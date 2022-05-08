@@ -120,8 +120,9 @@ func (we Adapter) Start() {
 	adminSubrouter.HandleFunc("/auth/verify-mfa", we.wrapFunc(we.adminApisHandler.adminVerifyMFA, we.auth.admin.user)).Methods("POST")
 	adminSubrouter.HandleFunc("/auth/app-token", we.wrapFunc(we.adminApisHandler.getAppToken, we.auth.admin.user)).Methods("GET")
 
+	adminSubrouter.HandleFunc("/accounts", we.wrapFunc(we.adminApisHandler.createAccount, we.auth.admin.permissions)).Methods("POST")
+
 	adminSubrouter.HandleFunc("/account", we.wrapFunc(we.adminApisHandler.getAccount, we.auth.admin.user)).Methods("GET")
-	adminSubrouter.HandleFunc("/account", we.wrapFunc(we.adminApisHandler.createAccount, we.auth.admin.permissions)).Methods("POST")
 	adminSubrouter.HandleFunc("/account/mfa", we.wrapFunc(we.adminApisHandler.getMFATypes, we.auth.admin.user)).Methods("GET")
 	adminSubrouter.HandleFunc("/account/mfa", we.wrapFunc(we.adminApisHandler.addMFAType, we.auth.admin.authenticated)).Methods("POST")
 	adminSubrouter.HandleFunc("/account/mfa", we.wrapFunc(we.adminApisHandler.removeMFAType, we.auth.admin.authenticated)).Methods("DELETE")
@@ -209,7 +210,7 @@ func (we Adapter) Start() {
 	systemSubrouter.HandleFunc("/application/configs/{id}", we.wrapFunc(we.systemApisHandler.updateApplicationConfig, we.auth.system.permissions)).Methods("PUT")
 	systemSubrouter.HandleFunc("/application/configs/{id}", we.wrapFunc(we.systemApisHandler.deleteApplicationConfig, we.auth.system.permissions)).Methods("DELETE")
 
-	systemSubrouter.HandleFunc("/account", we.wrapFunc(we.systemApisHandler.createAccount, we.auth.system.permissions)).Methods("POST")
+	systemSubrouter.HandleFunc("/accounts", we.wrapFunc(we.systemApisHandler.createAccount, we.auth.system.permissions)).Methods("POST")
 	systemSubrouter.HandleFunc("/account/permissions", we.wrapFunc(we.systemApisHandler.grantAccountPermissions, we.auth.system.permissions)).Methods("PUT")
 	systemSubrouter.HandleFunc("/account/roles", we.wrapFunc(we.systemApisHandler.grantAccountRoles, we.auth.system.permissions)).Methods("PUT")
 	systemSubrouter.HandleFunc("/account/mfa", we.wrapFunc(we.systemApisHandler.getMFATypes, we.auth.system.user)).Methods("GET")

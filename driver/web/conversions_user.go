@@ -31,7 +31,7 @@ func accountsToDef(items []model.Account) []Def.SharedResAccount {
 	return result
 }
 
-func adminAccountToDef(item model.Account, params map[string]interface{}) *Def.SharedResCreateAccount {
+func partialAccountToDef(item model.Account, params map[string]interface{}) *Def.PartialAccount {
 	//permissions
 	permissions := applicationPermissionsToDef(item.Permissions)
 	//roles
@@ -43,14 +43,21 @@ func adminAccountToDef(item model.Account, params map[string]interface{}) *Def.S
 	for i := 0; i < len(authTypes); i++ {
 		authTypes[i].Params = nil
 	}
+	//dates
+	var dateUpdated *string
+	dateCreated := item.DateCreated.Format("2006-01-02T15:04:05.000Z")
+	if item.DateUpdated != nil {
+		*dateUpdated = item.DateUpdated.Format("2006-01-02T15:04:05.000Z")
+	}
+
 	//params
 	var paramsData *map[string]interface{}
 	if params != nil {
 		paramsData = &params
 	}
-	return &Def.SharedResCreateAccount{Id: item.ID, AppId: item.AppOrg.Application.ID, OrgId: item.AppOrg.Organization.ID,
+	return &Def.PartialAccount{Id: item.ID, AppId: item.AppOrg.Application.ID, OrgId: item.AppOrg.Organization.ID,
 		FirstName: item.Profile.FirstName, LastName: item.Profile.LastName, Permissions: permissions, Roles: roles, Groups: groups,
-		AuthTypes: authTypes, Params: paramsData}
+		AuthTypes: authTypes, DateCreated: dateCreated, DateUpdated: dateUpdated, Params: paramsData}
 }
 
 //AccountAuthType

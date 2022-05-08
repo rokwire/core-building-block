@@ -1,30 +1,6 @@
-delete:
-  tags:
-  - Services
-  summary: Delete user account
-  description: |
-    Deletes a user account
-
-    **Auth:** Requires user auth token
-  security:
-    - bearerAuth: []
-  responses:
-    200:
-      description: Success
-      content:
-        text/plain:
-          schema:
-            type: string
-            example: Success
-    400:
-      description: Bad request
-    401:
-      description: Unauthorized
-    500:
-      description: Internal error
 get:
   tags:
-  - Services
+  - System
   summary: Get user account
   description: |
     Get the user account
@@ -38,7 +14,7 @@ get:
       content:
         application/json:
           schema:
-            $ref: "../../schemas/apis/shared/responses/Account.yaml" 
+            $ref: "../../schemas/user/PartialAccount.yaml" 
     400:
       description: Bad request
     401:
@@ -47,7 +23,7 @@ get:
       description: Internal error
 post:
   tags:
-  - Services
+  - System
   summary: Create admin account
   description: |
     Create a new admin account
@@ -61,7 +37,7 @@ post:
     content:
       application/json:
         schema:
-          $ref: "../../schemas/apis/services/create-account/Request.yaml"
+          $ref: "../../schemas/apis/system/create-account/Request.yaml"
     required: true
   responses:
     200:

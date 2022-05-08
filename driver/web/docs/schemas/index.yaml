@@ -76,6 +76,8 @@ OIDCDiscovery:
 # user
 Account:
   $ref: "./user/Account.yaml"
+PartialAccount:
+  $ref: "./user/PartialAccount.yaml"
 AccountFields:
   $ref: "./user/AccountFields.yaml"
 Profile:
@@ -142,8 +144,6 @@ _shared_res_Refresh:
   $ref: "./apis/shared/responses/refresh/Response.yaml"
 _shared_res_Mfa:
   $ref: "./apis/shared/responses/mfa/Response.yaml"
-_shared_res_CreateAccount:
-  $ref: "./apis/shared/responses/create-account/Response.yaml"
 _shared_res_Account:
   $ref: "./apis/shared/responses/Account.yaml"
 _shared_res_AccountCheck:

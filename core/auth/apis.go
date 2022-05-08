@@ -537,23 +537,20 @@ func (a *Auth) LoginMFA(apiKey string, accountID string, sessionID string, ident
 }
 
 //CreateAccount creates an account for a new user or updates an existing user's account with new permissions, roles, and groups
-func (a *Auth) CreateAccount(authenticationType string, appTypeIdentifier string, orgID string, identifier string,
-	profile model.Profile, permissions []string, roleIDs []string, groupIDs []string, creatorAppID *string, creatorPermissions []string, l *logs.Log) (*model.Account, map[string]interface{}, error) {
+func (a *Auth) CreateAccount(authenticationType string, appID string, orgID string, identifier string,
+	profile model.Profile, permissions []string, roleIDs []string, groupIDs []string, creatorPermissions []string, l *logs.Log) (*model.Account, map[string]interface{}, error) {
 	//TODO: add admin authentication policies that specify which auth types may be used for each app org
 	if authenticationType != AuthTypeOidc && authenticationType != AuthTypeEmail && !strings.HasSuffix(authenticationType, "_oidc") {
 		return nil, nil, errors.ErrorData(logutils.StatusInvalid, "auth type", nil)
 	}
 
-	// validate if the provided auth type is supported by the provided application and organization
-	authType, _, appOrg, err := a.validateAuthType(authenticationType, appTypeIdentifier, orgID)
+	// check if the provided auth type is supported by the provided application and organization
+	authType, appOrg, err := a.validateAuthTypeForAppOrg(authenticationType, appID, orgID)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
 	}
 
-	if creatorAppID != nil && appOrg.Application.ID != *creatorAppID {
-		return nil, nil, errors.ErrorData(logutils.StatusInvalid, "application type", &logutils.FieldArgs{"app_type_identifier": appTypeIdentifier})
-	}
-
+	// create account
 	var accountAuthType *model.AccountAuthType
 	var newAccount *model.Account
 	var params map[string]interface{}

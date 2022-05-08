@@ -410,13 +410,13 @@ func (h AdminApisHandler) createAccount(l *logs.Log, r *http.Request, claims *to
 	profile := profileFromDefNullable(requestData.Profile)
 	creatorPermissions := strings.Split(claims.Permissions, ",")
 
-	account, params, err := h.coreAPIs.Auth.CreateAccount(string(requestData.AuthType), requestData.AppTypeIdentifier,
-		claims.OrgID, requestData.Identifier, profile, permissions, roleIDs, groupIDs, nil, creatorPermissions, l)
+	account, params, err := h.coreAPIs.Auth.CreateAccount(string(requestData.AuthType), claims.AppID, claims.OrgID,
+		requestData.Identifier, profile, permissions, roleIDs, groupIDs, creatorPermissions, l)
 	if err != nil || account == nil {
 		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}
 
-	respData := adminAccountToDef(*account, params)
+	respData := partialAccountToDef(*account, params)
 
 	data, err = json.Marshal(respData)
 	if err != nil {

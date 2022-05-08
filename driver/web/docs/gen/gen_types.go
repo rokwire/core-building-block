@@ -497,6 +497,22 @@ type OrganizationFields struct {
 // OrganizationFieldsType defines model for OrganizationFields.Type.
 type OrganizationFieldsType string
 
+// PartialAccount defines model for PartialAccount.
+type PartialAccount struct {
+	AppId       string                  `json:"app_id"`
+	AuthTypes   []AccountAuthTypeFields `json:"auth_types"`
+	DateCreated string                  `json:"date_created"`
+	DateUpdated *string                 `json:"date_updated"`
+	FirstName   string                  `json:"first_name"`
+	Groups      []AppOrgGroupFields     `json:"groups"`
+	Id          string                  `json:"id"`
+	LastName    string                  `json:"last_name"`
+	OrgId       string                  `json:"org_id"`
+	Params      *map[string]interface{} `json:"params"`
+	Permissions []PermissionFields      `json:"permissions"`
+	Roles       []AppOrgRoleFields      `json:"roles"`
+}
+
 // Permission defines model for Permission.
 type Permission struct {
 	Fields *PermissionFields `json:"fields,omitempty"`
@@ -591,13 +607,12 @@ type AdminReqAddAccountsToGroup struct {
 
 // AdminReqCreateAccount defines model for _admin_req_create-account.
 type AdminReqCreateAccount struct {
-	AppTypeIdentifier string                        `json:"app_type_identifier"`
-	AuthType          AdminReqCreateAccountAuthType `json:"auth_type"`
-	GroupIds          *[]string                     `json:"group_ids,omitempty"`
-	Identifier        string                        `json:"identifier"`
-	Permissions       *[]string                     `json:"permissions,omitempty"`
-	Profile           *SharedReqProfileNullable     `json:"profile"`
-	RoleIds           *[]string                     `json:"role_ids,omitempty"`
+	AuthType    AdminReqCreateAccountAuthType `json:"auth_type"`
+	GroupIds    *[]string                     `json:"group_ids,omitempty"`
+	Identifier  string                        `json:"identifier"`
+	Permissions *[]string                     `json:"permissions,omitempty"`
+	Profile     *SharedReqProfileNullable     `json:"profile"`
+	RoleIds     *[]string                     `json:"role_ids,omitempty"`
 }
 
 // AdminReqCreateAccountAuthType defines model for AdminReqCreateAccount.AuthType.
@@ -706,13 +721,12 @@ type ServicesReqAuthorizeService struct {
 
 // ServicesReqCreateAccount defines model for _services_req_create-account.
 type ServicesReqCreateAccount struct {
-	AppTypeIdentifier string                           `json:"app_type_identifier"`
-	AuthType          ServicesReqCreateAccountAuthType `json:"auth_type"`
-	GroupIds          *[]string                        `json:"group_ids,omitempty"`
-	Identifier        string                           `json:"identifier"`
-	Permissions       *[]string                        `json:"permissions,omitempty"`
-	Profile           *SharedReqProfileNullable        `json:"profile"`
-	RoleIds           *[]string                        `json:"role_ids,omitempty"`
+	AuthType    ServicesReqCreateAccountAuthType `json:"auth_type"`
+	GroupIds    *[]string                        `json:"group_ids,omitempty"`
+	Identifier  string                           `json:"identifier"`
+	Permissions *[]string                        `json:"permissions,omitempty"`
+	Profile     *SharedReqProfileNullable        `json:"profile"`
+	RoleIds     *[]string                        `json:"role_ids,omitempty"`
 }
 
 // ServicesReqCreateAccountAuthType defines model for ServicesReqCreateAccount.AuthType.
@@ -974,20 +988,6 @@ type SharedResAccount struct {
 // SharedResAccountCheck defines model for _shared_res_AccountCheck.
 type SharedResAccountCheck bool
 
-// SharedResCreateAccount defines model for _shared_res_CreateAccount.
-type SharedResCreateAccount struct {
-	AppId       string                  `json:"app_id"`
-	AuthTypes   []AccountAuthTypeFields `json:"auth_types"`
-	FirstName   string                  `json:"first_name"`
-	Groups      []AppOrgGroupFields     `json:"groups"`
-	Id          string                  `json:"id"`
-	LastName    string                  `json:"last_name"`
-	OrgId       string                  `json:"org_id"`
-	Params      *map[string]interface{} `json:"params"`
-	Permissions []PermissionFields      `json:"permissions"`
-	Roles       []AppOrgRoleFields      `json:"roles"`
-}
-
 // SharedResLogin defines model for _shared_res_Login.
 type SharedResLogin struct {
 	Account *SharedResAccount      `json:"account,omitempty"`
@@ -1098,14 +1098,12 @@ type SystemReqCreateOrganizationType string
 
 // SystemReqCreateAccount defines model for _system_req_create-account.
 type SystemReqCreateAccount struct {
-	AppTypeIdentifier string                         `json:"app_type_identifier"`
-	AuthType          SystemReqCreateAccountAuthType `json:"auth_type"`
-	GroupIds          *[]string                      `json:"group_ids,omitempty"`
-	Identifier        string                         `json:"identifier"`
-	OrgId             string                         `json:"org_id"`
-	Permissions       *[]string                      `json:"permissions,omitempty"`
-	Profile           *SharedReqProfileNullable      `json:"profile"`
-	RoleIds           *[]string                      `json:"role_ids,omitempty"`
+	AuthType    SystemReqCreateAccountAuthType `json:"auth_type"`
+	GroupIds    *[]string                      `json:"group_ids,omitempty"`
+	Identifier  string                         `json:"identifier"`
+	Permissions *[]string                      `json:"permissions,omitempty"`
+	Profile     *SharedReqProfileNullable      `json:"profile"`
+	RoleIds     *[]string                      `json:"role_ids,omitempty"`
 }
 
 // SystemReqCreateAccountAuthType defines model for SystemReqCreateAccount.AuthType.
@@ -1203,9 +1201,6 @@ type SystemReqUpdateServiceAccount struct {
 	Permissions []string `json:"permissions"`
 }
 
-// PostAdminAccountJSONBody defines parameters for PostAdminAccount.
-type PostAdminAccountJSONBody AdminReqCreateAccount
-
 // DeleteAdminAccountMfaParams defines parameters for DeleteAdminAccountMfa.
 type DeleteAdminAccountMfaParams struct {
 
@@ -1219,6 +1214,9 @@ type PostAdminAccountMfaParams struct {
 	// MFA type
 	Type string `json:"type"`
 }
+
+// PostAdminAccountsJSONBody defines parameters for PostAdminAccounts.
+type PostAdminAccountsJSONBody AdminReqCreateAccount
 
 // PutAdminApplicationAccountPermissionsGrantJSONBody defines parameters for PutAdminApplicationAccountPermissionsGrant.
 type PutAdminApplicationAccountPermissionsGrantJSONBody AdminReqGrantPermissions
@@ -1419,9 +1417,6 @@ type GetServicesAuthServiceRegsParams struct {
 // PostServicesAuthVerifyMfaJSONBody defines parameters for PostServicesAuthVerifyMfa.
 type PostServicesAuthVerifyMfaJSONBody SharedReqMfa
 
-// PostSystemAccountJSONBody defines parameters for PostSystemAccount.
-type PostSystemAccountJSONBody SystemReqCreateAccount
-
 // DeleteSystemAccountMfaParams defines parameters for DeleteSystemAccountMfa.
 type DeleteSystemAccountMfaParams struct {
 
@@ -1441,6 +1436,9 @@ type PutSystemAccountPermissionsJSONBody SystemReqAccountPermissions
 
 // PutSystemAccountRolesJSONBody defines parameters for PutSystemAccountRoles.
 type PutSystemAccountRolesJSONBody SystemReqAccountRoles
+
+// PostSystemAccountsJSONBody defines parameters for PostSystemAccounts.
+type PostSystemAccountsJSONBody SystemReqCreateAccount
 
 // DeleteSystemApiKeysParams defines parameters for DeleteSystemApiKeys.
 type DeleteSystemApiKeysParams struct {
@@ -1669,8 +1667,8 @@ type GetUiCredentialVerifyParams struct {
 	Code string `json:"code"`
 }
 
-// PostAdminAccountJSONRequestBody defines body for PostAdminAccount for application/json ContentType.
-type PostAdminAccountJSONRequestBody PostAdminAccountJSONBody
+// PostAdminAccountsJSONRequestBody defines body for PostAdminAccounts for application/json ContentType.
+type PostAdminAccountsJSONRequestBody PostAdminAccountsJSONBody
 
 // PutAdminApplicationAccountPermissionsGrantJSONRequestBody defines body for PutAdminApplicationAccountPermissionsGrant for application/json ContentType.
 type PutAdminApplicationAccountPermissionsGrantJSONRequestBody PutAdminApplicationAccountPermissionsGrantJSONBody
@@ -1789,14 +1787,14 @@ type PostServicesAuthRefreshJSONRequestBody PostServicesAuthRefreshJSONBody
 // PostServicesAuthVerifyMfaJSONRequestBody defines body for PostServicesAuthVerifyMfa for application/json ContentType.
 type PostServicesAuthVerifyMfaJSONRequestBody PostServicesAuthVerifyMfaJSONBody
 
-// PostSystemAccountJSONRequestBody defines body for PostSystemAccount for application/json ContentType.
-type PostSystemAccountJSONRequestBody PostSystemAccountJSONBody
-
 // PutSystemAccountPermissionsJSONRequestBody defines body for PutSystemAccountPermissions for application/json ContentType.
 type PutSystemAccountPermissionsJSONRequestBody PutSystemAccountPermissionsJSONBody
 
 // PutSystemAccountRolesJSONRequestBody defines body for PutSystemAccountRoles for application/json ContentType.
 type PutSystemAccountRolesJSONRequestBody PutSystemAccountRolesJSONBody
+
+// PostSystemAccountsJSONRequestBody defines body for PostSystemAccounts for application/json ContentType.
+type PostSystemAccountsJSONRequestBody PostSystemAccountsJSONBody
 
 // PostSystemApiKeysJSONRequestBody defines body for PostSystemApiKeys for application/json ContentType.
 type PostSystemApiKeysJSONRequestBody PostSystemApiKeysJSONBody

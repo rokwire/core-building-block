@@ -8,6 +8,7 @@ required:
   - roles
   - groups
   - auth_types
+  - date_created
 type: object
 properties:
   id:
@@ -24,19 +25,24 @@ properties:
   permissions:
     type: array
     items:
-      $ref: "../../../../application/PermissionFields.yaml"
+      $ref: "../application/PermissionFields.yaml"
   roles:
     type: array
     items:
-      $ref: "../../../../application/AppOrgRoleFields.yaml"
+      $ref: "../application/AppOrgRoleFields.yaml"
   groups:
     type: array
     items:
-      $ref: "../../../../application/AppOrgGroupFields.yaml"
+      $ref: "../application/AppOrgGroupFields.yaml"
   auth_types:
     type: array
     items:
-      $ref: "../../../../user/AccountAuthTypeFields.yaml"
+      $ref: "../user/AccountAuthTypeFields.yaml"
   params:
     type: object
+    nullable: true
+  date_created:
+    type: string
+  date_updated:
+    type: string
     nullable: true

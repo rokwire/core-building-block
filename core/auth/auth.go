@@ -2017,6 +2017,29 @@ func (a *Auth) validateAuthType(authenticationType string, appTypeIdentifier str
 	return authType, applicationType, appOrg, nil
 }
 
+func (a *Auth) validateAuthTypeForAppOrg(authenticationType string, appID string, orgID string) (*model.AuthType, *model.ApplicationOrganization, error) {
+	authType, err := a.storage.FindAuthType(authenticationType)
+	if err != nil || authType == nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, typeAuthType, logutils.StringArgs(authenticationType), err)
+	}
+
+	appOrg, err := a.storage.FindApplicationOrganization(appID, orgID)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": appID, "org_id": orgID}, err)
+	}
+	if appOrg == nil {
+		return nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": appID, "org_id": orgID})
+	}
+
+	for _, appType := range appOrg.Application.Types {
+		if appOrg.IsAuthTypeSupported(appType, *authType) {
+			return authType, appOrg, nil
+		}
+	}
+
+	return nil, nil, errors.ErrorData(logutils.StatusInvalid, typeAuthType, &logutils.FieldArgs{"app_org_id": appOrg.ID, "auth_type": authenticationType})
+}
+
 func (a *Auth) getAuthTypeImpl(authType model.AuthType) (authType, error) {
 	if auth, ok := a.authTypes[authType.Code]; ok {
 		return auth, nil

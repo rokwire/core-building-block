@@ -954,7 +954,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_shared_res_CreateAccount'
+                $ref: '#/components/schemas/PartialAccount'
         '400':
           description: Bad request
         '401':
@@ -1524,30 +1524,7 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /admin/account:
-    get:
-      tags:
-        - Admin
-      summary: Get user account
-      description: |
-        Get the user account
-
-        **Auth:** Requires user auth token
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/_shared_res_Account'
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal error
+  /admin/accounts:
     post:
       tags:
         - Admin
@@ -1572,7 +1549,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_shared_res_CreateAccount'
+                $ref: '#/components/schemas/PartialAccount'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /admin/account:
+    get:
+      tags:
+        - Admin
+      summary: Get user account
+      description: |
+        Get the user account
+
+        **Auth:** Requires user auth token
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_shared_res_Account'
         '400':
           description: Bad request
         '401':
@@ -4044,7 +4045,7 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /system/account:
+  /system/accounts:
     get:
       tags:
         - System
@@ -4061,7 +4062,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_shared_res_Account'
+                $ref: '#/components/schemas/PartialAccount'
         '400':
           description: Bad request
         '401':
@@ -4092,7 +4093,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_shared_res_CreateAccount'
+                $ref: '#/components/schemas/PartialAccount'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /system/account:
+    get:
+      tags:
+        - System
+      summary: Get user account
+      description: |
+        Get the user account
+
+        **Auth:** Requires user auth token
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_shared_res_Account'
         '400':
           description: Bad request
         '401':
@@ -5106,6 +5131,55 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Device'
+    PartialAccount:
+      required:
+        - id
+        - app_id
+        - org_id
+        - first_name
+        - last_name
+        - permissions
+        - roles
+        - groups
+        - auth_types
+        - date_created
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        app_id:
+          type: string
+        org_id:
+          type: string
+        first_name:
+          type: string
+        last_name:
+          type: string
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/PermissionFields'
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/AppOrgRoleFields'
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/AppOrgGroupFields'
+        auth_types:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccountAuthTypeFields'
+        params:
+          type: object
+          nullable: true
+        date_created:
+          type: string
+        date_updated:
+          type: string
+          nullable: true
     AccountFields:
       required:
         - id
@@ -5592,49 +5666,6 @@ components:
           type: boolean
         params:
           type: object
-    _shared_res_CreateAccount:
-      required:
-        - id
-        - app_id
-        - org_id
-        - first_name
-        - last_name
-        - permissions
-        - roles
-        - groups
-        - auth_types
-      type: object
-      properties:
-        id:
-          type: string
-          readOnly: true
-        app_id:
-          type: string
-        org_id:
-          type: string
-        first_name:
-          type: string
-        last_name:
-          type: string
-        permissions:
-          type: array
-          items:
-            $ref: '#/components/schemas/PermissionFields'
-        roles:
-          type: array
-          items:
-            $ref: '#/components/schemas/AppOrgRoleFields'
-        groups:
-          type: array
-          items:
-            $ref: '#/components/schemas/AppOrgGroupFields'
-        auth_types:
-          type: array
-          items:
-            $ref: '#/components/schemas/AccountAuthTypeFields'
-        params:
-          type: object
-          nullable: true
     _shared_res_Account:
       required:
         - id
@@ -5722,7 +5753,6 @@ components:
     _services_req_create-account:
       required:
         - auth_type
-        - app_type_identifier
         - identifier
       type: object
       properties:
@@ -5731,8 +5761,6 @@ components:
           enum:
             - email
             - illinois_oidc
-        app_type_identifier:
-          type: string
         identifier:
           type: string
         permissions:
@@ -5976,7 +6004,6 @@ components:
     _admin_req_create-account:
       required:
         - auth_type
-        - app_type_identifier
         - identifier
       type: object
       properties:
@@ -5985,8 +6012,6 @@ components:
           enum:
             - email
             - illinois_oidc
-        app_type_identifier:
-          type: string
         identifier:
           type: string
         permissions:
@@ -6127,8 +6152,6 @@ components:
     _system_req_create-account:
       required:
         - auth_type
-        - app_type_identifier
-        - org_id
         - identifier
       type: object
       properties:
@@ -6137,10 +6160,6 @@ components:
           enum:
             - email
             - illinois_oidc
-        app_type_identifier:
-          type: string
-        org_id:
-          type: string
         identifier:
           type: string
         permissions:
