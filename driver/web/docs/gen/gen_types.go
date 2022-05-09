@@ -1337,6 +1337,9 @@ type PutServicesAccountPreferencesJSONBody map[string]interface{}
 // PutServicesAccountProfileJSONBody defines parameters for PutServicesAccountProfile.
 type PutServicesAccountProfileJSONBody SharedReqProfile
 
+// PostServicesAccountsJSONBody defines parameters for PostServicesAccounts.
+type PostServicesAccountsJSONBody ServicesReqCreateAccount
+
 // PostServicesApplicationConfigsJSONBody defines parameters for PostServicesApplicationConfigs.
 type PostServicesApplicationConfigsJSONBody ServicesReqApplicationConfigs
 
@@ -1732,6 +1735,9 @@ type PutServicesAccountPreferencesJSONRequestBody PutServicesAccountPreferencesJ
 
 // PutServicesAccountProfileJSONRequestBody defines body for PutServicesAccountProfile for application/json ContentType.
 type PutServicesAccountProfileJSONRequestBody PutServicesAccountProfileJSONBody
+
+// PostServicesAccountsJSONRequestBody defines body for PostServicesAccounts for application/json ContentType.
+type PostServicesAccountsJSONRequestBody PostServicesAccountsJSONBody
 
 // PostServicesApplicationConfigsJSONRequestBody defines body for PostServicesApplicationConfigs for application/json ContentType.
 type PostServicesApplicationConfigsJSONRequestBody PostServicesApplicationConfigsJSONBody
