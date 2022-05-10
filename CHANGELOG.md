@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - Set up admin create account endpoint [#365](https://github.com/rokwire/core-building-block/issues/365)
+- Retrieve all service account tokens at once [#459](https://github.com/rokwire/core-building-block/issues/459)
 
 ## [1.23.0] - 2022-04-26
 ### Added

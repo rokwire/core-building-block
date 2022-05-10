@@ -291,10 +291,13 @@ type APIs interface {
 	RemoveMFAType(accountID string, identifier string, mfaType string) error
 
 	//GetServiceAccountParams returns a list of app, org pairs a service account has access to
-	GetServiceAccountParams(accountID string, r *sigauth.Request, l *logs.Log) ([]model.AppOrgPair, error)
+	GetServiceAccountParams(accountID string, firstParty bool, r *sigauth.Request, l *logs.Log) ([]model.AppOrgPair, error)
 
 	//GetServiceAccessToken returns an access token for a non-human client
-	GetServiceAccessToken(r *sigauth.Request, l *logs.Log) (string, error)
+	GetServiceAccessToken(firstParty bool, r *sigauth.Request, l *logs.Log) (string, error)
+
+	//GetAllServiceAccessTokens returns an access token for each app, org pair a service account has access to
+	GetAllServiceAccessTokens(firstParty bool, r *sigauth.Request, l *logs.Log) (map[model.AppOrgPair]string, error)
 
 	//GetServiceAccounts gets all service accounts matching a search
 	GetServiceAccounts(params map[string]interface{}) ([]model.ServiceAccount, error)

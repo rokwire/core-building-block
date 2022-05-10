@@ -4,6 +4,7 @@ import (
 	"core-building-block/core"
 	"core-building-block/core/model"
 	Def "core-building-block/driver/web/docs/gen"
+	"core-building-block/utils"
 	"encoding/json"
 	"net/http"
 	"strings"
@@ -71,13 +72,15 @@ func (h TPSApisHandler) getServiceAccountParams(l *logs.Log, r *http.Request, cl
 		return l.HttpResponseErrorAction(logutils.ActionParse, "service account params http request", nil, err, http.StatusInternalServerError, false)
 	}
 
-	accountParams, err := h.coreAPIs.Auth.GetServiceAccountParams(accountID, req, l)
+	accountParams, err := h.coreAPIs.Auth.GetServiceAccountParams(accountID, false, req, l)
 	if err != nil {
-		loggingErr, ok := err.(*errors.Error)
-		if ok && loggingErr.Status() != "" {
-			return l.HttpResponseError("Error getting access token", err, http.StatusUnauthorized, true)
+		if loggingErr, ok := err.(*errors.Error); ok {
+			status := loggingErr.Status()
+			if status == utils.ErrorStatusInvalid || status == utils.ErrorStatusNotFound {
+				return l.HttpResponseError("Error getting service account params", err, http.StatusUnauthorized, true)
+			}
 		}
-		return l.HttpResponseError("Error getting access token", err, http.StatusInternalServerError, true)
+		return l.HttpResponseError("Error getting service account params", err, http.StatusInternalServerError, true)
 	}
 
 	appOrgPairs := appOrgPairListToDef(accountParams)
@@ -93,14 +96,16 @@ func (h TPSApisHandler) getServiceAccountParams(l *logs.Log, r *http.Request, cl
 func (h TPSApisHandler) getServiceAccessToken(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	req, err := sigauth.ParseHTTPRequest(r)
 	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionParse, "service account params http request", nil, err, http.StatusInternalServerError, false)
+		return l.HttpResponseErrorAction(logutils.ActionParse, "service access token http request", nil, err, http.StatusInternalServerError, false)
 	}
 
-	accessToken, err := h.coreAPIs.Auth.GetServiceAccessToken(req, l)
+	accessToken, err := h.coreAPIs.Auth.GetServiceAccessToken(false, req, l)
 	if err != nil {
-		loggingErr, ok := err.(*errors.Error)
-		if ok && loggingErr.Status() != "" {
-			return l.HttpResponseError("Error getting access token", err, http.StatusUnauthorized, true)
+		if loggingErr, ok := err.(*errors.Error); ok {
+			status := loggingErr.Status()
+			if status == utils.ErrorStatusInvalid || status == utils.ErrorStatusNotFound {
+				return l.HttpResponseError("Error getting access token", err, http.StatusUnauthorized, true)
+			}
 		}
 		return l.HttpResponseError("Error getting access token", err, http.StatusInternalServerError, true)
 	}
@@ -111,6 +116,42 @@ func (h TPSApisHandler) getServiceAccessToken(l *logs.Log, r *http.Request, clai
 	respData, err := json.Marshal(rokwireToken)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("service access token response"), nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessJSON(respData)
+}
+
+func (h TPSApisHandler) getServiceAccessTokens(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	req, err := sigauth.ParseHTTPRequest(r)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionParse, "service access tokens http request", nil, err, http.StatusInternalServerError, false)
+	}
+
+	accessTokens, err := h.coreAPIs.Auth.GetAllServiceAccessTokens(false, req, l)
+	if err != nil {
+		if loggingErr, ok := err.(*errors.Error); ok {
+			status := loggingErr.Status()
+			if status == utils.ErrorStatusInvalid || status == utils.ErrorStatusNotFound {
+				return l.HttpResponseError("Error getting access tokens", err, http.StatusUnauthorized, true)
+			}
+		}
+		return l.HttpResponseError("Error getting access tokens", err, http.StatusInternalServerError, true)
+	}
+
+	rokwireTokens := make([]Def.ServicesResServiceAccountsAccessTokens, len(accessTokens))
+	i := 0
+	for appOrgPair, token := range accessTokens {
+		tokenType := Def.SharedResRokwireTokenTokenTypeBearer
+		accessToken := token
+		rokwireToken := Def.SharedResRokwireToken{AccessToken: &accessToken, TokenType: &tokenType}
+
+		rokwireTokens[i] = Def.ServicesResServiceAccountsAccessTokens{AppId: appOrgPair.AppID, OrgId: appOrgPair.OrgID, Token: rokwireToken}
+		i++
+	}
+
+	respData, err := json.Marshal(rokwireTokens)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("service access tokens response"), nil, err, http.StatusInternalServerError, false)
 	}
 
 	return l.HttpResponseSuccessJSON(respData)

@@ -1,17 +1,9 @@
 required:
   - account_id
-  - app_id
-  - org_id
   - auth_type
 type: object
 properties:
   account_id:
-    type: string
-  app_id:
-    nullable: true
-    type: string
-  org_id:
-    nullable: true
     type: string
   auth_type:
     type: string
@@ -19,4 +11,4 @@ properties:
       - static_token
       - signature
   creds:
-    $ref: "./CredsStaticToken.yaml"
+    $ref: "../../CredsStaticToken.yaml"
