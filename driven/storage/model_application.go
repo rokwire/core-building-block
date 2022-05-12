@@ -10,10 +10,8 @@ type application struct {
 	Name string `bson:"name"`
 
 	MultiTenant      bool `bson:"multi_tenant"`
-	RequiresOwnUsers bool `bson:"requires_own_users"`
+	SharedIdentities bool `bson:"shared_identities"`
 	Admin            bool `bson:"admin"`
-
-	MaxLoginSessionDuration *int `bson:"max_login_session_duration,omitempty"`
 
 	Types []applicationType `bson:"types"`
 
@@ -29,30 +27,32 @@ type applicationType struct {
 }
 
 type version struct {
-	ID              string               `json:"id" bson:"_id"`
-	VersionNumbers  model.VersionNumbers `json:"version_numbers" bson:"version_numbers"`
-	ApplicationType applicationType      `json:"app_type" bson:"app_type"`
+	ID             string               `bson:"_id"`
+	VersionNumbers model.VersionNumbers `bson:"version_numbers"`
+	AppTypeID      string               `bson:"app_type_id"`
 
-	DateCreated time.Time  `json:"date_created" bson:"date_created"`
-	DateUpdated *time.Time `json:"date_updated" bson:"date_updated"`
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
 }
 
 type applicationConfig struct {
-	ID              string          `json:"id" bson:"_id"`
-	ApplicationType applicationType `json:"app_type" bson:"app_type"`
-	Version         version         `json:"version" bson:"version"`
-	AppOrgID        string          `bson:"app_org_id"`
+	ID        string  `bson:"_id"`
+	AppTypeID string  `bson:"app_type_id"`
+	Version   version `bson:"version"`
+	AppOrgID  *string `bson:"app_org_id"`
 
-	Data map[string]interface{} `json:"data" bson:"data"`
+	Data map[string]interface{} `bson:"data"`
 
-	DateCreated time.Time  `json:"date_created" bson:"date_created"`
-	DateUpdated *time.Time `json:"date_updated" bson:"date_updated"`
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
 }
 
 type organization struct {
 	ID   string `bson:"_id"`
 	Name string `bson:"name"`
 	Type string `bson:"type"`
+
+	System bool `bson:"system"`
 
 	Config model.OrganizationConfig `bson:"config"`
 
@@ -71,6 +71,8 @@ type applicationOrganization struct {
 	IdentityProvidersSettings []model.IdentityProviderSetting `bson:"identity_providers_settings"`
 
 	SupportedAuthTypes []model.AuthTypesSupport `bson:"supported_auth_types"`
+
+	LoginsSessionsSetting model.LoginsSessionsSetting `bson:"logins_sessions_settings"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`

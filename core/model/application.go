@@ -2,9 +2,12 @@ package model
 
 import (
 	"fmt"
-	"regexp"
+	"strconv"
+	"strings"
 	"time"
 
+	"github.com/rokwire/core-auth-library-go/authutils"
+	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logutils"
 )
 
@@ -33,6 +36,22 @@ const (
 	TypeApplicationConfigsVersion logutils.MessageDataType = "app config version number"
 	//TypeVersionNumbers ...
 	TypeVersionNumbers logutils.MessageDataType = "version numbers"
+	//TypeWebhookConfig ...
+	TypeWebhookConfig logutils.MessageDataType = "github webhook configs"
+	//TypeApplicationConfigWebhook ...
+	TypeApplicationConfigWebhook logutils.MessageDataType = "app config from github webhook request"
+	//TypeGithubContent ...
+	TypeGithubContent logutils.MessageDataType = "github content"
+	//TypeGithubCommit ...
+	TypeGithubCommit logutils.MessageDataType = "github commit"
+	//TypeGithubCommitAdded ...
+	TypeGithubCommitAdded logutils.MessageDataType = "github commit added files"
+	//TypeGithubCommitUpdated ...
+	TypeGithubCommitUpdated logutils.MessageDataType = "github commit updated files"
+	//TypeGithubCommitDeleted ...
+	TypeGithubCommitDeleted logutils.MessageDataType = "github commit deleted files"
+	//TypeOrganizationID ...
+	TypeOrganizationID logutils.MessageDataType = "organization id"
 )
 
 //Permission represents permission entity
@@ -47,8 +66,24 @@ type Permission struct {
 	DateUpdated *time.Time `bson:"date_updated"`
 }
 
-func (c Permission) String() string {
-	return fmt.Sprintf("[ID:%s\nName:%s\nServiceID:%s]", c.ID, c.Name, c.ServiceID)
+//CheckAssigners checks if the passed permissions satisfy the needed assigners for the permission
+func (p Permission) CheckAssigners(assignerPermissions []string) error {
+	if len(p.Assigners) == 0 {
+		return errors.Newf("not defined assigners for %s permission", p.Name)
+	}
+
+	authorizedAssigners := p.Assigners
+	for _, authorizedAssigner := range authorizedAssigners {
+		if !authutils.ContainsString(assignerPermissions, authorizedAssigner) {
+			return errors.Newf("assigner %s is not satisfied", authorizedAssigner)
+		}
+	}
+	//all assigners are satisfied
+	return nil
+}
+
+func (p Permission) String() string {
+	return fmt.Sprintf("[ID:%s\nName:%s\nServiceID:%s]", p.ID, p.Name, p.ServiceID)
 }
 
 //AppOrgRole represents application organization role entity. It is a collection of permissions
@@ -65,6 +100,32 @@ type AppOrgRole struct {
 
 	DateCreated time.Time
 	DateUpdated *time.Time
+}
+
+//GetPermissionNamed returns the permission for a name if the role has it
+func (c AppOrgRole) GetPermissionNamed(name string) *Permission {
+	for _, permission := range c.Permissions {
+		if permission.Name == name {
+			return &permission
+		}
+	}
+	return nil
+}
+
+//CheckAssigners checks if the passed permissions satisfy the needed assigners for all role permissions
+func (c AppOrgRole) CheckAssigners(assignerPermissions []string) error {
+	if len(c.Permissions) == 0 {
+		return nil //no permission
+	}
+
+	for _, permission := range c.Permissions {
+		err := permission.CheckAssigners(assignerPermissions)
+		if err != nil {
+			errors.Wrapf("error checking role permission assigners", err)
+		}
+	}
+	//it satisies all permissions
+	return nil
 }
 
 func (c AppOrgRole) String() string {
@@ -87,6 +148,30 @@ type AppOrgGroup struct {
 	DateUpdated *time.Time
 }
 
+//CheckAssigners checks if the passed permissions satisfy the needed assigners for the group
+func (cg AppOrgGroup) CheckAssigners(assignerPermissions []string) error {
+	//check permission
+	if len(cg.Permissions) > 0 {
+		for _, permission := range cg.Permissions {
+			err := permission.CheckAssigners(assignerPermissions)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	//check roles
+	if len(cg.Roles) > 0 {
+		for _, role := range cg.Roles {
+			err := role.CheckAssigners(assignerPermissions)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	//all assigners are satisfied
+	return nil
+}
+
 func (cg AppOrgGroup) String() string {
 	return fmt.Sprintf("[ID:%s\nName:%s\nAppOrg:%s]", cg.ID, cg.Name, cg.AppOrg.ID)
 }
@@ -99,10 +184,10 @@ type Application struct {
 	MultiTenant bool //safer community is multi-tenant
 	Admin       bool //is this an admin app?
 
-	//if true the service will always require the user to create profile for the application, otherwise he/she could use his/her already created profile from another platform application
-	RequiresOwnUsers bool
-
-	MaxLoginSessionDuration *int
+	//if to share identities between the organizations within the appication or to use e separate identities for every organization
+	//if true - the user uses shared profile between all organizations within the application
+	//if false - the user uses a separate profile for every organization within the application
+	SharedIdentities bool
 
 	Types []ApplicationType
 
@@ -112,10 +197,10 @@ type Application struct {
 	DateUpdated *time.Time
 }
 
-//FindApplicationType finds app type for identifier
-func (a Application) FindApplicationType(identifier string) *ApplicationType {
+//FindApplicationType finds app type
+func (a Application) FindApplicationType(id string) *ApplicationType {
 	for _, appType := range a.Types {
-		if appType.Identifier == identifier {
+		if appType.Identifier == id || appType.ID == id {
 			return &appType
 		}
 	}
@@ -127,6 +212,8 @@ type Organization struct {
 	ID   string
 	Name string
 	Type string //micro small medium large - based on the users count
+
+	System bool //is this a system org?
 
 	Config OrganizationConfig
 
@@ -152,6 +239,8 @@ type ApplicationOrganization struct {
 	IdentityProvidersSettings []IdentityProviderSetting
 
 	SupportedAuthTypes []AuthTypesSupport //supported auth types for this organization in this application
+
+	LoginsSessionsSetting LoginsSessionsSetting
 
 	DateCreated time.Time
 	DateUpdated *time.Time
@@ -193,7 +282,8 @@ func (ao ApplicationOrganization) IsAuthTypeSupported(appType ApplicationType, a
 type IdentityProviderSetting struct {
 	IdentityProviderID string `bson:"identity_provider_id"`
 
-	UserIdentifierField string `bson:"user_identifier_field"`
+	UserIdentifierField string            `bson:"user_identifier_field"`
+	ExternalIDFields    map[string]string `bson:"external_id_fields"`
 
 	FirstNameField  string `bson:"first_name_field"`
 	MiddleNameField string `bson:"middle_name_field"`
@@ -206,6 +296,36 @@ type IdentityProviderSetting struct {
 
 	Roles  map[string]string `bson:"roles"`  //map[identity_provider_role]app_role_id
 	Groups map[string]string `bson:"groups"` //map[identity_provider_group]app_group_id
+}
+
+//LoginsSessionsSetting represents logins sessions setting for an organization in an application
+type LoginsSessionsSetting struct {
+	MaxConcurrentSessions int `bson:"max_concurrent_sessions"`
+
+	InactivityExpirePolicy InactivityExpirePolicy `bson:"inactivity_expire_policy"`
+	TSLExpirePolicy        TSLExpirePolicy        `bson:"time_since_login_expire_policy"`
+	YearlyExpirePolicy     YearlyExpirePolicy     `bson:"yearly_expire_policy"`
+}
+
+//InactivityExpirePolicy represents expires policy based on inactivity
+type InactivityExpirePolicy struct {
+	Active           bool `bson:"active"`
+	InactivityPeriod int  `bson:"inactivity_period"` //in minutes
+}
+
+//TSLExpirePolicy represents expires policy based on the time since login
+type TSLExpirePolicy struct {
+	Active               bool `bson:"active"`
+	TimeSinceLoginPeriod int  `bson:"time_since_login_period"` //in minutes
+}
+
+//YearlyExpirePolicy represents expires policy based on fixed date
+type YearlyExpirePolicy struct {
+	Active bool `bson:"active"`
+	Day    int  `bson:"day"`
+	Month  int  `bson:"month"`
+	Hour   int  `bson:"hour"`
+	Min    int  `bson:"min"`
 }
 
 //ApplicationType represents users application type entity - safer community android, safer community ios, safer community web, uuic android etc
@@ -228,41 +348,40 @@ type AuthTypesSupport struct {
 	} `bson:"supported_auth_types"`
 }
 
-//ApplicationConfig represents mobile app configs
+//ApplicationConfig represents app configs
 type ApplicationConfig struct {
 	ID              string
 	ApplicationType ApplicationType
 	Version         Version
-	AppOrg          ApplicationOrganization
+	AppOrg          *ApplicationOrganization
 	Data            map[string]interface{}
 
 	DateCreated time.Time
 	DateUpdated *time.Time
 }
 
-// Version represents mobile app config version information
+// Version represents app config version information
 type Version struct {
-	ID             string         `json:"id" bson:"_id"`
-	VersionNumbers VersionNumbers `json:"version_numbers" bson:"version_numbers"`
+	ID             string
+	VersionNumbers VersionNumbers
 
-	ApplicationType ApplicationType `json:"app_type" bson:"app_type"`
-
-	DateCreated time.Time  `json:"date_created" bson:"date_created"`
-	DateUpdated *time.Time `json:"date_updated" bson:"date_updated"`
+	ApplicationType ApplicationType
+	DateCreated     time.Time
+	DateUpdated     *time.Time
 }
 
-//VersionNumbers represents mobile app config version numbers
+//VersionNumbers represents app config version numbers
 type VersionNumbers struct {
-	Major string `json:"major" bson:"major"`
-	Minor string `json:"minor" bson:"minor"`
-	Patch string `json:"patch" bson:"patch"`
+	Major int `json:"major" bson:"major"`
+	Minor int `json:"minor" bson:"minor"`
+	Patch int `json:"patch" bson:"patch"`
 }
 
 func (v *VersionNumbers) String() string {
 	if v == nil {
 		return ""
 	}
-	return fmt.Sprintf("%s.%s.%s", v.Major, v.Minor, v.Patch)
+	return fmt.Sprintf("%d.%d.%d", v.Major, v.Minor, v.Patch)
 }
 
 // LessThanOrEqualTo evaluates if v1 is less than or equal to v
@@ -286,17 +405,71 @@ func (v VersionNumbers) LessThanOrEqualTo(v1 *VersionNumbers) bool {
 
 //VersionNumbersFromString parses a string into a VersionNumbers struct. Returns nil if invalid format.
 func VersionNumbersFromString(version string) *VersionNumbers {
-	validVersionRegex := regexp.MustCompile(`^(?P<major>\d+).(?P<minor>\d+).(?P<patch>\d+)$`)
-	if !validVersionRegex.MatchString(version) {
+	parts := strings.Split(version, ".")
+	if len(parts) != 3 {
 		return nil
 	}
 
-	n1 := validVersionRegex.SubexpNames()
-	r2 := validVersionRegex.FindAllStringSubmatch(version, -1)[0]
-	md := map[string]string{}
-	for i, n := range r2 {
-		md[n1[i]] = n
+	major, err := strconv.Atoi(parts[0])
+	if err != nil {
+		return nil
+	}
+	minor, err := strconv.Atoi(parts[1])
+	if err != nil {
+		return nil
+	}
+	patch, err := strconv.Atoi(parts[2])
+	if err != nil {
+		return nil
 	}
 
-	return &VersionNumbers{Major: md["major"], Minor: md["minor"], Patch: md["patch"]}
+	return &VersionNumbers{Major: major, Minor: minor, Patch: patch}
+}
+
+// WebhookConfig is the organizaiton and application mapping config
+type WebhookConfig struct {
+	Organizations map[string]string            `json:"organizations"`
+	Applications  map[string]map[string]string `json:"applications"`
+}
+
+// WebhookRequest is the request from github webhook
+type WebhookRequest struct {
+	Ref     string   `json:"ref"`
+	Before  string   `json:"before"`
+	After   string   `json:"after"`
+	Created bool     `json:"created"`
+	Deleted bool     `json:"deleted"`
+	Forced  bool     `json:"forced"`
+	BaseRef string   `json:"base_ref"`
+	Compare string   `json:"compare"`
+	Commits []Commit `json:"commits"`
+}
+
+// Commit is the commit information of github push events
+type Commit struct {
+	ID        string    `json:"id"`
+	TreeID    string    `json:"tree_id"`
+	Distinct  bool      `json:"distinct"`
+	Message   string    `json:"message"`
+	Timestamp string    `json:"timestamp"`
+	URL       string    `json:"url"`
+	Author    Author    `json:"author"`
+	Committer Committer `json:"committer"`
+	Added     []string  `json:"added"`
+	Removed   []string  `json:"removed"`
+	Modified  []string  `json:"modified"`
+}
+
+// Author is the author of the commit
+type Author struct {
+	Name     string `json:"name"`
+	Email    string `json:"email"`
+	Username string `json:"username"`
+}
+
+// Committer is the commiter of the commit
+type Committer struct {
+	Name     string `json:"name"`
+	Email    string `json:"email"`
+	Username string `json:"username"`
 }

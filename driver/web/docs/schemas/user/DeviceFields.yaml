@@ -5,6 +5,8 @@ type: object
 properties:
   id:
     type: string
+  device_id:
+    type: string
   type:
     type: string
     enum:

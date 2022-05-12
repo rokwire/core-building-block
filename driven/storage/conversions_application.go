@@ -11,8 +11,9 @@ func applicationFromStorage(item *application) model.Application {
 	}
 
 	types := applicationTypesFromStorage(item.Types)
-	return model.Application{ID: item.ID, Name: item.Name, MultiTenant: item.MultiTenant, RequiresOwnUsers: item.RequiresOwnUsers, Admin: item.Admin,
-		MaxLoginSessionDuration: item.MaxLoginSessionDuration, Types: types, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+	return model.Application{ID: item.ID, Name: item.Name, MultiTenant: item.MultiTenant,
+		SharedIdentities: item.SharedIdentities, Admin: item.Admin,
+		Types: types, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
 func applicationsFromStorage(itemsList []application) []model.Application {
@@ -116,7 +117,7 @@ func versionsFromStorage(itemList []version, appType model.ApplicationType) []mo
 }
 
 func versionToStorage(item model.Version) version {
-	return version{ID: item.ID, VersionNumbers: item.VersionNumbers, ApplicationType: applicationTypeToStorage(item.ApplicationType), DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+	return version{ID: item.ID, VersionNumbers: item.VersionNumbers, AppTypeID: item.ApplicationType.ID, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
 func versionsToStorage(itemList []model.Version) []version {
@@ -133,30 +134,33 @@ func versionsToStorage(itemList []model.Version) []version {
 }
 
 // AppConfig
-func appConfigFromStorage(item *applicationConfig, appOrg model.ApplicationOrganization) model.ApplicationConfig {
+func appConfigFromStorage(item *applicationConfig, appOrg *model.ApplicationOrganization, appType model.ApplicationType) model.ApplicationConfig {
 	if item == nil {
 		return model.ApplicationConfig{}
 	}
-
-	appType := applicationTypeFromStorage(&item.ApplicationType)
 	return model.ApplicationConfig{ID: item.ID, AppOrg: appOrg, ApplicationType: appType, Data: item.Data, Version: versionFromStorage(&item.Version, appType), DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
-func appConfigsFromStorage(itemList []applicationConfig, appOrg model.ApplicationOrganization) []model.ApplicationConfig {
+func appConfigsFromStorage(itemList []applicationConfig, appOrg *model.ApplicationOrganization, appType model.ApplicationType) []model.ApplicationConfig {
 	if len(itemList) == 0 {
 		return make([]model.ApplicationConfig, 0)
 	}
 
 	res := make([]model.ApplicationConfig, len(itemList))
 	for i, appConfig := range itemList {
-		res[i] = appConfigFromStorage(&appConfig, appOrg)
+		res[i] = appConfigFromStorage(&appConfig, appOrg, appType)
 	}
 
 	return res
 }
 
 func appConfigToStorage(item model.ApplicationConfig) applicationConfig {
-	return applicationConfig{ID: item.ID, ApplicationType: applicationTypeToStorage(item.ApplicationType), AppOrgID: item.AppOrg.ID, Version: versionToStorage(item.Version), Data: item.Data, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+	appConfig := applicationConfig{ID: item.ID, AppTypeID: item.ApplicationType.ID, Version: versionToStorage(item.Version), Data: item.Data, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+	if item.AppOrg != nil {
+		appConfig.AppOrgID = &item.AppOrg.ID
+	}
+
+	return appConfig
 }
 
 //AppOrgGroup
@@ -206,7 +210,7 @@ func organizationFromStorage(item *organization) model.Organization {
 		return model.Organization{}
 	}
 
-	return model.Organization{ID: item.ID, Name: item.Name, Type: item.Type,
+	return model.Organization{ID: item.ID, Name: item.Name, Type: item.Type, System: item.System,
 		Config: item.Config, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
@@ -227,15 +231,22 @@ func organizationToStorage(item *model.Organization) *organization {
 		return nil
 	}
 
-	return &organization{ID: item.ID, Name: item.Name, Type: item.Type, Config: item.Config,
-		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+	return &organization{ID: item.ID, Name: item.Name, Type: item.Type, System: item.System,
+		Config: item.Config, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
 //ApplicationOrganization
+func applicationOrganizationToStorage(item model.ApplicationOrganization) applicationOrganization {
+	return applicationOrganization{ID: item.ID, AppID: item.Application.ID, OrgID: item.Organization.ID,
+		ServicesIDs: item.ServicesIDs, IdentityProvidersSettings: item.IdentityProvidersSettings,
+		SupportedAuthTypes: item.SupportedAuthTypes, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+}
+
 func applicationOrganizationFromStorage(item applicationOrganization, application model.Application, organization model.Organization) model.ApplicationOrganization {
 	return model.ApplicationOrganization{ID: item.ID, Application: application, Organization: organization,
 		ServicesIDs: item.ServicesIDs, IdentityProvidersSettings: item.IdentityProvidersSettings,
-		SupportedAuthTypes: item.SupportedAuthTypes, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+		SupportedAuthTypes: item.SupportedAuthTypes, LoginsSessionsSetting: item.LoginsSessionsSetting,
+		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
 func applicationTypeToStorage(item model.ApplicationType) applicationType {
@@ -257,6 +268,7 @@ func applicationTypesToStorage(items []model.ApplicationType) []applicationType 
 func applicationToStorage(item *model.Application) *application {
 	applicationTypes := applicationTypesToStorage(item.Types)
 
-	return &application{ID: item.ID, Name: item.Name, MultiTenant: item.MultiTenant, RequiresOwnUsers: item.RequiresOwnUsers, Admin: item.Admin,
-		MaxLoginSessionDuration: item.MaxLoginSessionDuration, Types: applicationTypes, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+	return &application{ID: item.ID, Name: item.Name, MultiTenant: item.MultiTenant,
+		SharedIdentities: item.SharedIdentities, Admin: item.Admin,
+		Types: applicationTypes, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }

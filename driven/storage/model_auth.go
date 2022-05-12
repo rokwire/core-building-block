@@ -1,6 +1,9 @@
 package storage
 
-import "time"
+import (
+	"core-building-block/core/model"
+	"time"
+)
 
 type loginSession struct {
 	ID string `bson:"_id"`
@@ -15,7 +18,8 @@ type loginSession struct {
 
 	Anonymous bool `bson:"anonymous"`
 
-	Identifier string `bson:"identifier"`
+	Identifier  string            `bson:"identifier"`
+	ExternalIDs map[string]string `bson:"external_ids"`
 
 	AccountAuthTypeID         *string `bson:"account_auth_type_id"`
 	AccountAuthTypeIdentifier *string `bson:"account_auth_type_identifier"`
@@ -31,9 +35,24 @@ type loginSession struct {
 	StateExpires *time.Time `bson:"state_expires,omitempty"`
 	MfaAttempts  *int       `bson:"mfa_attempts,omitempty"`
 
-	Expires      time.Time  `bson:"expires"`
-	ForceExpires *time.Time `bson:"force_expires,omitempty"`
+	DateRefreshed *time.Time `bson:"date_refreshed"`
 
 	DateUpdated *time.Time `bson:"date_updated"`
 	DateCreated time.Time  `bson:"date_created"`
+}
+
+type serviceAccount struct {
+	AccountID string `bson:"account_id"`
+	Name      string `bson:"name"`
+
+	AppID *string `bson:"app_id"`
+	OrgID *string `bson:"org_id"`
+
+	Permissions []model.Permission `bson:"permissions"`
+	FirstParty  bool               `bson:"first_party"`
+
+	Credentials []model.ServiceAccountCredential `bson:"credentials"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
 }

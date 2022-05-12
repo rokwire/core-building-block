@@ -2,6 +2,7 @@ package model
 
 import (
 	"core-building-block/utils"
+	"sort"
 	"time"
 
 	"github.com/rokwire/logging-library-go/logutils"
@@ -46,6 +47,7 @@ type Account struct {
 
 	MFATypes []MFAType
 
+	ExternalIDs map[string]string
 	Preferences map[string]interface{}
 	Profile     Profile //one account has one profile, one profile can be shared between many accounts
 
@@ -57,28 +59,31 @@ type Account struct {
 
 //GetAccountAuthTypeByID finds account auth type by id
 func (a Account) GetAccountAuthTypeByID(ID string) *AccountAuthType {
-	var result AccountAuthType
 	for _, aat := range a.AuthTypes {
 		if aat.ID == ID {
-			result = aat
+			aat.Account = a
+			return &aat
 		}
 	}
-	//assign account
-	result.Account = a
-	return &result
+	return nil
 }
 
 //GetAccountAuthType finds account auth type
 func (a Account) GetAccountAuthType(authTypeID string, identifier string) *AccountAuthType {
-	var result AccountAuthType
 	for _, aat := range a.AuthTypes {
 		if aat.AuthType.ID == authTypeID && aat.Identifier == identifier {
-			result = aat
+			aat.Account = a
+			return &aat
 		}
 	}
-	//assign account
-	result.Account = a
-	return &result
+	return nil
+}
+
+//SortAccountAuthTypes sorts account auth types by matching the given uid
+func (a Account) SortAccountAuthTypes(uid string) {
+	sort.Slice(a.AuthTypes, func(i, _ int) bool {
+		return a.AuthTypes[i].Identifier == uid
+	})
 }
 
 //GetPermissions returns all permissions granted to this account
@@ -250,7 +255,9 @@ type AccountAuthType struct {
 
 	Credential *Credential //this can be nil as the external auth types authenticates the users outside the system
 
-	Active bool
+	Active     bool
+	Unverified bool
+	Linked     bool
 
 	DateCreated time.Time
 	DateUpdated *time.Time
@@ -331,7 +338,8 @@ type Device struct {
 
 //ExternalSystemUser represents external system user
 type ExternalSystemUser struct {
-	Identifier string `json:"identifier" bson:"identifier"` //this is the identifier used in our system to map the user
+	Identifier  string            `json:"identifier" bson:"identifier"` //this is the identifier used in our system to map the user
+	ExternalIDs map[string]string `json:"external_ids" bson:"external_ids"`
 
 	//these are common fields which should be popuated by the external system
 	FirstName  string   `json:"first_name" bson:"first_name"`
@@ -348,6 +356,9 @@ type ExternalSystemUser struct {
 //Equals checks if two external system users are equals
 func (esu ExternalSystemUser) Equals(other ExternalSystemUser) bool {
 	if esu.Identifier != other.Identifier {
+		return false
+	}
+	if !utils.DeepEqual(esu.ExternalIDs, other.ExternalIDs) {
 		return false
 	}
 	if esu.FirstName != other.FirstName {

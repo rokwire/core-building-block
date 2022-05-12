@@ -55,10 +55,16 @@ func main() {
 	host := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_HOST", true, false)
 
 	// mongoDB adapter
-	mongoDBAuth := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_MONGO_AUTH", true, false)
+	mongoDBAuth := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_MONGO_AUTH", true, true)
 	mongoDBName := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_MONGO_DATABASE", true, false)
 	mongoTimeout := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_MONGO_TIMEOUT", false, false)
-	storageAdapter := storage.NewStorageAdapter(mongoDBAuth, mongoDBName, mongoTimeout, logger)
+	// webhook configs
+	githubWebhookToken := envLoader.GetAndLogEnvVar("GITHUB_WEBHOOK_TOKEN", false, false)
+	githubWebhookOrgnizationName := envLoader.GetAndLogEnvVar("GITHUB_WEBHOOK_ORG_NAME", false, false)
+	githubWebhookRepoName := envLoader.GetAndLogEnvVar("GITHUB_WEBHOOK_REPO_NAME", false, false)
+	githubWebhookConfigPath := envLoader.GetAndLogEnvVar("GITHUB_WEBHOOK_CONFIG_PATH", false, false)
+
+	storageAdapter := storage.NewStorageAdapter(mongoDBAuth, mongoDBName, mongoTimeout, githubWebhookToken, githubWebhookOrgnizationName, githubWebhookRepoName, githubWebhookConfigPath, logger)
 	err = storageAdapter.Start()
 	if err != nil {
 		logger.Fatalf("Cannot start the mongoDB adapter: %v", err)
@@ -131,8 +137,18 @@ func main() {
 	if err != nil {
 		logger.Fatalf("Error initializing auth: %v", err)
 	}
+
+	//system account init
+	systemInitSettings := map[string]string{
+		"app_type_id":   envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SYSTEM_APP_TYPE_IDENTIFIER", false, false),
+		"app_type_name": envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SYSTEM_APP_TYPE_NAME", false, false),
+		"api_key":       envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SYSTEM_API_KEY", false, true),
+		"email":         envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SYSTEM_ACCOUNT_EMAIL", false, false),
+		"password":      envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SYSTEM_ACCOUNT_PASSWORD", false, true),
+	}
+
 	//core
-	coreAPIs := core.NewCoreAPIs(env, Version, Build, storageAdapter, auth)
+	coreAPIs := core.NewCoreAPIs(env, Version, Build, storageAdapter, auth, systemInitSettings, githubWebhookToken, githubWebhookOrgnizationName, githubWebhookRepoName, logger)
 	coreAPIs.Start()
 
 	//web adapter

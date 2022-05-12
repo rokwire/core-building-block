@@ -1,6 +1,11 @@
 package storage
 
-import "core-building-block/core/model"
+import (
+	"core-building-block/core/model"
+
+	"github.com/rokwire/logging-library-go/errors"
+	"github.com/rokwire/logging-library-go/logutils"
+)
 
 //LoginSession
 func loginSessionFromStorage(item loginSession, authType model.AuthType, account *model.Account,
@@ -11,11 +16,16 @@ func loginSessionFromStorage(item loginSession, authType model.AuthType, account
 
 	anonymous := item.Anonymous
 	identifier := item.Identifier
+	externalIDs := item.ExternalIDs
 	var accountAuthType *model.AccountAuthType
-	if item.AccountAuthTypeID != nil {
+	if item.AccountAuthTypeID != nil && account != nil {
 		accountAuthType = account.GetAccountAuthTypeByID(*item.AccountAuthTypeID)
 	}
-	device := &model.Device{ID: item.ID}
+	var deviceID string
+	if item.DeviceID != nil {
+		deviceID = *item.DeviceID
+	}
+	device := &model.Device{ID: deviceID}
 	idAddress := item.IPAddress
 	accessToken := item.AccessToken
 	refreshTokens := item.RefreshTokens
@@ -31,17 +41,16 @@ func loginSessionFromStorage(item loginSession, authType model.AuthType, account
 		mfaAttempts = *item.MfaAttempts
 	}
 
-	expires := item.Expires
-	forceExpires := item.ForceExpires
+	dateRefreshed := item.DateRefreshed
 
 	dateUpdated := item.DateUpdated
 	dateCreated := item.DateCreated
 
 	return model.LoginSession{ID: id, AppOrg: appOrg, AuthType: authType, AppType: appType,
-		Anonymous: anonymous, Identifier: identifier, AccountAuthType: accountAuthType,
+		Anonymous: anonymous, Identifier: identifier, ExternalIDs: externalIDs, AccountAuthType: accountAuthType,
 		Device: device, IPAddress: idAddress, AccessToken: accessToken, RefreshTokens: refreshTokens, Params: params,
 		State: state, StateExpires: stateExpires, MfaAttempts: mfaAttempts,
-		Expires: expires, ForceExpires: forceExpires, DateUpdated: dateUpdated, DateCreated: dateCreated}
+		DateRefreshed: dateRefreshed, DateUpdated: dateUpdated, DateCreated: dateCreated}
 }
 
 func loginSessionToStorage(item model.LoginSession) *loginSession {
@@ -57,6 +66,7 @@ func loginSessionToStorage(item model.LoginSession) *loginSession {
 
 	anonymous := item.Anonymous
 	identifier := item.Identifier
+	externalIDs := item.ExternalIDs
 	var accountAuthTypeID *string
 	var accountAuthTypeIdentifier *string
 	if item.AccountAuthType != nil {
@@ -82,16 +92,64 @@ func loginSessionToStorage(item model.LoginSession) *loginSession {
 		mfaAttempts = &item.MfaAttempts
 	}
 
-	expires := item.Expires
-	forceExpires := item.ForceExpires
+	dateRefreshed := item.DateRefreshed
 
 	dateUpdated := item.DateUpdated
 	dateCreated := item.DateCreated
 
 	return &loginSession{ID: id, AppID: appID, OrgID: orgID, AuthTypeCode: authTypeCode,
 		AppTypeID: appTypeID, AppTypeIdentifier: appTypeIdentifier, Anonymous: anonymous,
-		Identifier: identifier, AccountAuthTypeID: accountAuthTypeID, AccountAuthTypeIdentifier: accountAuthTypeIdentifier,
+		Identifier: identifier, ExternalIDs: externalIDs, AccountAuthTypeID: accountAuthTypeID, AccountAuthTypeIdentifier: accountAuthTypeIdentifier,
 		DeviceID: deviceID, IPAddress: ipAddress, AccessToken: accessToken, RefreshTokens: refreshTokens,
 		Params: params, State: state, StateExpires: stateExpires, MfaAttempts: mfaAttempts,
-		Expires: expires, ForceExpires: forceExpires, DateUpdated: dateUpdated, DateCreated: dateCreated}
+		DateRefreshed: dateRefreshed, DateUpdated: dateUpdated, DateCreated: dateCreated}
+}
+
+//ServiceAccount
+func serviceAccountFromStorage(item serviceAccount, sa *Adapter) (*model.ServiceAccount, error) {
+	var err error
+	var application *model.Application
+	if item.AppID != nil {
+		application, err = sa.getCachedApplication(*item.AppID)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, &logutils.FieldArgs{"app_id": *item.AppID}, err)
+		}
+	}
+	var organization *model.Organization
+	if item.OrgID != nil {
+		organization, err = sa.getCachedOrganization(*item.OrgID)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, &logutils.FieldArgs{"org_id": *item.OrgID}, err)
+		}
+	}
+
+	return &model.ServiceAccount{AccountID: item.AccountID, Name: item.Name, Application: application, Organization: organization, Permissions: item.Permissions,
+		FirstParty: item.FirstParty, Credentials: item.Credentials, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}, nil
+}
+
+func serviceAccountListFromStorage(items []serviceAccount, sa *Adapter) []model.ServiceAccount {
+	accountList := make([]model.ServiceAccount, len(items))
+
+	for i, account := range items {
+		modelAccount, err := serviceAccountFromStorage(account, sa)
+		if err != nil {
+			sa.logger.Warn(err.Error())
+		}
+		accountList[i] = *modelAccount
+	}
+	return accountList
+}
+
+func serviceAccountToStorage(item model.ServiceAccount) *serviceAccount {
+	var appID *string
+	if item.Application != nil {
+		appID = &item.Application.ID
+	}
+	var orgID *string
+	if item.Organization != nil {
+		orgID = &item.Organization.ID
+	}
+
+	return &serviceAccount{AccountID: item.AccountID, Name: item.Name, AppID: appID, OrgID: orgID, Permissions: item.Permissions,
+		FirstParty: item.FirstParty, Credentials: item.Credentials, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }

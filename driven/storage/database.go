@@ -30,6 +30,7 @@ type database struct {
 	loginsSessions                  *collectionWrapper
 	globalConfig                    *collectionWrapper
 	serviceRegs                     *collectionWrapper
+	serviceAccounts                 *collectionWrapper
 	serviceAuthorizations           *collectionWrapper
 	organizations                   *collectionWrapper
 	applications                    *collectionWrapper
@@ -101,6 +102,12 @@ func (m *database) start() error {
 		return err
 	}
 
+	serviceAccounts := &collectionWrapper{database: m, coll: db.Collection("service_accounts")}
+	err = m.applyServiceAccountsChecks(serviceAccounts)
+	if err != nil {
+		return err
+	}
+
 	loginsSessions := &collectionWrapper{database: m, coll: db.Collection("logins_sessions")}
 	err = m.applyLoginsSessionsChecks(loginsSessions)
 	if err != nil {
@@ -137,20 +144,20 @@ func (m *database) start() error {
 		return err
 	}
 
-	applicationsOrganziations := &collectionWrapper{database: m, coll: db.Collection("applications_organizations")}
-	err = m.applyApplicationsOrganizationsChecks(applicationsOrganziations)
+	applicationsOrganizations := &collectionWrapper{database: m, coll: db.Collection("applications_organizations")}
+	err = m.applyApplicationsOrganizationsChecks(applicationsOrganizations)
 	if err != nil {
 		return err
 	}
 
-	applicationsOrganizationsGroups := &collectionWrapper{database: m, coll: db.Collection("applications_organziations_groups")}
+	applicationsOrganizationsGroups := &collectionWrapper{database: m, coll: db.Collection("applications_organizations_groups")}
 	err = m.applyApplicationsOrganizationsGroupsChecks(applicationsOrganizationsGroups)
 	if err != nil {
 		return err
 	}
 
 	applicationsOrganizationsRoles := &collectionWrapper{database: m, coll: db.Collection("applications_organizations_roles")}
-	err = m.applyApplicationsOrganziationsRolesChecks(applicationsOrganizationsRoles)
+	err = m.applyApplicationsOrganizationsRolesChecks(applicationsOrganizationsRoles)
 	if err != nil {
 		return err
 	}
@@ -180,10 +187,11 @@ func (m *database) start() error {
 	m.globalConfig = globalConfig
 	m.apiKeys = apiKeys
 	m.serviceRegs = serviceRegs
+	m.serviceAccounts = serviceAccounts
 	m.serviceAuthorizations = serviceAuthorizations
 	m.organizations = organizations
 	m.applications = applications
-	m.applicationsOrganizations = applicationsOrganziations
+	m.applicationsOrganizations = applicationsOrganizations
 	m.applicationConfigs = applicationConfigs
 	m.applicationsOrganizationsGroups = applicationsOrganizationsGroups
 	m.applicationsOrganizationsRoles = applicationsOrganizationsRoles
@@ -294,6 +302,12 @@ func (m *database) applyAPIKeysChecks(apiKeys *collectionWrapper) error {
 		return err
 	}
 
+	// Add key index
+	err = apiKeys.AddIndex(bson.D{primitive.E{Key: "key", Value: 1}}, true)
+	if err != nil {
+		return err
+	}
+
 	m.logger.Info("api keys check passed")
 	return nil
 }
@@ -315,6 +329,18 @@ func (m *database) applyServiceRegsChecks(serviceRegs *collectionWrapper) error 
 	}
 
 	m.logger.Info("service regs checks passed")
+	return nil
+}
+
+func (m *database) applyServiceAccountsChecks(serviceAccounts *collectionWrapper) error {
+	m.logger.Info("apply service accounts checks.....")
+
+	err := serviceAccounts.AddIndex(bson.D{primitive.E{Key: "account_id", Value: 1}, primitive.E{Key: "app_id", Value: 1}, primitive.E{Key: "org_id", Value: 1}}, true)
+	if err != nil {
+		return err
+	}
+
+	m.logger.Info("service accounts checks passed")
 	return nil
 }
 
@@ -340,7 +366,7 @@ func (m *database) applyOrganizationsChecks(organizations *collectionWrapper) er
 		return err
 	}
 
-	//TODO
+	//TODO:
 
 	//add applications index
 	err = organizations.AddIndex(bson.D{primitive.E{Key: "applications", Value: 1}}, false)
@@ -393,10 +419,16 @@ func (m *database) applyApplicationsOrganizationsChecks(applicationsOrganization
 }
 
 func (m *database) applyApplicationsOrganizationsGroupsChecks(applicationsOrganizationGroups *collectionWrapper) error {
-	m.logger.Info("apply applications organziations groups checks.....")
+	m.logger.Info("apply applications organizations groups checks.....")
+
+	//add compound unique index - name + app_org_id
+	err := applicationsOrganizationGroups.AddIndex(bson.D{primitive.E{Key: "name", Value: 1}, primitive.E{Key: "app_org_id", Value: 1}}, true)
+	if err != nil {
+		return err
+	}
 
 	//add application organization index
-	err := applicationsOrganizationGroups.AddIndex(bson.D{primitive.E{Key: "app_org_id", Value: 1}}, false)
+	err = applicationsOrganizationGroups.AddIndex(bson.D{primitive.E{Key: "app_org_id", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
@@ -423,17 +455,23 @@ func (m *database) applyApplicationsOrganizationsGroupsChecks(applicationsOrgani
 	return nil
 }
 
-func (m *database) applyApplicationsOrganziationsRolesChecks(applicationsOrganziationsRoles *collectionWrapper) error {
+func (m *database) applyApplicationsOrganizationsRolesChecks(applicationsOrganizationsRoles *collectionWrapper) error {
 	m.logger.Info("apply applications organizations roles checks.....")
 
+	//add compound unique index - name + app_org_id
+	err := applicationsOrganizationsRoles.AddIndex(bson.D{primitive.E{Key: "name", Value: 1}, primitive.E{Key: "app_org_id", Value: 1}}, true)
+	if err != nil {
+		return err
+	}
+
 	//add application organization index
-	err := applicationsOrganziationsRoles.AddIndex(bson.D{primitive.E{Key: "app_org_id", Value: 1}}, false)
+	err = applicationsOrganizationsRoles.AddIndex(bson.D{primitive.E{Key: "app_org_id", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
 
 	//add permissions index
-	err = applicationsOrganziationsRoles.AddIndex(bson.D{primitive.E{Key: "permissions._id", Value: 1}}, false)
+	err = applicationsOrganizationsRoles.AddIndex(bson.D{primitive.E{Key: "permissions._id", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
@@ -458,11 +496,14 @@ func (m *database) applyPermissionsChecks(permissions *collectionWrapper) error 
 func (m *database) applyApplicationConfigsChecks(applicationConfigs *collectionWrapper) error {
 	m.logger.Info("apply applications configs checks.....")
 
-	//add appconfigs index
-	err := applicationConfigs.AddIndex(bson.D{primitive.E{Key: "app_type.id", Value: 1}, primitive.E{Key: "app_org_id", Value: 1}, primitive.E{Key: "version.version_numbers.major", Value: -1}, primitive.E{Key: "version.version_numbers.minor", Value: -1}, primitive.E{Key: "version.version_numbers.patch", Value: -1}}, true)
-	if err != nil {
-		return err
-	}
+	//disable the problem index for now! Look at https://github.com/rokwire/core-building-block/issues/424
+	/*
+		//add appconfigs index
+		err := applicationConfigs.AddIndex(bson.D{primitive.E{Key: "app_type_id", Value: 1}, primitive.E{Key: "app_org_id", Value: 1}, primitive.E{Key: "version.version_numbers.major", Value: -1}, primitive.E{Key: "version.version_numbers.minor", Value: -1}, primitive.E{Key: "version.version_numbers.patch", Value: -1}}, true)
+		if err != nil {
+			return err
+		}
+	*/
 
 	m.logger.Info("applications configs checks passed")
 	return nil

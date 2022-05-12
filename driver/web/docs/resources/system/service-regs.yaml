@@ -1,5 +1,4 @@
 get:
-  deprecated: true
   tags:
   - System
   summary: Get service registrations
@@ -34,7 +33,6 @@ get:
     500:
       description: Internal error
 post:
-  deprecated: true
   tags:
   - System
   summary: Register service
@@ -68,7 +66,6 @@ post:
     500:
       description: Internal error
 put:
-  deprecated: true
   tags:
   - System
   summary: Update service registration
@@ -102,7 +99,6 @@ put:
     500:
       description: Internal error
 delete:
-  deprecated: true
   tags:
   - System
   summary: Deregister service

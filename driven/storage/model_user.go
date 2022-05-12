@@ -19,6 +19,7 @@ type account struct {
 
 	MFATypes []mfaType `bson:"mfa_types,omitempty"`
 
+	ExternalIDs map[string]string      `bson:"external_ids"`
 	Preferences map[string]interface{} `bson:"preferences"`
 	Profile     profile                `bson:"profile"`
 
@@ -50,6 +51,8 @@ type accountAuthType struct {
 	Params       map[string]interface{} `bson:"params"`
 	CredentialID *string                `bson:"credential_id"`
 	Active       bool                   `bson:"active"`
+	Unverified   bool                   `bson:"unverified"`
+	Linked       bool                   `bson:"linked"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`

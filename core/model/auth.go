@@ -1,9 +1,11 @@
 package model
 
 import (
+	"core-building-block/utils"
 	"crypto/rsa"
 	"encoding/base64"
 	"encoding/binary"
+	"fmt"
 	"time"
 
 	"github.com/rokwire/logging-library-go/errors"
@@ -32,6 +34,10 @@ const (
 	TypeAuthRefresh logutils.MessageDataType = "auth refresh"
 	//TypeRefreshToken refresh token type
 	TypeRefreshToken logutils.MessageDataType = "refresh token"
+	//TypeServiceAccount service account type
+	TypeServiceAccount logutils.MessageDataType = "service account"
+	//TypeServiceAccountCredential service account type
+	TypeServiceAccountCredential logutils.MessageDataType = "service account credential"
 	//TypeServiceReg service reg type
 	TypeServiceReg logutils.MessageDataType = "service reg"
 	//TypeServiceScope service scope type
@@ -64,7 +70,8 @@ type LoginSession struct {
 
 	Anonymous bool
 
-	Identifier      string           //it is the account id(anonymous id for anonymous logins)
+	Identifier      string //it is the account id(anonymous id for anonymous logins)
+	ExternalIDs     map[string]string
 	AccountAuthType *AccountAuthType //it is nil for anonymous logins
 
 	Device *Device
@@ -78,8 +85,7 @@ type LoginSession struct {
 	StateExpires *time.Time
 	MfaAttempts  int
 
-	Expires      time.Time
-	ForceExpires *time.Time
+	DateRefreshed *time.Time
 
 	DateUpdated *time.Time
 	DateCreated time.Time
@@ -87,8 +93,84 @@ type LoginSession struct {
 
 //IsExpired says if the sessions is expired
 func (ls LoginSession) IsExpired() bool {
+	loginsSessionsSetting := ls.AppOrg.LoginsSessionsSetting
+
+	inactivityExpirePolicy := loginsSessionsSetting.InactivityExpirePolicy
+	tslExpirePolicy := loginsSessionsSetting.TSLExpirePolicy
+	yearlyExpirePolicy := loginsSessionsSetting.YearlyExpirePolicy
+
+	inactivityActive := inactivityExpirePolicy.Active
+	tslActive := tslExpirePolicy.Active
+	yearlyActive := yearlyExpirePolicy.Active
+
+	//we must have at least one active expiration policy
+	if !inactivityActive && !tslActive && !yearlyActive {
+		return true //expired
+	}
+
+	expired := true //expired by default
+
+	if inactivityActive {
+		//check if satisfy the policy
+		expired = ls.isInactivityExpired(inactivityExpirePolicy)
+		if expired {
+			return true
+		}
+	}
+
+	if tslActive {
+		//check if satisfy the policy
+		expired = ls.isTSLExpired(tslExpirePolicy)
+		if expired {
+			return true
+		}
+	}
+
+	if yearlyActive {
+		//check if satisfy the policy
+		expired = ls.isYearlyExpired(yearlyExpirePolicy)
+		if expired {
+			return true
+		}
+	}
+
+	return expired
+}
+
+func (ls LoginSession) isInactivityExpired(policy InactivityExpirePolicy) bool {
+	lastRefreshedDate := ls.DateRefreshed
+	if lastRefreshedDate == nil {
+		lastRefreshedDate = &ls.DateCreated //not refreshed yet
+	}
+
+	expiresDate := lastRefreshedDate.Add(time.Duration(policy.InactivityPeriod) * time.Minute)
 	now := time.Now()
-	return ls.Expires.Before(now) || (ls.ForceExpires != nil && ls.ForceExpires.Before(now))
+
+	return expiresDate.Before(now)
+}
+
+func (ls LoginSession) isTSLExpired(policy TSLExpirePolicy) bool {
+	loginDate := ls.DateCreated
+	expiresDate := loginDate.Add(time.Duration(policy.TimeSinceLoginPeriod) * time.Minute)
+	now := time.Now()
+
+	return expiresDate.Before(now)
+}
+
+func (ls LoginSession) isYearlyExpired(policy YearlyExpirePolicy) bool {
+	createdDate := ls.DateCreated
+
+	now := time.Now().UTC()
+
+	min := policy.Min
+	hour := policy.Hour
+	day := policy.Day
+	month := policy.Month
+	year, _, _ := now.Date()
+
+	expiresDate := time.Date(year, time.Month(month), day, hour, min, 0, 0, time.UTC)
+
+	return createdDate.Before(expiresDate) && expiresDate.Before(now)
 }
 
 //CurrentRefreshToken returns the current refresh token (last element of RefreshTokens)
@@ -98,6 +180,24 @@ func (ls LoginSession) CurrentRefreshToken() string {
 		return ""
 	}
 	return ls.RefreshTokens[numTokens-1]
+}
+
+//LogInfo gives the information appropriate to be logged for the session
+func (ls LoginSession) LogInfo() string {
+	identifier := utils.GetLogValue(ls.Identifier, 3)
+	accessToken := utils.GetLogValue(ls.AccessToken, 10)
+
+	refreshTokens := make([]string, len(ls.RefreshTokens))
+	for i, rt := range ls.RefreshTokens {
+		refreshTokens[i] = utils.GetLogValue(rt, 10)
+	}
+
+	state := utils.GetLogValue(ls.State, 5)
+
+	return fmt.Sprintf("[id:%s, anonymous:%t, identifier:%s, at:%s, rts:%s, state:%s, "+
+		"state expires:%s,mfa attempts:%d, date refreshed:%s, date updated:%s, date created:%s]",
+		ls.ID, ls.Anonymous, identifier, accessToken, refreshTokens, state,
+		ls.StateExpires, ls.MfaAttempts, ls.DateRefreshed, ls.DateUpdated, ls.DateCreated)
 }
 
 //APIKey represents an API key entity
@@ -169,7 +269,7 @@ type AuthCreds struct {
 }
 
 //AuthRefresh represents refresh token info used by auth
-//TODO remove
+//TODO: remove
 type AuthRefresh struct {
 	PreviousToken string                 `bson:"previous_token"`
 	CurrentToken  string                 `bson:"current_token" validate:"required"`
@@ -200,6 +300,60 @@ type ServiceScope struct {
 	Scope       *authorization.Scope `json:"scope" bson:"scope"`
 	Required    bool                 `json:"required" bson:"required"`
 	Explanation string               `json:"explanation,omitempty" bson:"explanation,omitempty"`
+}
+
+//ServiceAccount represents a service account entity
+type ServiceAccount struct {
+	AccountID string
+	Name      string
+
+	Application  *Application
+	Organization *Organization
+
+	Permissions []Permission
+	FirstParty  bool
+
+	Credentials []ServiceAccountCredential
+
+	DateCreated time.Time
+	DateUpdated *time.Time
+}
+
+//GetPermissionNames returns all names of permissions granted to this account
+func (s ServiceAccount) GetPermissionNames() []string {
+	permissions := make([]string, len(s.Permissions))
+	for i, permission := range s.Permissions {
+		permissions[i] = permission.Name
+	}
+	return permissions
+}
+
+//AppOrgPair represents an appID, orgID pair entity
+type AppOrgPair struct {
+	AppID *string
+	OrgID *string
+}
+
+//ServiceAccountCredential represents a service account credential entity
+type ServiceAccountCredential struct {
+	ID   string `bson:"id"`
+	Name string `bson:"name"`
+	Type string `bson:"type"`
+
+	Params  map[string]interface{} `bson:"params,omitempty"`
+	Secrets map[string]interface{} `bson:"secrets,omitempty"`
+
+	DateCreated time.Time `bson:"date_created"`
+}
+
+// ServiceAccountTokenRequest represents a service account token request entity
+type ServiceAccountTokenRequest struct {
+	AccountID string  `json:"account_id"`
+	AppID     *string `json:"app_id"`
+	OrgID     *string `json:"org_id"`
+	AuthType  string  `json:"auth_type"`
+
+	Creds *interface{} `json:"creds,omitempty"`
 }
 
 //ServiceAuthorization represents service authorization entity
