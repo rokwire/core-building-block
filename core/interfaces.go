@@ -10,6 +10,7 @@ import (
 //Default exposes APIs for the driver adapters
 type Default interface {
 	CreateAppConfigFromWebhook(enviromentString string, orgName string, appName string, appType string, versionNumbers model.VersionNumbers, apiKey *string, data map[string]interface{}) (*model.ApplicationConfig, error)
+	UpdateCachedWebhookConfigs() error
 }
 
 //Services exposes APIs for the driver adapters
@@ -183,6 +184,7 @@ type Storage interface {
 	FindApplicationType(id string) (*model.ApplicationType, error)
 
 	FindWebhookConfig() (*model.WebhookConfig, error)
+	UpdateCachedWebhookConfigs() error
 
 	FindAppConfigs(appTypeIdentifier string, appOrgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error)
 	FindAppConfigByVersion(appTypeIdentifier string, appOrgID *string, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error)

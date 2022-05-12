@@ -2,6 +2,7 @@ package core
 
 import (
 	"core-building-block/core/model"
+	"core-building-block/utils"
 
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logutils"
@@ -40,6 +41,8 @@ func (app *application) createAppConfigFromWebhook(enviromentString string, orgN
 					if err != nil {
 						return nil, err
 					}
+				} else {
+					return nil, errors.Newf("app config with app identifier %s already exists", appTypeIdentifier).SetStatus(utils.ErrorStatusAlreadyExists)
 				}
 
 				return appConfig, nil
@@ -48,4 +51,8 @@ func (app *application) createAppConfigFromWebhook(enviromentString string, orgN
 	}
 
 	return nil, nil
+}
+
+func (app *application) updateCachedWebhookConfigs() error {
+	return app.storage.UpdateCachedWebhookConfigs()
 }

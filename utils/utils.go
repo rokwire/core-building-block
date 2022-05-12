@@ -10,6 +10,8 @@ import (
 	"math/rand"
 	"net/http"
 	"reflect"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/rokwire/logging-library-go/logs"
@@ -154,4 +156,49 @@ func GetPrintableString(v *string) string {
 		return *v
 	}
 	return "nil"
+}
+
+// ParseWebhookFilePath parses the commited file path in the webhook request
+func ParseWebhookFilePath(path string) (valid *bool, appType *string, envString *string, orgName *string, appName *string, major *int, minor *int, patch *int) {
+	dirs := strings.Split(path, "/")
+	ok := false
+	valid = &ok
+	// appType := ""
+	if len(dirs) == 4 || len(dirs) == 5 {
+		// "/env/org_name/applications_name/config.xxx.json"
+		envString, orgName, appName = &dirs[0], &dirs[1], &dirs[2]
+		if len(dirs) == 5 {
+			// "/env/org_name/applications_name/app_type/config.xxx.json"
+			appType = &dirs[3]
+		} else {
+			tmp := ""
+			appType = &tmp
+		}
+
+		fileName := strings.Split(dirs[len(dirs)-1], ".")
+		// var versionNumbers *model.VersionNumbers
+		if len(fileName) == 5 {
+			tmp, err := strconv.Atoi(fileName[1])
+			if err != nil {
+				return
+			}
+			major = &tmp
+
+			tmp, err = strconv.Atoi(fileName[2])
+			if err != nil {
+				return
+			}
+			minor = &tmp
+
+			tmp, err = strconv.Atoi(fileName[3])
+			if err != nil {
+				return
+			}
+			patch = &tmp
+		}
+	}
+
+	*valid = true
+
+	return
 }

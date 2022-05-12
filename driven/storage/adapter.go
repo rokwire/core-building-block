@@ -585,6 +585,11 @@ func (sa *Adapter) getCachedApplicationOrganizations() ([]model.ApplicationOrgan
 	return appOrgList, err
 }
 
+// UpdateCachedWebhookConfigs updates the webhook configs cache
+func (sa *Adapter) UpdateCachedWebhookConfigs() error {
+	return sa.cacheWebhookConfigs()
+}
+
 // TODO: could hava a loadFromGithub function for all the client getContents functions
 func (sa *Adapter) loadWebhookConfigs() (*model.WebhookConfig, error) {
 	ctx := context.Background()

@@ -148,7 +148,7 @@ func main() {
 	}
 
 	//core
-	coreAPIs := core.NewCoreAPIs(env, Version, Build, storageAdapter, auth, systemInitSettings, githubWebhookToken, githubWebhookOrgnizationName, githubWebhookRepoName, logger)
+	coreAPIs := core.NewCoreAPIs(env, Version, Build, storageAdapter, auth, systemInitSettings, githubWebhookToken, githubWebhookOrgnizationName, githubWebhookRepoName, githubWebhookConfigPath, logger)
 	coreAPIs.Start()
 
 	//web adapter

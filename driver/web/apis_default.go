@@ -5,12 +5,11 @@ import (
 	"core-building-block/core"
 	"core-building-block/core/model"
 	Def "core-building-block/driver/web/docs/gen"
+	"core-building-block/utils"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"strconv"
-	"strings"
 
 	"github.com/google/go-github/v44/github"
 	"github.com/rokwire/core-auth-library-go/tokenauth"
@@ -90,37 +89,24 @@ func (h DefaultApisHandler) handleWebhookConfigChange(l *logs.Log, r *http.Reque
 			}
 			fmt.Printf("%v", contentString)
 
-			// If both s and sep are empty, Split returns an empty slice.
-			dirs := strings.Split(path, "/")
-			appType := ""
-			if len(dirs) == 4 || len(dirs) == 5 {
-				// "/env/org_name/applications_name/config.xxx.json"
-				envString, orgName, appName := dirs[0], dirs[1], dirs[2]
-				if len(dirs) == 5 {
-					// "/env/org_name/applications_name/app_type/config.xxx.json"
-					appType = dirs[3]
+			if path == h.coreAPIs.GithubWebhookConfigPath {
+				// update webhook configs
+				err = h.coreAPIs.Default.UpdateCachedWebhookConfigs()
+				if err != nil {
+					return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeWebhookConfig, nil, err, http.StatusInternalServerError, true)
 				}
+			} else {
+				// update actual app config files
 
-				fileName := strings.Split(dirs[len(dirs)-1], ".")
-				if len(fileName) == 5 {
-					major, err := strconv.Atoi(fileName[1])
-					if err != nil {
-						continue
-					}
-					minor, err := strconv.Atoi(fileName[2])
-					if err != nil {
-						continue
-					}
-					patch, err := strconv.Atoi(fileName[3])
-					if err != nil {
-						continue
-					}
-					versionNumber := model.VersionNumbers{Major: major, Minor: minor, Patch: patch}
+				// If both s and sep are empty, Split returns an empty slice.
+				valid, appType, envString, orgName, appName, major, minor, patch := utils.ParseWebhookFilePath(path)
+				if valid != nil && *valid == true {
+					versionNumber := model.VersionNumbers{Major: *major, Minor: *minor, Patch: *patch}
 
 					data := make(map[string]interface{})
 					json.Unmarshal([]byte(contentString), &data)
 
-					h.coreAPIs.Default.CreateAppConfigFromWebhook(envString, orgName, appName, appType, versionNumber, nil, data)
+					h.coreAPIs.Default.CreateAppConfigFromWebhook(*envString, *orgName, *appName, *appType, versionNumber, nil, data)
 				}
 			}
 		}

@@ -1212,6 +1212,20 @@ func (_m *Storage) UpdateAuthTypes(ID string, code string, description string, i
 	return r0
 }
 
+// UpdateCachedWebhookConfigs provides a mock function with given fields:
+func (_m *Storage) UpdateCachedWebhookConfigs() error {
+	ret := _m.Called()
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func() error); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // UpdateOrganization provides a mock function with given fields: ID, name, requestType, organizationDomains
 func (_m *Storage) UpdateOrganization(ID string, name string, requestType string, organizationDomains []string) error {
 	ret := _m.Called(ID, name, requestType, organizationDomains)

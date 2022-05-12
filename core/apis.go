@@ -26,6 +26,7 @@ type APIs struct {
 	GithubWebhookToken           string
 	GithubWebhookOrgnizationName string
 	GithubWebhookRepoName        string
+	GithubWebhookConfigPath      string
 
 	Auth auth.APIs //expose to the drivers auth
 
@@ -213,7 +214,7 @@ func (c *APIs) storeSystemData() error {
 }
 
 //NewCoreAPIs creates new CoreAPIs
-func NewCoreAPIs(env string, version string, build string, storage Storage, auth auth.APIs, systemInitSettings map[string]string, githubWebhookToken string, githubWebhookOrgnizationName string, githubWebhookRepoName string, logger *logs.Logger) *APIs {
+func NewCoreAPIs(env string, version string, build string, storage Storage, auth auth.APIs, systemInitSettings map[string]string, githubWebhookToken string, githubWebhookOrgnizationName string, githubWebhookRepoName string, githubWebhookConfigPath string, logger *logs.Logger) *APIs {
 	//add application instance
 	listeners := []ApplicationListener{}
 	application := application{env: env, version: version, build: build, storage: storage, listeners: listeners, auth: auth}
@@ -230,7 +231,7 @@ func NewCoreAPIs(env string, version string, build string, storage Storage, auth
 	coreAPIs := APIs{Default: defaultImpl, Services: servicesImpl, Administration: administrationImpl, Encryption: encryptionImpl,
 		BBs: bbsImpl, System: systemImpl, Auth: auth, app: &application, systemAppTypeIdentifier: systemInitSettings["app_type_id"],
 		systemAppTypeName: systemInitSettings["app_type_name"], systemAPIKey: systemInitSettings["api_key"],
-		systemAccountEmail: systemInitSettings["email"], systemAccountPassword: systemInitSettings["password"], GithubWebhookToken: githubWebhookToken, GithubWebhookOrgnizationName: githubWebhookOrgnizationName, GithubWebhookRepoName: githubWebhookRepoName, logger: logger}
+		systemAccountEmail: systemInitSettings["email"], systemAccountPassword: systemInitSettings["password"], GithubWebhookToken: githubWebhookToken, GithubWebhookOrgnizationName: githubWebhookOrgnizationName, GithubWebhookRepoName: githubWebhookRepoName, GithubWebhookConfigPath: githubWebhookConfigPath, logger: logger}
 
 	return &coreAPIs
 }
@@ -244,6 +245,10 @@ type defaultImpl struct {
 
 func (s *defaultImpl) CreateAppConfigFromWebhook(enviromentString string, orgName string, appName string, appType string, versionNumbers model.VersionNumbers, apiKey *string, data map[string]interface{}) (*model.ApplicationConfig, error) {
 	return s.app.createAppConfigFromWebhook(enviromentString, orgName, appName, appType, versionNumbers, apiKey, data)
+}
+
+func (s *defaultImpl) UpdateCachedWebhookConfigs() error {
+	return s.app.updateCachedWebhookConfigs()
 }
 
 //servicesImpl
