@@ -927,9 +927,7 @@ func (a *Auth) findAccountAuthTypeByID(account *model.Account, accountAuthTypeID
 	if err != nil || authType == nil {
 		return nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, logutils.StringArgs(accountAuthType.AuthType.ID), err)
 	}
-	if authType == nil {
 
-	}
 	accountAuthType.AuthType = *authType
 
 	if accountAuthType.Credential != nil {
