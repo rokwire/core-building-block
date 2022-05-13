@@ -61,8 +61,8 @@ func (auth *Auth) Start() error {
 }
 
 //NewAuth creates new auth handler
-func NewAuth(coreAPIs *core.APIs, serviceID string, authService *authservice.AuthService, logger *logs.Logger) (*Auth, error) {
-	servicesAuth, err := newServicesAuth(coreAPIs, authService, serviceID, logger)
+func NewAuth(coreAPIs *core.APIs, serviceID string, serviceRegManager *authservice.ServiceRegManager, logger *logs.Logger) (*Auth, error) {
+	servicesAuth, err := newServicesAuth(coreAPIs, serviceRegManager, serviceID, logger)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, "services auth", nil, err)
 	}
@@ -71,7 +71,7 @@ func NewAuth(coreAPIs *core.APIs, serviceID string, authService *authservice.Aut
 		return nil, errors.WrapErrorAction(logutils.ActionStart, "services auth handlers", nil, err)
 	}
 
-	adminAuth, err := newAdminAuth(coreAPIs, authService, logger)
+	adminAuth, err := newAdminAuth(coreAPIs, serviceRegManager, logger)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionStart, "admin auth", nil, err)
 	}
@@ -82,7 +82,7 @@ func NewAuth(coreAPIs *core.APIs, serviceID string, authService *authservice.Aut
 
 	encAuth := newEncAuth(coreAPIs, logger)
 
-	bbsAuth, err := newBBsAuth(coreAPIs, authService, logger)
+	bbsAuth, err := newBBsAuth(coreAPIs, serviceRegManager, logger)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionStart, "bbs auth", nil, err)
 	}
@@ -91,7 +91,7 @@ func NewAuth(coreAPIs *core.APIs, serviceID string, authService *authservice.Aut
 		return nil, errors.WrapErrorAction(logutils.ActionStart, "bbs auth handlers", nil, err)
 	}
 
-	tpsAuth, err := newTPsAuth(coreAPIs, authService, logger)
+	tpsAuth, err := newTPsAuth(coreAPIs, serviceRegManager, logger)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionStart, "tps auth", nil, err)
 	}
@@ -100,7 +100,7 @@ func NewAuth(coreAPIs *core.APIs, serviceID string, authService *authservice.Aut
 		return nil, errors.WrapErrorAction(logutils.ActionStart, "tps auth handlers", nil, err)
 	}
 
-	systemAuth, err := newSystemAuth(coreAPIs, authService, logger)
+	systemAuth, err := newSystemAuth(coreAPIs, serviceRegManager, logger)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionStart, "auth handler", nil, err)
 	}
@@ -172,10 +172,10 @@ func (auth *ServicesAuth) getTokenAuth() *tokenauth.TokenAuth {
 	return auth.tokenAuth
 }
 
-func newServicesAuth(coreAPIs *core.APIs, authService *authservice.AuthService, serviceID string, logger *logs.Logger) (*ServicesAuth, error) {
+func newServicesAuth(coreAPIs *core.APIs, serviceRegManager *authservice.ServiceRegManager, serviceID string, logger *logs.Logger) (*ServicesAuth, error) {
 	servicesScopeAuth := authorization.NewCasbinScopeAuthorization("driver/web/authorization_services_policy.csv", serviceID)
 
-	servicesTokenAuth, err := tokenauth.NewTokenAuth(true, authService, nil, servicesScopeAuth)
+	servicesTokenAuth, err := tokenauth.NewTokenAuth(true, serviceRegManager, nil, servicesScopeAuth)
 
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionStart, "token auth for servicesAuth", nil, err)
@@ -213,9 +213,9 @@ func (auth *AdminAuth) getTokenAuth() *tokenauth.TokenAuth {
 	return auth.tokenAuth
 }
 
-func newAdminAuth(coreAPIs *core.APIs, authService *authservice.AuthService, logger *logs.Logger) (*AdminAuth, error) {
+func newAdminAuth(coreAPIs *core.APIs, serviceRegManager *authservice.ServiceRegManager, logger *logs.Logger) (*AdminAuth, error) {
 	adminPermissionAuth := authorization.NewCasbinStringAuthorization("driver/web/authorization_admin_policy.csv")
-	adminTokenAuth, err := tokenauth.NewTokenAuth(true, authService, adminPermissionAuth, nil)
+	adminTokenAuth, err := tokenauth.NewTokenAuth(true, serviceRegManager, adminPermissionAuth, nil)
 
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionStart, "token auth for adminAuth", nil, err)
@@ -273,9 +273,9 @@ func (auth *BBsAuth) getTokenAuth() *tokenauth.TokenAuth {
 	return auth.tokenAuth
 }
 
-func newBBsAuth(coreAPIs *core.APIs, authService *authservice.AuthService, logger *logs.Logger) (*BBsAuth, error) {
+func newBBsAuth(coreAPIs *core.APIs, serviceRegManager *authservice.ServiceRegManager, logger *logs.Logger) (*BBsAuth, error) {
 	bbsPermissionAuth := authorization.NewCasbinStringAuthorization("driver/web/authorization_bbs_policy.csv")
-	bbsTokenAuth, err := tokenauth.NewTokenAuth(true, authService, bbsPermissionAuth, nil)
+	bbsTokenAuth, err := tokenauth.NewTokenAuth(true, serviceRegManager, bbsPermissionAuth, nil)
 
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionStart, "token auth for bbsAuth", nil, err)
@@ -317,9 +317,9 @@ func (auth *TPsAuth) getTokenAuth() *tokenauth.TokenAuth {
 	return auth.tokenAuth
 }
 
-func newTPsAuth(coreAPIs *core.APIs, authService *authservice.AuthService, logger *logs.Logger) (*TPsAuth, error) {
+func newTPsAuth(coreAPIs *core.APIs, serviceRegManager *authservice.ServiceRegManager, logger *logs.Logger) (*TPsAuth, error) {
 	tpsPermissionAuth := authorization.NewCasbinStringAuthorization("driver/web/authorization_tps_policy.csv")
-	tpsTokenAuth, err := tokenauth.NewTokenAuth(true, authService, tpsPermissionAuth, nil)
+	tpsTokenAuth, err := tokenauth.NewTokenAuth(true, serviceRegManager, tpsPermissionAuth, nil)
 
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionStart, "token auth for tpsAuth", nil, err)
@@ -361,9 +361,9 @@ func (auth *SystemAuth) getTokenAuth() *tokenauth.TokenAuth {
 	return auth.tokenAuth
 }
 
-func newSystemAuth(coreAPIs *core.APIs, authService *authservice.AuthService, logger *logs.Logger) (*SystemAuth, error) {
+func newSystemAuth(coreAPIs *core.APIs, serviceRegManager *authservice.ServiceRegManager, logger *logs.Logger) (*SystemAuth, error) {
 	systemPermissionAuth := authorization.NewCasbinStringAuthorization("driver/web/authorization_system_policy.csv")
-	systemTokenAuth, err := tokenauth.NewTokenAuth(true, authService, systemPermissionAuth, nil)
+	systemTokenAuth, err := tokenauth.NewTokenAuth(true, serviceRegManager, systemPermissionAuth, nil)
 
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionStart, "token auth for systemAuth", nil, err)
