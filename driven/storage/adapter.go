@@ -664,7 +664,6 @@ func (sa *Adapter) getCachedWebhookConfig() (*model.WebhookConfig, error) {
 		return nil, errors.ErrorAction(logutils.ActionLoadCache, model.TypeWebhookConfig, nil)
 	}
 	if item != nil {
-		fmt.Printf("type: %T", item)
 		webhookConfig, ok = item.(*model.WebhookConfig)
 		if !ok {
 			return nil, errors.ErrorAction(logutils.ActionCast, model.TypeWebhookConfig, nil)

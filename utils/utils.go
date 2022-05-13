@@ -159,7 +159,7 @@ func GetPrintableString(v *string) string {
 }
 
 // ParseWebhookFilePath parses the commited file path in the webhook request
-func ParseWebhookFilePath(path string) (valid *bool, appType *string, envString *string, orgName *string, appName *string, major *int, minor *int, patch *int) {
+func ParseWebhookFilePath(path string) (valid *bool, appType string, envString *string, orgName *string, appName *string, major int, minor int, patch int) {
 	dirs := strings.Split(path, "/")
 	ok := false
 	valid = &ok
@@ -169,10 +169,9 @@ func ParseWebhookFilePath(path string) (valid *bool, appType *string, envString 
 		envString, orgName, appName = &dirs[0], &dirs[1], &dirs[2]
 		if len(dirs) == 5 {
 			// "/env/org_name/applications_name/app_type/config.xxx.json"
-			appType = &dirs[3]
+			appType = dirs[3]
 		} else {
-			tmp := ""
-			appType = &tmp
+			appType = ""
 		}
 
 		fileName := strings.Split(dirs[len(dirs)-1], ".")
@@ -182,19 +181,19 @@ func ParseWebhookFilePath(path string) (valid *bool, appType *string, envString 
 			if err != nil {
 				return
 			}
-			major = &tmp
+			major = tmp
 
 			tmp, err = strconv.Atoi(fileName[2])
 			if err != nil {
 				return
 			}
-			minor = &tmp
+			minor = tmp
 
 			tmp, err = strconv.Atoi(fileName[3])
 			if err != nil {
 				return
 			}
-			patch = &tmp
+			patch = tmp
 		}
 	}
 

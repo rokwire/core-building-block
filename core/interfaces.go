@@ -9,7 +9,7 @@ import (
 
 //Default exposes APIs for the driver adapters
 type Default interface {
-	CreateAppConfigFromWebhook(enviromentString string, orgName string, appName string, appType string, versionNumbers model.VersionNumbers, apiKey *string, data map[string]interface{}) (*model.ApplicationConfig, error)
+	UpdateAppConfigFromWebhook(enviromentString string, orgName string, appName string, appType string, versionNumbers model.VersionNumbers, apiKey *string, isDelete bool, data map[string]interface{}) (*model.ApplicationConfig, error)
 	UpdateCachedWebhookConfigs() error
 }
 

@@ -243,8 +243,8 @@ type defaultImpl struct {
 	app *application
 }
 
-func (s *defaultImpl) CreateAppConfigFromWebhook(enviromentString string, orgName string, appName string, appType string, versionNumbers model.VersionNumbers, apiKey *string, data map[string]interface{}) (*model.ApplicationConfig, error) {
-	return s.app.createAppConfigFromWebhook(enviromentString, orgName, appName, appType, versionNumbers, apiKey, data)
+func (s *defaultImpl) UpdateAppConfigFromWebhook(enviromentString string, orgName string, appName string, appType string, versionNumbers model.VersionNumbers, apiKey *string, isDelete bool, data map[string]interface{}) (*model.ApplicationConfig, error) {
+	return s.app.updateAppConfigFromWebhook(enviromentString, orgName, appName, appType, versionNumbers, apiKey, isDelete, data)
 }
 
 func (s *defaultImpl) UpdateCachedWebhookConfigs() error {

@@ -2,14 +2,12 @@ package core
 
 import (
 	"core-building-block/core/model"
-	"core-building-block/utils"
 
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logutils"
 )
 
-func (app *application) createAppConfigFromWebhook(enviromentString string, orgName string, appName string, appType string, versionNumbers model.VersionNumbers, apiKey *string, data map[string]interface{}) (*model.ApplicationConfig, error) {
-
+func (app *application) updateAppConfigFromWebhook(enviromentString string, orgName string, appName string, appType string, versionNumbers model.VersionNumbers, apiKey *string, isDelete bool, data map[string]interface{}) (*model.ApplicationConfig, error) {
 	webhookConfig, err := app.storage.FindWebhookConfig()
 	if err != nil || webhookConfig == nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeWebhookConfig, logutils.StringArgs(orgName), err)
@@ -24,25 +22,38 @@ func (app *application) createAppConfigFromWebhook(enviromentString string, orgN
 	if webhookConfig.Applications != nil {
 		if appMap, ok := webhookConfig.Applications[appName]; ok {
 			if appTypeIdentifier, ok := appMap[appType]; ok {
-				// TODO:
+				applicationType, err := app.storage.FindApplicationType(appTypeIdentifier)
+				if err != nil {
+					return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationType, logutils.StringArgs(appTypeIdentifier), err)
+				}
+				if applicationType == nil {
+					return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationType, logutils.StringArgs(appTypeIdentifier))
+				}
+
 				appConfig, _ := app.serGetAppConfig(appTypeIdentifier, orgID, versionNumbers, apiKey)
 				if appConfig == nil {
-					// insert current new appConfig
-					// appTypeIdentifier = "com.rokmetro.safercommunity"
-					applicationType, err := app.storage.FindApplicationType(appTypeIdentifier)
-					if err != nil {
-						return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationType, logutils.StringArgs(appTypeIdentifier), err)
-					}
-					if applicationType == nil {
-						return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationType, logutils.StringArgs(appTypeIdentifier))
+					if isDelete {
+						return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationConfig, logutils.StringArgs(appTypeIdentifier))
 					}
 
+					// create new appConfig from webhook request
 					appConfig, err = app.sysCreateAppConfig(applicationType.ID, orgID, data, versionNumbers)
 					if err != nil {
 						return nil, err
 					}
 				} else {
-					return nil, errors.Newf("app config with app identifier %s already exists", appTypeIdentifier).SetStatus(utils.ErrorStatusAlreadyExists)
+					if isDelete {
+						err = app.sysDeleteAppConfig(appConfig.ID)
+						if err != nil {
+							return nil, err
+						}
+					} else {
+						// update
+						err = app.sysUpdateAppConfig(appConfig.ID, applicationType.ID, orgID, data, versionNumbers)
+						if err != nil {
+							return nil, err
+						}
+					}
 				}
 
 				return appConfig, nil
