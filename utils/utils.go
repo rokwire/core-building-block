@@ -139,19 +139,3 @@ func Contains(list []string, value string) bool {
 	}
 	return false
 }
-
-//StringOrNil returns a pointer to the input string, but returns nil if input matches nilCase
-func StringOrNil(v string, nilCase string) *string {
-	if v == nilCase {
-		return nil
-	}
-	return &v
-}
-
-//GetPrintableString returns the string content of a pointer, and defaultVal if pointer is nil
-func GetPrintableString(v *string, defaultVal string) string {
-	if v != nil {
-		return *v
-	}
-	return defaultVal
-}

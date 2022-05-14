@@ -1669,22 +1669,22 @@ func (a *Auth) deleteAccount(context storage.TransactionContext, account model.A
 	return nil
 }
 
-func (a *Auth) constructServiceAccount(accountID string, name string, appID *string, orgID *string, permissions []string, firstParty bool) (*model.ServiceAccount, error) {
+func (a *Auth) constructServiceAccount(accountID string, name string, appID string, orgID string, permissions []string, firstParty bool) (*model.ServiceAccount, error) {
 	permissionList, err := a.storage.FindPermissionsByName(permissions)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypePermission, nil, err)
 	}
 
 	var application *model.Application
-	if appID != nil {
-		application, err = a.storage.FindApplication(*appID)
+	if appID != model.All {
+		application, err = a.storage.FindApplication(appID)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
 		}
 	}
 	var organization *model.Organization
-	if orgID != nil {
-		organization, err = a.storage.FindOrganization(*orgID)
+	if orgID != model.All {
+		organization, err = a.storage.FindOrganization(orgID)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
 		}
@@ -1728,11 +1728,11 @@ func (a *Auth) checkServiceAccountCreds(r *sigauth.Request, accountID *string, f
 
 func (a *Auth) buildAccessTokenForServiceAccount(account model.ServiceAccount, authType string) (string, *model.AppOrgPair, error) {
 	permissions := account.GetPermissionNames()
-	appID := "all"
+	appID := model.All
 	if account.Application != nil {
 		appID = account.Application.ID
 	}
-	orgID := "all"
+	orgID := model.All
 	if account.Organization != nil {
 		orgID = account.Organization.ID
 	}
@@ -1742,7 +1742,7 @@ func (a *Auth) buildAccessTokenForServiceAccount(account model.ServiceAccount, a
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
 	}
-	return accessToken, &model.AppOrgPair{AppID: utils.StringOrNil(appID, "all"), OrgID: utils.StringOrNil(orgID, "all")}, nil
+	return accessToken, &model.AppOrgPair{AppID: appID, OrgID: orgID}, nil
 }
 
 func (a *Auth) registerAuthType(name string, auth authType) error {
@@ -2353,7 +2353,7 @@ func (l *LocalServiceRegLoaderImpl) LoadServices() ([]authservice.ServiceReg, er
 
 //NewLocalServiceRegLoader creates and configures a new LocalServiceRegLoaderImpl instance
 func NewLocalServiceRegLoader(storage Storage) *LocalServiceRegLoaderImpl {
-	subscriptions := authservice.NewServiceRegSubscriptions([]string{"all"})
+	subscriptions := authservice.NewServiceRegSubscriptions([]string{model.All})
 	return &LocalServiceRegLoaderImpl{storage: storage, ServiceRegSubscriptions: subscriptions}
 }
 

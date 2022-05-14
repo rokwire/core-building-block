@@ -3285,7 +3285,7 @@ paths:
         - name: app_id
           in: query
           description: Application ID of the service account instance
-          required: false
+          required: true
           style: form
           explode: false
           schema:
@@ -3293,7 +3293,7 @@ paths:
         - name: org_id
           in: query
           description: Organization ID of the service account instance
-          required: false
+          required: true
           style: form
           explode: false
           schema:
@@ -3333,7 +3333,7 @@ paths:
         - name: app_id
           in: query
           description: Application ID of the service account instance
-          required: false
+          required: true
           style: form
           explode: false
           schema:
@@ -3341,7 +3341,7 @@ paths:
         - name: org_id
           in: query
           description: Organization ID of the service account instance
-          required: false
+          required: true
           style: form
           explode: false
           schema:
@@ -3397,7 +3397,7 @@ paths:
         - name: app_id
           in: query
           description: Application ID of the service account instance
-          required: false
+          required: true
           style: form
           explode: false
           schema:
@@ -3405,7 +3405,7 @@ paths:
         - name: org_id
           in: query
           description: Organization ID of the service account instance
-          required: false
+          required: true
           style: form
           explode: false
           schema:
@@ -4891,10 +4891,8 @@ components:
           type: string
         app_id:
           type: string
-          nullable: true
         org_id:
           type: string
-          nullable: true
         permissions:
           type: array
           items:
@@ -4913,10 +4911,8 @@ components:
       properties:
         app_id:
           type: string
-          nullable: true
         org_id:
           type: string
-          nullable: true
     ServiceAccountCredential:
       required:
         - name
@@ -5856,10 +5852,8 @@ components:
           type: string
         app_id:
           nullable: true
-          type: string
         org_id:
           nullable: true
-          type: string
         auth_type:
           type: string
           enum:
@@ -5890,10 +5884,8 @@ components:
       type: object
       properties:
         app_id:
-          nullable: true
           type: string
         org_id:
-          nullable: true
           type: string
         token:
           $ref: '#/components/schemas/_shared_res_RokwireToken'
@@ -6412,10 +6404,8 @@ components:
           type: string
         app_id:
           type: string
-          nullable: true
         org_id:
           type: string
-          nullable: true
         permissions:
           type: array
           items:

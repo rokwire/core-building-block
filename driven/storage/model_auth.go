@@ -45,8 +45,8 @@ type serviceAccount struct {
 	AccountID string `bson:"account_id"`
 	Name      string `bson:"name"`
 
-	AppID *string `bson:"app_id"`
-	OrgID *string `bson:"org_id"`
+	AppID string `bson:"app_id"`
+	OrgID string `bson:"org_id"`
 
 	Permissions []model.Permission `bson:"permissions"`
 	FirstParty  bool               `bson:"first_party"`
