@@ -41,19 +41,32 @@ func (app *application) updateAppConfigFromWebhook(enviromentString string, orgN
 					if err != nil {
 						return nil, err
 					}
-				} else {
-					if isDelete {
-						err = app.sysDeleteAppConfig(appConfig.ID)
-						if err != nil {
-							return nil, err
-						}
-					} else {
-						// update
-						err = app.sysUpdateAppConfig(appConfig.ID, applicationType.ID, orgID, data, versionNumbers)
-						if err != nil {
-							return nil, err
-						}
+
+					return appConfig, nil
+				}
+
+				if isDelete {
+					err = app.sysDeleteAppConfig(appConfig.ID)
+					if err != nil {
+						return nil, err
 					}
+				}
+
+				// update
+				if appConfig.Version.VersionNumbers == versionNumbers {
+					err = app.sysUpdateAppConfig(appConfig.ID, applicationType.ID, orgID, data, versionNumbers)
+					if err != nil {
+						return nil, err
+					}
+
+					return appConfig, nil
+				}
+
+				// return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationConfig, logutils.StringArgs(appTypeIdentifier))
+				// create appConfig with a new version from webhook request
+				appConfig, err = app.sysCreateAppConfig(applicationType.ID, orgID, data, versionNumbers)
+				if err != nil {
+					return nil, err
 				}
 
 				return appConfig, nil

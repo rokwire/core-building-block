@@ -52,8 +52,8 @@ type Adapter struct {
 	cachedApplicationConfigs *syncmap.Map
 	applicationConfigsLock   *sync.RWMutex
 
-	cachedWebhookConfigs *syncmap.Map
-	webhookConfigsLock   *sync.RWMutex
+	cachedWebhookConfig *model.WebhookConfig
+	webhookConfigsLock  *sync.RWMutex
 }
 
 //Start starts the storage
@@ -641,15 +641,14 @@ func (sa *Adapter) setCachedWebhookConfigs(webhookConfigs *model.WebhookConfig) 
 	sa.webhookConfigsLock.Lock()
 	defer sa.webhookConfigsLock.Unlock()
 
-	sa.cachedWebhookConfigs = &syncmap.Map{}
+	// sa.cachedWebhookConfigs = &syncmap.Map{}
 	validate := validator.New()
 
 	err := validate.Struct(webhookConfigs)
 	if err != nil {
 		sa.logger.Errorf("failed to validate and cache webhook config: %s", err.Error())
 	} else {
-		// TODO: what should we put as the key here? Enviroment strings?
-		sa.cachedWebhookConfigs.Store("dev", webhookConfigs)
+		sa.cachedWebhookConfig = webhookConfigs
 	}
 }
 
@@ -657,20 +656,19 @@ func (sa *Adapter) getCachedWebhookConfig() (*model.WebhookConfig, error) {
 	sa.webhookConfigsLock.Lock()
 	defer sa.webhookConfigsLock.Unlock()
 
-	var webhookConfig *model.WebhookConfig
-	// TODO: do we need the 'env' key here?
-	item, ok := sa.cachedWebhookConfigs.Load("dev")
-	if !ok {
-		return nil, errors.ErrorAction(logutils.ActionLoadCache, model.TypeWebhookConfig, nil)
-	}
-	if item != nil {
-		webhookConfig, ok = item.(*model.WebhookConfig)
-		if !ok {
-			return nil, errors.ErrorAction(logutils.ActionCast, model.TypeWebhookConfig, nil)
-		}
-	}
+	// var webhookConfig *model.WebhookConfig
+	// item, ok := sa.cachedWebhookConfigs.Load("dev")
+	// if !ok {
+	// 	return nil, errors.ErrorAction(logutils.ActionLoadCache, model.TypeWebhookConfig, nil)
+	// }
+	// if item != nil {
+	// 	webhookConfig, ok = item.(*model.WebhookConfig)
+	// 	if !ok {
+	// 		return nil, errors.ErrorAction(logutils.ActionCast, model.TypeWebhookConfig, nil)
+	// 	}
+	// }
 
-	return webhookConfig, nil
+	return sa.cachedWebhookConfig, nil
 }
 
 func (sa *Adapter) cacheApplicationConfigs() error {
@@ -3481,7 +3479,7 @@ func NewStorageAdapter(mongoDBAuth string, mongoDBName string, mongoTimeout stri
 	cachedApplicationConfigs := &syncmap.Map{}
 	applicationConfigsLock := &sync.RWMutex{}
 
-	cachedWebhookConfigs := &syncmap.Map{}
+	cachedWebhookConfigs := &model.WebhookConfig{}
 	webhookConfigsLock := &sync.RWMutex{}
 
 	db := &database{mongoDBAuth: mongoDBAuth, mongoDBName: mongoDBName, mongoTimeout: timeout, logger: logger}
@@ -3491,7 +3489,7 @@ func NewStorageAdapter(mongoDBAuth string, mongoDBName string, mongoTimeout stri
 		cachedAuthTypes: cachedAuthTypes, authTypesLock: authTypesLock,
 		cachedApplicationsOrganizations: cachedApplicationsOrganizations, applicationsOrganizationsLock: applicationsOrganizationsLock,
 		cachedApplicationConfigs: cachedApplicationConfigs, applicationConfigsLock: applicationConfigsLock,
-		cachedWebhookConfigs: cachedWebhookConfigs, webhookConfigsLock: webhookConfigsLock,
+		cachedWebhookConfig: cachedWebhookConfigs, webhookConfigsLock: webhookConfigsLock,
 		githubWebhookToken: githubWebhookToken, githubWebhookOrgnizationName: githubWebhookOrgnizationName, githubWebhookRepoName: githubWebhookRepoName, githubWebhookConfigPath: githubWebhookConfigPath,
 	}
 }

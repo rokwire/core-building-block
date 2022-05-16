@@ -7,7 +7,6 @@ import (
 	Def "core-building-block/driver/web/docs/gen"
 	"core-building-block/utils"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 
@@ -69,8 +68,6 @@ func (h DefaultApisHandler) handleWebhookConfigChange(l *logs.Log, r *http.Reque
 	client := github.NewClient(tc)
 
 	for _, commit := range commits {
-
-		// TODO: also need to handle commit.Modified/Deleted
 		addedFiles := commit.Added
 		if len(addedFiles) > 0 {
 			// return l.HttpResponseErrorData(logutils.StatusInvalid, model.TypeGithubCommitAdded, nil, nil, http.StatusBadRequest, false)
@@ -78,13 +75,14 @@ func (h DefaultApisHandler) handleWebhookConfigChange(l *logs.Log, r *http.Reque
 			for _, path := range addedFiles {
 				fileContent, _, _, err := client.Repositories.GetContents(ctx, h.coreAPIs.GithubWebhookOrgnizationName, h.coreAPIs.GithubWebhookRepoName, path, &github.RepositoryContentGetOptions{Ref: "develop"})
 				if err != nil || fileContent == nil {
-					fmt.Printf("Repositories.GetContents returned error: %v", err)
+					// fmt.Printf("Repositories.GetContents returned error: %v", err)
 					continue
 				}
 
 				contentString, err := fileContent.GetContent()
 				if err != nil {
-					fmt.Printf("fileContent.GetContent returned error: %v", err)
+					// fmt.Printf("fileContent.GetContent returned error: %v", err)
+					continue
 				}
 
 				if path == h.coreAPIs.GithubWebhookConfigPath {
@@ -116,13 +114,14 @@ func (h DefaultApisHandler) handleWebhookConfigChange(l *logs.Log, r *http.Reque
 			for _, path := range modifiedFiles {
 				fileContent, _, _, err := client.Repositories.GetContents(ctx, h.coreAPIs.GithubWebhookOrgnizationName, h.coreAPIs.GithubWebhookRepoName, path, &github.RepositoryContentGetOptions{Ref: "develop"})
 				if err != nil || fileContent == nil {
-					fmt.Printf("Repositories.GetContents returned error: %v", err)
+					// fmt.Printf("Repositories.GetContents returned error: %v", err)
 					continue
 				}
 
 				contentString, err := fileContent.GetContent()
 				if err != nil {
-					fmt.Printf("fileContent.GetContent returned error: %v", err)
+					continue
+					// fmt.Printf("fileContent.GetContent returned error: %v", err)
 				}
 
 				if path == h.coreAPIs.GithubWebhookConfigPath {

@@ -264,22 +264,42 @@ func (app *application) sysCreateAppConfig(appTypeID string, orgID *string, data
 		}
 	}
 
+	// TODO: create the app config without checking if it's supported
+	var version *model.Version
 	for _, supportedVersion := range applicationType.Versions {
 		if versionNumbers == supportedVersion.VersionNumbers {
-			now := time.Now()
-			appConfigID, _ := uuid.NewUUID()
-			applicationConfig := model.ApplicationConfig{ID: appConfigID.String(), Version: supportedVersion, ApplicationType: *applicationType, AppOrg: appOrg, Data: data, DateCreated: now}
+			version = &supportedVersion
+			break
+			// now := time.Now()
+			// appConfigID, _ := uuid.NewUUID()
+			// applicationConfig := model.ApplicationConfig{ID: appConfigID.String(), Version: supportedVersion, ApplicationType: *applicationType, AppOrg: appOrg, Data: data, DateCreated: now}
 
-			insertedConfig, err := app.storage.InsertAppConfig(applicationConfig)
-			if err != nil {
-				return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeApplicationConfig, nil, err)
-			}
+			// insertedConfig, err := app.storage.InsertAppConfig(applicationConfig)
+			// if err != nil {
+			// 	return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeApplicationConfig, nil, err)
+			// }
 
-			return insertedConfig, nil
+			// return insertedConfig, nil
 		}
 	}
 
-	return nil, errors.ErrorData(logutils.StatusInvalid, model.TypeApplicationConfigsVersion, logutils.StringArgs(versionNumbers.String()+" for app_type_id: "+appTypeID))
+	now := time.Now()
+	appConfigID, _ := uuid.NewUUID()
+
+	if version == nil {
+		version = &model.Version{VersionNumbers: versionNumbers, DateCreated: now}
+	}
+
+	applicationConfig := model.ApplicationConfig{ID: appConfigID.String(), Version: *version, ApplicationType: *applicationType, AppOrg: appOrg, Data: data, DateCreated: now}
+
+	insertedConfig, err := app.storage.InsertAppConfig(applicationConfig)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeApplicationConfig, nil, err)
+	}
+
+	return insertedConfig, nil
+
+	// return nil, errors.ErrorData(logutils.StatusInvalid, model.TypeApplicationConfigsVersion, logutils.StringArgs(versionNumbers.String()+" for app_type_id: "+appTypeID))
 }
 
 func (app *application) sysUpdateAppConfig(id string, appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) error {
@@ -303,19 +323,25 @@ func (app *application) sysUpdateAppConfig(id string, appTypeID string, orgID *s
 		}
 	}
 
+	var version *model.Version
 	for _, supportedVersion := range applicationType.Versions {
 		if versionNumbers == supportedVersion.VersionNumbers {
-
-			err := app.storage.UpdateAppConfig(id, *applicationType, appOrg, supportedVersion, data)
-			if err != nil {
-				return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeApplicationConfig, nil, err)
-			}
-
-			return nil
+			version = &supportedVersion
+			break
 		}
 	}
+	if version == nil {
+		version = &model.Version{VersionNumbers: versionNumbers}
+	}
 
-	return errors.ErrorData(logutils.StatusInvalid, model.TypeApplicationConfigsVersion, logutils.StringArgs(versionNumbers.String()+" for app_type_id: "+appTypeID))
+	err = app.storage.UpdateAppConfig(id, *applicationType, appOrg, *version, data)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeApplicationConfig, nil, err)
+	}
+
+	return nil
+
+	// return errors.ErrorData(logutils.StatusInvalid, model.TypeApplicationConfigsVersion, logutils.StringArgs(versionNumbers.String()+" for app_type_id: "+appTypeID))
 }
 
 func (app *application) sysDeleteAppConfig(id string) error {
