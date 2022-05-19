@@ -5,7 +5,7 @@
   description: |
     Gets applications
   
-    **Auth:** Requires auth token with `app_admin` permission
+    **Auth:** Requires system access token with `get_applications` or `all_applications` permission
   security:
     - bearerAuth: []
   responses:
@@ -30,7 +30,7 @@
   description: |
     Creates application
 
-    **Auth:** Requires auth token with `app_admin` permission
+    **Auth:** Requires system access token with `update_applications` or `all_applications` permission
   security:
     - bearerAuth: []
   requestBody:

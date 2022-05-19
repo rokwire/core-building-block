@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Prepare the project to become open source [#129](https://github.com/rokwire/core-building-block/issues/129)
 - Retrieve all service account tokens at once [#459](https://github.com/rokwire/core-building-block/issues/459)
 
+### Fixed
+- Clean up authorization policies [#499](https://github.com/rokwire/core-building-block/issues/499)
+
 ## [1.23.0] - 2022-04-26
 ### Added
 - Email/phone registration should populate email/phone in profile [#431](https://github.com/rokwire/core-building-block/issues/431)
