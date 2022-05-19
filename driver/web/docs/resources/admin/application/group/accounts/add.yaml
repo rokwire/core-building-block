@@ -5,7 +5,7 @@ put:
   description: |
     Add accounts 
   
-    **Auth:** Requires auth token with `all_admin_core` permission
+    **Auth:** Requires admin access token with 'update_account-auth-groups' or `update_account-authorization` permission
   security:
     - bearerAuth: []
   requestBody:

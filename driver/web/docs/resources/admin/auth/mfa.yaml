@@ -4,6 +4,8 @@ post:
   summary: MFA
   description: |
     Verify multi-factor authentication credentials to complete login
+
+    **Auth:** Requires API key
   parameters:
     - name: state
       in: query

@@ -4,6 +4,8 @@ get:
   summary: Get application sessions
   description: |
     Get application sessions
+
+    **Auth:** Requires admin access token with `get_login-sessions` or `all_login-sessions` permission
   security:
     - bearerAuth: []
   parameters:

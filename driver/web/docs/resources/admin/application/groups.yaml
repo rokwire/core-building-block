@@ -4,6 +4,8 @@
   summary: Get application groups
   description: |
     Gets application groups
+        
+    **Auth:** Requires admin access token with `get_auth-groups` or `all_auth-groups` permission
   security:
     - bearerAuth: []
   responses:
@@ -28,7 +30,7 @@
   description: |
    Create application group
 
-    **Auth:** Requires auth token with 'all_admin_core'
+    **Auth:** Requires admin access token with `update_auth-groups` or `all_auth-groups` permission
     - bearerAuth: []
   security:
     - bearerAuth: []

@@ -5,7 +5,7 @@ get:
   description: |
     Get application permissions
 
-    **Auth:** Requires user auth token
+    **Auth:** Requires admin access token with 'get_permissions' permission
   security:
     - bearerAuth: []
   responses:

@@ -4,6 +4,8 @@
   summary: Get applications for an organization
   description: |
     Gets applications for an organization
+
+    **Auth:** Requires admin access token
   security:
     - bearerAuth: []
   responses:
