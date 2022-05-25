@@ -5,7 +5,7 @@ get:
   description: |
     Returns service registration records
 
-    **Auth:** Requires system access token with `get_service-regs` or `all_service-regs` permission
+    **Auth:** Requires system access token with `get_service-regs`, `update_service-regs`, `delete_service-regs`, or `all_service-regs` permission
   security:
     - bearerAuth: []
   parameters:

@@ -5,7 +5,7 @@ get:
   description: |
     Returns API key record
 
-    **Auth:** Requires system access token with `get_api-keys` or `all_api-keys` permission
+    **Auth:** Requires system access token with `get_api-keys`, `update_api-keys`, `delete_api-keys`, or `all_api-keys` permission
   security:
     - bearerAuth: []
   parameters:

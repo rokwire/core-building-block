@@ -5,7 +5,7 @@ get:
   description: |
     Gets organization by ID
 
-    **Auth:** Requires system access token with `get_organizations` or `all_organizations` permission
+    **Auth:** Requires system access token with `get_organizations`, `update_organizations`, or `all_organizations` permission
   security:
     - bearerAuth: []
   parameters:

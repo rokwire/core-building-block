@@ -5,7 +5,13 @@
   description: |
     Gets application groups
         
-    **Auth:** Requires admin access token with `get_auth-groups` or `all_auth-groups` permission
+    **Auth:** Requires admin access token with at least one of the following permissions:
+    - `get_auth-groups`
+    - `update_auth-groups`
+    - `delete_auth-groups`
+    - `all_auth-groups`
+    - `update_account-auth-groups`
+    - `update_account-authorization`
   security:
     - bearerAuth: []
   responses:

@@ -5,7 +5,7 @@
   description: |
     Gets applications
   
-    **Auth:** Requires system access token with `get_applications` or `all_applications` permission
+    **Auth:** Requires system access token with `get_applications`, `udpate_applications`, or `all_applications` permission
   security:
     - bearerAuth: []
   responses:

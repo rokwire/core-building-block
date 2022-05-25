@@ -5,7 +5,13 @@
   description: |
     Gets application roles
 
-    **Auth:** Requires admin access token with 'get_auth-roles' or `all_auth-roles` permission
+    **Auth:** Requires admin access token with at least one of the following permissions: 
+    - 'get_auth-roles'
+    - 'update_auth-roles'
+    - 'delete_auth-roles'
+    - `all_auth-roles`
+    - `update_account-auth-roles`
+    - `update_account-authorization`
   security:
     - bearerAuth: []
   responses:

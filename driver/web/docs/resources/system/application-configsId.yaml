@@ -3,9 +3,9 @@ get:
   - System
   summary: Reads app configs by ID
   description: |
-    Get a app configs for the provided ID
+    Get app configs for the provided ID
     
-    **Auth:** Requires system access token with `get_app-configs` or `all_app-configs` permission
+    **Auth:** Requires system access token with `get_app-configs`, `update_app-configs`, `delete_app-configs`, or `all_app-configs` permission
   security:
     - bearerAuth: []
   parameters:

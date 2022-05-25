@@ -5,7 +5,7 @@
   description: |
     Gets auth types
 
-    **Auth:** Requires system access token with `get_auth-types` or `all_auth-types` permission
+    **Auth:** Requires system access token with `get_auth-types`, `update_auth-types`, or `all_auth-types` permission
   security:
     - bearerAuth: []
   responses:

@@ -5,7 +5,7 @@ get:
   description: |
     Get application sessions
 
-    **Auth:** Requires admin access token with `get_login-sessions` or `all_login-sessions` permission
+    **Auth:** Requires admin access token with `get_login-sessions`, `update_login-sessions`, `delete_login-sessions`, or `all_login-sessions` permission
   security:
     - bearerAuth: []
   parameters:

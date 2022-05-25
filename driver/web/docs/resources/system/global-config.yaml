@@ -5,7 +5,7 @@ get:
   description: |
     Gives the system global config
 
-    **Auth:** Requires system access token with `get_global-config` or `all_global-config` permission
+    **Auth:** Requires system access token with `get_global-config`, `update_global-config`, or `all_global-config` permission
   security:
     - bearerAuth: []
   responses:
