@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Clean up authorization policies [#499](https://github.com/rokwire/core-building-block/issues/499)
+- Prevent admins from using service account management endpoints [#500](https://github.com/rokwire/core-building-block/issues/500)
 
 ## [1.23.0] - 2022-04-26
 ### Added
