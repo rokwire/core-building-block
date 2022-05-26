@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Clean up authorization policies [#499](https://github.com/rokwire/core-building-block/issues/499)
 - Prevent admins from using service account management endpoints [#500](https://github.com/rokwire/core-building-block/issues/500)
 
+### Changed
+- Update SECURITY.md [#504](https://github.com/rokwire/core-building-block/issues/504)
+
 ## [1.23.0] - 2022-04-26
 ### Added
 - Email/phone registration should populate email/phone in profile [#431](https://github.com/rokwire/core-building-block/issues/431)
