@@ -1,11 +1,11 @@
 get:
   tags:
   - System
-  summary: Get application
+  summary: Get application by ID
   description: |
-    Gets application
+    Gets application by provided ID
 
-    **Auth:** Requires auth token with `app_admin` permission
+    **Auth:** Requires system access token with `get_applications` or `all_applications` permission
   security:
     - bearerAuth: []
   parameters:

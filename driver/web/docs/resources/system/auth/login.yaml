@@ -4,6 +4,8 @@ post:
   summary: Login
   description: |
     Login using credentials to retrieve access token, refresh token, and user data
+    
+    **Auth:** Requires API key
   requestBody:
     description: |
       User credential details and parameters
