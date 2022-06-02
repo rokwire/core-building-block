@@ -1,9 +1,11 @@
 post:
   tags:
-  - System
+  - Default
   summary: Update app configs from github webhooks
   description: |
     Handle github webhook requests
+
+    **Auth:** Requires GitHub webhook serect token
   requestBody:
     description: App configs file updated on github
     content:

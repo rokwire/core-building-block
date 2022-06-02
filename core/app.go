@@ -16,6 +16,7 @@ type application struct {
 	build   string
 
 	storage Storage
+	github  GitHub
 
 	listeners []ApplicationListener
 

@@ -9,8 +9,7 @@ import (
 
 //Default exposes APIs for the driver adapters
 type Default interface {
-	UpdateAppConfigFromWebhook(enviromentString string, orgName string, appName string, appType string, versionNumbers model.VersionNumbers, apiKey *string, isDelete bool, data map[string]interface{}) (*model.ApplicationConfig, error)
-	UpdateCachedWebhookConfigs() error
+	ProcessWebhookRequest([]model.Commit) error
 }
 
 //Services exposes APIs for the driver adapters
@@ -183,9 +182,6 @@ type Storage interface {
 
 	FindApplicationType(id string) (*model.ApplicationType, error)
 
-	FindWebhookConfig() (*model.WebhookConfig, error)
-	UpdateCachedWebhookConfigs() error
-
 	FindAppConfigs(appTypeIdentifier string, appOrgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error)
 	FindAppConfigByVersion(appTypeIdentifier string, appOrgID *string, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error)
 	FindAppConfigByID(ID string) (*model.ApplicationConfig, error)
@@ -198,6 +194,14 @@ type Storage interface {
 	InsertApplicationOrganization(context storage.TransactionContext, applicationOrganization model.ApplicationOrganization) (*model.ApplicationOrganization, error)
 
 	InsertAPIKey(context storage.TransactionContext, apiKey model.APIKey) (*model.APIKey, error)
+}
+
+//GitHub is used by core to load from and send data to GitHub
+type GitHub interface {
+	GetContents(path string) (string, bool, error)
+
+	FindWebhookConfig() (*model.WebhookConfig, error)
+	UpdateCachedWebhookConfigs() error
 }
 
 //StorageListener listenes for change data storage events

@@ -4,13 +4,11 @@ import (
 	"context"
 	"core-building-block/core/model"
 	"core-building-block/utils"
-	"encoding/json"
 	"fmt"
 	"strconv"
 	"sync"
 	"time"
 
-	"github.com/google/go-github/v44/github"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
@@ -18,7 +16,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"golang.org/x/oauth2"
 	"golang.org/x/sync/syncmap"
 	"gopkg.in/go-playground/validator.v9"
 )
@@ -26,11 +23,6 @@ import (
 //Adapter implements the Storage interface
 type Adapter struct {
 	db *database
-
-	githubWebhookToken           string
-	githubWebhookOrgnizationName string
-	githubWebhookRepoName        string
-	githubWebhookConfigPath      string
 
 	logger *logs.Logger
 
@@ -51,9 +43,6 @@ type Adapter struct {
 
 	cachedApplicationConfigs *syncmap.Map
 	applicationConfigsLock   *sync.RWMutex
-
-	cachedWebhookConfig *model.WebhookConfig
-	webhookConfigsLock  *sync.RWMutex
 }
 
 //Start starts the storage
@@ -102,12 +91,6 @@ func (sa *Adapter) Start() error {
 	err = sa.cacheApplicationConfigs()
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionCache, model.TypeApplicationConfig, nil, err)
-	}
-
-	// cache webhook config
-	err = sa.cacheWebhookConfigs()
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionCache, model.TypeWebhookConfig, nil, err)
 	}
 
 	return err
@@ -583,92 +566,6 @@ func (sa *Adapter) getCachedApplicationOrganizations() ([]model.ApplicationOrgan
 	})
 
 	return appOrgList, err
-}
-
-// UpdateCachedWebhookConfigs updates the webhook configs cache
-func (sa *Adapter) UpdateCachedWebhookConfigs() error {
-	return sa.cacheWebhookConfigs()
-}
-
-// TODO: could hava a loadFromGithub function for all the client getContents functions
-func (sa *Adapter) loadWebhookConfigs() (*model.WebhookConfig, error) {
-	ctx := context.Background()
-	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: sa.githubWebhookToken},
-	)
-	tc := oauth2.NewClient(ctx, ts)
-
-	client := github.NewClient(tc)
-
-	fileContent, _, _, err := client.Repositories.GetContents(ctx, sa.githubWebhookOrgnizationName, sa.githubWebhookRepoName, sa.githubWebhookConfigPath, &github.RepositoryContentGetOptions{Ref: "develop"})
-	if err != nil || fileContent == nil {
-		fmt.Printf("Repositories.GetContents returned error: %v", err)
-		// continue
-	}
-
-	contentString, err := fileContent.GetContent()
-	if err != nil {
-		fmt.Printf("fileContent.GetContent returned error: %v", err)
-	}
-
-	var webhookConfig model.WebhookConfig
-	err = json.Unmarshal([]byte(contentString), &webhookConfig)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, model.TypeWebhookConfig, nil, err)
-	}
-
-	return &webhookConfig, nil
-}
-
-func (sa *Adapter) cacheWebhookConfigs() error {
-	sa.logger.Info("cacheWebhookConfigs..")
-
-	webhookConfigs, err := sa.loadWebhookConfigs()
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionFind, model.TypeWebhookConfig, nil, err)
-	}
-
-	sa.setCachedWebhookConfigs(webhookConfigs)
-
-	return nil
-}
-
-func (sa *Adapter) setCachedWebhookConfigs(webhookConfigs *model.WebhookConfig) {
-	if webhookConfigs == nil {
-		return
-	}
-
-	sa.webhookConfigsLock.Lock()
-	defer sa.webhookConfigsLock.Unlock()
-
-	// sa.cachedWebhookConfigs = &syncmap.Map{}
-	validate := validator.New()
-
-	err := validate.Struct(webhookConfigs)
-	if err != nil {
-		sa.logger.Errorf("failed to validate and cache webhook config: %s", err.Error())
-	} else {
-		sa.cachedWebhookConfig = webhookConfigs
-	}
-}
-
-func (sa *Adapter) getCachedWebhookConfig() (*model.WebhookConfig, error) {
-	sa.webhookConfigsLock.Lock()
-	defer sa.webhookConfigsLock.Unlock()
-
-	// var webhookConfig *model.WebhookConfig
-	// item, ok := sa.cachedWebhookConfigs.Load("dev")
-	// if !ok {
-	// 	return nil, errors.ErrorAction(logutils.ActionLoadCache, model.TypeWebhookConfig, nil)
-	// }
-	// if item != nil {
-	// 	webhookConfig, ok = item.(*model.WebhookConfig)
-	// 	if !ok {
-	// 		return nil, errors.ErrorAction(logutils.ActionCast, model.TypeWebhookConfig, nil)
-	// 	}
-	// }
-
-	return sa.cachedWebhookConfig, nil
 }
 
 func (sa *Adapter) cacheApplicationConfigs() error {
@@ -2986,11 +2883,6 @@ func (sa *Adapter) loadAppConfigs() ([]model.ApplicationConfig, error) {
 	return result, nil
 }
 
-// FindWebhookConfig finds webhook configs
-func (sa *Adapter) FindWebhookConfig() (*model.WebhookConfig, error) {
-	return sa.getCachedWebhookConfig()
-}
-
 //FindAppConfigs finds appconfigs
 func (sa *Adapter) FindAppConfigs(appTypeID string, appOrgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error) {
 	return sa.getCachedApplicationConfigByAppTypeIDAndVersion(appTypeID, appOrgID, versionNumbers)
@@ -3453,7 +3345,7 @@ func (sa *Adapter) abortTransaction(sessionContext mongo.SessionContext) {
 }
 
 //NewStorageAdapter creates a new storage adapter instance
-func NewStorageAdapter(mongoDBAuth string, mongoDBName string, mongoTimeout string, githubWebhookToken string, githubWebhookOrgnizationName string, githubWebhookRepoName string, githubWebhookConfigPath string, logger *logs.Logger) *Adapter {
+func NewStorageAdapter(mongoDBAuth string, mongoDBName string, mongoTimeout string, logger *logs.Logger) *Adapter {
 	timeoutInt, err := strconv.Atoi(mongoTimeout)
 	if err != nil {
 		logger.Warn("Setting default Mongo timeout - 500")
@@ -3479,9 +3371,6 @@ func NewStorageAdapter(mongoDBAuth string, mongoDBName string, mongoTimeout stri
 	cachedApplicationConfigs := &syncmap.Map{}
 	applicationConfigsLock := &sync.RWMutex{}
 
-	cachedWebhookConfigs := &model.WebhookConfig{}
-	webhookConfigsLock := &sync.RWMutex{}
-
 	db := &database{mongoDBAuth: mongoDBAuth, mongoDBName: mongoDBName, mongoTimeout: timeout, logger: logger}
 	return &Adapter{db: db, logger: logger, cachedServiceRegs: cachedServiceRegs, serviceRegsLock: serviceRegsLock,
 		cachedOrganizations: cachedOrganizations, organizationsLock: organizationsLock,
@@ -3489,8 +3378,6 @@ func NewStorageAdapter(mongoDBAuth string, mongoDBName string, mongoTimeout stri
 		cachedAuthTypes: cachedAuthTypes, authTypesLock: authTypesLock,
 		cachedApplicationsOrganizations: cachedApplicationsOrganizations, applicationsOrganizationsLock: applicationsOrganizationsLock,
 		cachedApplicationConfigs: cachedApplicationConfigs, applicationConfigsLock: applicationConfigsLock,
-		cachedWebhookConfig: cachedWebhookConfigs, webhookConfigsLock: webhookConfigsLock,
-		githubWebhookToken: githubWebhookToken, githubWebhookOrgnizationName: githubWebhookOrgnizationName, githubWebhookRepoName: githubWebhookRepoName, githubWebhookConfigPath: githubWebhookConfigPath,
 	}
 }
 

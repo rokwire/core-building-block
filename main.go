@@ -4,6 +4,7 @@ import (
 	"core-building-block/core"
 	"core-building-block/core/auth"
 	"core-building-block/driven/emailer"
+	"core-building-block/driven/github"
 	"core-building-block/driven/profilebb"
 	"core-building-block/driven/storage"
 	"core-building-block/driver/web"
@@ -59,12 +60,18 @@ func main() {
 	mongoDBName := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_MONGO_DATABASE", true, false)
 	mongoTimeout := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_MONGO_TIMEOUT", false, false)
 	// webhook configs
-	githubWebhookToken := envLoader.GetAndLogEnvVar("GITHUB_WEBHOOK_TOKEN", false, false)
-	githubWebhookOrgnizationName := envLoader.GetAndLogEnvVar("GITHUB_WEBHOOK_ORG_NAME", false, false)
-	githubWebhookRepoName := envLoader.GetAndLogEnvVar("GITHUB_WEBHOOK_REPO_NAME", false, false)
+	githubToken := envLoader.GetAndLogEnvVar("GITHUB_TOKEN", false, false)
+	githubOrgnizationName := envLoader.GetAndLogEnvVar("GITHUB_ORG_NAME", false, false)
+	githubRepoName := envLoader.GetAndLogEnvVar("GITHUB_REPO_NAME", false, false)
 	githubWebhookConfigPath := envLoader.GetAndLogEnvVar("GITHUB_WEBHOOK_CONFIG_PATH", false, false)
 
-	storageAdapter := storage.NewStorageAdapter(mongoDBAuth, mongoDBName, mongoTimeout, githubWebhookToken, githubWebhookOrgnizationName, githubWebhookRepoName, githubWebhookConfigPath, logger)
+	githubAdapter := github.NewGitHubAdapter(githubToken, githubOrgnizationName, githubRepoName, githubWebhookConfigPath, logger)
+	err = githubAdapter.Start()
+	if err != nil {
+		logger.Fatalf("Cannot start the GitHub adapter: %v", err)
+	}
+
+	storageAdapter := storage.NewStorageAdapter(mongoDBAuth, mongoDBName, mongoTimeout, logger)
 	err = storageAdapter.Start()
 	if err != nil {
 		logger.Fatalf("Cannot start the mongoDB adapter: %v", err)
@@ -148,7 +155,7 @@ func main() {
 	}
 
 	//core
-	coreAPIs := core.NewCoreAPIs(env, Version, Build, storageAdapter, auth, systemInitSettings, githubWebhookToken, githubWebhookOrgnizationName, githubWebhookRepoName, githubWebhookConfigPath, logger)
+	coreAPIs := core.NewCoreAPIs(env, Version, Build, storageAdapter, githubAdapter, auth, systemInitSettings, logger)
 	coreAPIs.Start()
 
 	//web adapter
