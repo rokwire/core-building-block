@@ -1,54 +1,54 @@
-p, all_admin_core, /core/admin/*, (GET)|(POST)|(DELETE)|(PUT) #Access all Core BB admin endpoints
+p, all_admin_core, /core/admin/*, (GET)|(POST)|(DELETE)|(PUT), Access all Core BB admin endpoints
 
-p, all_test, /core/admin/test, (GET)|(POST)|(DELETE)|(PUT) #All test actions
-p, get_test, /core/admin/test, (GET) #Get test data
+p, all_test, /core/admin/test, (GET)|(POST)|(DELETE)|(PUT), All test actions
+p, get_test, /core/admin/test, (GET), Get test data
 
-p, get_test-model, /core/admin/test-model, (GET) #Get test models
+p, get_test-model, /core/admin/test-model, (GET), Get test models
 
-p, all_login-sessions, /core/admin/application/login-sessions, (GET) #All login session actions
-p, all_login-sessions, /core/admin/application/account/*/login-sessions/*, (DELETE)
-p, get_login-sessions, /core/admin/application/login-sessions, (GET) #Get login sessions
-p, delete_login-sessions, /core/admin/application/account/*/login-sessions/*, (GET)|(DELETE) #Delete login sessions
+p, all_login-sessions, /core/admin/application/login-sessions, (GET), All login session actions
+p, all_login-sessions, /core/admin/application/account/*/login-sessions/*, (DELETE),
+p, get_login-sessions, /core/admin/application/login-sessions, (GET), Get login sessions
+p, delete_login-sessions, /core/admin/application/account/*/login-sessions/*, (GET)|(DELETE), Delete login sessions
 
-p, all_auth-groups, /core/admin/application/groups, (GET)|(POST)|(PUT)|(DELETE) #All auth groups actions
-p, all_auth-groups, /core/admin/application/groups/*, (GET)|(POST)|(PUT)|(DELETE) 
-p, get_auth-groups, /core/admin/application/groups, (GET) #Get auth groups
-p, update_auth-groups, /core/admin/application/groups, (GET)|(POST)|(PUT) #Update and create auth groups
-p, delete_auth-groups, /core/admin/application/groups/*, (GET)|(DELETE) #Delete auth groups
+p, all_auth-groups, /core/admin/application/groups, (GET)|(POST)|(PUT)|(DELETE),
+p, all_auth-groups, /core/admin/application/groups/*, (GET)|(POST)|(PUT)|(DELETE), All auth groups actions
+p, get_auth-groups, /core/admin/application/groups, (GET), Get auth groups
+p, update_auth-groups, /core/admin/application/groups, (GET)|(POST)|(PUT), Update and create auth groups
+p, delete_auth-groups, /core/admin/application/groups/*, (GET)|(DELETE), Delete auth groups
 
-p, all_auth-roles, /core/admin/application/roles, (GET)|(POST)|(PUT)|(DELETE) #All auth role actions
-p, all_auth-roles, /core/admin/application/roles/*, (GET)|(POST)|(PUT)|(DELETE)
-p, all_auth-roles, /core/application/role/permissions/grant, (PUT)
-p, get_auth-roles, /core/admin/application/roles, (GET) #Get auth roles
-p, update_auth-roles, /core/admin/application/roles, (GET)|(POST)|(PUT) #Update and create auth roles
-p, update_auth-roles, /core/application/role/permissions/grant, (PUT)
-p, delete_auth-roles, /core/admin/application/roles/*, (DELETE) #Delete auth roles
-p, delete_auth-roles, /core/admin/application/roles, (GET)
+p, all_auth-roles, /core/admin/application/roles, (GET)|(POST)|(PUT)|(DELETE), All auth role actions
+p, all_auth-roles, /core/admin/application/roles/*, (GET)|(POST)|(PUT)|(DELETE),
+p, all_auth-roles, /core/application/role/permissions/grant, (PUT),
+p, get_auth-roles, /core/admin/application/roles, (GET), Get auth roles
+p, update_auth-roles, /core/admin/application/roles, (GET)|(POST)|(PUT), Update and create auth roles
+p, update_auth-roles, /core/application/role/permissions/grant, (PUT),
+p, delete_auth-roles, /core/admin/application/roles/*, (DELETE), Delete auth roles
+p, delete_auth-roles, /core/admin/application/roles, (GET),
 
-p, get_permissions, /core/admin/application/permissions, (GET) #Get permissions
+p, get_permissions, /core/admin/application/permissions, (GET), Get permissions
 
-p, get_accounts, /core/admin/application/accounts, (GET) #Get accounts
+p, get_accounts, /core/admin/application/accounts, (GET), Get accounts
 
-p, get_account-devices, /application/account/{id}/devices, (GET) #Get account devices
+p, get_account-devices, /application/account/{id}/devices, (GET), Get account devices
 
-p, update_account-permissions, /application/account/permissions/grant, (PUT) #Grant and revoke permissions
-p, update_account-permissions, /application/account/permissions/revoke, (DELETE)
-p, update_account-permissions, /core/admin/application/permissions, (GET)
+p, update_account-permissions, /application/account/permissions/grant, (PUT), Grant and revoke permissions
+p, update_account-permissions, /application/account/permissions/revoke, (DELETE),
+p, update_account-permissions, /core/admin/application/permissions, (GET),
 
-p, update_account-auth-roles, /application/account/roles/grant, (PUT) #Grant and revoke roles
-p, update_account-auth-roles, /application/account/roles/revoke, (DELETE)
-p, update_account-auth-roles, /core/admin/application/roles, (GET)
+p, update_account-auth-roles, /application/account/roles/grant, (PUT), Grant and revoke roles
+p, update_account-auth-roles, /application/account/roles/revoke, (DELETE),
+p, update_account-auth-roles, /core/admin/application/roles, (GET),
 
-p, update_account-auth-groups, /core/admin/application/group/accounts/add, (PUT) #Add and remove accounts from auth groups
-p, update_account-auth-groups, /core/admin/application/groups/accounts/remove, (DELETE)
-p, update_account-auth-groups, /core/admin/application/groups, (GET)
+p, update_account-auth-groups, /core/admin/application/group/accounts/add, (PUT), Add and remove accounts from auth groups
+p, update_account-auth-groups, /core/admin/application/groups/accounts/remove, (DELETE),
+p, update_account-auth-groups, /core/admin/application/groups, (GET),
 
-p, update_account-authorization, /application/account/permissions/grant, (PUT) #Add and remove permissions, roles, and groups from accounts
-p, update_account-authorization, /application/account/permissions/revoke, (DELETE)
-p, update_account-authorization, /application/account/roles/grant, (PUT)
-p, update_account-authorization, /application/account/roles/revoke, (DELETE)
-p, update_account-authorization, /core/admin/application/group/accounts/add, (PUT)
-p, update_account-authorization, /core/admin/application/group/accounts/remove, (DELETE)
-p, update_account-authorization, /core/admin/application/permissions, (GET)
-p, update_account-authorization, /core/admin/application/roles, (GET)
-p, update_account-authorization, /core/admin/application/groups, (GET)
+p, update_account-authorization, /application/account/permissions/grant, (PUT), Add and remove permissions roles and groups from accounts
+p, update_account-authorization, /application/account/permissions/revoke, (DELETE),
+p, update_account-authorization, /application/account/roles/grant, (PUT),
+p, update_account-authorization, /application/account/roles/revoke, (DELETE),
+p, update_account-authorization, /core/admin/application/group/accounts/add, (PUT),
+p, update_account-authorization, /core/admin/application/group/accounts/remove, (DELETE),
+p, update_account-authorization, /core/admin/application/permissions, (GET),
+p, update_account-authorization, /core/admin/application/roles, (GET),
+p, update_account-authorization, /core/admin/application/groups, (GET),
