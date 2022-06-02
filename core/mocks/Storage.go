@@ -813,29 +813,6 @@ func (_m *Storage) FindSystemOrganization() (*model.Organization, error) {
 	return r0, r1
 }
 
-// FindWebhookConfig provides a mock function with given fields:
-func (_m *Storage) FindWebhookConfig() (*model.WebhookConfig, error) {
-	ret := _m.Called()
-
-	var r0 *model.WebhookConfig
-	if rf, ok := ret.Get(0).(func() *model.WebhookConfig); ok {
-		r0 = rf()
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*model.WebhookConfig)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func() error); ok {
-		r1 = rf()
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // GetGlobalConfig provides a mock function with given fields:
 func (_m *Storage) GetGlobalConfig() (*model.GlobalConfig, error) {
 	ret := _m.Called()
@@ -1205,20 +1182,6 @@ func (_m *Storage) UpdateAuthTypes(ID string, code string, description string, i
 	var r0 error
 	if rf, ok := ret.Get(0).(func(string, string, string, bool, bool, bool, bool, map[string]interface{}) error); ok {
 		r0 = rf(ID, code, description, isExternal, isAnonymous, useCredentials, ignoreMFA, params)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// UpdateCachedWebhookConfigs provides a mock function with given fields:
-func (_m *Storage) UpdateCachedWebhookConfigs() error {
-	ret := _m.Called()
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func() error); ok {
-		r0 = rf()
 	} else {
 		r0 = ret.Error(0)
 	}

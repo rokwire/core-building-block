@@ -5,9 +5,9 @@ import (
 	"core-building-block/core/model"
 	Def "core-building-block/driver/web/docs/gen"
 	"encoding/json"
-	"io/ioutil"
 	"net/http"
 
+	"github.com/google/go-github/v44/github"
 	"github.com/rokwire/core-auth-library-go/tokenauth"
 	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
@@ -15,7 +15,8 @@ import (
 
 //DefaultApisHandler handles default APIs implementation - version etc
 type DefaultApisHandler struct {
-	coreAPIs *core.APIs
+	coreAPIs                  *core.APIs
+	githubWebhookRequestToken string
 }
 
 //getVersion gives the service version
@@ -38,9 +39,15 @@ func (h DefaultApisHandler) getOpenIDConfiguration(l *logs.Log, r *http.Request,
 }
 
 func (h DefaultApisHandler) handleWebhookConfigChange(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	data, err := ioutil.ReadAll(r.Body)
+	// verify webhook request signature
+	data, err := github.ValidatePayload(r, []byte(h.githubWebhookRequestToken))
+
+	// if string(payload) != body {
+	// err = fmt.Errorf("ValidatePayload = %q, want %q", payload, body)
+	// }
+
 	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+		return l.HttpResponseErrorData(logutils.MessageDataStatus(logutils.ActionValidate), model.TypeWebhookSecretToken, nil, nil, http.StatusBadRequest, false)
 	}
 
 	var requestData model.WebhookRequest

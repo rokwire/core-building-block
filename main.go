@@ -60,6 +60,7 @@ func main() {
 	mongoDBName := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_MONGO_DATABASE", true, false)
 	mongoTimeout := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_MONGO_TIMEOUT", false, false)
 	// webhook configs
+	githubWebhookRequestToken := envLoader.GetAndLogEnvVar("GITHUB_WEBHOOK_REQUEST_TOKEN", false, false)
 	githubToken := envLoader.GetAndLogEnvVar("GITHUB_TOKEN", false, false)
 	githubOrgnizationName := envLoader.GetAndLogEnvVar("GITHUB_ORG_NAME", false, false)
 	githubRepoName := envLoader.GetAndLogEnvVar("GITHUB_REPO_NAME", false, false)
@@ -155,7 +156,7 @@ func main() {
 	}
 
 	//core
-	coreAPIs := core.NewCoreAPIs(env, Version, Build, storageAdapter, githubAdapter, auth, systemInitSettings, logger)
+	coreAPIs := core.NewCoreAPIs(env, Version, Build, storageAdapter, githubAdapter, auth, systemInitSettings, githubWebhookRequestToken, logger)
 	coreAPIs.Start()
 
 	//web adapter
