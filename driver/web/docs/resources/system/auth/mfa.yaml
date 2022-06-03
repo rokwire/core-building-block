@@ -4,6 +4,8 @@ post:
   summary: MFA
   description: |
     Verify multi-factor authentication credentials to complete login
+
+    **Auth:** Requires system access token
   parameters:
     - name: state
       in: query

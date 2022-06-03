@@ -1228,6 +1228,8 @@ paths:
       summary: Login
       description: |
         Login using credentials to retrieve access token, refresh token, and user data
+
+        **Auth:** Requires API key
       requestBody:
         description: |
           User credential details and parameters
@@ -1346,6 +1348,8 @@ paths:
       summary: MFA
       description: |
         Verify multi-factor authentication credentials to complete login
+
+        **Auth:** Requires API key
       parameters:
         - name: state
           in: query
@@ -1383,6 +1387,8 @@ paths:
       summary: Refresh
       description: |
         Refresh access token using a refresh token
+
+        **Auth:** Requires API key
       requestBody:
         description: |
           Refresh token
@@ -1411,6 +1417,8 @@ paths:
       summary: Get SSO login url
       description: |
         Retrieve a pre-formatted SSO login URL
+
+        **Auth:** Requires API key
       requestBody:
         content:
           application/json:
@@ -1437,6 +1445,8 @@ paths:
       summary: MFA
       description: |
         Verify multi-factor authentication credentials to complete MFA registration
+
+        **Auth:** Requires admin access token
       requestBody:
         description: |
           MFA credentials and parameters
@@ -1468,7 +1478,7 @@ paths:
       description: |
         Retrieve an admin token for the specified application
 
-        **Auth:** Requires user auth token
+        **Auth:** Requires admin access token
       security:
         - bearerAuth: []
       parameters:
@@ -1501,7 +1511,7 @@ paths:
       description: |
         Get the user account
 
-        **Auth:** Requires user auth token
+        **Auth:** Requires admin access token
       security:
         - bearerAuth: []
       responses:
@@ -1525,7 +1535,7 @@ paths:
       description: |
         Get MFA types set up for an account
 
-        **Auth:** Requires user auth token
+        **Auth:** Requires admin access token
       security:
         - bearerAuth: []
       responses:
@@ -1611,7 +1621,7 @@ paths:
       description: |
         Finds accounts for the specified application
 
-        **Auth:** Requires user auth token
+        **Auth:** Requires admin access token with `get_accounts` permission
       security:
         - bearerAuth: []
       parameters:
@@ -1652,7 +1662,9 @@ paths:
         - Admin
       summary: Finds application account devices
       description: |
-        Finds devices for the specified application
+        Finds devices for the specified account and application
+
+        **Auth:** Requires admin access token with `get_account-devices` permission
       security:
         - bearerAuth: []
       parameters:
@@ -1683,22 +1695,24 @@ paths:
     delete:
       tags:
         - Admin
-      summary: logouts an account session
+      summary: Delete an account session
       description: |
-        Logouts an account session for specific application
+        Delete an account session for specific application
+
+        **Auth:** Requires admin access token with `delete_login-sessions` or `all_login-sessions` permission
       security:
         - bearerAuth: []
       parameters:
         - name: session_id
           in: path
-          description: The sessionID of the loggin session to delete
+          description: The sessionID of the login session to delete
           required: true
           explode: false
           schema:
             type: string
         - name: account_id
           in: path
-          description: The accountID of the loggin session to delete
+          description: The accountID of the login session to delete
           required: true
           explode: false
           schema:
@@ -1725,7 +1739,7 @@ paths:
       description: |
         Grant account permissions
 
-        **Auth:** Requires auth token with 'all_admin_core' permission
+        **Auth:** Requires admin access token with 'update_account-permissions' or `update_account-authorization` permission
       security:
         - bearerAuth: []
       requestBody:
@@ -1757,7 +1771,7 @@ paths:
       description: |
         Deletes an existing permissions from account
 
-        **Auth:** Requires auth token with 'all_admin_core' permission
+        **Auth:** Requires admin access token with 'update_account-permissions' or `update_account-authorization` permission
       security:
         - bearerAuth: []
       requestBody:
@@ -1788,7 +1802,7 @@ paths:
       description: |
         Grant account roles
 
-        **Auth:** Requires auth token with 'all_admin_core' permission
+        **Auth:** Requires admin access token with 'update_account-auth-roles' or `update_account-authorization` permission
       security:
         - bearerAuth: []
       requestBody:
@@ -1820,7 +1834,7 @@ paths:
       description: |
         Deletes an existing roles from account
 
-        **Auth:** Requires auth token with 'all_admin_core' permission
+        **Auth:** Requires admin access token with 'update_account-auth-roles' or `update_account-authorization` permission
       security:
         - bearerAuth: []
       requestBody:
@@ -1850,6 +1864,8 @@ paths:
       summary: Get application sessions
       description: |
         Get application sessions
+
+        **Auth:** Requires admin access token with `get_login-sessions`, `update_login-sessions`, `delete_login-sessions`, or `all_login-sessions` permission
       security:
         - bearerAuth: []
       parameters:
@@ -1931,6 +1947,13 @@ paths:
       summary: Get application groups
       description: |
         Gets application groups
+            
+        **Auth:** Requires admin access token with at least one of the following permissions:
+        - `get_auth-groups`
+        - `update_auth-groups`
+        - `delete_auth-groups`
+        - `all_auth-groups`
+        - `update_account-auth-roles`
       security:
         - bearerAuth: []
       responses:
@@ -1955,7 +1978,7 @@ paths:
       description: |
         Create application group
 
-         **Auth:** Requires auth token with 'all_admin_core'
+         **Auth:** Requires admin access token with `update_auth-groups` or `all_auth-groups` permission
          - bearerAuth: []
       security:
         - bearerAuth: []
@@ -1988,7 +2011,7 @@ paths:
       description: |
         Deletes an existing application group
 
-        **Auth:** Requires auth token with 'all_admin_core' permission
+        **Auth:** Requires admin access token with `delete_auth-groups` or `all_auth-groups` permission
       security:
         - bearerAuth: []
       parameters:
@@ -2015,7 +2038,7 @@ paths:
       description: |
         Add accounts 
 
-        **Auth:** Requires auth token with `all_admin_core` permission
+        **Auth:** Requires admin access token with 'update_account-auth-groups' or `update_account-authorization` permission
       security:
         - bearerAuth: []
       requestBody:
@@ -2047,7 +2070,7 @@ paths:
       description: |
         Deletes an existing accounts from group
 
-        **Auth:** Requires auth token with `all_admin_core` permission
+        **Auth:** Requires admin access token with 'update_account-auth-groups' or `update_account-authorization` permission
       security:
         - bearerAuth: []
       requestBody:
@@ -2078,7 +2101,7 @@ paths:
       description: |
         Get application permissions
 
-        **Auth:** Requires user auth token
+        **Auth:** Requires admin access token with 'get_permissions' permission
       security:
         - bearerAuth: []
       responses:
@@ -2103,6 +2126,8 @@ paths:
       summary: Get application roles
       description: |
         Gets application roles
+
+        **Auth:** Requires admin access token with 'get_auth-roles', 'update_auth-roles', 'delete_auth-roles', or `all_auth-roles` permission
       security:
         - bearerAuth: []
       responses:
@@ -2127,7 +2152,8 @@ paths:
       description: |
         Creates application role
 
-        **Auth:** Requires auth token with 'all_admin_core'
+        **Auth:** Requires admin access token with 'update_auth-roles' or `all_auth-roles` permission
+      security:
         - bearerAuth: []
       requestBody:
         description: Application role
@@ -2158,7 +2184,7 @@ paths:
       description: |
         Delete application role
 
-        **Auth:** Requires auth token with 'all_admin_core' permission
+        **Auth:** Requires admin access token with 'delete_auth-roles' or `all_auth-roles` permission
       security:
         - bearerAuth: []
       parameters:
@@ -2185,7 +2211,7 @@ paths:
       description: |
         Grant permissions to role
 
-        **Auth:** Requires auth token with 'all_admin_core' permission
+        **Auth:** Requires admin access token with 'update_auth-roles' or `all_auth-roles` permission
       security:
         - bearerAuth: []
       requestBody:
@@ -2216,6 +2242,8 @@ paths:
       summary: Get applications for an organization
       description: |
         Gets applications for an organization
+
+        **Auth:** Requires admin access token
       security:
         - bearerAuth: []
       responses:
@@ -2654,6 +2682,8 @@ paths:
       summary: Login
       description: |
         Login using credentials to retrieve access token, refresh token, and user data
+
+        **Auth:** Requires API key
       requestBody:
         description: |
           User credential details and parameters
@@ -2772,6 +2802,8 @@ paths:
       summary: MFA
       description: |
         Verify multi-factor authentication credentials to complete login
+
+        **Auth:** Requires system access token
       parameters:
         - name: state
           in: query
@@ -2809,6 +2841,8 @@ paths:
       summary: Refresh
       description: |
         Refresh access token using a refresh token
+
+        **Auth:** Requires API key
       requestBody:
         description: |
           Refresh token
@@ -2837,6 +2871,8 @@ paths:
       summary: Get SSO login url
       description: |
         Retrieve a pre-formatted SSO login URL
+
+        **Auth:** Requires API key
       requestBody:
         content:
           application/json:
@@ -2863,6 +2899,8 @@ paths:
       summary: MFA
       description: |
         Verify multi-factor authentication credentials to complete MFA registration
+
+        **Auth:** Requires API key
       requestBody:
         description: |
           MFA credentials and parameters
@@ -2894,7 +2932,7 @@ paths:
       description: |
         Gives the system global config
 
-        **Auth:** Requires auth token with `config_admin` permission
+        **Auth:** Requires system access token with `get_global-config` or `all_global-config` permission
       security:
         - bearerAuth: []
       responses:
@@ -2917,7 +2955,7 @@ paths:
       description: |
         Creates the system global config
 
-        **Auth:** Requires auth token with `config_admin` permission
+        **Auth:** Requires system access token with `update_global-config` or `all_global-config` permission
       security:
         - bearerAuth: []
       requestBody:
@@ -2947,7 +2985,7 @@ paths:
       description: |
         Updates the system global config
 
-        **Auth:** Requires auth token with `config_admin` permission
+        **Auth:** Requires system access token with `update_global-config` or `all_global-config` permission
       security:
         - bearerAuth: []
       requestBody:
@@ -2971,14 +3009,48 @@ paths:
         '500':
           description: Internal error
   '/system/organizations/{id}':
+    get:
+      tags:
+        - System
+      summary: Get organization by ID
+      description: |
+        Gets organization by ID
+
+        **Auth:** Requires system access token with `get_organizations` or `all_organizations` permission
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: ID of the organization
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '404':
+          description: Not Found
+        '500':
+          description: Internal error
     put:
       tags:
         - System
-      summary: Update organization
+      summary: Update organization by ID
       description: |
-        Updates organization
+        Updates organization by ID
 
-         **Auth:** Requires auth token with `org_admin` permission
+        **Auth:** Requires system access token with `update_organizations` or `all_organizations` permission
       security:
         - bearerAuth: []
       parameters:
@@ -3011,40 +3083,6 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-    get:
-      tags:
-        - System
-      summary: Get organization
-      description: |
-        Gets organization
-
-        **Auth:** Requires auth token with `org_admin` permission
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          description: ID of the organization
-          required: true
-          style: simple
-          explode: false
-          schema:
-            type: string
-      responses:
-        '200':
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Organization'
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '404':
-          description: Not Found
-        '500':
-          description: Internal error
   /system/organizations:
     get:
       tags:
@@ -3053,7 +3091,7 @@ paths:
       description: |
         Gets organizations
 
-        **Auth:** Requires auth token with `org_admin` permission
+        **Auth:** Requires system access token with `get_organizations` or `all_organizations` permission
       security:
         - bearerAuth: []
       responses:
@@ -3078,7 +3116,7 @@ paths:
       description: |
         Creates organization
 
-        **Auth:** Requires auth token with `org_admin` permission
+        **Auth:** Requires system access token with `update_organizations` or `all_organizations` permission
       security:
         - bearerAuth: []
       requestBody:
@@ -3110,7 +3148,7 @@ paths:
       description: |
         Returns service registration records
 
-        **Auth:** Requires auth token with `service_admin` permission
+        **Auth:** Requires system access token with `get_service-regs` or `all_service-regs` permission
       security:
         - bearerAuth: []
       parameters:
@@ -3146,7 +3184,7 @@ paths:
 
         The "service_id" of the registration must not match an existing registration  
 
-        **Auth:** Requires auth token with `service_admin` permission
+        **Auth:** Requires system access token with `update_service-regs` or `all_service-regs` permission
       security:
         - bearerAuth: []
       requestBody:
@@ -3179,7 +3217,7 @@ paths:
 
         The "service_id" of the registration must match an existing registration
 
-        **Auth:** Requires auth token with `service_admin` permission
+        **Auth:** Requires system access token with `update_service-regs` or `all_service-regs` permission
       security:
         - bearerAuth: []
       requestBody:
@@ -3210,7 +3248,7 @@ paths:
       description: |
         Deletes an existing service registration record
 
-        **Auth:** Requires auth token with `service_admin` permission
+        **Auth:** Requires system access token with `delete_service-regs` or `all_service-regs` permission
       security:
         - bearerAuth: []
       parameters:
@@ -3244,7 +3282,7 @@ paths:
       description: |
         Get service account instance by account ID, app ID, and org ID
 
-        **Auth:** Requires auth token with permission to read service accounts
+        **Auth:** Requires system access token with `get_service-accounts` or `all_service-accounts` permission
       security:
         - bearerAuth: []
       parameters:
@@ -3292,7 +3330,7 @@ paths:
       description: |
         Updates a service account instance
 
-        **Auth:** Requires auth token with permission to update service accounts
+        **Auth:** Requires system access token with `update_service-accounts` or `all_service-accounts` permission
       security:
         - bearerAuth: []
       parameters:
@@ -3356,7 +3394,7 @@ paths:
       description: |
         Removes a service account instance
 
-        **Auth:** Requires auth token with permission to delete service accounts
+        **Auth:** Requires system access token with `delete_service-accounts` or `all_service-accounts` permission
       security:
         - bearerAuth: []
       parameters:
@@ -3401,7 +3439,7 @@ paths:
       description: |
         Get list of all service accounts matching a search
 
-        **Auth:** Requires auth token with permission to read service accounts
+        **Auth:** Requires system access token with `get_service-accounts` or `all_service-accounts` permission
       security:
         - bearerAuth: []
       parameters:
@@ -3467,7 +3505,7 @@ paths:
       description: |
         Creates a new service account
 
-        **Auth:** Requires auth token with permission to create service accounts
+        **Auth:** Requires system access token with `update_service-accounts` or `all_service-accounts` permission
       security:
         - bearerAuth: []
       parameters:
@@ -3533,10 +3571,9 @@ paths:
                 value: |
                   {
                     "account_id": "12345678-e2cd-11eb-af68-60f81db5ecc0",
-                    "name": "test_account",
                     "app_id": "9766",
                     "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
-                    "permissions": ["permission1", "permission2"],
+                    "permissions": ["permission1", "permission2"]
                   }
         required: true
       responses:
@@ -3559,7 +3596,7 @@ paths:
       description: |
         Delete service accounts matching an account ID
 
-        **Auth:** Requires auth token with permission to delete service accounts
+        **Auth:** Requires system access token with `delete_service-accounts` or `all_service-accounts` permission
       security:
         - bearerAuth: []
       parameters:
@@ -3588,7 +3625,7 @@ paths:
       description: |
         Adds a new credential to an existing service account
 
-        **Auth:** Requires auth token with permission to add service account credentials
+        **Auth:** Requires system access token with `update_service-accounts` or `all_service-accounts` permission
       security:
         - bearerAuth: []
       parameters:
@@ -3646,7 +3683,7 @@ paths:
       description: |
         Removes a credential from an existing service account
 
-        **Auth:** Requires auth token with permission to delete service account credentials
+        **Auth:** Requires system access token with `delete_service-accounts` or `all_service-accounts` permission
       security:
         - bearerAuth: []
       parameters:
@@ -3679,11 +3716,11 @@ paths:
     get:
       tags:
         - System
-      summary: Get application
+      summary: Get application by ID
       description: |
-        Gets application
+        Gets application by provided ID
 
-        **Auth:** Requires auth token with `app_admin` permission
+        **Auth:** Requires system access token with `get_applications` or `all_applications` permission
       security:
         - bearerAuth: []
       parameters:
@@ -3718,7 +3755,7 @@ paths:
       description: |
         Gets applications
 
-        **Auth:** Requires auth token with `app_admin` permission
+        **Auth:** Requires system access token with `get_applications` or `all_applications` permission
       security:
         - bearerAuth: []
       responses:
@@ -3743,7 +3780,7 @@ paths:
       description: |
         Creates application
 
-        **Auth:** Requires auth token with `app_admin` permission
+        **Auth:** Requires system access token with `update_applications` or `all_applications` permission
       security:
         - bearerAuth: []
       requestBody:
@@ -3775,7 +3812,7 @@ paths:
       description: |
         Creates permission
 
-        **Auth:** Requires auth token with `all_permission` or 'update_permission" permission
+        **Auth:** Requires system access token with `update_permissions` or `all_permissions` permission
       security:
         - bearerAuth: []
       requestBody:
@@ -3806,7 +3843,7 @@ paths:
       description: |
         Updates permission
 
-        **Auth:** Requires auth token with `all_permission` or 'update_permission" permission
+        **Auth:** Requires system access token with `update_permissions` or `all_permissions` permission
       security:
         - bearerAuth: []
       requestBody:
@@ -3838,7 +3875,7 @@ paths:
       description: |
         Creates application role
 
-        **Auth:** Requires auth token with `auth_admin` permission
+        **Auth:** Requires system access token with `update_auth-roles` or `all_auth-roles` permission
       security:
         - bearerAuth: []
       requestBody:
@@ -3870,7 +3907,7 @@ paths:
       description: |
         Returns all API key records for a given app ID
 
-        **Auth:** Requires auth token with `get_api-keys` permission
+        **Auth:** Requires system access token with `get_api-keys` or `all_api-keys` permission
       security:
         - bearerAuth: []
       parameters:
@@ -3907,7 +3944,7 @@ paths:
         Otherwise it will return a list of all app config versions for the given app_type_id. If org_id is provided, the configs for that organization will
         be returned, otherwise the default configs will be returned.
 
-        **Auth:** Requires user auth token with 'all_appconfigs' or 'get_appconfig' permission
+        **Auth:** Requires system access token with `get_app-configs` or `all_app-configs` permission
       security:
         - bearerAuth: []
       parameters:
@@ -3950,7 +3987,9 @@ paths:
         - System
       summary: Creates app configs
       description: |
-        **Auth:** Requires user auth token with 'all_appconfigs' or 'update_appconfig' permission.
+        Creates a new app config
+
+        **Auth:** Requires system access token with `update_app-configs` or `all_app-configs` permission
       security:
         - bearerAuth: []
       requestBody:
@@ -3983,9 +4022,11 @@ paths:
     get:
       tags:
         - System
-      summary: Reads app configs by given id
+      summary: Reads app configs by ID
       description: |
-        **Auth:** Requires user auth token  with 'all_appconfigs' or 'get_appconfig' permission
+        Get a app configs for the provided ID
+
+        **Auth:** Requires system access token with `get_app-configs` or `all_app-configs` permission
       security:
         - bearerAuth: []
       parameters:
@@ -4013,9 +4054,11 @@ paths:
     put:
       tags:
         - System
-      summary: Updates app configs
+      summary: Updates app config by ID
       description: |
-        **Auth:** Requires user auth token with 'all_appconfigs' or 'update_appconfig' permission
+        Updates app config with the provided ID
+
+        **Auth:** Requires system access token with `update_app-configs` or `all_app-configs` permission
       security:
         - bearerAuth: []
       parameters:
@@ -4056,9 +4099,11 @@ paths:
     delete:
       tags:
         - System
-      summary: Deletes app configs
+      summary: Deletes app config by ID
       description: |
-        **Auth:** Requires user auth token with 'all_appconfigs' or 'update_appconfig' permission
+        Deletes app config with the provided ID
+
+        **Auth:** Requires system access token with `delete_app-configs` or `all_app-configs` permission
       security:
         - bearerAuth: []
       parameters:
@@ -4086,7 +4131,7 @@ paths:
       description: |
         Grant account permissions
 
-        **Auth:** Requires auth token with `auth_admin` permission
+        **Auth:** Requires system access token with `update_account-permissions` or `all_account-permissions` permission
       security:
         - bearerAuth: []
       requestBody:
@@ -4118,7 +4163,7 @@ paths:
       description: |
         Grant account roles
 
-        **Auth:** Requires auth token with `auth_admin` permission
+        **Auth:** Requires system access token with `update_account-roles` or `all_account-roles` permission
       security:
         - bearerAuth: []
       requestBody:
@@ -4150,7 +4195,7 @@ paths:
       description: |
         Get MFA types set up for an account
 
-        **Auth:** Requires user auth token
+        **Auth:** Requires system access token
       security:
         - bearerAuth: []
       responses:
@@ -4236,7 +4281,7 @@ paths:
       description: |
         Returns API key record
 
-        **Auth:** Requires auth token with `get_api-keys` permission
+        **Auth:** Requires system access token with `get_api-keys` or `all_api-keys` permission
       security:
         - bearerAuth: []
       parameters:
@@ -4268,7 +4313,7 @@ paths:
       description: |
         Creates a new API key record
 
-        **Auth:** Requires auth token with `update_api-keys` permission
+        **Auth:** Requires system access token with `update_api-keys` or `all_api-keys` permission
       security:
         - bearerAuth: []
       requestBody:
@@ -4306,7 +4351,7 @@ paths:
 
         Must include the "id" field to identify which key is to be udpated
 
-        **Auth:** Requires auth token with `update_api-keys` permission
+        **Auth:** Requires system access token with `update_api-keys` or `all_api-keys` permission
       security:
         - bearerAuth: []
       requestBody:
@@ -4337,7 +4382,7 @@ paths:
       description: |
         Deletes an existing API key record
 
-        **Auth:** Requires auth token with `update_api-keys` permission
+        **Auth:** Requires system access token with `delete_api-keys` or `all_api-keys` permission
       security:
         - bearerAuth: []
       parameters:
@@ -4364,12 +4409,39 @@ paths:
         '500':
           description: Internal error
   /system/auth-types:
+    get:
+      tags:
+        - System
+      summary: Get auth types
+      description: |
+        Gets auth types
+
+        **Auth:** Requires system access token with `get_auth-types` or `all_auth-types` permission
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AuthTypeFields'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
     post:
       tags:
         - System
-      summary: Create auth-type
+      summary: Create auth type
       description: |
-        Creates auth-type
+        Creates auth type
+
+        **Auth:** Requires system access token with `update_auth-types` or `all_auth-types` permission
       security:
         - bearerAuth: []
       requestBody:
@@ -4393,36 +4465,15 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-    get:
-      tags:
-        - System
-      summary: Get auth-types
-      description: |
-        Gets auth-types
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/AuthTypeFields'
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal error
   '/system/auth-types/{id}':
     put:
       tags:
         - System
-      summary: Update auth type
+      summary: Update auth type by ID
       description: |
-        Updates auth type
+        Updates auth type with the provided ID
+
+        **Auth:** Requires system access token with `update_auth-types` or `all_auth-types` permission
       security:
         - bearerAuth: []
       parameters:

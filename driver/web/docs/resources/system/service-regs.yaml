@@ -5,7 +5,7 @@ get:
   description: |
     Returns service registration records
 
-    **Auth:** Requires auth token with `service_admin` permission
+    **Auth:** Requires system access token with `get_service-regs`, `update_service-regs`, `delete_service-regs`, or `all_service-regs` permission
   security:
     - bearerAuth: []
   parameters:
@@ -41,7 +41,7 @@ post:
 
     The "service_id" of the registration must not match an existing registration  
 
-    **Auth:** Requires auth token with `service_admin` permission
+    **Auth:** Requires system access token with `update_service-regs` or `all_service-regs` permission
   security:
     - bearerAuth: []
   requestBody:
@@ -74,7 +74,7 @@ put:
 
     The "service_id" of the registration must match an existing registration
 
-    **Auth:** Requires auth token with `service_admin` permission
+    **Auth:** Requires system access token with `update_service-regs` or `all_service-regs` permission
   security:
     - bearerAuth: []
   requestBody:
@@ -105,7 +105,7 @@ delete:
   description: |
     Deletes an existing service registration record
 
-    **Auth:** Requires auth token with `service_admin` permission
+    **Auth:** Requires system access token with `delete_service-regs` or `all_service-regs` permission
   security:
     - bearerAuth: []
   parameters:

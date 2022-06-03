@@ -865,6 +865,11 @@ func (a *Auth) getAccount(authenticationType string, userIdentifier string, apiK
 		return nil, "", errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
 	}
 
+	//do not allow for admins
+	if appOrg.Application.Admin {
+		return nil, "", errors.New("not allowed for admins")
+	}
+
 	//TODO: Ideally we would not make many database calls before validating the API key. Currently needed to get app ID
 	err = a.validateAPIKey(apiKey, appOrg.Application.ID)
 	if err != nil {

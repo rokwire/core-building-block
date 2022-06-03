@@ -5,7 +5,7 @@ delete:
   description: |
     Deletes an existing application group
 
-    **Auth:** Requires auth token with 'all_admin_core' permission
+    **Auth:** Requires admin access token with `delete_auth-groups` or `all_auth-groups` permission
   security:
     - bearerAuth: []
   parameters:
