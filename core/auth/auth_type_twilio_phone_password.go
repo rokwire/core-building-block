@@ -513,7 +513,7 @@ func mapToPhonePasswordCreds(credsMap map[string]interface{}) (*phonePasswordCre
 func initPhonePasswordAuth(auth *Auth) (*PhonePasswordAuthImpl, error) {
 	phoneP := &PhonePasswordAuthImpl{auth: auth, authType: AuthTypePhonePassword}
 
-	err := auth.registerAuthType(phoneP.authType, phoneP)
+	err := auth.registerAuthType(phoneP.authType, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionRegister, typeAuthType, nil, err)
 	}
