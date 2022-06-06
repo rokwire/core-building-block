@@ -4,6 +4,8 @@ post:
   summary: Login
   description: |
     Login using credentials to retrieve access token, refresh token, and user data
+
+    **Auth:** Requires API key
   requestBody:
     description: |
       User credential details and parameters
@@ -97,26 +99,6 @@ post:
                 "creds": {
                   "email": "test@example.com", 
                   "password": "test12345"
-                },
-                "params":{
-                    "sign_up":true,
-                    "confirm_password": "test12345"
-                },
-                "preferences":{
-                    "key1":"value1",
-                    "key2":"value2"
-                },
-                "profile":{
-                  "address": "address",
-                  "birth_year": 1990,
-                  "country": "county",
-                  "email": "email",
-                  "first_name": "first name",
-                  "last_name": "last name",
-                  "phone": "+000000000000",
-                  "photo_url": "photo url",
-                  "state": "state",
-                  "zip_code": "zip code"
                 },
                 "device": {
                   "type": "mobile",

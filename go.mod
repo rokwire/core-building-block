@@ -7,9 +7,6 @@ require (
 	github.com/casbin/casbin/v2 v2.35.1 // indirect
 	github.com/coreos/go-oidc v2.2.1+incompatible
 	github.com/getkin/kin-openapi v0.72.0
-	github.com/go-openapi/jsonreference v0.19.6 // indirect
-	github.com/go-openapi/spec v0.20.3 // indirect
-	github.com/go-openapi/swag v0.19.15 // indirect
 	github.com/go-playground/universal-translator v0.18.0 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/golang/protobuf v1.5.2 // indirect
@@ -22,8 +19,8 @@ require (
 	github.com/rokwire/core-auth-library-go v1.0.8
 	github.com/rokwire/logging-library-go v1.0.3
 	github.com/stretchr/testify v1.7.0
-	github.com/swaggo/http-swagger v1.0.0
 	github.com/twilio/twilio-go v0.22.2 // indirect
+	github.com/swaggo/http-swagger v1.2.6
 	go.mongodb.org/mongo-driver v1.7.1
 	golang.org/x/crypto v0.0.0-20210711020723-a769d52b0f97
 	golang.org/x/oauth2 v0.0.0-20210810183815-faf39c7919d5 // indirect

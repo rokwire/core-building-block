@@ -1,12 +1,11 @@
 get:
-  deprecated: true
   tags:
   - System
   summary: Get service registrations
   description: |
     Returns service registration records
 
-    **Auth:** Requires auth token with `service_admin` permission
+    **Auth:** Requires system access token with `get_service-regs`, `update_service-regs`, `delete_service-regs`, or `all_service-regs` permission
   security:
     - bearerAuth: []
   parameters:
@@ -34,7 +33,6 @@ get:
     500:
       description: Internal error
 post:
-  deprecated: true
   tags:
   - System
   summary: Register service
@@ -43,7 +41,7 @@ post:
 
     The "service_id" of the registration must not match an existing registration  
 
-    **Auth:** Requires auth token with `service_admin` permission
+    **Auth:** Requires system access token with `update_service-regs` or `all_service-regs` permission
   security:
     - bearerAuth: []
   requestBody:
@@ -68,7 +66,6 @@ post:
     500:
       description: Internal error
 put:
-  deprecated: true
   tags:
   - System
   summary: Update service registration
@@ -77,7 +74,7 @@ put:
 
     The "service_id" of the registration must match an existing registration
 
-    **Auth:** Requires auth token with `service_admin` permission
+    **Auth:** Requires system access token with `update_service-regs` or `all_service-regs` permission
   security:
     - bearerAuth: []
   requestBody:
@@ -102,14 +99,13 @@ put:
     500:
       description: Internal error
 delete:
-  deprecated: true
   tags:
   - System
   summary: Deregister service
   description: |
     Deletes an existing service registration record
 
-    **Auth:** Requires auth token with `service_admin` permission
+    **Auth:** Requires system access token with `delete_service-regs` or `all_service-regs` permission
   security:
     - bearerAuth: []
   parameters:

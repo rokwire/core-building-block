@@ -1,3 +1,17 @@
+// Copyright 2022 Board of Trustees of the University of Illinois.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package web
 
 import (
@@ -6,6 +20,45 @@ import (
 )
 
 //Application
+//TODO
+/*
+func applicationToDef(item *model.Application) *Def.Application {
+	if item == nil {
+		return nil
+	}
+
+	fields := Def.ApplicationFields{Id: item.ID, Name: item.Name, MultiTenant: &item.MultiTenant,
+		RequiresOwnUsers: &item.RequiresOwnUsers}
+	types := applicationTypeListToDef(item.Types)
+
+	return &Def.Application{Fields: &fields, Types: &types}
+}
+
+func applicationTypeListToDef(items []model.ApplicationType) []Def.ApplicationType {
+	result := make([]Def.ApplicationType, len(items))
+	for i, item := range items {
+		result[i] = *applicationTypeToDef(&item)
+	}
+	return result
+}
+
+func applicationTypeToDef(item *model.ApplicationType) *Def.ApplicationType {
+	if item == nil {
+		return nil
+	}
+
+	var name *string
+	if len(item.Name) > 0 {
+		name = &item.Name
+	}
+	var versions *[]string
+	if len(item.Versions) > 0 {
+		versions = &item.Versions
+	}
+
+	return &Def.ApplicationType{Fields: &Def.ApplicationTypeFields{Id: item.ID, Identifier: item.Identifier, Name: name, Versions: versions}}
+} */
+
 func applicationToDef(item model.Application) Def.ApplicationFields {
 
 	return Def.ApplicationFields{Id: item.ID, Name: item.Name, MultiTenant: &item.MultiTenant,
@@ -64,20 +117,40 @@ func appOrgGroupsToDef(items []model.AppOrgGroup) []Def.AppOrgGroupFields {
 }
 
 //Organization
-func organizationToDef(item *model.Organization) *Def.OrganizationFields {
+func organizationToDef(item *model.Organization) *Def.Organization {
 	if item == nil {
 		return nil
 	}
 
-	return &Def.OrganizationFields{Id: item.ID, Name: item.Name, Type: Def.OrganizationFieldsType(item.Type)}
+	fields := Def.OrganizationFields{Id: item.ID, Name: item.Name, Type: Def.OrganizationFieldsType(item.Type)}
+	config := item.Config
+
+	return &Def.Organization{Config: organizationConfigToDef(&config), Fields: &fields}
 }
 
-func organizationsToDef(items []model.Organization) []Def.OrganizationFields {
-	result := make([]Def.OrganizationFields, len(items))
+func organizationsToDef(items []model.Organization) []Def.Organization {
+	result := make([]Def.Organization, len(items))
 	for i, item := range items {
 		result[i] = *organizationToDef(&item)
 	}
 	return result
+}
+
+func organizationConfigToDef(item *model.OrganizationConfig) *Def.OrganizationConfigFields {
+	if item == nil {
+		return nil
+	}
+
+	var id *string
+	if len(item.ID) > 0 {
+		id = &item.ID
+	}
+	var domains *[]string
+	if len(item.Domains) > 0 {
+		domains = &item.Domains
+	}
+
+	return &Def.OrganizationConfigFields{Id: id, Domains: domains}
 }
 
 //App Config

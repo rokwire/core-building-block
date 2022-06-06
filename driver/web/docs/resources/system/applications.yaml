@@ -1,12 +1,11 @@
  get:
-  deprecated: true
   tags:
   - System
   summary: Get applications
   description: |
     Gets applications
   
-    **Auth:** Requires auth token with `app_admin` permission
+    **Auth:** Requires system access token with `get_applications`, `udpate_applications`, or `all_applications` permission
   security:
     - bearerAuth: []
   responses:
@@ -17,7 +16,7 @@
             schema:
               type: array
               items:
-                $ref: "../../schemas/apis/system/get-applications/response/Response.yaml"
+                $ref: "../../schemas/application/Application.yaml"
       400:
         description: Bad request
       401:
@@ -25,14 +24,13 @@
       500:
         description: Internal error
  post:
-  deprecated: true
   tags:
   - System
   summary: Create application
   description: |
     Creates application
 
-    **Auth:** Requires auth token with `app_admin` permission
+    **Auth:** Requires system access token with `update_applications` or `all_applications` permission
   security:
     - bearerAuth: []
   requestBody:

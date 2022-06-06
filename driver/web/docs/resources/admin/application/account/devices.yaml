@@ -3,7 +3,9 @@ get:
   - Admin
   summary: Finds application account devices
   description: |
-    Finds devices for the specified application
+    Finds devices for the specified account and application
+
+    **Auth:** Requires admin access token with `get_account-devices` permission
   security:
     - bearerAuth: []
   parameters:
@@ -19,11 +21,11 @@ get:
     200:
       description: Success
       content:
-      application/json:
-        schema:
-          type: array
-          items:
-            $ref: "../../../../schemas/user/DeviceFields.yaml"
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: "../../../../schemas/user/DeviceFields.yaml"
     400:
       description: Bad request
     401:

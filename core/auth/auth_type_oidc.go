@@ -1,3 +1,17 @@
+// Copyright 2022 Board of Trustees of the University of Illinois.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package auth
 
 import (
@@ -68,43 +82,6 @@ type oidcToken struct {
 	ExpiresIn    int    `json:"expires_in"`
 }
 
-type oidcCreds struct {
-	Sub         string `bson:"sub"`
-	IDPHost     string `bson:"idp_host"`
-	IDPClientID string `bson:"idp_client_id"`
-}
-
-func (o *oidcCreds) toMap() map[string]interface{} {
-	if o == nil {
-		return map[string]interface{}{}
-	}
-
-	return map[string]interface{}{
-		"sub":           o.Sub,
-		"idp_host":      o.IDPHost,
-		"idp_client_id": o.IDPClientID,
-	}
-}
-
-func oidcCredsFromMap(val map[string]interface{}) (*oidcCreds, error) {
-	sub, ok := val["sub"].(string)
-	if !ok {
-		return nil, errors.ErrorData(logutils.StatusMissing, "sub", nil)
-	}
-
-	idpHost, ok := val["idp_host"].(string)
-	if !ok {
-		return nil, errors.ErrorData(logutils.StatusMissing, "idp host", nil)
-	}
-
-	idpClientID, ok := val["idp_client_id"].(string)
-	if !ok {
-		return nil, errors.ErrorData(logutils.StatusMissing, "idp client id", nil)
-	}
-
-	return &oidcCreds{Sub: sub, IDPHost: idpHost, IDPClientID: idpClientID}, nil
-}
-
 type oidcRefreshParams struct {
 	RefreshToken string `json:"refresh_token" bson:"refresh_token" validate:"required"`
 	RedirectURI  string `json:"redirect_uri" bson:"redirect_uri" validate:"required"`
@@ -158,10 +135,6 @@ func (a *oidcAuthImpl) externalLogin(authType model.AuthType, appType model.Appl
 	return externalUser, parameters, nil
 }
 
-func (a *oidcAuthImpl) verify(id string, verification string, l *logs.Log) error {
-	return errors.New(logutils.Unimplemented)
-}
-
 //refresh must be implemented for OIDC auth
 func (a *oidcAuthImpl) refresh(params map[string]interface{}, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error) {
 	refreshParams, err := oidcRefreshParamsFromMap(params)
@@ -177,7 +150,7 @@ func (a *oidcAuthImpl) refresh(params map[string]interface{}, authType model.Aut
 	return a.refreshToken(authType, appType, appOrg, refreshParams, oidcConfig, l)
 }
 
-func (a *oidcAuthImpl) getLoginURL(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, redirectURI string, l *logs.Log) (string, map[string]interface{}, error) {
+func (a *oidcAuthImpl) getLoginURL(authType model.AuthType, appType model.ApplicationType, redirectURI string, l *logs.Log) (string, map[string]interface{}, error) {
 	oidcConfig, err := a.getOidcAuthConfig(authType, appType)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionGet, typeOidcAuthConfig, nil, err)
@@ -520,33 +493,7 @@ func (a *oidcAuthImpl) getOidcAuthConfig(authType model.AuthType, appType model.
 	return &oidcConfig, nil
 }
 
-func (a *oidcAuthImpl) validateUser(userAuth *model.UserAuth, credentials map[string]interface{}) (bool, error) {
-	creds, err := oidcCredsFromMap(credentials)
-	if err != nil {
-		return false, err
-	}
-
-	if userAuth.Sub != creds.Sub {
-		return false, errors.ErrorData(logutils.StatusInvalid, model.TypeUserAuth, logutils.StringArgs(userAuth.UserID))
-	}
-	return true, nil
-}
-
 // --- Helper functions ---
-func readFromClaims(key string, claimsMap *map[string]string, rawClaims *map[string]interface{}) interface{} {
-	if claimsMap == nil {
-		return nil
-	}
-	if rawClaims == nil {
-		return nil
-	}
-
-	claimsKey := (*claimsMap)[key]
-	if len(claimsKey) > 0 {
-		return (*rawClaims)[claimsKey]
-	}
-	return nil
-}
 
 //generatePkceChallenge generates and returns a PKCE code challenge and verifier
 func generatePkceChallenge() (string, string, error) {
