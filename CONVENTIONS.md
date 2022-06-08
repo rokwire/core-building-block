@@ -17,9 +17,7 @@ When implementing an API:
 - Test you API via the documentation - Open http://localhost/core/doc/ui/ , choose "Local server" from the "Servers" combobox and run your API. This is an alternative to Postman. Make sure to set the correct value in the `ROKWIRE_CORE_HOST` environment variable (eg. http://localhost/core) before running the service to access the docs.
 
 ## Pull Requests
-If your PR resolves the issue entirely, link it to the issue in the description with a [keyword](https://docs.github.com/en/issues/tracking-your-work-with-issues/creating-issues/linking-a-pull-request-to-an-issue#linking-a-pull-request-to-an-issue-using-a-keyword) (eg. `Resolves #{issue number}`).This will close the issue automatically when the PR is merged. 
-
-If the PR does not resolve the issue, include a reference to the related issue in the PR description without a keyword (eg. `Progress on #{issue number}`).
+Pull requests should be linked to the associated issue with a [keyword](https://docs.github.com/en/issues/tracking-your-work-with-issues/creating-issues/linking-a-pull-request-to-an-issue#linking-a-pull-request-to-an-issue-using-a-keyword) in the description (eg. `Resolves #{issue number}`). This will close the issue automatically when the PR is merged. 
 
 ## Unit Tests
 The test coverage should be at least 80% of the new created code.
