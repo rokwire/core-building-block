@@ -5,7 +5,7 @@
   description: |
     Gets organizations
 
-    **Auth:** Requires auth token with `org_admin` permission
+    **Auth:** Requires system access token with `get_organizations`, `update_organizations`, or `all_organizations` permission
   security:
     - bearerAuth: []
   responses:
@@ -30,7 +30,7 @@
   description: |
     Creates organization
 
-    **Auth:** Requires auth token with `org_admin` permission
+    **Auth:** Requires system access token with `update_organizations` or `all_organizations` permission
   security:
     - bearerAuth: []
   requestBody:

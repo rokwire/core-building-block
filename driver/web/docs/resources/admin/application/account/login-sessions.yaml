@@ -1,22 +1,24 @@
 delete:
   tags:
   - Admin
-  summary: logouts an account session
+  summary: Delete an account session
   description: |
-    Logouts an account session for specific application
+    Delete an account session for specific application
+    
+    **Auth:** Requires admin access token with `delete_login-sessions` or `all_login-sessions` permission
   security:
     - bearerAuth: []
   parameters:
     - name: session_id
       in: path
-      description: The sessionID of the loggin session to delete
+      description: The sessionID of the login session to delete
       required: true
       explode: false
       schema:
         type: string
     - name: account_id
       in: path
-      description: The accountID of the loggin session to delete
+      description: The accountID of the login session to delete
       required: true
       explode: false
       schema:

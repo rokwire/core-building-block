@@ -1,1 +1,1 @@
-p, create_account, /core/services/account, (POST)
+p, create_account, /core/services/accounts, (POST)

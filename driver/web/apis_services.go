@@ -787,7 +787,7 @@ func (h ServicesApisHandler) forgotCredentialInitiate(l *logs.Log, r *http.Reque
 
 	if err := h.coreAPIs.Auth.ForgotCredential(string(requestData.AuthType), requestData.AppTypeIdentifier,
 		requestData.OrgId, requestData.ApiKey, requestData.Identifier, l); err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionUpdate, "password", nil, err, http.StatusInternalServerError, false)
+		return l.HttpResponseErrorAction(logutils.ActionSend, "forgot password link", nil, err, http.StatusInternalServerError, false)
 	}
 
 	return l.HttpResponseSuccessMessage("Sent forgot password link successfully")

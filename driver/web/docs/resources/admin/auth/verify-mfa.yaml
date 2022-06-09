@@ -4,6 +4,8 @@ post:
   summary: MFA
   description: |
     Verify multi-factor authentication credentials to complete MFA registration
+
+    **Auth:** Requires admin access token
   requestBody:
     description: |
       MFA credentials and parameters

@@ -5,7 +5,7 @@ get:
   description: |
     Get MFA types set up for an account
 
-    **Auth:** Requires user auth token
+    **Auth:** Requires system access token
   security:
     - bearerAuth: []
   responses:

@@ -1241,9 +1241,6 @@ type PostAdminAccountMfaParams struct {
 	Type string `json:"type"`
 }
 
-// PostAdminAccountsJSONBody defines parameters for PostAdminAccounts.
-type PostAdminAccountsJSONBody AdminReqCreateAccount
-
 // PutAdminApplicationAccountPermissionsGrantJSONBody defines parameters for PutAdminApplicationAccountPermissionsGrant.
 type PutAdminApplicationAccountPermissionsGrantJSONBody AdminReqGrantPermissions
 
@@ -1265,6 +1262,9 @@ type GetAdminApplicationAccountsParams struct {
 	// The authentication type identifier
 	AuthTypeIdentifier *string `json:"auth-type-identifier,omitempty"`
 }
+
+// PostAdminApplicationAccountsJSONBody defines parameters for PostAdminApplicationAccounts.
+type PostAdminApplicationAccountsJSONBody AdminReqCreateAccount
 
 // PutAdminApplicationGroupAccountsAddJSONBody defines parameters for PutAdminApplicationGroupAccountsAdd.
 type PutAdminApplicationGroupAccountsAddJSONBody AdminReqAddAccountsToGroup
@@ -1702,9 +1702,6 @@ type GetUiCredentialVerifyParams struct {
 	Code string `json:"code"`
 }
 
-// PostAdminAccountsJSONRequestBody defines body for PostAdminAccounts for application/json ContentType.
-type PostAdminAccountsJSONRequestBody PostAdminAccountsJSONBody
-
 // PutAdminApplicationAccountPermissionsGrantJSONRequestBody defines body for PutAdminApplicationAccountPermissionsGrant for application/json ContentType.
 type PutAdminApplicationAccountPermissionsGrantJSONRequestBody PutAdminApplicationAccountPermissionsGrantJSONBody
 
@@ -1716,6 +1713,9 @@ type PutAdminApplicationAccountRolesGrantJSONRequestBody PutAdminApplicationAcco
 
 // DeleteAdminApplicationAccountRolesRevokeJSONRequestBody defines body for DeleteAdminApplicationAccountRolesRevoke for application/json ContentType.
 type DeleteAdminApplicationAccountRolesRevokeJSONRequestBody DeleteAdminApplicationAccountRolesRevokeJSONBody
+
+// PostAdminApplicationAccountsJSONRequestBody defines body for PostAdminApplicationAccounts for application/json ContentType.
+type PostAdminApplicationAccountsJSONRequestBody PostAdminApplicationAccountsJSONBody
 
 // PutAdminApplicationGroupAccountsAddJSONRequestBody defines body for PutAdminApplicationGroupAccountsAdd for application/json ContentType.
 type PutAdminApplicationGroupAccountsAddJSONRequestBody PutAdminApplicationGroupAccountsAddJSONBody
