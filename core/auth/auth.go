@@ -527,6 +527,8 @@ func (a *Auth) applyAuthType(authType model.AuthType, appOrg model.ApplicationOr
 			regProfile.Phone = userIdentifier
 		} else if authType.Code == "email" && regProfile.Email == "" {
 			regProfile.Email = userIdentifier
+		} else if authType.Code == "phone_password" && regProfile.Phone == "" {
+			regProfile.Phone = userIdentifier
 		}
 	}
 

@@ -1,3 +1,17 @@
+// Copyright 2022 Board of Trustees of the University of Illinois.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package auth
 
 import (
@@ -17,19 +31,17 @@ import (
 )
 
 const (
-	//AuthTypePhonePassword auth type
+	//AuthTypePhonePassword email auth type
 	AuthTypePhonePassword string = "phone_password"
 
-	typePPTime              logutils.MessageDataType = "time.Time"
-	typePhonePasswordCreds  logutils.MessageDataType = "phonePassword creds"
-	typePhonePasswordParams logutils.MessageDataType = "PhonePassword params"
-	verificationsPPPathPart                          = "Verifications"
-	verificationPPCheckPart                          = "VerificationCheck"
+	typesTime               logutils.MessageDataType = "time.Time"
+	typePhonePasswordCreds  logutils.MessageDataType = "phone_password creds"
+	typePhonePasswordParams logutils.MessageDataType = "phone_password params"
 )
 
-//phonePasswordCreds represents the creds struct for phonePassword auth
+//phonePasswordCreds represents the creds struct for phone_password auth
 type phonePasswordCreds struct {
-	Phone              string    `json:"phone" bson:"phone" validate:"required"`
+	Phone              string    `json:"phone_password" bson:"phone_password" validate:"required"`
 	Password           string    `json:"password" bson:"password"`
 	VerificationCode   string    `json:"verification_code" bson:"verification_code"`
 	VerificationExpiry time.Time `json:"verification_expiry" bson:"verification_expiry"`
@@ -37,7 +49,7 @@ type phonePasswordCreds struct {
 	ResetExpiry        time.Time `json:"reset_expiry" bson:"reset_expiry"`
 }
 
-// phonePasswordAuthImpl implementation of authType
+// PhonePassword implementation of authType
 type phonePasswordAuthImpl struct {
 	auth             *Auth
 	authType         string
@@ -46,28 +58,28 @@ type phonePasswordAuthImpl struct {
 	twilioServiceSID string
 }
 
-func (a *phonePasswordAuthImpl) signUp(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error) {
-	type signUpPhonePasswordParams struct {
+func (a *phonePasswordAuthImpl) signUp(authType model.AuthType, appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error) {
+	type signUpPhonePasswordlParams struct {
 		ConfirmPassword string `json:"confirm_password"`
 	}
 
-	var sphonePasswordCreds phonePasswordCreds
-	err := json.Unmarshal([]byte(creds), &sphonePasswordCreds)
+	var sPhonePasswordCreds phonePasswordCreds
+	err := json.Unmarshal([]byte(creds), &sPhonePasswordCreds)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typePhonePasswordCreds, nil, err)
 	}
 
-	var sPhonePasswordParams signUpPhonePasswordParams
+	var sPhonePasswordParams signUpPhonePasswordlParams
 	err = json.Unmarshal([]byte(params), &sPhonePasswordParams)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typePhonePasswordParams, nil, err)
 	}
 
-	phone := sphonePasswordCreds.Phone
-	password := sphonePasswordCreds.Password
+	phone := sPhonePasswordCreds.Phone
+	password := sPhonePasswordCreds.Password
 	confirmPassword := sPhonePasswordParams.ConfirmPassword
 	if len(phone) == 0 {
-		return "", nil, errors.ErrorData(logutils.StatusMissing, typePhonePasswordCreds, logutils.StringArgs("phone"))
+		return "", nil, errors.ErrorData(logutils.StatusMissing, typePhonePasswordCreds, logutils.StringArgs("phone_password"))
 	}
 	if len(password) == 0 {
 		return "", nil, errors.ErrorData(logutils.StatusMissing, typePhonePasswordCreds, logutils.StringArgs("password"))
@@ -92,7 +104,7 @@ func (a *phonePasswordAuthImpl) signUp(authType model.AuthType, appType model.Ap
 		return "", nil, errors.WrapErrorAction(logutils.ActionCompute, model.TypeAuthCred, nil, errors.New("failed to generate random string for verify code"))
 	}
 
-	verifyPhonePassword := a.getVerifyPhonePassword(authType)
+	verifyPhonePassword := a.getVerifyPhone(authType)
 	verifyExpiryTime := a.getVerifyExpiry(authType)
 
 	var phonePasswordCredValue phonePasswordCreds
@@ -104,13 +116,13 @@ func (a *phonePasswordAuthImpl) signUp(authType model.AuthType, appType model.Ap
 
 	phonePasswordCredValueMap, err := phonePasswordCredsToMap(&phonePasswordCredValue)
 	if err != nil {
-		return "", nil, errors.WrapErrorAction("failed phone params to map", "", nil, err)
+		return "", nil, errors.WrapErrorAction("failed email params to map", "", nil, err)
 	}
 
 	if verifyPhonePassword {
 		//send verification code
-		if err = a.sendVerificationCode(phone, appType.Application.Name, code, newCredentialID); err != nil {
-			return "", nil, errors.WrapErrorAction(logutils.ActionSend, "verification", nil, err)
+		if err = a.sendVerificationCode(phone, appOrg.Application.Name, code, newCredentialID, l); err != nil {
+			return "", nil, errors.WrapErrorAction(logutils.ActionSend, "verification link", nil, err)
 		}
 	}
 
@@ -124,8 +136,8 @@ func (a *phonePasswordAuthImpl) isCredentialVerified(credential *model.Credentia
 	}
 
 	//check if phone verification is off
-	verifyPhonePassword := a.getVerifyPhonePassword(credential.AuthType)
-	if !verifyPhonePassword {
+	verifyPhonePass := a.getVerifyPhone(credential.AuthType)
+	if !verifyPhonePass {
 		verified := true
 		return &verified, nil, nil
 	}
@@ -135,7 +147,7 @@ func (a *phonePasswordAuthImpl) isCredentialVerified(credential *model.Credentia
 	//check if the verification is expired
 	storedCreds, err := mapToPhonePasswordCreds(credential.Value)
 	if err != nil {
-		return nil, nil, errors.WrapErrorAction("error on map to phone creds when checking is credential verified", "", nil, err)
+		return nil, nil, errors.WrapErrorAction("error on map to email creds when checking is credential verified", "", nil, err)
 	}
 	expired := false
 	if storedCreds.VerificationExpiry.Before(time.Now()) {
@@ -148,7 +160,7 @@ func (a *phonePasswordAuthImpl) checkCredentials(accountAuthType model.AccountAu
 	//get stored credential
 	storedCreds, err := mapToPhonePasswordCreds(accountAuthType.Credential.Value)
 	if err != nil {
-		return "", errors.WrapErrorAction("error on map to phone creds", "", nil, err)
+		return "", errors.WrapErrorAction("error on map to email creds", "", nil, err)
 	}
 
 	//get request credential
@@ -171,16 +183,16 @@ func (a *phonePasswordAuthImpl) checkCredentials(accountAuthType model.AccountAu
 	return "", nil
 }
 
-func (a *phonePasswordAuthImpl) getVerifyPhonePassword(authType model.AuthType) bool {
-	verifyPhonePassword := true
-	verifyPhonePassowrdParam, ok := authType.Params["verify_phone"].(bool)
+func (a *phonePasswordAuthImpl) getVerifyPhone(authType model.AuthType) bool {
+	verifyPhone := true
+	verifyPhoneParam, ok := authType.Params["verify_phone_password"].(bool)
 	if ok {
-		verifyPhonePassword = verifyPhonePassowrdParam
+		verifyPhone = verifyPhoneParam
 	}
-	return verifyPhonePassword
+	return verifyPhone
 }
 
-//Time in seconds to wait before sending another verification phone
+//Time in seconds to wait before sending another verification email
 func (a *phonePasswordAuthImpl) getVerifyWaitTime(authType model.AuthType) int {
 	//Default is 30 seconds
 	verifyWaitTime := 30
@@ -202,66 +214,65 @@ func (a *phonePasswordAuthImpl) getVerifyExpiry(authType model.AuthType) int {
 	return verifyExpiry
 }
 
-func (a *phonePasswordAuthImpl) sendVerificationCode(phonePassword string, appName string, verificationCode string, credentialID string) error {
+func (a *phonePasswordAuthImpl) sendVerificationCode(phone string, appName string, verificationCode string, credentialID string, l *logs.Log) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	//urlStr := "https://verify.twilio.com/v2/Services"
 	params := url.Values{}
 	params.Add("id", credentialID)
 	params.Add("code", verificationCode)
-	params.Add("To", phonePassword)
-	params.Add("Channel", "sms")
 	verificationLink := a.auth.host + fmt.Sprintf("/ui/credential/verify?%s", params.Encode())
-	message := "Please click the link below to verify your phone number:<br><a href=" + verificationLink + ">" + verificationLink + "</a><br><br>If you did not request this verification link, please ignore this message."
-	params.Set("Body", message)
-	//msgDataReader := *strings.NewReader(params.Encode())
-	subject := "Verify your phone number"
+	subject := "Verify your email address"
 	if appName != "" {
 		subject += " for " + appName
 	}
-	body, err := makeRequest(ctx, "POST", servicesPathPart+"/"+a.twilioServiceSID+"/"+verificationPPCheckPart, params, a.twilioAccountSID, a.twilioToken)
+	body := "Please click the link below to verify your phone number:<br><a href=" + verificationLink + ">" + verificationLink + "</a><br><br>If you did not request this verification link, please ignore this message."
+	req, err := makeRequest(ctx, "POST", body, params, credentialID, a.twilioToken)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionSend, logutils.TypeRequest, nil, err)
 	}
-
-	err = json.Unmarshal(body, nil)
+	err = json.Unmarshal(req, nil)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUnmarshal, typeVerificationResponse, nil, err)
+		return errors.WrapErrorAction(logutils.ActionUnmarshal, "", nil, err)
+	}
+	// start verification
+	params.Add("Channel", "sms")
+
+	//	return a.auth.emailer.Send(email, subject, body, nil)
+	params.Add("To", phone)
+	if body != "" {
+		// check verification
+		params.Add("Verification link", body)
+		return nil
 	}
 
-	/*	client := &http.Client{}
-		req, _ := http.NewRequest("POST", urlStr, &msgDataReader)
-		req.SetBasicAuth(a.twilioAccountSID, a.twilioToken)
-		req.Header.Add("Accept", "application/json")
-		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	return err
+}
 
-		resp, _ := client.Do(req)
-		if resp.StatusCode >= 200 && resp.StatusCode < 300 {
-			var data map[string]interface{}
-			decoder := json.NewDecoder(resp.Body)
-			err := decoder.Decode(&data)
-			if err == nil {
-				fmt.Println(data["sid"])
-			}
-		} else {
-			fmt.Println(resp.Status)
-		}*/
+/*func (a *phonePasswordAuthImpl) checkVerification(phone string, data url.Values, l *logs.Log) error {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	body, err := makeRequest(ctx, "POST", servicesPathPart+"/"+a.twilioServiceSID+"/"+verificationCheckPart, data, a.twilioAccountSID, a.twilioToken)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionSend, logutils.TypeRequest, nil, err)
+	}
+	fmt.Printf(string(body))
 
 	return nil
-}
-func (a *phonePasswordAuthImpl) sendPasswordResetEmail(credentialID string, resetCode string, phonePassword string, appName string) (string, error) {
+}*/
+
+func (a *phonePasswordAuthImpl) sendPasswordResetPassoword(credentialID string, resetCode string, phone string, appName string) error {
 	params := url.Values{}
 	params.Add("id", credentialID)
 	params.Add("code", resetCode)
-	passwordResetLink := a.auth.host + fmt.Sprintf("/ui/credential/reset?%s", params.Encode())
+	//	passwordResetLink := a.auth.host + fmt.Sprintf("/ui/credential/reset?%s", params.Encode())
 	subject := "Reset your password"
 	if appName != "" {
 		subject += " for " + appName
 	}
-	body := "Please click the link below to reset your password:<br><a href=" + passwordResetLink + ">" + passwordResetLink + "</a><br><br>If you did not request a password reset, please ignore this message."
-
-	return body, nil
-
+	//	body := "Please click the link below to reset your password:<br><a href=" + passwordResetLink + ">" + passwordResetLink + "</a><br><br>If you did not request a password reset, please ignore this message."
+	//return a.auth.emailer.Send(email, subject, body, nil)
+	return nil
 }
 
 func (a *phonePasswordAuthImpl) verifyCredential(credential *model.Credential, verification string, l *logs.Log) (map[string]interface{}, error) {
@@ -292,19 +303,19 @@ func (a *phonePasswordAuthImpl) verifyCredential(credential *model.Credential, v
 }
 
 func (a *phonePasswordAuthImpl) sendVerifyCredential(credential *model.Credential, appName string, l *logs.Log) error {
-	//Check if verify phone is disabled for the given authType
+	//Check if verify email is disabled for the given authType
 	authType := credential.AuthType
-	verifyEmail := a.getVerifyPhonePassword(authType)
-	if !verifyEmail {
-		return errors.ErrorAction(logutils.ActionSend, logutils.TypeString, logutils.StringArgs("verify phone is disabled for authType"))
+	verifyPhonePassword := a.getVerifyPhone(authType)
+	if !verifyPhonePassword {
+		return errors.ErrorAction(logutils.ActionSend, logutils.TypeString, logutils.StringArgs("verify email is disabled for authType"))
 	}
 	verifyWaitTime := a.getVerifyWaitTime(authType)
 	verifyExpiryTime := a.getVerifyExpiry(authType)
 
-	//Parse credential value to phonePasswordCreds
+	//Parse credential value to emailCreds
 	phonePasswordCreds, err := mapToPhonePasswordCreds(credential.Value)
 	if err != nil {
-		return errors.WrapErrorAction("error on map to phone creds", "", nil, err)
+		return errors.WrapErrorAction("error on map to email creds", "", nil, err)
 	}
 	//Check if previous verification email was sent less than 30 seconds ago
 	now := time.Now()
@@ -318,9 +329,9 @@ func (a *phonePasswordAuthImpl) sendVerifyCredential(credential *model.Credentia
 		return errors.WrapErrorAction(logutils.ActionCompute, model.TypeAuthCred, nil, errors.New("failed to generate random string for verify code"))
 	}
 
-	//send verification
-	if err = a.sendVerificationCode(phonePasswordCreds.Phone, appName, code, credential.ID); err != nil {
-		return errors.WrapErrorAction(logutils.ActionSend, "verification phone number", nil, err)
+	//send verification email
+	if err = a.sendVerificationCode(phonePasswordCreds.Phone, appName, code, credential.ID, l); err != nil {
+		return errors.WrapErrorAction(logutils.ActionSend, "verification link", nil, err)
 	}
 
 	//Update verification data in credential value
@@ -328,7 +339,7 @@ func (a *phonePasswordAuthImpl) sendVerifyCredential(credential *model.Credentia
 	phonePasswordCreds.VerificationExpiry = time.Now().Add(time.Hour * time.Duration(verifyExpiryTime))
 	credsMap, err := phonePasswordCredsToMap(phonePasswordCreds)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionCast, typeEmailCreds, nil, err)
+		return errors.WrapErrorAction(logutils.ActionCast, typePhonePasswordCreds, nil, err)
 	}
 
 	credential.Value = credsMap
@@ -342,7 +353,7 @@ func (a *phonePasswordAuthImpl) sendVerifyCredential(credential *model.Credentia
 func (a *phonePasswordAuthImpl) restartCredentialVerification(credential *model.Credential, appName string, l *logs.Log) error {
 	storedCreds, err := mapToPhonePasswordCreds(credential.Value)
 	if err != nil {
-		return errors.WrapErrorAction("error on map to phonePassword creds when checking is credential verified", "", nil, err)
+		return errors.WrapErrorAction("error on map to email creds when checking is credential verified", "", nil, err)
 	}
 	//Generate new verification code
 	newCode, err := utils.GenerateRandomString(64)
@@ -351,7 +362,7 @@ func (a *phonePasswordAuthImpl) restartCredentialVerification(credential *model.
 
 	}
 	//send new verification code for future
-	if err = a.sendVerificationCode(storedCreds.Phone, appName, newCode, credential.ID); err != nil {
+	if err = a.sendVerificationCode(storedCreds.Phone, appName, newCode, credential.ID, l); err != nil {
 		return errors.WrapErrorAction(logutils.ActionSend, "verification link", nil, err)
 	}
 	//update new verification data in credential value
@@ -359,7 +370,7 @@ func (a *phonePasswordAuthImpl) restartCredentialVerification(credential *model.
 	storedCreds.VerificationExpiry = time.Now().Add(time.Hour * 24)
 	phonePasswordCredValueMap, err := phonePasswordCredsToMap(storedCreds)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionCast, typePhonePasswordCreds, nil, err)
+		return errors.WrapErrorAction(logutils.ActionCast, typeEmailCreds, nil, err)
 	}
 
 	err = a.auth.storage.UpdateCredentialValue(credential.ID, phonePasswordCredValueMap)
@@ -414,7 +425,7 @@ func (a *phonePasswordAuthImpl) resetCredential(credential *model.Credential, re
 	var creds *phonePasswordCreds
 	err = json.Unmarshal(credBytes, &creds)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typePhonePasswordCreds, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeEmailCreds, nil, err)
 	}
 	//reset password from link
 	if resetCode != nil {
@@ -440,7 +451,7 @@ func (a *phonePasswordAuthImpl) resetCredential(credential *model.Credential, re
 	creds.Password = string(hashedPassword)
 	credsMap, err := phonePasswordCredsToMap(creds)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionCast, typePhonePasswordCreds, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionCast, typeEmailCreds, nil, err)
 	}
 
 	return credsMap, nil
@@ -449,7 +460,7 @@ func (a *phonePasswordAuthImpl) resetCredential(credential *model.Credential, re
 func (a *phonePasswordAuthImpl) forgotCredential(credential *model.Credential, identifier string, appName string, l *logs.Log) (map[string]interface{}, error) {
 	phonePasswordCreds, err := mapToPhonePasswordCreds(credential.Value)
 	if err != nil {
-		return nil, errors.WrapErrorAction("error on map to phonePassword creds", "", nil, err)
+		return nil, errors.WrapErrorAction("error on map to email creds", "", nil, err)
 	}
 	resetCode, err := utils.GenerateRandomString(64)
 	if err != nil {
@@ -462,7 +473,7 @@ func (a *phonePasswordAuthImpl) forgotCredential(credential *model.Credential, i
 	}
 	phonePasswordCreds.ResetCode = string(hashedResetCode)
 	phonePasswordCreds.ResetExpiry = time.Now().Add(time.Hour * 24)
-	_, err = a.sendPasswordResetEmail(credential.ID, resetCode, identifier, appName)
+	err = a.sendPasswordResetPassoword(credential.ID, resetCode, identifier, appName)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionSend, logutils.TypeString, nil, err)
 	}
@@ -477,7 +488,7 @@ func (a *phonePasswordAuthImpl) getUserIdentifier(creds string) (string, error) 
 	var requestCreds phonePasswordCreds
 	err := json.Unmarshal([]byte(creds), &requestCreds)
 	if err != nil {
-		return "", errors.WrapErrorAction(logutils.ActionUnmarshal, typePhonePasswordCreds, nil, err)
+		return "", errors.WrapErrorAction(logutils.ActionUnmarshal, typeEmailCreds, nil, err)
 	}
 
 	return requestCreds.Phone, nil
@@ -509,14 +520,14 @@ func mapToPhonePasswordCreds(credsMap map[string]interface{}) (*phonePasswordCre
 	return &creds, nil
 }
 
-//initPhonePasswordAuth initializes and registers a new email auth instance
+//initEmailAuth initializes and registers a new email auth instance
 func initPhonePasswordAuth(auth *Auth) (*phonePasswordAuthImpl, error) {
-	phoneP := &phonePasswordAuthImpl{auth: auth, authType: AuthTypePhonePassword}
+	phonePassword := &phonePasswordAuthImpl{auth: auth, authType: AuthTypePhonePassword}
 
-	err := auth.registerAuthType(phoneP.authType, nil)
+	err := auth.registerAuthType(phonePassword.authType, phonePassword)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionRegister, typeAuthType, nil, err)
 	}
 
-	return phoneP, nil
+	return phonePassword, nil
 }
