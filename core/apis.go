@@ -174,15 +174,15 @@ func (c *APIs) storeSystemData() error {
 		}
 
 		//5. insert all_system_core permission if does not exist
-		systemPermissions := []string{"all_system_core"}
+		systemPermissions := []string{model.PermissionAllSystemCore}
 		allSystemPermissions, err := c.app.storage.FindPermissionsByName(context, systemPermissions)
 		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionFind, model.TypePermission, &logutils.FieldArgs{"name": "all_system_core"}, err)
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypePermission, &logutils.FieldArgs{"name": model.PermissionAllSystemCore}, err)
 		}
 
 		if len(allSystemPermissions) == 0 {
 			documentIDs["permission"] = uuid.NewString()
-			allSystemCore := model.Permission{ID: documentIDs["permission"], Name: "all_system_core", ServiceID: "core",
+			allSystemCore := model.Permission{ID: documentIDs["permission"], Name: model.PermissionAllSystemCore, ServiceID: "core",
 				Assigners: systemPermissions, DateCreated: time.Now().UTC()}
 			err = c.app.storage.InsertPermission(context, allSystemCore)
 			if err != nil {
@@ -197,7 +197,7 @@ func (c *APIs) storeSystemData() error {
 			if c.systemAccountEmail == "" || c.systemAccountPassword == "" {
 				return errors.ErrorData(logutils.StatusMissing, "initial system account email or password", nil)
 			}
-			documentIDs["account"], err = c.Auth.InitializeSystemAccount(context, *emailAuthType, systemAppOrg, "all_system_core", c.systemAccountEmail, c.systemAccountPassword, c.logger.NewRequestLog(nil))
+			documentIDs["account"], err = c.Auth.InitializeSystemAccount(context, *emailAuthType, systemAppOrg, model.PermissionAllSystemCore, c.systemAccountEmail, c.systemAccountPassword, c.logger.NewRequestLog(nil))
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionInitialize, "system account", nil, err)
 			}
@@ -213,7 +213,7 @@ func (c *APIs) storeSystemData() error {
 			if doc == "auth_type" {
 				fields["code"] = auth.AuthTypeEmail
 			} else if doc == "permission" {
-				fields["name"] = "all_system_core"
+				fields["name"] = model.PermissionAllSystemCore
 			}
 			c.logger.InfoWithFields(fmt.Sprintf("new system %s created", doc), fields)
 		}

@@ -1363,7 +1363,7 @@ func (a *Auth) GetAdminToken(claims tokenauth.Claims, appID string, l *logs.Log)
 	}
 
 	adminClaims := a.getStandardClaims(claims.Subject, claims.UID, claims.Name, claims.Email, claims.Phone, claims.Audience, claims.OrgID, appID, claims.AuthType,
-		claims.ExternalIDs, &claims.ExpiresAt, false, false, false, false, claims.Service, claims.FirstParty, claims.SessionID)
+		claims.ExternalIDs, &claims.ExpiresAt, false, false, true, claims.System, claims.Service, claims.FirstParty, claims.SessionID)
 	return a.buildAccessToken(adminClaims, claims.Permissions, claims.Scope)
 }
 

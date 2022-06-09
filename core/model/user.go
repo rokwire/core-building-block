@@ -277,9 +277,12 @@ type AccountAuthType struct {
 	DateUpdated *time.Time
 }
 
-//SetUnverified sets the Unverified flag to value in the account auth type itself and
-//the appropriate account auth type within the account member
+//SetUnverified sets the Unverified flag to value in the account auth type itself and the appropriate account auth type within the account member
 func (aat *AccountAuthType) SetUnverified(value bool) {
+	if aat == nil {
+		return
+	}
+
 	aat.Unverified = false
 	for i := 0; i < len(aat.Account.AuthTypes); i++ {
 		if aat.Account.AuthTypes[i].ID == aat.ID {
