@@ -617,6 +617,14 @@ func (app *application) admGetApplicationAccountDevices(appID string, orgID stri
 }
 
 func (app *application) admGrantAccountPermissions(appID string, orgID string, accountID string, permissionNames []string, assignerPermissions []string, l *logs.Log) error {
+	//check if there is data
+	if len(assignerPermissions) == 0 {
+		return errors.New("no permissions from admin assigner")
+	}
+	if len(permissionNames) == 0 {
+		return errors.New("no permissions for granting")
+	}
+
 	transaction := func(context storage.TransactionContext) error {
 		//1. verify that the account is for the current app/org
 		account, err := app.storage.FindAccountByID(context, accountID)

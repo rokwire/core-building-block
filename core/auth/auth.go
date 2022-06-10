@@ -359,17 +359,9 @@ func (a *Auth) prepareExternalUserData(authType model.AuthType, appOrg model.App
 
 		profile = regProfile
 		preferences = regPreferences
-	}
 
-	//2. prepare the registration data
-	identifier := externalUser.Identifier
-	params := map[string]interface{}{}
-	params["user"] = externalUser
-
-	//3. prepare profile and preferences
-	if !useSharedProfile {
-		//no need to merge from profile BB for new apps/UIUC app has useSharedprofile=false/
-		preparedProfile, preparedPreferences, err := a.prepareRegistrationData(authType, identifier, profile, preferences, l)
+		//prepare profile and preferences
+		preparedProfile, preparedPreferences, err := a.prepareRegistrationData(authType, externalUser.Identifier, profile, preferences, l)
 		if err != nil {
 			return "", nil, false, nil, nil, errors.WrapErrorAction("error preparing registration data", model.TypeUserAuth, nil, err)
 		}
@@ -377,7 +369,11 @@ func (a *Auth) prepareExternalUserData(authType model.AuthType, appOrg model.App
 		preferences = preparedPreferences
 	}
 
-	return identifier, params, useSharedProfile, &profile, preferences, nil
+	//2. prepare the registration data
+	params := map[string]interface{}{}
+	params["user"] = externalUser
+
+	return externalUser.Identifier, params, useSharedProfile, &profile, preferences, nil
 }
 
 func (a *Auth) applyProfileDataFromExternalUser(profile *model.Profile, externalUser model.ExternalSystemUser, l *logs.Log) (*bool, error) {
@@ -738,10 +734,7 @@ func (a *Auth) applySignUp(authImpl authType, account *model.Account, authType m
 			credential = &model.Credential{ID: credID, AccountsAuthTypes: nil, Value: credentialValue, Verified: false,
 				AuthType: authType, DateCreated: now, DateUpdated: &now}
 		}
-	}
 
-	if !useSharedProfile {
-		//no need to merge from profile BB for new apps/UIUC app has useSharedprofile=false/
 		preparedProfile, preparedPreferences, err := a.prepareRegistrationData(authType, userIdentifier, profile, preferences, l)
 		if err != nil {
 			return "", nil, errors.WrapErrorAction("error preparing registration data", model.TypeUserAuth, nil, err)
@@ -791,7 +784,6 @@ func (a *Auth) applySignUpAdmin(context storage.TransactionContext, authImpl aut
 		//merge client profile and shared profile
 		profile = a.mergeClientAndSharedProfile(regProfile, *sharedProfile)
 		credential = sharedCredential
-		// message = "sucessfully registered"
 	} else {
 		l.Infof("%s does not use a shared profile", identifier)
 
@@ -813,10 +805,7 @@ func (a *Auth) applySignUpAdmin(context storage.TransactionContext, authImpl aut
 			credential = &model.Credential{ID: credID, AccountsAuthTypes: nil, Value: credentialValue, Verified: false,
 				AuthType: authType, DateCreated: now, DateUpdated: &now}
 		}
-	}
 
-	if !useSharedProfile {
-		//no need to merge from profile BB for new apps/UIUC app has useSharedprofile=false/
 		preparedProfile, preparedPreferences, err := a.prepareRegistrationData(authType, identifier, profile, preferences, l)
 		if err != nil {
 			return nil, nil, errors.WrapErrorAction("error preparing registration data", model.TypeUserAuth, nil, err)
@@ -1283,6 +1272,7 @@ func (a *Auth) deleteLoginSessions(context storage.TransactionContext, loginSess
 
 func (a *Auth) prepareRegistrationData(authType model.AuthType, identifier string,
 	profile model.Profile, preferences map[string]interface{}, l *logs.Log) (*model.Profile, map[string]interface{}, error) {
+	//no need to merge from profile BB for new apps
 
 	///profile and preferences
 	//get profile BB data
@@ -1431,7 +1421,7 @@ func (a *Auth) registerUser(context storage.TransactionContext, authType model.A
 		return nil, errors.WrapErrorAction("constructing", model.TypeAccount, nil, err)
 	}
 
-	err = a.manageNewAccountInfo(context, accountAuthType.Account, credential, useSharedProfile, profile)
+	err = a.storeNewAccountInfo(context, accountAuthType.Account, credential, useSharedProfile, profile)
 	if err != nil {
 		return nil, errors.WrapErrorAction("managing", "new account information", nil, err)
 	}
@@ -1484,7 +1474,7 @@ func (a *Auth) registerAdminUser(context storage.TransactionContext, authType mo
 		}
 	}
 
-	err = a.manageNewAccountInfo(context, accountAuthType.Account, credential, useSharedProfile, profile)
+	err = a.storeNewAccountInfo(context, accountAuthType.Account, credential, useSharedProfile, profile)
 	if err != nil {
 		return nil, errors.WrapErrorAction("managing", "new account information", nil, err)
 	}
@@ -1528,7 +1518,7 @@ func (a *Auth) constructAccount(context storage.TransactionContext, authType mod
 	return accountAuthType, nil
 }
 
-func (a *Auth) manageNewAccountInfo(context storage.TransactionContext, account model.Account, credential *model.Credential, useSharedProfile bool, profile model.Profile) error {
+func (a *Auth) storeNewAccountInfo(context storage.TransactionContext, account model.Account, credential *model.Credential, useSharedProfile bool, profile model.Profile) error {
 	//insert account object - it includes the account auth type
 	_, err := a.storage.InsertAccount(context, account)
 	if err != nil {

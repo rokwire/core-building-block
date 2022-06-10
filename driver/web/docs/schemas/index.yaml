@@ -110,6 +110,8 @@ _shared_req_Refresh:
   $ref: "./apis/shared/requests/refresh/Request.yaml"
 _shared_req_Mfa:
   $ref: "./apis/shared/requests/mfa/Request.yaml"
+_shared_req_CreateAccount:
+  $ref: "./apis/shared/requests/create-account/Request.yaml"
 _shared_req_AccountCheck:
   $ref: "./apis/shared/requests/AccountCheck.yaml"
 _shared_req_CredsEmail:
@@ -155,10 +157,6 @@ _shared_res_LoginSession:
 ## end SHARED requests and responses
 
 ## SERVICES section
-
-### create-account API
-_services_req_create-account:
-  $ref: "./apis/services/create-account/Request.yaml"
 
 ### account auth-type link API
 _services_req_account_auth-type-link:
@@ -211,10 +209,6 @@ _services_req_application_org-configs:
 
 ## ADMIN section
 
-### create-account API
-_admin_req_create-account:
-  $ref: "./apis/admin/create-account/Request.yaml"
-
 ### admin app-token API
 _admin_res_app-token:
   $ref: "./apis/admin/app-token/response/Response.yaml"
@@ -257,10 +251,6 @@ _admin_req_grant-permissions-to-role:
 ## end ADMIN section
 
 ## SYSTEM section
-
-### create-account API
-_system_req_create-account:
-  $ref: "./apis/system/create-account/Request.yaml"
 
 ### organization API
 _system_req_create-Organization:

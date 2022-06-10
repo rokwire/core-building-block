@@ -1058,7 +1058,7 @@ func (h SystemApisHandler) createAccount(l *logs.Log, r *http.Request, claims *t
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.SystemReqCreateAccount
+	var requestData Def.SharedReqCreateAccount
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("create account request"), nil, err, http.StatusBadRequest, true)
