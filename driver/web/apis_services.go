@@ -449,6 +449,49 @@ func (h ServicesApisHandler) getAccount(l *logs.Log, r *http.Request, claims *to
 	return l.HttpResponseSuccessJSON(data)
 }
 
+func (h ServicesApisHandler) createAccount(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.SharedReqCreateAccount
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("create account request"), nil, err, http.StatusBadRequest, true)
+	}
+
+	var permissions []string
+	if requestData.Permissions != nil {
+		permissions = *requestData.Permissions
+	}
+	var roleIDs []string
+	if requestData.RoleIds != nil {
+		roleIDs = *requestData.RoleIds
+	}
+	var groupIDs []string
+	if requestData.GroupIds != nil {
+		groupIDs = *requestData.GroupIds
+	}
+	profile := profileFromDefNullable(requestData.Profile)
+	creatorPermissions := strings.Split(claims.Permissions, ",")
+
+	account, params, err := h.coreAPIs.Auth.CreateAccount(string(requestData.AuthType), claims.AppID, claims.OrgID,
+		requestData.Identifier, profile, permissions, roleIDs, groupIDs, creatorPermissions, l)
+	if err != nil || account == nil {
+		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
+	}
+
+	respData := partialAccountToDef(*account, params)
+
+	data, err = json.Marshal(respData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeAccount, nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessJSON(data)
+}
+
 func (h ServicesApisHandler) getMFATypes(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	mfaDataList, err := h.coreAPIs.Auth.GetMFATypes(claims.Subject)
 	if err != nil {

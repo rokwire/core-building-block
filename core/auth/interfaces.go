@@ -33,6 +33,12 @@ type authType interface {
 	//	credentialValue (map): Credential value
 	signUp(authType model.AuthType, appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error)
 
+	//signUpAdmin signs up a new admin user
+	// Returns:
+	//	password (string): newly generated password
+	//	credentialValue (map): Credential value
+	signUpAdmin(authType model.AuthType, appOrg model.ApplicationOrganization, identifier string, password string, newCredentialID string) (map[string]interface{}, map[string]interface{}, error)
+
 	//verifies credential (checks the verification code generated on email signup for email auth type)
 	// Returns:
 	//	authTypeCreds (map[string]interface{}): Updated Credential.Value
@@ -224,6 +230,10 @@ type APIs interface {
 	//			AccountAuthType (AccountAuthType): AccountAuthType object for authenticated user
 	LoginMFA(apiKey string, accountID string, sessionID string, identifier string, mfaType string, mfaCode string, state string, l *logs.Log) (*string, *model.LoginSession, error)
 
+	//CreateAccount creates an account for a new user or updates an existing user's account with new permissions, roles, and groups
+	CreateAccount(authenticationType string, appID string, orgID string, identifier string, profile model.Profile,
+		permissions []string, roleIDs []string, groupIDs []string, creatorPermissions []string, l *logs.Log) (*model.Account, map[string]interface{}, error)
+
 	//UpdateAdminAccount updates an existing user's account with new permissions, roles, and groups
 	UpdateAdminAccount(accountID string, permissions []string, roleIDs []string, groupIDs []string, updaterPermissions []string, l *logs.Log) (*model.Account, map[string]interface{}, error)
 
@@ -311,7 +321,7 @@ type APIs interface {
 
 	//RegisterServiceAccount registers a service account
 	RegisterServiceAccount(accountID *string, fromAppID *string, fromOrgID *string, name *string, appID *string, orgID *string,
-		permissions *[]string, firstParty *bool, creds []model.ServiceAccountCredential, l *logs.Log) (*model.ServiceAccount, error)
+		permissions *[]string, firstParty *bool, creds []model.ServiceAccountCredential, assignerPermissions []string, l *logs.Log) (*model.ServiceAccount, error)
 
 	//DeregisterServiceAccount deregisters a service account
 	DeregisterServiceAccount(accountID string) error
@@ -320,7 +330,7 @@ type APIs interface {
 	GetServiceAccountInstance(accountID string, appID *string, orgID *string) (*model.ServiceAccount, error)
 
 	//UpdateServiceAccountInstance updates a service account instance
-	UpdateServiceAccountInstance(id string, appID *string, orgID *string, name string, permissions []string) (*model.ServiceAccount, error)
+	UpdateServiceAccountInstance(id string, appID *string, orgID *string, name string, permissions []string, assignerPermissions []string) (*model.ServiceAccount, error)
 
 	//DeregisterServiceAccountInstance deregisters a service account instance
 	DeregisterServiceAccountInstance(id string, appID *string, orgID *string) error
@@ -372,7 +382,15 @@ type APIs interface {
 	UnlinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, identifier string, l *logs.Log) (*model.Account, error)
 
 	//InitializeSystemAccount initializes the first system account
-	InitializeSystemAccount(context storage.TransactionContext, authType model.AuthType, appOrg model.ApplicationOrganization, allSystemPermissionID string, email string, password string, l *logs.Log) (string, error)
+	InitializeSystemAccount(context storage.TransactionContext, authType model.AuthType, appOrg model.ApplicationOrganization, allSystemPermission string, email string, password string, l *logs.Log) (string, error)
+
+	//GrantAccountPermissions grants permissions to an account after validating the assigner has required permissions
+	//Checks that the account does not already have any of the requested permissions
+	GrantAccountPermissions(context storage.TransactionContext, account *model.Account, permissionNames []string, assignerPermissions []string) error
+
+	//GrantAccountRoles grants roles to an account after validating the assigner has required permissions
+	//Checks that the account does not already have any of the requested roles
+	GrantAccountRoles(context storage.TransactionContext, account *model.Account, roleIDs []string, assignerPermissions []string) error
 
 	//DeleteAccount deletes an account for the given id
 	DeleteAccount(id string) error
@@ -522,7 +540,8 @@ type Storage interface {
 	FindApplicationOrganization(appID string, orgID string) (*model.ApplicationOrganization, error)
 
 	//Permissions
-	FindPermissionsByName(names []string) ([]model.Permission, error)
+	FindPermissionsByName(context storage.TransactionContext, names []string) ([]model.Permission, error)
+	InsertAccountPermissions(context storage.TransactionContext, accountID string, permissions []model.Permission) error
 
 	//Device
 	FindDevice(context storage.TransactionContext, deviceID string, accountID string) (*model.Device, error)
@@ -536,11 +555,13 @@ type Storage interface {
 	FindAppOrgRolesByIDs(context storage.TransactionContext, ids []string, appOrgID string) ([]model.AppOrgRole, error)
 	//AccountRoles
 	UpdateAccountRoles(accountID string, roles []model.AccountRole) error
+	InsertAccountRoles(context storage.TransactionContext, accountID string, appOrgID string, roles []model.AccountRole) error
 
 	//ApplicationGroups
 	FindAppOrgGroupsByIDs(context storage.TransactionContext, ids []string, appOrgID string) ([]model.AppOrgGroup, error)
 	//AccountGroups
 	UpdateAccountGroups(accountID string, groups []model.AccountGroup) error
+	InsertAccountGroups(context storage.TransactionContext, accountID string, appOrgID string, groups []model.AccountGroup) error
 }
 
 //ProfileBuildingBlock is used by auth to communicate with the profile building block.

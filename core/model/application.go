@@ -50,6 +50,9 @@ const (
 	TypeApplicationConfigsVersion logutils.MessageDataType = "app config version number"
 	//TypeVersionNumbers ...
 	TypeVersionNumbers logutils.MessageDataType = "version numbers"
+
+	//PermissionAllSystemCore ...
+	PermissionAllSystemCore string = "all_system_core"
 )
 
 //Permission represents permission entity

@@ -882,6 +882,38 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+  /services/accounts:
+    post:
+      tags:
+        - Services
+      summary: Create admin account
+      description: |
+        Create a new admin account
+
+        **Auth:** Requires auth token with `create_account` permission
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: |
+          User account details and parameters
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_shared_req_CreateAccount'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PartialAccount'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   /services/account:
     delete:
       tags:
@@ -1656,6 +1688,37 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+    post:
+      tags:
+        - Admin
+      summary: Create admin accounts
+      description: |
+        Create a new admin account
+
+        **Auth:** Requires auth token with `create_account` permission
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: |
+          User account details and parameters
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_shared_req_CreateAccount'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PartialAccount'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   '/admin/application/account/{id}/devices':
     get:
       tags:
@@ -1953,7 +2016,8 @@ paths:
         - `update_auth-groups`
         - `delete_auth-groups`
         - `all_auth-groups`
-        - `update_account-auth-roles`
+        - `update_account-auth-groups`
+        - `update_account-authorization`
       security:
         - bearerAuth: []
       responses:
@@ -2101,7 +2165,10 @@ paths:
       description: |
         Get application permissions
 
-        **Auth:** Requires admin access token with 'get_permissions' permission
+        **Auth:** Requires admin access token with at least one of the following permissions:
+        - 'get_permissions'
+        - `update_account-permissions`
+        - `update_account-authorization`
       security:
         - bearerAuth: []
       responses:
@@ -2127,7 +2194,13 @@ paths:
       description: |
         Gets application roles
 
-        **Auth:** Requires admin access token with 'get_auth-roles', 'update_auth-roles', 'delete_auth-roles', or `all_auth-roles` permission
+        **Auth:** Requires admin access token with at least one of the following permissions: 
+        - 'get_auth-roles'
+        - 'update_auth-roles'
+        - 'delete_auth-roles'
+        - `all_auth-roles`
+        - `update_account-auth-roles`
+        - `update_account-authorization`
       security:
         - bearerAuth: []
       responses:
@@ -2932,7 +3005,7 @@ paths:
       description: |
         Gives the system global config
 
-        **Auth:** Requires system access token with `get_global-config` or `all_global-config` permission
+        **Auth:** Requires system access token with `get_global-config`, `update_global-config`, or `all_global-config` permission
       security:
         - bearerAuth: []
       responses:
@@ -3016,7 +3089,7 @@ paths:
       description: |
         Gets organization by ID
 
-        **Auth:** Requires system access token with `get_organizations` or `all_organizations` permission
+        **Auth:** Requires system access token with `get_organizations`, `update_organizations`, or `all_organizations` permission
       security:
         - bearerAuth: []
       parameters:
@@ -3091,7 +3164,7 @@ paths:
       description: |
         Gets organizations
 
-        **Auth:** Requires system access token with `get_organizations` or `all_organizations` permission
+        **Auth:** Requires system access token with `get_organizations`, `update_organizations`, or `all_organizations` permission
       security:
         - bearerAuth: []
       responses:
@@ -3148,7 +3221,7 @@ paths:
       description: |
         Returns service registration records
 
-        **Auth:** Requires system access token with `get_service-regs` or `all_service-regs` permission
+        **Auth:** Requires system access token with `get_service-regs`, `update_service-regs`, `delete_service-regs`, or `all_service-regs` permission
       security:
         - bearerAuth: []
       parameters:
@@ -3282,7 +3355,7 @@ paths:
       description: |
         Get service account instance by account ID, app ID, and org ID
 
-        **Auth:** Requires system access token with `get_service-accounts` or `all_service-accounts` permission
+        **Auth:** Requires system access token with `get_service-accounts`, `update_service-accounts`, `delete_service-accounts`, or `all_service-accounts` permission
       security:
         - bearerAuth: []
       parameters:
@@ -3439,7 +3512,7 @@ paths:
       description: |
         Get list of all service accounts matching a search
 
-        **Auth:** Requires system access token with `get_service-accounts` or `all_service-accounts` permission
+        **Auth:** Requires system access token with `get_service-accounts`, `update_service-accounts`, `delete_service-accounts`, or `all_service-accounts` permission
       security:
         - bearerAuth: []
       parameters:
@@ -3755,7 +3828,7 @@ paths:
       description: |
         Gets applications
 
-        **Auth:** Requires system access token with `get_applications` or `all_applications` permission
+        **Auth:** Requires system access token with `get_applications`, `udpate_applications`, or `all_applications` permission
       security:
         - bearerAuth: []
       responses:
@@ -3944,7 +4017,7 @@ paths:
         Otherwise it will return a list of all app config versions for the given app_type_id. If org_id is provided, the configs for that organization will
         be returned, otherwise the default configs will be returned.
 
-        **Auth:** Requires system access token with `get_app-configs` or `all_app-configs` permission
+        **Auth:** Requires system access token with `get_app-configs`, `update_app-configs`, `delete_app-configs`, or `all_app-configs` permission
       security:
         - bearerAuth: []
       parameters:
@@ -4024,9 +4097,9 @@ paths:
         - System
       summary: Reads app configs by ID
       description: |
-        Get a app configs for the provided ID
+        Get app configs for the provided ID
 
-        **Auth:** Requires system access token with `get_app-configs` or `all_app-configs` permission
+        **Auth:** Requires system access token with `get_app-configs`, `update_app-configs`, `delete_app-configs`, or `all_app-configs` permission
       security:
         - bearerAuth: []
       parameters:
@@ -4117,6 +4190,85 @@ paths:
       responses:
         '200':
           description: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /system/accounts:
+    get:
+      tags:
+        - System
+      summary: Get user account
+      description: |
+        Get the user account
+
+        **Auth:** Requires user auth token
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PartialAccount'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+    post:
+      tags:
+        - System
+      summary: Create admin account
+      description: |
+        Create a new admin account
+
+        **Auth:** Requires auth token with `create_account` permission
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: |
+          User account details and parameters
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_shared_req_CreateAccount'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PartialAccount'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /system/account:
+    get:
+      tags:
+        - System
+      summary: Get user account
+      description: |
+        Get the user account
+
+        **Auth:** Requires user auth token
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_shared_res_Account'
         '400':
           description: Bad request
         '401':
@@ -4281,7 +4433,7 @@ paths:
       description: |
         Returns API key record
 
-        **Auth:** Requires system access token with `get_api-keys` or `all_api-keys` permission
+        **Auth:** Requires system access token with `get_api-keys`, `update_api-keys`, `delete_api-keys`, or `all_api-keys` permission
       security:
         - bearerAuth: []
       parameters:
@@ -4416,7 +4568,7 @@ paths:
       description: |
         Gets auth types
 
-        **Auth:** Requires system access token with `get_auth-types` or `all_auth-types` permission
+        **Auth:** Requires system access token with `get_auth-types`, `update_auth-types`, or `all_auth-types` permission
       security:
         - bearerAuth: []
       responses:
@@ -5136,6 +5288,55 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Device'
+    PartialAccount:
+      required:
+        - id
+        - app_id
+        - org_id
+        - first_name
+        - last_name
+        - permissions
+        - roles
+        - groups
+        - auth_types
+        - date_created
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        app_id:
+          type: string
+        org_id:
+          type: string
+        first_name:
+          type: string
+        last_name:
+          type: string
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/PermissionFields'
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/AppOrgRoleFields'
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/AppOrgGroupFields'
+        auth_types:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccountAuthTypeFields'
+        params:
+          type: object
+          nullable: true
+        date_created:
+          type: string
+        date_updated:
+          type: string
+          nullable: true
     AccountFields:
       required:
         - id
@@ -5373,6 +5574,33 @@ components:
             - totp
         code:
           type: string
+    _shared_req_CreateAccount:
+      required:
+        - auth_type
+        - identifier
+      type: object
+      properties:
+        auth_type:
+          type: string
+          enum:
+            - email
+            - illinois_oidc
+        identifier:
+          type: string
+        permissions:
+          type: array
+          items:
+            type: string
+        role_ids:
+          type: array
+          items:
+            type: string
+        group_ids:
+          type: array
+          items:
+            type: string
+        profile:
+          $ref: '#/components/schemas/_shared_req_ProfileNullable'
     _shared_req_AccountCheck:
       required:
         - auth_type
@@ -5613,6 +5841,15 @@ components:
             - $ref: '#/components/schemas/_shared_res_Login/properties/params/anyOf/0'
             - $ref: '#/components/schemas/_shared_res_Login/properties/params/anyOf/1'
             - $ref: '#/components/schemas/_shared_res_Login/properties/params/anyOf/2'
+    _shared_res_Mfa:
+      type: object
+      properties:
+        type:
+          type: string
+        verified:
+          type: boolean
+        params:
+          type: object
     _shared_res_Account:
       required:
         - id
@@ -5643,15 +5880,6 @@ components:
             $ref: '#/components/schemas/AccountAuthTypeFields'
     _shared_res_AccountCheck:
       type: boolean
-    _shared_res_Mfa:
-      type: object
-      properties:
-        type:
-          type: string
-        verified:
-          type: boolean
-        params:
-          type: object
     _shared_res_RokwireToken:
       type: object
       properties:

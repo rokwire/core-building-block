@@ -131,6 +131,13 @@ const (
 	SharedReqAccountCheckAuthTypeUsername SharedReqAccountCheckAuthType = "username"
 )
 
+// Defines values for SharedReqCreateAccountAuthType.
+const (
+	SharedReqCreateAccountAuthTypeEmail SharedReqCreateAccountAuthType = "email"
+
+	SharedReqCreateAccountAuthTypeIllinoisOidc SharedReqCreateAccountAuthType = "illinois_oidc"
+)
+
 // Defines values for SharedReqLoginAuthType.
 const (
 	SharedReqLoginAuthTypeAnonymous SharedReqLoginAuthType = "anonymous"
@@ -483,6 +490,22 @@ type OrganizationFields struct {
 // OrganizationFieldsType defines model for OrganizationFields.Type.
 type OrganizationFieldsType string
 
+// PartialAccount defines model for PartialAccount.
+type PartialAccount struct {
+	AppId       string                  `json:"app_id"`
+	AuthTypes   []AccountAuthTypeFields `json:"auth_types"`
+	DateCreated string                  `json:"date_created"`
+	DateUpdated *string                 `json:"date_updated"`
+	FirstName   string                  `json:"first_name"`
+	Groups      []AppOrgGroupFields     `json:"groups"`
+	Id          string                  `json:"id"`
+	LastName    string                  `json:"last_name"`
+	OrgId       string                  `json:"org_id"`
+	Params      *map[string]interface{} `json:"params"`
+	Permissions []PermissionFields      `json:"permissions"`
+	Roles       []AppOrgRoleFields      `json:"roles"`
+}
+
 // Permission defines model for Permission.
 type Permission struct {
 	Fields *PermissionFields `json:"fields,omitempty"`
@@ -794,6 +817,19 @@ type SharedReqAccountCheck struct {
 
 // SharedReqAccountCheckAuthType defines model for SharedReqAccountCheck.AuthType.
 type SharedReqAccountCheckAuthType string
+
+// SharedReqCreateAccount defines model for _shared_req_CreateAccount.
+type SharedReqCreateAccount struct {
+	AuthType    SharedReqCreateAccountAuthType `json:"auth_type"`
+	GroupIds    *[]string                      `json:"group_ids,omitempty"`
+	Identifier  string                         `json:"identifier"`
+	Permissions *[]string                      `json:"permissions,omitempty"`
+	Profile     *SharedReqProfileNullable      `json:"profile"`
+	RoleIds     *[]string                      `json:"role_ids,omitempty"`
+}
+
+// SharedReqCreateAccountAuthType defines model for SharedReqCreateAccount.AuthType.
+type SharedReqCreateAccountAuthType string
 
 // Auth login creds for auth_type="anonymous"
 type SharedReqCredsAPIKey struct {
@@ -1187,6 +1223,9 @@ type GetAdminApplicationAccountsParams struct {
 	AuthTypeIdentifier *string `json:"auth-type-identifier,omitempty"`
 }
 
+// PostAdminApplicationAccountsJSONBody defines parameters for PostAdminApplicationAccounts.
+type PostAdminApplicationAccountsJSONBody SharedReqCreateAccount
+
 // PutAdminApplicationGroupAccountsAddJSONBody defines parameters for PutAdminApplicationGroupAccountsAdd.
 type PutAdminApplicationGroupAccountsAddJSONBody AdminReqAddAccountsToGroup
 
@@ -1283,6 +1322,9 @@ type PutServicesAccountPreferencesJSONBody map[string]interface{}
 
 // PutServicesAccountProfileJSONBody defines parameters for PutServicesAccountProfile.
 type PutServicesAccountProfileJSONBody SharedReqProfile
+
+// PostServicesAccountsJSONBody defines parameters for PostServicesAccounts.
+type PostServicesAccountsJSONBody SharedReqCreateAccount
 
 // PostServicesApplicationConfigsJSONBody defines parameters for PostServicesApplicationConfigs.
 type PostServicesApplicationConfigsJSONBody ServicesReqApplicationConfigs
@@ -1383,6 +1425,9 @@ type PutSystemAccountPermissionsJSONBody SystemReqAccountPermissions
 
 // PutSystemAccountRolesJSONBody defines parameters for PutSystemAccountRoles.
 type PutSystemAccountRolesJSONBody SystemReqAccountRoles
+
+// PostSystemAccountsJSONBody defines parameters for PostSystemAccounts.
+type PostSystemAccountsJSONBody SharedReqCreateAccount
 
 // DeleteSystemApiKeysParams defines parameters for DeleteSystemApiKeys.
 type DeleteSystemApiKeysParams struct {
@@ -1626,6 +1671,9 @@ type PutAdminApplicationAccountRolesGrantJSONRequestBody PutAdminApplicationAcco
 // DeleteAdminApplicationAccountRolesRevokeJSONRequestBody defines body for DeleteAdminApplicationAccountRolesRevoke for application/json ContentType.
 type DeleteAdminApplicationAccountRolesRevokeJSONRequestBody DeleteAdminApplicationAccountRolesRevokeJSONBody
 
+// PostAdminApplicationAccountsJSONRequestBody defines body for PostAdminApplicationAccounts for application/json ContentType.
+type PostAdminApplicationAccountsJSONRequestBody PostAdminApplicationAccountsJSONBody
+
 // PutAdminApplicationGroupAccountsAddJSONRequestBody defines body for PutAdminApplicationGroupAccountsAdd for application/json ContentType.
 type PutAdminApplicationGroupAccountsAddJSONRequestBody PutAdminApplicationGroupAccountsAddJSONBody
 
@@ -1676,6 +1724,9 @@ type PutServicesAccountPreferencesJSONRequestBody PutServicesAccountPreferencesJ
 
 // PutServicesAccountProfileJSONRequestBody defines body for PutServicesAccountProfile for application/json ContentType.
 type PutServicesAccountProfileJSONRequestBody PutServicesAccountProfileJSONBody
+
+// PostServicesAccountsJSONRequestBody defines body for PostServicesAccounts for application/json ContentType.
+type PostServicesAccountsJSONRequestBody PostServicesAccountsJSONBody
 
 // PostServicesApplicationConfigsJSONRequestBody defines body for PostServicesApplicationConfigs for application/json ContentType.
 type PostServicesApplicationConfigsJSONRequestBody PostServicesApplicationConfigsJSONBody
@@ -1736,6 +1787,9 @@ type PutSystemAccountPermissionsJSONRequestBody PutSystemAccountPermissionsJSONB
 
 // PutSystemAccountRolesJSONRequestBody defines body for PutSystemAccountRoles for application/json ContentType.
 type PutSystemAccountRolesJSONRequestBody PutSystemAccountRolesJSONBody
+
+// PostSystemAccountsJSONRequestBody defines body for PostSystemAccounts for application/json ContentType.
+type PostSystemAccountsJSONRequestBody PostSystemAccountsJSONBody
 
 // PostSystemApiKeysJSONRequestBody defines body for PostSystemApiKeys for application/json ContentType.
 type PostSystemApiKeysJSONRequestBody PostSystemApiKeysJSONBody

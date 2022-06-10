@@ -18,7 +18,6 @@ import (
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
 	"core-building-block/utils"
-	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -357,6 +356,9 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.
 	}
 
 	for k, v := range externalIDChanges {
+		if loginSession.ExternalIDs == nil {
+			loginSession.ExternalIDs = make(map[string]string)
+		}
 		loginSession.ExternalIDs[k] = v
 	}
 
@@ -546,6 +548,110 @@ func (a *Auth) LoginMFA(apiKey string, accountID string, sessionID string, ident
 	}
 
 	return nil, loginSession, nil
+}
+
+//CreateAccount creates an account for a new user or updates an existing user's account with new permissions, roles, and groups
+func (a *Auth) CreateAccount(authenticationType string, appID string, orgID string, identifier string,
+	profile model.Profile, permissions []string, roleIDs []string, groupIDs []string, creatorPermissions []string, l *logs.Log) (*model.Account, map[string]interface{}, error) {
+	//TODO: add admin authentication policies that specify which auth types may be used for each app org
+	if authenticationType != AuthTypeOidc && authenticationType != AuthTypeEmail && !strings.HasSuffix(authenticationType, "_oidc") {
+		return nil, nil, errors.ErrorData(logutils.StatusInvalid, "auth type", nil)
+	}
+
+	// check if the provided auth type is supported by the provided application and organization
+	authType, appOrg, err := a.validateAuthTypeForAppOrg(authenticationType, appID, orgID)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
+	}
+
+	// create account
+	var accountAuthType *model.AccountAuthType
+	var newAccount *model.Account
+	var params map[string]interface{}
+	transaction := func(context storage.TransactionContext) error {
+		//1. check if the user exists
+		account, err := a.storage.FindAccount(appOrg.ID, authType.ID, identifier)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+		}
+		canSignIn := a.canSignIn(account, authType.ID, identifier)
+
+		//2. account exists, so grant the necessary permissions, roles, groups
+		if canSignIn {
+			addPermissions := make([]string, 0)
+			for _, p := range permissions {
+				if account.GetPermissionNamed(p) == nil {
+					addPermissions = append(addPermissions, p)
+				}
+			}
+			if len(addPermissions) > 0 {
+				err = a.GrantAccountPermissions(context, account, addPermissions, creatorPermissions)
+				if err != nil {
+					return errors.WrapErrorAction("granting", "admin account permissions", nil, err)
+				}
+			}
+
+			addRoles := make([]string, 0)
+			for _, r := range roleIDs {
+				if account.GetRole(r) == nil {
+					addRoles = append(addRoles, r)
+				}
+			}
+			if len(addRoles) > 0 {
+				err = a.GrantAccountRoles(context, account, addRoles, creatorPermissions)
+				if err != nil {
+					return errors.WrapErrorAction("granting", "admin account roles", nil, err)
+				}
+			}
+
+			addGroups := make([]string, 0)
+			for _, g := range groupIDs {
+				if account.GetGroup(g) == nil {
+					addGroups = append(addGroups, g)
+				}
+			}
+			if len(addGroups) > 0 {
+				err = a.GrantAccountGroups(context, account, addGroups, creatorPermissions)
+				if err != nil {
+					return errors.WrapErrorAction("granting", "admin account groups", nil, err)
+				}
+			}
+
+			newAccount = account
+			return nil
+		}
+
+		//3. account does not exist, so apply sign up
+		profile.DateCreated = time.Now().UTC()
+		if authType.IsExternal {
+			externalUser := model.ExternalSystemUser{Identifier: identifier}
+			accountAuthType, err = a.applySignUpAdminExternal(context, *authType, *appOrg, externalUser, profile, permissions, roleIDs, groupIDs, creatorPermissions, l)
+			if err != nil {
+				return errors.WrapErrorAction("signing up", "admin user", &logutils.FieldArgs{"auth_type": authType.Code, "identifier": identifier}, err)
+			}
+		} else {
+			authImpl, err := a.getAuthTypeImpl(*authType)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionLoadCache, typeExternalAuthType, nil, err)
+			}
+
+			profile.Email = identifier
+			params, accountAuthType, err = a.applySignUpAdmin(context, authImpl, account, *authType, *appOrg, identifier, "", profile, permissions, roleIDs, groupIDs, creatorPermissions, l)
+			if err != nil {
+				return errors.WrapErrorAction("signing up", "admin user", &logutils.FieldArgs{"auth_type": authType.Code, "identifier": identifier}, err)
+			}
+		}
+
+		newAccount = &accountAuthType.Account
+		return nil
+	}
+
+	err = a.storage.PerformTransaction(transaction)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionCreate, "admin account", nil, err)
+	}
+
+	return newAccount, params, nil
 }
 
 //UpdateAdminAccount updates an existing user's account with new permissions, roles, and groups
@@ -1102,7 +1208,7 @@ func (a *Auth) GetServiceAccounts(params map[string]interface{}) ([]model.Servic
 
 //RegisterServiceAccount registers a service account
 func (a *Auth) RegisterServiceAccount(accountID *string, fromAppID *string, fromOrgID *string, name *string, appID *string,
-	orgID *string, permissions *[]string, firstParty *bool, creds []model.ServiceAccountCredential, l *logs.Log) (*model.ServiceAccount, error) {
+	orgID *string, permissions *[]string, firstParty *bool, creds []model.ServiceAccountCredential, assignerPermissions []string, l *logs.Log) (*model.ServiceAccount, error) {
 	var newAccount *model.ServiceAccount
 	var err error
 	var newName string
@@ -1125,7 +1231,7 @@ func (a *Auth) RegisterServiceAccount(accountID *string, fromAppID *string, from
 			permissionList = *permissions
 		}
 
-		newAccount, err = a.constructServiceAccount(fromAccount.AccountID, newName, appID, orgID, permissionList, fromAccount.FirstParty)
+		newAccount, err = a.constructServiceAccount(fromAccount.AccountID, newName, appID, orgID, permissionList, fromAccount.FirstParty, assignerPermissions)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeServiceAccount, nil, err)
 		}
@@ -1143,7 +1249,7 @@ func (a *Auth) RegisterServiceAccount(accountID *string, fromAppID *string, from
 			permissionList = *permissions
 		}
 
-		newAccount, err = a.constructServiceAccount(id.String(), newName, appID, orgID, permissionList, *firstParty)
+		newAccount, err = a.constructServiceAccount(id.String(), newName, appID, orgID, permissionList, *firstParty, assignerPermissions)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeServiceAccount, nil, err)
 		}
@@ -1203,8 +1309,8 @@ func (a *Auth) GetServiceAccountInstance(accountID string, appID *string, orgID 
 }
 
 //UpdateServiceAccountInstance updates a service account instance
-func (a *Auth) UpdateServiceAccountInstance(id string, appID *string, orgID *string, name string, permissions []string) (*model.ServiceAccount, error) {
-	updatedAccount, err := a.constructServiceAccount(id, name, appID, orgID, permissions, false)
+func (a *Auth) UpdateServiceAccountInstance(id string, appID *string, orgID *string, name string, permissions []string, assignerPermissions []string) (*model.ServiceAccount, error) {
+	updatedAccount, err := a.constructServiceAccount(id, name, appID, orgID, permissions, false, assignerPermissions)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeServiceAccount, nil, err)
 	}
@@ -1323,7 +1429,7 @@ func (a *Auth) GetAdminToken(claims tokenauth.Claims, appID string, l *logs.Log)
 	}
 
 	adminClaims := a.getStandardClaims(claims.Subject, claims.UID, claims.Name, claims.Email, claims.Phone, claims.Audience, claims.OrgID, appID, claims.AuthType,
-		claims.ExternalIDs, &claims.ExpiresAt, false, false, true, appOrg.Organization.System, claims.Service, claims.FirstParty, claims.SessionID)
+		claims.ExternalIDs, &claims.ExpiresAt, false, false, true, claims.System, claims.Service, claims.FirstParty, claims.SessionID)
 	return a.buildAccessToken(adminClaims, claims.Permissions, claims.Scope)
 }
 
@@ -1417,7 +1523,7 @@ func (a *Auth) DeleteAccount(id string) error {
 
 //InitializeSystemAccount initializes the first system account
 func (a *Auth) InitializeSystemAccount(context storage.TransactionContext, authType model.AuthType, appOrg model.ApplicationOrganization,
-	allSystemPermissionID string, email string, password string, l *logs.Log) (string, error) {
+	allSystemPermission string, email string, password string, l *logs.Log) (string, error) {
 	//auth type
 	authImpl, err := a.getAuthTypeImpl(authType)
 	if err != nil {
@@ -1426,47 +1532,193 @@ func (a *Auth) InitializeSystemAccount(context storage.TransactionContext, authT
 
 	now := time.Now()
 	profile := model.Profile{ID: uuid.NewString(), Email: email, DateCreated: now}
+	permissions := []string{allSystemPermission}
 
-	credentialID, _ := uuid.NewUUID()
-	credID := credentialID.String()
-
-	///apply sign up
-	creds := struct {
-		Email    string `json:"email"`
-		Password string `json:"password"`
-	}{email, password}
-	emailCreds, err := json.Marshal(creds)
+	_, accountAuthType, err := a.applySignUpAdmin(context, authImpl, nil, authType, appOrg, email, password, profile, permissions, nil, nil, permissions, l)
 	if err != nil {
-		return "", errors.WrapErrorAction(logutils.ActionMarshal, "initial system account email creds", nil, err)
-	}
-
-	params := struct {
-		ConfirmPassword string `json:"confirm_password"`
-	}{password}
-	emailParams, err := json.Marshal(params)
-	if err != nil {
-		return "", errors.WrapErrorAction(logutils.ActionMarshal, "initial system account email params", nil, err)
-	}
-
-	var credentialValue map[string]interface{}
-	_, credentialValue, err = authImpl.signUp(authType, appOrg, string(emailCreds), string(emailParams), credentialID.String(), l)
-	if err != nil {
-		return "", errors.Wrap("error signing up", err)
-	}
-	if credentialValue == nil {
-		return "", errors.New("error creating credentials for initial system account")
-	}
-
-	//credential
-	credential := &model.Credential{ID: credID, AccountsAuthTypes: nil, Value: credentialValue, Verified: false,
-		AuthType: authType, DateCreated: now, DateUpdated: &now}
-
-	accountAuthType, err := a.registerUser(context, authType, email, nil, appOrg, credential, false, nil, profile, nil, []string{allSystemPermissionID}, nil, nil, l)
-	if err != nil {
-		return "", errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
+		return "", errors.WrapErrorAction("signing up", "initial system user", &logutils.FieldArgs{"email": email}, err)
 	}
 
 	return accountAuthType.Account.ID, nil
+}
+
+//GrantAccountPermissions grants permissions to an account after validating the assigner has required permissions
+//Checks that the account does not already have any of the requested permissions
+func (a *Auth) GrantAccountPermissions(context storage.TransactionContext, account *model.Account, permissionNames []string, assignerPermissions []string) error {
+	//check if there is data
+	if account == nil {
+		return errors.New("no account to grant permissions")
+	}
+	if len(permissionNames) == 0 {
+		return errors.New("no permissions to grant")
+	}
+
+	//verify that the account do not have any of the permissions which are supposed to be granted
+	for _, current := range permissionNames {
+		hasP := account.GetPermissionNamed(current)
+		if hasP != nil {
+			return errors.Newf("account %s already has %s granted", account.ID, current)
+		}
+	}
+
+	//find permissions
+	permissions, err := a.storage.FindPermissionsByName(context, permissionNames)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypePermission, nil, err)
+	}
+	if len(permissions) != len(permissionNames) {
+		badNames := make([]string, 0)
+		for _, pName := range permissionNames {
+			bad := true
+			for _, p := range permissions {
+				if p.Name == pName {
+					bad = false
+					break
+				}
+			}
+			if bad {
+				badNames = append(badNames, pName)
+			}
+		}
+		return errors.ErrorData(logutils.StatusInvalid, model.TypePermission, &logutils.FieldArgs{"names": badNames})
+	}
+
+	//check if authorized
+	for _, permission := range permissions {
+		err = permission.CheckAssigners(assignerPermissions)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionValidate, "assigner permissions", &logutils.FieldArgs{"name": permission.Name}, err)
+		}
+	}
+
+	//update account if authorized
+	err = a.storage.InsertAccountPermissions(context, account.ID, permissions)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAccountPermissions, &logutils.FieldArgs{"account_id": account.ID}, err)
+	}
+
+	account.Permissions = append(account.Permissions, permissions...)
+	return nil
+}
+
+//GrantAccountRoles grants roles to an account after validating the assigner has required permissions
+//Checks that the account does not already have any of the requested roles
+func (a *Auth) GrantAccountRoles(context storage.TransactionContext, account *model.Account, roleIDs []string, assignerPermissions []string) error {
+	//check if there is data
+	if account == nil {
+		return errors.New("no account to grant roles")
+	}
+	if len(roleIDs) == 0 {
+		return errors.New("no roles to grant")
+	}
+
+	//verify that the account do not have any of the roles which are supposed to be granted
+	for _, current := range roleIDs {
+		hasR := account.GetRole(current)
+		if hasR != nil {
+			return errors.Newf("account %s already has %s granted", account.ID, current)
+		}
+	}
+
+	//find roles
+	roles, err := a.storage.FindAppOrgRolesByIDs(context, roleIDs, account.AppOrg.ID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgRole, nil, err)
+	}
+	if len(roles) != len(roleIDs) {
+		badIDs := make([]string, 0)
+		for _, rID := range roleIDs {
+			bad := true
+			for _, r := range roles {
+				if r.ID == rID {
+					bad = false
+					break
+				}
+			}
+			if bad {
+				badIDs = append(badIDs, rID)
+			}
+		}
+		return errors.ErrorData(logutils.StatusInvalid, model.TypeAppOrgRole, &logutils.FieldArgs{"ids": badIDs})
+	}
+
+	//check if authorized
+	for _, cRole := range roles {
+		err = cRole.CheckAssigners(assignerPermissions)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionValidate, "assigner permissions", &logutils.FieldArgs{"id": cRole.ID}, err)
+		}
+	}
+
+	//update account if authorized
+	accountRoles := model.AccountRolesFromAppOrgRoles(roles, true, true)
+	err = a.storage.InsertAccountRoles(context, account.ID, account.AppOrg.ID, accountRoles)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAccountRoles, &logutils.FieldArgs{"account_id": account.ID}, err)
+	}
+
+	account.Roles = append(account.Roles, accountRoles...)
+	return nil
+}
+
+//GrantAccountGroups grants groups to an account after validating the assigner has required permissions
+//Checks that the account does not already have any of the requested groups
+func (a *Auth) GrantAccountGroups(context storage.TransactionContext, account *model.Account, groupIDs []string, assignerPermissions []string) error {
+	//check if there is data
+	if account == nil {
+		return errors.New("no accounts to grant groups")
+	}
+	if len(groupIDs) == 0 {
+		return errors.New("no groups to grant")
+	}
+
+	//ensure that the account does not have the groups before adding
+	for _, current := range groupIDs {
+		gr := account.GetGroup(current)
+		if gr != nil {
+			return errors.Newf("account %s already is a member of group %s", account.ID, current)
+		}
+	}
+
+	//find group
+	groups, err := a.storage.FindAppOrgGroupsByIDs(context, groupIDs, account.AppOrg.ID)
+	if err != nil {
+		return errors.Wrap("error finding app org group", err)
+	}
+	if len(groups) != len(groupIDs) {
+		badIDs := make([]string, 0)
+		for _, gID := range groupIDs {
+			bad := true
+			for _, g := range groups {
+				if g.ID == gID {
+					bad = false
+					break
+				}
+			}
+			if bad {
+				badIDs = append(badIDs, gID)
+			}
+		}
+		return errors.ErrorData(logutils.StatusInvalid, model.TypeAppOrgGroup, &logutils.FieldArgs{"ids": badIDs})
+	}
+
+	//check assigners
+	for _, group := range groups {
+		err = group.CheckAssigners(assignerPermissions)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionValidate, "assigner permissions", &logutils.FieldArgs{"id": group.ID}, err)
+		}
+	}
+
+	//update account if authorized
+	accountGroups := model.AccountGroupsFromAppOrgGroups(groups, true, true)
+	err = a.storage.InsertAccountGroups(context, account.ID, account.AppOrg.ID, accountGroups)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAccountGroups, &logutils.FieldArgs{"account_id": account.ID}, err)
+	}
+
+	account.Groups = append(account.Groups, accountGroups...)
+	return nil
 }
 
 //GetServiceRegistrations retrieves all service registrations

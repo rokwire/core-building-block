@@ -20,7 +20,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/rokwire/core-auth-library-go/authutils"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logutils"
 )
@@ -178,7 +177,7 @@ func (app *application) sysCreatePermission(name string, serviceID string, assig
 
 func (app *application) sysUpdatePermission(name string, serviceID *string, assigners *[]string) (*model.Permission, error) {
 	permissionNames := []string{name}
-	permissions, err := app.storage.FindPermissionsByName(permissionNames)
+	permissions, err := app.storage.FindPermissionsByName(nil, permissionNames)
 	if err != nil {
 		return nil, err
 	}
@@ -203,7 +202,7 @@ func (app *application) sysUpdatePermission(name string, serviceID *string, assi
 }
 
 func (app *application) sysCreateAppOrgRole(name string, appOrgID string, description string, permissionNames []string) (*model.AppOrgRole, error) {
-	permissions, err := app.storage.FindPermissionsByName(permissionNames)
+	permissions, err := app.storage.FindPermissionsByName(nil, permissionNames)
 	if err != nil {
 		return nil, err
 	}
@@ -342,54 +341,59 @@ func (app *application) sysDeleteAppConfig(id string) error {
 }
 
 func (app *application) sysGrantAccountPermissions(accountID string, permissionNames []string, assignerPermissions []string) error {
-	if assignerPermissions == nil {
-		return errors.New("no permissions from admin assigner")
+	//check if there is data
+	if len(assignerPermissions) == 0 {
+		return errors.New("no permissions from system assigner")
+	}
+	if len(permissionNames) == 0 {
+		return errors.New("no permissions for granting")
 	}
 
-	permissions, err := app.storage.FindPermissionsByName(permissionNames)
-	if err != nil {
-		return err
-	}
-
-	if len(permissions) == 0 {
-		return errors.Newf("no permissions found for names: %v", permissionNames)
-	}
-
-	var authorizedPermissions []model.Permission
-	for _, permission := range permissions {
-		authorizedAssigners := permission.Assigners
-		for _, authorizedAssigner := range authorizedAssigners {
-			if authutils.ContainsString(assignerPermissions, authorizedAssigner) {
-				authorizedPermissions = append(authorizedPermissions, permission)
-			}
+	transaction := func(context storage.TransactionContext) error {
+		//1. find the account
+		account, err := app.storage.FindAccountByID(context, accountID)
+		if err != nil {
+			return errors.Wrap("error finding account on permissions granting", err)
 		}
-	}
-	if authorizedPermissions == nil {
-		return errors.Newf("Assigner is not authorized to assign permissions for names: %v", permissionNames)
+
+		//2. grant account permissions
+		err = app.auth.GrantAccountPermissions(context, account, permissionNames, assignerPermissions)
+		if err != nil {
+			return errors.Wrap("error granting account permissions", err)
+		}
+
+		return nil
 	}
 
-	err = app.storage.InsertAccountPermissions(accountID, authorizedPermissions)
-	if err != nil {
-		return err
-	}
-	return nil
+	return app.storage.PerformTransaction(transaction)
 }
 
-func (app *application) sysGrantAccountRoles(accountID string, appOrgID string, roleIDs []string) error {
-	roles, err := app.storage.FindAppOrgRolesByIDs(nil, roleIDs, appOrgID)
-	if err != nil {
-		return err
+func (app *application) sysGrantAccountRoles(accountID string, appOrgID string, roleIDs []string, assignerPermissions []string) error {
+	//check if there is data
+	if len(assignerPermissions) == 0 {
+		return errors.New("no permissions from system assigner")
+	}
+	if len(roleIDs) == 0 {
+		return errors.New("no roles for granting")
 	}
 
-	if len(roles) == 0 {
-		return errors.Newf("no roles found for IDs: %v", roleIDs)
+	transaction := func(context storage.TransactionContext) error {
+		//1. find the account
+		account, err := app.storage.FindAccountByID(context, accountID)
+		if err != nil {
+			return errors.Wrap("error finding account on roles granting", err)
+		}
+
+		//2. grant account roles
+		err = app.auth.GrantAccountRoles(context, account, roleIDs, assignerPermissions)
+		if err != nil {
+			return errors.Wrap("error granting account roles", err)
+		}
+
+		return nil
 	}
 
-	err = app.storage.InsertAccountRoles(accountID, appOrgID, model.AccountRolesFromAppOrgRoles(roles, true, true))
-	if err != nil {
-		return err
-	}
-	return nil
+	return app.storage.PerformTransaction(transaction)
 }
 
 func (app *application) sysCreateAuthTypes(code string, description string, isExternal bool,

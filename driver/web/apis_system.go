@@ -507,8 +507,9 @@ func (h SystemApisHandler) registerServiceAccount(l *logs.Log, r *http.Request, 
 		creds = serviceAccountCredentialListFromDef(*requestData.Creds)
 	}
 
+	assignerPermissions := strings.Split(claims.Permissions, ",")
 	serviceAccount, err := h.coreAPIs.Auth.RegisterServiceAccount(requestData.AccountId, fromAppID, fromOrgID, requestData.Name,
-		requestData.AppId, requestData.OrgId, requestData.Permissions, requestData.FirstParty, creds, l)
+		requestData.AppId, requestData.OrgId, requestData.Permissions, requestData.FirstParty, creds, assignerPermissions, l)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRegister, model.TypeServiceAccount, nil, err, http.StatusInternalServerError, true)
 	}
@@ -583,7 +584,8 @@ func (h SystemApisHandler) updateServiceAccountInstance(l *logs.Log, r *http.Req
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, "service account update request", nil, err, http.StatusBadRequest, true)
 	}
 
-	serviceAccount, err := h.coreAPIs.Auth.UpdateServiceAccountInstance(id, appID, orgID, requestData.Name, requestData.Permissions)
+	assignerPermissions := strings.Split(claims.Permissions, ",")
+	serviceAccount, err := h.coreAPIs.Auth.UpdateServiceAccountInstance(id, appID, orgID, requestData.Name, requestData.Permissions, assignerPermissions)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeServiceAccount, nil, err, http.StatusInternalServerError, true)
 	}
@@ -1050,6 +1052,48 @@ func (h SystemApisHandler) deleteApplicationConfig(l *logs.Log, r *http.Request,
 	return l.HttpResponseSuccess()
 }
 
+func (h SystemApisHandler) createAccount(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.SharedReqCreateAccount
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("create account request"), nil, err, http.StatusBadRequest, true)
+	}
+
+	var permissions []string
+	if requestData.Permissions != nil {
+		permissions = *requestData.Permissions
+	}
+	var roleIDs []string
+	if requestData.RoleIds != nil {
+		roleIDs = *requestData.RoleIds
+	}
+	var groupIDs []string
+	if requestData.GroupIds != nil {
+		groupIDs = *requestData.GroupIds
+	}
+	profile := profileFromDefNullable(requestData.Profile)
+	creatorPermissions := strings.Split(claims.Permissions, ",")
+	account, params, err := h.coreAPIs.Auth.CreateAccount(string(requestData.AuthType), claims.AppID, claims.OrgID,
+		requestData.Identifier, profile, permissions, roleIDs, groupIDs, creatorPermissions, l)
+	if err != nil || account == nil {
+		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
+	}
+
+	respData := partialAccountToDef(*account, params)
+
+	data, err = json.Marshal(respData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeAccount, nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessJSON(data)
+}
+
 //grantAccountPermissions grants an account the given permissions
 func (h SystemApisHandler) grantAccountPermissions(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
@@ -1085,7 +1129,8 @@ func (h SystemApisHandler) grantAccountRoles(l *logs.Log, r *http.Request, claim
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeAppOrgRole, nil, err, http.StatusBadRequest, true)
 	}
 
-	err = h.coreAPIs.System.SysGrantAccountRoles(requestData.AccountId, requestData.AppId, requestData.RoleIds)
+	assignerPermissions := strings.Split(claims.Permissions, ",")
+	err = h.coreAPIs.System.SysGrantAccountRoles(requestData.AccountId, requestData.AppId, requestData.RoleIds, assignerPermissions)
 	if err != nil {
 		return l.HttpResponseErrorAction(actionGrant, model.TypeAppOrgRole, nil, err, http.StatusInternalServerError, true)
 	}

@@ -110,7 +110,7 @@ type System interface {
 	SysDeleteAppConfig(id string) error
 
 	SysGrantAccountPermissions(accountID string, permissionNames []string, assignerPermissions []string) error
-	SysGrantAccountRoles(accountID string, appID string, roleIDs []string) error
+	SysGrantAccountRoles(accountID string, appID string, roleIDs []string, assignerPermissions []string) error
 
 	SysCreateAuthTypes(code string, description string, isExternal bool, isAnonymous bool, useCredentials bool, ignoreMFA bool, params map[string]interface{}) (*model.AuthType, error)
 	SysGetAuthTypes() ([]model.AuthType, error)
@@ -130,9 +130,9 @@ type Storage interface {
 	FindAccountsByAccountID(appID string, orgID string, accountIDs []string) ([]model.Account, error)
 
 	UpdateAccountPreferences(accountID string, preferences map[string]interface{}) error
-	InsertAccountPermissions(accountID string, permissions []model.Permission) error
+	InsertAccountPermissions(context storage.TransactionContext, accountID string, permissions []model.Permission) error
 	DeleteAccountPermissions(context storage.TransactionContext, accountID string, permissions []model.Permission) error
-	InsertAccountRoles(accountID string, appOrgID string, roles []model.AccountRole) error
+	InsertAccountRoles(context storage.TransactionContext, accountID string, appOrgID string, roles []model.AccountRole) error
 	DeleteAccountRoles(context storage.TransactionContext, accountID string, roleIDs []string) error
 	InsertAccountsGroup(group model.AccountGroup, accounts []model.Account) error
 	RemoveAccountsGroup(groupID string, accounts []model.Account) error
@@ -153,7 +153,7 @@ type Storage interface {
 	GetGlobalConfig() (*model.GlobalConfig, error)
 	DeleteGlobalConfig(context storage.TransactionContext) error
 
-	FindPermissionsByName(names []string) ([]model.Permission, error)
+	FindPermissionsByName(context storage.TransactionContext, names []string) ([]model.Permission, error)
 	FindPermissionsByServiceIDs(serviceIDs []string) ([]model.Permission, error)
 	InsertPermission(context storage.TransactionContext, item model.Permission) error
 	UpdatePermission(item model.Permission) error
