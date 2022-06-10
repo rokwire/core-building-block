@@ -550,8 +550,8 @@ func (a *Auth) LoginMFA(apiKey string, accountID string, sessionID string, ident
 	return nil, loginSession, nil
 }
 
-//CreateAccount creates an account for a new user or updates an existing user's account with new permissions, roles, and groups
-func (a *Auth) CreateAccount(authenticationType string, appID string, orgID string, identifier string,
+//CreateAdminAccount creates an account for a new admin user
+func (a *Auth) CreateAdminAccount(authenticationType string, appID string, orgID string, identifier string,
 	profile model.Profile, permissions []string, roleIDs []string, groupIDs []string, creatorPermissions []string, l *logs.Log) (*model.Account, map[string]interface{}, error) {
 	//TODO: add admin authentication policies that specify which auth types may be used for each app org
 	if authenticationType != AuthTypeOidc && authenticationType != AuthTypeEmail && !strings.HasSuffix(authenticationType, "_oidc") {
@@ -574,54 +574,11 @@ func (a *Auth) CreateAccount(authenticationType string, appID string, orgID stri
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 		}
-		canSignIn := a.canSignIn(account, authType.ID, identifier)
-
-		//2. account exists, so grant the necessary permissions, roles, groups
-		if canSignIn {
-			addPermissions := make([]string, 0)
-			for _, p := range permissions {
-				if account.GetPermissionNamed(p) == nil {
-					addPermissions = append(addPermissions, p)
-				}
-			}
-			if len(addPermissions) > 0 {
-				err = a.GrantAccountPermissions(context, account, addPermissions, creatorPermissions)
-				if err != nil {
-					return errors.WrapErrorAction("granting", "admin account permissions", nil, err)
-				}
-			}
-
-			addRoles := make([]string, 0)
-			for _, r := range roleIDs {
-				if account.GetRole(r) == nil {
-					addRoles = append(addRoles, r)
-				}
-			}
-			if len(addRoles) > 0 {
-				err = a.GrantAccountRoles(context, account, addRoles, creatorPermissions)
-				if err != nil {
-					return errors.WrapErrorAction("granting", "admin account roles", nil, err)
-				}
-			}
-
-			addGroups := make([]string, 0)
-			for _, g := range groupIDs {
-				if account.GetGroup(g) == nil {
-					addGroups = append(addGroups, g)
-				}
-			}
-			if len(addGroups) > 0 {
-				err = a.GrantAccountGroups(context, account, addGroups, creatorPermissions)
-				if err != nil {
-					return errors.WrapErrorAction("granting", "admin account groups", nil, err)
-				}
-			}
-
-			newAccount = account
-			return nil
+		if account != nil {
+			return errors.ErrorData(logutils.StatusFound, model.TypeAccount, &logutils.FieldArgs{"app_org_id": appOrg.ID, "auth_type_id": authType.ID, "identifier": identifier})
 		}
 
-		//3. account does not exist, so apply sign up
+		//2. account does not exist, so apply sign up
 		profile.DateCreated = time.Now().UTC()
 		if authType.IsExternal {
 			externalUser := model.ExternalSystemUser{Identifier: identifier}
