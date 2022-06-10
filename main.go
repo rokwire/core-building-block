@@ -155,11 +155,21 @@ func main() {
 		"password":      envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SYSTEM_ACCOUNT_PASSWORD", false, true),
 	}
 
+	//deleted accounts
+	deleteAccountsPeriodStr := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_DELETE_ACCOUNTS_PERIOD", false, false)
+	var deleteAccountsPeriod *uint64
+	deleteAccountsPeriodVal, err := strconv.ParseUint(deleteAccountsPeriodStr, 10, 64)
+	if err == nil {
+		deleteAccountsPeriod = &deleteAccountsPeriodVal
+	} else {
+		logger.Infof("Error parsing delete account period, applying defaults: %v", err)
+	}
+
 	//core
-	coreAPIs := core.NewCoreAPIs(env, Version, Build, storageAdapter, auth, systemInitSettings, logger)
+	coreAPIs := core.NewCoreAPIs(env, Version, Build, storageAdapter, auth, systemInitSettings, deleteAccountsPeriod, logger)
 	coreAPIs.Start()
 
 	//web adapter
-	webAdapter := web.NewWebAdapter(env, serviceID, auth.AuthService, port, coreAPIs, host, logger)
+	webAdapter := web.NewWebAdapter(env, serviceID, auth.ServiceRegManager, port, coreAPIs, host, logger)
 	webAdapter.Start()
 }

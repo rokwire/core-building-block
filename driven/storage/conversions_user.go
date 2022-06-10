@@ -30,9 +30,15 @@ func accountFromStorage(item account, appOrg model.ApplicationOrganization) mode
 	devices := accountDevicesFromStorage(item)
 	dateCreated := item.DateCreated
 	dateUpdated := item.DateUpdated
+
+	var deleted bool
+	if item.Deleted != nil {
+		deleted = *item.Deleted
+	}
+
 	return model.Account{ID: id, AppOrg: appOrg, Permissions: permissions,
 		Roles: roles, Groups: groups, AuthTypes: authTypes, MFATypes: mfaTypes, ExternalIDs: item.ExternalIDs,
-		Preferences: item.Preferences, Profile: profile, Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated}
+		Preferences: item.Preferences, Profile: profile, Devices: devices, Deleted: deleted, DateCreated: dateCreated, DateUpdated: dateUpdated}
 }
 
 func accountsFromStorage(items []account, appOrg model.ApplicationOrganization) []model.Account {
@@ -60,9 +66,14 @@ func accountToStorage(item *model.Account) *account {
 	dateCreated := item.DateCreated
 	dateUpdated := item.DateUpdated
 
+	var deleted *bool
+	if item.Deleted {
+		deleted = &item.Deleted
+	}
+
 	return &account{ID: id, AppOrgID: appOrgID, Permissions: permissions, Roles: roles, Groups: groups, AuthTypes: authTypes,
-		MFATypes: mfaTypes, ExternalIDs: item.ExternalIDs, Preferences: item.Preferences, Profile: profile, Devices: devices,
-		DateCreated: dateCreated, DateUpdated: dateUpdated}
+		MFATypes: mfaTypes, ExternalIDs: item.ExternalIDs, Preferences: item.Preferences, Profile: profile, Deleted: deleted,
+		Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated}
 }
 
 func accountDevicesFromStorage(item account) []model.Device {

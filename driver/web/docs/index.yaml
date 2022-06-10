@@ -145,6 +145,8 @@ paths:
     $ref: "./resources/bbs/access-token.yaml"
   /bbs/access-tokens:
     $ref: "./resources/bbs/access-tokens.yaml"
+  /bbs/deleted-accounts:
+    $ref: "./resources/bbs/deleted-accounts.yaml"
 
   #third-party services
   /tps/service-regs:

@@ -18,9 +18,15 @@ import (
 	"core-building-block/core/auth"
 	"core-building-block/core/model"
 
+	"time"
+
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
+)
+
+const (
+	deleteAccountsPeriodDefault uint = 2
 )
 
 //application represents the core application code based on hexagonal architecture
@@ -34,6 +40,13 @@ type application struct {
 	listeners []ApplicationListener
 
 	auth auth.APIs
+
+	//delete accounts timer
+	deleteAccountsPeriod *uint64
+	deleteAccountsTimer  *time.Timer
+	timerDone            chan bool
+
+	logger *logs.Logger
 }
 
 //start starts the core part of the application
@@ -41,6 +54,8 @@ func (app *application) start() {
 	//set storage listener
 	storageListener := StorageListener{app: app}
 	app.storage.RegisterStorageListener(&storageListener)
+
+	go app.setupDeleteAccountsTimer()
 }
 
 //addListener adds application listener
@@ -117,4 +132,47 @@ func (app *application) checkRoles(appOrg model.ApplicationOrganization, rolesID
 	}
 
 	return appOrgRoles, nil
+}
+
+func (app *application) setupDeleteAccountsTimer() {
+	if app.logger != nil {
+		app.logger.Info("setupDeleteAccountsTimer")
+	}
+
+	//cancel if active
+	if app.deleteAccountsTimer != nil {
+		app.timerDone <- true
+		app.deleteAccountsTimer.Stop()
+	}
+
+	app.deleteAccounts()
+}
+
+func (app *application) deleteAccounts() {
+	if app.logger != nil {
+		app.logger.Info("deleteAccounts")
+	}
+
+	deletePeriod := uint64(deleteAccountsPeriodDefault)
+	if app.deleteAccountsPeriod != nil {
+		deletePeriod = *app.deleteAccountsPeriod
+	}
+	duration := time.Hour * time.Duration(deletePeriod)
+
+	err := app.storage.DeleteFlaggedAccounts(time.Now().UTC().Add(-duration))
+	if err != nil {
+		app.logger.Error(err.Error())
+	}
+
+	app.deleteAccountsTimer = time.NewTimer(duration)
+	select {
+	case <-app.deleteAccountsTimer.C:
+		// timer expired
+		app.deleteAccountsTimer = nil
+
+		app.deleteAccounts()
+	case <-app.timerDone:
+		// timer aborted
+		app.deleteAccountsTimer = nil
+	}
 }

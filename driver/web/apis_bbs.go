@@ -162,6 +162,20 @@ func (h BBsApisHandler) getServiceAccessTokens(l *logs.Log, r *http.Request, cla
 	return l.HttpResponseSuccessJSON(respData)
 }
 
+func (h BBsApisHandler) getDeletedAccounts(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	accountIDs, err := h.coreAPIs.BBs.BBsGetDeletedAccounts(claims.AppID, claims.OrgID)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionGet, "deleted account ids", nil, err, http.StatusInternalServerError, true)
+	}
+
+	data, err := json.Marshal(accountIDs)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, "deleted account ids", nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessJSON(data)
+}
+
 //NewBBsApisHandler creates new bbs Handler instance
 func NewBBsApisHandler(coreAPIs *core.APIs) BBsApisHandler {
 	return BBsApisHandler{coreAPIs: coreAPIs}

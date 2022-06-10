@@ -72,6 +72,8 @@ const (
 	TypeCreds logutils.MessageDataType = "creds"
 	//TypeIP auth type type
 	TypeIP logutils.MessageDataType = "ip"
+	//All represents all possible options
+	All string = "all"
 )
 
 //LoginSession represents login session entity
@@ -344,8 +346,8 @@ func (s ServiceAccount) GetPermissionNames() []string {
 
 //AppOrgPair represents an appID, orgID pair entity
 type AppOrgPair struct {
-	AppID *string
-	OrgID *string
+	AppID string
+	OrgID string
 }
 
 //ServiceAccountCredential represents a service account credential entity

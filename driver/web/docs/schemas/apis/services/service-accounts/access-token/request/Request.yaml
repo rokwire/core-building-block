@@ -9,10 +9,8 @@ properties:
     type: string
   app_id:
     nullable: true
-    type: string
   org_id:
     nullable: true
-    type: string
   auth_type:
     type: string
     enum:

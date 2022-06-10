@@ -17,6 +17,7 @@ package core
 import (
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
+	"time"
 
 	"github.com/rokwire/logging-library-go/logs"
 )
@@ -80,6 +81,8 @@ type Encryption interface {
 
 //BBs exposes users related APIs used by the platform building blocks
 type BBs interface {
+	BBsGetDeletedAccounts(appID string, orgID string) ([]string, error)
+
 	BBsGetTest() string
 }
 
@@ -128,6 +131,10 @@ type Storage interface {
 	FindAccountByID(context storage.TransactionContext, id string) (*model.Account, error)
 	FindAccounts(appID string, orgID string, accountID *string, authTypeIdentifier *string) ([]model.Account, error)
 	FindAccountsByAccountID(appID string, orgID string, accountIDs []string) ([]model.Account, error)
+	FindDeletedAccounts(appID string, orgID string) ([]model.Account, error)
+	SaveAccount(context storage.TransactionContext, account *model.Account) error
+	DeleteAccount(context storage.TransactionContext, id string) error
+	DeleteFlaggedAccounts(cutoff time.Time) error
 
 	UpdateAccountPreferences(accountID string, preferences map[string]interface{}) error
 	InsertAccountPermissions(accountID string, permissions []model.Permission) error
@@ -140,6 +147,10 @@ type Storage interface {
 	CountAccountsByGroupID(groupID string) (*int64, error)
 
 	UpdateProfile(context storage.TransactionContext, profile model.Profile) error
+
+	FindCredential(context storage.TransactionContext, ID string) (*model.Credential, error)
+	UpdateCredential(context storage.TransactionContext, creds *model.Credential) error
+	DeleteCredential(context storage.TransactionContext, ID string) error
 
 	FindLoginSessionsByParams(appID string, orgID string, sessionID *string, identifier *string, accountAuthTypeIdentifier *string,
 		appTypeID *string, appTypeIdentifier *string, anonymous *bool, deviceID *string, ipAddress *string) ([]model.LoginSession, error)

@@ -309,7 +309,7 @@ func (h AdminApisHandler) getApplicationAccounts(l *logs.Log, r *http.Request, c
 	if err != nil {
 		return l.HttpResponseErrorAction("error finding accounts", model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}
-	response := аccountsToDef(accounts)
+	response := accountsToDef(accounts)
 
 	data, err := json.Marshal(response)
 	if err != nil {

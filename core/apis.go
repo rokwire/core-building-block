@@ -221,10 +221,13 @@ func (c *APIs) storeSystemData() error {
 }
 
 //NewCoreAPIs creates new CoreAPIs
-func NewCoreAPIs(env string, version string, build string, storage Storage, auth auth.APIs, systemInitSettings map[string]string, logger *logs.Logger) *APIs {
+func NewCoreAPIs(env string, version string, build string, storage Storage, auth auth.APIs, systemInitSettings map[string]string, deleteAccountsPeriod *uint64, logger *logs.Logger) *APIs {
 	//add application instance
 	listeners := []ApplicationListener{}
-	application := application{env: env, version: version, build: build, storage: storage, listeners: listeners, auth: auth}
+
+	timerDone := make(chan bool)
+	application := application{env: env, version: version, build: build, storage: storage, listeners: listeners, auth: auth,
+		deleteAccountsPeriod: deleteAccountsPeriod, timerDone: timerDone, logger: logger}
 
 	//add coreAPIs instance
 	servicesImpl := &servicesImpl{app: &application}
@@ -400,6 +403,10 @@ func (s *encryptionImpl) EncGetTest() string {
 
 type bbsImpl struct {
 	app *application
+}
+
+func (s *bbsImpl) BBsGetDeletedAccounts(appID string, orgID string) ([]string, error) {
+	return s.app.bbsGetDeletedAccounts(appID, orgID)
 }
 
 func (s *bbsImpl) BBsGetTest() string {
