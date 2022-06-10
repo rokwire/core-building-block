@@ -5,7 +5,7 @@ get:
   description: |
     Returns API key record
 
-    **Auth:** Requires auth token with `get_api-keys` permission
+    **Auth:** Requires system access token with `get_api-keys`, `update_api-keys`, `delete_api-keys`, or `all_api-keys` permission
   security:
     - bearerAuth: []
   parameters:
@@ -37,7 +37,7 @@ post:
   description: |
     Creates a new API key record
 
-    **Auth:** Requires auth token with `update_api-keys` permission
+    **Auth:** Requires system access token with `update_api-keys` or `all_api-keys` permission
   security:
     - bearerAuth: []
   requestBody:
@@ -75,7 +75,7 @@ put:
 
     Must include the "id" field to identify which key is to be udpated
 
-    **Auth:** Requires auth token with `update_api-keys` permission
+    **Auth:** Requires system access token with `update_api-keys` or `all_api-keys` permission
   security:
     - bearerAuth: []
   requestBody:
@@ -106,7 +106,7 @@ delete:
   description: |
     Deletes an existing API key record
 
-    **Auth:** Requires auth token with `update_api-keys` permission
+    **Auth:** Requires system access token with `delete_api-keys` or `all_api-keys` permission
   security:
     - bearerAuth: []
   parameters:

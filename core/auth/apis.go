@@ -693,6 +693,11 @@ func (a *Auth) ForgotCredential(authenticationType string, appTypeIdentifier str
 		return errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
 	}
 
+	//do not allow for admins
+	if appOrg.Application.Admin {
+		return errors.New("contact a system admin to reset credentials")
+	}
+
 	//check for api key
 	//TODO: Ideally we would not make many database calls before validating the API key. Currently needed to get app ID
 	err = a.validateAPIKey(apiKey, appOrg.Application.ID)
