@@ -224,6 +224,9 @@ type APIs interface {
 	//			AccountAuthType (AccountAuthType): AccountAuthType object for authenticated user
 	LoginMFA(apiKey string, accountID string, sessionID string, identifier string, mfaType string, mfaCode string, state string, l *logs.Log) (*string, *model.LoginSession, error)
 
+	//UpdateAdminAccount updates an existing user's account with new permissions, roles, and groups
+	UpdateAdminAccount(accountID string, permissions []string, roleIDs []string, groupIDs []string, updaterPermissions []string, l *logs.Log) (*model.Account, map[string]interface{}, error)
+
 	//VerifyCredential verifies credential (checks the verification code in the credentials collection)
 	VerifyCredential(id string, verification string, l *logs.Log) error
 

@@ -107,6 +107,7 @@ func (we Adapter) Start() {
 	servicesSubRouter.HandleFunc("/auth/verify-mfa", we.wrapFunc(we.servicesApisHandler.verifyMFA, we.auth.services.user)).Methods("POST")
 	servicesSubRouter.HandleFunc("/auth/authorize-service", we.wrapFunc(we.servicesApisHandler.authAuthorizeService, we.auth.services.user)).Methods("POST")
 	servicesSubRouter.HandleFunc("/auth/service-regs", we.wrapFunc(we.servicesApisHandler.getServiceRegistrations, we.auth.services.user)).Methods("GET")
+	servicesSubRouter.HandleFunc("/accounts", we.wrapFunc(we.servicesApisHandler.updateAdminAccount, we.auth.services.permissions)).Methods("PUT")
 	servicesSubRouter.HandleFunc("/account", we.wrapFunc(we.servicesApisHandler.deleteAccount, we.auth.services.user)).Methods("DELETE")
 	servicesSubRouter.HandleFunc("/account", we.wrapFunc(we.servicesApisHandler.getAccount, we.auth.services.user)).Methods("GET")
 	servicesSubRouter.HandleFunc("/account/mfa", we.wrapFunc(we.servicesApisHandler.getMFATypes, we.auth.services.user)).Methods("GET")
@@ -157,6 +158,7 @@ func (we Adapter) Start() {
 	adminSubrouter.HandleFunc("/application/permissions", we.wrapFunc(we.adminApisHandler.getApplicationPermissions, we.auth.admin.permissions)).Methods("GET")
 
 	adminSubrouter.HandleFunc("/application/accounts", we.wrapFunc(we.adminApisHandler.getApplicationAccounts, we.auth.admin.permissions)).Methods("GET")
+	adminSubrouter.HandleFunc("/application/accounts", we.wrapFunc(we.adminApisHandler.updateAdminAccount, we.auth.services.permissions)).Methods("PUT")
 
 	adminSubrouter.HandleFunc("/application/account/{account_id}/login-sessions/{session_id}", we.wrapFunc(we.adminApisHandler.deleteApplicationLoginSession, we.auth.admin.permissions)).Methods("DELETE")
 	adminSubrouter.HandleFunc("/application/account/{id}/devices", we.wrapFunc(we.adminApisHandler.getApplicationAccountDevices, we.auth.admin.permissions)).Methods("GET")
@@ -223,6 +225,7 @@ func (we Adapter) Start() {
 	systemSubrouter.HandleFunc("/application/configs/{id}", we.wrapFunc(we.systemApisHandler.updateApplicationConfig, we.auth.system.permissions)).Methods("PUT")
 	systemSubrouter.HandleFunc("/application/configs/{id}", we.wrapFunc(we.systemApisHandler.deleteApplicationConfig, we.auth.system.permissions)).Methods("DELETE")
 
+	systemSubrouter.HandleFunc("/accounts", we.wrapFunc(we.systemApisHandler.updateAdminAccount, we.auth.services.permissions)).Methods("PUT")
 	systemSubrouter.HandleFunc("/account/permissions", we.wrapFunc(we.systemApisHandler.grantAccountPermissions, we.auth.system.permissions)).Methods("PUT")
 	systemSubrouter.HandleFunc("/account/roles", we.wrapFunc(we.systemApisHandler.grantAccountRoles, we.auth.system.permissions)).Methods("PUT")
 	systemSubrouter.HandleFunc("/account/mfa", we.wrapFunc(we.systemApisHandler.getMFATypes, we.auth.system.user)).Methods("GET")

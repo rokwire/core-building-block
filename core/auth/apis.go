@@ -548,6 +548,72 @@ func (a *Auth) LoginMFA(apiKey string, accountID string, sessionID string, ident
 	return nil, loginSession, nil
 }
 
+//UpdateAdminAccount updates an existing user's account with new permissions, roles, and groups
+func (a *Auth) UpdateAdminAccount(accountID string, permissions []string, roleIDs []string, groupIDs []string, updaterPermissions []string, l *logs.Log) (*model.Account, map[string]interface{}, error) {
+	var updatedAccount *model.Account
+	var params map[string]interface{}
+	transaction := func(context storage.TransactionContext) error {
+		//1. check if the user exists
+		account, err := a.storage.FindAccountByID(context, accountID)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+		}
+		if account == nil {
+			return errors.ErrorData(logutils.StatusMissing, model.TypeAccount, &logutils.FieldArgs{"account_id": accountID})
+		}
+
+		//2. account exists, so grant the necessary permissions, roles, groups
+		addPermissions := make([]string, 0)
+		for _, p := range permissions {
+			if account.GetPermissionNamed(p) == nil {
+				addPermissions = append(addPermissions, p)
+			}
+		}
+		if len(addPermissions) > 0 {
+			err = a.GrantAccountPermissions(context, account, addPermissions, updaterPermissions)
+			if err != nil {
+				return errors.WrapErrorAction("granting", "admin account permissions", nil, err)
+			}
+		}
+
+		addRoles := make([]string, 0)
+		for _, r := range roleIDs {
+			if account.GetRole(r) == nil {
+				addRoles = append(addRoles, r)
+			}
+		}
+		if len(addRoles) > 0 {
+			err = a.GrantAccountRoles(context, account, addRoles, updaterPermissions)
+			if err != nil {
+				return errors.WrapErrorAction("granting", "admin account roles", nil, err)
+			}
+		}
+
+		addGroups := make([]string, 0)
+		for _, g := range groupIDs {
+			if account.GetGroup(g) == nil {
+				addGroups = append(addGroups, g)
+			}
+		}
+		if len(addGroups) > 0 {
+			err = a.GrantAccountGroups(context, account, addGroups, updaterPermissions)
+			if err != nil {
+				return errors.WrapErrorAction("granting", "admin account groups", nil, err)
+			}
+		}
+
+		updatedAccount = account
+		return nil
+	}
+
+	err := a.storage.PerformTransaction(transaction)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionCreate, "admin account", nil, err)
+	}
+
+	return updatedAccount, params, nil
+}
+
 //VerifyCredential verifies credential (checks the verification code in the credentials collection)
 func (a *Auth) VerifyCredential(id string, verification string, l *logs.Log) error {
 	credential, err := a.storage.FindCredential(nil, id)
