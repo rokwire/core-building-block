@@ -551,8 +551,8 @@ func (a *Auth) LoginMFA(apiKey string, accountID string, sessionID string, ident
 }
 
 //CreateAdminAccount creates an account for a new admin user
-func (a *Auth) CreateAdminAccount(authenticationType string, appID string, orgID string, identifier string,
-	profile model.Profile, permissions []string, roleIDs []string, groupIDs []string, creatorPermissions []string, l *logs.Log) (*model.Account, map[string]interface{}, error) {
+func (a *Auth) CreateAdminAccount(authenticationType string, appID string, orgID string, identifier string, profile model.Profile,
+	permissions []string, roleIDs []string, groupIDs []string, creatorPermissions []string, l *logs.Log) (*model.Account, map[string]interface{}, error) {
 	//TODO: add admin authentication policies that specify which auth types may be used for each app org
 	if authenticationType != AuthTypeOidc && authenticationType != AuthTypeEmail && !strings.HasSuffix(authenticationType, "_oidc") {
 		return nil, nil, errors.ErrorData(logutils.StatusInvalid, "auth type", nil)
@@ -570,7 +570,7 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appID string, orgID
 	var params map[string]interface{}
 	transaction := func(context storage.TransactionContext) error {
 		//1. check if the user exists
-		account, err := a.storage.FindAccount(appOrg.ID, authType.ID, identifier)
+		account, err := a.storage.FindAccount(context, appOrg.ID, authType.ID, identifier)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 		}
@@ -612,66 +612,69 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appID string, orgID
 }
 
 //UpdateAdminAccount updates an existing user's account with new permissions, roles, and groups
-func (a *Auth) UpdateAdminAccount(accountID string, permissions []string, roleIDs []string, groupIDs []string, updaterPermissions []string, l *logs.Log) (*model.Account, map[string]interface{}, error) {
+func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID string, identifier string, permissions []string, roleIDs []string,
+	groupIDs []string, updaterPermissions []string, l *logs.Log) (*model.Account, map[string]interface{}, error) {
+	// check if the provided auth type is supported by the provided application and organization
+	authType, appOrg, err := a.validateAuthTypeForAppOrg(authenticationType, appID, orgID)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
+	}
+
 	var updatedAccount *model.Account
 	var params map[string]interface{}
 	transaction := func(context storage.TransactionContext) error {
 		//1. check if the user exists
-		account, err := a.storage.FindAccountByID(context, accountID)
+		account, err := a.storage.FindAccount(context, appOrg.ID, authType.ID, identifier)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 		}
 		if account == nil {
-			return errors.ErrorData(logutils.StatusMissing, model.TypeAccount, &logutils.FieldArgs{"account_id": accountID})
+			return errors.ErrorData(logutils.StatusMissing, model.TypeAccount, &logutils.FieldArgs{"app_org_id": appOrg.ID, "auth_type": authType.Code, "identifier": identifier})
 		}
 
-		//2. account exists, so grant the necessary permissions, roles, groups
-		addPermissions := make([]string, 0)
-		for _, p := range permissions {
-			if account.GetPermissionNamed(p) == nil {
-				addPermissions = append(addPermissions, p)
-			}
-		}
-		if len(addPermissions) > 0 {
-			err = a.GrantAccountPermissions(context, account, addPermissions, updaterPermissions)
-			if err != nil {
-				return errors.WrapErrorAction("granting", "admin account permissions", nil, err)
-			}
+		//2. check if the user's auth type is verified
+		accountAuthType := account.GetAccountAuthType(authType.ID, identifier)
+		if accountAuthType == nil || accountAuthType.Unverified {
+			return errors.ErrorData("Unverified", model.TypeAccountAuthType, &logutils.FieldArgs{"app_org_id": appOrg.ID, "auth_type": authType.Code, "identifier": identifier}).SetStatus(utils.ErrorStatusUnverified)
 		}
 
-		addRoles := make([]string, 0)
-		for _, r := range roleIDs {
-			if account.GetRole(r) == nil {
-				addRoles = append(addRoles, r)
-			}
+		//3. grant the necessary permissions, roles, groups
+		newPermissions, err := a.checkPermissions(context, permissions, updaterPermissions)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionValidate, model.TypePermission, nil, err)
 		}
-		if len(addRoles) > 0 {
-			err = a.GrantAccountRoles(context, account, addRoles, updaterPermissions)
-			if err != nil {
-				return errors.WrapErrorAction("granting", "admin account roles", nil, err)
-			}
+		err = a.storage.UpdateAccountPermissions(context, account.ID, newPermissions)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionUpdate, "admin account permissions", nil, err)
 		}
 
-		addGroups := make([]string, 0)
-		for _, g := range groupIDs {
-			if account.GetGroup(g) == nil {
-				addGroups = append(addGroups, g)
-			}
+		newRoles, err := a.checkRoles(context, *appOrg, roleIDs, updaterPermissions)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionValidate, model.TypeAppOrgRole, nil, err)
 		}
-		if len(addGroups) > 0 {
-			err = a.GrantAccountGroups(context, account, addGroups, updaterPermissions)
-			if err != nil {
-				return errors.WrapErrorAction("granting", "admin account groups", nil, err)
-			}
+		err = a.storage.UpdateAccountRoles(context, account.ID, model.AccountRolesFromAppOrgRoles(newRoles, true, true))
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionUpdate, "admin account roles", nil, err)
 		}
+
+		newGroups, err := a.checkGroups(context, *appOrg, groupIDs, updaterPermissions)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionValidate, model.TypeAppOrgGroup, nil, err)
+		}
+		err = a.storage.UpdateAccountGroups(context, account.ID, model.AccountGroupsFromAppOrgGroups(newGroups, true, true))
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionUpdate, "admin account groups", nil, err)
+		}
+
+		//TODO: delete login sessions
 
 		updatedAccount = account
 		return nil
 	}
 
-	err := a.storage.PerformTransaction(transaction)
+	err = a.storage.PerformTransaction(transaction)
 	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionCreate, "admin account", nil, err)
+		return nil, nil, errors.WrapErrorAction(logutils.ActionUpdate, "admin account", nil, err)
 	}
 
 	return updatedAccount, params, nil
@@ -846,7 +849,7 @@ func (a *Auth) ForgotCredential(authenticationType string, appTypeIdentifier str
 	authTypeID := authType.ID
 
 	//Find the credential for setting reset code and expiry and sending credID in reset link
-	account, err := a.storage.FindAccount(appOrg.ID, authTypeID, identifier)
+	account, err := a.storage.FindAccount(nil, appOrg.ID, authTypeID, identifier)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
@@ -897,7 +900,7 @@ func (a *Auth) SendVerifyCredential(authenticationType string, appTypeIdentifier
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
 	}
-	account, err := a.storage.FindAccount(appOrg.ID, authType.ID, identifier)
+	account, err := a.storage.FindAccount(nil, appOrg.ID, authType.ID, identifier)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}

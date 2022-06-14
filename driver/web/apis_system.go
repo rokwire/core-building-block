@@ -1100,10 +1100,10 @@ func (h SystemApisHandler) updateAdminAccount(l *logs.Log, r *http.Request, clai
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.SharedReqCreateAccount
+	var requestData Def.SharedReqUpdateAccount
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("create account request"), nil, err, http.StatusBadRequest, true)
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("update account request"), nil, err, http.StatusBadRequest, true)
 	}
 
 	var permissions []string
@@ -1118,12 +1118,11 @@ func (h SystemApisHandler) updateAdminAccount(l *logs.Log, r *http.Request, clai
 	if requestData.GroupIds != nil {
 		groupIDs = *requestData.GroupIds
 	}
-	profile := profileFromDefNullable(requestData.Profile)
-	creatorPermissions := strings.Split(claims.Permissions, ",")
-	account, params, err := h.coreAPIs.Auth.CreateAdminAccount(string(requestData.AuthType), claims.AppID, claims.OrgID,
-		requestData.Identifier, profile, permissions, roleIDs, groupIDs, creatorPermissions, l)
+	updaterPermissions := strings.Split(claims.Permissions, ",")
+	account, params, err := h.coreAPIs.Auth.UpdateAdminAccount(string(requestData.AuthType), claims.AppID, claims.OrgID, requestData.Identifier,
+		permissions, roleIDs, groupIDs, updaterPermissions, l)
 	if err != nil || account == nil {
-		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
+		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}
 
 	respData := partialAccountToDef(*account, params)

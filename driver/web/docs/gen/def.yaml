@@ -914,6 +914,37 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+    put:
+      tags:
+        - Services
+      summary: Update admin account
+      description: |
+        Update an existing admin account
+
+        **Auth:** Requires auth token with `update_accounts` permission
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: |
+          User account details and parameters
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_shared_req_UpdateAccount'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PartialAccount'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   /services/account:
     delete:
       tags:
@@ -1705,6 +1736,37 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/_shared_req_CreateAccount'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PartialAccount'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+    put:
+      tags:
+        - Admin
+      summary: Update admin account
+      description: |
+        Update an existing admin account
+
+        **Auth:** Requires auth token with `update_accounts` permission
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: |
+          User account details and parameters
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_shared_req_UpdateAccount'
         required: true
       responses:
         '200':
@@ -4251,6 +4313,37 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+    put:
+      tags:
+        - System
+      summary: Update admin account
+      description: |
+        Update an existing admin account
+
+        **Auth:** Requires auth token with `update_accounts` permission
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: |
+          User account details and parameters
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_shared_req_UpdateAccount'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PartialAccount'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   /system/account:
     get:
       tags:
@@ -5601,6 +5694,31 @@ components:
             type: string
         profile:
           $ref: '#/components/schemas/_shared_req_ProfileNullable'
+    _shared_req_UpdateAccount:
+      required:
+        - auth_type
+        - identifier
+      type: object
+      properties:
+        auth_type:
+          type: string
+          enum:
+            - email
+            - illinois_oidc
+        identifier:
+          type: string
+        permissions:
+          type: array
+          items:
+            type: string
+        role_ids:
+          type: array
+          items:
+            type: string
+        group_ids:
+          type: array
+          items:
+            type: string
     _shared_req_AccountCheck:
       required:
         - auth_type

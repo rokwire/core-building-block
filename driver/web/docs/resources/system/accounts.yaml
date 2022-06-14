@@ -52,7 +52,7 @@ post:
       description: Unauthorized
     500:
       description: Internal error
-post:
+put:
   tags:
   - System
   summary: Update admin account
@@ -68,7 +68,7 @@ post:
     content:
       application/json:
         schema:
-          $ref: "../../schemas/apis/shared/requests/create-account/Request.yaml"
+          $ref: "../../schemas/apis/shared/requests/update-account/Request.yaml"
     required: true
   responses:
     200:
