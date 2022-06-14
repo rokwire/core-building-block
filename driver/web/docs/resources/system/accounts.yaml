@@ -28,7 +28,7 @@ post:
   description: |
     Create a new admin account
 
-    **Auth:** Requires auth token with `create_account` permission
+    **Auth:** Requires auth token with `create_accounts` permission
   security:
     - bearerAuth: []
   requestBody:

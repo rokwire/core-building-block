@@ -32,7 +32,7 @@ p, update_app-configs, /core/system/application/configs/*, (GET)|(PUT)
 p, delete_app-config, /core/system/application/configs/*, (GET)|(DELETE) #Delete app configs
 p, delete_app-config, /core/system/application/configs, (GET)
 
-p, create_account, /core/system/accounts, (POST) #Create accounts
+p, create_accounts, /core/system/accounts, (POST) #Create accounts
 
 p, all_account-permissions, /core/system/account/permissions, (GET)|(POST)|(DELETE)|(PUT) #All account permission actions
 p, update_account-permissions, /core/system/account/permissions, (POST)|(PUT) #Grant and revoke account permissions
