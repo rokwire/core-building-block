@@ -1052,7 +1052,7 @@ func (h SystemApisHandler) deleteApplicationConfig(l *logs.Log, r *http.Request,
 	return l.HttpResponseSuccess()
 }
 
-func (h SystemApisHandler) createAccount(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+func (h SystemApisHandler) createAdminAccount(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
@@ -1078,7 +1078,7 @@ func (h SystemApisHandler) createAccount(l *logs.Log, r *http.Request, claims *t
 	}
 	profile := profileFromDefNullable(requestData.Profile)
 	creatorPermissions := strings.Split(claims.Permissions, ",")
-	account, params, err := h.coreAPIs.Auth.CreateAccount(string(requestData.AuthType), claims.AppID, claims.OrgID,
+	account, params, err := h.coreAPIs.Auth.CreateAdminAccount(string(requestData.AuthType), claims.AppID, claims.OrgID,
 		requestData.Identifier, profile, permissions, roleIDs, groupIDs, creatorPermissions, l)
 	if err != nil || account == nil {
 		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypeAccount, nil, err, http.StatusInternalServerError, true)

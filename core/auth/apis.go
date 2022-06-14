@@ -550,8 +550,8 @@ func (a *Auth) LoginMFA(apiKey string, accountID string, sessionID string, ident
 	return nil, loginSession, nil
 }
 
-//CreateAccount creates an account for a new user or updates an existing user's account with new permissions, roles, and groups
-func (a *Auth) CreateAccount(authenticationType string, appID string, orgID string, identifier string,
+//CreateAdminAccount creates an account for a new admin user
+func (a *Auth) CreateAdminAccount(authenticationType string, appID string, orgID string, identifier string,
 	profile model.Profile, permissions []string, roleIDs []string, groupIDs []string, creatorPermissions []string, l *logs.Log) (*model.Account, map[string]interface{}, error) {
 	//TODO: add admin authentication policies that specify which auth types may be used for each app org
 	if authenticationType != AuthTypeOidc && authenticationType != AuthTypeEmail && !strings.HasSuffix(authenticationType, "_oidc") {
@@ -574,54 +574,11 @@ func (a *Auth) CreateAccount(authenticationType string, appID string, orgID stri
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 		}
-		canSignIn := a.canSignIn(account, authType.ID, identifier)
-
-		//2. account exists, so grant the necessary permissions, roles, groups
-		if canSignIn {
-			addPermissions := make([]string, 0)
-			for _, p := range permissions {
-				if account.GetPermissionNamed(p) == nil {
-					addPermissions = append(addPermissions, p)
-				}
-			}
-			if len(addPermissions) > 0 {
-				err = a.GrantAccountPermissions(context, account, addPermissions, creatorPermissions)
-				if err != nil {
-					return errors.WrapErrorAction("granting", "admin account permissions", nil, err)
-				}
-			}
-
-			addRoles := make([]string, 0)
-			for _, r := range roleIDs {
-				if account.GetRole(r) == nil {
-					addRoles = append(addRoles, r)
-				}
-			}
-			if len(addRoles) > 0 {
-				err = a.GrantAccountRoles(context, account, addRoles, creatorPermissions)
-				if err != nil {
-					return errors.WrapErrorAction("granting", "admin account roles", nil, err)
-				}
-			}
-
-			addGroups := make([]string, 0)
-			for _, g := range groupIDs {
-				if account.GetGroup(g) == nil {
-					addGroups = append(addGroups, g)
-				}
-			}
-			if len(addGroups) > 0 {
-				err = a.GrantAccountGroups(context, account, addGroups, creatorPermissions)
-				if err != nil {
-					return errors.WrapErrorAction("granting", "admin account groups", nil, err)
-				}
-			}
-
-			newAccount = account
-			return nil
+		if account != nil {
+			return errors.ErrorData(logutils.StatusFound, model.TypeAccount, &logutils.FieldArgs{"app_org_id": appOrg.ID, "auth_type": authType.Code, "identifier": identifier})
 		}
 
-		//3. account does not exist, so apply sign up
+		//2. account does not exist, so apply sign up
 		profile.DateCreated = time.Now().UTC()
 		if authType.IsExternal {
 			externalUser := model.ExternalSystemUser{Identifier: identifier}
@@ -1561,34 +1518,10 @@ func (a *Auth) GrantAccountPermissions(context storage.TransactionContext, accou
 		}
 	}
 
-	//find permissions
-	permissions, err := a.storage.FindPermissionsByName(context, permissionNames)
+	//check permissions
+	permissions, err := a.checkPermissions(context, permissionNames, assignerPermissions)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionFind, model.TypePermission, nil, err)
-	}
-	if len(permissions) != len(permissionNames) {
-		badNames := make([]string, 0)
-		for _, pName := range permissionNames {
-			bad := true
-			for _, p := range permissions {
-				if p.Name == pName {
-					bad = false
-					break
-				}
-			}
-			if bad {
-				badNames = append(badNames, pName)
-			}
-		}
-		return errors.ErrorData(logutils.StatusInvalid, model.TypePermission, &logutils.FieldArgs{"names": badNames})
-	}
-
-	//check if authorized
-	for _, permission := range permissions {
-		err = permission.CheckAssigners(assignerPermissions)
-		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionValidate, "assigner permissions", &logutils.FieldArgs{"name": permission.Name}, err)
-		}
+		return errors.WrapErrorAction(logutils.ActionValidate, model.TypePermission, nil, err)
 	}
 
 	//update account if authorized
@@ -1620,34 +1553,10 @@ func (a *Auth) GrantAccountRoles(context storage.TransactionContext, account *mo
 		}
 	}
 
-	//find roles
-	roles, err := a.storage.FindAppOrgRolesByIDs(context, roleIDs, account.AppOrg.ID)
+	//check roles
+	roles, err := a.checkRoles(context, account.AppOrg, roleIDs, assignerPermissions)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgRole, nil, err)
-	}
-	if len(roles) != len(roleIDs) {
-		badIDs := make([]string, 0)
-		for _, rID := range roleIDs {
-			bad := true
-			for _, r := range roles {
-				if r.ID == rID {
-					bad = false
-					break
-				}
-			}
-			if bad {
-				badIDs = append(badIDs, rID)
-			}
-		}
-		return errors.ErrorData(logutils.StatusInvalid, model.TypeAppOrgRole, &logutils.FieldArgs{"ids": badIDs})
-	}
-
-	//check if authorized
-	for _, cRole := range roles {
-		err = cRole.CheckAssigners(assignerPermissions)
-		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionValidate, "assigner permissions", &logutils.FieldArgs{"id": cRole.ID}, err)
-		}
+		return errors.WrapErrorAction(logutils.ActionValidate, model.TypeAppOrgRole, nil, err)
 	}
 
 	//update account if authorized
@@ -1680,34 +1589,10 @@ func (a *Auth) GrantAccountGroups(context storage.TransactionContext, account *m
 		}
 	}
 
-	//find group
-	groups, err := a.storage.FindAppOrgGroupsByIDs(context, groupIDs, account.AppOrg.ID)
+	//check groups
+	groups, err := a.checkGroups(context, account.AppOrg, groupIDs, assignerPermissions)
 	if err != nil {
-		return errors.Wrap("error finding app org group", err)
-	}
-	if len(groups) != len(groupIDs) {
-		badIDs := make([]string, 0)
-		for _, gID := range groupIDs {
-			bad := true
-			for _, g := range groups {
-				if g.ID == gID {
-					bad = false
-					break
-				}
-			}
-			if bad {
-				badIDs = append(badIDs, gID)
-			}
-		}
-		return errors.ErrorData(logutils.StatusInvalid, model.TypeAppOrgGroup, &logutils.FieldArgs{"ids": badIDs})
-	}
-
-	//check assigners
-	for _, group := range groups {
-		err = group.CheckAssigners(assignerPermissions)
-		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionValidate, "assigner permissions", &logutils.FieldArgs{"id": group.ID}, err)
-		}
+		return errors.WrapErrorAction(logutils.ActionValidate, model.TypeAppOrgGroup, nil, err)
 	}
 
 	//update account if authorized
