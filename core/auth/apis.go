@@ -575,7 +575,7 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appID string, orgID
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 		}
 		if account != nil {
-			return errors.ErrorData(logutils.StatusFound, model.TypeAccount, &logutils.FieldArgs{"app_org_id": appOrg.ID, "auth_type_id": authType.ID, "identifier": identifier})
+			return errors.ErrorData(logutils.StatusFound, model.TypeAccount, &logutils.FieldArgs{"app_org_id": appOrg.ID, "auth_type": authType.Code, "identifier": identifier})
 		}
 
 		//2. account does not exist, so apply sign up
