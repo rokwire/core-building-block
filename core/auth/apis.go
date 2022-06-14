@@ -1452,34 +1452,10 @@ func (a *Auth) GrantAccountPermissions(context storage.TransactionContext, accou
 		}
 	}
 
-	//find permissions
-	permissions, err := a.storage.FindPermissionsByName(context, permissionNames)
+	//check permissions
+	permissions, err := a.checkPermissions(context, permissionNames, assignerPermissions)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionFind, model.TypePermission, nil, err)
-	}
-	if len(permissions) != len(permissionNames) {
-		badNames := make([]string, 0)
-		for _, pName := range permissionNames {
-			bad := true
-			for _, p := range permissions {
-				if p.Name == pName {
-					bad = false
-					break
-				}
-			}
-			if bad {
-				badNames = append(badNames, pName)
-			}
-		}
-		return errors.ErrorData(logutils.StatusInvalid, model.TypePermission, &logutils.FieldArgs{"names": badNames})
-	}
-
-	//check if authorized
-	for _, permission := range permissions {
-		err = permission.CheckAssigners(assignerPermissions)
-		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionValidate, "assigner permissions", &logutils.FieldArgs{"name": permission.Name}, err)
-		}
+		return errors.WrapErrorAction(logutils.ActionValidate, model.TypePermission, nil, err)
 	}
 
 	//update account if authorized
@@ -1511,34 +1487,10 @@ func (a *Auth) GrantAccountRoles(context storage.TransactionContext, account *mo
 		}
 	}
 
-	//find roles
-	roles, err := a.storage.FindAppOrgRolesByIDs(context, roleIDs, account.AppOrg.ID)
+	//check roles
+	roles, err := a.checkRoles(context, account.AppOrg, roleIDs, assignerPermissions)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgRole, nil, err)
-	}
-	if len(roles) != len(roleIDs) {
-		badIDs := make([]string, 0)
-		for _, rID := range roleIDs {
-			bad := true
-			for _, r := range roles {
-				if r.ID == rID {
-					bad = false
-					break
-				}
-			}
-			if bad {
-				badIDs = append(badIDs, rID)
-			}
-		}
-		return errors.ErrorData(logutils.StatusInvalid, model.TypeAppOrgRole, &logutils.FieldArgs{"ids": badIDs})
-	}
-
-	//check if authorized
-	for _, cRole := range roles {
-		err = cRole.CheckAssigners(assignerPermissions)
-		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionValidate, "assigner permissions", &logutils.FieldArgs{"id": cRole.ID}, err)
-		}
+		return errors.WrapErrorAction(logutils.ActionValidate, model.TypeAppOrgRole, nil, err)
 	}
 
 	//update account if authorized
@@ -1571,34 +1523,10 @@ func (a *Auth) GrantAccountGroups(context storage.TransactionContext, account *m
 		}
 	}
 
-	//find group
-	groups, err := a.storage.FindAppOrgGroupsByIDs(context, groupIDs, account.AppOrg.ID)
+	//check groups
+	groups, err := a.checkGroups(context, account.AppOrg, groupIDs, assignerPermissions)
 	if err != nil {
-		return errors.Wrap("error finding app org group", err)
-	}
-	if len(groups) != len(groupIDs) {
-		badIDs := make([]string, 0)
-		for _, gID := range groupIDs {
-			bad := true
-			for _, g := range groups {
-				if g.ID == gID {
-					bad = false
-					break
-				}
-			}
-			if bad {
-				badIDs = append(badIDs, gID)
-			}
-		}
-		return errors.ErrorData(logutils.StatusInvalid, model.TypeAppOrgGroup, &logutils.FieldArgs{"ids": badIDs})
-	}
-
-	//check assigners
-	for _, group := range groups {
-		err = group.CheckAssigners(assignerPermissions)
-		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionValidate, "assigner permissions", &logutils.FieldArgs{"id": group.ID}, err)
-		}
+		return errors.WrapErrorAction(logutils.ActionValidate, model.TypeAppOrgGroup, nil, err)
 	}
 
 	//update account if authorized

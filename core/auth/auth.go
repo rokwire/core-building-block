@@ -1416,7 +1416,7 @@ func (a *Auth) registerUser(context storage.TransactionContext, authType model.A
 	}
 
 	accountAuthType, err := a.constructAccount(context, authType, userIdentifier, accountAuthTypeParams, appOrg, credential,
-		unverified, externalIDs, profile, preferences, permissionNames, roleIDs, groupIDs, false, l)
+		unverified, externalIDs, profile, preferences, permissionNames, roleIDs, groupIDs, nil, l)
 	if err != nil {
 		return nil, errors.WrapErrorAction("constructing", model.TypeAccount, nil, err)
 	}
@@ -1450,28 +1450,9 @@ func (a *Auth) registerAdminUser(context storage.TransactionContext, authType mo
 	permissionNames []string, roleIDs []string, groupIDs []string, assignerPermissions []string, l *logs.Log) (*model.AccountAuthType, error) {
 
 	accountAuthType, err := a.constructAccount(context, authType, userIdentifier, accountAuthTypeParams, appOrg, credential,
-		true, nil, profile, nil, permissionNames, roleIDs, groupIDs, true, l)
+		true, nil, profile, nil, permissionNames, roleIDs, groupIDs, assignerPermissions, l)
 	if err != nil {
 		return nil, errors.WrapErrorAction("constructing", "admin account", nil, err)
-	}
-
-	for _, permission := range accountAuthType.Account.Permissions {
-		err = permission.CheckAssigners(assignerPermissions)
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionValidate, "account creator permissions", &logutils.FieldArgs{"name": permission.Name}, err)
-		}
-	}
-	for _, role := range accountAuthType.Account.Roles {
-		err = role.Role.CheckAssigners(assignerPermissions)
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionValidate, "account creator permissions", &logutils.FieldArgs{"name": role.Role.Name, "app_org_id": role.Role.AppOrg.ID}, err)
-		}
-	}
-	for _, group := range accountAuthType.Account.Groups {
-		err = group.Group.CheckAssigners(assignerPermissions)
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionValidate, "account creator permissions", &logutils.FieldArgs{"name": group.Group.Name, "app_org_id": group.Group.AppOrg.ID}, err)
-		}
 	}
 
 	err = a.storeNewAccountInfo(context, accountAuthType.Account, credential, useSharedProfile, profile)
@@ -1484,7 +1465,7 @@ func (a *Auth) registerAdminUser(context storage.TransactionContext, authType mo
 
 func (a *Auth) constructAccount(context storage.TransactionContext, authType model.AuthType, userIdentifier string, accountAuthTypeParams map[string]interface{},
 	appOrg model.ApplicationOrganization, credential *model.Credential, unverified bool, externalIDs map[string]string, profile model.Profile,
-	preferences map[string]interface{}, permissionNames []string, roleIDs []string, groupIDs []string, admin bool, l *logs.Log) (*model.AccountAuthType, error) {
+	preferences map[string]interface{}, permissionNames []string, roleIDs []string, groupIDs []string, assignerPermissions []string, l *logs.Log) (*model.AccountAuthType, error) {
 	//create account auth type
 	accountAuthType, credential, err := a.prepareAccountAuthType(authType, userIdentifier, accountAuthTypeParams, credential, unverified, false)
 	if err != nil {
@@ -1495,19 +1476,41 @@ func (a *Auth) constructAccount(context storage.TransactionContext, authType mod
 	accountID, _ := uuid.NewUUID()
 	authTypes := []model.AccountAuthType{*accountAuthType}
 
-	permissions, err := a.storage.FindPermissionsByName(context, permissionNames)
-	if err != nil {
-		l.WarnError(logutils.MessageAction(logutils.StatusError, logutils.ActionFind, model.TypePermission, nil), err)
-	}
+	//assumes admin creator permissions are always non-nil
+	admin := assignerPermissions != nil
+	var permissions []model.Permission
+	var roles []model.AppOrgRole
+	var groups []model.AppOrgGroup
+	if admin {
+		permissions, err = a.checkPermissions(context, permissionNames, assignerPermissions)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypePermission, nil, err)
+		}
 
-	roles, err := a.storage.FindAppOrgRolesByIDs(context, roleIDs, appOrg.ID)
-	if err != nil {
-		l.WarnError(logutils.MessageAction(logutils.StatusError, logutils.ActionFind, model.TypeAppOrgRole, nil), err)
-	}
+		roles, err = a.checkRoles(context, appOrg, roleIDs, assignerPermissions)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypePermission, nil, err)
+		}
 
-	groups, err := a.storage.FindAppOrgGroupsByIDs(context, groupIDs, appOrg.ID)
-	if err != nil {
-		l.WarnError(logutils.MessageAction(logutils.StatusError, logutils.ActionFind, model.TypeAppOrgGroup, nil), err)
+		groups, err = a.checkGroups(context, appOrg, groupIDs, assignerPermissions)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypePermission, nil, err)
+		}
+	} else {
+		permissions, err = a.storage.FindPermissionsByName(context, permissionNames)
+		if err != nil {
+			l.WarnError(logutils.MessageAction(logutils.StatusError, logutils.ActionFind, model.TypePermission, nil), err)
+		}
+
+		roles, err = a.storage.FindAppOrgRolesByIDs(context, roleIDs, appOrg.ID)
+		if err != nil {
+			l.WarnError(logutils.MessageAction(logutils.StatusError, logutils.ActionFind, model.TypeAppOrgRole, nil), err)
+		}
+
+		groups, err = a.storage.FindAppOrgGroupsByIDs(context, groupIDs, appOrg.ID)
+		if err != nil {
+			l.WarnError(logutils.MessageAction(logutils.StatusError, logutils.ActionFind, model.TypeAppOrgGroup, nil), err)
+		}
 	}
 
 	account := model.Account{ID: accountID.String(), AppOrg: appOrg,
@@ -1551,6 +1554,108 @@ func (a *Auth) storeNewAccountInfo(context storage.TransactionContext, account m
 	}
 
 	return nil
+}
+
+func (a *Auth) checkPermissions(context storage.TransactionContext, permissionNames []string, assignerPermissions []string) ([]model.Permission, error) {
+	//find permissions
+	permissions, err := a.storage.FindPermissionsByName(context, permissionNames)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypePermission, nil, err)
+	}
+	if len(permissions) != len(permissionNames) {
+		badNames := make([]string, 0)
+		for _, pName := range permissionNames {
+			bad := true
+			for _, p := range permissions {
+				if p.Name == pName {
+					bad = false
+					break
+				}
+			}
+			if bad {
+				badNames = append(badNames, pName)
+			}
+		}
+		return nil, errors.ErrorData(logutils.StatusInvalid, model.TypePermission, &logutils.FieldArgs{"names": badNames})
+	}
+
+	//check if authorized
+	for _, permission := range permissions {
+		err = permission.CheckAssigners(assignerPermissions)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionValidate, "assigner permissions", &logutils.FieldArgs{"name": permission.Name}, err)
+		}
+	}
+
+	return permissions, nil
+}
+
+func (a *Auth) checkRoles(context storage.TransactionContext, appOrg model.ApplicationOrganization, roleIDs []string, assignerPermissions []string) ([]model.AppOrgRole, error) {
+	//find roles
+	roles, err := a.storage.FindAppOrgRolesByIDs(context, roleIDs, appOrg.ID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgRole, nil, err)
+	}
+	if len(roles) != len(roleIDs) {
+		badIDs := make([]string, 0)
+		for _, rID := range roleIDs {
+			bad := true
+			for _, r := range roles {
+				if r.ID == rID {
+					bad = false
+					break
+				}
+			}
+			if bad {
+				badIDs = append(badIDs, rID)
+			}
+		}
+		return nil, errors.ErrorData(logutils.StatusInvalid, model.TypeAppOrgRole, &logutils.FieldArgs{"ids": badIDs})
+	}
+
+	//check if authorized
+	for _, cRole := range roles {
+		err = cRole.CheckAssigners(assignerPermissions)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionValidate, "assigner permissions", &logutils.FieldArgs{"id": cRole.ID}, err)
+		}
+	}
+
+	return roles, nil
+}
+
+func (a *Auth) checkGroups(context storage.TransactionContext, appOrg model.ApplicationOrganization, groupIDs []string, assignerPermissions []string) ([]model.AppOrgGroup, error) {
+	//find groups
+	groups, err := a.storage.FindAppOrgGroupsByIDs(context, groupIDs, appOrg.ID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgGroup, nil, err)
+	}
+	if len(groups) != len(groupIDs) {
+		badIDs := make([]string, 0)
+		for _, gID := range groupIDs {
+			bad := true
+			for _, g := range groups {
+				if g.ID == gID {
+					bad = false
+					break
+				}
+			}
+			if bad {
+				badIDs = append(badIDs, gID)
+			}
+		}
+		return nil, errors.ErrorData(logutils.StatusInvalid, model.TypeAppOrgGroup, &logutils.FieldArgs{"ids": badIDs})
+	}
+
+	//check assigners
+	for _, group := range groups {
+		err = group.CheckAssigners(assignerPermissions)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionValidate, "assigner permissions", &logutils.FieldArgs{"id": group.ID}, err)
+		}
+	}
+
+	return groups, nil
 }
 
 func (a *Auth) linkAccountAuthType(account model.Account, authType model.AuthType, appOrg model.ApplicationOrganization,
