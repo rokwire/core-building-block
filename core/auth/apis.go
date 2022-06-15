@@ -570,7 +570,7 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appID string, orgID
 	var params map[string]interface{}
 	transaction := func(context storage.TransactionContext) error {
 		//1. check if the user exists
-		account, err := a.storage.FindAccount(appOrg.ID, authType.ID, identifier)
+		account, err := a.storage.FindAccount(context, appOrg.ID, authType.ID, identifier)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 		}
@@ -780,7 +780,7 @@ func (a *Auth) ForgotCredential(authenticationType string, appTypeIdentifier str
 	authTypeID := authType.ID
 
 	//Find the credential for setting reset code and expiry and sending credID in reset link
-	account, err := a.storage.FindAccount(appOrg.ID, authTypeID, identifier)
+	account, err := a.storage.FindAccount(nil, appOrg.ID, authTypeID, identifier)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
@@ -831,7 +831,7 @@ func (a *Auth) SendVerifyCredential(authenticationType string, appTypeIdentifier
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
 	}
-	account, err := a.storage.FindAccount(appOrg.ID, authType.ID, identifier)
+	account, err := a.storage.FindAccount(nil, appOrg.ID, authType.ID, identifier)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
