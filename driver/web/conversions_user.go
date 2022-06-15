@@ -37,7 +37,7 @@ func accountToDef(item model.Account) *Def.SharedResAccount {
 		AuthTypes: &authTypes, Profile: profile, Preferences: preferences}
 }
 
-func аccountsToDef(items []model.Account) []Def.SharedResAccount {
+func accountsToDef(items []model.Account) []Def.SharedResAccount {
 	result := make([]Def.SharedResAccount, len(items))
 	for i, item := range items {
 		result[i] = *accountToDef(item)

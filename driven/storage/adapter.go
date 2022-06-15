@@ -1135,7 +1135,7 @@ func (sa *Adapter) FindAccount(appOrgID string, authTypeID string, accountAuthTy
 }
 
 //FindAccounts finds accounts
-func (sa *Adapter) FindAccounts(appID string, orgID string, accountID *string, authTypeIdentifier *string) ([]model.Account, error) {
+func (sa *Adapter) FindAccounts(limit int, offset int, appID string, orgID string, accountID *string, authTypeIdentifier *string, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error) {
 	//find app org id
 	appOrg, err := sa.getCachedApplicationOrganization(appID, orgID)
 	if err != nil {

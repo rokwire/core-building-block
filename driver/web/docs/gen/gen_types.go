@@ -1180,11 +1180,26 @@ type DeleteAdminApplicationAccountRolesRevokeJSONBody AdminReqRevokeRolesFromAcc
 // GetAdminApplicationAccountsParams defines parameters for GetAdminApplicationAccounts.
 type GetAdminApplicationAccountsParams struct {
 
+	// The maximum number of accounts to return
+	Limit *int `json:"limit,omitempty"`
+
+	// The index of the first account to return
+	Offset *int `json:"offset,omitempty"`
+
 	// The account ID
 	AccountId *string `json:"account-id,omitempty"`
 
 	// The authentication type identifier
 	AuthTypeIdentifier *string `json:"auth-type-identifier,omitempty"`
+
+	// A comma-separated list of permission names
+	Permissions *string `json:"permissions,omitempty"`
+
+	// A comma-separated list of role IDs
+	RoleIds *string `json:"role-ids,omitempty"`
+
+	// A comma-separated list of group IDs
+	GroupIds *string `json:"group-ids,omitempty"`
 }
 
 // PutAdminApplicationGroupAccountsAddJSONBody defines parameters for PutAdminApplicationGroupAccountsAdd.

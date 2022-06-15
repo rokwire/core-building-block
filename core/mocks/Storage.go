@@ -261,13 +261,13 @@ func (_m *Storage) FindAccountByID(context storage.TransactionContext, id string
 	return r0, r1
 }
 
-// FindAccounts provides a mock function with given fields: appID, orgID, accountID, authTypeIdentifier
-func (_m *Storage) FindAccounts(appID string, orgID string, accountID *string, authTypeIdentifier *string) ([]model.Account, error) {
-	ret := _m.Called(appID, orgID, accountID, authTypeIdentifier)
+// FindAccounts provides a mock function with given fields: limit, offset, appID, orgID, accountID, authTypeIdentifier, permissions, roleIDs, groupIDs
+func (_m *Storage) FindAccounts(limit int, offset int, appID string, orgID string, accountID *string, authTypeIdentifier *string, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error) {
+	ret := _m.Called(limit, offset, appID, orgID, accountID, authTypeIdentifier, permissions, roleIDs, groupIDs)
 
 	var r0 []model.Account
-	if rf, ok := ret.Get(0).(func(string, string, *string, *string) []model.Account); ok {
-		r0 = rf(appID, orgID, accountID, authTypeIdentifier)
+	if rf, ok := ret.Get(0).(func(int, int, string, string, *string, *string, []string, []string, []string) []model.Account); ok {
+		r0 = rf(limit, offset, appID, orgID, accountID, authTypeIdentifier, permissions, roleIDs, groupIDs)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]model.Account)
@@ -275,8 +275,8 @@ func (_m *Storage) FindAccounts(appID string, orgID string, accountID *string, a
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(string, string, *string, *string) error); ok {
-		r1 = rf(appID, orgID, accountID, authTypeIdentifier)
+	if rf, ok := ret.Get(1).(func(int, int, string, string, *string, *string, []string, []string, []string) error); ok {
+		r1 = rf(limit, offset, appID, orgID, accountID, authTypeIdentifier, permissions, roleIDs, groupIDs)
 	} else {
 		r1 = ret.Error(1)
 	}

@@ -291,6 +291,26 @@ func (h AdminApisHandler) adminGetApplicationOrgRoles(l *logs.Log, r *http.Reque
 }
 
 func (h AdminApisHandler) getApplicationAccounts(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	var err error
+
+	//limit and offset
+	limit := 20
+	limitArg := r.URL.Query().Get("limit")
+	if limitArg != "" {
+		limit, err = strconv.Atoi(limitArg)
+		if err != nil {
+			return l.HttpResponseErrorAction(logutils.ActionParse, logutils.TypeArg, logutils.StringArgs("limit"), err, http.StatusBadRequest, false)
+		}
+	}
+	offset := 0
+	offsetArg := r.URL.Query().Get("offset")
+	if offsetArg != "" {
+		offset, err = strconv.Atoi(offsetArg)
+		if err != nil {
+			return l.HttpResponseErrorAction(logutils.ActionParse, logutils.TypeArg, logutils.StringArgs("offset"), err, http.StatusBadRequest, false)
+		}
+	}
+
 	//account ID
 	var accountID *string
 	accountIDParam := r.URL.Query().Get("account-id")
@@ -305,11 +325,20 @@ func (h AdminApisHandler) getApplicationAccounts(l *logs.Log, r *http.Request, c
 		authTypeIdentifier = &authTypeIdentifierParam
 	}
 
-	accounts, err := h.coreAPIs.Administration.AdmGetAccounts(claims.AppID, claims.OrgID, accountID, authTypeIdentifier)
+	//TODO: add admin query param (bool)
+	//permissions
+	permissions := strings.Split(r.URL.Query().Get("permissions"), ",")
+	//roleIDs
+	roleIDs := strings.Split(r.URL.Query().Get("role-ids"), ",")
+	//groupIDs
+	groupIDs := strings.Split(r.URL.Query().Get("group-ids"), ",")
+
+	accounts, err := h.coreAPIs.Administration.AdmGetAccounts(limit, offset, claims.AppID, claims.OrgID, accountID, authTypeIdentifier, permissions, roleIDs, groupIDs)
 	if err != nil {
 		return l.HttpResponseErrorAction("error finding accounts", model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}
-	response := аccountsToDef(accounts)
+	//TODO: change to partial account
+	response := accountsToDef(accounts)
 
 	data, err := json.Marshal(response)
 	if err != nil {

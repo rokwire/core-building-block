@@ -549,9 +549,9 @@ func (app *application) admGetApplicationPermissions(appID string, orgID string,
 	return permissions, nil
 }
 
-func (app *application) admGetAccounts(appID string, orgID string, accountID *string, authTypeIdentifier *string) ([]model.Account, error) {
+func (app *application) admGetAccounts(limit int, offset int, appID string, orgID string, accountID *string, authTypeIdentifier *string, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error) {
 	//find the accounts
-	accounts, err := app.storage.FindAccounts(appID, orgID, accountID, authTypeIdentifier)
+	accounts, err := app.storage.FindAccounts(limit, offset, appID, orgID, accountID, authTypeIdentifier, permissions, roleIDs, groupIDs)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}

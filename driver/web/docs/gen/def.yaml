@@ -1625,6 +1625,22 @@ paths:
       security:
         - bearerAuth: []
       parameters:
+        - name: limit
+          in: query
+          description: The maximum number of accounts to return
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          description: The index of the first account to return
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: integer
         - name: account-id
           in: query
           description: The account ID
@@ -1636,6 +1652,30 @@ paths:
         - name: auth-type-identifier
           in: query
           description: The authentication type identifier
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
+        - name: permissions
+          in: query
+          description: A comma-separated list of permission names
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
+        - name: role-ids
+          in: query
+          description: A comma-separated list of role IDs
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
+        - name: group-ids
+          in: query
+          description: A comma-separated list of group IDs
           required: false
           style: form
           explode: false
@@ -1953,7 +1993,8 @@ paths:
         - `update_auth-groups`
         - `delete_auth-groups`
         - `all_auth-groups`
-        - `update_account-auth-roles`
+        - `update_account-auth-groups`
+        - `update_account-authorization`
       security:
         - bearerAuth: []
       responses:
@@ -2101,7 +2142,10 @@ paths:
       description: |
         Get application permissions
 
-        **Auth:** Requires admin access token with 'get_permissions' permission
+        **Auth:** Requires admin access token with at least one of the following permissions:
+        - 'get_permissions'
+        - `update_account-permissions`
+        - `update_account-authorization`
       security:
         - bearerAuth: []
       responses:
@@ -2127,7 +2171,13 @@ paths:
       description: |
         Gets application roles
 
-        **Auth:** Requires admin access token with 'get_auth-roles', 'update_auth-roles', 'delete_auth-roles', or `all_auth-roles` permission
+        **Auth:** Requires admin access token with at least one of the following permissions: 
+        - 'get_auth-roles'
+        - 'update_auth-roles'
+        - 'delete_auth-roles'
+        - `all_auth-roles`
+        - `update_account-auth-roles`
+        - `update_account-authorization`
       security:
         - bearerAuth: []
       responses:
@@ -2932,7 +2982,7 @@ paths:
       description: |
         Gives the system global config
 
-        **Auth:** Requires system access token with `get_global-config` or `all_global-config` permission
+        **Auth:** Requires system access token with `get_global-config`, `update_global-config`, or `all_global-config` permission
       security:
         - bearerAuth: []
       responses:
@@ -3016,7 +3066,7 @@ paths:
       description: |
         Gets organization by ID
 
-        **Auth:** Requires system access token with `get_organizations` or `all_organizations` permission
+        **Auth:** Requires system access token with `get_organizations`, `update_organizations`, or `all_organizations` permission
       security:
         - bearerAuth: []
       parameters:
@@ -3091,7 +3141,7 @@ paths:
       description: |
         Gets organizations
 
-        **Auth:** Requires system access token with `get_organizations` or `all_organizations` permission
+        **Auth:** Requires system access token with `get_organizations`, `update_organizations`, or `all_organizations` permission
       security:
         - bearerAuth: []
       responses:
@@ -3148,7 +3198,7 @@ paths:
       description: |
         Returns service registration records
 
-        **Auth:** Requires system access token with `get_service-regs` or `all_service-regs` permission
+        **Auth:** Requires system access token with `get_service-regs`, `update_service-regs`, `delete_service-regs`, or `all_service-regs` permission
       security:
         - bearerAuth: []
       parameters:
@@ -3282,7 +3332,7 @@ paths:
       description: |
         Get service account instance by account ID, app ID, and org ID
 
-        **Auth:** Requires system access token with `get_service-accounts` or `all_service-accounts` permission
+        **Auth:** Requires system access token with `get_service-accounts`, `update_service-accounts`, `delete_service-accounts`, or `all_service-accounts` permission
       security:
         - bearerAuth: []
       parameters:
@@ -3439,7 +3489,7 @@ paths:
       description: |
         Get list of all service accounts matching a search
 
-        **Auth:** Requires system access token with `get_service-accounts` or `all_service-accounts` permission
+        **Auth:** Requires system access token with `get_service-accounts`, `update_service-accounts`, `delete_service-accounts`, or `all_service-accounts` permission
       security:
         - bearerAuth: []
       parameters:
@@ -3755,7 +3805,7 @@ paths:
       description: |
         Gets applications
 
-        **Auth:** Requires system access token with `get_applications` or `all_applications` permission
+        **Auth:** Requires system access token with `get_applications`, `udpate_applications`, or `all_applications` permission
       security:
         - bearerAuth: []
       responses:
@@ -3944,7 +3994,7 @@ paths:
         Otherwise it will return a list of all app config versions for the given app_type_id. If org_id is provided, the configs for that organization will
         be returned, otherwise the default configs will be returned.
 
-        **Auth:** Requires system access token with `get_app-configs` or `all_app-configs` permission
+        **Auth:** Requires system access token with `get_app-configs`, `update_app-configs`, `delete_app-configs`, or `all_app-configs` permission
       security:
         - bearerAuth: []
       parameters:
@@ -4024,9 +4074,9 @@ paths:
         - System
       summary: Reads app configs by ID
       description: |
-        Get a app configs for the provided ID
+        Get app configs for the provided ID
 
-        **Auth:** Requires system access token with `get_app-configs` or `all_app-configs` permission
+        **Auth:** Requires system access token with `get_app-configs`, `update_app-configs`, `delete_app-configs`, or `all_app-configs` permission
       security:
         - bearerAuth: []
       parameters:
@@ -4281,7 +4331,7 @@ paths:
       description: |
         Returns API key record
 
-        **Auth:** Requires system access token with `get_api-keys` or `all_api-keys` permission
+        **Auth:** Requires system access token with `get_api-keys`, `update_api-keys`, `delete_api-keys`, or `all_api-keys` permission
       security:
         - bearerAuth: []
       parameters:
@@ -4416,7 +4466,7 @@ paths:
       description: |
         Gets auth types
 
-        **Auth:** Requires system access token with `get_auth-types` or `all_auth-types` permission
+        **Auth:** Requires system access token with `get_auth-types`, `update_auth-types`, or `all_auth-types` permission
       security:
         - bearerAuth: []
       responses:

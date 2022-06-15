@@ -9,6 +9,22 @@ get:
   security:
     - bearerAuth: []
   parameters:
+    - name: limit
+      in: query
+      description: The maximum number of accounts to return
+      required: false
+      style: form
+      explode: false
+      schema:
+        type: integer
+    - name: offset
+      in: query
+      description: The index of the first account to return
+      required: false
+      style: form
+      explode: false
+      schema:
+        type: integer
     - name: account-id
       in: query
       description: The account ID
@@ -20,6 +36,30 @@ get:
     - name: auth-type-identifier
       in: query
       description: The authentication type identifier
+      required: false
+      style: form
+      explode: false
+      schema:
+        type: string
+    - name: permissions
+      in: query
+      description: A comma-separated list of permission names
+      required: false
+      style: form
+      explode: false
+      schema:
+        type: string
+    - name: role-ids
+      in: query
+      description: A comma-separated list of role IDs
+      required: false
+      style: form
+      explode: false
+      schema:
+        type: string
+    - name: group-ids
+      in: query
+      description: A comma-separated list of group IDs
       required: false
       style: form
       explode: false
