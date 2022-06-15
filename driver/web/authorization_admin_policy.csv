@@ -28,7 +28,8 @@ p, delete_auth-roles, /core/admin/application/roles, (GET)
 p, get_permissions, /core/admin/application/permissions, (GET) #Get permissions
 
 p, get_accounts, /core/admin/application/accounts, (GET) #Get accounts
-p, create_account, /core/admin/application/accounts, (POST) #Create accounts
+p, create_accounts, /core/admin/application/accounts, (POST) #Create accounts
+p, update_accounts, /core/admin/application/accounts, (PUT)
 
 p, get_account-devices, /application/account/{id}/devices, (GET) #Get account devices
 
