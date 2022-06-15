@@ -614,6 +614,9 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appID string, orgID
 //UpdateAdminAccount updates an existing user's account with new permissions, roles, and groups
 func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID string, identifier string, permissions []string, roleIDs []string,
 	groupIDs []string, updaterPermissions []string, l *logs.Log) (*model.Account, map[string]interface{}, error) {
+	//TODO: when elevating existing accounts to application level admin, need to enforce any authentication policies set up for the app org
+	// when demoting from application level admin to standard user, may want to inform user of applicable authentication policy changes
+
 	if authenticationType != AuthTypeOidc && authenticationType != AuthTypeEmail && !strings.HasSuffix(authenticationType, "_oidc") {
 		return nil, nil, errors.ErrorData(logutils.StatusInvalid, "auth type", nil)
 	}
@@ -642,7 +645,9 @@ func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID
 			return errors.ErrorData("Unverified", model.TypeAccountAuthType, &logutils.FieldArgs{"app_org_id": appOrg.ID, "auth_type": authType.Code, "identifier": identifier}).SetStatus(utils.ErrorStatusUnverified)
 		}
 
-		//3. update account permissions, roles, groups
+		//3. update account permissions
+		updatedAccount = account
+		updated := false
 		if account.CheckForPermissionChanges(permissions) {
 			newPermissions, err := a.checkPermissions(context, permissions, updaterPermissions)
 			if err != nil {
@@ -652,36 +657,56 @@ func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionUpdate, "admin account permissions", nil, err)
 			}
+
+			updatedAccount.Permissions = newPermissions
+			updated = true
 		}
 
+		//4. update account roles
 		if account.CheckForRoleChanges(roleIDs) {
 			newRoles, err := a.checkRoles(context, *appOrg, roleIDs, updaterPermissions)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionValidate, model.TypeAppOrgRole, nil, err)
 			}
-			err = a.storage.UpdateAccountRoles(context, account.ID, model.AccountRolesFromAppOrgRoles(newRoles, true, true))
+
+			newAccountRoles := model.AccountRolesFromAppOrgRoles(newRoles, true, true)
+			err = a.storage.UpdateAccountRoles(context, account.ID, newAccountRoles)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionUpdate, "admin account roles", nil, err)
 			}
+
+			updatedAccount.Roles = newAccountRoles
+			updated = true
 		}
 
+		//5. update account groups
 		if account.CheckForGroupChanges(groupIDs) {
 			newGroups, err := a.checkGroups(context, *appOrg, groupIDs, updaterPermissions)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionValidate, model.TypeAppOrgGroup, nil, err)
 			}
-			err = a.storage.UpdateAccountGroups(context, account.ID, model.AccountGroupsFromAppOrgGroups(newGroups, true, true))
+
+			newAccountGroups := model.AccountGroupsFromAppOrgGroups(newGroups, true, true)
+			err = a.storage.UpdateAccountGroups(context, account.ID, newAccountGroups)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionUpdate, "admin account groups", nil, err)
 			}
+
+			updatedAccount.Groups = newAccountGroups
+			updated = true
 		}
 
-		err = a.storage.DeleteLoginSessionsByIdentifier(context, account.ID)
-		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, nil, err)
+		//6. delete active login sessions if account was updated
+		if updated {
+			err = a.storage.DeleteLoginSessionsByIdentifier(context, account.ID)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, nil, err)
+			}
+
+			now := time.Now().UTC()
+			updatedAccount.DateUpdated = &now
 		}
 
-		updatedAccount = account
 		return nil
 	}
 

@@ -61,7 +61,8 @@ func partialAccountToDef(item model.Account, params map[string]interface{}) *Def
 	var dateUpdated *string
 	dateCreated := item.DateCreated.Format("2006-01-02T15:04:05.000Z")
 	if item.DateUpdated != nil {
-		*dateUpdated = item.DateUpdated.Format("2006-01-02T15:04:05.000Z")
+		formatted := item.DateUpdated.Format("2006-01-02T15:04:05.000Z")
+		dateUpdated = &formatted
 	}
 
 	//params
