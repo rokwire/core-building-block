@@ -183,6 +183,34 @@ func (a Account) GetPermissionNamed(name string) *Permission {
 	return nil
 }
 
+//GetPermissionChanges returns changes to account permissions given a list of new permissions
+func (a Account) GetPermissionChanges(new []string) ([]string, []string) {
+	added := make([]string, 0)
+	removed := make([]string, 0)
+	unchanged := make([]bool, len(a.Permissions))
+
+	for _, newP := range new {
+		found := false
+		for i, p := range a.Permissions {
+			if p.Name == newP {
+				found = true
+				unchanged[i] = true
+				break
+			}
+		}
+		if !found {
+			added = append(added, newP)
+		}
+	}
+	for i, p := range a.Permissions {
+		if !unchanged[i] {
+			removed = append(removed, p.Name)
+		}
+	}
+
+	return added, removed
+}
+
 //GetActiveRoles returns all active roles
 func (a Account) GetActiveRoles() []AccountRole {
 	roles := []AccountRole{}

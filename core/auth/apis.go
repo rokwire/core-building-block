@@ -638,7 +638,7 @@ func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID
 			return errors.ErrorData("Unverified", model.TypeAccountAuthType, &logutils.FieldArgs{"app_org_id": appOrg.ID, "auth_type": authType.Code, "identifier": identifier}).SetStatus(utils.ErrorStatusUnverified)
 		}
 
-		//3. grant the necessary permissions, roles, groups
+		//3. update account permissions, roles, groups
 		newPermissions, err := a.checkPermissions(context, permissions, updaterPermissions)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionValidate, model.TypePermission, nil, err)
@@ -667,6 +667,10 @@ func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID
 		}
 
 		//TODO: delete login sessions
+		err = a.storage.DeleteLoginSessionsByIdentifier(context, account.ID)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, nil, err)
+		}
 
 		updatedAccount = account
 		return nil
