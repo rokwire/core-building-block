@@ -24,8 +24,8 @@ import (
 
 	"github.com/rokwire/logging-library-go/errors"
 
-	"github.com/rokwire/core-auth-library-go/authorization"
-	"github.com/rokwire/core-auth-library-go/authservice"
+	"github.com/rokwire/core-auth-library-go/v2/authorization"
+	"github.com/rokwire/core-auth-library-go/v2/authservice"
 	"github.com/rokwire/logging-library-go/logutils"
 )
 
@@ -412,7 +412,7 @@ func JSONWebKeyFromPubKey(key *authservice.PubKey) (*JSONWebKey, error) {
 	nString := base64.URLEncoding.EncodeToString(n)
 	eString := base64.URLEncoding.EncodeToString(e)
 
-	return &JSONWebKey{Kty: "RSA", Use: "sig", Kid: key.Kid, Alg: key.Alg, N: nString, E: eString}, nil
+	return &JSONWebKey{Kty: "RSA", Use: "sig", Kid: key.KeyID, Alg: key.Alg, N: nString, E: eString}, nil
 }
 
 func rsaPublicKeyByteValuesFromRaw(rawKey *rsa.PublicKey) ([]byte, []byte, error) {

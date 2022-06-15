@@ -24,9 +24,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/rokwire/core-auth-library-go/authorization"
-	"github.com/rokwire/core-auth-library-go/sigauth"
-	"github.com/rokwire/core-auth-library-go/tokenauth"
+	"github.com/rokwire/core-auth-library-go/v2/authorization"
+	"github.com/rokwire/core-auth-library-go/v2/sigauth"
+	"github.com/rokwire/core-auth-library-go/v2/tokenauth"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logutils"
 
@@ -1439,7 +1439,7 @@ func (a *Auth) DeregisterService(serviceID string) error {
 
 //GetAuthKeySet generates a JSON Web Key Set for auth service registration
 func (a *Auth) GetAuthKeySet() (*model.JSONWebKeySet, error) {
-	authReg, err := a.AuthService.GetServiceReg("auth")
+	authReg, err := a.ServiceRegManager.GetServiceReg("auth")
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeServiceReg, logutils.StringArgs("auth"), err)
 	}
