@@ -1135,7 +1135,8 @@ func (sa *Adapter) FindAccount(appOrgID string, authTypeID string, accountAuthTy
 }
 
 //FindAccounts finds accounts
-func (sa *Adapter) FindAccounts(limit int, offset int, appID string, orgID string, accountID *string, authTypeIdentifier *string, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error) {
+func (sa *Adapter) FindAccounts(limit int, offset int, appID string, orgID string, accountID *string, authTypeIdentifier *string, admin bool,
+	permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error) {
 	//find app org id
 	appOrg, err := sa.getCachedApplicationOrganization(appID, orgID)
 	if err != nil {
@@ -1154,11 +1155,39 @@ func (sa *Adapter) FindAccounts(limit int, offset int, appID string, orgID strin
 	if authTypeIdentifier != nil {
 		filter = append(filter, primitive.E{Key: "auth_types.identifier", Value: *authTypeIdentifier})
 	}
+	if !admin {
+		filter = append(filter, primitive.E{Key: "permissions.0", Value: bson.M{"$exists": false}}) //bson.M{"$in": bson.A{bson.A{}, nil}}})
+		filter = append(filter, primitive.E{Key: "roles.0", Value: bson.M{"$exists": false}})
+		filter = append(filter, primitive.E{Key: "groups.0", Value: bson.M{"$exists": false}})
+	} else {
+		override := false
+		if len(permissions) > 0 {
+			filter = append(filter, primitive.E{Key: "permissions.name", Value: bson.M{"$in": permissions}})
+			override = true
+		}
+		if len(roleIDs) > 0 {
+			filter = append(filter, primitive.E{Key: "roles.role._id", Value: bson.M{"$in": roleIDs}})
+			override = true
+		}
+		if len(groupIDs) > 0 {
+			filter = append(filter, primitive.E{Key: "groups.group._id", Value: bson.M{"$in": groupIDs}})
+			override = true
+		}
+
+		if !override {
+			filter = append(filter, primitive.E{Key: "$or", Value: bson.A{
+				primitive.E{Key: "permissions.0", Value: bson.M{"$exists": true}},
+				primitive.E{Key: "roles.0", Value: bson.M{"$exists": true}},
+				primitive.E{Key: "groups.0", Value: bson.M{"$exists": true}},
+			}})
+		}
+	}
 
 	var list []account
 	options := options.Find()
-	limitAccounts := int64(20)
-	options.SetLimit(limitAccounts)
+	options.SetLimit(int64(limit))
+	options.SetSkip(int64(offset))
+
 	err = sa.db.accounts.Find(filter, &list, options)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)

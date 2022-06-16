@@ -1192,6 +1192,9 @@ type GetAdminApplicationAccountsParams struct {
 	// The authentication type identifier
 	AuthTypeIdentifier *string `json:"auth-type-identifier,omitempty"`
 
+	// Admin level account filter
+	Admin *bool `json:"admin,omitempty"`
+
 	// A comma-separated list of permission names
 	Permissions *string `json:"permissions,omitempty"`
 

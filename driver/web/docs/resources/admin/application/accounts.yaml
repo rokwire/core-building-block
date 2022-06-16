@@ -41,6 +41,14 @@ get:
       explode: false
       schema:
         type: string
+    - name: admin
+      in: query
+      description: Admin level account filter
+      required: false
+      style: form
+      explode: false
+      schema:
+        type: boolean
     - name: permissions
       in: query
       description: A comma-separated list of permission names

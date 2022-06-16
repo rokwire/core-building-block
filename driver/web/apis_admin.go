@@ -317,7 +317,6 @@ func (h AdminApisHandler) getApplicationAccounts(l *logs.Log, r *http.Request, c
 	if len(accountIDParam) > 0 {
 		accountID = &accountIDParam
 	}
-
 	//auth type identifier
 	var authTypeIdentifier *string
 	authTypeIdentifierParam := r.URL.Query().Get("auth-type-identifier")
@@ -325,15 +324,35 @@ func (h AdminApisHandler) getApplicationAccounts(l *logs.Log, r *http.Request, c
 		authTypeIdentifier = &authTypeIdentifierParam
 	}
 
-	//TODO: add admin query param (bool)
+	//admin
+	admin := false
+	adminArg := r.URL.Query().Get("admin")
+	if adminArg != "" {
+		admin, err = strconv.ParseBool(adminArg)
+		if err != nil {
+			return l.HttpResponseErrorAction(logutils.ActionParse, logutils.TypeArg, logutils.StringArgs("admin"), err, http.StatusBadRequest, false)
+		}
+	}
 	//permissions
-	permissions := strings.Split(r.URL.Query().Get("permissions"), ",")
+	var permissions []string
+	permissionsArg := r.URL.Query().Get("permissions")
+	if permissionsArg != "" {
+		permissions = strings.Split(permissionsArg, ",")
+	}
 	//roleIDs
-	roleIDs := strings.Split(r.URL.Query().Get("role-ids"), ",")
+	var roleIDs []string
+	rolesArg := r.URL.Query().Get("role-ids")
+	if rolesArg != "" {
+		roleIDs = strings.Split(rolesArg, ",")
+	}
 	//groupIDs
-	groupIDs := strings.Split(r.URL.Query().Get("group-ids"), ",")
+	var groupIDs []string
+	groupsArg := r.URL.Query().Get("group-ids")
+	if groupsArg != "" {
+		groupIDs = strings.Split(groupsArg, ",")
+	}
 
-	accounts, err := h.coreAPIs.Administration.AdmGetAccounts(limit, offset, claims.AppID, claims.OrgID, accountID, authTypeIdentifier, permissions, roleIDs, groupIDs)
+	accounts, err := h.coreAPIs.Administration.AdmGetAccounts(limit, offset, claims.AppID, claims.OrgID, accountID, authTypeIdentifier, admin, permissions, roleIDs, groupIDs)
 	if err != nil {
 		return l.HttpResponseErrorAction("error finding accounts", model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}
