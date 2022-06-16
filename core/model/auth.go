@@ -30,6 +30,11 @@ import (
 )
 
 const (
+	//AllApps indicates that all apps may be accessed
+	AllApps string = "all"
+	//AllOrgs indicates that all orgs may be accessed
+	AllOrgs string = "all"
+
 	//TypeLoginSession auth type type
 	TypeLoginSession logutils.MessageDataType = "login session"
 	//TypeAuthType auth type type
@@ -344,8 +349,8 @@ func (s ServiceAccount) GetPermissionNames() []string {
 
 //AppOrgPair represents an appID, orgID pair entity
 type AppOrgPair struct {
-	AppID *string
-	OrgID *string
+	AppID string
+	OrgID string
 }
 
 //ServiceAccountCredential represents a service account credential entity

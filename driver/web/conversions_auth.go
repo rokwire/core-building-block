@@ -121,13 +121,13 @@ func serviceAccountToDef(item *model.ServiceAccount) *Def.ServiceAccount {
 
 	accountID := item.AccountID
 	name := item.Name
-	var appID *string
+	appID := model.AllApps
 	if item.Application != nil {
-		appID = &item.Application.ID
+		appID = item.Application.ID
 	}
-	var orgID *string
+	orgID := model.AllOrgs
 	if item.Organization != nil {
-		orgID = &item.Organization.ID
+		orgID = item.Organization.ID
 	}
 	permissions := make([]string, len(item.Permissions))
 	for i, p := range item.Permissions {

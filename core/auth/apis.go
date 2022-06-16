@@ -975,13 +975,13 @@ func (a *Auth) GetServiceAccountParams(accountID string, firstParty bool, r *sig
 
 	appOrgPairs := make([]model.AppOrgPair, len(accounts))
 	for i, account := range accounts {
-		var appID *string
+		appID := model.AllApps
 		if account.Application != nil {
-			appID = &account.Application.ID
+			appID = account.Application.ID
 		}
-		var orgID *string
+		orgID := model.AllOrgs
 		if account.Organization != nil {
-			orgID = &account.Organization.ID
+			orgID = account.Organization.ID
 		}
 		appOrgPairs[i] = model.AppOrgPair{AppID: appID, OrgID: orgID}
 	}
@@ -1035,17 +1035,17 @@ func (a *Auth) GetServiceAccounts(params map[string]interface{}) ([]model.Servic
 }
 
 //RegisterServiceAccount registers a service account
-func (a *Auth) RegisterServiceAccount(accountID *string, fromAppID *string, fromOrgID *string, name *string, appID *string,
-	orgID *string, permissions *[]string, firstParty *bool, creds []model.ServiceAccountCredential, l *logs.Log) (*model.ServiceAccount, error) {
+func (a *Auth) RegisterServiceAccount(accountID *string, fromAppID *string, fromOrgID *string, name *string, appID string,
+	orgID string, permissions *[]string, firstParty *bool, creds []model.ServiceAccountCredential, l *logs.Log) (*model.ServiceAccount, error) {
 	var newAccount *model.ServiceAccount
 	var err error
 	var newName string
 	var permissionList []string
 	var displayParamsList []map[string]interface{}
 
-	if accountID != nil {
+	if accountID != nil && fromAppID != nil && fromOrgID != nil {
 		var fromAccount *model.ServiceAccount
-		fromAccount, err = a.storage.FindServiceAccount(nil, *accountID, fromAppID, fromOrgID)
+		fromAccount, err = a.storage.FindServiceAccount(nil, *accountID, *fromAppID, *fromOrgID)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, nil, err)
 		}
@@ -1127,7 +1127,7 @@ func (a *Auth) DeregisterServiceAccount(accountID string) error {
 }
 
 //GetServiceAccountInstance gets a service account instance
-func (a *Auth) GetServiceAccountInstance(accountID string, appID *string, orgID *string) (*model.ServiceAccount, error) {
+func (a *Auth) GetServiceAccountInstance(accountID string, appID string, orgID string) (*model.ServiceAccount, error) {
 	serviceAccount, err := a.storage.FindServiceAccount(nil, accountID, appID, orgID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, nil, err)
@@ -1137,7 +1137,7 @@ func (a *Auth) GetServiceAccountInstance(accountID string, appID *string, orgID 
 }
 
 //UpdateServiceAccountInstance updates a service account instance
-func (a *Auth) UpdateServiceAccountInstance(id string, appID *string, orgID *string, name string, permissions []string) (*model.ServiceAccount, error) {
+func (a *Auth) UpdateServiceAccountInstance(id string, appID string, orgID string, name string, permissions []string) (*model.ServiceAccount, error) {
 	updatedAccount, err := a.constructServiceAccount(id, name, appID, orgID, permissions, false)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeServiceAccount, nil, err)
@@ -1152,7 +1152,7 @@ func (a *Auth) UpdateServiceAccountInstance(id string, appID *string, orgID *str
 }
 
 //DeregisterServiceAccountInstance deregisters a service account instance
-func (a *Auth) DeregisterServiceAccountInstance(id string, appID *string, orgID *string) error {
+func (a *Auth) DeregisterServiceAccountInstance(id string, appID string, orgID string) error {
 	err := a.storage.DeleteServiceAccount(id, appID, orgID)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeServiceAccount, nil, err)
