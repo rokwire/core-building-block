@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/rokwire/core-auth-library-go/tokenauth"
@@ -583,6 +584,82 @@ func (h ServicesApisHandler) getPreferences(l *logs.Log, r *http.Request, claims
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeAccount, nil, err, http.StatusInternalServerError, false)
 	}
 
+	return l.HttpResponseSuccessJSON(data)
+}
+
+func (h ServicesApisHandler) getAccounts(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	var err error
+
+	//limit and offset
+	limit := 20
+	limitArg := r.URL.Query().Get("limit")
+	if limitArg != "" {
+		limit, err = strconv.Atoi(limitArg)
+		if err != nil {
+			return l.HttpResponseErrorAction(logutils.ActionParse, logutils.TypeArg, logutils.StringArgs("limit"), err, http.StatusBadRequest, false)
+		}
+	}
+	offset := 0
+	offsetArg := r.URL.Query().Get("offset")
+	if offsetArg != "" {
+		offset, err = strconv.Atoi(offsetArg)
+		if err != nil {
+			return l.HttpResponseErrorAction(logutils.ActionParse, logutils.TypeArg, logutils.StringArgs("offset"), err, http.StatusBadRequest, false)
+		}
+	}
+
+	//account ID
+	var accountID *string
+	accountIDParam := r.URL.Query().Get("account-id")
+	if len(accountIDParam) > 0 {
+		accountID = &accountIDParam
+	}
+	//auth type identifier
+	var authTypeIdentifier *string
+	authTypeIdentifierParam := r.URL.Query().Get("auth-type-identifier")
+	if len(authTypeIdentifierParam) > 0 {
+		authTypeIdentifier = &authTypeIdentifierParam
+	}
+
+	//admin
+	admin := false
+	adminArg := r.URL.Query().Get("admin")
+	if adminArg != "" {
+		admin, err = strconv.ParseBool(adminArg)
+		if err != nil {
+			return l.HttpResponseErrorAction(logutils.ActionParse, logutils.TypeArg, logutils.StringArgs("admin"), err, http.StatusBadRequest, false)
+		}
+	}
+	//permissions
+	var permissions []string
+	permissionsArg := r.URL.Query().Get("permissions")
+	if permissionsArg != "" {
+		permissions = strings.Split(permissionsArg, ",")
+	}
+	//roleIDs
+	var roleIDs []string
+	rolesArg := r.URL.Query().Get("role-ids")
+	if rolesArg != "" {
+		roleIDs = strings.Split(rolesArg, ",")
+	}
+	//groupIDs
+	var groupIDs []string
+	groupsArg := r.URL.Query().Get("group-ids")
+	if groupsArg != "" {
+		groupIDs = strings.Split(groupsArg, ",")
+	}
+
+	accounts, err := h.coreAPIs.Services.SerGetAccounts(limit, offset, claims.AppID, claims.OrgID, accountID, authTypeIdentifier, admin, permissions, roleIDs, groupIDs)
+	if err != nil {
+		return l.HttpResponseErrorAction("error finding accounts", model.TypeAccount, nil, err, http.StatusInternalServerError, true)
+	}
+
+	response := partialAccountsToDef(accounts)
+
+	data, err := json.Marshal(response)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeAccount, nil, err, http.StatusInternalServerError, false)
+	}
 	return l.HttpResponseSuccessJSON(data)
 }
 

@@ -28,8 +28,10 @@ type Services interface {
 	SerGetProfile(accountID string) (*model.Profile, error)
 	SerGetPreferences(accountID string) (map[string]interface{}, error)
 	SerUpdateAccountPreferences(id string, preferences map[string]interface{}) error
-
 	SerUpdateProfile(accountID string, profile model.Profile) error
+
+	SerGetAccounts(limit int, offset int, appID string, orgID string, accountID *string, authTypeIdentifier *string, admin bool,
+		permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error)
 
 	SerGetAuthTest(l *logs.Log) string
 	SerGetCommonTest(l *logs.Log) string

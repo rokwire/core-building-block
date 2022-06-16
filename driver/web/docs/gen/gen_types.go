@@ -483,6 +483,22 @@ type OrganizationFields struct {
 // OrganizationFieldsType defines model for OrganizationFields.Type.
 type OrganizationFieldsType string
 
+// PartialAccount defines model for PartialAccount.
+type PartialAccount struct {
+	AppId       string                  `json:"app_id"`
+	AuthTypes   []AccountAuthTypeFields `json:"auth_types"`
+	DateCreated string                  `json:"date_created"`
+	DateUpdated *string                 `json:"date_updated"`
+	FirstName   string                  `json:"first_name"`
+	Groups      []AppOrgGroupFields     `json:"groups"`
+	Id          string                  `json:"id"`
+	LastName    string                  `json:"last_name"`
+	OrgId       string                  `json:"org_id"`
+	Params      *map[string]interface{} `json:"params"`
+	Permissions []PermissionFields      `json:"permissions"`
+	Roles       []AppOrgRoleFields      `json:"roles"`
+}
+
 // Permission defines model for Permission.
 type Permission struct {
 	Fields *PermissionFields `json:"fields,omitempty"`
@@ -1301,6 +1317,34 @@ type PutServicesAccountPreferencesJSONBody map[string]interface{}
 
 // PutServicesAccountProfileJSONBody defines parameters for PutServicesAccountProfile.
 type PutServicesAccountProfileJSONBody SharedReqProfile
+
+// GetServicesAccountsParams defines parameters for GetServicesAccounts.
+type GetServicesAccountsParams struct {
+
+	// The maximum number of accounts to return
+	Limit *int `json:"limit,omitempty"`
+
+	// The index of the first account to return
+	Offset *int `json:"offset,omitempty"`
+
+	// The account ID
+	AccountId *string `json:"account-id,omitempty"`
+
+	// The authentication type identifier
+	AuthTypeIdentifier *string `json:"auth-type-identifier,omitempty"`
+
+	// Admin level account filter
+	Admin *bool `json:"admin,omitempty"`
+
+	// A comma-separated list of permission names
+	Permissions *string `json:"permissions,omitempty"`
+
+	// A comma-separated list of role IDs
+	RoleIds *string `json:"role-ids,omitempty"`
+
+	// A comma-separated list of group IDs
+	GroupIds *string `json:"group-ids,omitempty"`
+}
 
 // PostServicesApplicationConfigsJSONBody defines parameters for PostServicesApplicationConfigs.
 type PostServicesApplicationConfigsJSONBody ServicesReqApplicationConfigs

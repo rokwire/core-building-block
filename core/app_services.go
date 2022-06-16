@@ -82,6 +82,16 @@ func (app *application) serDeleteAccount(id string) error {
 	return app.auth.DeleteAccount(id)
 }
 
+func (app *application) serGetAccounts(limit int, offset int, appID string, orgID string, accountID *string, authTypeIdentifier *string, admin bool,
+	permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error) {
+	//find the accounts
+	accounts, err := app.storage.FindAccounts(limit, offset, appID, orgID, accountID, authTypeIdentifier, admin, permissions, roleIDs, groupIDs)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+	return accounts, nil
+}
+
 func (app *application) serGetAuthTest(l *logs.Log) string {
 	return "Services - Auth - test"
 }

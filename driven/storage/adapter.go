@@ -1155,31 +1155,32 @@ func (sa *Adapter) FindAccounts(limit int, offset int, appID string, orgID strin
 	if authTypeIdentifier != nil {
 		filter = append(filter, primitive.E{Key: "auth_types.identifier", Value: *authTypeIdentifier})
 	}
-	if !admin {
-		filter = append(filter, primitive.E{Key: "permissions.0", Value: bson.M{"$exists": false}}) //bson.M{"$in": bson.A{bson.A{}, nil}}})
-		filter = append(filter, primitive.E{Key: "roles.0", Value: bson.M{"$exists": false}})
-		filter = append(filter, primitive.E{Key: "groups.0", Value: bson.M{"$exists": false}})
-	} else {
-		override := false
-		if len(permissions) > 0 {
-			filter = append(filter, primitive.E{Key: "permissions.name", Value: bson.M{"$in": permissions}})
-			override = true
-		}
-		if len(roleIDs) > 0 {
-			filter = append(filter, primitive.E{Key: "roles.role._id", Value: bson.M{"$in": roleIDs}})
-			override = true
-		}
-		if len(groupIDs) > 0 {
-			filter = append(filter, primitive.E{Key: "groups.group._id", Value: bson.M{"$in": groupIDs}})
-			override = true
-		}
 
-		if !override {
+	overrideAdmin := false
+	if len(permissions) > 0 {
+		filter = append(filter, primitive.E{Key: "permissions.name", Value: bson.M{"$in": permissions}})
+		overrideAdmin = true
+	}
+	if len(roleIDs) > 0 {
+		filter = append(filter, primitive.E{Key: "roles.role._id", Value: bson.M{"$in": roleIDs}})
+		overrideAdmin = true
+	}
+	if len(groupIDs) > 0 {
+		filter = append(filter, primitive.E{Key: "groups.group._id", Value: bson.M{"$in": groupIDs}})
+		overrideAdmin = true
+	}
+
+	if !overrideAdmin {
+		if admin {
 			filter = append(filter, primitive.E{Key: "$or", Value: bson.A{
 				bson.M{"permissions.0": bson.M{"$exists": true}},
 				bson.M{"roles.0": bson.M{"$exists": true}},
 				bson.M{"groups.0": bson.M{"$exists": true}},
 			}})
+		} else {
+			filter = append(filter, primitive.E{Key: "permissions.0", Value: bson.M{"$exists": false}})
+			filter = append(filter, primitive.E{Key: "roles.0", Value: bson.M{"$exists": false}})
+			filter = append(filter, primitive.E{Key: "groups.0", Value: bson.M{"$exists": false}})
 		}
 	}
 

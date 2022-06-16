@@ -76,6 +76,8 @@ OIDCDiscovery:
 # user
 Account:
   $ref: "./user/Account.yaml"
+PartialAccount:
+  $ref: "./user/PartialAccount.yaml"
 AccountFields:
   $ref: "./user/AccountFields.yaml"
 Profile:

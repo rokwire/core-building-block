@@ -356,8 +356,8 @@ func (h AdminApisHandler) getApplicationAccounts(l *logs.Log, r *http.Request, c
 	if err != nil {
 		return l.HttpResponseErrorAction("error finding accounts", model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}
-	//TODO: change to partial account
-	response := accountsToDef(accounts)
+
+	response := partialAccountsToDef(accounts)
 
 	data, err := json.Marshal(response)
 	if err != nil {
