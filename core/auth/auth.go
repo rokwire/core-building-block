@@ -1708,14 +1708,14 @@ func (a *Auth) constructServiceAccount(accountID string, name string, appID stri
 	var application *model.Application
 	if appID != model.AllApps {
 		application, err = a.storage.FindApplication(appID)
-		if err != nil {
+		if err != nil || application == nil {
 			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
 		}
 	}
 	var organization *model.Organization
 	if orgID != model.AllOrgs {
 		organization, err = a.storage.FindOrganization(orgID)
-		if err != nil {
+		if err != nil || organization == nil {
 			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
 		}
 	}

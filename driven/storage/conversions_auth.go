@@ -125,14 +125,14 @@ func serviceAccountFromStorage(item serviceAccount, sa *Adapter) (*model.Service
 	var application *model.Application
 	if item.AppID != model.AllApps {
 		application, err = sa.getCachedApplication(item.AppID)
-		if err != nil {
+		if err != nil || application == nil {
 			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, &logutils.FieldArgs{"app_id": item.AppID}, err)
 		}
 	}
 	var organization *model.Organization
 	if item.OrgID != model.AllOrgs {
 		organization, err = sa.getCachedOrganization(item.OrgID)
-		if err != nil {
+		if err != nil || organization == nil {
 			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, &logutils.FieldArgs{"org_id": item.OrgID}, err)
 		}
 	}
