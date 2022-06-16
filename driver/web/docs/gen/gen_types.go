@@ -1426,9 +1426,6 @@ type PutSystemAccountPermissionsJSONBody SystemReqAccountPermissions
 // PutSystemAccountRolesJSONBody defines parameters for PutSystemAccountRoles.
 type PutSystemAccountRolesJSONBody SystemReqAccountRoles
 
-// PostSystemAccountsJSONBody defines parameters for PostSystemAccounts.
-type PostSystemAccountsJSONBody SharedReqCreateAccount
-
 // DeleteSystemApiKeysParams defines parameters for DeleteSystemApiKeys.
 type DeleteSystemApiKeysParams struct {
 
@@ -1787,9 +1784,6 @@ type PutSystemAccountPermissionsJSONRequestBody PutSystemAccountPermissionsJSONB
 
 // PutSystemAccountRolesJSONRequestBody defines body for PutSystemAccountRoles for application/json ContentType.
 type PutSystemAccountRolesJSONRequestBody PutSystemAccountRolesJSONBody
-
-// PostSystemAccountsJSONRequestBody defines body for PostSystemAccounts for application/json ContentType.
-type PostSystemAccountsJSONRequestBody PostSystemAccountsJSONBody
 
 // PostSystemApiKeysJSONRequestBody defines body for PostSystemApiKeys for application/json ContentType.
 type PostSystemApiKeysJSONRequestBody PostSystemApiKeysJSONBody

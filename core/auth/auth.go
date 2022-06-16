@@ -754,13 +754,6 @@ func (a *Auth) applySignUp(authImpl authType, account *model.Account, authType m
 func (a *Auth) applySignUpAdmin(context storage.TransactionContext, authImpl authType, account *model.Account, authType model.AuthType, appOrg model.ApplicationOrganization,
 	identifier string, password string, regProfile model.Profile, permissions []string, roles []string, groups []string, creatorPermissions []string, l *logs.Log) (map[string]interface{}, *model.AccountAuthType, error) {
 
-	if account != nil {
-		err := a.handleAccountAuthTypeConflict(*account, authType.ID, identifier, true)
-		if err != nil {
-			return nil, nil, err
-		}
-	}
-
 	var params map[string]interface{}
 	var credential *model.Credential
 	var profile model.Profile
@@ -792,6 +785,13 @@ func (a *Auth) applySignUpAdmin(context storage.TransactionContext, authImpl aut
 		credentialID, _ := uuid.NewUUID()
 		credID := credentialID.String()
 
+		preparedProfile, preparedPreferences, err := a.prepareRegistrationData(authType, identifier, profile, preferences, l)
+		if err != nil {
+			return nil, nil, errors.WrapErrorAction("error preparing registration data", model.TypeUserAuth, nil, err)
+		}
+		profile = *preparedProfile
+		preferences = preparedPreferences
+
 		///apply sign up
 		var credentialValue map[string]interface{}
 		params, credentialValue, err = authImpl.signUpAdmin(authType, appOrg, identifier, password, credID)
@@ -805,13 +805,6 @@ func (a *Auth) applySignUpAdmin(context storage.TransactionContext, authImpl aut
 			credential = &model.Credential{ID: credID, AccountsAuthTypes: nil, Value: credentialValue, Verified: false,
 				AuthType: authType, DateCreated: now, DateUpdated: &now}
 		}
-
-		preparedProfile, preparedPreferences, err := a.prepareRegistrationData(authType, identifier, profile, preferences, l)
-		if err != nil {
-			return nil, nil, errors.WrapErrorAction("error preparing registration data", model.TypeUserAuth, nil, err)
-		}
-		profile = *preparedProfile
-		preferences = preparedPreferences
 	}
 
 	accountAuthType, err := a.registerAdminUser(context, authType, identifier, nil, appOrg, credential, useSharedProfile,

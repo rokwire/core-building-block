@@ -21,34 +21,3 @@ get:
       description: Unauthorized
     500:
       description: Internal error
-post:
-  tags:
-  - System
-  summary: Create admin account
-  description: |
-    Create a new admin account
-
-    **Auth:** Requires auth token with `create_accounts` permission
-  security:
-    - bearerAuth: []
-  requestBody:
-    description: |
-      User account details and parameters
-    content:
-      application/json:
-        schema:
-          $ref: "../../schemas/apis/shared/requests/create-account/Request.yaml"
-    required: true
-  responses:
-    200:
-      description: Success
-      content:
-        application/json:
-          schema:
-            $ref: "../../schemas/user/PartialAccount.yaml" 
-    400:
-      description: Bad request
-    401:
-      description: Unauthorized
-    500:
-      description: Internal error
