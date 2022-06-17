@@ -549,7 +549,7 @@ func (app *application) admGetApplicationPermissions(appID string, orgID string,
 	return permissions, nil
 }
 
-func (app *application) admGetAccounts(limit int, offset int, appID string, orgID string, accountID *string, authTypeIdentifier *string, admin bool,
+func (app *application) admGetAccounts(limit int, offset int, appID string, orgID string, accountID *string, authTypeIdentifier *string, admin *bool,
 	permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error) {
 	//find the accounts
 	accounts, err := app.storage.FindAccounts(limit, offset, appID, orgID, accountID, authTypeIdentifier, admin, permissions, roleIDs, groupIDs)

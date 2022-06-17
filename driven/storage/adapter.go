@@ -1135,7 +1135,7 @@ func (sa *Adapter) FindAccount(appOrgID string, authTypeID string, accountAuthTy
 }
 
 //FindAccounts finds accounts
-func (sa *Adapter) FindAccounts(limit int, offset int, appID string, orgID string, accountID *string, authTypeIdentifier *string, admin bool,
+func (sa *Adapter) FindAccounts(limit int, offset int, appID string, orgID string, accountID *string, authTypeIdentifier *string, admin *bool,
 	permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error) {
 	//find app org id
 	appOrg, err := sa.getCachedApplicationOrganization(appID, orgID)
@@ -1170,8 +1170,8 @@ func (sa *Adapter) FindAccounts(limit int, offset int, appID string, orgID strin
 		overrideAdmin = true
 	}
 
-	if !overrideAdmin {
-		if admin {
+	if !overrideAdmin && admin != nil {
+		if *admin {
 			filter = append(filter, primitive.E{Key: "$or", Value: bson.A{
 				bson.M{"permissions.0": bson.M{"$exists": true}},
 				bson.M{"roles.0": bson.M{"$exists": true}},

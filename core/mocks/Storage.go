@@ -262,11 +262,11 @@ func (_m *Storage) FindAccountByID(context storage.TransactionContext, id string
 }
 
 // FindAccounts provides a mock function with given fields: limit, offset, appID, orgID, accountID, authTypeIdentifier, admin, permissions, roleIDs, groupIDs
-func (_m *Storage) FindAccounts(limit int, offset int, appID string, orgID string, accountID *string, authTypeIdentifier *string, admin bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error) {
+func (_m *Storage) FindAccounts(limit int, offset int, appID string, orgID string, accountID *string, authTypeIdentifier *string, admin *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error) {
 	ret := _m.Called(limit, offset, appID, orgID, accountID, authTypeIdentifier, admin, permissions, roleIDs, groupIDs)
 
 	var r0 []model.Account
-	if rf, ok := ret.Get(0).(func(int, int, string, string, *string, *string, bool, []string, []string, []string) []model.Account); ok {
+	if rf, ok := ret.Get(0).(func(int, int, string, string, *string, *string, *bool, []string, []string, []string) []model.Account); ok {
 		r0 = rf(limit, offset, appID, orgID, accountID, authTypeIdentifier, admin, permissions, roleIDs, groupIDs)
 	} else {
 		if ret.Get(0) != nil {
@@ -275,7 +275,7 @@ func (_m *Storage) FindAccounts(limit int, offset int, appID string, orgID strin
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(int, int, string, string, *string, *string, bool, []string, []string, []string) error); ok {
+	if rf, ok := ret.Get(1).(func(int, int, string, string, *string, *string, *bool, []string, []string, []string) error); ok {
 		r1 = rf(limit, offset, appID, orgID, accountID, authTypeIdentifier, admin, permissions, roleIDs, groupIDs)
 	} else {
 		r1 = ret.Error(1)

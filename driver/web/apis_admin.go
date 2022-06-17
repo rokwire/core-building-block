@@ -325,13 +325,14 @@ func (h AdminApisHandler) getApplicationAccounts(l *logs.Log, r *http.Request, c
 	}
 
 	//admin
-	admin := false
+	var admin *bool
 	adminArg := r.URL.Query().Get("admin")
 	if adminArg != "" {
-		admin, err = strconv.ParseBool(adminArg)
+		adminVal, err := strconv.ParseBool(adminArg)
 		if err != nil {
 			return l.HttpResponseErrorAction(logutils.ActionParse, logutils.TypeArg, logutils.StringArgs("admin"), err, http.StatusBadRequest, false)
 		}
+		admin = &adminVal
 	}
 	//permissions
 	var permissions []string
