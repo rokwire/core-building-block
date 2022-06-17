@@ -1433,27 +1433,27 @@ func (a *Auth) InitializeSystemAccount(context storage.TransactionContext, authT
 	return accountAuthType.Account.ID, nil
 }
 
-//GrantAccountPermissions grants permissions to an account after validating the assigner has required permissions
-//Checks that the account does not already have any of the requested permissions
+//GrantAccountPermissions grants new permissions to an account after validating the assigner has required permissions
 func (a *Auth) GrantAccountPermissions(context storage.TransactionContext, account *model.Account, permissionNames []string, assignerPermissions []string) error {
 	//check if there is data
 	if account == nil {
 		return errors.New("no account to grant permissions")
 	}
-	if len(permissionNames) == 0 {
-		return errors.New("no permissions to grant")
-	}
 
 	//verify that the account do not have any of the permissions which are supposed to be granted
+	newPermissions := make([]string, 0)
 	for _, current := range permissionNames {
-		hasP := account.GetPermissionNamed(current)
-		if hasP != nil {
-			return errors.Newf("account %s already has %s granted", account.ID, current)
+		if account.GetPermissionNamed(current) == nil {
+			newPermissions = append(newPermissions, current)
 		}
+	}
+	//no error if no zero new permissions are being granted
+	if len(newPermissions) == 0 {
+		return nil
 	}
 
 	//check permissions
-	permissions, err := a.checkPermissions(context, permissionNames, assignerPermissions)
+	permissions, err := a.checkPermissions(context, newPermissions, assignerPermissions)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionValidate, model.TypePermission, nil, err)
 	}
@@ -1468,27 +1468,27 @@ func (a *Auth) GrantAccountPermissions(context storage.TransactionContext, accou
 	return nil
 }
 
-//GrantAccountRoles grants roles to an account after validating the assigner has required permissions
-//Checks that the account does not already have any of the requested roles
+//GrantAccountRoles grants new roles to an account after validating the assigner has required permissions
 func (a *Auth) GrantAccountRoles(context storage.TransactionContext, account *model.Account, roleIDs []string, assignerPermissions []string) error {
 	//check if there is data
 	if account == nil {
 		return errors.New("no account to grant roles")
 	}
-	if len(roleIDs) == 0 {
-		return errors.New("no roles to grant")
-	}
 
 	//verify that the account do not have any of the roles which are supposed to be granted
+	newRoles := make([]string, 0)
 	for _, current := range roleIDs {
-		hasR := account.GetRole(current)
-		if hasR != nil {
-			return errors.Newf("account %s already has %s granted", account.ID, current)
+		if account.GetRole(current) == nil {
+			newRoles = append(newRoles, current)
 		}
+	}
+	//no error if no zero new roles are being granted
+	if len(newRoles) == 0 {
+		return nil
 	}
 
 	//check roles
-	roles, err := a.checkRoles(context, account.AppOrg, roleIDs, assignerPermissions)
+	roles, err := a.checkRoles(context, account.AppOrg, newRoles, assignerPermissions)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionValidate, model.TypeAppOrgRole, nil, err)
 	}
@@ -1504,27 +1504,27 @@ func (a *Auth) GrantAccountRoles(context storage.TransactionContext, account *mo
 	return nil
 }
 
-//GrantAccountGroups grants groups to an account after validating the assigner has required permissions
-//Checks that the account does not already have any of the requested groups
+//GrantAccountGroups grants new groups to an account after validating the assigner has required permissions
 func (a *Auth) GrantAccountGroups(context storage.TransactionContext, account *model.Account, groupIDs []string, assignerPermissions []string) error {
 	//check if there is data
 	if account == nil {
 		return errors.New("no accounts to grant groups")
 	}
-	if len(groupIDs) == 0 {
-		return errors.New("no groups to grant")
-	}
 
 	//ensure that the account does not have the groups before adding
+	newGroups := make([]string, 0)
 	for _, current := range groupIDs {
-		gr := account.GetGroup(current)
-		if gr != nil {
-			return errors.Newf("account %s already is a member of group %s", account.ID, current)
+		if account.GetGroup(current) == nil {
+			newGroups = append(newGroups, current)
 		}
+	}
+	//no error if no zero new groups are being granted
+	if len(newGroups) == 0 {
+		return nil
 	}
 
 	//check groups
-	groups, err := a.checkGroups(context, account.AppOrg, groupIDs, assignerPermissions)
+	groups, err := a.checkGroups(context, account.AppOrg, newGroups, assignerPermissions)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionValidate, model.TypeAppOrgGroup, nil, err)
 	}

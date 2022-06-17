@@ -381,13 +381,14 @@ type APIs interface {
 	//InitializeSystemAccount initializes the first system account
 	InitializeSystemAccount(context storage.TransactionContext, authType model.AuthType, appOrg model.ApplicationOrganization, allSystemPermission string, email string, password string, l *logs.Log) (string, error)
 
-	//GrantAccountPermissions grants permissions to an account after validating the assigner has required permissions
-	//Checks that the account does not already have any of the requested permissions
+	//GrantAccountPermissions grants new permissions to an account after validating the assigner has required permissions
 	GrantAccountPermissions(context storage.TransactionContext, account *model.Account, permissionNames []string, assignerPermissions []string) error
 
-	//GrantAccountRoles grants roles to an account after validating the assigner has required permissions
-	//Checks that the account does not already have any of the requested roles
+	//GrantAccountRoles grants new roles to an account after validating the assigner has required permissions
 	GrantAccountRoles(context storage.TransactionContext, account *model.Account, roleIDs []string, assignerPermissions []string) error
+
+	//GrantAccountGroups grants new groups to an account after validating the assigner has required permissions
+	GrantAccountGroups(context storage.TransactionContext, account *model.Account, groupIDs []string, assignerPermissions []string) error
 
 	//DeleteAccount deletes an account for the given id
 	DeleteAccount(id string) error
