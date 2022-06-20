@@ -340,62 +340,6 @@ func (app *application) sysDeleteAppConfig(id string) error {
 	return nil
 }
 
-func (app *application) sysGrantAccountPermissions(accountID string, permissionNames []string, assignerPermissions []string) error {
-	//check if there is data
-	if len(assignerPermissions) == 0 {
-		return errors.New("no permissions from system assigner")
-	}
-	if len(permissionNames) == 0 {
-		return errors.New("no permissions for granting")
-	}
-
-	transaction := func(context storage.TransactionContext) error {
-		//1. find the account
-		account, err := app.storage.FindAccountByID(context, accountID)
-		if err != nil {
-			return errors.Wrap("error finding account on permissions granting", err)
-		}
-
-		//2. grant account permissions
-		err = app.auth.GrantAccountPermissions(context, account, permissionNames, assignerPermissions)
-		if err != nil {
-			return errors.Wrap("error granting account permissions", err)
-		}
-
-		return nil
-	}
-
-	return app.storage.PerformTransaction(transaction)
-}
-
-func (app *application) sysGrantAccountRoles(accountID string, appOrgID string, roleIDs []string, assignerPermissions []string) error {
-	//check if there is data
-	if len(assignerPermissions) == 0 {
-		return errors.New("no permissions from system assigner")
-	}
-	if len(roleIDs) == 0 {
-		return errors.New("no roles for granting")
-	}
-
-	transaction := func(context storage.TransactionContext) error {
-		//1. find the account
-		account, err := app.storage.FindAccountByID(context, accountID)
-		if err != nil {
-			return errors.Wrap("error finding account on roles granting", err)
-		}
-
-		//2. grant account roles
-		err = app.auth.GrantAccountRoles(context, account, roleIDs, assignerPermissions)
-		if err != nil {
-			return errors.Wrap("error granting account roles", err)
-		}
-
-		return nil
-	}
-
-	return app.storage.PerformTransaction(transaction)
-}
-
 func (app *application) sysCreateAuthTypes(code string, description string, isExternal bool,
 	isAnonymous bool, useCredentials bool, ignoreMFA bool, params map[string]interface{}) (*model.AuthType, error) {
 

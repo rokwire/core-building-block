@@ -1062,20 +1062,6 @@ type SharedResRokwireToken struct {
 // The type of the provided tokens to be specified when they are sent in the "Authorization" header
 type SharedResRokwireTokenTokenType string
 
-// SystemReqAccountPermissions defines model for _system_req_account-permissions.
-type SystemReqAccountPermissions struct {
-	AccountId   string   `json:"account_id"`
-	AppId       string   `json:"app_id"`
-	Permissions []string `json:"permissions"`
-}
-
-// SystemReqAccountRoles defines model for _system_req_account-roles.
-type SystemReqAccountRoles struct {
-	AccountId string   `json:"account_id"`
-	AppId     string   `json:"app_id"`
-	RoleIds   []string `json:"role_ids"`
-}
-
 // SystemReqApplicationRoles defines model for _system_req_application-roles.
 type SystemReqApplicationRoles struct {
 	AppId       string   `json:"app_id"`
@@ -1419,12 +1405,6 @@ type PostSystemAccountMfaParams struct {
 	// MFA type
 	Type string `json:"type"`
 }
-
-// PutSystemAccountPermissionsJSONBody defines parameters for PutSystemAccountPermissions.
-type PutSystemAccountPermissionsJSONBody SystemReqAccountPermissions
-
-// PutSystemAccountRolesJSONBody defines parameters for PutSystemAccountRoles.
-type PutSystemAccountRolesJSONBody SystemReqAccountRoles
 
 // DeleteSystemApiKeysParams defines parameters for DeleteSystemApiKeys.
 type DeleteSystemApiKeysParams struct {
@@ -1778,12 +1758,6 @@ type PostServicesAuthRefreshJSONRequestBody PostServicesAuthRefreshJSONBody
 
 // PostServicesAuthVerifyMfaJSONRequestBody defines body for PostServicesAuthVerifyMfa for application/json ContentType.
 type PostServicesAuthVerifyMfaJSONRequestBody PostServicesAuthVerifyMfaJSONBody
-
-// PutSystemAccountPermissionsJSONRequestBody defines body for PutSystemAccountPermissions for application/json ContentType.
-type PutSystemAccountPermissionsJSONRequestBody PutSystemAccountPermissionsJSONBody
-
-// PutSystemAccountRolesJSONRequestBody defines body for PutSystemAccountRoles for application/json ContentType.
-type PutSystemAccountRolesJSONRequestBody PutSystemAccountRolesJSONBody
 
 // PostSystemApiKeysJSONRequestBody defines body for PostSystemApiKeys for application/json ContentType.
 type PostSystemApiKeysJSONRequestBody PostSystemApiKeysJSONBody

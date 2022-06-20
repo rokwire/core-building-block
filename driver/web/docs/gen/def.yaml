@@ -4244,70 +4244,6 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /system/account/permissions:
-    put:
-      tags:
-        - System
-      summary: Grant account permissions
-      description: |
-        Grant account permissions
-
-        **Auth:** Requires system access token with `update_account-permissions` or `all_account-permissions` permission
-      security:
-        - bearerAuth: []
-      requestBody:
-        description: Permissions
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/_system_req_account-permissions'
-        required: true
-      responses:
-        '200':
-          description: Success
-          content:
-            text/plain:
-              schema:
-                type: string
-                example: Success
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal error
-  /system/account/roles:
-    put:
-      tags:
-        - System
-      summary: Grant account roles
-      description: |
-        Grant account roles
-
-        **Auth:** Requires system access token with `update_account-roles` or `all_account-roles` permission
-      security:
-        - bearerAuth: []
-      requestBody:
-        description: Roles
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/_system_req_account-roles'
-        required: true
-      responses:
-        '200':
-          description: Success
-          content:
-            text/plain:
-              schema:
-                type: string
-                example: Success
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal error
   /system/account/mfa:
     get:
       tags:
@@ -6527,21 +6463,6 @@ components:
           type: array
           items:
             type: string
-    _system_req_account-permissions:
-      required:
-        - account_id
-        - app_id
-        - permissions
-      type: object
-      properties:
-        account_id:
-          type: string
-        app_id:
-          type: string
-        permissions:
-          type: array
-          items:
-            type: string
     _system_req_create_auth_type:
       type: object
       required:
@@ -6592,21 +6513,6 @@ components:
         params:
           type: object
           additionalProperties: true
-    _system_req_account-roles:
-      required:
-        - account_id
-        - app_id
-        - role_ids
-      type: object
-      properties:
-        account_id:
-          type: string
-        app_id:
-          type: string
-        role_ids:
-          type: array
-          items:
-            type: string
     _system_req_create_ApplicationConfig_Request:
       required:
         - app_type_id
