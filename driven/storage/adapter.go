@@ -1171,17 +1171,7 @@ func (sa *Adapter) FindAccounts(limit int, offset int, appID string, orgID strin
 	}
 
 	if !overrideAdmin && admin != nil {
-		if *admin {
-			filter = append(filter, primitive.E{Key: "$or", Value: bson.A{
-				bson.M{"permissions.0": bson.M{"$exists": true}},
-				bson.M{"roles.0": bson.M{"$exists": true}},
-				bson.M{"groups.0": bson.M{"$exists": true}},
-			}})
-		} else {
-			filter = append(filter, primitive.E{Key: "permissions.0", Value: bson.M{"$exists": false}})
-			filter = append(filter, primitive.E{Key: "roles.0", Value: bson.M{"$exists": false}})
-			filter = append(filter, primitive.E{Key: "groups.0", Value: bson.M{"$exists": false}})
-		}
+		filter = append(filter, primitive.E{Key: "admin", Value: *admin})
 	}
 
 	var list []account
