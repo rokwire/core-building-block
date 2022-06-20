@@ -112,6 +112,9 @@ type System interface {
 	SysGrantAccountPermissions(accountID string, permissionNames []string, assignerPermissions []string) error
 	SysGrantAccountRoles(accountID string, appID string, roleIDs []string) error
 
+	SysCreateAppTypeVersion(appTypeID string, major int, minor int, patch int) error
+	SysGetApplicationTypeVersion(appTypeID string) ([]model.Version, error)
+	SysDeleteApplicationTypeVersion(appTypeID string, versionID string, l *logs.Log) error
 	SysCreateAuthTypes(code string, description string, isExternal bool, isAnonymous bool, useCredentials bool, ignoreMFA bool, params map[string]interface{}) (*model.AuthType, error)
 	SysGetAuthTypes() ([]model.AuthType, error)
 	SysUpdateAuthTypes(ID string, code string, description string, isExternal bool, isAnonymous bool, useCredentials bool, ignoreMFA bool, params map[string]interface{}) error
@@ -138,6 +141,7 @@ type Storage interface {
 	RemoveAccountsGroup(groupID string, accounts []model.Account) error
 	CountAccountsByRoleID(roleID string) (*int64, error)
 	CountAccountsByGroupID(groupID string) (*int64, error)
+	CountAppConfigsByVersionID(versionID string) (*int64, error)
 
 	UpdateProfile(context storage.TransactionContext, profile model.Profile) error
 
@@ -190,6 +194,9 @@ type Storage interface {
 	UpdateAuthTypes(ID string, code string, description string, isExternal bool, isAnonymous bool, useCredentials bool, ignoreMFA bool, params map[string]interface{}) error
 
 	FindApplicationType(id string) (*model.ApplicationType, error)
+	InsertVersion(context storage.TransactionContext, version *model.Version, appTypeID string) error
+	FindVersionByAppTypeID(context storage.TransactionContext, appTypeID string) ([]model.Version, error)
+	DeleteVersion(context storage.TransactionContext, versionObj *model.Version, appTypeID string, versionID string) error
 
 	FindAppConfigs(appTypeIdentifier string, appOrgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error)
 	FindAppConfigByVersion(appTypeIdentifier string, appOrgID *string, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error)

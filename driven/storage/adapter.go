@@ -1899,6 +1899,17 @@ func (sa *Adapter) CountAccountsByGroupID(groupID string) (*int64, error) {
 	return &count, nil
 }
 
+//CountAppConfigsByVersionID counts how many applicationConfigs  there are with the passed version id
+func (sa *Adapter) CountAppConfigsByVersionID(versionID string) (*int64, error) {
+	filter := bson.D{primitive.E{Key: "version._id", Value: versionID}}
+
+	count, err := sa.db.applicationConfigs.CountDocuments(filter)
+	if err != nil {
+		return nil, errors.WrapErrorAction("error counting app confgs for version id", "", &logutils.FieldArgs{"version._id": versionID}, err)
+	}
+	return &count, nil
+}
+
 //FindCredential finds a credential by ID
 func (sa *Adapter) FindCredential(context TransactionContext, ID string) (*model.Credential, error) {
 	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
@@ -2995,7 +3006,172 @@ func (sa *Adapter) FindApplicationType(id string) (*model.ApplicationType, error
 	return appType, nil
 }
 
-//loadApplicationsOrganizations loads all applications organizations
+//InsertVersion inserts version
+func (sa *Adapter) InsertVersion(context TransactionContext, version *model.Version, appTypeID string) error {
+	if version == nil {
+		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs("version"))
+	}
+	if len(appTypeID) == 0 {
+		return nil
+	}
+
+	filter := bson.D{primitive.E{Key: "types.id", Value: appTypeID}}
+	var applicationsResult []application
+	err := sa.db.applications.Find(filter, &applicationsResult, nil)
+	if err != nil {
+		return err
+	}
+
+	if len(applicationsResult) == 0 {
+		return errors.Newf("no application for ID: %v", appTypeID)
+	}
+
+	application := applicationsResult[0]
+
+	storageVersion := versionToStorage(*version)
+	appType := application.Types
+
+	for i, currentAppType := range appType {
+		if currentAppType.ID == appTypeID {
+			currentAppType.Versions = append(currentAppType.Versions, storageVersion)
+			appType[i] = currentAppType
+		}
+	}
+
+	applicationFilter := bson.M{"_id": application.ID}
+	opts := options.Replace().SetUpsert(true)
+	if context != nil {
+		err = sa.db.applications.ReplaceOneWithContext(context, applicationFilter, application, opts)
+	} else {
+		err = sa.db.applications.ReplaceOne(applicationFilter, application, opts)
+	}
+
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionSave, "applications", &logutils.FieldArgs{"applications_id": application.ID}, nil)
+	}
+
+	return nil
+}
+
+//FindVersionByAppTypeIDfinds version
+func (sa *Adapter) FindVersionByAppTypeID(context TransactionContext, appTypeID string) ([]model.Version, error) {
+
+	if len(appTypeID) == 0 {
+		return nil, nil
+	}
+
+	filter := bson.D{primitive.E{Key: "types.id", Value: appTypeID}}
+	var applicationsResult []application
+	err := sa.db.applications.Find(filter, &applicationsResult, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(applicationsResult) == 0 {
+		return nil, errors.Newf("no application for ID: %v", appTypeID)
+	}
+
+	application := applicationsResult[0]
+
+	appType := application.Types
+	for i, currentAppType := range appType {
+		if currentAppType.ID == appTypeID {
+			appType[i] = currentAppType
+			av := versionsFromStorage(currentAppType.Versions, model.ApplicationType{})
+			return av, nil
+		}
+
+	}
+
+	return nil, nil
+}
+
+func (sa *Adapter) DeleteVersion(context TransactionContext, versionObj *model.Version, appTypeID string, versionID string) error {
+
+	if len(appTypeID) == 0 {
+		return nil
+	}
+	if len(versionID) == 0 {
+		return nil
+	}
+
+	filter := bson.D{primitive.E{Key: "types.id", Value: appTypeID}}
+	var applicationsResult []application
+	err := sa.db.applications.Find(filter, &applicationsResult, nil)
+	if err != nil {
+		return err
+	}
+
+	if len(applicationsResult) == 0 {
+		return errors.Newf("no application for ID: %v", appTypeID)
+	}
+
+	application := applicationsResult[0]
+
+	appType := application.Types
+
+	for i, currentAppType := range appType {
+		if currentAppType.ID == appTypeID {
+			versions := currentAppType.Versions
+			versionNew := []version{}
+			for _, version := range versions {
+				if version.ID != versionID {
+					versionNew = append(versionNew, version)
+
+				}
+			}
+			currentAppType.Versions = versionNew
+			appType[i] = currentAppType
+		}
+	}
+
+	applicationFilter := bson.M{"_id": application.ID}
+	opts := options.Replace().SetUpsert(true)
+	if context != nil {
+		err = sa.db.applications.ReplaceOneWithContext(context, applicationFilter, application, opts)
+	} else {
+		err = sa.db.applications.ReplaceOne(applicationFilter, application, opts)
+	}
+
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionSave, "applications", &logutils.FieldArgs{"applications_id": application.ID}, nil)
+	}
+
+	return nil
+}
+
+//FindApplicationsOrganizationsByOrgID finds a set of applications organizations
+func (sa *Adapter) FindApplicationsOrganizationsByOrgID(orgID string) ([]model.ApplicationOrganization, error) {
+	applicationsOrgFilter := bson.D{primitive.E{Key: "org_id", Value: orgID}}
+	var applicationsOrgResult []applicationOrganization
+	err := sa.db.applicationsOrganizations.Find(applicationsOrgFilter, &applicationsOrgResult, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(applicationsOrgResult) == 0 {
+		//no data
+		return make([]model.ApplicationOrganization, 0), nil
+	}
+
+	result := make([]model.ApplicationOrganization, len(applicationsOrgResult))
+	organization, err := sa.getCachedOrganization(orgID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
+	}
+	for i, item := range applicationsOrgResult {
+		//we have organizations and applications cached
+		application, err := sa.getCachedApplication(item.AppID)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
+		}
+
+		result[i] = applicationOrganizationFromStorage(item, *application, *organization)
+	}
+	return result, nil
+}
+
+//LoadApplicationsOrganizations loads all applications organizations
 func (sa *Adapter) loadApplicationsOrganizations() ([]model.ApplicationOrganization, error) {
 	filter := bson.D{}
 	var list []applicationOrganization
@@ -3029,7 +3205,6 @@ func (sa *Adapter) loadApplicationsOrganizations() ([]model.ApplicationOrganizat
 		result[i] = applicationOrganizationFromStorage(item, *application, *organization)
 	}
 	return result, nil
-
 }
 
 //FindApplicationOrganization finds application organization
@@ -3040,24 +3215,6 @@ func (sa *Adapter) FindApplicationOrganization(appID string, orgID string) (*mod
 //FindApplicationsOrganizations finds application organizations
 func (sa *Adapter) FindApplicationsOrganizations() ([]model.ApplicationOrganization, error) {
 	return sa.getCachedApplicationOrganizations()
-}
-
-//FindApplicationsOrganizationsByOrgID finds applications organizations by orgID
-func (sa *Adapter) FindApplicationsOrganizationsByOrgID(orgID string) ([]model.ApplicationOrganization, error) {
-
-	cachedAppOrgs, err := sa.getCachedApplicationOrganizations()
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeApplicationOrganization, nil, err)
-	}
-
-	result := make([]model.ApplicationOrganization, 0)
-	for _, appOrg := range cachedAppOrgs {
-		if appOrg.Organization.ID == orgID {
-			result = append(result, appOrg)
-		}
-	}
-
-	return result, nil
 }
 
 // InsertApplicationOrganization inserts an application organization

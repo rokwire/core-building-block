@@ -494,6 +494,18 @@ func (s *systemImpl) SysGrantAccountRoles(accountID string, appID string, roleID
 	return s.app.sysGrantAccountRoles(accountID, appID, roleIDs)
 }
 
+func (s *systemImpl) SysCreateAppTypeVersion(appTypeID string, major int, minor int, patch int) error {
+	return s.app.sysCreateAppTypeVersion(appTypeID, major, minor, patch)
+}
+
+func (s *systemImpl) SysGetApplicationTypeVersion(appTypeID string) ([]model.Version, error) {
+	return s.app.sysGetApplicationTypeVersion(appTypeID)
+}
+
+func (s *systemImpl) SysDeleteApplicationTypeVersion(appTypeID string, versionID string, l *logs.Log) error {
+	return s.app.sysDeleteApplicationTypeVersion(appTypeID, versionID, l)
+}
+
 func (s *systemImpl) SysCreateAuthTypes(code string, description string, isExternal bool, isAnonymous bool, useCredentials bool, ignoreMFA bool, params map[string]interface{}) (*model.AuthType, error) {
 	return s.app.sysCreateAuthTypes(code, description, isExternal, isAnonymous, useCredentials, ignoreMFA, params)
 }

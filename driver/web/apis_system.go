@@ -1050,6 +1050,78 @@ func (h SystemApisHandler) deleteApplicationConfig(l *logs.Log, r *http.Request,
 	return l.HttpResponseSuccess()
 }
 
+//createApplicationTypeVersion creates application type version
+func (h SystemApisHandler) createApplicationTypeVersion(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	params := mux.Vars(r)
+	appTypeID := params["id"]
+	if len(appTypeID) <= 0 {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
+	}
+
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.SystemReqCreateApplicationType
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeApplicationType, nil, err, http.StatusBadRequest, true)
+	}
+
+	err = h.coreAPIs.System.SysCreateAppTypeVersion(appTypeID, *requestData.Major, *requestData.Minor, *requestData.Patch)
+	if err != nil {
+		return l.HttpResponseErrorAction(actionGrant, model.TypeAppOrgRole, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
+func (h SystemApisHandler) getApplicationTypeVersion(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	params := mux.Vars(r)
+	appTypeID := params["id"]
+	if len(appTypeID) <= 0 {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("appTypeid"), nil, http.StatusBadRequest, false)
+	}
+
+	appVersion, err := h.coreAPIs.System.SysGetApplicationTypeVersion(appTypeID)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeApplicationTypeVersionList, nil, err, http.StatusInternalServerError, true)
+	}
+	if appVersion == nil {
+		return l.HttpResponseErrorData(logutils.StatusMissing, model.TypeApplicationTypeVersionList, &logutils.FieldArgs{"id": appTypeID}, nil, http.StatusNotFound, false)
+	}
+
+	data, err := json.Marshal(appVersion)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeApplicationConfigsVersion, nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessJSON(data)
+
+}
+
+func (h SystemApisHandler) deleteApplicationTypeVersion(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	params := mux.Vars(r)
+	appTypeID := params["appliction-type-id"]
+	if len(appTypeID) <= 0 {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("appliction-type-id"), nil, http.StatusBadRequest, false)
+	}
+
+	params = mux.Vars(r)
+	versionID := params["version-id"]
+	if len(versionID) <= 0 {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("version-id"), nil, http.StatusBadRequest, false)
+	}
+
+	err := h.coreAPIs.System.SysDeleteApplicationTypeVersion(appTypeID, versionID, l)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeApplicationTypeVersionList, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
 //grantAccountPermissions grants an account the given permissions
 func (h SystemApisHandler) grantAccountPermissions(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)

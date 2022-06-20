@@ -22,6 +22,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/rokwire/core-auth-library-go/authutils"
 	"github.com/rokwire/logging-library-go/errors"
+	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
 )
 
@@ -336,6 +337,49 @@ func (app *application) sysDeleteAppConfig(id string) error {
 	err := app.storage.DeleteAppConfig(id)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeApplicationConfig, nil, err)
+	}
+
+	return nil
+}
+
+func (app *application) sysCreateAppTypeVersion(appTypeID string, major int, minor int, patch int) error {
+
+	appType := model.ApplicationType{ID: appTypeID}
+
+	versionID, _ := uuid.NewUUID()
+	version := &model.Version{ID: versionID.String(), ApplicationType: appType, VersionNumbers: model.VersionNumbers{Major: major, Minor: minor, Patch: patch}}
+
+	err := app.storage.InsertVersion(nil, version, appTypeID)
+	if err != nil {
+		return nil
+	}
+	return nil
+}
+
+func (app *application) sysGetApplicationTypeVersion(appTypeID string) ([]model.Version, error) {
+	appTypeVersion, err := app.storage.FindVersionByAppTypeID(nil, appTypeID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationTypeVersionList, nil, err)
+	}
+
+	return appTypeVersion, nil
+}
+
+func (app *application) sysDeleteApplicationTypeVersion(appTypeID string, versionID string, l *logs.Log) error {
+
+	// check if the Applcation type version has applications config relations
+	numberOfVersions, err := app.storage.CountAppConfigsByVersionID(versionID)
+	if err != nil {
+		return errors.WrapErrorAction("error checking the configs count by version id", "", nil, err)
+	}
+
+	if *numberOfVersions > 0 {
+		return errors.Newf("the %s is already used by application configs and cannot be deleted", versionID)
+	}
+
+	err = app.storage.DeleteVersion(nil, nil, appTypeID, versionID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationTypeVersionList, nil, nil)
 	}
 
 	return nil

@@ -197,6 +197,10 @@ paths:
     $ref: "./resources/system/application-configs.yaml"
   /system/application/configs/{id}:
     $ref: "./resources/system/application-configsId.yaml"
+  /system/application-type/{id}/versions:
+    $ref: "./resources/system/application-type.yaml"
+  /system/application-type/{appliction-type-id}/versions/{version-id}:
+    $ref: "./resources/system/delete-application-type-version.yaml"
   /system/account/permissions:
     $ref: "./resources/system/account/permissions.yaml"
   /system/account/roles:
