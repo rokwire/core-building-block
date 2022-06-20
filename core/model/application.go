@@ -170,6 +170,21 @@ func (cg AppOrgGroup) CheckAssigners(assignerPermissions []string) error {
 	return nil
 }
 
+//GetAllPermissions returns a map of all permissions granted to this group
+func (cg AppOrgGroup) GetAllPermissions() []Permission {
+
+	var allPermissions []Permission
+	for _, role := range cg.Roles {
+		if role.Permissions != nil {
+			allPermissions = append(allPermissions, role.Permissions...)
+		}
+	}
+	groupPermissions := cg.Permissions
+	allPermissions = append(allPermissions, groupPermissions...)
+
+	return allPermissions
+}
+
 func (cg AppOrgGroup) String() string {
 	return fmt.Sprintf("[ID:%s\nName:%s\nAppOrg:%s]", cg.ID, cg.Name, cg.AppOrg.ID)
 }

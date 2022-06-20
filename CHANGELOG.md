@@ -23,6 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Implement system accounts [#278](https://github.com/rokwire/core-building-block/issues/278)
 - Service accounts [#306](https://github.com/rokwire/core-building-block/issues/306)
 
+### Fixed
+- Fix delete accounts from group Admin API [#460](https://github.com/rokwire/core-building-block/issues/460)
 ### Security
 - Update http-swagger dependency [#465](https://github.com/rokwire/core-building-block/issues/465)
 

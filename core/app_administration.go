@@ -397,6 +397,7 @@ func (app *application) admRemoveAccountsFromGroup(appID string, orgID string, g
 	if err != nil {
 		return errors.Wrap("error getting app org on add accounts to group", err)
 	}
+
 	group, err := app.storage.FindAppOrgGroup(groupID, appOrg.ID)
 	if err != nil {
 		return errors.Wrap("error finding app org group", err)
@@ -404,6 +405,8 @@ func (app *application) admRemoveAccountsFromGroup(appID string, orgID string, g
 	if group == nil {
 		return errors.New("bad group id params")
 	}
+
+	allPermissions := group.GetAllPermissions()
 
 	//check assigners
 	err = group.CheckAssigners(assignerPermissions)
@@ -419,12 +422,28 @@ func (app *application) admRemoveAccountsFromGroup(appID string, orgID string, g
 		}
 	}
 
-	//remove the accounts from the group
-	err = app.storage.RemoveAccountsGroup(group.ID, accounts)
-	if err != nil {
-		return errors.Wrapf("error removing accounts from a group - %s", err, groupID)
-	}
+	transaction := func(context storage.TransactionContext) error {
+		//remove the accounts from the group
+		err = app.storage.RemoveAccountsGroup(group.ID, accounts)
+		if err != nil {
+			return errors.Wrapf("error removing accounts from a group - %s", err, groupID)
+		}
 
+		if allPermissions == nil {
+			return nil
+		} else {
+			err = app.storage.DeleteLoginSessionsByIdentifiers(context, accountIDs)
+			if err != nil {
+				return errors.Wrap("error deleting sessions by identifier on revoking permissions", err)
+			}
+		}
+
+		return nil
+	}
+	err = app.storage.PerformTransaction(transaction)
+	if err != nil {
+		return errors.Wrapf("error revoking permissions %s from an account %s", err, groupID)
+	}
 	return nil
 }
 
