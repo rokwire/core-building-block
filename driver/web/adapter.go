@@ -1,15 +1,31 @@
+// Copyright 2022 Board of Trustees of the University of Illinois.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package web
 
 import (
 	"context"
 	"core-building-block/core"
 	"fmt"
+	"html/template"
 	"net/http"
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/getkin/kin-openapi/openapi3filter"
 	"github.com/getkin/kin-openapi/routers"
 	"github.com/getkin/kin-openapi/routers/gorillamux"
+	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
 
@@ -57,15 +73,14 @@ func (we Adapter) Start() {
 	router := mux.NewRouter().StrictSlash(true)
 	subRouter := router.PathPrefix("/core").Subrouter()
 
-	///UI
-
-	//reset credential
-	subRouter.HandleFunc("/ui/reset-credential", we.serveResetCredential) //Public
-
 	//docs
 	subRouter.PathPrefix("/doc/ui").Handler(we.serveDocUI()) //Public
 	subRouter.HandleFunc("/doc", we.serveDoc)                //Public
 	///
+
+	//ui
+	subRouter.HandleFunc("/ui/credential/reset", we.serveResetCredential)                                                     //Public
+	subRouter.HandleFunc("/ui/credential/verify", we.uiWrapFunc(we.servicesApisHandler.verifyCredential, nil)).Methods("GET") //Public (validates code)
 
 	///default ///
 	subRouter.HandleFunc("/version", we.wrapFunc(we.defaultApisHandler.getVersion, nil)).Methods("GET")                                      //Public
@@ -131,9 +146,13 @@ func (we Adapter) Start() {
 	adminSubrouter.HandleFunc("/application/groups", we.wrapFunc(we.adminApisHandler.adminCreateApplicationGroup, we.auth.admin.permissions)).Methods("POST")
 	adminSubrouter.HandleFunc("/application/groups/{id}", we.wrapFunc(we.adminApisHandler.adminDeleteApplicationGroup, we.auth.admin.permissions)).Methods("DELETE")
 
+	adminSubrouter.HandleFunc("/application/group/accounts/add", we.wrapFunc(we.adminApisHandler.addAccountsToGroup, we.auth.admin.permissions)).Methods("PUT")
+	adminSubrouter.HandleFunc("/application/group/accounts/remove", we.wrapFunc(we.adminApisHandler.removeAccountsFromGroup, we.auth.admin.permissions)).Methods("DELETE")
+
 	adminSubrouter.HandleFunc("/application/roles", we.wrapFunc(we.adminApisHandler.adminGetApplicationOrgRoles, we.auth.admin.permissions)).Methods("GET")
 	adminSubrouter.HandleFunc("/application/roles", we.wrapFunc(we.adminApisHandler.adminCreateApplicationRole, we.auth.admin.permissions)).Methods("POST")
 	adminSubrouter.HandleFunc("/application/roles/{id}", we.wrapFunc(we.adminApisHandler.adminDeleteApplicationRole, we.auth.admin.permissions)).Methods("DELETE")
+	adminSubrouter.HandleFunc("/application/role/permissions/grant", we.wrapFunc(we.adminApisHandler.adminGrantPermissionsToRole, we.auth.admin.permissions)).Methods("PUT")
 
 	adminSubrouter.HandleFunc("/application/permissions", we.wrapFunc(we.adminApisHandler.getApplicationPermissions, we.auth.admin.permissions)).Methods("GET")
 
@@ -142,7 +161,9 @@ func (we Adapter) Start() {
 	adminSubrouter.HandleFunc("/application/account/{account_id}/login-sessions/{session_id}", we.wrapFunc(we.adminApisHandler.deleteApplicationLoginSession, we.auth.admin.permissions)).Methods("DELETE")
 	adminSubrouter.HandleFunc("/application/account/{id}/devices", we.wrapFunc(we.adminApisHandler.getApplicationAccountDevices, we.auth.admin.permissions)).Methods("GET")
 	adminSubrouter.HandleFunc("/application/account/permissions/grant", we.wrapFunc(we.adminApisHandler.grantAccountPermissions, we.auth.admin.permissions)).Methods("PUT")
-	adminSubrouter.HandleFunc("/application/account/roles/grant", we.wrapFunc(we.adminApisHandler.grantAccountRoles, we.auth.admin.user)).Methods("PUT")
+	adminSubrouter.HandleFunc("/application/account/permissions/revoke", we.wrapFunc(we.adminApisHandler.revokeAccountPermissions, we.auth.admin.permissions)).Methods("DELETE")
+	adminSubrouter.HandleFunc("/application/account/roles/grant", we.wrapFunc(we.adminApisHandler.grantAccountRoles, we.auth.admin.permissions)).Methods("PUT")
+	adminSubrouter.HandleFunc("/application/account/roles/revoke", we.wrapFunc(we.adminApisHandler.revokeAccountRoles, we.auth.admin.permissions)).Methods("DELETE")
 	///
 
 	///enc ///
@@ -154,12 +175,20 @@ func (we Adapter) Start() {
 	bbsSubrouter := subRouter.PathPrefix("/bbs").Subrouter()
 	bbsSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.bbsApisHandler.getServiceRegistrations, nil)).Methods("GET") //Public
 	bbsSubrouter.HandleFunc("/test", we.wrapFunc(we.bbsApisHandler.getTest, nil)).Methods("GET")                         //Public
+
+	bbsSubrouter.HandleFunc("/service-account/{id}", we.wrapFunc(we.bbsApisHandler.getServiceAccountParams, nil)).Methods("POST") //Public
+	bbsSubrouter.HandleFunc("/access-token", we.wrapFunc(we.bbsApisHandler.getServiceAccessToken, nil)).Methods("POST")           //Public
+	bbsSubrouter.HandleFunc("/access-tokens", we.wrapFunc(we.bbsApisHandler.getServiceAccessTokens, nil)).Methods("POST")         //Public
 	///
 
 	///third-party services ///
 	tpsSubrouter := subRouter.PathPrefix("/tps").Subrouter()
 	tpsSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.tpsApisHandler.getServiceRegistrations, nil)).Methods("GET") //Public
 	tpsSubrouter.HandleFunc("/auth-keys", we.wrapFunc(we.tpsApisHandler.getAuthKeys, nil)).Methods("GET")                //Public
+
+	tpsSubrouter.HandleFunc("/service-account/{id}", we.wrapFunc(we.tpsApisHandler.getServiceAccountParams, nil)).Methods("POST") //Public
+	tpsSubrouter.HandleFunc("/access-token", we.wrapFunc(we.tpsApisHandler.getServiceAccessToken, nil)).Methods("POST")           //Public
+	tpsSubrouter.HandleFunc("/access-tokens", we.wrapFunc(we.tpsApisHandler.getServiceAccessTokens, nil)).Methods("POST")         //Public
 	///
 
 	///system ///
@@ -210,9 +239,68 @@ func (we Adapter) Start() {
 	systemSubrouter.HandleFunc("/auth-types", we.wrapFunc(we.systemApisHandler.getAuthTypes, we.auth.systemAuth)).Methods("GET")
 	systemSubrouter.HandleFunc("/auth-types/{id}", we.wrapFunc(we.systemApisHandler.updateAuthTypes, we.auth.systemAuth)).Methods("PUT")
 	*/
-	systemSubrouter.HandleFunc("/application-type/{id}/versions", we.wrapFunc(we.systemApisHandler.createApplicationTypeVersion, we.auth.systemAuth)).Methods("POST")
-	systemSubrouter.HandleFunc("/application-type/{id}/versions", we.wrapFunc(we.systemApisHandler.getApplicationTypeVersion, we.auth.systemAuth)).Methods("GET")
-	systemSubrouter.HandleFunc("/application-type/{appliction-type-id}/versions/{version-id}", we.wrapFunc(we.systemApisHandler.deleteApplicationTypeVersion, we.auth.systemAuth)).Methods("DELETE")
+	systemSubrouter.HandleFunc("/application-type/{id}/versions", we.wrapFunc(we.systemApisHandler.createApplicationTypeVersion, we.auth.system.permissions)).Methods("POST")
+	systemSubrouter.HandleFunc("/application-type/{id}/versions", we.wrapFunc(we.systemApisHandler.getApplicationTypeVersion, we.auth.system.permissions)).Methods("GET")
+	systemSubrouter.HandleFunc("/application-type/{appliction-type-id}/versions/{version-id}", we.wrapFunc(we.systemApisHandler.deleteApplicationTypeVersion, we.auth.system.permissions)).Methods("DELETE")
+	//	systemSubrouter := subRouter.PathPrefix("/system").Subrouter()
+	systemSubrouter.HandleFunc("/auth/login", we.wrapFunc(we.systemApisHandler.systemLogin, nil)).Methods("POST")
+	systemSubrouter.HandleFunc("/auth/mfa", we.wrapFunc(we.systemApisHandler.systemLoginMFA, nil)).Methods("POST")
+	systemSubrouter.HandleFunc("/auth/login-url", we.wrapFunc(we.systemApisHandler.systemLoginURL, nil)).Methods("POST")
+	systemSubrouter.HandleFunc("/auth/refresh", we.wrapFunc(we.systemApisHandler.systemRefresh, nil)).Methods("POST")
+	systemSubrouter.HandleFunc("/auth/verify-mfa", we.wrapFunc(we.systemApisHandler.systemVerifyMFA, we.auth.system.user)).Methods("POST")
+
+	systemSubrouter.HandleFunc("/global-config", we.wrapFunc(we.systemApisHandler.createGlobalConfig, we.auth.system.permissions)).Methods("POST")
+	systemSubrouter.HandleFunc("/global-config", we.wrapFunc(we.systemApisHandler.getGlobalConfig, we.auth.system.permissions)).Methods("GET")
+	systemSubrouter.HandleFunc("/global-config", we.wrapFunc(we.systemApisHandler.updateGlobalConfig, we.auth.system.permissions)).Methods("PUT")
+
+	systemSubrouter.HandleFunc("/organizations", we.wrapFunc(we.systemApisHandler.createOrganization, we.auth.system.permissions)).Methods("POST")
+	systemSubrouter.HandleFunc("/organizations/{id}", we.wrapFunc(we.systemApisHandler.updateOrganization, we.auth.system.permissions)).Methods("PUT")
+	systemSubrouter.HandleFunc("/organizations/{id}", we.wrapFunc(we.systemApisHandler.getOrganization, we.auth.system.permissions)).Methods("GET")
+	systemSubrouter.HandleFunc("/organizations", we.wrapFunc(we.systemApisHandler.getOrganizations, we.auth.system.permissions)).Methods("GET")
+
+	systemSubrouter.HandleFunc("/applications", we.wrapFunc(we.systemApisHandler.createApplication, we.auth.system.permissions)).Methods("POST")
+	systemSubrouter.HandleFunc("/applications/{id}", we.wrapFunc(we.systemApisHandler.getApplication, we.auth.system.permissions)).Methods("GET")
+	systemSubrouter.HandleFunc("/applications", we.wrapFunc(we.systemApisHandler.getApplications, we.auth.system.permissions)).Methods("GET")
+
+	systemSubrouter.HandleFunc("/permissions", we.wrapFunc(we.systemApisHandler.createPermission, we.auth.system.permissions)).Methods("POST")
+	systemSubrouter.HandleFunc("/permissions", we.wrapFunc(we.systemApisHandler.updatePermission, we.auth.system.permissions)).Methods("PUT")
+	systemSubrouter.HandleFunc("/application-roles", we.wrapFunc(we.systemApisHandler.createApplicationRole, we.auth.system.permissions)).Methods("POST")
+	systemSubrouter.HandleFunc("/application-api-keys", we.wrapFunc(we.systemApisHandler.getApplicationAPIKeys, we.auth.system.permissions)).Methods("GET")
+
+	systemSubrouter.HandleFunc("/application/configs", we.wrapFunc(we.systemApisHandler.getApplicationConfigs, we.auth.system.permissions)).Methods("GET")
+	systemSubrouter.HandleFunc("/application/configs", we.wrapFunc(we.systemApisHandler.createApplicationConfig, we.auth.system.permissions)).Methods("POST")
+	systemSubrouter.HandleFunc("/application/configs/{id}", we.wrapFunc(we.systemApisHandler.getApplicationConfig, we.auth.system.permissions)).Methods("GET")
+	systemSubrouter.HandleFunc("/application/configs/{id}", we.wrapFunc(we.systemApisHandler.updateApplicationConfig, we.auth.system.permissions)).Methods("PUT")
+	systemSubrouter.HandleFunc("/application/configs/{id}", we.wrapFunc(we.systemApisHandler.deleteApplicationConfig, we.auth.system.permissions)).Methods("DELETE")
+
+	systemSubrouter.HandleFunc("/account/permissions", we.wrapFunc(we.systemApisHandler.grantAccountPermissions, we.auth.system.permissions)).Methods("PUT")
+	systemSubrouter.HandleFunc("/account/roles", we.wrapFunc(we.systemApisHandler.grantAccountRoles, we.auth.system.permissions)).Methods("PUT")
+	systemSubrouter.HandleFunc("/account/mfa", we.wrapFunc(we.systemApisHandler.getMFATypes, we.auth.system.user)).Methods("GET")
+	systemSubrouter.HandleFunc("/account/mfa", we.wrapFunc(we.systemApisHandler.addMFAType, we.auth.system.authenticated)).Methods("POST")
+	systemSubrouter.HandleFunc("/account/mfa", we.wrapFunc(we.systemApisHandler.removeMFAType, we.auth.system.authenticated)).Methods("DELETE")
+
+	systemSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.systemApisHandler.getServiceRegistrations, we.auth.system.permissions)).Methods("GET")
+	systemSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.systemApisHandler.registerService, we.auth.system.permissions)).Methods("POST")
+	systemSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.systemApisHandler.updateServiceRegistration, we.auth.system.permissions)).Methods("PUT")
+	systemSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.systemApisHandler.deregisterService, we.auth.system.permissions)).Methods("DELETE")
+
+	systemSubrouter.HandleFunc("/service-accounts", we.wrapFunc(we.systemApisHandler.getServiceAccounts, we.auth.system.permissions)).Methods("GET")
+	systemSubrouter.HandleFunc("/service-accounts", we.wrapFunc(we.systemApisHandler.registerServiceAccount, we.auth.system.permissions)).Methods("POST")
+	systemSubrouter.HandleFunc("/service-accounts", we.wrapFunc(we.systemApisHandler.deregisterServiceAccount, we.auth.system.permissions)).Methods("DELETE")
+	systemSubrouter.HandleFunc("/service-accounts/{id}", we.wrapFunc(we.systemApisHandler.getServiceAccountInstance, we.auth.system.permissions)).Methods("GET")
+	systemSubrouter.HandleFunc("/service-accounts/{id}", we.wrapFunc(we.systemApisHandler.updateServiceAccountInstance, we.auth.system.permissions)).Methods("PUT")
+	systemSubrouter.HandleFunc("/service-accounts/{id}", we.wrapFunc(we.systemApisHandler.deregisterServiceAccountInstance, we.auth.system.permissions)).Methods("DELETE")
+	systemSubrouter.HandleFunc("/service-accounts/{id}/creds", we.wrapFunc(we.systemApisHandler.addServiceAccountCredential, we.auth.system.permissions)).Methods("POST")
+	systemSubrouter.HandleFunc("/service-accounts/{id}/creds", we.wrapFunc(we.systemApisHandler.removeServiceAccountCredential, we.auth.system.permissions)).Methods("DELETE")
+
+	systemSubrouter.HandleFunc("/api-keys", we.wrapFunc(we.systemApisHandler.getAPIKey, we.auth.system.permissions)).Methods("GET")
+	systemSubrouter.HandleFunc("/api-keys", we.wrapFunc(we.systemApisHandler.createAPIKey, we.auth.system.permissions)).Methods("POST")
+	systemSubrouter.HandleFunc("/api-keys", we.wrapFunc(we.systemApisHandler.updateAPIKey, we.auth.system.permissions)).Methods("PUT")
+	systemSubrouter.HandleFunc("/api-keys", we.wrapFunc(we.systemApisHandler.deleteAPIKey, we.auth.system.permissions)).Methods("DELETE")
+
+	systemSubrouter.HandleFunc("/auth-types", we.wrapFunc(we.systemApisHandler.createAuthTypes, we.auth.system.permissions)).Methods("POST")
+	systemSubrouter.HandleFunc("/auth-types", we.wrapFunc(we.systemApisHandler.getAuthTypes, we.auth.system.permissions)).Methods("GET")
+	systemSubrouter.HandleFunc("/auth-types/{id}", we.wrapFunc(we.systemApisHandler.updateAuthTypes, we.auth.system.permissions)).Methods("PUT")
 	///
 
 	err := http.ListenAndServe(":"+we.port, router)
@@ -295,6 +383,58 @@ func (we Adapter) wrapFunc(handler handlerFunc, authorization Authorization) htt
 		//5. print
 		logObj.RequestComplete()
 	}
+}
+
+func (we Adapter) uiWrapFunc(handler handlerFunc, authorization Authorization) http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+		logObj := we.logger.NewRequestLog(req)
+
+		logObj.RequestReceived()
+
+		//1. validate request
+		_, err := we.validateRequest(req)
+		if err != nil {
+			message := errors.WrapErrorAction(logutils.ActionValidate, logutils.TypeRequest, nil, err)
+			we.serveResponseUI(w, message.Error(), true, logObj)
+			return
+		}
+
+		//2. process it
+		var response logs.HttpResponse
+		if authorization != nil {
+			_, claims, err := authorization.check(req)
+			if err != nil {
+				message := errors.WrapErrorAction(logutils.ActionValidate, logutils.TypeRequest, nil, err)
+				we.serveResponseUI(w, message.Error(), true, logObj)
+				return
+			}
+			response = handler(logObj, req, claims)
+		} else {
+			response = handler(logObj, req, nil)
+		}
+
+		we.serveResponseUI(w, string(response.Body), response.ResponseCode != 200, logObj)
+		//5. print
+		logObj.RequestComplete()
+	}
+}
+
+func (we Adapter) serveResponseUI(w http.ResponseWriter, message string, isErr bool, l *logs.Log) {
+	file := ""
+	if isErr {
+		file = "./driver/web/ui/error.html"
+		l.Error(message)
+	} else {
+		file = "./driver/web/ui/success.html"
+	}
+	tmpl, err := template.ParseFiles(file)
+	if err != nil {
+		l.RequestErrorAction(w, logutils.ActionLoad, "page template", nil, err, http.StatusInternalServerError, true)
+		return
+	}
+	data := HTMLResponseTemplate{Message: message}
+	// w.Header().Add("access-control-allow-origin", "*")
+	tmpl.Execute(w, data)
 }
 
 func (we Adapter) validateRequest(req *http.Request) (*openapi3filter.RequestValidationInput, error) {

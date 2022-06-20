@@ -1,12 +1,11 @@
 get:
-  deprecated: true
   tags:
   - System
-  summary: Get application
+  summary: Get application by ID
   description: |
-    Gets application
+    Gets application by provided ID
 
-    **Auth:** Requires auth token with `app_admin` permission
+    **Auth:** Requires system access token with `get_applications` or `all_applications` permission
   security:
     - bearerAuth: []
   parameters:
@@ -24,7 +23,7 @@ get:
       content:
         application/json:
             schema:
-              $ref: "../../schemas/apis/system/get-application/request/Request.yaml"
+              $ref: "../../schemas/application/Application.yaml"
     400:
       description: Bad request
     401:

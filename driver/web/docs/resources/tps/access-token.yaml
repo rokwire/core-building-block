@@ -1,0 +1,49 @@
+post:
+  tags:
+    - Third-Party Services
+  summary: Get service account access token
+  description: |
+    Returns a new service account access token
+  requestBody:
+    description: |
+      Service account credentials
+    content:
+      application/json:
+        schema:
+          $ref: "../../schemas/apis/services/service-accounts/access-token/request/Request.yaml"
+        examples:
+          static_token:
+            summary: Static token
+            value: |
+              {
+                "account_id": "service_account_id",
+                "app_id": "9766",
+                "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
+                "auth_type": "static_token",
+                "creds": {
+                  "token": "account_token"
+                }
+              }
+          signature:
+            summary: Signature
+            value: |
+              {
+                "account_id": "service_account_id",
+                "app_id": "9766",
+                "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
+                "auth_type": "signature",
+              }
+    required: true
+  responses:
+    200:
+      description: Success
+      content:
+        application/json:
+          schema:
+            $ref: "../../schemas/apis/shared/responses/RokwireToken.yaml"
+    400:
+      description: Bad request
+    401:
+      description: Unauthorized
+    500:
+      description: Internal error

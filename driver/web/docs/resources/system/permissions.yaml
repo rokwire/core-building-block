@@ -1,12 +1,11 @@
 post:
-  deprecated: true
   tags:
   - System
   summary: Create permission
   description: |
     Creates permission
 
-    **Auth:** Requires auth token with `all_permission` or 'update_permission" permission
+    **Auth:** Requires system access token with `update_permissions` or `all_permissions` permission
   security:
     - bearerAuth: []
   requestBody:
@@ -31,14 +30,13 @@ post:
     500:
       description: Internal error
 put:
-  deprecated: true
   tags:
   - System
   summary: Updates permission
   description: |
     Updates permission
 
-    **Auth:** Requires auth token with `all_permission` or 'update_permission" permission
+    **Auth:** Requires system access token with `update_permissions` or `all_permissions` permission
   security:
     - bearerAuth: []
   requestBody:

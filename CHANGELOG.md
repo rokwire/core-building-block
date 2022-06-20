@@ -8,6 +8,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - Expose application type versions system APIs [#404](https://github.com/rokwire/core-building-block/issues/404)
+- Prepare the project to become open source [#129](https://github.com/rokwire/core-building-block/issues/129)
+- Retrieve all service account tokens at once [#459](https://github.com/rokwire/core-building-block/issues/459)
+
+### Fixed
+- Clean up authorization policies [#499](https://github.com/rokwire/core-building-block/issues/499)
+- Prevent admins from using service account management endpoints [#500](https://github.com/rokwire/core-building-block/issues/500)
+
+### Changed
+- Update SECURITY.md [#504](https://github.com/rokwire/core-building-block/issues/504)
+
+## [1.23.0] - 2022-04-26
+### Added
+- Email/phone registration should populate email/phone in profile [#431](https://github.com/rokwire/core-building-block/issues/431)
+- Implement system accounts [#278](https://github.com/rokwire/core-building-block/issues/278)
+- Service accounts [#306](https://github.com/rokwire/core-building-block/issues/306)
+
+### Security
+- Update http-swagger dependency [#465](https://github.com/rokwire/core-building-block/issues/465)
+
+## [1.22.0] - 2022-04-02
+### Added
+- Expose revoke roles from account Admin API [#412](https://github.com/rokwire/core-building-block/issues/412)
+- Expose revoke permissions from account Admin API [#411](https://github.com/rokwire/core-building-block/issues/411)
+- Expose grant permissions to role Admin API [#415](https://github.com/rokwire/core-building-block/issues/415)
+- Expose remove accounts from a group Admin API [#413](https://github.com/rokwire/core-building-block/issues/413)
+- Expose add accounts to a group Admin API [#384](https://github.com/rokwire/core-building-block/issues/384)
+- Handle external ID management [#364](https://github.com/rokwire/core-building-block/issues/364)
+
+### Security
+- Loading all roles and groups for empty query [#458](https://github.com/rokwire/core-building-block/issues/458)
+
+## [1.21.1] - 2022-03-17
+### Fixed
+- Fix verify credential HTML template loading issues [#451](https://github.com/rokwire/core-building-block/issues/451)
+
+## [1.21.0] - 2022-03-16
+### Added
+- Clean up verification email messaging and UI [#444](https://github.com/rokwire/core-building-block/issues/444)
 - Implement logout for users accounts [#329](https://github.com/rokwire/core-building-block/issues/329)
 
 ## [1.20.1] - 2022-03-07
@@ -250,7 +288,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Users authentication polish [#155](https://github.com/rokwire/core-building-block/issues/155)
 - Optimise the Mongo DB collections indexes usage [#146](https://github.com/rokwire/core-building-block/issues/146)
 
-[Unreleased]: https://github.com/rokwire/core-building-block/compare/v1.20.1...HEAD
+[Unreleased]: https://github.com/rokwire/core-building-block/compare/v1.23.0...HEAD
+[1.23.0]: https://github.com/rokwire/core-building-block/compare/v1.22.0...v1.23.0
+[1.22.0]: https://github.com/rokwire/core-building-block/compare/v1.21.1...v1.22.0
+[1.21.1]: https://github.com/rokwire/core-building-block/compare/v1.21.0...v1.21.1
+[1.21.0]: https://github.com/rokwire/core-building-block/compare/v1.20.1...v1.21.0
 [1.20.1]: https://github.com/rokwire/core-building-block/compare/v1.20.0...v1.20.1
 [1.20.0]: https://github.com/rokwire/core-building-block/compare/v1.19.0...v1.20.0
 [1.19.0]: https://github.com/rokwire/core-building-block/compare/v1.18.0...v1.19.0

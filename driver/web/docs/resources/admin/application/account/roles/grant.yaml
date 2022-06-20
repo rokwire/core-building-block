@@ -4,6 +4,8 @@ put:
   summary: Grant account roles
   description: |
     Grant account roles
+
+    **Auth:** Requires admin access token with 'update_account-auth-roles' or `update_account-authorization` permission
   security:
     - bearerAuth: []
   requestBody:

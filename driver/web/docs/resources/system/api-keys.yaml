@@ -1,12 +1,11 @@
 get:
-  deprecated: true
   tags:
   - System
   summary: Get API key
   description: |
     Returns API key record
 
-    **Auth:** Requires auth token with `get_api-keys` permission
+    **Auth:** Requires system access token with `get_api-keys`, `update_api-keys`, `delete_api-keys`, or `all_api-keys` permission
   security:
     - bearerAuth: []
   parameters:
@@ -32,14 +31,13 @@ get:
     500:
       description: Internal error
 post:
-  deprecated: true
   tags:
   - System
   summary: Create API key
   description: |
     Creates a new API key record
 
-    **Auth:** Requires auth token with `update_api-keys` permission
+    **Auth:** Requires system access token with `update_api-keys` or `all_api-keys` permission
   security:
     - bearerAuth: []
   requestBody:
@@ -69,7 +67,6 @@ post:
     500:
       description: Internal error
 put:
-  deprecated: true
   tags:
   - System
   summary: Update API key
@@ -78,7 +75,7 @@ put:
 
     Must include the "id" field to identify which key is to be udpated
 
-    **Auth:** Requires auth token with `update_api-keys` permission
+    **Auth:** Requires system access token with `update_api-keys` or `all_api-keys` permission
   security:
     - bearerAuth: []
   requestBody:
@@ -103,14 +100,13 @@ put:
     500:
       description: Internal error
 delete:
-  deprecated: true
   tags:
   - System
   summary: Delete API key
   description: |
     Deletes an existing API key record
 
-    **Auth:** Requires auth token with `update_api-keys` permission
+    **Auth:** Requires system access token with `delete_api-keys` or `all_api-keys` permission
   security:
     - bearerAuth: []
   parameters:

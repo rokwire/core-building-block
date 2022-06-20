@@ -1,12 +1,11 @@
 put:
-  deprecated: true
   tags:
   - System
   summary: Grant account permissions
   description: |
     Grant account permissions
 
-    **Auth:** Requires auth token with `auth_admin` permission
+    **Auth:** Requires system access token with `update_account-permissions` or `all_account-permissions` permission
   security:
     - bearerAuth: []
   requestBody:

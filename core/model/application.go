@@ -1,3 +1,17 @@
+// Copyright 2022 Board of Trustees of the University of Illinois.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package model
 
 import (
@@ -86,6 +100,16 @@ type AppOrgRole struct {
 	DateUpdated *time.Time
 }
 
+//GetPermissionNamed returns the permission for a name if the role has it
+func (c AppOrgRole) GetPermissionNamed(name string) *Permission {
+	for _, permission := range c.Permissions {
+		if permission.Name == name {
+			return &permission
+		}
+	}
+	return nil
+}
+
 //CheckAssigners checks if the passed permissions satisfy the needed assigners for all role permissions
 func (c AppOrgRole) CheckAssigners(assignerPermissions []string) error {
 	if len(c.Permissions) == 0 {
@@ -120,6 +144,30 @@ type AppOrgGroup struct {
 
 	DateCreated time.Time
 	DateUpdated *time.Time
+}
+
+//CheckAssigners checks if the passed permissions satisfy the needed assigners for the group
+func (cg AppOrgGroup) CheckAssigners(assignerPermissions []string) error {
+	//check permission
+	if len(cg.Permissions) > 0 {
+		for _, permission := range cg.Permissions {
+			err := permission.CheckAssigners(assignerPermissions)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	//check roles
+	if len(cg.Roles) > 0 {
+		for _, role := range cg.Roles {
+			err := role.CheckAssigners(assignerPermissions)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	//all assigners are satisfied
+	return nil
 }
 
 func (cg AppOrgGroup) String() string {
@@ -162,6 +210,8 @@ type Organization struct {
 	ID   string
 	Name string
 	Type string //micro small medium large - based on the users count
+
+	System bool //is this a system org?
 
 	Config OrganizationConfig
 
@@ -230,7 +280,8 @@ func (ao ApplicationOrganization) IsAuthTypeSupported(appType ApplicationType, a
 type IdentityProviderSetting struct {
 	IdentityProviderID string `bson:"identity_provider_id"`
 
-	UserIdentifierField string `bson:"user_identifier_field"`
+	UserIdentifierField string            `bson:"user_identifier_field"`
+	ExternalIDFields    map[string]string `bson:"external_id_fields"`
 
 	FirstNameField  string `bson:"first_name_field"`
 	MiddleNameField string `bson:"middle_name_field"`

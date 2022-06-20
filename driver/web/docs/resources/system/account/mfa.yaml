@@ -1,12 +1,11 @@
 get:
-  deprecated: true
   tags:
   - System
   summary: Get account MFA types
   description: |
     Get MFA types set up for an account
 
-    **Auth:** Requires user auth token
+    **Auth:** Requires system access token
   security:
     - bearerAuth: []
   responses:
@@ -25,7 +24,6 @@ get:
     500:
       description: Internal error
 post:
-  deprecated: true
   tags:
   - System
   summary: Enroll in MFA type
@@ -58,7 +56,6 @@ post:
     500:
       description: Internal error
 delete:
-  deprecated: true
   tags:
   - System
   summary: Remove MFA type
