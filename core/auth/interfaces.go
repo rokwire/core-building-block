@@ -1,3 +1,17 @@
+// Copyright 2022 Board of Trustees of the University of Illinois.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package auth
 
 import (
@@ -281,10 +295,13 @@ type APIs interface {
 	RemoveMFAType(accountID string, identifier string, mfaType string) error
 
 	//GetServiceAccountParams returns a list of app, org pairs a service account has access to
-	GetServiceAccountParams(accountID string, r *sigauth.Request, l *logs.Log) ([]model.AppOrgPair, error)
+	GetServiceAccountParams(accountID string, firstParty bool, r *sigauth.Request, l *logs.Log) ([]model.AppOrgPair, error)
 
 	//GetServiceAccessToken returns an access token for a non-human client
-	GetServiceAccessToken(r *sigauth.Request, l *logs.Log) (string, error)
+	GetServiceAccessToken(firstParty bool, r *sigauth.Request, l *logs.Log) (string, error)
+
+	//GetAllServiceAccessTokens returns an access token for each app, org pair a service account has access to
+	GetAllServiceAccessTokens(firstParty bool, r *sigauth.Request, l *logs.Log) (map[model.AppOrgPair]string, error)
 
 	//GetServiceAccounts gets all service accounts matching a search
 	GetServiceAccounts(params map[string]interface{}) ([]model.ServiceAccount, error)

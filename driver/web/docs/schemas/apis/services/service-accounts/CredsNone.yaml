@@ -1,3 +1,0 @@
-type: object
-description: Service account creds for unlisted auth_types (None)
-nullable: true

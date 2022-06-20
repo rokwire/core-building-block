@@ -4,6 +4,8 @@ post:
   summary: Refresh
   description: |
     Refresh access token using a refresh token
+
+    **Auth:** Requires API key
   requestBody:
     description: |
       Refresh token
