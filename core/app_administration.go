@@ -872,6 +872,77 @@ func (app *application) admRevokeAccountRoles(appID string, orgID string, accoun
 	return nil
 }
 
+func (app *application) admRemovePermissionsFromRole(appID string, orgID string, roleID string, permissionNames []string, assignerPermissions []string, l *logs.Log) error {
+	//check if there is data
+	if len(assignerPermissions) == 0 {
+		return errors.New("no permissions from admin assigner")
+	}
+	if len(permissionNames) == 0 {
+		return errors.New("no permissions names")
+	}
+
+	//find the application organization
+	appOrg, err := app.storage.FindApplicationOrganization(appID, orgID)
+	if err != nil {
+		return errors.Wrap("there is no application organization with that IDs", err)
+	}
+
+	//find the application organization role entity
+	role, err := app.storage.FindAppOrgRole(roleID, appOrg.ID)
+	if err != nil {
+		return errors.Wrap("there is no roles with that ID", err)
+	}
+
+	//verify that the role has the permissions which are supposed to be revoked
+	for _, current := range permissionNames {
+		hasP := role.GetPermissionNamed(current)
+		if hasP == nil {
+			l.Infof("trying to revoke %s for %s but the role does not have it", current, roleID)
+			return errors.Newf("%s cannot be revoked from %s", current, roleID)
+		}
+	}
+
+	//find permissions by name
+	permissions, err := app.storage.FindPermissionsByName(permissionNames)
+	if err != nil {
+		return err
+	}
+	if len(permissions) == 0 {
+		return errors.Newf("no permissions found for names: %v", permissionNames)
+	}
+
+	//check if authorized
+	for _, permission := range permissions {
+		err = permission.CheckAssigners(assignerPermissions)
+		if err != nil {
+			return errors.Wrapf("error checking permission assigners", err)
+		}
+	}
+
+	//TODO - bigger timeout
+	transaction := func(context storage.TransactionContext) error {
+		//1. delete permissions from a role
+		err = app.storage.DeletePermissionsFromRole(context, appOrg.ID, role.ID, permissions)
+		if err != nil {
+			return errors.Wrap("error deleting permissions from role", err)
+		}
+
+		/*
+			//delete all sessions
+			err = app.storage.DeleteLoginSessionsByRoleID(context, appID, orgID, roleID)
+			if err != nil {
+				return errors.Wrap("error deleting sessions by identifier on revoking permissions", err)
+			} */
+
+		return nil
+	}
+	err = app.storage.PerformTransaction(transaction)
+	if err != nil {
+		return errors.Wrapf("error revoking permissions %s from an account %s", err, roleID, permissionNames)
+	}
+	return nil
+}
+
 func (app *application) admGrantPermissionsToRole(appID string, orgID string, roleID string, permissionNames []string, assignerPermissions []string, l *logs.Log) error {
 	//check if there is data
 	if len(assignerPermissions) == 0 {

@@ -619,6 +619,12 @@ type AdminReqRevokePermissions struct {
 	Permissions []string `json:"permissions"`
 }
 
+// AdminReqRevokePermissionsFromRole defines model for _admin_req_revoke-permissions-from-role.
+type AdminReqRevokePermissionsFromRole struct {
+	Permissions []string `json:"permissions"`
+	RoleId      string   `json:"role_id"`
+}
+
 // AdminReqRevokeRolesFromAccount defines model for _admin_req_revoke-roles-from-account.
 type AdminReqRevokeRolesFromAccount struct {
 	AccountId string   `json:"account_id"`
@@ -1224,6 +1230,9 @@ type GetAdminApplicationLoginSessionsParams struct {
 // PutAdminApplicationRolePermissionsGrantJSONBody defines parameters for PutAdminApplicationRolePermissionsGrant.
 type PutAdminApplicationRolePermissionsGrantJSONBody AdminReqGrantPermissionsToRole
 
+// DeleteAdminApplicationRolePermissionsRevokeJSONBody defines parameters for DeleteAdminApplicationRolePermissionsRevoke.
+type DeleteAdminApplicationRolePermissionsRevokeJSONBody AdminReqRevokePermissionsFromRole
+
 // PostAdminApplicationRolesJSONBody defines parameters for PostAdminApplicationRoles.
 type PostAdminApplicationRolesJSONBody AdminReqCreateApplicationRole
 
@@ -1637,6 +1646,9 @@ type PostAdminApplicationGroupsJSONRequestBody PostAdminApplicationGroupsJSONBod
 
 // PutAdminApplicationRolePermissionsGrantJSONRequestBody defines body for PutAdminApplicationRolePermissionsGrant for application/json ContentType.
 type PutAdminApplicationRolePermissionsGrantJSONRequestBody PutAdminApplicationRolePermissionsGrantJSONBody
+
+// DeleteAdminApplicationRolePermissionsRevokeJSONRequestBody defines body for DeleteAdminApplicationRolePermissionsRevoke for application/json ContentType.
+type DeleteAdminApplicationRolePermissionsRevokeJSONRequestBody DeleteAdminApplicationRolePermissionsRevokeJSONBody
 
 // PostAdminApplicationRolesJSONRequestBody defines body for PostAdminApplicationRoles for application/json ContentType.
 type PostAdminApplicationRolesJSONRequestBody PostAdminApplicationRolesJSONBody
