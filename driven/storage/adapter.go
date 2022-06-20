@@ -1,3 +1,17 @@
+// Copyright 2022 Board of Trustees of the University of Illinois.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package storage
 
 import (
@@ -1320,19 +1334,19 @@ func (sa *Adapter) FindServiceAccount(context TransactionContext, accountID stri
 
 	var account serviceAccount
 	var err error
+	errFields := logutils.FieldArgs{"account_id": accountID, "app_id": utils.GetPrintableString(appID, "nil"), "org_id": utils.GetPrintableString(orgID, "nil")}
 	if context != nil {
 		err = sa.db.serviceAccounts.FindOneWithContext(context, filter, &account, nil)
 	} else {
 		err = sa.db.serviceAccounts.FindOne(filter, &account, nil)
 	}
-
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, &logutils.FieldArgs{"account_id": accountID, "app_id": utils.GetPrintableString(appID), "org_id": utils.GetPrintableString(orgID)}, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, &errFields, err)
 	}
 
 	modelAccount, err := serviceAccountFromStorage(account, sa)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionCast, model.TypeServiceAccount, &logutils.FieldArgs{"account_id": accountID, "app_id": utils.GetPrintableString(appID), "org_id": utils.GetPrintableString(orgID)}, err)
+		return nil, errors.WrapErrorAction(logutils.ActionCast, model.TypeServiceAccount, &errFields, err)
 	}
 
 	return modelAccount, nil
@@ -1398,14 +1412,15 @@ func (sa *Adapter) UpdateServiceAccount(account *model.ServiceAccount) (*model.S
 	opts.SetProjection(bson.D{bson.E{Key: "secrets", Value: 0}})
 
 	var updated serviceAccount
+	errFields := logutils.FieldArgs{"account_id": storageAccount.AccountID, "app_id": utils.GetPrintableString(storageAccount.AppID, "nil"), "org_id": utils.GetPrintableString(storageAccount.OrgID, "nil")}
 	err := sa.db.serviceAccounts.FindOneAndUpdate(filter, update, &updated, &opts)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeServiceAccount, &logutils.FieldArgs{"account_id": storageAccount.AccountID, "app_id": utils.GetPrintableString(storageAccount.AppID), "org_id": utils.GetPrintableString(storageAccount.OrgID)}, err)
+		return nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeServiceAccount, &errFields, err)
 	}
 
 	modelAccount, err := serviceAccountFromStorage(updated, sa)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionCast, model.TypeServiceAccount, &logutils.FieldArgs{"account_id": storageAccount.AccountID, "app_id": utils.GetPrintableString(storageAccount.AppID), "org_id": utils.GetPrintableString(storageAccount.OrgID)}, err)
+		return nil, errors.WrapErrorAction(logutils.ActionCast, model.TypeServiceAccount, &errFields, err)
 	}
 
 	return modelAccount, nil
@@ -1415,12 +1430,13 @@ func (sa *Adapter) UpdateServiceAccount(account *model.ServiceAccount) (*model.S
 func (sa *Adapter) DeleteServiceAccount(accountID string, appID *string, orgID *string) error {
 	filter := bson.D{primitive.E{Key: "account_id", Value: accountID}, primitive.E{Key: "app_id", Value: appID}, primitive.E{Key: "org_id", Value: orgID}}
 
+	errFields := logutils.FieldArgs{"account_id": accountID, "app_id": utils.GetPrintableString(appID, "nil"), "org_id": utils.GetPrintableString(orgID, "nil")}
 	res, err := sa.db.serviceAccounts.DeleteOne(filter, nil)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeServiceAccount, &logutils.FieldArgs{"account_id": accountID, "app_id": utils.GetPrintableString(appID), "org_id": utils.GetPrintableString(orgID)}, err)
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeServiceAccount, &errFields, err)
 	}
 	if res.DeletedCount == 0 {
-		return errors.ErrorAction(logutils.ActionDelete, model.TypeServiceAccount, &logutils.FieldArgs{"account_id": accountID, "app_id": utils.GetPrintableString(appID), "org_id": utils.GetPrintableString(orgID)})
+		return errors.ErrorAction(logutils.ActionDelete, model.TypeServiceAccount, &errFields)
 	}
 	if res.DeletedCount > 1 {
 		return errors.ErrorAction(logutils.ActionDelete, model.TypeServiceAccount, logutils.StringArgs("unexpected deleted count"))

@@ -1,9 +1,11 @@
  put:
   tags:
   - System
-  summary: Update auth type
+  summary: Update auth type by ID
   description: |
-    Updates auth type
+    Updates auth type with the provided ID
+
+    **Auth:** Requires system access token with `update_auth-types` or `all_auth-types` permission
   security:
     - bearerAuth: []
   parameters:

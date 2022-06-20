@@ -8,4 +8,4 @@ properties:
       - static_token
       - signature
   creds:
-    $ref: "./CredsStaticToken.yaml"
+    $ref: "../../CredsStaticToken.yaml"
