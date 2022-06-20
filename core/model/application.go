@@ -1,3 +1,17 @@
+// Copyright 2022 Board of Trustees of the University of Illinois.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package model
 
 import (
@@ -6,6 +20,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/rokwire/core-auth-library-go/authutils"
+	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logutils"
 )
 
@@ -48,8 +64,24 @@ type Permission struct {
 	DateUpdated *time.Time `bson:"date_updated"`
 }
 
-func (c Permission) String() string {
-	return fmt.Sprintf("[ID:%s\nName:%s\nServiceID:%s]", c.ID, c.Name, c.ServiceID)
+//CheckAssigners checks if the passed permissions satisfy the needed assigners for the permission
+func (p Permission) CheckAssigners(assignerPermissions []string) error {
+	if len(p.Assigners) == 0 {
+		return errors.Newf("not defined assigners for %s permission", p.Name)
+	}
+
+	authorizedAssigners := p.Assigners
+	for _, authorizedAssigner := range authorizedAssigners {
+		if !authutils.ContainsString(assignerPermissions, authorizedAssigner) {
+			return errors.Newf("assigner %s is not satisfied", authorizedAssigner)
+		}
+	}
+	//all assigners are satisfied
+	return nil
+}
+
+func (p Permission) String() string {
+	return fmt.Sprintf("[ID:%s\nName:%s\nServiceID:%s]", p.ID, p.Name, p.ServiceID)
 }
 
 //AppOrgRole represents application organization role entity. It is a collection of permissions
@@ -66,6 +98,32 @@ type AppOrgRole struct {
 
 	DateCreated time.Time
 	DateUpdated *time.Time
+}
+
+//GetPermissionNamed returns the permission for a name if the role has it
+func (c AppOrgRole) GetPermissionNamed(name string) *Permission {
+	for _, permission := range c.Permissions {
+		if permission.Name == name {
+			return &permission
+		}
+	}
+	return nil
+}
+
+//CheckAssigners checks if the passed permissions satisfy the needed assigners for all role permissions
+func (c AppOrgRole) CheckAssigners(assignerPermissions []string) error {
+	if len(c.Permissions) == 0 {
+		return nil //no permission
+	}
+
+	for _, permission := range c.Permissions {
+		err := permission.CheckAssigners(assignerPermissions)
+		if err != nil {
+			errors.Wrapf("error checking role permission assigners", err)
+		}
+	}
+	//it satisies all permissions
+	return nil
 }
 
 func (c AppOrgRole) String() string {
@@ -88,6 +146,30 @@ type AppOrgGroup struct {
 	DateUpdated *time.Time
 }
 
+//CheckAssigners checks if the passed permissions satisfy the needed assigners for the group
+func (cg AppOrgGroup) CheckAssigners(assignerPermissions []string) error {
+	//check permission
+	if len(cg.Permissions) > 0 {
+		for _, permission := range cg.Permissions {
+			err := permission.CheckAssigners(assignerPermissions)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	//check roles
+	if len(cg.Roles) > 0 {
+		for _, role := range cg.Roles {
+			err := role.CheckAssigners(assignerPermissions)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	//all assigners are satisfied
+	return nil
+}
+
 func (cg AppOrgGroup) String() string {
 	return fmt.Sprintf("[ID:%s\nName:%s\nAppOrg:%s]", cg.ID, cg.Name, cg.AppOrg.ID)
 }
@@ -100,8 +182,10 @@ type Application struct {
 	MultiTenant bool //safer community is multi-tenant
 	Admin       bool //is this an admin app?
 
-	//if true the service will always require the user to create profile for the application, otherwise he/she could use his/her already created profile from another platform application
-	RequiresOwnUsers bool
+	//if to share identities between the organizations within the appication or to use e separate identities for every organization
+	//if true - the user uses shared profile between all organizations within the application
+	//if false - the user uses a separate profile for every organization within the application
+	SharedIdentities bool
 
 	Types []ApplicationType
 
@@ -126,6 +210,8 @@ type Organization struct {
 	ID   string
 	Name string
 	Type string //micro small medium large - based on the users count
+
+	System bool //is this a system org?
 
 	Config OrganizationConfig
 
@@ -194,7 +280,8 @@ func (ao ApplicationOrganization) IsAuthTypeSupported(appType ApplicationType, a
 type IdentityProviderSetting struct {
 	IdentityProviderID string `bson:"identity_provider_id"`
 
-	UserIdentifierField string `bson:"user_identifier_field"`
+	UserIdentifierField string            `bson:"user_identifier_field"`
+	ExternalIDFields    map[string]string `bson:"external_id_fields"`
 
 	FirstNameField  string `bson:"first_name_field"`
 	MiddleNameField string `bson:"middle_name_field"`

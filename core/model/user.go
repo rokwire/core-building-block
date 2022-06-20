@@ -1,3 +1,17 @@
+// Copyright 2022 Board of Trustees of the University of Illinois.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package model
 
 import (
@@ -47,6 +61,7 @@ type Account struct {
 
 	MFATypes []MFAType
 
+	ExternalIDs map[string]string
 	Preferences map[string]interface{}
 	Profile     Profile //one account has one profile, one profile can be shared between many accounts
 
@@ -58,28 +73,24 @@ type Account struct {
 
 //GetAccountAuthTypeByID finds account auth type by id
 func (a Account) GetAccountAuthTypeByID(ID string) *AccountAuthType {
-	var result AccountAuthType
 	for _, aat := range a.AuthTypes {
 		if aat.ID == ID {
-			result = aat
+			aat.Account = a
+			return &aat
 		}
 	}
-	//assign account
-	result.Account = a
-	return &result
+	return nil
 }
 
 //GetAccountAuthType finds account auth type
 func (a Account) GetAccountAuthType(authTypeID string, identifier string) *AccountAuthType {
-	var result AccountAuthType
 	for _, aat := range a.AuthTypes {
 		if aat.AuthType.ID == authTypeID && aat.Identifier == identifier {
-			result = aat
+			aat.Account = a
+			return &aat
 		}
 	}
-	//assign account
-	result.Account = a
-	return &result
+	return nil
 }
 
 //SortAccountAuthTypes sorts account auth types by matching the given uid
@@ -258,7 +269,9 @@ type AccountAuthType struct {
 
 	Credential *Credential //this can be nil as the external auth types authenticates the users outside the system
 
-	Active bool
+	Active     bool
+	Unverified bool
+	Linked     bool
 
 	DateCreated time.Time
 	DateUpdated *time.Time
@@ -339,7 +352,8 @@ type Device struct {
 
 //ExternalSystemUser represents external system user
 type ExternalSystemUser struct {
-	Identifier string `json:"identifier" bson:"identifier"` //this is the identifier used in our system to map the user
+	Identifier  string            `json:"identifier" bson:"identifier"` //this is the identifier used in our system to map the user
+	ExternalIDs map[string]string `json:"external_ids" bson:"external_ids"`
 
 	//these are common fields which should be popuated by the external system
 	FirstName  string   `json:"first_name" bson:"first_name"`
@@ -356,6 +370,9 @@ type ExternalSystemUser struct {
 //Equals checks if two external system users are equals
 func (esu ExternalSystemUser) Equals(other ExternalSystemUser) bool {
 	if esu.Identifier != other.Identifier {
+		return false
+	}
+	if !utils.DeepEqual(esu.ExternalIDs, other.ExternalIDs) {
 		return false
 	}
 	if esu.FirstName != other.FirstName {

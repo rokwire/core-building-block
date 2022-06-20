@@ -4,6 +4,8 @@ get:
   summary: Get application sessions
   description: |
     Get application sessions
+
+    **Auth:** Requires admin access token with `get_login-sessions`, `update_login-sessions`, `delete_login-sessions`, or `all_login-sessions` permission
   security:
     - bearerAuth: []
   parameters:
@@ -18,6 +20,46 @@ get:
     - name: account-auth-type-identifier
       in: query
       description: account auth type identifier
+      required: false
+      style: form
+      explode: false
+      schema:
+        type: string
+    - name: app-type-id
+      in: query
+      description: app type id
+      required: false
+      style: form
+      explode: false
+      schema:
+        type: string
+    - name: app-type-identifier
+      in: query
+      description: app type identifier
+      required: false
+      style: form
+      explode: false
+      schema:
+        type: string
+    - name: anonymous
+      in: query
+      description: anonymous
+      required: false
+      style: form
+      explode: false
+      schema:
+        type: boolean
+    - name: device-id
+      in: query
+      description: device id
+      required: false
+      style: form
+      explode: false
+      schema:
+        type: string
+    - name: ip-address
+      in: query
+      description: ip address
       required: false
       style: form
       explode: false

@@ -1,12 +1,11 @@
 put:
-  deprecated: true
   tags:
   - System
   summary: Grant account roles
   description: |
     Grant account roles
   
-    **Auth:** Requires auth token with `auth_admin` permission
+    **Auth:** Requires system access token with `update_account-roles` or `all_account-roles` permission
   security:
     - bearerAuth: []
   requestBody:

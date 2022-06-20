@@ -1,0 +1,7 @@
+required:
+  - token
+type: object
+description: Service account token for auth_type="static_token"
+properties:
+  token:
+    type: string

@@ -3,8 +3,8 @@ properties:
   fields:
     $ref: "./AccountAuthTypeFields.yaml"
   auth_type:
-     $ref: "../auth/AuthType.yaml"
+    $ref: "../auth/AuthType.yaml"
   account:
-     $ref: "./Account.yaml"
+    $ref: "./Account.yaml"
   credential:
-     $ref: "../auth/Credential.yaml"
+    $ref: "../auth/Credential.yaml"

@@ -1,9 +1,21 @@
+// Copyright 2022 Board of Trustees of the University of Illinois.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package core
 
 import (
 	"core-building-block/core/model"
-	"core-building-block/driven/storage"
-	"time"
 
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
@@ -40,8 +52,22 @@ func (app *application) serGetPreferences(accountID string) (map[string]interfac
 	return preferences, nil
 }
 
-func (app *application) serUpdateProfile(accountID string, profile *model.Profile) error {
-	return app.storage.UpdateProfile(accountID, profile)
+func (app *application) serUpdateProfile(accountID string, profile model.Profile) error {
+	//1. find the account
+	account, err := app.storage.FindAccountByID(nil, accountID)
+	if err != nil {
+		return errors.Wrapf("error finding an account on profile update", err)
+	}
+
+	//2. get the profile ID from the account
+	profile.ID = account.Profile.ID
+
+	//3. update profile
+	err = app.storage.UpdateProfile(nil, profile)
+	if err != nil {
+		return errors.Wrapf("error updating a profile", err)
+	}
+	return nil
 }
 
 func (app *application) serUpdateAccountPreferences(id string, preferences map[string]interface{}) error {
@@ -53,70 +79,7 @@ func (app *application) serUpdateAccountPreferences(id string, preferences map[s
 }
 
 func (app *application) serDeleteAccount(id string) error {
-	transaction := func(context storage.TransactionContext) error {
-		//1. first find the account record
-		account, err := app.storage.FindAccountByID(context, id)
-		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
-		}
-		if account == nil {
-			return errors.ErrorData(logutils.StatusMissing, model.TypeAccount, nil)
-		}
-
-		//2. delete the account record
-		err = app.storage.DeleteAccount(context, id)
-		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
-		}
-
-		//3. remove account auth types from or delete credentials
-		for _, aat := range account.AuthTypes {
-			if aat.Credential != nil {
-				credential, err := app.storage.FindCredential(context, aat.Credential.ID)
-				if err != nil {
-					return errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
-				}
-
-				if len(credential.AccountsAuthTypes) > 1 {
-					now := time.Now().UTC()
-					for i, credAat := range credential.AccountsAuthTypes {
-						if credAat.ID == aat.ID {
-							credential.AccountsAuthTypes = append(credential.AccountsAuthTypes[:i], credential.AccountsAuthTypes[i+1:]...)
-							credential.DateUpdated = &now
-							err = app.storage.UpdateCredential(context, credential)
-							if err != nil {
-								return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
-							}
-							break
-						}
-					}
-				} else {
-					err = app.storage.DeleteCredential(context, credential.ID)
-					if err != nil {
-						return errors.WrapErrorAction(logutils.ActionDelete, model.TypeCredential, nil, err)
-					}
-				}
-			}
-		}
-
-		//4. delete login sessions
-		err = app.storage.DeleteLoginSessions(context, id)
-		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, nil, err)
-		}
-
-		//5. delete devices records
-		for _, device := range account.Devices {
-			err = app.storage.DeleteDevice(context, device.ID)
-			if err != nil {
-				return errors.WrapErrorAction(logutils.ActionDelete, model.TypeDevice, nil, err)
-			}
-		}
-
-		return nil
-	}
-
-	return app.storage.PerformTransaction(transaction)
+	return app.auth.DeleteAccount(id)
 }
 
 func (app *application) serGetAuthTest(l *logs.Log) string {

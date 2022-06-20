@@ -1,3 +1,17 @@
+// Copyright 2022 Board of Trustees of the University of Illinois.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package web
 
 import (
@@ -36,7 +50,7 @@ func accountAuthTypeToDef(item model.AccountAuthType) Def.AccountAuthTypeFields 
 	params := &Def.AccountAuthTypeFields_Params{}
 	params.AdditionalProperties = item.Params
 
-	return Def.AccountAuthTypeFields{Id: &item.ID, Code: &item.AuthType.Code, Identifier: &item.Identifier, Active: &item.Active, Params: params}
+	return Def.AccountAuthTypeFields{Id: &item.ID, Code: &item.AuthType.Code, Identifier: &item.Identifier, Active: &item.Active, Unverified: &item.Unverified, Params: params}
 }
 
 func accountAuthTypesToDef(items []model.AccountAuthType) []Def.AccountAuthTypeFields {
@@ -231,7 +245,7 @@ func deviceToDef(item *model.Device) *Def.DeviceFields {
 		return nil
 	}
 
-	return &Def.DeviceFields{Id: item.ID, Type: Def.DeviceFieldsType(item.Type), Os: &item.OS}
+	return &Def.DeviceFields{Id: item.ID, DeviceId: &item.DeviceID, Type: Def.DeviceFieldsType(item.Type), Os: &item.OS}
 }
 
 func deviceListToDef(items []model.Device) []Def.DeviceFields {

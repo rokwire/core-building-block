@@ -1,3 +1,31 @@
+// Copyright 2022 Board of Trustees of the University of Illinois.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+// Copyright 2022 Board of Trustees of the University of Illinois.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package auth
 
 import (
@@ -100,7 +128,7 @@ func (a *twilioPhoneAuthImpl) checkRequestCreds(creds string) (*twilioPhoneCreds
 	return &requestCreds, nil
 }
 
-func (a *twilioPhoneAuthImpl) signUp(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error) {
+func (a *twilioPhoneAuthImpl) signUp(authType model.AuthType, appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error) {
 	requestCreds, err := a.checkRequestCreds(creds)
 	if err != nil {
 		return "", nil, err
@@ -272,11 +300,11 @@ func (a *twilioPhoneAuthImpl) verifyCredential(credential *model.Credential, ver
 	return nil, errors.New(logutils.Unimplemented)
 }
 
-func (a *twilioPhoneAuthImpl) sendVerifyCredential(credential *model.Credential, l *logs.Log) error {
+func (a *twilioPhoneAuthImpl) sendVerifyCredential(credential *model.Credential, appName string, l *logs.Log) error {
 	return nil
 }
 
-func (a *twilioPhoneAuthImpl) restartCredentialVerification(credential *model.Credential, l *logs.Log) error {
+func (a *twilioPhoneAuthImpl) restartCredentialVerification(credential *model.Credential, appName string, l *logs.Log) error {
 	return nil
 }
 
@@ -284,7 +312,7 @@ func (a *twilioPhoneAuthImpl) resetCredential(credential *model.Credential, rese
 	return nil, nil
 }
 
-func (a *twilioPhoneAuthImpl) forgotCredential(credential *model.Credential, identifier string, l *logs.Log) (map[string]interface{}, error) {
+func (a *twilioPhoneAuthImpl) forgotCredential(credential *model.Credential, identifier string, appName string, l *logs.Log) (map[string]interface{}, error) {
 	return nil, nil
 }
 

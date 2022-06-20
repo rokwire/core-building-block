@@ -4,6 +4,8 @@ post:
   summary: Get SSO login url
   description: |
     Retrieve a pre-formatted SSO login URL
+
+    **Auth:** Requires API key
   requestBody:
     content:
       application/json:

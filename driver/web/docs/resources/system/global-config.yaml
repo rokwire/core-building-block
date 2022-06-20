@@ -1,12 +1,11 @@
 get:
-  deprecated: true
   tags:
   - System
   summary: Get global config
   description: |
     Gives the system global config
 
-    **Auth:** Requires auth token with `config_admin` permission
+    **Auth:** Requires system access token with `get_global-config`, `update_global-config`, or `all_global-config` permission
   security:
     - bearerAuth: []
   responses:
@@ -23,14 +22,13 @@ get:
       500:
         description: Internal error
 post:
-  deprecated: true
   tags:
   - System
   summary: Create global config
   description: |
     Creates the system global config
 
-    **Auth:** Requires auth token with `config_admin` permission
+    **Auth:** Requires system access token with `update_global-config` or `all_global-config` permission
   security:
     - bearerAuth: []
   requestBody:
@@ -54,14 +52,13 @@ post:
       500:
         description: Internal error
 put:
-  deprecated: true
   tags:
   - System
   summary: Update global config
   description: |
     Updates the system global config
 
-    **Auth:** Requires auth token with `config_admin` permission
+    **Auth:** Requires system access token with `update_global-config` or `all_global-config` permission
   security:
     - bearerAuth: []
   requestBody:

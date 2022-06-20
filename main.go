@@ -1,3 +1,17 @@
+// Copyright 2022 Board of Trustees of the University of Illinois.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package main
 
 import (
@@ -55,7 +69,7 @@ func main() {
 	host := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_HOST", true, false)
 
 	// mongoDB adapter
-	mongoDBAuth := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_MONGO_AUTH", true, false)
+	mongoDBAuth := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_MONGO_AUTH", true, true)
 	mongoDBName := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_MONGO_DATABASE", true, false)
 	mongoTimeout := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_MONGO_TIMEOUT", false, false)
 	storageAdapter := storage.NewStorageAdapter(mongoDBAuth, mongoDBName, mongoTimeout, logger)
@@ -131,8 +145,18 @@ func main() {
 	if err != nil {
 		logger.Fatalf("Error initializing auth: %v", err)
 	}
+
+	//system account init
+	systemInitSettings := map[string]string{
+		"app_type_id":   envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SYSTEM_APP_TYPE_IDENTIFIER", false, false),
+		"app_type_name": envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SYSTEM_APP_TYPE_NAME", false, false),
+		"api_key":       envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SYSTEM_API_KEY", false, true),
+		"email":         envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SYSTEM_ACCOUNT_EMAIL", false, false),
+		"password":      envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SYSTEM_ACCOUNT_PASSWORD", false, true),
+	}
+
 	//core
-	coreAPIs := core.NewCoreAPIs(env, Version, Build, storageAdapter, auth)
+	coreAPIs := core.NewCoreAPIs(env, Version, Build, storageAdapter, auth, systemInitSettings, logger)
 	coreAPIs.Start()
 
 	//web adapter

@@ -1,3 +1,17 @@
+// Copyright 2022 Board of Trustees of the University of Illinois.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package web
 
 import (
@@ -11,6 +25,7 @@ import (
 	"strings"
 
 	"github.com/rokwire/core-auth-library-go/tokenauth"
+	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
 )
@@ -64,6 +79,10 @@ func (h ServicesApisHandler) authLogin(l *logs.Log, r *http.Request, claims *tok
 	message, loginSession, mfaTypes, err := h.coreAPIs.Auth.Login(ip, string(requestDevice.Type), requestDevice.Os, *requestDevice.DeviceId,
 		string(requestData.AuthType), requestCreds, requestData.ApiKey, requestData.AppTypeIdentifier, requestData.OrgId, requestParams, requestProfile, requestPreferences, false, l)
 	if err != nil {
+		loggingErr, ok := err.(*errors.Error)
+		if ok && loggingErr.Status() != "" {
+			return l.HttpResponseError("Error logging in", err, http.StatusUnauthorized, true)
+		}
 		return l.HttpResponseError("Error logging in", err, http.StatusInternalServerError, true)
 	}
 
@@ -120,31 +139,6 @@ func (h ServicesApisHandler) authLoginMFA(l *logs.Log, r *http.Request, claims *
 	}
 
 	return authBuildLoginResponse(l, loginSession)
-}
-
-func (h ServicesApisHandler) accountExists(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
-
-	var requestData Def.ServicesReqAccountExists
-	err = json.Unmarshal(data, &requestData)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.TypeRequest, nil, err, http.StatusBadRequest, true)
-	}
-
-	accountExists, err := h.coreAPIs.Auth.AccountExists(string(requestData.AuthType), requestData.UserIdentifier, requestData.ApiKey, requestData.AppTypeIdentifier, requestData.OrgId, l)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionGet, logutils.MessageDataType("account exists"), nil, err, http.StatusInternalServerError, false)
-	}
-
-	respData, err := json.Marshal(accountExists)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.TypeResponse, nil, err, http.StatusInternalServerError, false)
-	}
-
-	return l.HttpResponseSuccessJSON(respData)
 }
 
 func (h ServicesApisHandler) authRefresh(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
@@ -213,6 +207,81 @@ func (h ServicesApisHandler) authLoginURL(l *logs.Log, r *http.Request, claims *
 	return l.HttpResponseSuccessJSON(respData)
 }
 
+func (h ServicesApisHandler) accountExists(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.SharedReqAccountCheck
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.TypeRequest, nil, err, http.StatusBadRequest, true)
+	}
+
+	accountExists, err := h.coreAPIs.Auth.AccountExists(string(requestData.AuthType), requestData.UserIdentifier, requestData.ApiKey, requestData.AppTypeIdentifier, requestData.OrgId)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionGet, logutils.MessageDataType("account exists"), nil, err, http.StatusInternalServerError, false)
+	}
+
+	respData, err := json.Marshal(accountExists)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.TypeResponse, nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessJSON(respData)
+}
+
+func (h ServicesApisHandler) canSignIn(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.SharedReqAccountCheck
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.TypeRequest, nil, err, http.StatusBadRequest, true)
+	}
+
+	canSignIn, err := h.coreAPIs.Auth.CanSignIn(string(requestData.AuthType), requestData.UserIdentifier, requestData.ApiKey, requestData.AppTypeIdentifier, requestData.OrgId)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionGet, logutils.MessageDataType("can sign in"), nil, err, http.StatusInternalServerError, false)
+	}
+
+	respData, err := json.Marshal(canSignIn)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.TypeResponse, nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessJSON(respData)
+}
+
+func (h ServicesApisHandler) canLink(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.SharedReqAccountCheck
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.TypeRequest, nil, err, http.StatusBadRequest, true)
+	}
+
+	canLink, err := h.coreAPIs.Auth.CanLink(string(requestData.AuthType), requestData.UserIdentifier, requestData.ApiKey, requestData.AppTypeIdentifier, requestData.OrgId)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionGet, logutils.MessageDataType("can link"), nil, err, http.StatusInternalServerError, false)
+	}
+
+	respData, err := json.Marshal(canLink)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.TypeResponse, nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessJSON(respData)
+}
+
 func (h ServicesApisHandler) linkAccountAuthType(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -252,6 +321,42 @@ func (h ServicesApisHandler) linkAccountAuthType(l *logs.Log, r *http.Request, c
 	respData, err := json.Marshal(responseData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, "link account auth type response", nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessJSON(respData)
+}
+
+func (h ServicesApisHandler) unlinkAccountAuthType(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.ServicesReqAccountAuthTypeUnlink
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("account auth type unlink request"), nil, err, http.StatusBadRequest, true)
+	}
+
+	if string(requestData.AuthType) == claims.AuthType && requestData.Identifier == claims.UID {
+		return l.HttpResponseError("May not unlink account auth type currently in use", nil, http.StatusBadRequest, false)
+	}
+
+	account, err := h.coreAPIs.Auth.UnlinkAccountAuthType(claims.Subject, string(requestData.AuthType), requestData.AppTypeIdentifier, requestData.Identifier, l)
+	if err != nil {
+		return l.HttpResponseError("Error unlinking account auth type", err, http.StatusInternalServerError, true)
+	}
+
+	authTypes := make([]Def.AccountAuthTypeFields, 0)
+	if account != nil {
+		account.SortAccountAuthTypes(claims.UID)
+		authTypes = accountAuthTypesToDef(account.AuthTypes)
+	}
+
+	responseData := &Def.ServicesResAccountAuthTypeLink{AuthTypes: authTypes}
+	respData, err := json.Marshal(responseData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, "unlink account auth type response", nil, err, http.StatusInternalServerError, false)
 	}
 
 	return l.HttpResponseSuccessJSON(respData)
@@ -437,7 +542,7 @@ func (h ServicesApisHandler) updateProfile(l *logs.Log, r *http.Request, claims 
 
 	profile := profileFromDef(&requestData)
 
-	err = h.coreAPIs.Services.SerUpdateProfile(claims.Subject, &profile)
+	err = h.coreAPIs.Services.SerUpdateProfile(claims.Subject, profile)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeProfile, nil, err, http.StatusInternalServerError, true)
 	}
@@ -504,7 +609,7 @@ func (h ServicesApisHandler) verifyCredential(l *logs.Log, r *http.Request, clai
 		return l.HttpResponseErrorAction(logutils.ActionValidate, "code", nil, err, http.StatusInternalServerError, false)
 	}
 
-	return l.HttpResponseSuccessMessage("Code verified!")
+	return l.HttpResponseSuccessMessage("Code verified successfully!")
 }
 
 func (h ServicesApisHandler) getApplicationConfigs(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
@@ -639,7 +744,7 @@ func (h ServicesApisHandler) forgotCredentialInitiate(l *logs.Log, r *http.Reque
 
 	if err := h.coreAPIs.Auth.ForgotCredential(string(requestData.AuthType), requestData.AppTypeIdentifier,
 		requestData.OrgId, requestData.ApiKey, requestData.Identifier, l); err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionUpdate, "password", nil, err, http.StatusInternalServerError, false)
+		return l.HttpResponseErrorAction(logutils.ActionSend, "forgot password link", nil, err, http.StatusInternalServerError, false)
 	}
 
 	return l.HttpResponseSuccessMessage("Sent forgot password link successfully")
@@ -701,7 +806,32 @@ func (h ServicesApisHandler) verifyMFA(l *logs.Log, r *http.Request, claims *tok
 	return l.HttpResponseSuccessJSON(response)
 }
 
+func (h ServicesApisHandler) authLogout(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestDataData Def.PostServicesAuthLogoutJSONBody
+	err = json.Unmarshal(data, &requestDataData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("verify logout request"), nil, err, http.StatusBadRequest, true)
+	}
+
+	err = h.coreAPIs.Auth.Logout(claims.AppID, claims.OrgID, claims.Subject, claims.SessionID, requestDataData.AllSessions, l)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionDelete, model.TypeLoginSession, nil, err, http.StatusInternalServerError, true)
+	}
+	return l.HttpResponseSuccess()
+}
+
 //NewServicesApisHandler creates new rest services Handler instance
 func NewServicesApisHandler(coreAPIs *core.APIs) ServicesApisHandler {
 	return ServicesApisHandler{coreAPIs: coreAPIs}
+}
+
+//HTMLResponseTemplate represents html response template
+type HTMLResponseTemplate struct {
+	Message string
 }

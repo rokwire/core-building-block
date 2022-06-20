@@ -1,12 +1,11 @@
 get:
-  deprecated: true
   tags:
   - System
   summary: Get application API keys
   description: |
     Returns all API key records for a given app ID
 
-    **Auth:** Requires auth token with `get_api-keys` permission
+    **Auth:** Requires system access token with `get_api-keys` or `all_api-keys` permission
   security:
     - bearerAuth: []
   parameters:

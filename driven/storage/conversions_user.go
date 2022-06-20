@@ -1,3 +1,17 @@
+// Copyright 2022 Board of Trustees of the University of Illinois.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package storage
 
 import (
@@ -17,8 +31,8 @@ func accountFromStorage(item account, appOrg model.ApplicationOrganization) mode
 	dateCreated := item.DateCreated
 	dateUpdated := item.DateUpdated
 	return model.Account{ID: id, AppOrg: appOrg, Permissions: permissions,
-		Roles: roles, Groups: groups, AuthTypes: authTypes, MFATypes: mfaTypes, Preferences: item.Preferences, Profile: profile,
-		Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated}
+		Roles: roles, Groups: groups, AuthTypes: authTypes, MFATypes: mfaTypes, ExternalIDs: item.ExternalIDs,
+		Preferences: item.Preferences, Profile: profile, Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated}
 }
 
 func accountsFromStorage(items []account, appOrg model.ApplicationOrganization) []model.Account {
@@ -47,7 +61,8 @@ func accountToStorage(item *model.Account) *account {
 	dateUpdated := item.DateUpdated
 
 	return &account{ID: id, AppOrgID: appOrgID, Permissions: permissions, Roles: roles, Groups: groups, AuthTypes: authTypes,
-		MFATypes: mfaTypes, Preferences: item.Preferences, Profile: profile, Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated}
+		MFATypes: mfaTypes, ExternalIDs: item.ExternalIDs, Preferences: item.Preferences, Profile: profile, Devices: devices,
+		DateCreated: dateCreated, DateUpdated: dateUpdated}
 }
 
 func accountDevicesFromStorage(item account) []model.Device {
@@ -60,7 +75,7 @@ func accountDevicesFromStorage(item account) []model.Device {
 }
 
 func accountDeviceFromStorage(item userDevice) model.Device {
-	return model.Device{ID: item.ID, Type: item.Type, OS: item.OS,
+	return model.Device{ID: item.ID, DeviceID: item.DeviceID, Type: item.Type, OS: item.OS,
 		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
@@ -90,7 +105,7 @@ func accountAuthTypeFromStorage(item accountAuthType) model.AccountAuthType {
 	}
 	active := item.Active
 	return model.AccountAuthType{ID: id, AuthType: authType, Identifier: identifier, Params: params, Credential: credential,
-		Active: active, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+		Active: active, Unverified: item.Unverified, Linked: item.Linked, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
 func accountAuthTypesFromStorage(items []accountAuthType) []model.AccountAuthType {
@@ -111,7 +126,7 @@ func accountAuthTypeToStorage(item model.AccountAuthType) accountAuthType {
 		credentialID = &item.Credential.ID
 	}
 	return accountAuthType{ID: item.ID, AuthTypeID: item.AuthType.ID, AuthTypeCode: item.AuthType.Code, Identifier: item.Identifier,
-		Params: item.Params, CredentialID: credentialID, Active: item.Active, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+		Params: item.Params, CredentialID: credentialID, Active: item.Active, Unverified: item.Unverified, Linked: item.Linked, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
 func accountAuthTypesToStorage(items []model.AccountAuthType) []accountAuthType {
@@ -209,6 +224,38 @@ func profileFromStorage(item profile) model.Profile {
 	return model.Profile{ID: item.ID, PhotoURL: item.PhotoURL, FirstName: item.FirstName, LastName: item.LastName,
 		Email: item.Email, Phone: item.Phone, BirthYear: item.BirthYear, Address: item.Address, ZipCode: item.ZipCode,
 		State: item.State, Country: item.Country, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+}
+
+func profilesFromStorage(items []account, sa Adapter) []model.Profile {
+	if len(items) == 0 {
+		return make([]model.Profile, 0)
+	}
+
+	//prepare accounts
+	accounts := make(map[string][]model.Account, len(items))
+	for _, account := range items {
+		appOrg, _ := sa.getCachedApplicationOrganizationByKey(account.AppOrgID)
+		rAccount := accountFromStorage(account, *appOrg)
+
+		//add account to the map
+		profileAccounts := accounts[rAccount.Profile.ID]
+		if profileAccounts == nil {
+			profileAccounts = []model.Account{}
+		}
+		profileAccounts = append(profileAccounts, rAccount)
+		accounts[rAccount.Profile.ID] = profileAccounts
+	}
+
+	//prepare profiles
+	res := make([]model.Profile, len(items))
+	for i, item := range items {
+
+		profile := profileFromStorage(item.Profile)
+		profile.Accounts = accounts[item.Profile.ID]
+
+		res[i] = profile
+	}
+	return res
 }
 
 func profileToStorage(item model.Profile) profile {

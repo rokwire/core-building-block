@@ -1,12 +1,11 @@
 post:
-  deprecated: true
   tags:
   - System
   summary: Create application role
   description: |
     Creates application role
 
-    **Auth:** Requires auth token with `auth_admin` permission
+    **Auth:** Requires system access token with `update_auth-roles` or `all_auth-roles` permission
   security:
     - bearerAuth: []
   requestBody:

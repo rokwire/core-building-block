@@ -8,17 +8,80 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - Expose Admin API which gives all building blocks for an application within an organization [#325](https://github.com/rokwire/core-building-block/issues/325) 
+
+- Prepare the project to become open source [#129](https://github.com/rokwire/core-building-block/issues/129)
+- Retrieve all service account tokens at once [#459](https://github.com/rokwire/core-building-block/issues/459)
+
+### Fixed
+- Clean up authorization policies [#499](https://github.com/rokwire/core-building-block/issues/499)
+- Prevent admins from using service account management endpoints [#500](https://github.com/rokwire/core-building-block/issues/500)
+
+### Changed
+- Update SECURITY.md [#504](https://github.com/rokwire/core-building-block/issues/504)
+
+## [1.23.0] - 2022-04-26
+### Added
+- Email/phone registration should populate email/phone in profile [#431](https://github.com/rokwire/core-building-block/issues/431)
+- Implement system accounts [#278](https://github.com/rokwire/core-building-block/issues/278)
+- Service accounts [#306](https://github.com/rokwire/core-building-block/issues/306)
+
+### Security
+- Update http-swagger dependency [#465](https://github.com/rokwire/core-building-block/issues/465)
+
+## [1.22.0] - 2022-04-02
+### Added
+- Expose revoke roles from account Admin API [#412](https://github.com/rokwire/core-building-block/issues/412)
+- Expose revoke permissions from account Admin API [#411](https://github.com/rokwire/core-building-block/issues/411)
+- Expose grant permissions to role Admin API [#415](https://github.com/rokwire/core-building-block/issues/415)
+- Expose remove accounts from a group Admin API [#413](https://github.com/rokwire/core-building-block/issues/413)
+- Expose add accounts to a group Admin API [#384](https://github.com/rokwire/core-building-block/issues/384)
+- Handle external ID management [#364](https://github.com/rokwire/core-building-block/issues/364)
+
+### Security
+- Loading all roles and groups for empty query [#458](https://github.com/rokwire/core-building-block/issues/458)
+
+## [1.21.1] - 2022-03-17
+### Fixed
+- Fix verify credential HTML template loading issues [#451](https://github.com/rokwire/core-building-block/issues/451)
+
+## [1.21.0] - 2022-03-16
+### Added
+- Clean up verification email messaging and UI [#444](https://github.com/rokwire/core-building-block/issues/444)
+- Implement logout for users accounts [#329](https://github.com/rokwire/core-building-block/issues/329)
+
+## [1.20.1] - 2022-03-07
+### Fixed
+- Unable to login in the Admin app [#430](https://github.com/rokwire/core-building-block/issues/430)
+
+## [1.20.0] - 2022-03-01
+### Fixed
+- Fix broken external login [#427](https://github.com/rokwire/core-building-block/issues/427)
+
+## [1.19.0] - 2022-02-25
+### Added
+- Expose System APIs for auth types [#362](https://github.com/rokwire/core-building-block/issues/362)
+- Expose grant roles to account Admin API [#383](https://github.com/rokwire/core-building-block/issues/383)
+- Expose grant permissions to account Admin API [#382](https://github.com/rokwire/core-building-block/issues/382)
+- Expose Admin API which gives an application account devices [#359](https://github.com/rokwire/core-building-block/issues/359)
+- Expose Admin API which logouts an account session for specific application [#371](https://github.com/rokwire/core-building-block/issues/371)
+- Unlink account auth types [#393](https://github.com/rokwire/core-building-block/issues/393)
 - Expose delete app org role admin API [#313](https://github.com/rokwire/core-building-block/issues/313)
 - Expose delete app org group admin API [#312](https://github.com/rokwire/core-building-block/issues/312)
 - Expose Admin API with the currently logged in accounts [#355](https://github.com/rokwire/core-building-block/issues/355)
 - Add app config endpoints [#261](https://github.com/rokwire/core-building-block/issues/261)
 
+### Security
+- Fix security vulnerability for roles and groups admin APIs [#414](https://github.com/rokwire/core-building-block/issues/414)
+
 ### Fixed
+- Fix issues with account linking [#408](https://github.com/rokwire/core-building-block/issues/408)
 - Fix creating application group admin API [#397](https://github.com/rokwire/core-building-block/issues/397)
 - Fix create role and create group Admin APIs [#386](https://github.com/rokwire/core-building-block/issues/386)
 - Fix broken app config API and CHANGELOG.md [#401](https://github.com/rokwire/core-building-block/issues/401)
+- Fix shared profile feature [#405](https://github.com/rokwire/core-building-block/issues/405)
 
 ### Changed
+- Update the filter capability for the get login sessions Admin API [#394](https://github.com/rokwire/core-building-block/issues/394)
 - Limit the returned items for get application accounts admin API [#375](https://github.com/rokwire/core-building-block/issues/375)
 - Return ordered list of account auth types on link account auth type [#376](https://github.com/rokwire/core-building-block/issues/376)
 
@@ -226,7 +289,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Users authentication polish [#155](https://github.com/rokwire/core-building-block/issues/155)
 - Optimise the Mongo DB collections indexes usage [#146](https://github.com/rokwire/core-building-block/issues/146)
 
-[Unreleased]: https://github.com/rokwire/core-building-block/compare/v1.18.0...HEAD
+[Unreleased]: https://github.com/rokwire/core-building-block/compare/v1.23.0...HEAD
+[1.23.0]: https://github.com/rokwire/core-building-block/compare/v1.22.0...v1.23.0
+[1.22.0]: https://github.com/rokwire/core-building-block/compare/v1.21.1...v1.22.0
+[1.21.1]: https://github.com/rokwire/core-building-block/compare/v1.21.0...v1.21.1
+[1.21.0]: https://github.com/rokwire/core-building-block/compare/v1.20.1...v1.21.0
+[1.20.1]: https://github.com/rokwire/core-building-block/compare/v1.20.0...v1.20.1
+[1.20.0]: https://github.com/rokwire/core-building-block/compare/v1.19.0...v1.20.0
+[1.19.0]: https://github.com/rokwire/core-building-block/compare/v1.18.0...v1.19.0
 [1.18.0]: https://github.com/rokwire/core-building-block/compare/v1.17.0...v1.18.0
 [1.17.0]: https://github.com/rokwire/core-building-block/compare/v1.16.0...v1.17.0
 [1.16.0]: https://github.com/rokwire/core-building-block/compare/v1.15.0...v1.16.0

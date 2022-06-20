@@ -3,4 +3,4 @@ properties:
   fields:
      $ref: "./OrganizationFields.yaml"
   config:
-    $ref: "./OrganizationConfig.yaml"
+    $ref: "./OrganizationConfigFields.yaml"
