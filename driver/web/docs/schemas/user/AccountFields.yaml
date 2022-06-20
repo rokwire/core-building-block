@@ -1,6 +1,9 @@
 required:
   - id
+  - admin
 type: object
 properties:
   id:
     type: string
+  admin:
+    type: boolean

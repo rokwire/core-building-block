@@ -25,7 +25,7 @@ type account struct {
 
 	AppOrgID string `bson:"app_org_id,omitempty"`
 
-	Admin       bool
+	Admin       bool               `bson:"admin"`
 	Permissions []model.Permission `bson:"permissions,omitempty"`
 	Roles       []accountRole      `bson:"roles,omitempty"`
 	Groups      []accountGroup     `bson:"groups,omitempty"`

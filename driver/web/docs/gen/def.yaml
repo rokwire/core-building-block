@@ -5310,6 +5310,8 @@ components:
           type: string
         last_name:
           type: string
+        admin:
+          type: boolean
         permissions:
           type: array
           items:
@@ -5337,10 +5339,13 @@ components:
     AccountFields:
       required:
         - id
+        - admin
       type: object
       properties:
         id:
           type: string
+        admin:
+          type: boolean
     Profile:
       type: object
       properties:
@@ -5823,6 +5828,8 @@ components:
         preferences:
           type: object
           nullable: true
+        admin:
+          type: boolean
         permissions:
           type: array
           items:

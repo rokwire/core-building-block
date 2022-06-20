@@ -9,6 +9,8 @@ properties:
   preferences:
     type: object
     nullable: true
+  admin:
+    type: boolean
   permissions:
     type: array
     items:

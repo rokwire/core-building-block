@@ -254,7 +254,8 @@ type AccountAuthTypeFields_Params struct {
 
 // AccountFields defines model for AccountFields.
 type AccountFields struct {
-	Id string `json:"id"`
+	Admin bool   `json:"admin"`
+	Id    string `json:"id"`
 }
 
 // AppOrgGroup defines model for AppOrgGroup.
@@ -485,6 +486,7 @@ type OrganizationFieldsType string
 
 // PartialAccount defines model for PartialAccount.
 type PartialAccount struct {
+	Admin       *bool                   `json:"admin,omitempty"`
 	AppId       string                  `json:"app_id"`
 	AuthTypes   []AccountAuthTypeFields `json:"auth_types"`
 	DateCreated string                  `json:"date_created"`
@@ -955,6 +957,7 @@ type SharedReqRefresh struct {
 
 // SharedResAccount defines model for _shared_res_Account.
 type SharedResAccount struct {
+	Admin       *bool                    `json:"admin,omitempty"`
 	AuthTypes   *[]AccountAuthTypeFields `json:"auth_types,omitempty"`
 	Groups      *[]AppOrgGroupFields     `json:"groups,omitempty"`
 	Id          string                   `json:"id"`

@@ -1326,7 +1326,7 @@ func (a *Auth) registerUser(context storage.TransactionContext, authType model.A
 		l.WarnError(logutils.MessageAction(logutils.StatusError, logutils.ActionFind, model.TypeAppOrgGroup, nil), err)
 	}
 
-	account := model.Account{ID: accountID.String(), AppOrg: appOrg,
+	account := model.Account{ID: accountID.String(), AppOrg: appOrg, Admin: false,
 		Permissions: permissions, Roles: model.AccountRolesFromAppOrgRoles(roles, true, false), Groups: model.AccountGroupsFromAppOrgGroups(groups, true, false),
 		AuthTypes: authTypes, ExternalIDs: externalIDs, Preferences: preferences, Profile: profile, DateCreated: time.Now()} // Anonymous: accountAuthType.AuthType.IsAnonymous
 

@@ -22,6 +22,8 @@ properties:
     type: string
   last_name:
     type: string
+  admin:
+    type: boolean
   permissions:
     type: array
     items:

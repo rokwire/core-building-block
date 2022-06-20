@@ -412,15 +412,18 @@ func (app *application) admRemoveAccountsFromGroup(appID string, orgID string, g
 	}
 
 	//ensure that the accounts have the group
-	for _, account := range accounts {
+	admins := make([]bool, len(accounts))
+	for i, account := range accounts {
 		gr := account.GetGroup(groupID)
 		if gr == nil {
 			return errors.Newf("account %s is not a member of the group", account.ID)
 		}
+
+		admins[i] = len(account.Permissions) > 0 || len(account.Roles) > 0 || len(account.Groups) > 1
 	}
 
 	//remove the accounts from the group
-	err = app.storage.RemoveAccountsGroup(group.ID, accounts)
+	err = app.storage.RemoveAccountsGroup(group.ID, accounts, admins)
 	if err != nil {
 		return errors.Wrapf("error removing accounts from a group - %s", err, groupID)
 	}
@@ -697,12 +700,15 @@ func (app *application) admRevokeAccountPermissions(appID string, orgID string, 
 	}
 
 	//verify that the account has the permissions which are supposed to be revoked
+	numRevoked := 0
 	for _, current := range permissionNames {
 		hasP := account.GetPermissionNamed(current)
 		if hasP == nil {
 			l.Infof("trying to revoke %s for %s but the account does not have it", current, accountID)
 			return errors.Newf("%s cannot be revoked from %s", current, accountID)
 		}
+
+		numRevoked++
 	}
 
 	//find permissions
@@ -722,10 +728,11 @@ func (app *application) admRevokeAccountPermissions(appID string, orgID string, 
 		}
 	}
 
+	admin := len(account.Permissions) > numRevoked || len(account.Roles) > 0 || len(account.Groups) > 0
 	//delete permissions from an account AND delete all sessions for the account
 	transaction := func(context storage.TransactionContext) error {
 		//delete permissions from an account
-		err = app.storage.DeleteAccountPermissions(context, accountID, permissions)
+		err = app.storage.DeleteAccountPermissions(context, accountID, admin, permissions)
 		if err != nil {
 			return errors.Wrap("error deleting account permissions", err)
 		}
@@ -824,12 +831,15 @@ func (app *application) admRevokeAccountRoles(appID string, orgID string, accoun
 	}
 
 	//verify that the account has the roles which are supposed to be revoked
+	numRevoked := 0
 	for _, roleID := range roleIDs {
 		hasR := account.GetRole(roleID)
 		if hasR == nil {
 			l.Infof("trying to revoke role %s for %s but the account does not have it", roleID, accountID)
 			return errors.Newf("%s cannot be revoked from %s", roleID, accountID)
 		}
+
+		numRevoked++
 	}
 
 	//find roles
@@ -849,10 +859,11 @@ func (app *application) admRevokeAccountRoles(appID string, orgID string, accoun
 		}
 	}
 
+	admin := len(account.Permissions) > 0 || len(account.Roles) > numRevoked || len(account.Groups) > 0
 	//delete roles from an account AND delete all sessions for the account
 	transaction := func(context storage.TransactionContext) error {
 		//delete roles from an account
-		err = app.storage.DeleteAccountRoles(context, accountID, roleIDs)
+		err = app.storage.DeleteAccountRoles(context, accountID, admin, roleIDs)
 		if err != nil {
 			return errors.Wrap("error deleting account roles", err)
 		}
