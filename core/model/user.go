@@ -53,6 +53,7 @@ type Account struct {
 
 	AppOrg ApplicationOrganization
 
+	Admin       bool
 	Permissions []Permission
 	Roles       []AccountRole
 	Groups      []AccountGroup
