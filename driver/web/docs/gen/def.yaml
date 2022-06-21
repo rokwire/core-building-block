@@ -1794,7 +1794,7 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /admin/application/account/permissions/grant:
+  /admin/application/account/permissions:
     put:
       tags:
         - Admin
@@ -1802,7 +1802,7 @@ paths:
       description: |
         Grant account permissions
 
-        **Auth:** Requires admin access token with 'update_account-permissions' or `update_account-authorization` permission
+        **Auth:** Requires admin access token with `update_account-permissions` or `update_account-authorization` permission
       security:
         - bearerAuth: []
       requestBody:
@@ -1826,7 +1826,6 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /admin/application/account/permissions/revoke:
     delete:
       tags:
         - Admin
@@ -1834,7 +1833,7 @@ paths:
       description: |
         Deletes an existing permissions from account
 
-        **Auth:** Requires admin access token with 'update_account-permissions' or `update_account-authorization` permission
+        **Auth:** Requires admin access token with `update_account-permissions` or `update_account-authorization` permission
       security:
         - bearerAuth: []
       requestBody:
@@ -1857,7 +1856,7 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /admin/application/account/roles/grant:
+  /admin/application/account/roles:
     put:
       tags:
         - Admin
@@ -1865,7 +1864,7 @@ paths:
       description: |
         Grant account roles
 
-        **Auth:** Requires admin access token with 'update_account-auth-roles' or `update_account-authorization` permission
+        **Auth:** Requires admin access token with `update_account-auth-roles` or `update_account-authorization` permission
       security:
         - bearerAuth: []
       requestBody:
@@ -1889,7 +1888,6 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /admin/application/account/roles/revoke:
     delete:
       tags:
         - Admin
@@ -1897,7 +1895,7 @@ paths:
       description: |
         Deletes an existing roles from account
 
-        **Auth:** Requires admin access token with 'update_account-auth-roles' or `update_account-authorization` permission
+        **Auth:** Requires admin access token with `update_account-auth-roles` or `update_account-authorization` permission
       security:
         - bearerAuth: []
       requestBody:
@@ -2057,10 +2055,9 @@ paths:
         '200':
           description: Success
           content:
-            text/plain:
+            application/json:
               schema:
-                type: string
-                example: Success
+                $ref: '#/components/schemas/AppOrgGroupFields'
         '400':
           description: Bad request
         '401':
@@ -2094,7 +2091,7 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /admin/application/group/accounts/add:
+  /admin/application/group/accounts:
     put:
       tags:
         - Admin
@@ -2102,7 +2099,7 @@ paths:
       description: |
         Add accounts 
 
-        **Auth:** Requires admin access token with 'update_account-auth-groups' or `update_account-authorization` permission
+        **Auth:** Requires admin access token with `update_account-auth-groups` or `update_account-authorization` permission
       security:
         - bearerAuth: []
       requestBody:
@@ -2126,7 +2123,6 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /admin/application/group/accounts/remove:
     delete:
       tags:
         - Admin
@@ -2134,7 +2130,7 @@ paths:
       description: |
         Deletes an existing accounts from group
 
-        **Auth:** Requires admin access token with 'update_account-auth-groups' or `update_account-authorization` permission
+        **Auth:** Requires admin access token with `update_account-auth-groups` or `update_account-authorization` permission
       security:
         - bearerAuth: []
       requestBody:
@@ -2166,7 +2162,7 @@ paths:
         Get application permissions
 
         **Auth:** Requires admin access token with at least one of the following permissions:
-        - 'get_permissions'
+        - `get_permissions`
         - `update_account-permissions`
         - `update_account-authorization`
       security:
@@ -2195,9 +2191,9 @@ paths:
         Gets application roles
 
         **Auth:** Requires admin access token with at least one of the following permissions: 
-        - 'get_auth-roles'
-        - 'update_auth-roles'
-        - 'delete_auth-roles'
+        - `get_auth-roles`
+        - `update_auth-roles`
+        - `delete_auth-roles`
         - `all_auth-roles`
         - `update_account-auth-roles`
         - `update_account-authorization`
@@ -2225,7 +2221,7 @@ paths:
       description: |
         Creates application role
 
-        **Auth:** Requires admin access token with 'update_auth-roles' or `all_auth-roles` permission
+        **Auth:** Requires admin access token with `update_auth-roles` or `all_auth-roles` permission
       security:
         - bearerAuth: []
       requestBody:
@@ -2239,10 +2235,9 @@ paths:
         '200':
           description: Success
           content:
-            text/plain:
+            application/json:
               schema:
-                type: string
-                example: Success
+                $ref: '#/components/schemas/AppOrgRoleFields'
         '400':
           description: Bad request
         '401':
@@ -2257,7 +2252,7 @@ paths:
       description: |
         Delete application role
 
-        **Auth:** Requires admin access token with 'delete_auth-roles' or `all_auth-roles` permission
+        **Auth:** Requires admin access token with `delete_auth-roles` or `all_auth-roles` permission
       security:
         - bearerAuth: []
       parameters:
@@ -2276,7 +2271,7 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /admin/application/role/permissions/grant:
+  /admin/application/role/permissions:
     put:
       tags:
         - Admin
@@ -2284,7 +2279,7 @@ paths:
       description: |
         Grant permissions to role
 
-        **Auth:** Requires admin access token with 'update_auth-roles' or `all_auth-roles` permission
+        **Auth:** Requires admin access token with `update_auth-roles` or `all_auth-roles` permission
       security:
         - bearerAuth: []
       requestBody:
@@ -3940,73 +3935,6 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /system/application-roles:
-    post:
-      tags:
-        - System
-      summary: Create application role
-      description: |
-        Creates application role
-
-        **Auth:** Requires system access token with `update_auth-roles` or `all_auth-roles` permission
-      security:
-        - bearerAuth: []
-      requestBody:
-        description: Application role
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/_system_req_application-roles'
-        required: true
-      responses:
-        '200':
-          description: Success
-          content:
-            text/plain:
-              schema:
-                type: string
-                example: Success
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal error
-  /system/application-api-keys:
-    get:
-      tags:
-        - System
-      summary: Get application API keys
-      description: |
-        Returns all API key records for a given app ID
-
-        **Auth:** Requires system access token with `get_api-keys` or `all_api-keys` permission
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: app_id
-          in: query
-          description: The app ID of the API keys to return
-          required: true
-          style: form
-          explode: false
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/APIKey'
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal error
   /system/application/configs:
     get:
       tags:
@@ -4336,7 +4264,7 @@ paths:
         - System
       summary: Get API key
       description: |
-        Returns API key record
+        Returns API key records for given ID or app ID
 
         **Auth:** Requires system access token with `get_api-keys`, `update_api-keys`, `delete_api-keys`, or `all_api-keys` permission
       security:
@@ -4344,8 +4272,16 @@ paths:
       parameters:
         - name: id
           in: query
-          description: The ID of the API key to return
-          required: true
+          description: The ID of the API key to return. Required if `app_id` is not provided.
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
+        - name: app_id
+          in: query
+          description: The app ID of the API keys to return. Required if `id` is not provided.
+          required: false
           style: form
           explode: false
           schema:
@@ -4356,7 +4292,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIKey'
+                type: array
+                items:
+                  $ref: '#/components/schemas/APIKey'
         '400':
           description: Bad request
         '401':
@@ -6443,24 +6381,6 @@ components:
         assigners:
           type: array
           description: permissions that could assign current permission to accounts
-          items:
-            type: string
-    _system_req_application-roles:
-      required:
-        - name
-        - app_id
-        - description
-        - permissions
-      type: object
-      properties:
-        name:
-          type: string
-        app_id:
-          type: string
-        description:
-          type: string
-        permissions:
-          type: array
           items:
             type: string
     _system_req_create_auth_type:

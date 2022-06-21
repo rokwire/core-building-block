@@ -1,11 +1,11 @@
-delete:
+put:
   tags:
   - Admin
-  summary: Delete permissions from account
+  summary: Grant permissions to role
   description: |
-    Deletes an existing permissions from account
+    Grant permissions to role
 
-    **Auth:** Requires admin access token with 'update_account-permissions' or `update_account-authorization` permission
+    **Auth:** Requires admin access token with `update_auth-roles` or `all_auth-roles` permission
   security:
     - bearerAuth: []
   requestBody:
@@ -13,7 +13,8 @@ delete:
     content:
       application/json:
         schema:
-          $ref: "../../../../../schemas/apis/admin/application/account/permissions/revoke/request/Request.yaml"
+          $ref: "../../../../schemas/apis/admin/application/role/permissions/grant/request/Request.yaml"
+    required: true
   responses:
     200:
       description: Success

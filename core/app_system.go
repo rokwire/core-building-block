@@ -201,24 +201,6 @@ func (app *application) sysUpdatePermission(name string, serviceID *string, assi
 	return &permission, nil
 }
 
-func (app *application) sysCreateAppOrgRole(name string, appOrgID string, description string, permissionNames []string) (*model.AppOrgRole, error) {
-	permissions, err := app.storage.FindPermissionsByName(nil, permissionNames)
-	if err != nil {
-		return nil, err
-	}
-
-	//TODO - load ApplicationOrganization
-
-	id, _ := uuid.NewUUID()
-	now := time.Now()
-	role := model.AppOrgRole{ID: id.String(), Name: name, Description: description, AppOrg: model.ApplicationOrganization{ID: appOrgID}, Permissions: permissions, DateCreated: now}
-	err = app.storage.InsertAppOrgRole(role)
-	if err != nil {
-		return nil, err
-	}
-	return &role, nil
-}
-
 func (app *application) sysGetAppConfigs(appTypeID string, orgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error) {
 	//get the app type
 	applicationType, err := app.storage.FindApplicationType(appTypeID)
