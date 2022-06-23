@@ -26,6 +26,19 @@ Whenever a new interface is created, a unit test should be created for each func
 
 When updating or changing existing implementations, run the associated unit tests to ensure that they still pass. If they do not, the implementation changes likely changed the interface as well. If the change to the interface was intentional, update the unit tests as needed to make them pass and document the [Breaking Change](#breaking-changes). If the change was not intentional, rework your implementation changes to keep the interface consistent and ensure all tests pass.
 
+## Releases
+Whenever a new release is made, the following process should be followed.
+
+1. Make a pull request from `develop` into `main` named `Release vX.X.X` (eg. `Release v1.1.7`)
+2. Review the changes included in the update to ensure they are all production ready.
+3. Update the "Unreleased" version in the [CHANGELOG](CHANGELOG.md#unreleased) to `X.X.X - YYYY-MM-dd` (eg. `[1.1.7] - 2022-06-08`) on the `develop` branch.
+4. Update [SECURITY.md](SECURITY.md) to reflect the latest supported and unsupported versions on the `develop` branch.
+5. Update the latest version in any docs or source code as needed on the `develop` branch. 
+6. Make any changes needed to document [breaking changes](#breaking-changes) and [deprecations](#deprecations).
+7. Merge the pull request using "Create a merge commit"
+8. Create a new tag from the `main` branch called `vX.X.X` (eg. `v1.1.7`)
+9. **RECOMMENDED** - Publish a new [GitHub Release](https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository#creating-a-release) from this tag with the title `vX.X.X` (eg. `v1.1.7`). Include the contents from the [CHANGELOG](CHANGELOG.md) for this latest version in the release notes, as well as a link to the whole [CHANGELOG](CHANGELOG.md) on the `main` branch. For libraries this is highly recommended.
+
 ## Breaking Changes
 Breaking changes should be avoided when possible, but will sometimes be necessary. In the event that a breaking change does need to be made, this change should be documented clearly for developers relying on the functionality. This includes the following items:
 * Create and apply a "breaking" label to the associated issue in GitHub
