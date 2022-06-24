@@ -19,15 +19,14 @@ import (
 	"core-building-block/utils"
 	"crypto/subtle"
 	"encoding/json"
-	"fmt"
-	"net/http"
+	"log"
 	"net/url"
-	"strings"
 	"time"
 
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
+	"github.com/subosito/twilio"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -125,7 +124,7 @@ func (a *phonePasswordAuthImpl) signUp(authType model.AuthType, appOrg model.App
 		/*if _, err = a.sendVerificationLInk(phone, appOrg.Application.Name, code, newCredentialID, &logs.Log{}); err != nil {
 			return "", nil, errors.WrapErrorAction(logutils.ActionSend, "verification email", nil, err)
 		}*/
-		if err = a.sendSMS(phone); err != nil {
+		if err = a.sendSMS(phone, newCredentialID); err != nil {
 			return "", nil, errors.WrapErrorAction(logutils.ActionSend, "verification email", nil, err)
 		}
 	}
@@ -218,66 +217,28 @@ func (a *phonePasswordAuthImpl) getVerifyExpiry(authType model.AuthType) int {
 	return verifyExpiry
 }
 
-func (a *phonePasswordAuthImpl) sendSMS(phone string) error {
-	var err error
-	var apiValues url.Values
-	var webClient *http.Client
-	var webRequest *http.Request
-	var webResponse *http.Response
-	message := "Message for testing"
-	twillioAPI := "https://api.twilio.com/2010-04-01/Accounts/" + a.twilioAccountSID + "/Messages.json"
+func (a *phonePasswordAuthImpl) sendSMS(phone string, credentialID string) error {
+	//ctx, cancel := context.WithCancel(context.Background())
+	//	defer cancel()
+	// Initialize twilio Client
+	c := twilio.NewTwilio(a.twilioServiceSID, a.twilioToken)
 
-	apiValues = url.Values{}
-	apiValues.Set("To", phone)
-	apiValues.Set("Body", message)
-	apiValuesReader := *strings.NewReader(apiValues.Encode())
+	data := url.Values{}
+	data.Add("To", phone)
+	data.Add("Channel", "sms")
+	data.Add("id", credentialID)
+	sms := "Hello from Go"
+	data.Add("sms", sms)
 
-	webRequest, err = http.NewRequest("POST", twillioAPI, &apiValuesReader)
+	/*body, err := makeRequest(ctx, "POST", servicesPathPart+"/"+a.twilioServiceSID+"/"+verificationsPathPart, data, a.twilioAccountSID, a.twilioToken)
 	if err != nil {
-		return err
-	}
-
-	webRequest.SetBasicAuth(a.twilioAccountSID, a.twilioToken)
-	webRequest.Header.Add("Accept", "application/json")
-	webRequest.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-
-	webClient = &http.Client{
-		Timeout: 10 * time.Second,
-	}
-
-	webResponse, err = webClient.Do(webRequest)
-	if err != nil {
-		return err
-	}
-
-	if webResponse.StatusCode >= 200 &&
-		webResponse.StatusCode < 500 {
-
-		var responseData map[string]interface{}
-		decoder := json.NewDecoder(webResponse.Body)
-		err := decoder.Decode(&responseData)
-		if err == nil {
-			fmt.Println("Message sent with ID")
-			fmt.Println(responseData["sid"])
-			return nil
-		}
-		return err
-	}
-	return errors.New(webResponse.Status)
+		return errors.WrapErrorAction(logutils.ActionSend, logutils.TypeRequest, &logutils.FieldArgs{"verification params": typePhonePasswordParams}, err)
+	}*/
+	s, resp := c.SendSMS("", phone, data.Encode(), twilio.SMSParams{"", a.twilioAccountSID})
+	log.Println("Send:", s)
+	log.Println("Response:", resp)
+	return nil
 }
-
-/*func (a *phonePasswordAuthImpl) sendPasswordResetEmail(credentialID string, resetCode string, phone string, appName string) error {
-	params := url.Values{}
-	params.Add("id", credentialID)
-	params.Add("code", resetCode)
-	passwordResetLink := a.auth.host + fmt.Sprintf("/ui/credential/reset?%s", params.Encode())
-	subject := "Reset your password"
-	if appName != "" {
-		subject += " for " + appName
-	}
-	body := "Please click the link below to reset your password:<br><a href=" + passwordResetLink + ">" + passwordResetLink + "</a><br><br>If you did not request a password reset, please ignore this message."
-	return a.auth.phonePassword.Send(phone, subject, body, nil)
-}*/
 
 func (a *phonePasswordAuthImpl) verifyCredential(credential *model.Credential, verification string, l *logs.Log) (map[string]interface{}, error) {
 	credBytes, err := json.Marshal(credential.Value)
@@ -525,13 +486,13 @@ func mapToPhonePasswordCreds(credsMap map[string]interface{}) (*phonePasswordCre
 }
 
 //initEmailAuth initializes and registers a new email auth instance
-func initPhonePasswordAuth(auth *Auth) (*phonePasswordAuthImpl, error) {
-	email := &phonePasswordAuthImpl{auth: auth, authType: AuthTypePhonePassword}
+func initPhonePasswordAuth(auth *Auth, twilioAccountSID string, twilioToken string, twilioServiceSID string) (*phonePasswordAuthImpl, error) {
+	phonePassword := &phonePasswordAuthImpl{auth: auth, authType: AuthTypePhonePassword, twilioAccountSID: twilioAccountSID, twilioToken: twilioToken, twilioServiceSID: twilioServiceSID}
 
-	err := auth.registerAuthType(email.authType, email)
+	err := auth.registerAuthType(phonePassword.authType, phonePassword)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionRegister, typeAuthType, nil, err)
 	}
 
-	return email, nil
+	return phonePassword, nil
 }

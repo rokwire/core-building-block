@@ -5048,7 +5048,7 @@ components:
           type: string
         code:
           type: string
-          description: username or email or phone or illinois_oidc etc
+          description: username or email or phone or illinois_oidc or phone_password etc
         description:
           type: string
         is_external:
@@ -5614,7 +5614,7 @@ components:
           type: string
     _shared_req_CredsPhonePassword:
       required:
-        - phone
+        - phone_password
         - password
       type: object
       description: Auth login creds for auth_type="phone_password"

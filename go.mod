@@ -19,6 +19,7 @@ require (
 	github.com/rokwire/core-auth-library-go v1.0.8
 	github.com/rokwire/logging-library-go v1.0.3
 	github.com/stretchr/testify v1.7.0
+	github.com/subosito/twilio v0.0.1
 	github.com/swaggo/http-swagger v1.2.6
 	go.mongodb.org/mongo-driver v1.7.1
 	golang.org/x/crypto v0.0.0-20210711020723-a769d52b0f97

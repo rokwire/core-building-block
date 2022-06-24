@@ -364,7 +364,7 @@ type AuthType struct {
 
 // AuthTypeFields defines model for AuthTypeFields.
 type AuthTypeFields struct {
-	// username or email or phone or illinois_oidc etc
+	// username or email or phone or illinois_oidc or phone_password etc
 	Code        *string `json:"code,omitempty"`
 	Description *string `json:"description,omitempty"`
 	Id          *string `json:"id,omitempty"`
@@ -815,8 +815,8 @@ type SharedReqCredsOIDC string
 
 // Auth login creds for auth_type="phone_password"
 type SharedReqCredsPhonePassword struct {
-	Password string `json:"password"`
-	Phone    string `json:"phone"`
+	Password string  `json:"password"`
+	Phone    *string `json:"phone,omitempty"`
 }
 
 // Auth login creds for auth_type="twilio_phone"

@@ -4,7 +4,7 @@ properties:
     type: string
   code:
     type: string
-    description: "username or email or phone or illinois_oidc etc"
+    description: "username or email or phone or illinois_oidc or phone_password etc"
   description:
     type: string
   is_external:
