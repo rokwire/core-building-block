@@ -169,6 +169,7 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 	initUsernameAuth(auth)
 	initEmailAuth(auth)
 	initPhoneAuth(auth, twilioAccountSID, twilioToken, twilioServiceSID)
+	initPhonePasswordAuth(auth, twilioAccountSID, twilioToken, twilioServiceSID)
 	initFirebaseAuth(auth)
 	initAnonymousAuth(auth)
 	initSignatureAuth(auth)
@@ -526,6 +527,8 @@ func (a *Auth) applyAuthType(authType model.AuthType, appOrg model.ApplicationOr
 			regProfile.Phone = userIdentifier
 		} else if authType.Code == "email" && regProfile.Email == "" {
 			regProfile.Email = userIdentifier
+		} else if authType.Code == "phone_password" && regProfile.Phone == "" {
+			regProfile.Phone = userIdentifier
 		}
 	}
 
