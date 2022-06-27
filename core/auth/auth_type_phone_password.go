@@ -19,14 +19,16 @@ import (
 	"core-building-block/utils"
 	"crypto/subtle"
 	"encoding/json"
-	"log"
+	"fmt"
+	"math/rand"
+	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
-	"github.com/subosito/twilio"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -124,12 +126,12 @@ func (a *phonePasswordAuthImpl) signUp(authType model.AuthType, appOrg model.App
 		/*if _, err = a.sendVerificationLInk(phone, appOrg.Application.Name, code, newCredentialID, &logs.Log{}); err != nil {
 			return "", nil, errors.WrapErrorAction(logutils.ActionSend, "verification email", nil, err)
 		}*/
-		if err = a.sendSMS(phone, newCredentialID); err != nil {
+		if err = a.sendSMS(phone, appOrg.Application.Name, code, newCredentialID); err != nil {
 			return "", nil, errors.WrapErrorAction(logutils.ActionSend, "verification email", nil, err)
 		}
 	}
 
-	return "verification code sent successfully", phonePaswordCredValueMap, nil
+	return "verification link sent successfully", phonePaswordCredValueMap, nil
 }
 
 func (a *phonePasswordAuthImpl) isCredentialVerified(credential *model.Credential, l *logs.Log) (*bool, *bool, error) {
@@ -217,26 +219,42 @@ func (a *phonePasswordAuthImpl) getVerifyExpiry(authType model.AuthType) int {
 	return verifyExpiry
 }
 
-func (a *phonePasswordAuthImpl) sendSMS(phone string, credentialID string) error {
-	//ctx, cancel := context.WithCancel(context.Background())
-	//	defer cancel()
-	// Initialize twilio Client
-	c := twilio.NewTwilio(a.twilioServiceSID, a.twilioToken)
+func (a *phonePasswordAuthImpl) sendSMS(phone string, appName string, code string, credentialID string) error {
+	//	accountSid := a.twilioAccountSID
+	urlStr := "https://api.twilio.com/2010-04-01/Accounts/"
 
-	data := url.Values{}
-	data.Add("To", phone)
-	data.Add("Channel", "sms")
-	data.Add("id", credentialID)
-	sms := "Hello from Go"
-	data.Add("sms", sms)
+	// Create possible message bodies
+	quotes := [1]string{"Message from Golang for testing"}
 
-	/*body, err := makeRequest(ctx, "POST", servicesPathPart+"/"+a.twilioServiceSID+"/"+verificationsPathPart, data, a.twilioAccountSID, a.twilioToken)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionSend, logutils.TypeRequest, &logutils.FieldArgs{"verification params": typePhonePasswordParams}, err)
-	}*/
-	s, resp := c.SendSMS("", phone, data.Encode(), twilio.SMSParams{"", a.twilioAccountSID})
-	log.Println("Send:", s)
-	log.Println("Response:", resp)
+	// Set up rand
+	rand.Seed(time.Now().Unix())
+
+	msgData := url.Values{}
+	msgData.Set("To", phone)
+	//msgData.Set("From","NUMBER_FROM")
+	msgData.Set("Body", quotes[rand.Intn(len(quotes))])
+	msgData.Set("id", credentialID)
+	msgData.Set("code", code)
+	msgData.Set("Channel", "sms")
+	msgDataReader := *strings.NewReader(msgData.Encode())
+
+	client := &http.Client{}
+	req, _ := http.NewRequest("POST", urlStr, &msgDataReader)
+	req.SetBasicAuth(a.twilioAccountSID, a.twilioToken)
+	req.Header.Add("Accept", "application/json")
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+	resp, _ := client.Do(req)
+	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
+		var data map[string]interface{}
+		decoder := json.NewDecoder(resp.Body)
+		err := decoder.Decode(&data)
+		if err == nil {
+			fmt.Println(data["sid"])
+		}
+	} else {
+		fmt.Println(resp.Status)
+	}
 	return nil
 }
 
