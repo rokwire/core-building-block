@@ -12,7 +12,7 @@ properties:
   permissions:
     type: array
     items:
-      $ref: "../../../application/PermissionFields.yaml"
+      $ref: "../../../application/Permission.yaml"
   roles:
     type: array
     items:

@@ -74,16 +74,25 @@ func applicationsToDef(item []model.Application) []Def.ApplicationFields {
 }
 
 //ApplicationPermission
-func applicationPermissionToDef(item model.Permission) Def.PermissionFields {
+func applicationPermissionToDef(item model.Permission) Def.Permission {
 	assigners := item.Assigners
 	if assigners == nil {
 		assigners = make([]string, 0)
 	}
-	return Def.PermissionFields{Id: item.ID, Name: item.Name, ServiceId: &item.ServiceID, Assigners: &assigners}
+
+	//dates
+	var dateUpdated *string
+	dateCreated := item.DateCreated.Format("2006-01-02T15:04:05.000Z")
+	if item.DateUpdated != nil {
+		formatted := item.DateUpdated.Format("2006-01-02T15:04:05.000Z")
+		dateUpdated = &formatted
+	}
+
+	return Def.Permission{Id: item.ID, Name: item.Name, ServiceId: &item.ServiceID, Assigners: &assigners, DateCreated: &dateCreated, DateUpdated: dateUpdated}
 }
 
-func applicationPermissionsToDef(items []model.Permission) []Def.PermissionFields {
-	result := make([]Def.PermissionFields, len(items))
+func applicationPermissionsToDef(items []model.Permission) []Def.Permission {
+	result := make([]Def.Permission, len(items))
 	for i, item := range items {
 		result[i] = applicationPermissionToDef(item)
 	}

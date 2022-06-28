@@ -485,15 +485,12 @@ type OrganizationFieldsType string
 
 // Permission defines model for Permission.
 type Permission struct {
-	Fields *PermissionFields `json:"fields,omitempty"`
-}
-
-// PermissionFields defines model for PermissionFields.
-type PermissionFields struct {
-	Assigners *[]string `json:"assigners,omitempty"`
-	Id        string    `json:"id"`
-	Name      string    `json:"name"`
-	ServiceId *string   `json:"service_id,omitempty"`
+	Assigners   *[]string `json:"assigners,omitempty"`
+	DateCreated *string   `json:"date_created,omitempty"`
+	DateUpdated *string   `json:"date_updated,omitempty"`
+	Id          string    `json:"id"`
+	Name        string    `json:"name"`
+	ServiceId   *string   `json:"service_id,omitempty"`
 }
 
 // Profile defines model for Profile.
@@ -942,7 +939,7 @@ type SharedResAccount struct {
 	AuthTypes   *[]AccountAuthTypeFields `json:"auth_types,omitempty"`
 	Groups      *[]AppOrgGroupFields     `json:"groups,omitempty"`
 	Id          string                   `json:"id"`
-	Permissions *[]PermissionFields      `json:"permissions,omitempty"`
+	Permissions *[]Permission            `json:"permissions,omitempty"`
 	Preferences *map[string]interface{}  `json:"preferences"`
 	Profile     *ProfileFields           `json:"profile,omitempty"`
 	Roles       *[]AppOrgRoleFields      `json:"roles,omitempty"`
