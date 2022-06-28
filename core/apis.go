@@ -382,6 +382,10 @@ func (s *administrationImpl) AdmGetApplicationAccountDevices(appID string, orgID
 	return s.app.admGetApplicationAccountDevices(appID, orgID, accountID, l)
 }
 
+func (s *administrationImpl) AdmGetServiceRegs(orgID string, l *logs.Log) ([]model.ServiceReg, error) {
+	return s.app.admGetServiceRegs(orgID, l)
+}
+
 ///
 
 //encryptionImpl

@@ -934,3 +934,22 @@ func (app *application) admGrantPermissionsToRole(appID string, orgID string, ro
 
 	return nil
 }
+
+func (app *application) admGetServiceRegs(orgID string, l *logs.Log) ([]model.ServiceReg, error) {
+	appOrg, err := app.storage.FindApplicationsOrganizationsByOrgID(orgID)
+	if err != nil {
+		return nil, errors.Wrapf("error finding app org on getting devices", err)
+	}
+	var serviceIDs []string
+	for _, appOrg := range appOrg {
+		if appOrg.ServicesIDs != nil {
+			serviceIDs = append(serviceIDs, appOrg.ServicesIDs...)
+		}
+	}
+	serviceRegs, err := app.storage.FindServiceRegs(serviceIDs)
+	if err != nil {
+		return nil, nil
+		//return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeServiceReg, nil, err, http.StatusInternalServerError, true)
+	}
+	return serviceRegs, nil
+}
