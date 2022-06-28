@@ -304,6 +304,7 @@ type ServiceReg struct {
 	Description  string                 `json:"description" bson:"description"`
 	InfoURL      string                 `json:"info_url" bson:"info_url"`
 	LogoURL      string                 `json:"logo_url" bson:"logo_url"`
+	VersionURL   *string                `json:"version_url" bson:"version_url"`
 	Scopes       []ServiceScope         `json:"scopes" bson:"scopes"`
 	AuthEndpoint string                 `json:"auth_endpoint" bson:"auth_endpoint"`
 	FirstParty   bool                   `json:"first_party" bson:"first_party"`
