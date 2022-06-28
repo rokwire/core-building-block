@@ -287,9 +287,12 @@ type AppOrgRole struct {
 
 // AppOrgRoleFields defines model for AppOrgRoleFields.
 type AppOrgRoleFields struct {
-	Id     string `json:"id"`
-	Name   string `json:"name"`
-	System *bool  `json:"system,omitempty"`
+	DateCreated *string `json:"date_created,omitempty"`
+	DateUpdated *string `json:"date_updated,omitempty"`
+	Description *string `json:"description,omitempty"`
+	Id          string  `json:"id"`
+	Name        string  `json:"name"`
+	System      *bool   `json:"system,omitempty"`
 }
 
 // Application defines model for Application.

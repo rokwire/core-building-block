@@ -2148,7 +2148,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/AppOrgRoleFields'
+                  $ref: '#/components/schemas/AppOrgRole'
         '400':
           description: Bad request
         '401':
@@ -4721,8 +4721,14 @@ components:
           type: string
         name:
           type: string
+        description:
+          type: string
         system:
           type: boolean
+        date_created:
+          type: string
+        date_updated:
+          type: string
     AppOrgGroup:
       type: object
       properties:
