@@ -23,6 +23,8 @@ properties:
     type: string
   logo_url:
     type: string
+  version_url:
+    type: string
   scopes:
     type: array
     nullable: true
