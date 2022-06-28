@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Expose get services registration Admin API [#521](https://github.com/rokwire/core-building-block/issues/521)
 - Prepare the project to become open source [#129](https://github.com/rokwire/core-building-block/issues/129)
 - Retrieve all service account tokens at once [#459](https://github.com/rokwire/core-building-block/issues/459)
 
