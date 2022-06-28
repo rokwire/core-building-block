@@ -129,6 +129,8 @@ paths:
     $ref: "./resources/admin/application/role/permissions/grant.yaml"
   /admin/organization/applications:
     $ref: "./resources/admin/organization/applications.yaml"
+  /admin/organization/service-regs:
+    $ref: "./resources/admin/organization/service-regs.yaml"
  
   #enc
   /enc/test:
