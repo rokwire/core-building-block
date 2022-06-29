@@ -949,7 +949,6 @@ func (app *application) admGetServiceRegs(orgID string, l *logs.Log) ([]model.Se
 	serviceRegs, err := app.storage.FindServiceRegs(serviceIDs)
 	if err != nil {
 		return nil, nil
-		//return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeServiceReg, nil, err, http.StatusInternalServerError, true)
 	}
 	return serviceRegs, nil
 }
