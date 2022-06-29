@@ -124,12 +124,24 @@ func appOrgRolesToDef(items []model.AppOrgRole) []Def.AppOrgRole {
 }
 
 //AppOrgGroup
-func appOrgGroupToDef(item model.AppOrgGroup) Def.AppOrgGroupFields {
-	return Def.AppOrgGroupFields{Id: item.ID, Name: item.Name, System: &item.System}
+func appOrgGroupToDef(item model.AppOrgGroup) Def.AppOrgGroup {
+	permissions := applicationPermissionsToDef(item.Permissions)
+	roles := appOrgRolesToDef(item.Roles)
+
+	//dates
+	var dateUpdated *string
+	dateCreated := item.DateCreated.Format("2006-01-02T15:04:05.000Z")
+	if item.DateUpdated != nil {
+		formatted := item.DateUpdated.Format("2006-01-02T15:04:05.000Z")
+		dateUpdated = &formatted
+	}
+
+	fields := Def.AppOrgGroupFields{Id: item.ID, Name: item.Name, Description: &item.Description, System: &item.System, DateCreated: &dateCreated, DateUpdated: dateUpdated}
+	return Def.AppOrgGroup{Fields: &fields, Permissions: &permissions, Roles: &roles}
 }
 
-func appOrgGroupsToDef(items []model.AppOrgGroup) []Def.AppOrgGroupFields {
-	result := make([]Def.AppOrgGroupFields, len(items))
+func appOrgGroupsToDef(items []model.AppOrgGroup) []Def.AppOrgGroup {
+	result := make([]Def.AppOrgGroup, len(items))
 	for i, item := range items {
 		result[i] = appOrgGroupToDef(item)
 	}

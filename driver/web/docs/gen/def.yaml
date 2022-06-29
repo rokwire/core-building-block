@@ -1965,7 +1965,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/AppOrgGroupFields'
+                  $ref: '#/components/schemas/AppOrgGroup'
         '400':
           description: Bad request
         '401':
@@ -4754,8 +4754,14 @@ components:
           type: string
         name:
           type: string
+        description:
+          type: string
         system:
           type: boolean
+        date_created:
+          type: string
+        date_updated:
+          type: string
     Organization:
       type: object
       properties:

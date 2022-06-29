@@ -267,9 +267,12 @@ type AppOrgGroup struct {
 
 // AppOrgGroupFields defines model for AppOrgGroupFields.
 type AppOrgGroupFields struct {
-	Id     string `json:"id"`
-	Name   string `json:"name"`
-	System *bool  `json:"system,omitempty"`
+	DateCreated *string `json:"date_created,omitempty"`
+	DateUpdated *string `json:"date_updated,omitempty"`
+	Description *string `json:"description,omitempty"`
+	Id          string  `json:"id"`
+	Name        string  `json:"name"`
+	System      *bool   `json:"system,omitempty"`
 }
 
 // AppOrgPair defines model for AppOrgPair.

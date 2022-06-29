@@ -132,8 +132,9 @@ func (c AppOrgRole) String() string {
 
 //AppOrgGroup represents application organization group entity. It is a collection of users
 type AppOrgGroup struct {
-	ID   string
-	Name string
+	ID          string
+	Name        string
+	Description string
 
 	System bool
 
