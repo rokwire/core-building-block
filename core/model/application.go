@@ -54,8 +54,9 @@ const (
 
 //Permission represents permission entity
 type Permission struct {
-	ID   string `bson:"_id"`
-	Name string `bson:"name"`
+	ID          string `bson:"_id"`
+	Name        string `bson:"name"`
+	Description string `bson:"description"`
 
 	ServiceID string   `bson:"service_id"`
 	Assigners []string `bson:"assigners"`

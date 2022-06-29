@@ -88,7 +88,7 @@ func applicationPermissionToDef(item model.Permission) Def.Permission {
 		dateUpdated = &formatted
 	}
 
-	return Def.Permission{Id: item.ID, Name: item.Name, ServiceId: &item.ServiceID, Assigners: &assigners, DateCreated: &dateCreated, DateUpdated: dateUpdated}
+	return Def.Permission{Id: item.ID, Name: item.Name, Description: &item.Description, ServiceId: &item.ServiceID, Assigners: &assigners, DateCreated: &dateCreated, DateUpdated: dateUpdated}
 }
 
 func applicationPermissionsToDef(items []model.Permission) []Def.Permission {

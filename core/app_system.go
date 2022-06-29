@@ -163,10 +163,19 @@ func (app *application) sysGetApplications() ([]model.Application, error) {
 	return getApplications, nil
 }
 
-func (app *application) sysCreatePermission(name string, serviceID string, assigners *[]string) (*model.Permission, error) {
+func (app *application) sysCreatePermission(name string, description *string, serviceID *string, assigners *[]string) (*model.Permission, error) {
 	id, _ := uuid.NewUUID()
 	now := time.Now()
-	permission := model.Permission{ID: id.String(), Name: name, DateCreated: now, ServiceID: serviceID, Assigners: *assigners}
+	serviceIDVal := ""
+	if serviceID != nil {
+		serviceIDVal = *serviceID
+	}
+	descriptionVal := ""
+	if description != nil {
+		descriptionVal = *description
+	}
+
+	permission := model.Permission{ID: id.String(), Name: name, Description: descriptionVal, DateCreated: now, ServiceID: serviceIDVal, Assigners: *assigners}
 
 	err := app.storage.InsertPermission(nil, permission)
 
@@ -176,7 +185,7 @@ func (app *application) sysCreatePermission(name string, serviceID string, assig
 	return &permission, nil
 }
 
-func (app *application) sysUpdatePermission(name string, serviceID *string, assigners *[]string) (*model.Permission, error) {
+func (app *application) sysUpdatePermission(name string, description *string, serviceID *string, assigners *[]string) (*model.Permission, error) {
 	permissionNames := []string{name}
 	permissions, err := app.storage.FindPermissionsByName(permissionNames)
 	if err != nil {
@@ -187,6 +196,9 @@ func (app *application) sysUpdatePermission(name string, serviceID *string, assi
 	}
 
 	permission := permissions[0]
+	if description != nil {
+		permission.Description = *description
+	}
 	if serviceID != nil {
 		permission.ServiceID = *serviceID
 	}

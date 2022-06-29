@@ -7,6 +7,8 @@ properties:
     type: string
   name:
     type: string
+  description:
+    type: string
   service_id:
     type: string
   assigners:
