@@ -2271,7 +2271,7 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /admin/organization/service-regs:
+  /admin/service-regs:
     get:
       tags:
         - admin
