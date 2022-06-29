@@ -193,12 +193,6 @@ func (we Adapter) Start() {
 
 	///system ///
 	systemSubrouter := subRouter.PathPrefix("/system").Subrouter()
-	systemSubrouter.HandleFunc("/auth/login", we.wrapFunc(we.systemApisHandler.systemLogin, nil)).Methods("POST")
-	systemSubrouter.HandleFunc("/auth/mfa", we.wrapFunc(we.systemApisHandler.systemLoginMFA, nil)).Methods("POST")
-	systemSubrouter.HandleFunc("/auth/login-url", we.wrapFunc(we.systemApisHandler.systemLoginURL, nil)).Methods("POST")
-	systemSubrouter.HandleFunc("/auth/refresh", we.wrapFunc(we.systemApisHandler.systemRefresh, nil)).Methods("POST")
-	systemSubrouter.HandleFunc("/auth/verify-mfa", we.wrapFunc(we.systemApisHandler.systemVerifyMFA, we.auth.system.user)).Methods("POST")
-
 	systemSubrouter.HandleFunc("/global-config", we.wrapFunc(we.systemApisHandler.createGlobalConfig, we.auth.system.permissions)).Methods("POST")
 	systemSubrouter.HandleFunc("/global-config", we.wrapFunc(we.systemApisHandler.getGlobalConfig, we.auth.system.permissions)).Methods("GET")
 	systemSubrouter.HandleFunc("/global-config", we.wrapFunc(we.systemApisHandler.updateGlobalConfig, we.auth.system.permissions)).Methods("PUT")
@@ -225,9 +219,6 @@ func (we Adapter) Start() {
 
 	systemSubrouter.HandleFunc("/account/permissions", we.wrapFunc(we.systemApisHandler.grantAccountPermissions, we.auth.system.permissions)).Methods("PUT")
 	systemSubrouter.HandleFunc("/account/roles", we.wrapFunc(we.systemApisHandler.grantAccountRoles, we.auth.system.permissions)).Methods("PUT")
-	systemSubrouter.HandleFunc("/account/mfa", we.wrapFunc(we.systemApisHandler.getMFATypes, we.auth.system.user)).Methods("GET")
-	systemSubrouter.HandleFunc("/account/mfa", we.wrapFunc(we.systemApisHandler.addMFAType, we.auth.system.authenticated)).Methods("POST")
-	systemSubrouter.HandleFunc("/account/mfa", we.wrapFunc(we.systemApisHandler.removeMFAType, we.auth.system.authenticated)).Methods("DELETE")
 
 	systemSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.systemApisHandler.getServiceRegistrations, we.auth.system.permissions)).Methods("GET")
 	systemSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.systemApisHandler.registerService, we.auth.system.permissions)).Methods("POST")
