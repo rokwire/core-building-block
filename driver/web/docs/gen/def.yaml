@@ -1656,7 +1656,7 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  '/admin/application/account/{id}/devices':
+  '/admin/application/accounts/{id}/devices':
     get:
       tags:
         - Admin
@@ -1691,7 +1691,7 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  '/admin/application/account/{account_id}/login-sessions/{session_id}':
+  '/admin/application/accounts/{account_id}/login-sessions/{session_id}':
     delete:
       tags:
         - Admin
@@ -1731,7 +1731,7 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /admin/application/account/permissions/grant:
+  '/admin/application/accounts/{id}/permissions/grant':
     put:
       tags:
         - Admin
@@ -1742,6 +1742,15 @@ paths:
         **Auth:** Requires admin access token with 'update_account-permissions' or `update_account-authorization` permission
       security:
         - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: The account ID
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
       requestBody:
         description: Permissions
         content:
@@ -1763,7 +1772,7 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /admin/application/account/permissions/revoke:
+  '/admin/application/accounts/{id}/permissions/revoke':
     delete:
       tags:
         - Admin
@@ -1774,6 +1783,15 @@ paths:
         **Auth:** Requires admin access token with 'update_account-permissions' or `update_account-authorization` permission
       security:
         - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: The account ID
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
       requestBody:
         description: Permissions
         content:
@@ -1794,7 +1812,7 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /admin/application/account/roles/grant:
+  '/admin/application/accounts/{id}/roles/grant':
     put:
       tags:
         - Admin
@@ -1805,6 +1823,15 @@ paths:
         **Auth:** Requires admin access token with 'update_account-auth-roles' or `update_account-authorization` permission
       security:
         - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: The account ID
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
       requestBody:
         description: Roles
         content:
@@ -1826,7 +1853,7 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /admin/application/account/roles/revoke:
+  '/admin/application/accounts/{id}/roles/revoke':
     delete:
       tags:
         - Admin
@@ -1837,6 +1864,15 @@ paths:
         **Auth:** Requires admin access token with 'update_account-auth-roles' or `update_account-authorization` permission
       security:
         - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: The account ID
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
       requestBody:
         description: Roles
         content:
@@ -2031,7 +2067,7 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /admin/application/group/accounts/add:
+  '/admin/application/groups/{id}/accounts/add':
     put:
       tags:
         - Admin
@@ -2042,8 +2078,15 @@ paths:
         **Auth:** Requires admin access token with 'update_account-auth-groups' or `update_account-authorization` permission
       security:
         - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: The group ID
+          required: true
+          schema:
+            type: string
       requestBody:
-        description: Roles
+        description: account IDs to add
         content:
           application/json:
             schema:
@@ -2063,7 +2106,7 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /admin/application/group/accounts/remove:
+  '/admin/application/groups/{id}/accounts/remove':
     delete:
       tags:
         - Admin
@@ -2074,8 +2117,15 @@ paths:
         **Auth:** Requires admin access token with 'update_account-auth-groups' or `update_account-authorization` permission
       security:
         - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: The group ID
+          required: true
+          schema:
+            type: string
       requestBody:
-        description: account ID for removing
+        description: account IDs to remove
         content:
           application/json:
             schema:
@@ -2213,7 +2263,7 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /admin/application/role/permissions/grant:
+  '/admin/application/roles/{id}/permissions/grant':
     put:
       tags:
         - Admin
@@ -2224,6 +2274,13 @@ paths:
         **Auth:** Requires admin access token with 'update_auth-roles' or `all_auth-roles` permission
       security:
         - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: The role ID
+          required: true
+          schema:
+            type: string
       requestBody:
         description: Permissions
         content:
@@ -5683,84 +5740,63 @@ components:
             type: string
     _admin_req_add-accounts-to-group:
       required:
-        - group_id
         - account_ids
       type: object
       properties:
-        group_id:
-          type: string
         account_ids:
           type: array
           items:
             type: string
     _admin_req_remove-account-from-group:
       required:
-        - group_id
         - account_ids
       type: object
       properties:
-        group_id:
-          type: string
         account_ids:
           type: array
           items:
             type: string
     _admin_req_grant-roles-to-account:
       required:
-        - account_id
         - role_ids
       type: object
       properties:
-        account_id:
-          type: string
         role_ids:
           type: array
           items:
             type: string
     _admin_req_revoke-roles-from-account:
       required:
-        - account_id
         - role_ids
       type: object
       properties:
-        account_id:
-          type: string
         role_ids:
           type: array
           items:
             type: string
     _admin_req_grant-permissions:
       required:
-        - account_id
         - permissions
       type: object
       properties:
-        account_id:
-          type: string
         permissions:
           type: array
           items:
             type: string
     _admin_req_revoke-permissions:
       required:
-        - account_id
         - permissions
       type: object
       properties:
-        account_id:
-          type: string
         permissions:
           type: array
           items:
             type: string
     _admin_req_grant-permissions-to-role:
       required:
-        - role_id
         - permissions
       type: object
       properties:
-        role_id:
-          type: string
         permissions:
           type: array
           items:

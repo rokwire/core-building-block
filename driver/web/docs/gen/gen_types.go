@@ -576,7 +576,6 @@ type ServiceScope struct {
 // AdminReqAddAccountsToGroup defines model for _admin_req_add-accounts-to-group.
 type AdminReqAddAccountsToGroup struct {
 	AccountIds []string `json:"account_ids"`
-	GroupId    string   `json:"group_id"`
 }
 
 // AdminReqCreateApplicationGroup defines model for _admin_req_create-application_group.
@@ -595,38 +594,32 @@ type AdminReqCreateApplicationRole struct {
 
 // AdminReqGrantPermissions defines model for _admin_req_grant-permissions.
 type AdminReqGrantPermissions struct {
-	AccountId   string   `json:"account_id"`
 	Permissions []string `json:"permissions"`
 }
 
 // AdminReqGrantPermissionsToRole defines model for _admin_req_grant-permissions-to-role.
 type AdminReqGrantPermissionsToRole struct {
 	Permissions []string `json:"permissions"`
-	RoleId      string   `json:"role_id"`
 }
 
 // AdminReqGrantRolesToAccount defines model for _admin_req_grant-roles-to-account.
 type AdminReqGrantRolesToAccount struct {
-	AccountId string   `json:"account_id"`
-	RoleIds   []string `json:"role_ids"`
+	RoleIds []string `json:"role_ids"`
 }
 
 // AdminReqRemoveAccountFromGroup defines model for _admin_req_remove-account-from-group.
 type AdminReqRemoveAccountFromGroup struct {
 	AccountIds []string `json:"account_ids"`
-	GroupId    string   `json:"group_id"`
 }
 
 // AdminReqRevokePermissions defines model for _admin_req_revoke-permissions.
 type AdminReqRevokePermissions struct {
-	AccountId   string   `json:"account_id"`
 	Permissions []string `json:"permissions"`
 }
 
 // AdminReqRevokeRolesFromAccount defines model for _admin_req_revoke-roles-from-account.
 type AdminReqRevokeRolesFromAccount struct {
-	AccountId string   `json:"account_id"`
-	RoleIds   []string `json:"role_ids"`
+	RoleIds []string `json:"role_ids"`
 }
 
 // AdminResAppToken defines model for _admin_res_app-token.
@@ -1170,18 +1163,6 @@ type PostAdminAccountMfaParams struct {
 	Type string `json:"type"`
 }
 
-// PutAdminApplicationAccountPermissionsGrantJSONBody defines parameters for PutAdminApplicationAccountPermissionsGrant.
-type PutAdminApplicationAccountPermissionsGrantJSONBody AdminReqGrantPermissions
-
-// DeleteAdminApplicationAccountPermissionsRevokeJSONBody defines parameters for DeleteAdminApplicationAccountPermissionsRevoke.
-type DeleteAdminApplicationAccountPermissionsRevokeJSONBody AdminReqRevokePermissions
-
-// PutAdminApplicationAccountRolesGrantJSONBody defines parameters for PutAdminApplicationAccountRolesGrant.
-type PutAdminApplicationAccountRolesGrantJSONBody AdminReqGrantRolesToAccount
-
-// DeleteAdminApplicationAccountRolesRevokeJSONBody defines parameters for DeleteAdminApplicationAccountRolesRevoke.
-type DeleteAdminApplicationAccountRolesRevokeJSONBody AdminReqRevokeRolesFromAccount
-
 // GetAdminApplicationAccountsParams defines parameters for GetAdminApplicationAccounts.
 type GetAdminApplicationAccountsParams struct {
 
@@ -1192,14 +1173,26 @@ type GetAdminApplicationAccountsParams struct {
 	AuthTypeIdentifier *string `json:"auth-type-identifier,omitempty"`
 }
 
-// PutAdminApplicationGroupAccountsAddJSONBody defines parameters for PutAdminApplicationGroupAccountsAdd.
-type PutAdminApplicationGroupAccountsAddJSONBody AdminReqAddAccountsToGroup
+// PutAdminApplicationAccountsIdPermissionsGrantJSONBody defines parameters for PutAdminApplicationAccountsIdPermissionsGrant.
+type PutAdminApplicationAccountsIdPermissionsGrantJSONBody AdminReqGrantPermissions
 
-// DeleteAdminApplicationGroupAccountsRemoveJSONBody defines parameters for DeleteAdminApplicationGroupAccountsRemove.
-type DeleteAdminApplicationGroupAccountsRemoveJSONBody AdminReqRemoveAccountFromGroup
+// DeleteAdminApplicationAccountsIdPermissionsRevokeJSONBody defines parameters for DeleteAdminApplicationAccountsIdPermissionsRevoke.
+type DeleteAdminApplicationAccountsIdPermissionsRevokeJSONBody AdminReqRevokePermissions
+
+// PutAdminApplicationAccountsIdRolesGrantJSONBody defines parameters for PutAdminApplicationAccountsIdRolesGrant.
+type PutAdminApplicationAccountsIdRolesGrantJSONBody AdminReqGrantRolesToAccount
+
+// DeleteAdminApplicationAccountsIdRolesRevokeJSONBody defines parameters for DeleteAdminApplicationAccountsIdRolesRevoke.
+type DeleteAdminApplicationAccountsIdRolesRevokeJSONBody AdminReqRevokeRolesFromAccount
 
 // PostAdminApplicationGroupsJSONBody defines parameters for PostAdminApplicationGroups.
 type PostAdminApplicationGroupsJSONBody AdminReqCreateApplicationGroup
+
+// PutAdminApplicationGroupsIdAccountsAddJSONBody defines parameters for PutAdminApplicationGroupsIdAccountsAdd.
+type PutAdminApplicationGroupsIdAccountsAddJSONBody AdminReqAddAccountsToGroup
+
+// DeleteAdminApplicationGroupsIdAccountsRemoveJSONBody defines parameters for DeleteAdminApplicationGroupsIdAccountsRemove.
+type DeleteAdminApplicationGroupsIdAccountsRemoveJSONBody AdminReqRemoveAccountFromGroup
 
 // GetAdminApplicationLoginSessionsParams defines parameters for GetAdminApplicationLoginSessions.
 type GetAdminApplicationLoginSessionsParams struct {
@@ -1226,11 +1219,11 @@ type GetAdminApplicationLoginSessionsParams struct {
 	IpAddress *string `json:"ip-address,omitempty"`
 }
 
-// PutAdminApplicationRolePermissionsGrantJSONBody defines parameters for PutAdminApplicationRolePermissionsGrant.
-type PutAdminApplicationRolePermissionsGrantJSONBody AdminReqGrantPermissionsToRole
-
 // PostAdminApplicationRolesJSONBody defines parameters for PostAdminApplicationRoles.
 type PostAdminApplicationRolesJSONBody AdminReqCreateApplicationRole
+
+// PutAdminApplicationRolesIdPermissionsGrantJSONBody defines parameters for PutAdminApplicationRolesIdPermissionsGrant.
+type PutAdminApplicationRolesIdPermissionsGrantJSONBody AdminReqGrantPermissionsToRole
 
 // GetAdminAuthAppTokenParams defines parameters for GetAdminAuthAppToken.
 type GetAdminAuthAppTokenParams struct {
@@ -1583,32 +1576,32 @@ type GetUiCredentialVerifyParams struct {
 	Code string `json:"code"`
 }
 
-// PutAdminApplicationAccountPermissionsGrantJSONRequestBody defines body for PutAdminApplicationAccountPermissionsGrant for application/json ContentType.
-type PutAdminApplicationAccountPermissionsGrantJSONRequestBody PutAdminApplicationAccountPermissionsGrantJSONBody
+// PutAdminApplicationAccountsIdPermissionsGrantJSONRequestBody defines body for PutAdminApplicationAccountsIdPermissionsGrant for application/json ContentType.
+type PutAdminApplicationAccountsIdPermissionsGrantJSONRequestBody PutAdminApplicationAccountsIdPermissionsGrantJSONBody
 
-// DeleteAdminApplicationAccountPermissionsRevokeJSONRequestBody defines body for DeleteAdminApplicationAccountPermissionsRevoke for application/json ContentType.
-type DeleteAdminApplicationAccountPermissionsRevokeJSONRequestBody DeleteAdminApplicationAccountPermissionsRevokeJSONBody
+// DeleteAdminApplicationAccountsIdPermissionsRevokeJSONRequestBody defines body for DeleteAdminApplicationAccountsIdPermissionsRevoke for application/json ContentType.
+type DeleteAdminApplicationAccountsIdPermissionsRevokeJSONRequestBody DeleteAdminApplicationAccountsIdPermissionsRevokeJSONBody
 
-// PutAdminApplicationAccountRolesGrantJSONRequestBody defines body for PutAdminApplicationAccountRolesGrant for application/json ContentType.
-type PutAdminApplicationAccountRolesGrantJSONRequestBody PutAdminApplicationAccountRolesGrantJSONBody
+// PutAdminApplicationAccountsIdRolesGrantJSONRequestBody defines body for PutAdminApplicationAccountsIdRolesGrant for application/json ContentType.
+type PutAdminApplicationAccountsIdRolesGrantJSONRequestBody PutAdminApplicationAccountsIdRolesGrantJSONBody
 
-// DeleteAdminApplicationAccountRolesRevokeJSONRequestBody defines body for DeleteAdminApplicationAccountRolesRevoke for application/json ContentType.
-type DeleteAdminApplicationAccountRolesRevokeJSONRequestBody DeleteAdminApplicationAccountRolesRevokeJSONBody
-
-// PutAdminApplicationGroupAccountsAddJSONRequestBody defines body for PutAdminApplicationGroupAccountsAdd for application/json ContentType.
-type PutAdminApplicationGroupAccountsAddJSONRequestBody PutAdminApplicationGroupAccountsAddJSONBody
-
-// DeleteAdminApplicationGroupAccountsRemoveJSONRequestBody defines body for DeleteAdminApplicationGroupAccountsRemove for application/json ContentType.
-type DeleteAdminApplicationGroupAccountsRemoveJSONRequestBody DeleteAdminApplicationGroupAccountsRemoveJSONBody
+// DeleteAdminApplicationAccountsIdRolesRevokeJSONRequestBody defines body for DeleteAdminApplicationAccountsIdRolesRevoke for application/json ContentType.
+type DeleteAdminApplicationAccountsIdRolesRevokeJSONRequestBody DeleteAdminApplicationAccountsIdRolesRevokeJSONBody
 
 // PostAdminApplicationGroupsJSONRequestBody defines body for PostAdminApplicationGroups for application/json ContentType.
 type PostAdminApplicationGroupsJSONRequestBody PostAdminApplicationGroupsJSONBody
 
-// PutAdminApplicationRolePermissionsGrantJSONRequestBody defines body for PutAdminApplicationRolePermissionsGrant for application/json ContentType.
-type PutAdminApplicationRolePermissionsGrantJSONRequestBody PutAdminApplicationRolePermissionsGrantJSONBody
+// PutAdminApplicationGroupsIdAccountsAddJSONRequestBody defines body for PutAdminApplicationGroupsIdAccountsAdd for application/json ContentType.
+type PutAdminApplicationGroupsIdAccountsAddJSONRequestBody PutAdminApplicationGroupsIdAccountsAddJSONBody
+
+// DeleteAdminApplicationGroupsIdAccountsRemoveJSONRequestBody defines body for DeleteAdminApplicationGroupsIdAccountsRemove for application/json ContentType.
+type DeleteAdminApplicationGroupsIdAccountsRemoveJSONRequestBody DeleteAdminApplicationGroupsIdAccountsRemoveJSONBody
 
 // PostAdminApplicationRolesJSONRequestBody defines body for PostAdminApplicationRoles for application/json ContentType.
 type PostAdminApplicationRolesJSONRequestBody PostAdminApplicationRolesJSONBody
+
+// PutAdminApplicationRolesIdPermissionsGrantJSONRequestBody defines body for PutAdminApplicationRolesIdPermissionsGrant for application/json ContentType.
+type PutAdminApplicationRolesIdPermissionsGrantJSONRequestBody PutAdminApplicationRolesIdPermissionsGrantJSONBody
 
 // PostAdminAuthLoginJSONRequestBody defines body for PostAdminAuthLogin for application/json ContentType.
 type PostAdminAuthLoginJSONRequestBody PostAdminAuthLoginJSONBody

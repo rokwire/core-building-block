@@ -97,36 +97,36 @@ paths:
     $ref: "./resources/admin/account/mfa.yaml"
   /admin/application/accounts:
     $ref: "./resources/admin/application/accounts.yaml"
-  /admin/application/account/{id}/devices:
-    $ref: "./resources/admin/application/account/devices.yaml"
-  /admin/application/account/{account_id}/login-sessions/{session_id}:
-    $ref: "./resources/admin/application/account/login-sessions.yaml"
-  /admin/application/account/permissions/grant:
-    $ref: "./resources/admin/application/account/permissions/grant.yaml"
-  /admin/application/account/permissions/revoke:
-    $ref: "./resources/admin/application/account/permissions/revoke.yaml"
-  /admin/application/account/roles/grant:
-    $ref: "./resources/admin/application/account/roles/grant.yaml"
-  /admin/application/account/roles/revoke:
-    $ref: "./resources/admin/application/account/roles/revoke.yaml"
+  /admin/application/accounts/{id}/devices:
+    $ref: "./resources/admin/application/accounts/devices.yaml"
+  /admin/application/accounts/{account_id}/login-sessions/{session_id}:
+    $ref: "./resources/admin/application/accounts/login-sessions.yaml"
+  /admin/application/accounts/{id}/permissions/grant:
+    $ref: "./resources/admin/application/accounts/permissions/grant.yaml"
+  /admin/application/accounts/{id}/permissions/revoke:
+    $ref: "./resources/admin/application/accounts/permissions/revoke.yaml"
+  /admin/application/accounts/{id}/roles/grant:
+    $ref: "./resources/admin/application/accounts/roles/grant.yaml"
+  /admin/application/accounts/{id}/roles/revoke:
+    $ref: "./resources/admin/application/accounts/roles/revoke.yaml"
   /admin/application/login-sessions:
     $ref: "./resources/admin/application/login-sessions.yaml"
   /admin/application/groups:
     $ref: "./resources/admin/application/groups.yaml"
   /admin/application/groups/{id}:
     $ref: "./resources/admin/application/groupsID.yaml"
-  /admin/application/group/accounts/add:
-    $ref: "./resources/admin/application/group/accounts/add.yaml"
-  /admin/application/group/accounts/remove:
-    $ref: "./resources/admin/application/group/accounts/remove.yaml"
+  /admin/application/groups/{id}/accounts/add:
+    $ref: "./resources/admin/application/groups/accounts/add.yaml"
+  /admin/application/groups/{id}/accounts/remove:
+    $ref: "./resources/admin/application/groups/accounts/remove.yaml"
   /admin/application/permissions:
     $ref: "./resources/admin/application/permissions.yaml"
   /admin/application/roles:
     $ref: "./resources/admin/application/roles.yaml"
   /admin/application/roles/{id}:
     $ref: "./resources/admin/application/rolesID.yaml"
-  /admin/application/role/permissions/grant:
-    $ref: "./resources/admin/application/role/permissions/grant.yaml"
+  /admin/application/roles/{id}/permissions/grant:
+    $ref: "./resources/admin/application/roles/permissions/grant.yaml"
   /admin/organization/applications:
     $ref: "./resources/admin/organization/applications.yaml"
  

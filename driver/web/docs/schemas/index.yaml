@@ -217,31 +217,31 @@ _admin_req_create-application_group:
 
 ### admin add-accounts-to-group API
 _admin_req_add-accounts-to-group:
-  $ref: "./apis/admin/application/group/accounts/add/request/Request.yaml"
+  $ref: "./apis/admin/application/groups/accounts/add/request/Request.yaml"
 
 ### admin remove-accounts-from-group API
 _admin_req_remove-account-from-group:
-  $ref: "./apis/admin/application/group/accounts/remove/request/Request.yaml"
+  $ref: "./apis/admin/application/groups/accounts/remove/request/Request.yaml"
   
 ### grant account roles API
 _admin_req_grant-roles-to-account:
-  $ref: "./apis/admin/application/account/roles/grant/request/Request.yaml"
+  $ref: "./apis/admin/application/accounts/roles/grant/request/Request.yaml"
 
 ### revoke account roles API
 _admin_req_revoke-roles-from-account:
-  $ref: "./apis/admin/application/account/roles/revoke/request/Request.yaml"
+  $ref: "./apis/admin/application/accounts/roles/revoke/request/Request.yaml"
 
 ### grant permissions to account API
 _admin_req_grant-permissions:
-  $ref: "./apis/admin/application/account/permissions/grant/request/Request.yaml"
+  $ref: "./apis/admin/application/accounts/permissions/grant/request/Request.yaml"
 
 ### revoke permissions from account API
 _admin_req_revoke-permissions:
-  $ref: "./apis/admin/application/account/permissions/revoke/request/Request.yaml"
+  $ref: "./apis/admin/application/accounts/permissions/revoke/request/Request.yaml"
 
 ### grant permissions to role API
 _admin_req_grant-permissions-to-role:
-  $ref: "./apis/admin/application/role/permissions/grant/request/Request.yaml"
+  $ref: "./apis/admin/application/roles/permissions/grant/request/Request.yaml"
 ## end ADMIN section
 
 ## SYSTEM section
