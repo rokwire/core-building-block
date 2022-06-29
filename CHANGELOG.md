@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Retrieve all service account tokens at once [#459](https://github.com/rokwire/core-building-block/issues/459)
 
 ### Fixed
+- Fix admin authorization endpoints [#515](https://github.com/rokwire/core-building-block/issues/515)
 - Clean up authorization policies [#499](https://github.com/rokwire/core-building-block/issues/499)
 - Prevent admins from using service account management endpoints [#500](https://github.com/rokwire/core-building-block/issues/500)
 
