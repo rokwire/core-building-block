@@ -1,0 +1,10 @@
+required:
+  - appID
+  - orgID
+type: object
+properties:
+  appID:
+    type: string
+  orgID:
+    type: string
+    

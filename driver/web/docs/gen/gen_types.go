@@ -1243,6 +1243,15 @@ type PostAdminAuthRefreshJSONBody SharedReqRefresh
 // PostAdminAuthVerifyMfaJSONBody defines parameters for PostAdminAuthVerifyMfa.
 type PostAdminAuthVerifyMfaJSONBody SharedReqMfa
 
+// GetAdminServiceRegsParams defines parameters for GetAdminServiceRegs.
+type GetAdminServiceRegsParams struct {
+	// Application ID
+	AppID *string `json:"appID,omitempty"`
+
+	// Organization ID
+	OrgID *string `json:"orgID,omitempty"`
+}
+
 // PostBbsAccessTokenJSONBody defines parameters for PostBbsAccessToken.
 type PostBbsAccessTokenJSONBody ServicesReqServiceAccountsAccessToken
 

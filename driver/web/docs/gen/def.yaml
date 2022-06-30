@@ -2280,6 +2280,23 @@ paths:
         Returns service registration records
       security:
         - bearerAuth: []
+      parameters:
+        - name: appID
+          in: query
+          description: Application ID
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
+        - name: orgID
+          in: query
+          description: Organization ID
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
       responses:
         '200':
           description: Success
