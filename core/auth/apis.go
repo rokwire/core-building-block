@@ -653,7 +653,9 @@ func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionValidate, model.TypePermission, nil, err)
 			}
-			err = a.storage.UpdateAccountPermissions(context, account.ID, newPermissions)
+
+			admin := len(newPermissions) > 0 || len(updatedAccount.Roles) > 0 || len(updatedAccount.Groups) > 0
+			err = a.storage.UpdateAccountPermissions(context, account.ID, admin, newPermissions)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionUpdate, "admin account permissions", nil, err)
 			}
@@ -670,7 +672,8 @@ func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID
 			}
 
 			newAccountRoles := model.AccountRolesFromAppOrgRoles(newRoles, true, true)
-			err = a.storage.UpdateAccountRoles(context, account.ID, newAccountRoles)
+			admin := len(updatedAccount.Permissions) > 0 || len(newAccountRoles) > 0 || len(updatedAccount.Groups) > 0
+			err = a.storage.UpdateAccountRoles(context, account.ID, admin, newAccountRoles)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionUpdate, "admin account roles", nil, err)
 			}
@@ -687,7 +690,8 @@ func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID
 			}
 
 			newAccountGroups := model.AccountGroupsFromAppOrgGroups(newGroups, true, true)
-			err = a.storage.UpdateAccountGroups(context, account.ID, newAccountGroups)
+			admin := len(updatedAccount.Permissions) > 0 || len(updatedAccount.Roles) > 0 || len(newAccountGroups) > 0
+			err = a.storage.UpdateAccountGroups(context, account.ID, admin, newAccountGroups)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionUpdate, "admin account groups", nil, err)
 			}
