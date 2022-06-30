@@ -798,7 +798,21 @@ func (h AdminApisHandler) adminGrantPermissionsToRole(l *logs.Log, r *http.Reque
 }
 
 func (h AdminApisHandler) getServiceRegistrations(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	getServiceRegs, err := h.coreAPIs.Administration.AdmGetServiceRegs(claims.OrgID, l)
+	//orgID
+	var orgID *string
+	orgIDParam := r.URL.Query().Get("orgID")
+	if len(orgIDParam) > 0 {
+		orgID = &orgIDParam
+	}
+
+	//appID
+	var appID *string
+	appIDParam := r.URL.Query().Get("appID")
+	if len(appIDParam) > 0 {
+		appID = &appIDParam
+	}
+
+	getServiceRegs, err := h.coreAPIs.Administration.AdmGetServiceRegs(appID, orgID, l)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeServiceReg, nil, err, http.StatusInternalServerError, true)
 	}
