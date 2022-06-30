@@ -165,7 +165,7 @@ func (we Adapter) Start() {
 	adminSubrouter.HandleFunc("/application/account/roles/grant", we.wrapFunc(we.adminApisHandler.grantAccountRoles, we.auth.admin.permissions)).Methods("PUT")
 	adminSubrouter.HandleFunc("/application/account/roles/revoke", we.wrapFunc(we.adminApisHandler.revokeAccountRoles, we.auth.admin.permissions)).Methods("DELETE")
 
-	adminSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.adminApisHandler.getServiceRegistrations, we.auth.admin.user)).Methods("GET")
+	adminSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.adminApisHandler.getServiceRegistrations, nil)).Methods("GET")
 	///
 
 	///enc ///
