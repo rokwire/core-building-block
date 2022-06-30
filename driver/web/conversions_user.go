@@ -17,6 +17,7 @@ package web
 import (
 	"core-building-block/core/model"
 	Def "core-building-block/driver/web/docs/gen"
+	"core-building-block/utils"
 )
 
 //Account
@@ -59,9 +60,9 @@ func partialAccountToDef(item model.Account, params map[string]interface{}) *Def
 	}
 	//dates
 	var dateUpdated *string
-	dateCreated := item.DateCreated.Format("2006-01-02T15:04:05.000Z")
+	dateCreated := utils.FormatTime(&item.DateCreated)
 	if item.DateUpdated != nil {
-		formatted := item.DateUpdated.Format("2006-01-02T15:04:05.000Z")
+		formatted := utils.FormatTime(item.DateUpdated)
 		dateUpdated = &formatted
 	}
 

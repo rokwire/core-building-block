@@ -37,6 +37,10 @@ func (a *signatureAuthImpl) signUp(authType model.AuthType, appOrg model.Applica
 	return "", nil, nil
 }
 
+func (a *signatureAuthImpl) signUpAdmin(authType model.AuthType, appOrg model.ApplicationOrganization, identifier string, password string, newCredentialID string) (map[string]interface{}, map[string]interface{}, error) {
+	return nil, nil, nil
+}
+
 func (a *signatureAuthImpl) getUserIdentifier(creds string) (string, error) {
 	return "", nil
 }

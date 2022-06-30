@@ -46,16 +46,16 @@ type Administration interface {
 
 	AdmGetApplications(orgID string) ([]model.Application, error)
 
-	AdmCreateAppOrgGroup(name string, permissionIDs []string, rolesIDs []string, appID string, orgID string, assignerPermissions []string, l *logs.Log) (*model.AppOrgGroup, error)
+	AdmCreateAppOrgGroup(name string, permissionNames []string, rolesIDs []string, appID string, orgID string, assignerPermissions []string, system bool, l *logs.Log) (*model.AppOrgGroup, error)
 	AdmGetAppOrgGroups(appID string, orgID string) ([]model.AppOrgGroup, error)
 	AdmAddAccountsToGroup(appID string, orgID string, groupID string, accountIDs []string, assignerPermissions []string, l *logs.Log) error
 	AdmRemoveAccountsFromGroup(appID string, orgID string, groupID string, accountIDs []string, assignerPermissions []string, l *logs.Log) error
-	AdmDeleteAppOrgGroup(ID string, appID string, orgID string, assignerPermissions []string, l *logs.Log) error
+	AdmDeleteAppOrgGroup(ID string, appID string, orgID string, assignerPermissions []string, system bool, l *logs.Log) error
 
-	AdmCreateAppOrgRole(name string, description string, permissionIDs []string, appID string, orgID string, assignerPermissions []string, l *logs.Log) (*model.AppOrgRole, error)
+	AdmCreateAppOrgRole(name string, description string, permissionNames []string, appID string, orgID string, assignerPermissions []string, system bool, l *logs.Log) (*model.AppOrgRole, error)
 	AdmGetAppOrgRoles(appID string, orgID string) ([]model.AppOrgRole, error)
-	AdmGrantPermissionsToRole(appID string, orgID string, roleID string, permissionNames []string, assignerPermissions []string, l *logs.Log) error
-	AdmDeleteAppOrgRole(ID string, appID string, orgID string, assignerPermissions []string, l *logs.Log) error
+	AdmGrantPermissionsToRole(appID string, orgID string, roleID string, permissionNames []string, assignerPermissions []string, system bool, l *logs.Log) error
+	AdmDeleteAppOrgRole(ID string, appID string, orgID string, assignerPermissions []string, system bool, l *logs.Log) error
 
 	AdmGetApplicationPermissions(appID string, orgID string, l *logs.Log) ([]model.Permission, error)
 
@@ -70,7 +70,7 @@ type Administration interface {
 	AdmRevokeAccountRoles(appID string, orgID string, accountID string, roleIDs []string, assignerPermissions []string, l *logs.Log) error
 
 	AdmGetApplicationLoginSessions(appID string, orgID string, identifier *string, accountAuthTypeIdentifier *string,
-		appTypeID *string, appTypeIdentifier *string, anonymoys *bool, deviceID *string, ipAddress *string) ([]model.LoginSession, error)
+		appTypeID *string, appTypeIdentifier *string, anonymous *bool, deviceID *string, ipAddress *string) ([]model.LoginSession, error)
 	AdmDeleteApplicationLoginSession(appID string, orgID string, currentAccountID string, identifier string, sessionID string, l *logs.Log) error
 
 	AdmGetApplicationAccountDevices(appID string, orgID string, accountID string, l *logs.Log) ([]model.Device, error)
@@ -104,16 +104,11 @@ type System interface {
 	SysCreatePermission(name string, serviceID string, assigners *[]string) (*model.Permission, error)
 	SysUpdatePermission(name string, serviceID *string, assigners *[]string) (*model.Permission, error)
 
-	SysCreateAppOrgRole(name string, appID string, description string, permissionNames []string) (*model.AppOrgRole, error)
-
 	SysGetAppConfigs(appTypeID string, orgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error)
 	SysGetAppConfig(id string) (*model.ApplicationConfig, error)
 	SysCreateAppConfig(appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error)
 	SysUpdateAppConfig(id string, appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) error
 	SysDeleteAppConfig(id string) error
-
-	SysGrantAccountPermissions(accountID string, permissionNames []string, assignerPermissions []string) error
-	SysGrantAccountRoles(accountID string, appID string, roleIDs []string) error
 
 	SysCreateAuthTypes(code string, description string, isExternal bool, isAnonymous bool, useCredentials bool, ignoreMFA bool, params map[string]interface{}) (*model.AuthType, error)
 	SysGetAuthTypes() ([]model.AuthType, error)
@@ -134,9 +129,9 @@ type Storage interface {
 	FindAccountsByAccountID(appID string, orgID string, accountIDs []string) ([]model.Account, error)
 
 	UpdateAccountPreferences(accountID string, preferences map[string]interface{}) error
-	InsertAccountPermissions(accountID string, permissions []model.Permission) error
+	InsertAccountPermissions(context storage.TransactionContext, accountID string, permissions []model.Permission) error
 	DeleteAccountPermissions(context storage.TransactionContext, accountID string, admin bool, permissions []model.Permission) error
-	InsertAccountRoles(accountID string, appOrgID string, roles []model.AccountRole) error
+	InsertAccountRoles(context storage.TransactionContext, accountID string, appOrgID string, roles []model.AccountRole) error
 	DeleteAccountRoles(context storage.TransactionContext, accountID string, admin bool, roleIDs []string) error
 	InsertAccountsGroup(group model.AccountGroup, accounts []model.Account) error
 	RemoveAccountsGroup(groupID string, accounts []model.Account, admins []bool) error
@@ -157,7 +152,7 @@ type Storage interface {
 	GetGlobalConfig() (*model.GlobalConfig, error)
 	DeleteGlobalConfig(context storage.TransactionContext) error
 
-	FindPermissionsByName(names []string) ([]model.Permission, error)
+	FindPermissionsByName(context storage.TransactionContext, names []string) ([]model.Permission, error)
 	FindPermissionsByServiceIDs(serviceIDs []string) ([]model.Permission, error)
 	InsertPermission(context storage.TransactionContext, item model.Permission) error
 	UpdatePermission(item model.Permission) error
@@ -166,7 +161,7 @@ type Storage interface {
 	FindAppOrgRoles(appOrgID string) ([]model.AppOrgRole, error)
 	FindAppOrgRolesByIDs(context storage.TransactionContext, ids []string, appOrgID string) ([]model.AppOrgRole, error)
 	FindAppOrgRole(id string, appOrgID string) (*model.AppOrgRole, error)
-	InsertAppOrgRole(item model.AppOrgRole) error
+	InsertAppOrgRole(context storage.TransactionContext, item model.AppOrgRole) error
 	UpdateAppOrgRole(item model.AppOrgRole) error
 	DeleteAppOrgRole(id string) error
 	InsertAppOrgRolePermissions(context storage.TransactionContext, roleID string, permissionNames []model.Permission) error
@@ -174,7 +169,7 @@ type Storage interface {
 	FindAppOrgGroups(appOrgID string) ([]model.AppOrgGroup, error)
 	FindAppOrgGroupsByIDs(context storage.TransactionContext, ids []string, appOrgID string) ([]model.AppOrgGroup, error)
 	FindAppOrgGroup(id string, appOrgID string) (*model.AppOrgGroup, error)
-	InsertAppOrgGroup(item model.AppOrgGroup) error
+	InsertAppOrgGroup(context storage.TransactionContext, item model.AppOrgGroup) error
 	UpdateAppOrgGroup(item model.AppOrgGroup) error
 	DeleteAppOrgGroup(id string) error
 	CountGroupsByRoleID(roleID string) (*int64, error)

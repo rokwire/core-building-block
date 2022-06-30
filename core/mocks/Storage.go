@@ -744,13 +744,13 @@ func (_m *Storage) FindOrganizations() ([]model.Organization, error) {
 	return r0, r1
 }
 
-// FindPermissionsByName provides a mock function with given fields: names
-func (_m *Storage) FindPermissionsByName(names []string) ([]model.Permission, error) {
-	ret := _m.Called(names)
+// FindPermissionsByName provides a mock function with given fields: context, names
+func (_m *Storage) FindPermissionsByName(context storage.TransactionContext, names []string) ([]model.Permission, error) {
+	ret := _m.Called(context, names)
 
 	var r0 []model.Permission
-	if rf, ok := ret.Get(0).(func([]string) []model.Permission); ok {
-		r0 = rf(names)
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, []string) []model.Permission); ok {
+		r0 = rf(context, names)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]model.Permission)
@@ -758,8 +758,8 @@ func (_m *Storage) FindPermissionsByName(names []string) ([]model.Permission, er
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func([]string) error); ok {
-		r1 = rf(names)
+	if rf, ok := ret.Get(1).(func(storage.TransactionContext, []string) error); ok {
+		r1 = rf(context, names)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -859,13 +859,13 @@ func (_m *Storage) InsertAPIKey(context storage.TransactionContext, apiKey model
 	return r0, r1
 }
 
-// InsertAccountPermissions provides a mock function with given fields: accountID, permissions
-func (_m *Storage) InsertAccountPermissions(accountID string, permissions []model.Permission) error {
-	ret := _m.Called(accountID, permissions)
+// InsertAccountPermissions provides a mock function with given fields: context, accountID, permissions
+func (_m *Storage) InsertAccountPermissions(context storage.TransactionContext, accountID string, permissions []model.Permission) error {
+	ret := _m.Called(context, accountID, permissions)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(string, []model.Permission) error); ok {
-		r0 = rf(accountID, permissions)
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, []model.Permission) error); ok {
+		r0 = rf(context, accountID, permissions)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -873,13 +873,13 @@ func (_m *Storage) InsertAccountPermissions(accountID string, permissions []mode
 	return r0
 }
 
-// InsertAccountRoles provides a mock function with given fields: accountID, appOrgID, roles
-func (_m *Storage) InsertAccountRoles(accountID string, appOrgID string, roles []model.AccountRole) error {
-	ret := _m.Called(accountID, appOrgID, roles)
+// InsertAccountRoles provides a mock function with given fields: context, accountID, appOrgID, roles
+func (_m *Storage) InsertAccountRoles(context storage.TransactionContext, accountID string, appOrgID string, roles []model.AccountRole) error {
+	ret := _m.Called(context, accountID, appOrgID, roles)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(string, string, []model.AccountRole) error); ok {
-		r0 = rf(accountID, appOrgID, roles)
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, string, []model.AccountRole) error); ok {
+		r0 = rf(context, accountID, appOrgID, roles)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -924,13 +924,13 @@ func (_m *Storage) InsertAppConfig(item model.ApplicationConfig) (*model.Applica
 	return r0, r1
 }
 
-// InsertAppOrgGroup provides a mock function with given fields: item
-func (_m *Storage) InsertAppOrgGroup(item model.AppOrgGroup) error {
-	ret := _m.Called(item)
+// InsertAppOrgGroup provides a mock function with given fields: context, item
+func (_m *Storage) InsertAppOrgGroup(context storage.TransactionContext, item model.AppOrgGroup) error {
+	ret := _m.Called(context, item)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(model.AppOrgGroup) error); ok {
-		r0 = rf(item)
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, model.AppOrgGroup) error); ok {
+		r0 = rf(context, item)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -938,13 +938,13 @@ func (_m *Storage) InsertAppOrgGroup(item model.AppOrgGroup) error {
 	return r0
 }
 
-// InsertAppOrgRole provides a mock function with given fields: item
-func (_m *Storage) InsertAppOrgRole(item model.AppOrgRole) error {
-	ret := _m.Called(item)
+// InsertAppOrgRole provides a mock function with given fields: context, item
+func (_m *Storage) InsertAppOrgRole(context storage.TransactionContext, item model.AppOrgRole) error {
+	ret := _m.Called(context, item)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(model.AppOrgRole) error); ok {
-		r0 = rf(item)
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, model.AppOrgRole) error); ok {
+		r0 = rf(context, item)
 	} else {
 		r0 = ret.Error(0)
 	}

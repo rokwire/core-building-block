@@ -4,6 +4,7 @@ required:
   - org_id
   - first_name
   - last_name
+  - admin
   - permissions
   - roles
   - groups
