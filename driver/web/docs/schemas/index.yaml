@@ -283,24 +283,12 @@ _system_res_get_Applications:
 ### permissions API
 _system_req_permissions:
   $ref: "./apis/system/permissions/request/Request.yaml"
-  
-### application-roles API
-_system_req_application-roles:
-  $ref: "./apis/system/application-roles/request/Request.yaml"
-
-### account permissions API
-_system_req_account-permissions:
-  $ref: "./apis/system/account/permissions/request/Request.yaml"
 
 ### auth_type API
 _system_req_create_auth_type:
   $ref: "./apis/system/auth-types/request/Request.yaml"
 _system_req_update_auth_type:
   $ref: "./apis/system/auth-typesID/request/Request.yaml"
-
-### account roles API
-_system_req_account-roles:
-  $ref: "./apis/system/account/roles/request/Request.yaml"
 
 ### application config API
 _system_req_create_ApplicationConfig_Request:

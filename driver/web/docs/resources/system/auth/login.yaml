@@ -32,40 +32,6 @@ post:
                   "os": "Android"
                 }
               }
-          phone:
-            summary: Phone
-            value: |
-              {
-                "auth_type": "twilio_phone",
-                "app_type_identifier": "edu.illinois.rokwire.admin",
-                "org_id": "5d7ed0a6-48f2-4473-ae4e-120f2b541a22",
-                "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
-                "creds": {
-                  "phone": "+12223334444", 
-                  "code": "123456"
-                },
-                "preferences":{
-                    "key1":"value1",
-                    "key2":"value2"
-                },
-                "profile":{
-                  "address": "address",
-                  "birth_year": 1990,
-                  "country": "county",
-                  "email": "email",
-                  "first_name": "first name",
-                  "last_name": "last name",
-                  "phone": "+000000000000",
-                  "photo_url": "photo url",
-                  "state": "state",
-                  "zip_code": "zip code"
-                },
-                "device": {
-                  "type": "mobile",
-                  "device_id": "5555",
-                  "os": "Android"
-                }
-              }
           illinois_oidc:
             summary: Illinois OIDC login
             value: |
