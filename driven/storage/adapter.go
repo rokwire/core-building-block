@@ -2452,7 +2452,7 @@ func (sa *Adapter) FindAppOrgRole(id string, appOrgID string) (*model.AppOrgRole
 }
 
 //InsertAppOrgRole inserts a new application organization role
-func (sa *Adapter) InsertAppOrgRole(item model.AppOrgRole) error {
+func (sa *Adapter) InsertAppOrgRole(context TransactionContext, item model.AppOrgRole) error {
 	appOrg, err := sa.getCachedApplicationOrganizationByKey(item.AppOrg.ID)
 	if err != nil {
 		return errors.WrapErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_org_id": item.AppOrg.ID}, err)
@@ -2462,7 +2462,11 @@ func (sa *Adapter) InsertAppOrgRole(item model.AppOrgRole) error {
 	}
 
 	role := appOrgRoleToStorage(item)
-	_, err = sa.db.applicationsOrganizationsRoles.InsertOne(role)
+	if context != nil {
+		_, err = sa.db.applicationsOrganizationsRoles.InsertOneWithContext(context, role)
+	} else {
+		_, err = sa.db.applicationsOrganizationsRoles.InsertOne(role)
+	}
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAppOrgRole, nil, err)
 	}
@@ -2591,9 +2595,15 @@ func (sa *Adapter) FindAppOrgGroup(id string, appOrgID string) (*model.AppOrgGro
 }
 
 //InsertAppOrgGroup inserts a new application organization group
-func (sa *Adapter) InsertAppOrgGroup(item model.AppOrgGroup) error {
+func (sa *Adapter) InsertAppOrgGroup(context TransactionContext, item model.AppOrgGroup) error {
 	group := appOrgGroupToStorage(item)
-	_, err := sa.db.applicationsOrganizationsGroups.InsertOne(group)
+
+	var err error
+	if context != nil {
+		_, err = sa.db.applicationsOrganizationsGroups.InsertOneWithContext(context, group)
+	} else {
+		_, err = sa.db.applicationsOrganizationsGroups.InsertOne(group)
+	}
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAppOrgGroup, nil, err)
 	}
