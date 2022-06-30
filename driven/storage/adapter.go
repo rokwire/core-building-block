@@ -3043,6 +3043,32 @@ func (sa *Adapter) FindApplicationsOrganizations() ([]model.ApplicationOrganizat
 }
 
 //FindApplicationsOrganizationsByOrgID finds applications organizations by orgID
+func (sa *Adapter) FindApplicationsOrganizationsByAppAndOrgID(appID *string, orgID *string) ([]model.ApplicationOrganization, error) {
+	filter := bson.D{}
+	if appID != nil {
+		filter = append(filter, primitive.E{Key: "app_id", Value: appID})
+	}
+	if orgID != nil {
+		filter = append(filter, primitive.E{Key: "org_id", Value: orgID})
+	}
+
+	var result []applicationOrganization
+	err := sa.db.applicationsOrganizations.Find(filter, &result, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
+	}
+
+	if len(result) == 0 {
+		//no data
+		return make([]model.ApplicationOrganization, 0), nil
+	}
+
+	appOrg := applicationOrganizationsFromStorage(result)
+
+	return appOrg, nil
+}
+
+//FindApplicationsOrganizationsByOrgID finds applications organizations by orgID
 func (sa *Adapter) FindApplicationsOrganizationsByOrgID(orgID string) ([]model.ApplicationOrganization, error) {
 
 	cachedAppOrgs, err := sa.getCachedApplicationOrganizations()
@@ -3191,6 +3217,22 @@ func (sa *Adapter) UpdateAuthTypes(ID string, code string, description string, i
 
 //loadServiceRegs fetches all service registration records
 func (sa *Adapter) loadServiceRegs() ([]model.ServiceReg, error) {
+	filter := bson.M{}
+	var result []model.ServiceReg
+	err := sa.db.serviceRegs.Find(filter, &result, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceReg, &logutils.FieldArgs{"service_id": "all"}, err)
+	}
+
+	if result == nil {
+		result = []model.ServiceReg{}
+	}
+
+	return result, nil
+}
+
+//FindAllServiceRegs fetches all service registration records
+func (sa *Adapter) FindAllServiceRegs() ([]model.ServiceReg, error) {
 	filter := bson.M{}
 	var result []model.ServiceReg
 	err := sa.db.serviceRegs.Find(filter, &result, nil)
