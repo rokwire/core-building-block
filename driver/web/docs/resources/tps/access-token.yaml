@@ -10,7 +10,7 @@ post:
     content:
       application/json:
         schema:
-          $ref: "../../schemas/apis/services/service-accounts/access-token/request/Request.yaml"
+          $ref: "../../schemas/apis/shared/requests/service-accounts/access-token/Request.yaml"
         examples:
           static_token:
             summary: Static token

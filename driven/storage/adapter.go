@@ -1307,12 +1307,12 @@ func (sa *Adapter) DeleteAccount(context TransactionContext, id string) error {
 }
 
 //FindServiceAccount finds a service account by accountID, appID, and orgID
-func (sa *Adapter) FindServiceAccount(context TransactionContext, accountID string, appID *string, orgID *string) (*model.ServiceAccount, error) {
+func (sa *Adapter) FindServiceAccount(context TransactionContext, accountID string, appID string, orgID string) (*model.ServiceAccount, error) {
 	filter := bson.D{primitive.E{Key: "account_id", Value: accountID}, primitive.E{Key: "app_id", Value: appID}, primitive.E{Key: "org_id", Value: orgID}}
 
 	var account serviceAccount
 	var err error
-	errFields := logutils.FieldArgs{"account_id": accountID, "app_id": utils.GetPrintableString(appID, "nil"), "org_id": utils.GetPrintableString(orgID, "nil")}
+	errFields := logutils.FieldArgs{"account_id": accountID, "app_id": appID, "org_id": orgID}
 	if context != nil {
 		err = sa.db.serviceAccounts.FindOneWithContext(context, filter, &account, nil)
 	} else {
@@ -1390,7 +1390,7 @@ func (sa *Adapter) UpdateServiceAccount(account *model.ServiceAccount) (*model.S
 	opts.SetProjection(bson.D{bson.E{Key: "secrets", Value: 0}})
 
 	var updated serviceAccount
-	errFields := logutils.FieldArgs{"account_id": storageAccount.AccountID, "app_id": utils.GetPrintableString(storageAccount.AppID, "nil"), "org_id": utils.GetPrintableString(storageAccount.OrgID, "nil")}
+	errFields := logutils.FieldArgs{"account_id": storageAccount.AccountID, "app_id": storageAccount.AppID, "org_id": storageAccount.OrgID}
 	err := sa.db.serviceAccounts.FindOneAndUpdate(filter, update, &updated, &opts)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeServiceAccount, &errFields, err)
@@ -1405,10 +1405,10 @@ func (sa *Adapter) UpdateServiceAccount(account *model.ServiceAccount) (*model.S
 }
 
 //DeleteServiceAccount deletes a service account
-func (sa *Adapter) DeleteServiceAccount(accountID string, appID *string, orgID *string) error {
+func (sa *Adapter) DeleteServiceAccount(accountID string, appID string, orgID string) error {
 	filter := bson.D{primitive.E{Key: "account_id", Value: accountID}, primitive.E{Key: "app_id", Value: appID}, primitive.E{Key: "org_id", Value: orgID}}
 
-	errFields := logutils.FieldArgs{"account_id": accountID, "app_id": utils.GetPrintableString(appID, "nil"), "org_id": utils.GetPrintableString(orgID, "nil")}
+	errFields := logutils.FieldArgs{"account_id": accountID, "app_id": appID, "org_id": orgID}
 	res, err := sa.db.serviceAccounts.DeleteOne(filter, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeServiceAccount, &errFields, err)
