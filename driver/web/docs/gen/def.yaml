@@ -926,9 +926,9 @@ paths:
           explode: false
           schema:
             type: string
-        - name: admin
+        - name: has-permissions
           in: query
-          description: Admin level account filter
+          description: 'Account has permissions (permissions, roles, or groups) filter'
           required: false
           style: form
           explode: false
@@ -1776,9 +1776,9 @@ paths:
           explode: false
           schema:
             type: string
-        - name: admin
+        - name: has-permissions
           in: query
-          description: Admin level account filter
+          description: 'Account has permissions (permissions, roles, or groups) filter'
           required: false
           style: form
           explode: false
@@ -5270,7 +5270,7 @@ components:
         - org_id
         - first_name
         - last_name
-        - admin
+        - has_permissions
         - permissions
         - roles
         - groups
@@ -5289,7 +5289,7 @@ components:
           type: string
         last_name:
           type: string
-        admin:
+        has_permissions:
           type: boolean
         permissions:
           type: array
@@ -5318,12 +5318,12 @@ components:
     AccountFields:
       required:
         - id
-        - admin
+        - has_permissions
       type: object
       properties:
         id:
           type: string
-        admin:
+        has_permissions:
           type: boolean
     Profile:
       type: object
@@ -5868,7 +5868,7 @@ components:
         preferences:
           type: object
           nullable: true
-        admin:
+        has_permissions:
           type: boolean
         permissions:
           type: array

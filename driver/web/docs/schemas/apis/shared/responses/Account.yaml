@@ -9,7 +9,7 @@ properties:
   preferences:
     type: object
     nullable: true
-  admin:
+  has_permissions:
     type: boolean
   permissions:
     type: array

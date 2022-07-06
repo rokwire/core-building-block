@@ -1435,8 +1435,8 @@ func (a *Auth) constructAccount(context storage.TransactionContext, authType mod
 		}
 	}
 
-	adminAccount := len(permissions) > 0 || len(roles) > 0 || len(groups) > 0
-	account := model.Account{ID: accountID.String(), AppOrg: appOrg, Admin: adminAccount, Permissions: permissions,
+	hasPermissions := len(permissions) > 0 || len(roles) > 0 || len(groups) > 0
+	account := model.Account{ID: accountID.String(), AppOrg: appOrg, HasPermissions: hasPermissions, Permissions: permissions,
 		Roles: model.AccountRolesFromAppOrgRoles(roles, true, adminSet), Groups: model.AccountGroupsFromAppOrgGroups(groups, true, adminSet),
 		AuthTypes: authTypes, ExternalIDs: externalIDs, Preferences: preferences, Profile: profile, DateCreated: time.Now()}
 

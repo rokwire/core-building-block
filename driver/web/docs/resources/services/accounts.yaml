@@ -41,9 +41,9 @@ get:
       explode: false
       schema:
         type: string
-    - name: admin
+    - name: has-permissions
       in: query
-      description: Admin level account filter
+      description: Account has permissions (permissions, roles, or groups) filter
       required: false
       style: form
       explode: false

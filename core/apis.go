@@ -274,9 +274,9 @@ func (s *servicesImpl) SerUpdateProfile(accountID string, profile model.Profile)
 	return s.app.serUpdateProfile(accountID, profile)
 }
 
-func (s *servicesImpl) SerGetAccounts(limit int, offset int, appID string, orgID string, accountID *string, authTypeIdentifier *string, admin *bool,
+func (s *servicesImpl) SerGetAccounts(limit int, offset int, appID string, orgID string, accountID *string, authTypeIdentifier *string, hasPermissions *bool,
 	permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error) {
-	return s.app.serGetAccounts(limit, offset, appID, orgID, accountID, authTypeIdentifier, admin, permissions, roleIDs, groupIDs)
+	return s.app.serGetAccounts(limit, offset, appID, orgID, accountID, authTypeIdentifier, hasPermissions, permissions, roleIDs, groupIDs)
 }
 
 func (s *servicesImpl) SerGetAuthTest(l *logs.Log) string {
@@ -351,9 +351,9 @@ func (s *administrationImpl) AdmGetApplicationPermissions(appID string, orgID st
 	return s.app.admGetApplicationPermissions(appID, orgID, l)
 }
 
-func (s *administrationImpl) AdmGetAccounts(limit int, offset int, appID string, orgID string, accountID *string, authTypeIdentifier *string, admin *bool,
+func (s *administrationImpl) AdmGetAccounts(limit int, offset int, appID string, orgID string, accountID *string, authTypeIdentifier *string, hasPermissions *bool,
 	permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error) {
-	return s.app.admGetAccounts(limit, offset, appID, orgID, accountID, authTypeIdentifier, admin, permissions, roleIDs, groupIDs)
+	return s.app.admGetAccounts(limit, offset, appID, orgID, accountID, authTypeIdentifier, hasPermissions, permissions, roleIDs, groupIDs)
 }
 
 func (s *administrationImpl) AdmGetAccount(accountID string) (*model.Account, error) {

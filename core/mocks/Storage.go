@@ -99,12 +99,12 @@ func (_m *Storage) CreateGlobalConfig(context storage.TransactionContext, global
 }
 
 // DeleteAccountPermissions provides a mock function with given fields: context, accountID, admin, permissions
-func (_m *Storage) DeleteAccountPermissions(context storage.TransactionContext, accountID string, admin bool, permissions []model.Permission) error {
-	ret := _m.Called(context, accountID, admin, permissions)
+func (_m *Storage) DeleteAccountPermissions(context storage.TransactionContext, accountID string, hasPermissions bool, permissions []model.Permission) error {
+	ret := _m.Called(context, accountID, hasPermissions, permissions)
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, bool, []model.Permission) error); ok {
-		r0 = rf(context, accountID, admin, permissions)
+		r0 = rf(context, accountID, hasPermissions, permissions)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -113,12 +113,12 @@ func (_m *Storage) DeleteAccountPermissions(context storage.TransactionContext, 
 }
 
 // DeleteAccountRoles provides a mock function with given fields: context, accountID, admin, roleIDs
-func (_m *Storage) DeleteAccountRoles(context storage.TransactionContext, accountID string, admin bool, roleIDs []string) error {
-	ret := _m.Called(context, accountID, admin, roleIDs)
+func (_m *Storage) DeleteAccountRoles(context storage.TransactionContext, accountID string, hasPermissions bool, roleIDs []string) error {
+	ret := _m.Called(context, accountID, hasPermissions, roleIDs)
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, bool, []string) error); ok {
-		r0 = rf(context, accountID, admin, roleIDs)
+		r0 = rf(context, accountID, hasPermissions, roleIDs)
 	} else {
 		r0 = ret.Error(0)
 	}

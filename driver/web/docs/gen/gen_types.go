@@ -268,8 +268,8 @@ type AccountAuthTypeFields_Params struct {
 
 // AccountFields defines model for AccountFields.
 type AccountFields struct {
-	Admin bool   `json:"admin"`
-	Id    string `json:"id"`
+	HasPermissions bool   `json:"has_permissions"`
+	Id             string `json:"id"`
 }
 
 // AppOrgGroup defines model for AppOrgGroup.
@@ -500,19 +500,19 @@ type OrganizationFieldsType string
 
 // PartialAccount defines model for PartialAccount.
 type PartialAccount struct {
-	Admin       bool                    `json:"admin"`
-	AppId       string                  `json:"app_id"`
-	AuthTypes   []AccountAuthTypeFields `json:"auth_types"`
-	DateCreated string                  `json:"date_created"`
-	DateUpdated *string                 `json:"date_updated"`
-	FirstName   string                  `json:"first_name"`
-	Groups      []AppOrgGroupFields     `json:"groups"`
-	Id          string                  `json:"id"`
-	LastName    string                  `json:"last_name"`
-	OrgId       string                  `json:"org_id"`
-	Params      *map[string]interface{} `json:"params"`
-	Permissions []PermissionFields      `json:"permissions"`
-	Roles       []AppOrgRoleFields      `json:"roles"`
+	AppId          string                  `json:"app_id"`
+	AuthTypes      []AccountAuthTypeFields `json:"auth_types"`
+	DateCreated    string                  `json:"date_created"`
+	DateUpdated    *string                 `json:"date_updated"`
+	FirstName      string                  `json:"first_name"`
+	Groups         []AppOrgGroupFields     `json:"groups"`
+	HasPermissions bool                    `json:"has_permissions"`
+	Id             string                  `json:"id"`
+	LastName       string                  `json:"last_name"`
+	OrgId          string                  `json:"org_id"`
+	Params         *map[string]interface{} `json:"params"`
+	Permissions    []PermissionFields      `json:"permissions"`
+	Roles          []AppOrgRoleFields      `json:"roles"`
 }
 
 // Permission defines model for Permission.
@@ -996,14 +996,14 @@ type SharedReqUpdateAccountAuthType string
 
 // SharedResAccount defines model for _shared_res_Account.
 type SharedResAccount struct {
-	Admin       *bool                    `json:"admin,omitempty"`
-	AuthTypes   *[]AccountAuthTypeFields `json:"auth_types,omitempty"`
-	Groups      *[]AppOrgGroupFields     `json:"groups,omitempty"`
-	Id          string                   `json:"id"`
-	Permissions *[]PermissionFields      `json:"permissions,omitempty"`
-	Preferences *map[string]interface{}  `json:"preferences"`
-	Profile     *ProfileFields           `json:"profile,omitempty"`
-	Roles       *[]AppOrgRoleFields      `json:"roles,omitempty"`
+	AuthTypes      *[]AccountAuthTypeFields `json:"auth_types,omitempty"`
+	Groups         *[]AppOrgGroupFields     `json:"groups,omitempty"`
+	HasPermissions *bool                    `json:"has_permissions,omitempty"`
+	Id             string                   `json:"id"`
+	Permissions    *[]PermissionFields      `json:"permissions,omitempty"`
+	Preferences    *map[string]interface{}  `json:"preferences"`
+	Profile        *ProfileFields           `json:"profile,omitempty"`
+	Roles          *[]AppOrgRoleFields      `json:"roles,omitempty"`
 }
 
 // SharedResAccountCheck defines model for _shared_res_AccountCheck.
@@ -1228,8 +1228,8 @@ type GetAdminApplicationAccountsParams struct {
 	// The authentication type identifier
 	AuthTypeIdentifier *string `json:"auth-type-identifier,omitempty"`
 
-	// Admin level account filter
-	Admin *bool `json:"admin,omitempty"`
+	// Account has permissions (permissions, roles, or groups) filter
+	HasPermissions *bool `json:"has-permissions,omitempty"`
 
 	// A comma-separated list of permission names
 	Permissions *string `json:"permissions,omitempty"`
@@ -1359,8 +1359,8 @@ type GetServicesAccountsParams struct {
 	// The authentication type identifier
 	AuthTypeIdentifier *string `json:"auth-type-identifier,omitempty"`
 
-	// Admin level account filter
-	Admin *bool `json:"admin,omitempty"`
+	// Account has permissions (permissions, roles, or groups) filter
+	HasPermissions *bool `json:"has-permissions,omitempty"`
 
 	// A comma-separated list of permission names
 	Permissions *string `json:"permissions,omitempty"`

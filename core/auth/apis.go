@@ -654,8 +654,8 @@ func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID
 				return errors.WrapErrorAction(logutils.ActionValidate, model.TypePermission, nil, err)
 			}
 
-			admin := len(newPermissions) > 0 || len(updatedAccount.Roles) > 0 || len(updatedAccount.Groups) > 0
-			err = a.storage.UpdateAccountPermissions(context, account.ID, admin, newPermissions)
+			hasPermissions := len(newPermissions) > 0 || len(updatedAccount.Roles) > 0 || len(updatedAccount.Groups) > 0
+			err = a.storage.UpdateAccountPermissions(context, account.ID, hasPermissions, newPermissions)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionUpdate, "admin account permissions", nil, err)
 			}
@@ -672,8 +672,8 @@ func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID
 			}
 
 			newAccountRoles := model.AccountRolesFromAppOrgRoles(newRoles, true, true)
-			admin := len(updatedAccount.Permissions) > 0 || len(newAccountRoles) > 0 || len(updatedAccount.Groups) > 0
-			err = a.storage.UpdateAccountRoles(context, account.ID, admin, newAccountRoles)
+			hasPermissions := len(updatedAccount.Permissions) > 0 || len(newAccountRoles) > 0 || len(updatedAccount.Groups) > 0
+			err = a.storage.UpdateAccountRoles(context, account.ID, hasPermissions, newAccountRoles)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionUpdate, "admin account roles", nil, err)
 			}
@@ -690,8 +690,8 @@ func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID
 			}
 
 			newAccountGroups := model.AccountGroupsFromAppOrgGroups(newGroups, true, true)
-			admin := len(updatedAccount.Permissions) > 0 || len(updatedAccount.Roles) > 0 || len(newAccountGroups) > 0
-			err = a.storage.UpdateAccountGroups(context, account.ID, admin, newAccountGroups)
+			hasPermissions := len(updatedAccount.Permissions) > 0 || len(updatedAccount.Roles) > 0 || len(newAccountGroups) > 0
+			err = a.storage.UpdateAccountGroups(context, account.ID, hasPermissions, newAccountGroups)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionUpdate, "admin account groups", nil, err)
 			}
