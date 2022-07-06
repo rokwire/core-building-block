@@ -705,13 +705,13 @@ func (h ServicesApisHandler) getAccounts(l *logs.Log, r *http.Request, claims *t
 		authTypeIdentifier = &authTypeIdentifierParam
 	}
 
-	//admin
+	//has permissions
 	var hasPermissions *bool
 	hasPermissionsArg := r.URL.Query().Get("has-permissions")
 	if hasPermissionsArg != "" {
 		hasPermissionsVal, err := strconv.ParseBool(hasPermissionsArg)
 		if err != nil {
-			return l.HttpResponseErrorAction(logutils.ActionParse, logutils.TypeArg, logutils.StringArgs("admin"), err, http.StatusBadRequest, false)
+			return l.HttpResponseErrorAction(logutils.ActionParse, logutils.TypeArg, logutils.StringArgs("has-permissions"), err, http.StatusBadRequest, false)
 		}
 		hasPermissions = &hasPermissionsVal
 	}
