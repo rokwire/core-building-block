@@ -37,12 +37,42 @@ func accountToDef(item model.Account) *Def.SharedResAccount {
 		AuthTypes: &authTypes, Profile: profile, Preferences: preferences}
 }
 
-func аccountsToDef(items []model.Account) []Def.SharedResAccount {
+func accountsToDef(items []model.Account) []Def.SharedResAccount {
 	result := make([]Def.SharedResAccount, len(items))
 	for i, item := range items {
 		result[i] = *accountToDef(item)
 	}
 	return result
+}
+
+func partialAccountToDef(item model.Account, params map[string]interface{}) *Def.PartialAccount {
+	//permissions
+	permissions := applicationPermissionsToDef(item.Permissions)
+	//roles
+	roles := accountRolesToDef(item.GetActiveRoles())
+	//groups
+	groups := accountGroupsToDef(item.GetActiveGroups())
+	//account auth types
+	authTypes := accountAuthTypesToDef(item.AuthTypes)
+	for i := 0; i < len(authTypes); i++ {
+		authTypes[i].Params = nil
+	}
+	//dates
+	var dateUpdated *string
+	dateCreated := item.DateCreated.Format("2006-01-02T15:04:05.000Z")
+	if item.DateUpdated != nil {
+		formatted := item.DateUpdated.Format("2006-01-02T15:04:05.000Z")
+		dateUpdated = &formatted
+	}
+
+	//params
+	var paramsData *map[string]interface{}
+	if params != nil {
+		paramsData = &params
+	}
+	return &Def.PartialAccount{Id: item.ID, AppId: item.AppOrg.Application.ID, OrgId: item.AppOrg.Organization.ID,
+		FirstName: item.Profile.FirstName, LastName: item.Profile.LastName, Permissions: permissions, Roles: roles, Groups: groups,
+		AuthTypes: authTypes, DateCreated: dateCreated, DateUpdated: dateUpdated, Params: paramsData}
 }
 
 //AccountAuthType

@@ -198,7 +198,7 @@ func (app *application) admGetApplications(orgID string) ([]model.Application, e
 	return apps, nil
 }
 
-func (app *application) admCreateAppOrgGroup(name string, permissionIDs []string, rolesIDs []string, appID string, orgID string, assignerPermissions []string, l *logs.Log) (*model.AppOrgGroup, error) {
+func (app *application) admCreateAppOrgGroup(name string, permissionNames []string, rolesIDs []string, appID string, orgID string, assignerPermissions []string, system bool, l *logs.Log) (*model.AppOrgGroup, error) {
 	//1. get application organization entity
 	appOrg, err := app.storage.FindApplicationOrganization(appID, orgID)
 	if err != nil {
@@ -206,7 +206,7 @@ func (app *application) admCreateAppOrgGroup(name string, permissionIDs []string
 	}
 
 	//2. check permissions
-	groupPermissions, err := app.checkPermissions(*appOrg, permissionIDs, l)
+	groupPermissions, err := app.checkPermissions(*appOrg, permissionNames, l)
 	if err != nil {
 		return nil, errors.WrapErrorAction("error checking if the permissions ids are valid", "", nil, err)
 	}
@@ -236,7 +236,7 @@ func (app *application) admCreateAppOrgGroup(name string, permissionIDs []string
 	//6. create and insert group
 	id, _ := uuid.NewUUID()
 	now := time.Now()
-	group := model.AppOrgGroup{ID: id.String(), Name: name, Roles: groupRoles, Permissions: groupPermissions, AppOrg: *appOrg, DateCreated: now}
+	group := model.AppOrgGroup{ID: id.String(), Name: name, Roles: groupRoles, Permissions: groupPermissions, AppOrg: *appOrg, System: system, DateCreated: now}
 	err = app.storage.InsertAppOrgGroup(group)
 	if err != nil {
 		return nil, err
@@ -259,7 +259,7 @@ func (app *application) admGetAppOrgGroups(appID string, orgID string) ([]model.
 	return getAppOrgGroups, nil
 }
 
-func (app *application) admDeleteAppOrgGroup(ID string, appID string, orgID string, assignerPermissions []string, l *logs.Log) error {
+func (app *application) admDeleteAppOrgGroup(ID string, appID string, orgID string, assignerPermissions []string, system bool, l *logs.Log) error {
 	//1. get application organization entity
 	appOrg, err := app.storage.FindApplicationOrganization(appID, orgID)
 	if err != nil {
@@ -292,7 +292,7 @@ func (app *application) admDeleteAppOrgGroup(ID string, appID string, orgID stri
 	}
 
 	//5. do not allow to delete system groups
-	if group.System {
+	if group.System && !system {
 		return errors.Newf("%s group is a system grup and cannot be deleted", group.Name)
 	}
 
@@ -335,11 +335,7 @@ func (app *application) admAddAccountsToGroup(appID string, orgID string, groupI
 	}
 
 	//find group
-	appOrg, err := app.storage.FindApplicationOrganization(appID, orgID)
-	if err != nil {
-		return errors.Wrap("error getting app org on add accounts to group", err)
-	}
-	group, err := app.storage.FindAppOrgGroup(groupID, appOrg.ID)
+	group, err := app.storage.FindAppOrgGroup(groupID, accounts[0].AppOrg.ID)
 	if err != nil {
 		return errors.Wrap("error finding app org group", err)
 	}
@@ -428,7 +424,7 @@ func (app *application) admRemoveAccountsFromGroup(appID string, orgID string, g
 	return nil
 }
 
-func (app *application) admCreateAppOrgRole(name string, description string, permissionIDs []string, appID string, orgID string, assignerPermissions []string, l *logs.Log) (*model.AppOrgRole, error) {
+func (app *application) admCreateAppOrgRole(name string, description string, permissionNames []string, appID string, orgID string, assignerPermissions []string, system bool, l *logs.Log) (*model.AppOrgRole, error) {
 	//1. get application organization entity
 	appOrg, err := app.storage.FindApplicationOrganization(appID, orgID)
 	if err != nil {
@@ -436,7 +432,7 @@ func (app *application) admCreateAppOrgRole(name string, description string, per
 	}
 
 	//2. check role permissions
-	rolePermissions, err := app.checkPermissions(*appOrg, permissionIDs, l)
+	rolePermissions, err := app.checkPermissions(*appOrg, permissionNames, l)
 	if err != nil {
 		return nil, errors.WrapErrorAction("error checking if the permissions ids are valid", "", nil, err)
 	}
@@ -452,7 +448,7 @@ func (app *application) admCreateAppOrgRole(name string, description string, per
 	//4. create and insert role
 	id, _ := uuid.NewUUID()
 	now := time.Now()
-	role := model.AppOrgRole{ID: id.String(), Name: name, Description: description, Permissions: rolePermissions, AppOrg: *appOrg, DateCreated: now}
+	role := model.AppOrgRole{ID: id.String(), Name: name, Description: description, System: system, Permissions: rolePermissions, AppOrg: *appOrg, DateCreated: now}
 	err = app.storage.InsertAppOrgRole(role)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeAppOrgRole, nil, err)
@@ -460,7 +456,7 @@ func (app *application) admCreateAppOrgRole(name string, description string, per
 	return &role, nil
 }
 
-func (app *application) AdmGetAppOrgRoles(appID string, orgID string) ([]model.AppOrgRole, error) {
+func (app *application) admGetAppOrgRoles(appID string, orgID string) ([]model.AppOrgRole, error) {
 	//find application organization
 	getAppOrg, err := app.storage.FindApplicationOrganization(appID, orgID)
 	if err != nil {
@@ -476,7 +472,7 @@ func (app *application) AdmGetAppOrgRoles(appID string, orgID string) ([]model.A
 	return getAppOrgRoles, nil
 }
 
-func (app *application) admDeleteAppOrgRole(ID string, appID string, orgID string, assignerPermissions []string, l *logs.Log) error {
+func (app *application) admDeleteAppOrgRole(ID string, appID string, orgID string, assignerPermissions []string, system bool, l *logs.Log) error {
 	//1. get application organization entity
 	appOrg, err := app.storage.FindApplicationOrganization(appID, orgID)
 	if err != nil {
@@ -489,7 +485,7 @@ func (app *application) admDeleteAppOrgRole(ID string, appID string, orgID strin
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgRole, nil, err)
 	}
 	if role == nil {
-		return errors.Newf("there is no a role for id %s", ID)
+		return errors.Newf("there is no role for id %s", ID)
 	}
 
 	//3. check assigners field
@@ -501,7 +497,7 @@ func (app *application) admDeleteAppOrgRole(ID string, appID string, orgID strin
 	}
 
 	//4. do not allow to delete system roles
-	if role.System {
+	if role.System && !system {
 		return errors.Newf("%s role is a system role and cannot be deleted", role.Name)
 	}
 
@@ -511,19 +507,19 @@ func (app *application) admDeleteAppOrgRole(ID string, appID string, orgID strin
 		return errors.WrapErrorAction("error checking the accounts count by role id", "", nil, err)
 	}
 	if *numberOfAccounts > 0 {
-		return errors.Newf("the %s is already used by account and cannot be deleted", role.Name)
+		return errors.Newf("%s is already used by account and cannot be deleted", role.Name)
 	}
 
-	//6. check if the group has groups relations
+	//6. check if the role has groups relations
 	numberOfGroups, err := app.storage.CountGroupsByRoleID(ID)
 	if err != nil {
 		return errors.WrapErrorAction("error checking the groups count by role id", "", nil, err)
 	}
 	if *numberOfGroups > 0 {
-		return errors.Newf("the %s is already used by groups and cannot be deleted", role.Name)
+		return errors.Newf("%s is already used by groups and cannot be deleted", role.Name)
 	}
 
-	//7. delete the group
+	//7. delete the role
 	err = app.storage.DeleteAppOrgRole(ID)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAppOrgRole, nil, err)
@@ -629,48 +625,27 @@ func (app *application) admGrantAccountPermissions(appID string, orgID string, a
 		return errors.New("no permissions for granting")
 	}
 
-	//verify that the account is for the current app/org
-	account, err := app.storage.FindAccountByID(nil, accountID)
-	if err != nil {
-		return errors.Wrap("error finding account on permissions granting", err)
-	}
-	if (account.AppOrg.Application.ID != appID) || (account.AppOrg.Organization.ID != orgID) {
-		l.Warnf("someone is trying to grant permissions to %s for different app/org", accountID)
-		return errors.Newf("not allowed")
-	}
-
-	//verify that the account do not have any of the permissions which are supposed to be granted
-	for _, current := range permissionNames {
-		hasP := account.GetPermissionNamed(current)
-		if hasP != nil {
-			l.Infof("trying to double grant %s for %s", current, accountID)
-			return errors.Newf("account %s already has %s granted", accountID, current)
-		}
-	}
-
-	//find permissions
-	permissions, err := app.storage.FindPermissionsByName(permissionNames)
-	if err != nil {
-		return err
-	}
-	if len(permissions) == 0 {
-		return errors.Newf("no permissions found for names: %v", permissionNames)
-	}
-
-	//check if authorized
-	for _, permission := range permissions {
-		err = permission.CheckAssigners(assignerPermissions)
+	transaction := func(context storage.TransactionContext) error {
+		//1. verify that the account is for the current app/org
+		account, err := app.storage.FindAccountByID(context, accountID)
 		if err != nil {
-			return errors.Wrapf("error checking permission assigners", err)
+			return errors.Wrap("error finding account on permissions granting", err)
 		}
+		if (account.AppOrg.Application.ID != appID) || (account.AppOrg.Organization.ID != orgID) {
+			l.Warnf("someone is trying to grant permissions to %s for different app/org", accountID)
+			return errors.Newf("not allowed")
+		}
+
+		//2. grant account permissions
+		err = app.auth.GrantAccountPermissions(context, account, permissionNames, assignerPermissions)
+		if err != nil {
+			return errors.Wrap("error granting account permissions", err)
+		}
+
+		return nil
 	}
 
-	//update account if authorized
-	err = app.storage.InsertAccountPermissions(accountID, permissions)
-	if err != nil {
-		return err
-	}
-	return nil
+	return app.storage.PerformTransaction(transaction)
 }
 
 func (app *application) admRevokeAccountPermissions(appID string, orgID string, accountID string, permissionNames []string, assignerPermissions []string, l *logs.Log) error {
@@ -705,7 +680,7 @@ func (app *application) admRevokeAccountPermissions(appID string, orgID string, 
 	}
 
 	//find permissions
-	permissions, err := app.storage.FindPermissionsByName(permissionNames)
+	permissions, err := app.storage.FindPermissionsByName(nil, permissionNames)
 	if err != nil {
 		return err
 	}
@@ -754,50 +729,27 @@ func (app *application) admGrantAccountRoles(appID string, orgID string, account
 		return errors.New("no roles for granting")
 	}
 
-	//verify that the account is for the current app/org
-	account, err := app.storage.FindAccountByID(nil, accountID)
-	if err != nil {
-		return errors.Wrap("error finding account on permissions granting", err)
-	}
-	if (account.AppOrg.Application.ID != appID) || (account.AppOrg.Organization.ID != orgID) {
-		l.Warnf("someone is trying to grant roles to %s for different app/org", accountID)
-		return errors.Newf("not allowed")
-	}
-
-	//find roles
-	roles, err := app.storage.FindAppOrgRolesByIDs(nil, roleIDs, account.AppOrg.ID)
-	if err != nil {
-		return errors.Wrap("error finding app org roles", err)
-	}
-	if len(roles) != len(roleIDs) {
-		return errors.New("not valid roles")
-	}
-
-	//verify that the account do not have any of the roles which are supposed to be granted
-	for _, current := range roles {
-		hasR := account.GetRole(current.ID)
-		if hasR != nil {
-			l.Infof("trying to double grant %s for %s", current.Name, accountID)
-			return errors.Newf("account %s already has %s granted", accountID, current.Name)
-		}
-	}
-
-	//check if authorized
-	for _, cRole := range roles {
-		err = cRole.CheckAssigners(assignerPermissions)
+	transaction := func(context storage.TransactionContext) error {
+		//1. verify that the account is for the current app/org
+		account, err := app.storage.FindAccountByID(context, accountID)
 		if err != nil {
-			return errors.Wrapf("error checking assigners for %s role", err, cRole.Name)
+			return errors.Wrap("error finding account on roles granting", err)
 		}
+		if (account.AppOrg.Application.ID != appID) || (account.AppOrg.Organization.ID != orgID) {
+			l.Warnf("someone is trying to grant roles to %s for different app/org", accountID)
+			return errors.Newf("not allowed")
+		}
+
+		//2. grant account roles
+		err = app.auth.GrantAccountRoles(context, account, roleIDs, assignerPermissions)
+		if err != nil {
+			return errors.Wrap("error granting account roles", err)
+		}
+
+		return nil
 	}
 
-	//update account if authorized
-	accountRoles := model.AccountRolesFromAppOrgRoles(roles, true, true)
-	err = app.storage.InsertAccountRoles(accountID, account.AppOrg.ID, accountRoles)
-	if err != nil {
-		return errors.Wrap("error inserting account roles", err)
-	}
-
-	return nil
+	return app.storage.PerformTransaction(transaction)
 }
 
 func (app *application) admRevokeAccountRoles(appID string, orgID string, accountID string, roleIDs []string, assignerPermissions []string, l *logs.Log) error {
@@ -872,7 +824,7 @@ func (app *application) admRevokeAccountRoles(appID string, orgID string, accoun
 	return nil
 }
 
-func (app *application) admGrantPermissionsToRole(appID string, orgID string, roleID string, permissionNames []string, assignerPermissions []string, l *logs.Log) error {
+func (app *application) admGrantPermissionsToRole(appID string, orgID string, roleID string, permissionNames []string, assignerPermissions []string, system bool, l *logs.Log) error {
 	//check if there is data
 	if len(assignerPermissions) == 0 {
 		return errors.New("no permissions from admin assigner")
@@ -891,6 +843,10 @@ func (app *application) admGrantPermissionsToRole(appID string, orgID string, ro
 		return errors.Wrap("error finding account on permissions granting", err)
 	}
 
+	if role.System && !system {
+		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeClaim, logutils.StringArgs("system"))
+	}
+
 	//verify that the role do not have any of the permissions which are supposed to be granted
 	for _, current := range permissionNames {
 		hasP := role.GetPermissionNamed(current)
@@ -901,7 +857,7 @@ func (app *application) admGrantPermissionsToRole(appID string, orgID string, ro
 	}
 
 	//find permissions
-	permissions, err := app.storage.FindPermissionsByName(permissionNames)
+	permissions, err := app.storage.FindPermissionsByName(nil, permissionNames)
 	if err != nil {
 		return err
 	}

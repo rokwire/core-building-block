@@ -68,8 +68,8 @@ func (app *application) getAccount(accountID string) (*model.Account, error) {
 
 //checkPermissions checks if the provided permissions ids are valid for the app/org.
 //	it returns the permissions list for these ids if they are valid
-func (app *application) checkPermissions(appOrg model.ApplicationOrganization, permissionIDs []string, l *logs.Log) ([]model.Permission, error) {
-	if len(permissionIDs) == 0 {
+func (app *application) checkPermissions(appOrg model.ApplicationOrganization, permissionNames []string, l *logs.Log) ([]model.Permission, error) {
+	if len(permissionNames) == 0 {
 		return nil, nil
 	}
 
@@ -77,23 +77,23 @@ func (app *application) checkPermissions(appOrg model.ApplicationOrganization, p
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypePermission, nil, err)
 	}
-	if len(permissionIDs) > len(permissions) {
+	if len(permissionNames) > len(permissions) {
 		return nil, errors.New("mismatch permissions count")
 	}
-	rolePermissions := make([]model.Permission, len(permissionIDs))
-	for i, permissionID := range permissionIDs {
+	rolePermissions := make([]model.Permission, len(permissionNames))
+	for i, permissionName := range permissionNames {
 		var rolePermission *model.Permission
 
 		for _, permission := range permissions {
-			if permission.ID == permissionID {
+			if permission.Name == permissionName {
 				rolePermission = &permission
 				break
 			}
 		}
 
 		if rolePermission == nil {
-			l.Infof("%s permission does not match", permissionID)
-			return nil, errors.Newf("%s permission does not match", permissionID)
+			l.Infof("%s permission does not match", permissionName)
+			return nil, errors.Newf("%s permission does not match", permissionName)
 		}
 		rolePermissions[i] = *rolePermission
 	}

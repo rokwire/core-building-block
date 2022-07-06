@@ -1,66 +1,63 @@
-p, all_system_core, /core/system/*, (GET)|(POST)|(DELETE)|(PUT) #Access all Core BB system endpoints
+p, all_system_core, /core/system/*, (GET)|(POST)|(DELETE)|(PUT)
 
-p, all_global-config, /core/system/global-config, (GET)|(POST)|(DELETE)|(PUT) #All global config actions
-p, get_global-config, /core/system/global-config, (GET) #Get global configs
-p, update_global-config, /core/system/global-config, (GET)|(PUT)|(POST) #Update and create global configs
+p, all_global-config, /core/system/global-config, (GET)|(POST)|(DELETE)|(PUT)
+p, get_global-config, /core/system/global-config, (GET)
+p, update_global-config, /core/system/global-config, (GET)|(PUT)|(POST)
 
-p, all_organizations, /core/system/organizations, (GET)|(POST)|(DELETE)|(PUT) #All organization actions
+p, all_organizations, /core/system/organizations, (GET)|(POST)|(DELETE)|(PUT)
 p, all_organizations, /core/system/organizations/*, (GET)|(POST)|(DELETE)|(PUT)
-p, get_organizations, /core/system/organizations, (GET) #Get organizations
+p, get_organizations, /core/system/organizations, (GET)
 p, get_organizations, /core/system/organizations/*, (GET)
-p, update_organizations, /core/system/organizations, (GET)|(POST) #Update and create organizations
+p, update_organizations, /core/system/organizations, (GET)|(POST)
 p, update_organizations, /core/system/organizations/*, (GET)|(PUT)
 
-p, all_applications, /core/system/applications, (GET)|(POST)|(DELETE)|(PUT) #All application actions
+p, all_applications, /core/system/applications, (GET)|(POST)|(DELETE)|(PUT)
 p, all_applications, /core/system/applications/*, (GET)|(POST)|(DELETE)|(PUT)
-p, get_applications, /core/system/applications, (GET) #Get applications
+p, get_applications, /core/system/applications, (GET)
 p, get_applications, /core/system/applications/*, (GET)
-p, update_applications, /core/system/applications, (GET)|(POST) #Create applications
+p, update_applications, /core/system/applications, (GET)|(POST)
 
-p, all_permissions, /core/system/permissions, (GET)|(POST)|(DELETE)|(PUT) #All permission actions
-p, update_permissions, /core/system/permissions, (POST)|(PUT) #Update and create permissions
+p, all_permissions, /core/system/permissions, (GET)|(POST)|(DELETE)|(PUT)
+p, update_permissions, /core/system/permissions, (POST)|(PUT)
 
-p, all_auth-roles, /core/system/application-roles, (GET)|(POST)|(DELETE)|(PUT) #All auth role actions
-p, update_auth-roles, /core/system/application-roles, (POST) #Update and create auth roles
-
-p, all_app-configs, /core/system/application/configs, (GET)|(POST)|(PUT)|(DELETE) #All app config actions
-p, all_app-configs, /core/system/application/configs/*, (GET)|(POST)|(PUT)|(DELETE) #All app config actions
-p, get_app-configs, /core/system/application/configs, (GET) #Get app configs
+p, all_app-configs, /core/system/application/configs, (GET)|(POST)|(PUT)|(DELETE)
+p, all_app-configs, /core/system/application/configs/*, (GET)|(POST)|(PUT)|(DELETE)
+p, get_app-configs, /core/system/application/configs, (GET)
 p, get_app-configs, /core/system/application/configs/*, (GET)
-p, update_app-configs, /core/system/application/configs, (GET)|(POST) #Update and create app configs
+p, update_app-configs, /core/system/application/configs, (GET)|(POST)
 p, update_app-configs, /core/system/application/configs/*, (GET)|(PUT)
-p, delete_app-config, /core/system/application/configs/*, (GET)|(DELETE) #Delete app configs
+p, delete_app-config, /core/system/application/configs/*, (GET)|(DELETE)
 p, delete_app-config, /core/system/application/configs, (GET)
 
-p, all_account-permissions, /core/system/account/permissions, (GET)|(POST)|(DELETE)|(PUT) #All account permission actions
-p, update_account-permissions, /core/system/account/permissions, (POST)|(PUT) #Grant and revoke account permissions
+p, create_accounts, /core/system/accounts, (POST)
 
-p, all_account-roles, /core/system/account/roles, (GET)|(POST)|(DELETE)|(PUT) #All account roles actions
-p, update_account-roles, /core/system/account/roles, (POST)|(PUT) #Grant and revoke account roles
+p, all_account-permissions, /core/system/account/permissions, (GET)|(POST)|(DELETE)|(PUT)
+p, update_account-permissions, /core/system/account/permissions, (POST)|(PUT)
 
-p, all_service-regs, /core/system/service-regs, (GET)|(POST)|(DELETE)|(PUT) #All service registration actions
-p, get_service-regs, /core/system/service-regs, (GET) #Get service registrations
-p, update_service-regs, /core/system/service-regs, (GET)|(POST)|(PUT) #Update and create service registrations
-p, delete_service-regs, /core/system/service-regs, (GET)|(DELETE) #Delete service registrations
+p, all_account-roles, /core/system/account/roles, (GET)|(POST)|(DELETE)|(PUT)
+p, update_account-roles, /core/system/account/roles, (POST)|(PUT)
 
-p, all_service-accounts, /core/system/service-accounts, (GET)|(POST)|(DELETE)|(PUT) #All service account actions
+p, all_service-regs, /core/system/service-regs, (GET)|(POST)|(DELETE)|(PUT)
+p, get_service-regs, /core/system/service-regs, (GET)
+p, update_service-regs, /core/system/service-regs, (GET)|(POST)|(PUT)
+p, delete_service-regs, /core/system/service-regs, (GET)|(DELETE)
+
+p, all_service-accounts, /core/system/service-accounts, (GET)|(POST)|(DELETE)|(PUT)
 p, all_service-accounts, /core/system/service-accounts/*, (GET)|(POST)|(DELETE)|(PUT)
-p, get_service-accounts, /core/system/service-accounts, (GET) #Get service accounts
+p, get_service-accounts, /core/system/service-accounts, (GET)
 p, get_service-accounts, /core/system/service-accounts/*, (GET)
-p, update_service-accounts, /core/system/service-accounts, (GET)|(POST)|(PUT) #Update and create service accounts
+p, update_service-accounts, /core/system/service-accounts, (GET)|(POST)|(PUT)
 p, update_service-accounts, /core/system/service-accounts/*, (GET)|(POST)|(PUT)
-p, delete_service-accounts, /core/system/service-accounts, (GET)|(DELETE) #Delete service accounts
+p, delete_service-accounts, /core/system/service-accounts, (GET)|(DELETE)
 p, delete_service-accounts, /core/system/service-accounts/*, (GET)|(DELETE)
 
-p, all_api-keys, /core/system/api-keys, (GET)|(POST)|(DELETE)|(PUT) #All api key actions
-p, all_api-keys, /core/system/application-api-keys, (GET)
-p, get_api-keys, /core/system/api-keys, (GET) #Get api keys
-p, get_api-keys, /core/admin/application-api-keys, (GET)
-p, update_api-keys, /core/system/api-keys, (GET)|(POST)|(PUT) #Update and create api keys
-p, delete_api-keys, /core/system/api-keys, (GET)|(DELETE) #Delete api keys
+p, all_api-keys, /core/system/api-keys, (GET)|(POST)|(DELETE)|(PUT)
+p, get_api-keys, /core/system/api-keys, (GET)
+p, update_api-keys, /core/system/api-keys, (GET)|(POST)|(PUT)
+p, delete_api-keys, /core/system/api-keys, (GET)|(DELETE)
 
-p, all_auth-types, /core/system/auth-types, (GET)|(POST)|(PUT)|(DELETE) #All auth type actions
+p, all_auth-types, /core/system/auth-types, (GET)|(POST)|(PUT)|(DELETE)
 p, all_auth-types, /core/system/auth-types/*, (GET)|(POST)|(PUT)|(DELETE)
-p, get_auth-types, /core/system/auth-types, (GET) #Get auth types
-p, update_auth-types, /core/system/auth-types, (GET)|(POST) #Update and create auth types
+p, get_auth-types, /core/system/auth-types, (GET)
+p, update_auth-types, /core/system/auth-types, (GET)|(POST)
 p, update_auth-types, /core/system/auth-types/*, (PUT)
