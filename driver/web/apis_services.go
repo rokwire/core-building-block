@@ -706,14 +706,14 @@ func (h ServicesApisHandler) getAccounts(l *logs.Log, r *http.Request, claims *t
 	}
 
 	//admin
-	var admin *bool
-	adminArg := r.URL.Query().Get("admin")
-	if adminArg != "" {
-		adminVal, err := strconv.ParseBool(adminArg)
+	var hasPermissions *bool
+	hasPermissionsArg := r.URL.Query().Get("has-permissions")
+	if hasPermissionsArg != "" {
+		hasPermissionsVal, err := strconv.ParseBool(hasPermissionsArg)
 		if err != nil {
 			return l.HttpResponseErrorAction(logutils.ActionParse, logutils.TypeArg, logutils.StringArgs("admin"), err, http.StatusBadRequest, false)
 		}
-		admin = &adminVal
+		hasPermissions = &hasPermissionsVal
 	}
 	//permissions
 	var permissions []string
@@ -734,7 +734,7 @@ func (h ServicesApisHandler) getAccounts(l *logs.Log, r *http.Request, claims *t
 		groupIDs = strings.Split(groupsArg, ",")
 	}
 
-	accounts, err := h.coreAPIs.Services.SerGetAccounts(limit, offset, claims.AppID, claims.OrgID, accountID, authTypeIdentifier, admin, permissions, roleIDs, groupIDs)
+	accounts, err := h.coreAPIs.Services.SerGetAccounts(limit, offset, claims.AppID, claims.OrgID, accountID, authTypeIdentifier, hasPermissions, permissions, roleIDs, groupIDs)
 	if err != nil {
 		return l.HttpResponseErrorAction("error finding accounts", model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}
