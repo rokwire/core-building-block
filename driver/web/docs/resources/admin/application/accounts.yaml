@@ -5,7 +5,7 @@ get:
   description: |
     Finds accounts for the specified application
 
-    **Auth:** Requires admin access token with `get_accounts` permission
+    **Auth:** Requires admin access token with `get_accounts` or `update_accounts` permission
   security:
     - bearerAuth: []
   parameters:

@@ -890,7 +890,7 @@ paths:
       description: |
         Finds accounts using a set of optional search parameters
 
-        **Auth:** Requires access token with `get_accounts` permission
+        **Auth:** Requires access token with `get_accounts` or `update_accounts` permission
       security:
         - bearerAuth: []
       parameters:
@@ -1740,7 +1740,7 @@ paths:
       description: |
         Finds accounts for the specified application
 
-        **Auth:** Requires admin access token with `get_accounts` permission
+        **Auth:** Requires admin access token with `get_accounts` or `update_accounts` permission
       security:
         - bearerAuth: []
       parameters:
