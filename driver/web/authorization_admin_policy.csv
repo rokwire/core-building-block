@@ -30,7 +30,7 @@ p, get_permissions, /core/admin/application/permissions, (GET)
 
 p, get_accounts, /core/admin/application/accounts, (GET)
 p, create_accounts, /core/admin/application/accounts, (POST)
-p, update_accounts, /core/admin/application/accounts, (PUT)
+p, update_accounts, /core/admin/application/accounts, (GET)|(PUT)
 
 p, get_account-devices, /core/admin/application/account/{id}/devices, (GET)
 
