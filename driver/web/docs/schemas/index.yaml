@@ -112,6 +112,8 @@ _shared_req_Mfa:
   $ref: "./apis/shared/requests/mfa/Request.yaml"
 _shared_req_CreateAccount:
   $ref: "./apis/shared/requests/create-account/Request.yaml"
+_shared_req_UpdateAccount:
+  $ref: "./apis/shared/requests/update-account/Request.yaml"
 _shared_req_AccountCheck:
   $ref: "./apis/shared/requests/AccountCheck.yaml"
 _shared_req_CredsEmail:

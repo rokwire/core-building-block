@@ -1548,6 +1548,33 @@ func (sa *Adapter) InsertAccountPermissions(context TransactionContext, accountI
 	return nil
 }
 
+//UpdateAccountPermissions updates account permissions
+func (sa *Adapter) UpdateAccountPermissions(context TransactionContext, accountID string, permissions []model.Permission) error {
+	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
+	update := bson.D{
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "permissions", Value: permissions},
+			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
+		}},
+	}
+
+	var res *mongo.UpdateResult
+	var err error
+	if context != nil {
+		res, err = sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
+	} else {
+		res, err = sa.db.accounts.UpdateOne(filter, update, nil)
+	}
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, nil, err)
+	}
+	if res.ModifiedCount != 1 {
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
+	}
+
+	return nil
+}
+
 //DeleteAccountPermissions deletes permissions from an account
 func (sa *Adapter) DeleteAccountPermissions(context TransactionContext, accountID string, permissions []model.Permission) error {
 	//filter
@@ -1700,17 +1727,24 @@ func (sa *Adapter) RemoveAccountsGroup(groupID string, accounts []model.Account)
 }
 
 //UpdateAccountRoles updates the account roles
-func (sa *Adapter) UpdateAccountRoles(accountID string, roles []model.AccountRole) error {
+func (sa *Adapter) UpdateAccountRoles(context TransactionContext, accountID string, roles []model.AccountRole) error {
 	stgRoles := accountRolesToStorage(roles)
 
 	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
 	update := bson.D{
 		primitive.E{Key: "$set", Value: bson.D{
 			primitive.E{Key: "roles", Value: stgRoles},
+			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
 		}},
 	}
 
-	res, err := sa.db.accounts.UpdateOne(filter, update, nil)
+	var res *mongo.UpdateResult
+	var err error
+	if context != nil {
+		res, err = sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
+	} else {
+		res, err = sa.db.accounts.UpdateOne(filter, update, nil)
+	}
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
@@ -1754,17 +1788,24 @@ func (sa *Adapter) DeleteAccountRoles(context TransactionContext, accountID stri
 }
 
 //UpdateAccountGroups updates the account groups
-func (sa *Adapter) UpdateAccountGroups(accountID string, groups []model.AccountGroup) error {
+func (sa *Adapter) UpdateAccountGroups(context TransactionContext, accountID string, groups []model.AccountGroup) error {
 	stgGroups := accountGroupsToStorage(groups)
 
 	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
 	update := bson.D{
 		primitive.E{Key: "$set", Value: bson.D{
 			primitive.E{Key: "groups", Value: stgGroups},
+			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
 		}},
 	}
 
-	res, err := sa.db.accounts.UpdateOne(filter, update, nil)
+	var res *mongo.UpdateResult
+	var err error
+	if context != nil {
+		res, err = sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
+	} else {
+		res, err = sa.db.accounts.UpdateOne(filter, update, nil)
+	}
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
@@ -2411,7 +2452,7 @@ func (sa *Adapter) FindAppOrgRole(id string, appOrgID string) (*model.AppOrgRole
 }
 
 //InsertAppOrgRole inserts a new application organization role
-func (sa *Adapter) InsertAppOrgRole(item model.AppOrgRole) error {
+func (sa *Adapter) InsertAppOrgRole(context TransactionContext, item model.AppOrgRole) error {
 	appOrg, err := sa.getCachedApplicationOrganizationByKey(item.AppOrg.ID)
 	if err != nil {
 		return errors.WrapErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_org_id": item.AppOrg.ID}, err)
@@ -2421,7 +2462,11 @@ func (sa *Adapter) InsertAppOrgRole(item model.AppOrgRole) error {
 	}
 
 	role := appOrgRoleToStorage(item)
-	_, err = sa.db.applicationsOrganizationsRoles.InsertOne(role)
+	if context != nil {
+		_, err = sa.db.applicationsOrganizationsRoles.InsertOneWithContext(context, role)
+	} else {
+		_, err = sa.db.applicationsOrganizationsRoles.InsertOne(role)
+	}
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAppOrgRole, nil, err)
 	}
@@ -2550,9 +2595,15 @@ func (sa *Adapter) FindAppOrgGroup(id string, appOrgID string) (*model.AppOrgGro
 }
 
 //InsertAppOrgGroup inserts a new application organization group
-func (sa *Adapter) InsertAppOrgGroup(item model.AppOrgGroup) error {
+func (sa *Adapter) InsertAppOrgGroup(context TransactionContext, item model.AppOrgGroup) error {
 	group := appOrgGroupToStorage(item)
-	_, err := sa.db.applicationsOrganizationsGroups.InsertOne(group)
+
+	var err error
+	if context != nil {
+		_, err = sa.db.applicationsOrganizationsGroups.InsertOneWithContext(context, group)
+	} else {
+		_, err = sa.db.applicationsOrganizationsGroups.InsertOne(group)
+	}
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAppOrgGroup, nil, err)
 	}

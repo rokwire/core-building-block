@@ -199,49 +199,44 @@ func (app *application) admGetApplications(orgID string) ([]model.Application, e
 }
 
 func (app *application) admCreateAppOrgGroup(name string, permissionNames []string, rolesIDs []string, appID string, orgID string, assignerPermissions []string, system bool, l *logs.Log) (*model.AppOrgGroup, error) {
-	//1. get application organization entity
-	appOrg, err := app.storage.FindApplicationOrganization(appID, orgID)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
-	}
-
-	//2. check permissions
-	groupPermissions, err := app.checkPermissions(*appOrg, permissionNames, l)
-	if err != nil {
-		return nil, errors.WrapErrorAction("error checking if the permissions ids are valid", "", nil, err)
-	}
-
-	//3. check group permission assigners
-	for _, permission := range groupPermissions {
-		err = permission.CheckAssigners(assignerPermissions)
-		if err != nil {
-			return nil, errors.Wrapf("error checking permission assigners", err)
+	var newGroup *model.AppOrgGroup
+	transaction := func(context storage.TransactionContext) error {
+		//1. get application organization entity
+		appOrg, err := app.storage.FindApplicationOrganization(appID, orgID)
+		if err != nil || appOrg == nil {
+			return errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
 		}
-	}
 
-	//4. check roles
-	groupRoles, err := app.checkRoles(*appOrg, rolesIDs, l)
-	if err != nil {
-		return nil, errors.WrapErrorAction("error checking if the permissions ids are valid", "", nil, err)
-	}
-
-	//5. check roles permission assigners
-	for _, roles := range groupRoles {
-		err = roles.CheckAssigners(assignerPermissions)
+		//2. validate permissions
+		permissions, err := app.auth.CheckPermissions(context, appOrg, permissionNames, assignerPermissions)
 		if err != nil {
-			return nil, errors.Wrapf("error checking role assigners", err)
+			return errors.WrapErrorAction(logutils.ActionValidate, model.TypePermission, nil, err)
 		}
+
+		//3. check roles
+		roles, err := app.auth.CheckRoles(context, appOrg, rolesIDs, assignerPermissions)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionValidate, model.TypeAppOrgRole, nil, err)
+		}
+
+		//4. create and insert group
+		id, _ := uuid.NewUUID()
+		now := time.Now()
+		group := model.AppOrgGroup{ID: id.String(), Name: name, Roles: roles, Permissions: permissions, AppOrg: *appOrg, System: system, DateCreated: now}
+		err = app.storage.InsertAppOrgGroup(context, group)
+		if err != nil {
+			return err
+		}
+
+		newGroup = &group
+		return nil
 	}
 
-	//6. create and insert group
-	id, _ := uuid.NewUUID()
-	now := time.Now()
-	group := model.AppOrgGroup{ID: id.String(), Name: name, Roles: groupRoles, Permissions: groupPermissions, AppOrg: *appOrg, System: system, DateCreated: now}
-	err = app.storage.InsertAppOrgGroup(group)
+	err := app.storage.PerformTransaction(transaction)
 	if err != nil {
 		return nil, err
 	}
-	return &group, nil
+	return newGroup, nil
 }
 
 func (app *application) admGetAppOrgGroups(appID string, orgID string) ([]model.AppOrgGroup, error) {
@@ -350,16 +345,16 @@ func (app *application) admAddAccountsToGroup(appID string, orgID string, groupI
 	}
 
 	//ensure that the accounts do not have the group before adding
+	updateAccounts := make([]model.Account, 0)
 	for _, account := range accounts {
-		gr := account.GetGroup(groupID)
-		if gr != nil {
-			return errors.Newf("account %s already is a member of the group", account.ID)
+		if account.GetGroup(groupID) == nil {
+			updateAccounts = append(updateAccounts, account)
 		}
 	}
 
 	//insert accounts to group
 	accountGroup := model.AccountGroup{Group: *group, Active: true, AdminSet: true}
-	err = app.storage.InsertAccountsGroup(accountGroup, accounts)
+	err = app.storage.InsertAccountsGroup(accountGroup, updateAccounts)
 	if err != nil {
 		return errors.Wrapf("error inserting accounts group - %s", err, groupID)
 	}
@@ -408,15 +403,15 @@ func (app *application) admRemoveAccountsFromGroup(appID string, orgID string, g
 	}
 
 	//ensure that the accounts have the group
+	updateAccounts := make([]model.Account, 0)
 	for _, account := range accounts {
-		gr := account.GetGroup(groupID)
-		if gr == nil {
-			return errors.Newf("account %s is not a member of the group", account.ID)
+		if account.GetGroup(groupID) != nil {
+			updateAccounts = append(updateAccounts, account)
 		}
 	}
 
 	//remove the accounts from the group
-	err = app.storage.RemoveAccountsGroup(group.ID, accounts)
+	err = app.storage.RemoveAccountsGroup(group.ID, updateAccounts)
 	if err != nil {
 		return errors.Wrapf("error removing accounts from a group - %s", err, groupID)
 	}
@@ -425,35 +420,39 @@ func (app *application) admRemoveAccountsFromGroup(appID string, orgID string, g
 }
 
 func (app *application) admCreateAppOrgRole(name string, description string, permissionNames []string, appID string, orgID string, assignerPermissions []string, system bool, l *logs.Log) (*model.AppOrgRole, error) {
-	//1. get application organization entity
-	appOrg, err := app.storage.FindApplicationOrganization(appID, orgID)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
-	}
-
-	//2. check role permissions
-	rolePermissions, err := app.checkPermissions(*appOrg, permissionNames, l)
-	if err != nil {
-		return nil, errors.WrapErrorAction("error checking if the permissions ids are valid", "", nil, err)
-	}
-
-	//3. check role permissions assigners
-	for _, permission := range rolePermissions {
-		err = permission.CheckAssigners(assignerPermissions)
-		if err != nil {
-			return nil, errors.Wrapf("error checking permission assigners", err)
+	var newRole *model.AppOrgRole
+	transaction := func(context storage.TransactionContext) error {
+		//1. get application organization entity
+		appOrg, err := app.storage.FindApplicationOrganization(appID, orgID)
+		if err != nil || appOrg == nil {
+			return errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
 		}
+
+		//2. check role permissions
+		permissions, err := app.auth.CheckPermissions(context, appOrg, permissionNames, assignerPermissions)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionValidate, model.TypePermission, nil, err)
+		}
+
+		//3. create and insert role
+		id, _ := uuid.NewUUID()
+		now := time.Now()
+		role := model.AppOrgRole{ID: id.String(), Name: name, Description: description, System: system, Permissions: permissions, AppOrg: *appOrg, DateCreated: now}
+		err = app.storage.InsertAppOrgRole(context, role)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAppOrgRole, nil, err)
+		}
+
+		newRole = &role
+		return nil
 	}
 
-	//4. create and insert role
-	id, _ := uuid.NewUUID()
-	now := time.Now()
-	role := model.AppOrgRole{ID: id.String(), Name: name, Description: description, System: system, Permissions: rolePermissions, AppOrg: *appOrg, DateCreated: now}
-	err = app.storage.InsertAppOrgRole(role)
+	err := app.storage.PerformTransaction(transaction)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeAppOrgRole, nil, err)
+		return nil, err
 	}
-	return &role, nil
+
+	return newRole, nil
 }
 
 func (app *application) admGetAppOrgRoles(appID string, orgID string) ([]model.AppOrgRole, error) {
@@ -534,7 +533,7 @@ func (app *application) admGetApplicationPermissions(appID string, orgID string,
 		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
 	}
 	if appOrg == nil {
-		return nil, errors.New("there is no app org for app ID and org ID")
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": appID, "org_id": orgID})
 	}
 
 	//2. find permissions by the service ids

@@ -234,6 +234,10 @@ type APIs interface {
 	CreateAdminAccount(authenticationType string, appID string, orgID string, identifier string, profile model.Profile,
 		permissions []string, roleIDs []string, groupIDs []string, creatorPermissions []string, l *logs.Log) (*model.Account, map[string]interface{}, error)
 
+	//UpdateAdminAccount updates an existing user's account with new permissions, roles, and groups
+	UpdateAdminAccount(authenticationType string, appID string, orgID string, identifier string, permissions []string, roleIDs []string,
+		groupIDs []string, updaterPermissions []string, l *logs.Log) (*model.Account, map[string]interface{}, error)
+
 	//VerifyCredential verifies credential (checks the verification code in the credentials collection)
 	VerifyCredential(id string, verification string, l *logs.Log) error
 
@@ -384,8 +388,14 @@ type APIs interface {
 	//GrantAccountPermissions grants new permissions to an account after validating the assigner has required permissions
 	GrantAccountPermissions(context storage.TransactionContext, account *model.Account, permissionNames []string, assignerPermissions []string) error
 
+	//CheckPermissions loads permissions by names from storage and checks that they are assignable and valid for the given appOrg
+	CheckPermissions(context storage.TransactionContext, appOrg *model.ApplicationOrganization, permissionNames []string, assignerPermissions []string) ([]model.Permission, error)
+
 	//GrantAccountRoles grants new roles to an account after validating the assigner has required permissions
 	GrantAccountRoles(context storage.TransactionContext, account *model.Account, roleIDs []string, assignerPermissions []string) error
+
+	//CheckRoles loads appOrg roles by IDs from storage and checks that they are assignable
+	CheckRoles(context storage.TransactionContext, appOrg *model.ApplicationOrganization, roleIDs []string, assignerPermissions []string) ([]model.AppOrgRole, error)
 
 	//GrantAccountGroups grants new groups to an account after validating the assigner has required permissions
 	GrantAccountGroups(context storage.TransactionContext, account *model.Account, groupIDs []string, assignerPermissions []string) error
@@ -537,10 +547,6 @@ type Storage interface {
 	FindApplicationsOrganizations() ([]model.ApplicationOrganization, error)
 	FindApplicationOrganization(appID string, orgID string) (*model.ApplicationOrganization, error)
 
-	//Permissions
-	FindPermissionsByName(context storage.TransactionContext, names []string) ([]model.Permission, error)
-	InsertAccountPermissions(context storage.TransactionContext, accountID string, permissions []model.Permission) error
-
 	//Device
 	FindDevice(context storage.TransactionContext, deviceID string, accountID string) (*model.Device, error)
 	InsertDevice(context storage.TransactionContext, device model.Device) (*model.Device, error)
@@ -548,17 +554,20 @@ type Storage interface {
 
 	//Permissions
 	FindPermissions(context storage.TransactionContext, ids []string) ([]model.Permission, error)
+	FindPermissionsByName(context storage.TransactionContext, names []string) ([]model.Permission, error)
+	InsertAccountPermissions(context storage.TransactionContext, accountID string, permissions []model.Permission) error
+	UpdateAccountPermissions(context storage.TransactionContext, accountID string, permissions []model.Permission) error
 
 	//ApplicationRoles
 	FindAppOrgRolesByIDs(context storage.TransactionContext, ids []string, appOrgID string) ([]model.AppOrgRole, error)
 	//AccountRoles
-	UpdateAccountRoles(accountID string, roles []model.AccountRole) error
+	UpdateAccountRoles(context storage.TransactionContext, accountID string, roles []model.AccountRole) error
 	InsertAccountRoles(context storage.TransactionContext, accountID string, appOrgID string, roles []model.AccountRole) error
 
 	//ApplicationGroups
 	FindAppOrgGroupsByIDs(context storage.TransactionContext, ids []string, appOrgID string) ([]model.AppOrgGroup, error)
 	//AccountGroups
-	UpdateAccountGroups(accountID string, groups []model.AccountGroup) error
+	UpdateAccountGroups(context storage.TransactionContext, accountID string, groups []model.AccountGroup) error
 	InsertAccountGroups(context storage.TransactionContext, accountID string, appOrgID string, groups []model.AccountGroup) error
 }
 

@@ -1,1 +1,2 @@
 p, create_accounts, /core/services/accounts, (POST)
+p, update_accounts, /core/services/accounts, (PUT)

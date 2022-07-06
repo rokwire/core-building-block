@@ -29,3 +29,34 @@ post:
       description: Unauthorized
     500:
       description: Internal error
+put:
+  tags:
+  - Services
+  summary: Update admin account
+  description: |
+    Update an existing admin account
+
+    **Auth:** Requires auth token with `update_accounts` permission
+  security:
+    - bearerAuth: []
+  requestBody:
+    description: |
+      User account details and parameters
+    content:
+      application/json:
+        schema:
+          $ref: "../../schemas/apis/shared/requests/update-account/Request.yaml"
+    required: true
+  responses:
+    200:
+      description: Success
+      content:
+        application/json:
+          schema:
+            $ref: "../../schemas/user/PartialAccount.yaml" 
+    400:
+      description: Bad request
+    401:
+      description: Unauthorized
+    500:
+      description: Internal error

@@ -29,14 +29,6 @@ p, update_app-configs, /core/system/application/configs/*, (GET)|(PUT)
 p, delete_app-config, /core/system/application/configs/*, (GET)|(DELETE)
 p, delete_app-config, /core/system/application/configs, (GET)
 
-p, create_accounts, /core/system/accounts, (POST)
-
-p, all_account-permissions, /core/system/account/permissions, (GET)|(POST)|(DELETE)|(PUT)
-p, update_account-permissions, /core/system/account/permissions, (POST)|(PUT)
-
-p, all_account-roles, /core/system/account/roles, (GET)|(POST)|(DELETE)|(PUT)
-p, update_account-roles, /core/system/account/roles, (POST)|(PUT)
-
 p, all_service-regs, /core/system/service-regs, (GET)|(POST)|(DELETE)|(PUT)
 p, get_service-regs, /core/system/service-regs, (GET)
 p, update_service-regs, /core/system/service-regs, (GET)|(POST)|(PUT)

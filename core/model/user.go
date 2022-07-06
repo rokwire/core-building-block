@@ -183,6 +183,32 @@ func (a Account) GetPermissionNamed(name string) *Permission {
 	return nil
 }
 
+//CheckForPermissionChanges checks for changes to account permissions given a potential list of new permissions
+func (a Account) CheckForPermissionChanges(new []string) bool {
+	unchanged := make([]bool, len(a.Permissions))
+
+	for _, newP := range new {
+		found := false
+		for i, p := range a.Permissions {
+			if p.Name == newP {
+				found = true
+				unchanged[i] = true
+				break
+			}
+		}
+		if !found {
+			return true
+		}
+	}
+	for i := range a.Permissions {
+		if !unchanged[i] {
+			return true
+		}
+	}
+
+	return false
+}
+
 //GetActiveRoles returns all active roles
 func (a Account) GetActiveRoles() []AccountRole {
 	roles := []AccountRole{}
@@ -204,6 +230,32 @@ func (a Account) GetRole(id string) *AccountRole {
 	return nil
 }
 
+//CheckForRoleChanges checks for changes to account roles given a potential list of new roles
+func (a Account) CheckForRoleChanges(new []string) bool {
+	unchanged := make([]bool, len(a.Roles))
+
+	for _, newR := range new {
+		found := false
+		for i, r := range a.Roles {
+			if r.Role.ID == newR {
+				found = true
+				unchanged[i] = true
+				break
+			}
+		}
+		if !found {
+			return true
+		}
+	}
+	for i := range a.Roles {
+		if !unchanged[i] {
+			return true
+		}
+	}
+
+	return false
+}
+
 //GetActiveGroups returns all active groups
 func (a Account) GetActiveGroups() []AccountGroup {
 	groups := []AccountGroup{}
@@ -223,6 +275,32 @@ func (a Account) GetGroup(id string) *AccountGroup {
 		}
 	}
 	return nil
+}
+
+//CheckForGroupChanges checks for changes to account groups given a potential list of new groups
+func (a Account) CheckForGroupChanges(new []string) bool {
+	unchanged := make([]bool, len(a.Groups))
+
+	for _, newG := range new {
+		found := false
+		for i, g := range a.Groups {
+			if g.Group.ID == newG {
+				found = true
+				unchanged[i] = true
+				break
+			}
+		}
+		if !found {
+			return true
+		}
+	}
+	for i := range a.Groups {
+		if !unchanged[i] {
+			return true
+		}
+	}
+
+	return false
 }
 
 //AccountRole represents a role assigned to an account

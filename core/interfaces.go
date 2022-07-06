@@ -157,7 +157,7 @@ type Storage interface {
 	FindAppOrgRoles(appOrgID string) ([]model.AppOrgRole, error)
 	FindAppOrgRolesByIDs(context storage.TransactionContext, ids []string, appOrgID string) ([]model.AppOrgRole, error)
 	FindAppOrgRole(id string, appOrgID string) (*model.AppOrgRole, error)
-	InsertAppOrgRole(item model.AppOrgRole) error
+	InsertAppOrgRole(context storage.TransactionContext, item model.AppOrgRole) error
 	UpdateAppOrgRole(item model.AppOrgRole) error
 	DeleteAppOrgRole(id string) error
 	InsertAppOrgRolePermissions(context storage.TransactionContext, roleID string, permissionNames []model.Permission) error
@@ -165,7 +165,7 @@ type Storage interface {
 	FindAppOrgGroups(appOrgID string) ([]model.AppOrgGroup, error)
 	FindAppOrgGroupsByIDs(context storage.TransactionContext, ids []string, appOrgID string) ([]model.AppOrgGroup, error)
 	FindAppOrgGroup(id string, appOrgID string) (*model.AppOrgGroup, error)
-	InsertAppOrgGroup(item model.AppOrgGroup) error
+	InsertAppOrgGroup(context storage.TransactionContext, item model.AppOrgGroup) error
 	UpdateAppOrgGroup(item model.AppOrgGroup) error
 	DeleteAppOrgGroup(id string) error
 	CountGroupsByRoleID(roleID string) (*int64, error)

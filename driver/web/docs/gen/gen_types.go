@@ -185,6 +185,13 @@ const (
 	SharedReqMfaTypeTotp SharedReqMfaType = "totp"
 )
 
+// Defines values for SharedReqUpdateAccountAuthType.
+const (
+	SharedReqUpdateAccountAuthTypeEmail SharedReqUpdateAccountAuthType = "email"
+
+	SharedReqUpdateAccountAuthTypeIllinoisOidc SharedReqUpdateAccountAuthType = "illinois_oidc"
+)
+
 // Defines values for SharedResRokwireTokenTokenType.
 const (
 	SharedResRokwireTokenTokenTypeBearer SharedResRokwireTokenTokenType = "Bearer"
@@ -973,6 +980,18 @@ type SharedReqRefresh struct {
 	RefreshToken string `json:"refresh_token"`
 }
 
+// SharedReqUpdateAccount defines model for _shared_req_UpdateAccount.
+type SharedReqUpdateAccount struct {
+	AuthType    SharedReqUpdateAccountAuthType `json:"auth_type"`
+	GroupIds    *[]string                      `json:"group_ids,omitempty"`
+	Identifier  string                         `json:"identifier"`
+	Permissions *[]string                      `json:"permissions,omitempty"`
+	RoleIds     *[]string                      `json:"role_ids,omitempty"`
+}
+
+// SharedReqUpdateAccountAuthType defines model for SharedReqUpdateAccount.AuthType.
+type SharedReqUpdateAccountAuthType string
+
 // SharedResAccount defines model for _shared_res_Account.
 type SharedResAccount struct {
 	AuthTypes   *[]AccountAuthTypeFields `json:"auth_types,omitempty"`
@@ -1204,6 +1223,9 @@ type GetAdminApplicationAccountsParams struct {
 // PostAdminApplicationAccountsJSONBody defines parameters for PostAdminApplicationAccounts.
 type PostAdminApplicationAccountsJSONBody SharedReqCreateAccount
 
+// PutAdminApplicationAccountsJSONBody defines parameters for PutAdminApplicationAccounts.
+type PutAdminApplicationAccountsJSONBody SharedReqUpdateAccount
+
 // DeleteAdminApplicationGroupAccountsJSONBody defines parameters for DeleteAdminApplicationGroupAccounts.
 type DeleteAdminApplicationGroupAccountsJSONBody AdminReqRemoveAccountFromGroup
 
@@ -1303,6 +1325,9 @@ type PutServicesAccountProfileJSONBody SharedReqProfile
 
 // PostServicesAccountsJSONBody defines parameters for PostServicesAccounts.
 type PostServicesAccountsJSONBody SharedReqCreateAccount
+
+// PutServicesAccountsJSONBody defines parameters for PutServicesAccounts.
+type PutServicesAccountsJSONBody SharedReqUpdateAccount
 
 // PostServicesApplicationConfigsJSONBody defines parameters for PostServicesApplicationConfigs.
 type PostServicesApplicationConfigsJSONBody ServicesReqApplicationConfigs
@@ -1636,6 +1661,9 @@ type PutAdminApplicationAccountRolesJSONRequestBody PutAdminApplicationAccountRo
 // PostAdminApplicationAccountsJSONRequestBody defines body for PostAdminApplicationAccounts for application/json ContentType.
 type PostAdminApplicationAccountsJSONRequestBody PostAdminApplicationAccountsJSONBody
 
+// PutAdminApplicationAccountsJSONRequestBody defines body for PutAdminApplicationAccounts for application/json ContentType.
+type PutAdminApplicationAccountsJSONRequestBody PutAdminApplicationAccountsJSONBody
+
 // DeleteAdminApplicationGroupAccountsJSONRequestBody defines body for DeleteAdminApplicationGroupAccounts for application/json ContentType.
 type DeleteAdminApplicationGroupAccountsJSONRequestBody DeleteAdminApplicationGroupAccountsJSONBody
 
@@ -1689,6 +1717,9 @@ type PutServicesAccountProfileJSONRequestBody PutServicesAccountProfileJSONBody
 
 // PostServicesAccountsJSONRequestBody defines body for PostServicesAccounts for application/json ContentType.
 type PostServicesAccountsJSONRequestBody PostServicesAccountsJSONBody
+
+// PutServicesAccountsJSONRequestBody defines body for PutServicesAccounts for application/json ContentType.
+type PutServicesAccountsJSONRequestBody PutServicesAccountsJSONBody
 
 // PostServicesApplicationConfigsJSONRequestBody defines body for PostServicesApplicationConfigs for application/json ContentType.
 type PostServicesApplicationConfigsJSONRequestBody PostServicesApplicationConfigsJSONBody

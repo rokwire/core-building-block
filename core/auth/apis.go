@@ -551,8 +551,8 @@ func (a *Auth) LoginMFA(apiKey string, accountID string, sessionID string, ident
 }
 
 //CreateAdminAccount creates an account for a new admin user
-func (a *Auth) CreateAdminAccount(authenticationType string, appID string, orgID string, identifier string,
-	profile model.Profile, permissions []string, roleIDs []string, groupIDs []string, creatorPermissions []string, l *logs.Log) (*model.Account, map[string]interface{}, error) {
+func (a *Auth) CreateAdminAccount(authenticationType string, appID string, orgID string, identifier string, profile model.Profile,
+	permissions []string, roleIDs []string, groupIDs []string, creatorPermissions []string, l *logs.Log) (*model.Account, map[string]interface{}, error) {
 	//TODO: add admin authentication policies that specify which auth types may be used for each app org
 	if authenticationType != AuthTypeOidc && authenticationType != AuthTypeEmail && !strings.HasSuffix(authenticationType, "_oidc") {
 		return nil, nil, errors.ErrorData(logutils.StatusInvalid, "auth type", nil)
@@ -609,6 +609,113 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appID string, orgID
 	}
 
 	return newAccount, params, nil
+}
+
+//UpdateAdminAccount updates an existing user's account with new permissions, roles, and groups
+func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID string, identifier string, permissions []string, roleIDs []string,
+	groupIDs []string, updaterPermissions []string, l *logs.Log) (*model.Account, map[string]interface{}, error) {
+	//TODO: when elevating existing accounts to application level admin, need to enforce any authentication policies set up for the app org
+	// when demoting from application level admin to standard user, may want to inform user of applicable authentication policy changes
+
+	if authenticationType != AuthTypeOidc && authenticationType != AuthTypeEmail && !strings.HasSuffix(authenticationType, "_oidc") {
+		return nil, nil, errors.ErrorData(logutils.StatusInvalid, "auth type", nil)
+	}
+
+	// check if the provided auth type is supported by the provided application and organization
+	authType, appOrg, err := a.validateAuthTypeForAppOrg(authenticationType, appID, orgID)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
+	}
+
+	var updatedAccount *model.Account
+	var params map[string]interface{}
+	transaction := func(context storage.TransactionContext) error {
+		//1. check if the user exists
+		account, err := a.storage.FindAccount(context, appOrg.ID, authType.ID, identifier)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+		}
+		if account == nil {
+			return errors.ErrorData(logutils.StatusMissing, model.TypeAccount, &logutils.FieldArgs{"app_org_id": appOrg.ID, "auth_type": authType.Code, "identifier": identifier})
+		}
+
+		//2. check if the user's auth type is verified
+		accountAuthType := account.GetAccountAuthType(authType.ID, identifier)
+		if accountAuthType == nil || accountAuthType.Unverified {
+			return errors.ErrorData("Unverified", model.TypeAccountAuthType, &logutils.FieldArgs{"app_org_id": appOrg.ID, "auth_type": authType.Code, "identifier": identifier}).SetStatus(utils.ErrorStatusUnverified)
+		}
+
+		//3. update account permissions
+		updatedAccount = account
+		updated := false
+		if account.CheckForPermissionChanges(permissions) {
+			newPermissions, err := a.CheckPermissions(context, appOrg, permissions, updaterPermissions)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionValidate, model.TypePermission, nil, err)
+			}
+			err = a.storage.UpdateAccountPermissions(context, account.ID, newPermissions)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionUpdate, "admin account permissions", nil, err)
+			}
+
+			updatedAccount.Permissions = newPermissions
+			updated = true
+		}
+
+		//4. update account roles
+		if account.CheckForRoleChanges(roleIDs) {
+			newRoles, err := a.CheckRoles(context, appOrg, roleIDs, updaterPermissions)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionValidate, model.TypeAppOrgRole, nil, err)
+			}
+
+			newAccountRoles := model.AccountRolesFromAppOrgRoles(newRoles, true, true)
+			err = a.storage.UpdateAccountRoles(context, account.ID, newAccountRoles)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionUpdate, "admin account roles", nil, err)
+			}
+
+			updatedAccount.Roles = newAccountRoles
+			updated = true
+		}
+
+		//5. update account groups
+		if account.CheckForGroupChanges(groupIDs) {
+			newGroups, err := a.checkGroups(context, *appOrg, groupIDs, updaterPermissions)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionValidate, model.TypeAppOrgGroup, nil, err)
+			}
+
+			newAccountGroups := model.AccountGroupsFromAppOrgGroups(newGroups, true, true)
+			err = a.storage.UpdateAccountGroups(context, account.ID, newAccountGroups)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionUpdate, "admin account groups", nil, err)
+			}
+
+			updatedAccount.Groups = newAccountGroups
+			updated = true
+		}
+
+		//6. delete active login sessions if account was updated
+		if updated {
+			err = a.storage.DeleteLoginSessionsByIdentifier(context, account.ID)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, nil, err)
+			}
+
+			now := time.Now().UTC()
+			updatedAccount.DateUpdated = &now
+		}
+
+		return nil
+	}
+
+	err = a.storage.PerformTransaction(transaction)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionUpdate, "admin account", nil, err)
+	}
+
+	return updatedAccount, params, nil
 }
 
 //VerifyCredential verifies credential (checks the verification code in the credentials collection)
@@ -1453,7 +1560,7 @@ func (a *Auth) GrantAccountPermissions(context storage.TransactionContext, accou
 	}
 
 	//check permissions
-	permissions, err := a.checkPermissions(context, newPermissions, assignerPermissions)
+	permissions, err := a.CheckPermissions(context, &account.AppOrg, newPermissions, assignerPermissions)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionValidate, model.TypePermission, nil, err)
 	}
@@ -1466,6 +1573,48 @@ func (a *Auth) GrantAccountPermissions(context storage.TransactionContext, accou
 
 	account.Permissions = append(account.Permissions, permissions...)
 	return nil
+}
+
+//CheckPermissions loads permissions by names from storage and checks that they are assignable and valid for the given appOrg
+func (a *Auth) CheckPermissions(context storage.TransactionContext, appOrg *model.ApplicationOrganization, permissionNames []string, assignerPermissions []string) ([]model.Permission, error) {
+	if appOrg == nil {
+		return nil, errors.ErrorData(logutils.StatusInvalid, model.TypeApplicationOrganization, nil)
+	}
+
+	//find permissions
+	permissions, err := a.storage.FindPermissionsByName(context, permissionNames)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypePermission, nil, err)
+	}
+	if len(permissions) != len(permissionNames) {
+		badNames := make([]string, 0)
+		for _, pName := range permissionNames {
+			bad := true
+			for _, p := range permissions {
+				if p.Name == pName {
+					bad = false
+					break
+				}
+			}
+			if bad {
+				badNames = append(badNames, pName)
+			}
+		}
+		return nil, errors.ErrorData(logutils.StatusInvalid, model.TypePermission, &logutils.FieldArgs{"names": badNames})
+	}
+
+	//check if authorized
+	for _, permission := range permissions {
+		if !utils.Contains(appOrg.ServicesIDs, permission.ServiceID) {
+			return nil, errors.ErrorData(logutils.StatusInvalid, model.TypePermission, &logutils.FieldArgs{"name": permission.Name, "service_id": permission.ServiceID})
+		}
+		err = permission.CheckAssigners(assignerPermissions)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionValidate, "assigner permissions", &logutils.FieldArgs{"name": permission.Name}, err)
+		}
+	}
+
+	return permissions, nil
 }
 
 //GrantAccountRoles grants new roles to an account after validating the assigner has required permissions
@@ -1488,7 +1637,7 @@ func (a *Auth) GrantAccountRoles(context storage.TransactionContext, account *mo
 	}
 
 	//check roles
-	roles, err := a.checkRoles(context, account.AppOrg, newRoles, assignerPermissions)
+	roles, err := a.CheckRoles(context, &account.AppOrg, newRoles, assignerPermissions)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionValidate, model.TypeAppOrgRole, nil, err)
 	}
@@ -1502,6 +1651,45 @@ func (a *Auth) GrantAccountRoles(context storage.TransactionContext, account *mo
 
 	account.Roles = append(account.Roles, accountRoles...)
 	return nil
+}
+
+//CheckRoles loads appOrg roles by IDs from storage and checks that they are assignable
+func (a *Auth) CheckRoles(context storage.TransactionContext, appOrg *model.ApplicationOrganization, roleIDs []string, assignerPermissions []string) ([]model.AppOrgRole, error) {
+	if appOrg == nil {
+		return nil, errors.ErrorData(logutils.StatusInvalid, model.TypeApplicationOrganization, nil)
+	}
+
+	//find roles
+	roles, err := a.storage.FindAppOrgRolesByIDs(context, roleIDs, appOrg.ID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgRole, nil, err)
+	}
+	if len(roles) != len(roleIDs) {
+		badIDs := make([]string, 0)
+		for _, rID := range roleIDs {
+			bad := true
+			for _, r := range roles {
+				if r.ID == rID {
+					bad = false
+					break
+				}
+			}
+			if bad {
+				badIDs = append(badIDs, rID)
+			}
+		}
+		return nil, errors.ErrorData(logutils.StatusInvalid, model.TypeAppOrgRole, &logutils.FieldArgs{"ids": badIDs})
+	}
+
+	//check if authorized
+	for _, cRole := range roles {
+		err = cRole.CheckAssigners(assignerPermissions)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionValidate, "assigner permissions", &logutils.FieldArgs{"id": cRole.ID}, err)
+		}
+	}
+
+	return roles, nil
 }
 
 //GrantAccountGroups grants new groups to an account after validating the assigner has required permissions
