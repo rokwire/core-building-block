@@ -82,10 +82,10 @@ func (app *application) serDeleteAccount(id string) error {
 	return app.auth.DeleteAccount(id)
 }
 
-func (app *application) serGetAccounts(limit int, offset int, appID string, orgID string, accountID *string, authTypeIdentifier *string, hasPermissions *bool,
-	permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error) {
+func (app *application) serGetAccounts(limit int, offset int, appID string, orgID string, accountID *string, firstName *string, lastName *string, authType *string,
+	authTypeIdentifier *string, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error) {
 	//find the accounts
-	accounts, err := app.storage.FindAccounts(limit, offset, appID, orgID, accountID, authTypeIdentifier, hasPermissions, permissions, roleIDs, groupIDs)
+	accounts, err := app.storage.FindAccounts(limit, offset, appID, orgID, accountID, firstName, lastName, authType, authTypeIdentifier, hasPermissions, permissions, roleIDs, groupIDs)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}

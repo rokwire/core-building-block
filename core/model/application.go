@@ -122,7 +122,7 @@ func (c AppOrgRole) CheckAssigners(assignerPermissions []string) error {
 	for _, permission := range c.Permissions {
 		err := permission.CheckAssigners(assignerPermissions)
 		if err != nil {
-			errors.Wrapf("error checking role permission assigners", err)
+			return errors.Wrapf("error checking role permission assigners", err)
 		}
 	}
 	//it satisies all permissions

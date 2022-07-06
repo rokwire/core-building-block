@@ -98,7 +98,7 @@ func (_m *Storage) CreateGlobalConfig(context storage.TransactionContext, global
 	return r0
 }
 
-// DeleteAccountPermissions provides a mock function with given fields: context, accountID, admin, permissions
+// DeleteAccountPermissions provides a mock function with given fields: context, accountID, hasPermissions, permissions
 func (_m *Storage) DeleteAccountPermissions(context storage.TransactionContext, accountID string, hasPermissions bool, permissions []model.Permission) error {
 	ret := _m.Called(context, accountID, hasPermissions, permissions)
 
@@ -112,7 +112,7 @@ func (_m *Storage) DeleteAccountPermissions(context storage.TransactionContext, 
 	return r0
 }
 
-// DeleteAccountRoles provides a mock function with given fields: context, accountID, admin, roleIDs
+// DeleteAccountRoles provides a mock function with given fields: context, accountID, hasPermissions, roleIDs
 func (_m *Storage) DeleteAccountRoles(context storage.TransactionContext, accountID string, hasPermissions bool, roleIDs []string) error {
 	ret := _m.Called(context, accountID, hasPermissions, roleIDs)
 
@@ -261,13 +261,13 @@ func (_m *Storage) FindAccountByID(context storage.TransactionContext, id string
 	return r0, r1
 }
 
-// FindAccounts provides a mock function with given fields: limit, offset, appID, orgID, accountID, authTypeIdentifier, admin, permissions, roleIDs, groupIDs
-func (_m *Storage) FindAccounts(limit int, offset int, appID string, orgID string, accountID *string, authTypeIdentifier *string, admin *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error) {
-	ret := _m.Called(limit, offset, appID, orgID, accountID, authTypeIdentifier, admin, permissions, roleIDs, groupIDs)
+// FindAccounts provides a mock function with given fields: limit, offset, appID, orgID, accountID, firstName, lastName, authType, authTypeIdentifier, hasPermissions, permissions, roleIDs, groupIDs
+func (_m *Storage) FindAccounts(limit int, offset int, appID string, orgID string, accountID *string, firstName *string, lastName *string, authType *string, authTypeIdentifier *string, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error) {
+	ret := _m.Called(limit, offset, appID, orgID, accountID, firstName, lastName, authType, authTypeIdentifier, hasPermissions, permissions, roleIDs, groupIDs)
 
 	var r0 []model.Account
-	if rf, ok := ret.Get(0).(func(int, int, string, string, *string, *string, *bool, []string, []string, []string) []model.Account); ok {
-		r0 = rf(limit, offset, appID, orgID, accountID, authTypeIdentifier, admin, permissions, roleIDs, groupIDs)
+	if rf, ok := ret.Get(0).(func(int, int, string, string, *string, *string, *string, *string, *string, *bool, []string, []string, []string) []model.Account); ok {
+		r0 = rf(limit, offset, appID, orgID, accountID, firstName, lastName, authType, authTypeIdentifier, hasPermissions, permissions, roleIDs, groupIDs)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]model.Account)
@@ -275,8 +275,8 @@ func (_m *Storage) FindAccounts(limit int, offset int, appID string, orgID strin
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(int, int, string, string, *string, *string, *bool, []string, []string, []string) error); ok {
-		r1 = rf(limit, offset, appID, orgID, accountID, authTypeIdentifier, admin, permissions, roleIDs, groupIDs)
+	if rf, ok := ret.Get(1).(func(int, int, string, string, *string, *string, *string, *string, *string, *bool, []string, []string, []string) error); ok {
+		r1 = rf(limit, offset, appID, orgID, accountID, firstName, lastName, authType, authTypeIdentifier, hasPermissions, permissions, roleIDs, groupIDs)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -1091,13 +1091,13 @@ func (_m *Storage) RegisterStorageListener(storageListener storage.Listener) {
 	_m.Called(storageListener)
 }
 
-// RemoveAccountsGroup provides a mock function with given fields: groupID, accounts, admins
-func (_m *Storage) RemoveAccountsGroup(groupID string, accounts []model.Account, admins []bool) error {
-	ret := _m.Called(groupID, accounts, admins)
+// RemoveAccountsGroup provides a mock function with given fields: groupID, accounts, hasPermissions
+func (_m *Storage) RemoveAccountsGroup(groupID string, accounts []model.Account, hasPermissions []bool) error {
+	ret := _m.Called(groupID, accounts, hasPermissions)
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(string, []model.Account, []bool) error); ok {
-		r0 = rf(groupID, accounts, admins)
+		r0 = rf(groupID, accounts, hasPermissions)
 	} else {
 		r0 = ret.Error(0)
 	}

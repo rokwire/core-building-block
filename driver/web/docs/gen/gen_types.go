@@ -1225,6 +1225,15 @@ type GetAdminApplicationAccountsParams struct {
 	// The account ID
 	AccountId *string `json:"account-id,omitempty"`
 
+	// The account profile first name
+	Firstname *string `json:"firstname,omitempty"`
+
+	// The account profile last name
+	Lastname *string `json:"lastname,omitempty"`
+
+	// The auth type
+	AuthType *string `json:"auth-type,omitempty"`
+
 	// The authentication type identifier
 	AuthTypeIdentifier *string `json:"auth-type-identifier,omitempty"`
 
@@ -1355,6 +1364,15 @@ type GetServicesAccountsParams struct {
 
 	// The account ID
 	AccountId *string `json:"account-id,omitempty"`
+
+	// The account profile first name
+	Firstname *string `json:"firstname,omitempty"`
+
+	// The account profile last name
+	Lastname *string `json:"lastname,omitempty"`
+
+	// The auth type
+	AuthType *string `json:"auth-type,omitempty"`
 
 	// The authentication type identifier
 	AuthTypeIdentifier *string `json:"auth-type-identifier,omitempty"`
