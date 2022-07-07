@@ -173,6 +173,26 @@ func Contains(list []string, value string) bool {
 	return false
 }
 
+//StringListDiff returns a list of added, removed, unchanged values between a new and old string list
+func StringListDiff(new []string, old []string) ([]string, []string, []string) {
+	added := []string{}
+	removed := []string{}
+	unchanged := []string{}
+	for _, newVal := range new {
+		if !Contains(old, newVal) {
+			added = append(added, newVal)
+		} else {
+			unchanged = append(unchanged, newVal)
+		}
+	}
+	for _, oldVal := range old {
+		if !Contains(new, oldVal) {
+			removed = append(removed, oldVal)
+		}
+	}
+	return added, removed, unchanged
+}
+
 //StringOrNil returns a pointer to the input string, but returns nil if input is empty
 func StringOrNil(v string) *string {
 	if v == "" {

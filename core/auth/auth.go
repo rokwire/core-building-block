@@ -1513,6 +1513,25 @@ func (a *Auth) checkGroups(context storage.TransactionContext, appOrg model.Appl
 	return groups, nil
 }
 
+func (a *Auth) checkRevokedGroups(context storage.TransactionContext, appOrg model.ApplicationOrganization, groupIDs []string, assignerPermissions []string) error {
+	//find groups
+	groups, err := a.storage.FindAppOrgGroupsByIDs(context, groupIDs, appOrg.ID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgGroup, nil, err)
+	}
+	//Revoke missing groups
+
+	//check assigners
+	for _, group := range groups {
+		err = group.CheckAssigners(assignerPermissions)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionValidate, "assigner permissions", &logutils.FieldArgs{"id": group.ID}, err)
+		}
+	}
+
+	return nil
+}
+
 func (a *Auth) linkAccountAuthType(account model.Account, authType model.AuthType, appOrg model.ApplicationOrganization,
 	creds string, params string, l *logs.Log) (string, *model.AccountAuthType, error) {
 	authImpl, err := a.getAuthTypeImpl(authType)

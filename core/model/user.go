@@ -184,30 +184,13 @@ func (a Account) GetPermissionNamed(name string) *Permission {
 	return nil
 }
 
-//CheckForPermissionChanges checks for changes to account permissions given a potential list of new permissions
-func (a Account) CheckForPermissionChanges(new []string) bool {
-	unchanged := make([]bool, len(a.Permissions))
-
-	for _, newP := range new {
-		found := false
-		for i, p := range a.Permissions {
-			if p.Name == newP {
-				found = true
-				unchanged[i] = true
-				break
-			}
-		}
-		if !found {
-			return true
-		}
+//GetAssignedPermissionNames returns a list of names of directly assigned permissions for this account
+func (a Account) GetAssignedPermissionNames() []string {
+	names := make([]string, len(a.Permissions))
+	for i, permission := range a.Permissions {
+		names[i] = permission.Name
 	}
-	for i := range a.Permissions {
-		if !unchanged[i] {
-			return true
-		}
-	}
-
-	return false
+	return names
 }
 
 //GetActiveRoles returns all active roles
@@ -229,6 +212,15 @@ func (a Account) GetRole(id string) *AccountRole {
 		}
 	}
 	return nil
+}
+
+//GetAssignedRoleIDs returns a list of IDs of directly assigned roles for this account
+func (a Account) GetAssignedRoleIDs() []string {
+	ids := make([]string, len(a.Roles))
+	for i, role := range a.Roles {
+		ids[i] = role.Role.ID
+	}
+	return ids
 }
 
 //CheckForRoleChanges checks for changes to account roles given a potential list of new roles
@@ -276,6 +268,15 @@ func (a Account) GetGroup(id string) *AccountGroup {
 		}
 	}
 	return nil
+}
+
+//GetAssignedGroupIDs returns a list of IDs of directly assigned groups for this account
+func (a Account) GetAssignedGroupIDs() []string {
+	ids := make([]string, len(a.Groups))
+	for i, group := range a.Groups {
+		ids[i] = group.Group.ID
+	}
+	return ids
 }
 
 //CheckForGroupChanges checks for changes to account groups given a potential list of new groups

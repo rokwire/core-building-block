@@ -125,7 +125,7 @@ func (c AppOrgRole) CheckAssigners(assignerPermissions []string) error {
 			return errors.Wrapf("error checking role permission assigners", err)
 		}
 	}
-	//it satisies all permissions
+	//it satisfies all permissions
 	return nil
 }
 
