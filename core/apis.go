@@ -266,20 +266,25 @@ func (s *servicesImpl) SerGetPreferences(accountID string) (map[string]interface
 	return s.app.serGetPreferences(accountID)
 }
 
-func (s *servicesImpl) SerGetAuthTest(l *logs.Log) string {
-	return s.app.serGetAuthTest(l)
-}
-
-func (s *servicesImpl) SerGetCommonTest(l *logs.Log) string {
-	return s.app.serGetCommonTest(l)
-}
-
 func (s *servicesImpl) SerUpdateAccountPreferences(id string, preferences map[string]interface{}) error {
 	return s.app.serUpdateAccountPreferences(id, preferences)
 }
 
 func (s *servicesImpl) SerUpdateProfile(accountID string, profile model.Profile) error {
 	return s.app.serUpdateProfile(accountID, profile)
+}
+
+func (s *servicesImpl) SerGetAccounts(limit int, offset int, appID string, orgID string, accountID *string, firstName *string, lastName *string, authType *string,
+	authTypeIdentifier *string, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error) {
+	return s.app.serGetAccounts(limit, offset, appID, orgID, accountID, firstName, lastName, authType, authTypeIdentifier, hasPermissions, permissions, roleIDs, groupIDs)
+}
+
+func (s *servicesImpl) SerGetAuthTest(l *logs.Log) string {
+	return s.app.serGetAuthTest(l)
+}
+
+func (s *servicesImpl) SerGetCommonTest(l *logs.Log) string {
+	return s.app.serGetCommonTest(l)
 }
 
 func (s *servicesImpl) SerGetAppConfig(appTypeIdentifier string, orgID *string, versionNumbers model.VersionNumbers, apiKey *string) (*model.ApplicationConfig, error) {
@@ -346,8 +351,9 @@ func (s *administrationImpl) AdmGetApplicationPermissions(appID string, orgID st
 	return s.app.admGetApplicationPermissions(appID, orgID, l)
 }
 
-func (s *administrationImpl) AdmGetAccounts(appID string, orgID string, accountID *string, authTypeIdentifier *string) ([]model.Account, error) {
-	return s.app.admGetAccounts(appID, orgID, accountID, authTypeIdentifier)
+func (s *administrationImpl) AdmGetAccounts(limit int, offset int, appID string, orgID string, accountID *string, firstName *string, lastName *string, authType *string,
+	authTypeIdentifier *string, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error) {
+	return s.app.admGetAccounts(limit, offset, appID, orgID, accountID, firstName, lastName, authType, authTypeIdentifier, hasPermissions, permissions, roleIDs, groupIDs)
 }
 
 func (s *administrationImpl) AdmGetAccount(accountID string) (*model.Account, error) {

@@ -1399,11 +1399,11 @@ func (a *Auth) constructAccount(context storage.TransactionContext, authType mod
 	authTypes := []model.AccountAuthType{*accountAuthType}
 
 	//assumes admin creator permissions are always non-nil
-	admin := assignerPermissions != nil
+	adminSet := assignerPermissions != nil
 	var permissions []model.Permission
 	var roles []model.AppOrgRole
 	var groups []model.AppOrgGroup
-	if admin {
+	if adminSet {
 		permissions, err = a.CheckPermissions(context, &appOrg, permissionNames, assignerPermissions)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypePermission, nil, err)
@@ -1435,8 +1435,9 @@ func (a *Auth) constructAccount(context storage.TransactionContext, authType mod
 		}
 	}
 
-	account := model.Account{ID: accountID.String(), AppOrg: appOrg,
-		Permissions: permissions, Roles: model.AccountRolesFromAppOrgRoles(roles, true, admin), Groups: model.AccountGroupsFromAppOrgGroups(groups, true, admin),
+	hasPermissions := len(permissions) > 0 || len(roles) > 0 || len(groups) > 0
+	account := model.Account{ID: accountID.String(), AppOrg: appOrg, HasPermissions: hasPermissions, Permissions: permissions,
+		Roles: model.AccountRolesFromAppOrgRoles(roles, true, adminSet), Groups: model.AccountGroupsFromAppOrgGroups(groups, true, adminSet),
 		AuthTypes: authTypes, ExternalIDs: externalIDs, Preferences: preferences, Profile: profile, DateCreated: time.Now()}
 
 	accountAuthType.Account = account
@@ -1510,6 +1511,25 @@ func (a *Auth) checkGroups(context storage.TransactionContext, appOrg model.Appl
 	}
 
 	return groups, nil
+}
+
+func (a *Auth) checkRevokedGroups(context storage.TransactionContext, appOrg model.ApplicationOrganization, groupIDs []string, assignerPermissions []string) error {
+	//find groups
+	groups, err := a.storage.FindAppOrgGroupsByIDs(context, groupIDs, appOrg.ID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgGroup, nil, err)
+	}
+	//Revoke missing groups
+
+	//check assigners
+	for _, group := range groups {
+		err = group.CheckAssigners(assignerPermissions)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionValidate, "assigner permissions", &logutils.FieldArgs{"id": group.ID}, err)
+		}
+	}
+
+	return nil
 }
 
 func (a *Auth) linkAccountAuthType(account model.Account, authType model.AuthType, appOrg model.ApplicationOrganization,

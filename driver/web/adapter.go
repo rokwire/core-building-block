@@ -107,6 +107,7 @@ func (we Adapter) Start() {
 	servicesSubRouter.HandleFunc("/auth/verify-mfa", we.wrapFunc(we.servicesApisHandler.verifyMFA, we.auth.services.user)).Methods("POST")
 	servicesSubRouter.HandleFunc("/auth/authorize-service", we.wrapFunc(we.servicesApisHandler.authorizeService, we.auth.services.user)).Methods("POST")
 	servicesSubRouter.HandleFunc("/auth/service-regs", we.wrapFunc(we.servicesApisHandler.getServiceRegistrations, we.auth.services.user)).Methods("GET")
+	servicesSubRouter.HandleFunc("/accounts", we.wrapFunc(we.servicesApisHandler.getAccounts, we.auth.services.permissions)).Methods("GET")
 	servicesSubRouter.HandleFunc("/accounts", we.wrapFunc(we.servicesApisHandler.createAdminAccount, we.auth.services.permissions)).Methods("POST")
 	servicesSubRouter.HandleFunc("/accounts", we.wrapFunc(we.servicesApisHandler.updateAdminAccount, we.auth.services.permissions)).Methods("PUT")
 	servicesSubRouter.HandleFunc("/account", we.wrapFunc(we.servicesApisHandler.deleteAccount, we.auth.services.user)).Methods("DELETE")

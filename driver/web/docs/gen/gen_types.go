@@ -268,7 +268,8 @@ type AccountAuthTypeFields_Params struct {
 
 // AccountFields defines model for AccountFields.
 type AccountFields struct {
-	Id string `json:"id"`
+	HasPermissions bool   `json:"has_permissions"`
+	Id             string `json:"id"`
 }
 
 // AppOrgGroup defines model for AppOrgGroup.
@@ -499,18 +500,19 @@ type OrganizationFieldsType string
 
 // PartialAccount defines model for PartialAccount.
 type PartialAccount struct {
-	AppId       string                  `json:"app_id"`
-	AuthTypes   []AccountAuthTypeFields `json:"auth_types"`
-	DateCreated string                  `json:"date_created"`
-	DateUpdated *string                 `json:"date_updated"`
-	FirstName   string                  `json:"first_name"`
-	Groups      []AppOrgGroupFields     `json:"groups"`
-	Id          string                  `json:"id"`
-	LastName    string                  `json:"last_name"`
-	OrgId       string                  `json:"org_id"`
-	Params      *map[string]interface{} `json:"params"`
-	Permissions []PermissionFields      `json:"permissions"`
-	Roles       []AppOrgRoleFields      `json:"roles"`
+	AppId          string                  `json:"app_id"`
+	AuthTypes      []AccountAuthTypeFields `json:"auth_types"`
+	DateCreated    string                  `json:"date_created"`
+	DateUpdated    *string                 `json:"date_updated"`
+	FirstName      string                  `json:"first_name"`
+	Groups         []AppOrgGroupFields     `json:"groups"`
+	HasPermissions bool                    `json:"has_permissions"`
+	Id             string                  `json:"id"`
+	LastName       string                  `json:"last_name"`
+	OrgId          string                  `json:"org_id"`
+	Params         *map[string]interface{} `json:"params"`
+	Permissions    []PermissionFields      `json:"permissions"`
+	Roles          []AppOrgRoleFields      `json:"roles"`
 }
 
 // Permission defines model for Permission.
@@ -994,13 +996,14 @@ type SharedReqUpdateAccountAuthType string
 
 // SharedResAccount defines model for _shared_res_Account.
 type SharedResAccount struct {
-	AuthTypes   *[]AccountAuthTypeFields `json:"auth_types,omitempty"`
-	Groups      *[]AppOrgGroupFields     `json:"groups,omitempty"`
-	Id          string                   `json:"id"`
-	Permissions *[]PermissionFields      `json:"permissions,omitempty"`
-	Preferences *map[string]interface{}  `json:"preferences"`
-	Profile     *ProfileFields           `json:"profile,omitempty"`
-	Roles       *[]AppOrgRoleFields      `json:"roles,omitempty"`
+	AuthTypes      *[]AccountAuthTypeFields `json:"auth_types,omitempty"`
+	Groups         *[]AppOrgGroupFields     `json:"groups,omitempty"`
+	HasPermissions *bool                    `json:"has_permissions,omitempty"`
+	Id             string                   `json:"id"`
+	Permissions    *[]PermissionFields      `json:"permissions,omitempty"`
+	Preferences    *map[string]interface{}  `json:"preferences"`
+	Profile        *ProfileFields           `json:"profile,omitempty"`
+	Roles          *[]AppOrgRoleFields      `json:"roles,omitempty"`
 }
 
 // SharedResAccountCheck defines model for _shared_res_AccountCheck.
@@ -1213,11 +1216,38 @@ type PutAdminApplicationAccountRolesJSONBody AdminReqGrantRolesToAccount
 // GetAdminApplicationAccountsParams defines parameters for GetAdminApplicationAccounts.
 type GetAdminApplicationAccountsParams struct {
 
+	// The maximum number of accounts to return
+	Limit *int `json:"limit,omitempty"`
+
+	// The index of the first account to return
+	Offset *int `json:"offset,omitempty"`
+
 	// The account ID
 	AccountId *string `json:"account-id,omitempty"`
 
+	// The account profile first name
+	Firstname *string `json:"firstname,omitempty"`
+
+	// The account profile last name
+	Lastname *string `json:"lastname,omitempty"`
+
+	// The auth type
+	AuthType *string `json:"auth-type,omitempty"`
+
 	// The authentication type identifier
 	AuthTypeIdentifier *string `json:"auth-type-identifier,omitempty"`
+
+	// Account has permissions (permissions, roles, or groups) filter
+	HasPermissions *bool `json:"has-permissions,omitempty"`
+
+	// A comma-separated list of permission names
+	Permissions *string `json:"permissions,omitempty"`
+
+	// A comma-separated list of role IDs
+	RoleIds *string `json:"role-ids,omitempty"`
+
+	// A comma-separated list of group IDs
+	GroupIds *string `json:"group-ids,omitempty"`
 }
 
 // PostAdminApplicationAccountsJSONBody defines parameters for PostAdminApplicationAccounts.
@@ -1322,6 +1352,43 @@ type PutServicesAccountPreferencesJSONBody map[string]interface{}
 
 // PutServicesAccountProfileJSONBody defines parameters for PutServicesAccountProfile.
 type PutServicesAccountProfileJSONBody SharedReqProfile
+
+// GetServicesAccountsParams defines parameters for GetServicesAccounts.
+type GetServicesAccountsParams struct {
+
+	// The maximum number of accounts to return
+	Limit *int `json:"limit,omitempty"`
+
+	// The index of the first account to return
+	Offset *int `json:"offset,omitempty"`
+
+	// The account ID
+	AccountId *string `json:"account-id,omitempty"`
+
+	// The account profile first name
+	Firstname *string `json:"firstname,omitempty"`
+
+	// The account profile last name
+	Lastname *string `json:"lastname,omitempty"`
+
+	// The auth type
+	AuthType *string `json:"auth-type,omitempty"`
+
+	// The authentication type identifier
+	AuthTypeIdentifier *string `json:"auth-type-identifier,omitempty"`
+
+	// Account has permissions (permissions, roles, or groups) filter
+	HasPermissions *bool `json:"has-permissions,omitempty"`
+
+	// A comma-separated list of permission names
+	Permissions *string `json:"permissions,omitempty"`
+
+	// A comma-separated list of role IDs
+	RoleIds *string `json:"role-ids,omitempty"`
+
+	// A comma-separated list of group IDs
+	GroupIds *string `json:"group-ids,omitempty"`
+}
 
 // PostServicesAccountsJSONBody defines parameters for PostServicesAccounts.
 type PostServicesAccountsJSONBody SharedReqCreateAccount

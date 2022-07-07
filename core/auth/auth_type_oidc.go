@@ -300,6 +300,9 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 
 	identityProviderID, _ := authType.Params["identity_provider"].(string)
 	identityProviderSetting := appOrg.FindIdentityProviderSetting(identityProviderID)
+	if identityProviderSetting == nil {
+		return nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeIdentityProviderConfig, &logutils.FieldArgs{"app_org": appOrg.ID, "identity_provider_id": identityProviderID})
+	}
 
 	//identifier
 	identifier, _ := userClaims[identityProviderSetting.UserIdentifierField].(string)

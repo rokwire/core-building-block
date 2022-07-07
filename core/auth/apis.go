@@ -648,61 +648,135 @@ func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID
 		//3. update account permissions
 		updatedAccount = account
 		updated := false
-		if account.CheckForPermissionChanges(permissions) {
-			newPermissions, err := a.CheckPermissions(context, appOrg, permissions, updaterPermissions)
-			if err != nil {
-				return errors.WrapErrorAction(logutils.ActionValidate, model.TypePermission, nil, err)
+		revoked := false
+
+		added, removed, unchanged := utils.StringListDiff(permissions, account.GetAssignedPermissionNames())
+		if len(added) > 0 || len(removed) > 0 {
+			newPermissions := []model.Permission{}
+			if len(added) > 0 {
+				addedPermissions, err := a.CheckPermissions(context, appOrg, added, updaterPermissions)
+				if err != nil {
+					return errors.WrapErrorAction("adding", model.TypePermission, nil, err)
+				}
+				newPermissions = append(newPermissions, addedPermissions...)
 			}
-			err = a.storage.UpdateAccountPermissions(context, account.ID, newPermissions)
+
+			if len(removed) > 0 {
+				err := a.CheckRevokedPermissions(context, appOrg, removed, updaterPermissions)
+				if err != nil {
+					return errors.WrapErrorAction("revoking", model.TypePermission, nil, err)
+				}
+				revoked = true
+			}
+
+			if len(unchanged) > 0 {
+				unchangedPermissions, err := a.storage.FindPermissionsByName(context, unchanged)
+				if err != nil {
+					return errors.WrapErrorAction(logutils.ActionFind, model.TypePermission, nil, err)
+				}
+				newPermissions = append(newPermissions, unchangedPermissions...)
+			}
+
+			hasPermissions := len(newPermissions) > 0 || len(updatedAccount.Roles) > 0 || len(updatedAccount.Groups) > 0
+			err = a.storage.UpdateAccountPermissions(context, account.ID, hasPermissions, newPermissions)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionUpdate, "admin account permissions", nil, err)
 			}
 
 			updatedAccount.Permissions = newPermissions
+			updatedAccount.HasPermissions = hasPermissions
 			updated = true
 		}
 
 		//4. update account roles
-		if account.CheckForRoleChanges(roleIDs) {
-			newRoles, err := a.CheckRoles(context, appOrg, roleIDs, updaterPermissions)
-			if err != nil {
-				return errors.WrapErrorAction(logutils.ActionValidate, model.TypeAppOrgRole, nil, err)
+		added, removed, unchanged = utils.StringListDiff(roleIDs, account.GetAssignedRoleIDs())
+		if len(added) > 0 || len(removed) > 0 {
+			newRoles := []model.AppOrgRole{}
+			if len(added) > 0 {
+				addedRoles, err := a.CheckRoles(context, appOrg, added, updaterPermissions)
+				if err != nil {
+					return errors.WrapErrorAction("adding", model.TypeAccountRoles, nil, err)
+				}
+				newRoles = append(newRoles, addedRoles...)
+			}
+
+			if len(removed) > 0 {
+				err := a.CheckRevokedRoles(context, appOrg, removed, updaterPermissions)
+				if err != nil {
+					return errors.WrapErrorAction("revoking", model.TypeAccountRoles, nil, err)
+				}
+				revoked = true
+			}
+
+			if len(unchanged) > 0 {
+				unchangedRoles, err := a.storage.FindAppOrgRolesByIDs(context, unchanged, appOrg.ID)
+				if err != nil {
+					return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountRoles, nil, err)
+				}
+				newRoles = append(newRoles, unchangedRoles...)
 			}
 
 			newAccountRoles := model.AccountRolesFromAppOrgRoles(newRoles, true, true)
-			err = a.storage.UpdateAccountRoles(context, account.ID, newAccountRoles)
+			hasPermissions := len(updatedAccount.Permissions) > 0 || len(newAccountRoles) > 0 || len(updatedAccount.Groups) > 0
+			err = a.storage.UpdateAccountRoles(context, account.ID, hasPermissions, newAccountRoles)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionUpdate, "admin account roles", nil, err)
 			}
 
 			updatedAccount.Roles = newAccountRoles
+			updatedAccount.HasPermissions = hasPermissions
 			updated = true
 		}
 
 		//5. update account groups
-		if account.CheckForGroupChanges(groupIDs) {
-			newGroups, err := a.checkGroups(context, *appOrg, groupIDs, updaterPermissions)
-			if err != nil {
-				return errors.WrapErrorAction(logutils.ActionValidate, model.TypeAppOrgGroup, nil, err)
+		added, removed, unchanged = utils.StringListDiff(groupIDs, account.GetAssignedGroupIDs())
+		if len(added) > 0 || len(removed) > 0 {
+			newGroups := []model.AppOrgGroup{}
+			if len(added) > 0 {
+				addedGroups, err := a.checkGroups(context, *appOrg, added, updaterPermissions)
+				if err != nil {
+					return errors.WrapErrorAction("adding", model.TypeAccountGroups, nil, err)
+				}
+				newGroups = append(newGroups, addedGroups...)
+			}
+
+			if len(removed) > 0 {
+				err := a.checkRevokedGroups(context, *appOrg, removed, updaterPermissions)
+				if err != nil {
+					return errors.WrapErrorAction("revoking", model.TypeAccountGroups, nil, err)
+				}
+				revoked = true
+			}
+
+			if len(unchanged) > 0 {
+				unchangedGroups, err := a.storage.FindAppOrgGroupsByIDs(context, unchanged, appOrg.ID)
+				if err != nil {
+					return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountGroups, nil, err)
+				}
+				newGroups = append(newGroups, unchangedGroups...)
 			}
 
 			newAccountGroups := model.AccountGroupsFromAppOrgGroups(newGroups, true, true)
-			err = a.storage.UpdateAccountGroups(context, account.ID, newAccountGroups)
+			hasPermissions := len(updatedAccount.Permissions) > 0 || len(updatedAccount.Roles) > 0 || len(newAccountGroups) > 0
+			err = a.storage.UpdateAccountGroups(context, account.ID, hasPermissions, newAccountGroups)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionUpdate, "admin account groups", nil, err)
 			}
 
 			updatedAccount.Groups = newAccountGroups
+			updatedAccount.HasPermissions = hasPermissions
 			updated = true
 		}
 
-		//6. delete active login sessions if account was updated
-		if updated {
+		//6. delete active login sessions if anything was revoked
+		if revoked {
 			err = a.storage.DeleteLoginSessionsByIdentifier(context, account.ID)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, nil, err)
 			}
+		}
 
+		if updated {
 			now := time.Now().UTC()
 			updatedAccount.DateUpdated = &now
 		}
@@ -1617,6 +1691,34 @@ func (a *Auth) CheckPermissions(context storage.TransactionContext, appOrg *mode
 	return permissions, nil
 }
 
+//CheckRevokedPermissions loads permissions by names from storage and checks that they are revokable
+func (a *Auth) CheckRevokedPermissions(context storage.TransactionContext, appOrg *model.ApplicationOrganization, permissionNames []string, assignerPermissions []string) error {
+	if appOrg == nil {
+		return errors.ErrorData(logutils.StatusInvalid, model.TypeApplicationOrganization, nil)
+	}
+
+	//find permissions
+	permissions, err := a.storage.FindPermissionsByName(context, permissionNames)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypePermission, nil, err)
+	}
+	//Allow revocation of missing permissions
+
+	//check if authorized
+	for _, permission := range permissions {
+		//Allow revocation of permissions for invalid services
+		if !utils.Contains(appOrg.ServicesIDs, permission.ServiceID) {
+			continue
+		}
+		err = permission.CheckAssigners(assignerPermissions)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionValidate, "assigner permissions", &logutils.FieldArgs{"name": permission.Name}, err)
+		}
+	}
+
+	return nil
+}
+
 //GrantAccountRoles grants new roles to an account after validating the assigner has required permissions
 func (a *Auth) GrantAccountRoles(context storage.TransactionContext, account *model.Account, roleIDs []string, assignerPermissions []string) error {
 	//check if there is data
@@ -1690,6 +1792,30 @@ func (a *Auth) CheckRoles(context storage.TransactionContext, appOrg *model.Appl
 	}
 
 	return roles, nil
+}
+
+//CheckRevokedRoles loads appOrg roles by IDs from storage and checks that they are revocable
+func (a *Auth) CheckRevokedRoles(context storage.TransactionContext, appOrg *model.ApplicationOrganization, roleIDs []string, assignerPermissions []string) error {
+	if appOrg == nil {
+		return errors.ErrorData(logutils.StatusInvalid, model.TypeApplicationOrganization, nil)
+	}
+
+	//find roles
+	roles, err := a.storage.FindAppOrgRolesByIDs(context, roleIDs, appOrg.ID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgRole, nil, err)
+	}
+	//Allow missing roles to be revoked
+
+	//check if authorized
+	for _, cRole := range roles {
+		err = cRole.CheckAssigners(assignerPermissions)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionValidate, "assigner permissions", &logutils.FieldArgs{"id": cRole.ID}, err)
+		}
+	}
+
+	return nil
 }
 
 //GrantAccountGroups grants new groups to an account after validating the assigner has required permissions

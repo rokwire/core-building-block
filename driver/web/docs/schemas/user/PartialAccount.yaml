@@ -4,6 +4,7 @@ required:
   - org_id
   - first_name
   - last_name
+  - has_permissions
   - permissions
   - roles
   - groups
@@ -22,6 +23,8 @@ properties:
     type: string
   last_name:
     type: string
+  has_permissions:
+    type: boolean
   permissions:
     type: array
     items:
