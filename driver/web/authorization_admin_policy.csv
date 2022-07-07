@@ -28,6 +28,7 @@ p, delete_auth-roles, /core/admin/application/roles, (GET)
 
 p, get_permissions, /core/admin/application/permissions, (GET)
 
+p, all_accounts, /core/admin/application/accounts, (GET)|(POST)|(PUT)|(DELETE)
 p, get_accounts, /core/admin/application/accounts, (GET)
 p, create_accounts, /core/admin/application/accounts, (POST)
 p, update_accounts, /core/admin/application/accounts, (GET)|(PUT)
