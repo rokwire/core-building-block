@@ -1,3 +1,17 @@
+// Copyright 2022 Board of Trustees of the University of Illinois.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package web
 
 import (
@@ -12,7 +26,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/rokwire/core-auth-library-go/tokenauth"
-	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
 )
@@ -20,179 +33,6 @@ import (
 //SystemApisHandler handles system APIs implementation
 type SystemApisHandler struct {
 	coreAPIs *core.APIs
-}
-
-func (h SystemApisHandler) systemLogin(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
-
-	//get ip
-	ip := utils.GetIP(l, r)
-	if err != nil {
-		return l.HttpResponseError("Error getting IP", err, http.StatusInternalServerError, true)
-	}
-
-	var requestData Def.SharedReqLogin
-	err = json.Unmarshal(data, &requestData)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth login request"), nil, err, http.StatusBadRequest, true)
-	}
-
-	//creds
-	requestCreds, err := interfaceToJSON(requestData.Creds)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeCreds, nil, err, http.StatusBadRequest, true)
-	}
-
-	//params
-	requestParams, err := interfaceToJSON(requestData.Params)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionMarshal, "params", nil, err, http.StatusBadRequest, true)
-	}
-
-	//preferences
-	var requestPreferences map[string]interface{}
-	if requestData.Preferences != nil {
-		requestPreferences = *requestData.Preferences
-	}
-
-	//profile ////
-	requestProfile := profileFromDefNullable(requestData.Profile)
-
-	//device
-	requestDevice := requestData.Device
-
-	message, loginSession, mfaTypes, err := h.coreAPIs.Auth.Login(ip, string(requestDevice.Type), requestDevice.Os, *requestDevice.DeviceId,
-		string(requestData.AuthType), requestCreds, requestData.ApiKey, requestData.AppTypeIdentifier, requestData.OrgId, requestParams, requestProfile, requestPreferences, true, l)
-	if err != nil {
-		loggingErr, ok := err.(*errors.Error)
-		if ok && loggingErr.Status() != "" {
-			return l.HttpResponseError("Error logging in", err, http.StatusUnauthorized, true)
-		}
-		return l.HttpResponseError("Error logging in", err, http.StatusInternalServerError, true)
-	}
-
-	///prepare response
-
-	//message
-	if message != nil {
-		responseData := &Def.SharedResLogin{Message: message}
-		respData, err := json.Marshal(responseData)
-		if err != nil {
-			return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("auth login response"), nil, err, http.StatusInternalServerError, false)
-		}
-		return l.HttpResponseSuccessJSON(respData)
-	}
-
-	if loginSession.State != "" {
-		//params
-		var paramsRes interface{}
-		if loginSession.Params != nil {
-			paramsRes = loginSession.Params
-		}
-
-		mfaResp := mfaDataListToDef(mfaTypes)
-		responseData := &Def.SharedResLoginMfa{AccountId: loginSession.Identifier, Enrolled: mfaResp, Params: &paramsRes,
-			SessionId: loginSession.ID, State: loginSession.State}
-		respData, err := json.Marshal(responseData)
-		if err != nil {
-			return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("auth login response"), nil, err, http.StatusInternalServerError, false)
-		}
-		return l.HttpResponseSuccessJSON(respData)
-	}
-
-	return authBuildLoginResponse(l, loginSession)
-}
-
-func (h SystemApisHandler) systemLoginMFA(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
-
-	var mfaData Def.SharedReqLoginMfa
-	err = json.Unmarshal(data, &mfaData)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("login mfa request"), nil, err, http.StatusBadRequest, true)
-	}
-
-	message, loginSession, err := h.coreAPIs.Auth.LoginMFA(mfaData.ApiKey, mfaData.AccountId, mfaData.SessionId, mfaData.Identifier, string(mfaData.Type), mfaData.Code, mfaData.State, l)
-	if message != nil {
-		return l.HttpResponseError(*message, err, http.StatusUnauthorized, false)
-	}
-	if err != nil {
-		return l.HttpResponseError("Error logging in", err, http.StatusInternalServerError, true)
-	}
-
-	return authBuildLoginResponse(l, loginSession)
-}
-
-func (h SystemApisHandler) systemLoginURL(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
-
-	var requestData Def.SharedReqLoginUrl
-	err = json.Unmarshal(data, &requestData)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, "auth login url request", nil, err, http.StatusBadRequest, true)
-	}
-
-	loginURL, params, err := h.coreAPIs.Auth.GetLoginURL(string(requestData.AuthType), requestData.AppTypeIdentifier, requestData.OrgId, requestData.RedirectUri, requestData.ApiKey, l)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionGet, "login url", nil, err, http.StatusInternalServerError, true)
-	}
-
-	responseData := &Def.SharedResLoginUrl{LoginUrl: loginURL, Params: &params}
-	respData, err := json.Marshal(responseData)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionMarshal, "auth login url response", nil, err, http.StatusInternalServerError, false)
-	}
-
-	return l.HttpResponseSuccessJSON(respData)
-}
-
-func (h SystemApisHandler) systemRefresh(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
-
-	var requestData Def.SharedReqRefresh
-	err = json.Unmarshal(data, &requestData)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth refresh request"), nil, err, http.StatusBadRequest, true)
-	}
-
-	loginSession, err := h.coreAPIs.Auth.Refresh(requestData.RefreshToken, requestData.ApiKey, l)
-	if err != nil {
-		return l.HttpResponseError("Error refreshing token", err, http.StatusInternalServerError, true)
-	}
-	if loginSession == nil {
-		//if login session is null then unauthorized
-		l.Infof("trying to refresh - %s", requestData.RefreshToken)
-		return l.HttpResponseError(http.StatusText(http.StatusUnauthorized), nil, http.StatusUnauthorized, true)
-	}
-
-	accessToken := loginSession.AccessToken
-	refreshToken := loginSession.CurrentRefreshToken()
-	var paramsRes interface{}
-	if loginSession.Params != nil {
-		paramsRes = loginSession.Params
-	}
-
-	tokenType := Def.SharedResRokwireTokenTokenTypeBearer
-	rokwireToken := Def.SharedResRokwireToken{AccessToken: &accessToken, RefreshToken: &refreshToken, TokenType: &tokenType}
-	responseData := &Def.SharedResRefresh{Token: &rokwireToken, Params: &paramsRes}
-	respData, err := json.Marshal(responseData)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("auth refresh response"), nil, err, http.StatusInternalServerError, false)
-	}
-
-	return l.HttpResponseSuccessJSON(respData)
 }
 
 //createGlobalConfig creates a global config
@@ -493,8 +333,9 @@ func (h SystemApisHandler) registerServiceAccount(l *logs.Log, r *http.Request, 
 		creds = serviceAccountCredentialListFromDef(*requestData.Creds)
 	}
 
+	assignerPermissions := strings.Split(claims.Permissions, ",")
 	serviceAccount, err := h.coreAPIs.Auth.RegisterServiceAccount(requestData.AccountId, fromAppID, fromOrgID, requestData.Name,
-		requestData.AppId, requestData.OrgId, requestData.Permissions, requestData.FirstParty, creds, l)
+		requestData.AppId, requestData.OrgId, requestData.Permissions, requestData.FirstParty, creds, assignerPermissions, l)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRegister, model.TypeServiceAccount, nil, err, http.StatusInternalServerError, true)
 	}
@@ -569,7 +410,8 @@ func (h SystemApisHandler) updateServiceAccountInstance(l *logs.Log, r *http.Req
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, "service account update request", nil, err, http.StatusBadRequest, true)
 	}
 
-	serviceAccount, err := h.coreAPIs.Auth.UpdateServiceAccountInstance(id, appID, orgID, requestData.Name, requestData.Permissions)
+	assignerPermissions := strings.Split(claims.Permissions, ",")
+	serviceAccount, err := h.coreAPIs.Auth.UpdateServiceAccountInstance(id, appID, orgID, requestData.Name, requestData.Permissions, assignerPermissions)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeServiceAccount, nil, err, http.StatusInternalServerError, true)
 	}
@@ -676,21 +518,32 @@ func (h SystemApisHandler) getApplicationAPIKeys(l *logs.Log, r *http.Request, c
 	return l.HttpResponseSuccessJSON(data)
 }
 
-func (h SystemApisHandler) getAPIKey(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+func (h SystemApisHandler) getAPIKeys(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	var apiKeys []model.APIKey
+	var err error
+
 	id := r.URL.Query().Get("id")
-	if id == "" {
-		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
+	if id != "" {
+		apiKey, err := h.coreAPIs.Auth.GetAPIKey(id)
+		if err != nil {
+			return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeAPIKey, nil, err, http.StatusInternalServerError, true)
+		}
+		if apiKey != nil {
+			apiKeys = []model.APIKey{*apiKey}
+		}
+	} else {
+		appID := r.URL.Query().Get("app_id")
+		if appID == "" {
+			return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id and app_id"), nil, http.StatusBadRequest, false)
+		}
+
+		apiKeys, err = h.coreAPIs.Auth.GetApplicationAPIKeys(appID)
+		if err != nil {
+			return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeAPIKey, nil, err, http.StatusInternalServerError, true)
+		}
 	}
 
-	apiKey, err := h.coreAPIs.Auth.GetAPIKey(id)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeAPIKey, nil, err, http.StatusInternalServerError, true)
-	}
-	if apiKey == nil {
-		return l.HttpResponseErrorData(logutils.StatusMissing, model.TypeAPIKey, &logutils.FieldArgs{"id": id}, nil, http.StatusNotFound, false)
-	}
-
-	responseData := apiKeyToDef(apiKey)
+	responseData := apiKeyListToDef(apiKeys)
 	data, err := json.Marshal(responseData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeAPIKey, nil, err, http.StatusInternalServerError, false)
@@ -850,7 +703,7 @@ func (h SystemApisHandler) createPermission(l *logs.Log, r *http.Request, claims
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypePermission, nil, err, http.StatusBadRequest, true)
 	}
 
-	_, err = h.coreAPIs.System.SysCreatePermission(requestData.Name, *requestData.ServiceId, requestData.Assigners)
+	_, err = h.coreAPIs.System.SysCreatePermission(requestData.Name, requestData.Description, requestData.ServiceId, requestData.Assigners)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypePermission, nil, err, http.StatusInternalServerError, true)
 	}
@@ -871,30 +724,9 @@ func (h SystemApisHandler) updatePermission(l *logs.Log, r *http.Request, claims
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypePermission, nil, err, http.StatusBadRequest, true)
 	}
 
-	_, err = h.coreAPIs.System.SysUpdatePermission(requestData.Name, requestData.ServiceId, requestData.Assigners)
+	_, err = h.coreAPIs.System.SysUpdatePermission(requestData.Name, requestData.Description, requestData.ServiceId, requestData.Assigners)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypePermission, nil, err, http.StatusInternalServerError, true)
-	}
-
-	return l.HttpResponseSuccess()
-}
-
-//createApplicationRole creates an application role
-func (h SystemApisHandler) createApplicationRole(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
-
-	var requestData Def.SystemReqApplicationRoles
-	err = json.Unmarshal(data, &requestData)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeAppOrgRole, nil, err, http.StatusBadRequest, true)
-	}
-
-	_, err = h.coreAPIs.System.SysCreateAppOrgRole(requestData.Name, requestData.AppId, requestData.Description, requestData.Permissions)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeAppOrgRole, nil, err, http.StatusInternalServerError, true)
 	}
 
 	return l.HttpResponseSuccess()
@@ -1034,151 +866,6 @@ func (h SystemApisHandler) deleteApplicationConfig(l *logs.Log, r *http.Request,
 	}
 
 	return l.HttpResponseSuccess()
-}
-
-//grantAccountPermissions grants an account the given permissions
-func (h SystemApisHandler) grantAccountPermissions(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
-
-	var requestData Def.SystemReqAccountPermissions
-	err = json.Unmarshal(data, &requestData)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypePermission, nil, err, http.StatusBadRequest, true)
-	}
-
-	assignerPermissions := strings.Split(claims.Permissions, ",")
-	err = h.coreAPIs.System.SysGrantAccountPermissions(requestData.AccountId, requestData.Permissions, assignerPermissions)
-	if err != nil {
-		return l.HttpResponseErrorAction(actionGrant, model.TypePermission, nil, err, http.StatusInternalServerError, true)
-	}
-
-	return l.HttpResponseSuccess()
-}
-
-//grantAccountRoles grants an account the given roles
-func (h SystemApisHandler) grantAccountRoles(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
-
-	var requestData Def.SystemReqAccountRoles
-	err = json.Unmarshal(data, &requestData)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeAppOrgRole, nil, err, http.StatusBadRequest, true)
-	}
-
-	err = h.coreAPIs.System.SysGrantAccountRoles(requestData.AccountId, requestData.AppId, requestData.RoleIds)
-	if err != nil {
-		return l.HttpResponseErrorAction(actionGrant, model.TypeAppOrgRole, nil, err, http.StatusInternalServerError, true)
-	}
-
-	return l.HttpResponseSuccess()
-}
-
-//getMFATypes gets the mfa types an account is enrolled in
-func (h SystemApisHandler) getMFATypes(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	mfaDataList, err := h.coreAPIs.Auth.GetMFATypes(claims.Subject)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeMFAType, nil, err, http.StatusInternalServerError, true)
-	}
-
-	mfaResp := mfaDataListToDef(mfaDataList)
-
-	data, err := json.Marshal(mfaResp)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeMFAType, nil, err, http.StatusInternalServerError, false)
-	}
-
-	return l.HttpResponseSuccessJSON(data)
-}
-
-//addMFAType enrolls an account in a mfa type
-func (h SystemApisHandler) addMFAType(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
-
-	var mfaData Def.SharedReqMfa
-	err = json.Unmarshal(data, &mfaData)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("add mfa request"), nil, err, http.StatusBadRequest, true)
-	}
-
-	mfa, err := h.coreAPIs.Auth.AddMFAType(claims.Subject, mfaData.Identifier, string(mfaData.Type))
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionInsert, model.TypeMFAType, nil, err, http.StatusInternalServerError, true)
-	}
-
-	mfaResp := mfaDataToDef(mfa)
-
-	respData, err := json.Marshal(mfaResp)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeMFAType, nil, err, http.StatusInternalServerError, false)
-	}
-
-	return l.HttpResponseSuccessJSON(respData)
-}
-
-//removeMFAType removes a mfa type from an account
-func (h SystemApisHandler) removeMFAType(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
-
-	var mfaData Def.SharedReqMfa
-	err = json.Unmarshal(data, &mfaData)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("remove mfa request"), nil, err, http.StatusBadRequest, true)
-	}
-
-	err = h.coreAPIs.Auth.RemoveMFAType(claims.Subject, mfaData.Identifier, string(mfaData.Type))
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionDelete, model.TypeMFAType, nil, err, http.StatusInternalServerError, true)
-	}
-
-	return l.HttpResponseSuccess()
-}
-
-func (h SystemApisHandler) systemVerifyMFA(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
-
-	var mfaData Def.SharedReqMfa
-	err = json.Unmarshal(data, &mfaData)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("verify mfa request"), nil, err, http.StatusBadRequest, true)
-	}
-
-	if mfaData.Code == nil || *mfaData.Code == "" {
-		return l.HttpResponseErrorData(logutils.StatusMissing, "mfa code", nil, nil, http.StatusBadRequest, true)
-	}
-
-	message, recoveryCodes, err := h.coreAPIs.Auth.VerifyMFA(claims.Subject, mfaData.Identifier, string(mfaData.Type), *mfaData.Code)
-	if message != nil {
-		return l.HttpResponseError(*message, nil, http.StatusBadRequest, true)
-	}
-	if err != nil {
-		return l.HttpResponseError("Error verifying MFA", err, http.StatusInternalServerError, true)
-	}
-
-	if recoveryCodes == nil {
-		recoveryCodes = []string{}
-	}
-
-	response, err := json.Marshal(recoveryCodes)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionMarshal, "mfa recovery codes", nil, err, http.StatusInternalServerError, false)
-	}
-
-	return l.HttpResponseSuccessJSON(response)
 }
 
 //createAuthTypes creates auth-type

@@ -5,7 +5,7 @@
   description: |
     Delete application role
 
-    **Auth:** Requires auth token with 'all_admin_core' permission
+    **Auth:** Requires admin access token with `delete_auth-roles` or `all_auth-roles` permission
   security:
     - bearerAuth: []
   parameters:

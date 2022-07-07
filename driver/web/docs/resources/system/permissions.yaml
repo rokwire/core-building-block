@@ -5,7 +5,7 @@ post:
   description: |
     Creates permission
 
-    **Auth:** Requires auth token with `all_permission` or 'update_permission" permission
+    **Auth:** Requires system access token with `update_permissions` or `all_permissions` permission
   security:
     - bearerAuth: []
   requestBody:
@@ -36,7 +36,7 @@ put:
   description: |
     Updates permission
 
-    **Auth:** Requires auth token with `all_permission` or 'update_permission" permission
+    **Auth:** Requires system access token with `update_permissions` or `all_permissions` permission
   security:
     - bearerAuth: []
   requestBody:

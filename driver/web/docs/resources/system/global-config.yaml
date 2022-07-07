@@ -5,7 +5,7 @@ get:
   description: |
     Gives the system global config
 
-    **Auth:** Requires auth token with `config_admin` permission
+    **Auth:** Requires system access token with `get_global-config`, `update_global-config`, or `all_global-config` permission
   security:
     - bearerAuth: []
   responses:
@@ -28,7 +28,7 @@ post:
   description: |
     Creates the system global config
 
-    **Auth:** Requires auth token with `config_admin` permission
+    **Auth:** Requires system access token with `update_global-config` or `all_global-config` permission
   security:
     - bearerAuth: []
   requestBody:
@@ -58,7 +58,7 @@ put:
   description: |
     Updates the system global config
 
-    **Auth:** Requires auth token with `config_admin` permission
+    **Auth:** Requires system access token with `update_global-config` or `all_global-config` permission
   security:
     - bearerAuth: []
   requestBody:

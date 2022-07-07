@@ -1,8 +1,23 @@
+// Copyright 2022 Board of Trustees of the University of Illinois.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package web
 
 import (
 	"core-building-block/core/model"
 	Def "core-building-block/driver/web/docs/gen"
+	"core-building-block/utils"
 )
 
 //Account
@@ -19,14 +34,52 @@ func accountToDef(item model.Account) *Def.SharedResAccount {
 	groups := accountGroupsToDef(item.GetActiveGroups())
 	//account auth types
 	authTypes := accountAuthTypesToDef(item.AuthTypes)
-	return &Def.SharedResAccount{Id: item.ID, Permissions: &permissions, Roles: &roles, Groups: &groups,
+	return &Def.SharedResAccount{Id: item.ID, HasPermissions: &item.HasPermissions, Permissions: &permissions, Roles: &roles, Groups: &groups,
 		AuthTypes: &authTypes, Profile: profile, Preferences: preferences}
 }
 
-func аccountsToDef(items []model.Account) []Def.SharedResAccount {
+func accountsToDef(items []model.Account) []Def.SharedResAccount {
 	result := make([]Def.SharedResAccount, len(items))
 	for i, item := range items {
 		result[i] = *accountToDef(item)
+	}
+	return result
+}
+
+func partialAccountToDef(item model.Account, params map[string]interface{}) *Def.PartialAccount {
+	//permissions
+	permissions := applicationPermissionsToDef(item.Permissions)
+	//roles
+	roles := accountRolesToDef(item.GetActiveRoles())
+	//groups
+	groups := accountGroupsToDef(item.GetActiveGroups())
+	//account auth types
+	authTypes := accountAuthTypesToDef(item.AuthTypes)
+	for i := 0; i < len(authTypes); i++ {
+		authTypes[i].Params = nil
+	}
+	//dates
+	var dateUpdated *string
+	dateCreated := utils.FormatTime(&item.DateCreated)
+	if item.DateUpdated != nil {
+		formatted := utils.FormatTime(item.DateUpdated)
+		dateUpdated = &formatted
+	}
+
+	//params
+	var paramsData *map[string]interface{}
+	if params != nil {
+		paramsData = &params
+	}
+	return &Def.PartialAccount{Id: item.ID, AppId: item.AppOrg.Application.ID, OrgId: item.AppOrg.Organization.ID,
+		FirstName: item.Profile.FirstName, LastName: item.Profile.LastName, HasPermissions: item.HasPermissions, Permissions: permissions, Roles: roles, Groups: groups,
+		AuthTypes: authTypes, DateCreated: dateCreated, DateUpdated: dateUpdated, Params: paramsData}
+}
+
+func partialAccountsToDef(items []model.Account) []Def.PartialAccount {
+	result := make([]Def.PartialAccount, len(items))
+	for i, item := range items {
+		result[i] = *partialAccountToDef(item, nil)
 	}
 	return result
 }

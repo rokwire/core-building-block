@@ -1,3 +1,17 @@
+// Copyright 2022 Board of Trustees of the University of Illinois.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package storage
 
 import (
@@ -16,7 +30,7 @@ func accountFromStorage(item account, appOrg model.ApplicationOrganization) mode
 	devices := accountDevicesFromStorage(item)
 	dateCreated := item.DateCreated
 	dateUpdated := item.DateUpdated
-	return model.Account{ID: id, AppOrg: appOrg, Permissions: permissions,
+	return model.Account{ID: id, AppOrg: appOrg, HasPermissions: item.HasPermissions, Permissions: permissions,
 		Roles: roles, Groups: groups, AuthTypes: authTypes, MFATypes: mfaTypes, ExternalIDs: item.ExternalIDs,
 		Preferences: item.Preferences, Profile: profile, Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated}
 }
@@ -46,7 +60,7 @@ func accountToStorage(item *model.Account) *account {
 	dateCreated := item.DateCreated
 	dateUpdated := item.DateUpdated
 
-	return &account{ID: id, AppOrgID: appOrgID, Permissions: permissions, Roles: roles, Groups: groups, AuthTypes: authTypes,
+	return &account{ID: id, AppOrgID: appOrgID, HasPermissions: item.HasPermissions, Permissions: permissions, Roles: roles, Groups: groups, AuthTypes: authTypes,
 		MFATypes: mfaTypes, ExternalIDs: item.ExternalIDs, Preferences: item.Preferences, Profile: profile, Devices: devices,
 		DateCreated: dateCreated, DateUpdated: dateUpdated}
 }

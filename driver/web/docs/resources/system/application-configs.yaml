@@ -7,7 +7,7 @@ get:
     Otherwise it will return a list of all app config versions for the given app_type_id. If org_id is provided, the configs for that organization will
     be returned, otherwise the default configs will be returned.
 
-    **Auth:** Requires user auth token with 'all_appconfigs' or 'get_appconfig' permission
+    **Auth:** Requires system access token with `get_app-configs`, `update_app-configs`, `delete_app-configs`, or `all_app-configs` permission
   security:
     - bearerAuth: []
   parameters:
@@ -50,7 +50,9 @@ post:
   - System
   summary: Creates app configs
   description: |
-    **Auth:** Requires user auth token with 'all_appconfigs' or 'update_appconfig' permission.
+    Creates a new app config
+
+    **Auth:** Requires system access token with `update_app-configs` or `all_app-configs` permission
   security:
     - bearerAuth: []
   requestBody:
