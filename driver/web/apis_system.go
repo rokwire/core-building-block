@@ -333,8 +333,9 @@ func (h SystemApisHandler) registerServiceAccount(l *logs.Log, r *http.Request, 
 		creds = serviceAccountCredentialListFromDef(*requestData.Creds)
 	}
 
+	assignerPermissions := strings.Split(claims.Permissions, ",")
 	serviceAccount, err := h.coreAPIs.Auth.RegisterServiceAccount(requestData.AccountId, fromAppID, fromOrgID, requestData.Name,
-		requestData.AppId, requestData.OrgId, requestData.Permissions, requestData.FirstParty, creds, l)
+		requestData.AppId, requestData.OrgId, requestData.Permissions, requestData.FirstParty, creds, assignerPermissions, l)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRegister, model.TypeServiceAccount, nil, err, http.StatusInternalServerError, true)
 	}
@@ -409,7 +410,8 @@ func (h SystemApisHandler) updateServiceAccountInstance(l *logs.Log, r *http.Req
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, "service account update request", nil, err, http.StatusBadRequest, true)
 	}
 
-	serviceAccount, err := h.coreAPIs.Auth.UpdateServiceAccountInstance(id, appID, orgID, requestData.Name, requestData.Permissions)
+	assignerPermissions := strings.Split(claims.Permissions, ",")
+	serviceAccount, err := h.coreAPIs.Auth.UpdateServiceAccountInstance(id, appID, orgID, requestData.Name, requestData.Permissions, assignerPermissions)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeServiceAccount, nil, err, http.StatusInternalServerError, true)
 	}
@@ -516,21 +518,32 @@ func (h SystemApisHandler) getApplicationAPIKeys(l *logs.Log, r *http.Request, c
 	return l.HttpResponseSuccessJSON(data)
 }
 
-func (h SystemApisHandler) getAPIKey(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+func (h SystemApisHandler) getAPIKeys(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	var apiKeys []model.APIKey
+	var err error
+
 	id := r.URL.Query().Get("id")
-	if id == "" {
-		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
+	if id != "" {
+		apiKey, err := h.coreAPIs.Auth.GetAPIKey(id)
+		if err != nil {
+			return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeAPIKey, nil, err, http.StatusInternalServerError, true)
+		}
+		if apiKey != nil {
+			apiKeys = []model.APIKey{*apiKey}
+		}
+	} else {
+		appID := r.URL.Query().Get("app_id")
+		if appID == "" {
+			return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id and app_id"), nil, http.StatusBadRequest, false)
+		}
+
+		apiKeys, err = h.coreAPIs.Auth.GetApplicationAPIKeys(appID)
+		if err != nil {
+			return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeAPIKey, nil, err, http.StatusInternalServerError, true)
+		}
 	}
 
-	apiKey, err := h.coreAPIs.Auth.GetAPIKey(id)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeAPIKey, nil, err, http.StatusInternalServerError, true)
-	}
-	if apiKey == nil {
-		return l.HttpResponseErrorData(logutils.StatusMissing, model.TypeAPIKey, &logutils.FieldArgs{"id": id}, nil, http.StatusNotFound, false)
-	}
-
-	responseData := apiKeyToDef(apiKey)
+	responseData := apiKeyListToDef(apiKeys)
 	data, err := json.Marshal(responseData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeAPIKey, nil, err, http.StatusInternalServerError, false)
@@ -719,27 +732,6 @@ func (h SystemApisHandler) updatePermission(l *logs.Log, r *http.Request, claims
 	return l.HttpResponseSuccess()
 }
 
-//createApplicationRole creates an application role
-func (h SystemApisHandler) createApplicationRole(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
-
-	var requestData Def.SystemReqApplicationRoles
-	err = json.Unmarshal(data, &requestData)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeAppOrgRole, nil, err, http.StatusBadRequest, true)
-	}
-
-	_, err = h.coreAPIs.System.SysCreateAppOrgRole(requestData.Name, requestData.AppId, requestData.Description, requestData.Permissions)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeAppOrgRole, nil, err, http.StatusInternalServerError, true)
-	}
-
-	return l.HttpResponseSuccess()
-}
-
 func (h SystemApisHandler) getApplicationConfigs(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	appTypeIdentifier := r.URL.Query().Get("app_type_id")
 	if appTypeIdentifier == "" {
@@ -893,27 +885,6 @@ func (h SystemApisHandler) grantAccountPermissions(l *logs.Log, r *http.Request,
 	err = h.coreAPIs.System.SysGrantAccountPermissions(requestData.AccountId, requestData.Permissions, assignerPermissions)
 	if err != nil {
 		return l.HttpResponseErrorAction(actionGrant, model.TypePermission, nil, err, http.StatusInternalServerError, true)
-	}
-
-	return l.HttpResponseSuccess()
-}
-
-//grantAccountRoles grants an account the given roles
-func (h SystemApisHandler) grantAccountRoles(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
-
-	var requestData Def.SystemReqAccountRoles
-	err = json.Unmarshal(data, &requestData)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeAppOrgRole, nil, err, http.StatusBadRequest, true)
-	}
-
-	err = h.coreAPIs.System.SysGrantAccountRoles(requestData.AccountId, requestData.AppId, requestData.RoleIds)
-	if err != nil {
-		return l.HttpResponseErrorAction(actionGrant, model.TypeAppOrgRole, nil, err, http.StatusInternalServerError, true)
 	}
 
 	return l.HttpResponseSuccess()

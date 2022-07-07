@@ -1,11 +1,11 @@
 get:
   tags:
-  - Admin
-  summary: Finds application accounts
+  - Services
+  summary: Finds accounts
   description: |
-    Finds accounts for the specified application
+    Finds accounts using a set of optional search parameters
 
-    **Auth:** Requires admin access token with `get_accounts`, `update_accounts`, or `all_accounts` permission
+    **Auth:** Requires access token with `get_accounts`, `update_accounts`, or `all_accounts` permission
   security:
     - bearerAuth: []
   parameters:
@@ -105,7 +105,7 @@ get:
           schema:
             type: array
             items:
-              $ref: "../../../schemas/user/PartialAccount.yaml"
+              $ref: "../../schemas/user/PartialAccount.yaml"
     400:
       description: Bad request
     401:
@@ -114,8 +114,8 @@ get:
       description: Internal error
 post:
   tags:
-  - Admin
-  summary: Create admin accounts
+  - Services
+  summary: Create admin account
   description: |
     Create a new admin account
 
@@ -128,7 +128,7 @@ post:
     content:
       application/json:
         schema:
-          $ref: "../../../schemas/apis/shared/requests/create-account/Request.yaml"
+          $ref: "../../schemas/apis/shared/requests/create-account/Request.yaml"
     required: true
   responses:
     200:
@@ -136,7 +136,7 @@ post:
       content:
         application/json:
           schema:
-            $ref: "../../../schemas/user/PartialAccount.yaml" 
+            $ref: "../../schemas/user/PartialAccount.yaml" 
     400:
       description: Bad request
     401:
@@ -145,7 +145,7 @@ post:
       description: Internal error
 put:
   tags:
-  - Admin
+  - Services
   summary: Update admin account
   description: |
     Update an existing admin account
@@ -159,7 +159,7 @@ put:
     content:
       application/json:
         schema:
-          $ref: "../../../schemas/apis/shared/requests/update-account/Request.yaml"
+          $ref: "../../schemas/apis/shared/requests/update-account/Request.yaml"
     required: true
   responses:
     200:
@@ -167,7 +167,7 @@ put:
       content:
         application/json:
           schema:
-            $ref: "../../../schemas/user/PartialAccount.yaml" 
+            $ref: "../../schemas/user/PartialAccount.yaml" 
     400:
       description: Bad request
     401:

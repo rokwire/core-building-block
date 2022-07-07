@@ -20,9 +20,6 @@ p, update_applications, /core/system/applications, (GET)|(POST)
 p, all_permissions, /core/system/permissions, (GET)|(POST)|(DELETE)|(PUT)
 p, update_permissions, /core/system/permissions, (POST)|(PUT)
 
-p, all_auth-roles, /core/system/application-roles, (GET)|(POST)|(DELETE)|(PUT)
-p, update_auth-roles, /core/system/application-roles, (POST)
-
 p, all_app-configs, /core/system/application/configs, (GET)|(POST)|(PUT)|(DELETE)
 p, all_app-configs, /core/system/application/configs/*, (GET)|(POST)|(PUT)|(DELETE)
 p, get_app-configs, /core/system/application/configs, (GET)
@@ -31,12 +28,6 @@ p, update_app-configs, /core/system/application/configs, (GET)|(POST)
 p, update_app-configs, /core/system/application/configs/*, (GET)|(PUT)
 p, delete_app-config, /core/system/application/configs/*, (GET)|(DELETE)
 p, delete_app-config, /core/system/application/configs, (GET)
-
-p, all_account-permissions, /core/system/account/permissions, (GET)|(POST)|(DELETE)|(PUT)
-p, update_account-permissions, /core/system/account/permissions, (POST)|(PUT)
-
-p, all_account-roles, /core/system/account/roles, (GET)|(POST)|(DELETE)|(PUT)
-p, update_account-roles, /core/system/account/roles, (POST)|(PUT)
 
 p, all_service-regs, /core/system/service-regs, (GET)|(POST)|(DELETE)|(PUT)
 p, get_service-regs, /core/system/service-regs, (GET)
@@ -53,9 +44,7 @@ p, delete_service-accounts, /core/system/service-accounts, (GET)|(DELETE)
 p, delete_service-accounts, /core/system/service-accounts/*, (GET)|(DELETE)
 
 p, all_api-keys, /core/system/api-keys, (GET)|(POST)|(DELETE)|(PUT)
-p, all_api-keys, /core/system/application-api-keys, (GET)
 p, get_api-keys, /core/system/api-keys, (GET)
-p, get_api-keys, /core/admin/application-api-keys, (GET)
 p, update_api-keys, /core/system/api-keys, (GET)|(POST)|(PUT)
 p, delete_api-keys, /core/system/api-keys, (GET)|(DELETE)
 

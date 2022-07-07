@@ -50,6 +50,9 @@ const (
 	TypeApplicationConfigsVersion logutils.MessageDataType = "app config version number"
 	//TypeVersionNumbers ...
 	TypeVersionNumbers logutils.MessageDataType = "version numbers"
+
+	//PermissionAllSystemCore ...
+	PermissionAllSystemCore string = "all_system_core"
 )
 
 //Permission represents permission entity
@@ -120,10 +123,10 @@ func (c AppOrgRole) CheckAssigners(assignerPermissions []string) error {
 	for _, permission := range c.Permissions {
 		err := permission.CheckAssigners(assignerPermissions)
 		if err != nil {
-			errors.Wrapf("error checking role permission assigners", err)
+			return errors.Wrapf("error checking role permission assigners", err)
 		}
 	}
-	//it satisies all permissions
+	//it satisfies all permissions
 	return nil
 }
 

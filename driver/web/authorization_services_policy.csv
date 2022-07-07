@@ -1,0 +1,4 @@
+p, all_accounts, /core/services/accounts, (GET)|(POST)|(PUT)|(DELETE)
+p, get_accounts, /core/services/accounts, (GET)
+p, create_accounts, /core/services/accounts, (POST)
+p, update_accounts, /core/services/accounts, (GET)|(PUT)
