@@ -184,8 +184,8 @@ func appOrgGroupFromStorage(item *appOrgGroup, appOrg model.ApplicationOrganizat
 	}
 
 	roles := appOrgRolesFromStorage(item.Roles, appOrg)
-	return model.AppOrgGroup{ID: item.ID, Name: item.Name, System: item.System, Permissions: item.Permissions, Roles: roles,
-		AppOrg: appOrg, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+	return model.AppOrgGroup{ID: item.ID, Name: item.Name, Description: item.Description, System: item.System,
+		Permissions: item.Permissions, Roles: roles, AppOrg: appOrg, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
 func appOrgGroupsFromStorage(items []appOrgGroup, appOrg model.ApplicationOrganization) []model.AppOrgGroup {
@@ -202,7 +202,7 @@ func appOrgGroupsFromStorage(items []appOrgGroup, appOrg model.ApplicationOrgani
 
 func appOrgGroupToStorage(item model.AppOrgGroup) appOrgGroup {
 	roles := appOrgRolesToStorage(item.Roles)
-	return appOrgGroup{ID: item.ID, Name: item.Name, System: item.System, AppOrgID: item.AppOrg.ID,
+	return appOrgGroup{ID: item.ID, Name: item.Name, Description: item.Description, System: item.System, AppOrgID: item.AppOrg.ID,
 		Permissions: item.Permissions, Roles: roles, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 

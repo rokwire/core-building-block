@@ -868,28 +868,6 @@ func (h SystemApisHandler) deleteApplicationConfig(l *logs.Log, r *http.Request,
 	return l.HttpResponseSuccess()
 }
 
-//grantAccountPermissions grants an account the given permissions
-func (h SystemApisHandler) grantAccountPermissions(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
-
-	var requestData Def.SystemReqAccountPermissions
-	err = json.Unmarshal(data, &requestData)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypePermission, nil, err, http.StatusBadRequest, true)
-	}
-
-	assignerPermissions := strings.Split(claims.Permissions, ",")
-	err = h.coreAPIs.System.SysGrantAccountPermissions(requestData.AccountId, requestData.Permissions, assignerPermissions)
-	if err != nil {
-		return l.HttpResponseErrorAction(actionGrant, model.TypePermission, nil, err, http.StatusInternalServerError, true)
-	}
-
-	return l.HttpResponseSuccess()
-}
-
 //createAuthTypes creates auth-type
 func (h SystemApisHandler) createAuthTypes(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 
