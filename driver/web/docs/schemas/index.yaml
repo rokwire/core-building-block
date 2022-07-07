@@ -17,12 +17,8 @@ Permission:
   $ref: "./application/Permission.yaml"
 AppOrgRole:
   $ref: "./application/AppOrgRole.yaml"
-AppOrgRoleFields:
-  $ref: "./application/AppOrgRoleFields.yaml"
 AppOrgGroup:
   $ref: "./application/AppOrgGroup.yaml"
-AppOrgGroupFields:
-  $ref: "./application/AppOrgGroupFields.yaml"
 Organization:
   $ref: "./application/Organization.yaml"
 OrganizationFields:

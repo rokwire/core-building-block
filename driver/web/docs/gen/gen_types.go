@@ -274,20 +274,15 @@ type AccountFields struct {
 
 // AppOrgGroup defines model for AppOrgGroup.
 type AppOrgGroup struct {
-	Application *Application       `json:"application,omitempty"`
-	Fields      *AppOrgGroupFields `json:"fields,omitempty"`
-	Permissions *[]Permission      `json:"permissions,omitempty"`
-	Roles       *[]AppOrgRole      `json:"roles,omitempty"`
-}
-
-// AppOrgGroupFields defines model for AppOrgGroupFields.
-type AppOrgGroupFields struct {
-	DateCreated *string `json:"date_created,omitempty"`
-	DateUpdated *string `json:"date_updated,omitempty"`
-	Description *string `json:"description,omitempty"`
-	Id          string  `json:"id"`
-	Name        string  `json:"name"`
-	System      *bool   `json:"system,omitempty"`
+	Application *Application  `json:"application,omitempty"`
+	DateCreated *string       `json:"date_created,omitempty"`
+	DateUpdated *string       `json:"date_updated,omitempty"`
+	Description *string       `json:"description,omitempty"`
+	Id          string        `json:"id"`
+	Name        string        `json:"name"`
+	Permissions *[]Permission `json:"permissions,omitempty"`
+	Roles       *[]AppOrgRole `json:"roles,omitempty"`
+	System      *bool         `json:"system,omitempty"`
 }
 
 // AppOrgPair defines model for AppOrgPair.
@@ -298,19 +293,14 @@ type AppOrgPair struct {
 
 // AppOrgRole defines model for AppOrgRole.
 type AppOrgRole struct {
-	Application *Application      `json:"application,omitempty"`
-	Fields      *AppOrgRoleFields `json:"fields,omitempty"`
-	Permissions *[]Permission     `json:"permissions,omitempty"`
-}
-
-// AppOrgRoleFields defines model for AppOrgRoleFields.
-type AppOrgRoleFields struct {
-	DateCreated *string `json:"date_created,omitempty"`
-	DateUpdated *string `json:"date_updated,omitempty"`
-	Description *string `json:"description,omitempty"`
-	Id          string  `json:"id"`
-	Name        string  `json:"name"`
-	System      *bool   `json:"system,omitempty"`
+	Application *Application  `json:"application,omitempty"`
+	DateCreated *string       `json:"date_created,omitempty"`
+	DateUpdated *string       `json:"date_updated,omitempty"`
+	Description *string       `json:"description,omitempty"`
+	Id          string        `json:"id"`
+	Name        string        `json:"name"`
+	Permissions *[]Permission `json:"permissions,omitempty"`
+	System      *bool         `json:"system,omitempty"`
 }
 
 // Application defines model for Application.
@@ -511,14 +501,14 @@ type PartialAccount struct {
 	DateCreated    string                  `json:"date_created"`
 	DateUpdated    *string                 `json:"date_updated"`
 	FirstName      string                  `json:"first_name"`
-	Groups         []AppOrgGroupFields     `json:"groups"`
+	Groups         []AppOrgGroup           `json:"groups"`
 	HasPermissions bool                    `json:"has_permissions"`
 	Id             string                  `json:"id"`
 	LastName       string                  `json:"last_name"`
 	OrgId          string                  `json:"org_id"`
 	Params         *map[string]interface{} `json:"params"`
 	Permissions    []Permission            `json:"permissions"`
-	Roles          []AppOrgRoleFields      `json:"roles"`
+	Roles          []AppOrgRole            `json:"roles"`
 }
 
 // Permission defines model for Permission.
@@ -994,13 +984,13 @@ type SharedReqUpdateAccountAuthType string
 // SharedResAccount defines model for _shared_res_Account.
 type SharedResAccount struct {
 	AuthTypes      *[]AccountAuthTypeFields `json:"auth_types,omitempty"`
-	Groups         *[]AppOrgGroupFields     `json:"groups,omitempty"`
+	Groups         *[]AppOrgGroup           `json:"groups,omitempty"`
 	HasPermissions *bool                    `json:"has_permissions,omitempty"`
 	Id             string                   `json:"id"`
 	Permissions    *[]Permission            `json:"permissions,omitempty"`
 	Preferences    *map[string]interface{}  `json:"preferences"`
 	Profile        *ProfileFields           `json:"profile,omitempty"`
-	Roles          *[]AppOrgRoleFields      `json:"roles,omitempty"`
+	Roles          *[]AppOrgRole            `json:"roles,omitempty"`
 }
 
 // SharedResAccountCheck defines model for _shared_res_AccountCheck.

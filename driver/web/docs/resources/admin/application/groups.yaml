@@ -53,7 +53,7 @@
       content:
         application/json:
           schema:
-            $ref: "../../../schemas/application/AppOrgGroupFields.yaml"
+            $ref: "../../../schemas/application/AppOrgGroup.yaml"
     400:
       description: Bad request
     401:
