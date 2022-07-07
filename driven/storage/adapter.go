@@ -1140,8 +1140,8 @@ func (sa *Adapter) FindAccount(context TransactionContext, appOrgID string, auth
 }
 
 //FindAccounts finds accounts
-func (sa *Adapter) FindAccounts(limit int, offset int, appID string, orgID string, accountID *string, authTypeIdentifier *string, hasPermissions *bool,
-	permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error) {
+func (sa *Adapter) FindAccounts(limit int, offset int, appID string, orgID string, accountID *string, firstName *string, lastName *string, authType *string,
+	authTypeIdentifier *string, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error) {
 	//find app org id
 	appOrg, err := sa.getCachedApplicationOrganization(appID, orgID)
 	if err != nil {
@@ -1154,13 +1154,24 @@ func (sa *Adapter) FindAccounts(limit int, offset int, appID string, orgID strin
 	//find the accounts
 	filter := bson.D{primitive.E{Key: "app_org_id", Value: appOrg.ID}}
 
+	//ID, profile, and auth type filters
 	if accountID != nil {
 		filter = append(filter, primitive.E{Key: "_id", Value: *accountID})
+	}
+	if firstName != nil {
+		filter = append(filter, primitive.E{Key: "profile.first_name", Value: *firstName})
+	}
+	if lastName != nil {
+		filter = append(filter, primitive.E{Key: "profile.last_name", Value: *lastName})
+	}
+	if authType != nil {
+		filter = append(filter, primitive.E{Key: "auth_types.auth_type_code", Value: *authType})
 	}
 	if authTypeIdentifier != nil {
 		filter = append(filter, primitive.E{Key: "auth_types.identifier", Value: *authTypeIdentifier})
 	}
 
+	//authorization filters
 	overrideHasPermissions := false
 	if len(permissions) > 0 {
 		filter = append(filter, primitive.E{Key: "permissions.name", Value: bson.M{"$in": permissions}})

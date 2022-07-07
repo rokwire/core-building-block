@@ -33,6 +33,30 @@ get:
       explode: false
       schema:
         type: string
+    - name: firstname
+      in: query
+      description: The account profile first name
+      required: false
+      style: form
+      explode: false
+      schema:
+        type: string
+    - name: lastname
+      in: query
+      description: The account profile last name
+      required: false
+      style: form
+      explode: false
+      schema:
+        type: string
+    - name: auth-type
+      in: query
+      description: The auth type
+      required: false
+      style: form
+      explode: false
+      schema:
+        type: string
     - name: auth-type-identifier
       in: query
       description: The authentication type identifier

@@ -317,6 +317,24 @@ func (h AdminApisHandler) getApplicationAccounts(l *logs.Log, r *http.Request, c
 	if len(accountIDParam) > 0 {
 		accountID = &accountIDParam
 	}
+	//first name
+	var firstName *string
+	firstNameParam := r.URL.Query().Get("firstname")
+	if len(firstNameParam) > 0 {
+		firstName = &firstNameParam
+	}
+	//last name
+	var lastName *string
+	lastNameParam := r.URL.Query().Get("lastname")
+	if len(lastNameParam) > 0 {
+		lastName = &lastNameParam
+	}
+	//auth type
+	var authType *string
+	authTypeParam := r.URL.Query().Get("auth-type")
+	if len(authTypeParam) > 0 {
+		authType = &authTypeParam
+	}
 	//auth type identifier
 	var authTypeIdentifier *string
 	authTypeIdentifierParam := r.URL.Query().Get("auth-type-identifier")
@@ -353,7 +371,7 @@ func (h AdminApisHandler) getApplicationAccounts(l *logs.Log, r *http.Request, c
 		groupIDs = strings.Split(groupsArg, ",")
 	}
 
-	accounts, err := h.coreAPIs.Administration.AdmGetAccounts(limit, offset, claims.AppID, claims.OrgID, accountID, authTypeIdentifier, hasPermissions, permissions, roleIDs, groupIDs)
+	accounts, err := h.coreAPIs.Administration.AdmGetAccounts(limit, offset, claims.AppID, claims.OrgID, accountID, firstName, lastName, authType, authTypeIdentifier, hasPermissions, permissions, roleIDs, groupIDs)
 	if err != nil {
 		return l.HttpResponseErrorAction("error finding accounts", model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}
