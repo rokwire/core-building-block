@@ -17,6 +17,7 @@ package web
 import (
 	"core-building-block/core/model"
 	Def "core-building-block/driver/web/docs/gen"
+	"core-building-block/utils"
 )
 
 //Application
@@ -74,16 +75,25 @@ func applicationsToDef(item []model.Application) []Def.ApplicationFields {
 }
 
 //ApplicationPermission
-func applicationPermissionToDef(item model.Permission) Def.PermissionFields {
+func applicationPermissionToDef(item model.Permission) Def.Permission {
 	assigners := item.Assigners
 	if assigners == nil {
 		assigners = make([]string, 0)
 	}
-	return Def.PermissionFields{Id: item.ID, Name: item.Name, ServiceId: &item.ServiceID, Assigners: &assigners}
+
+	//dates
+	var dateUpdated *string
+	dateCreated := utils.FormatTime(&item.DateCreated)
+	if item.DateUpdated != nil {
+		formatted := utils.FormatTime(item.DateUpdated)
+		dateUpdated = &formatted
+	}
+
+	return Def.Permission{Id: item.ID, Name: item.Name, Description: &item.Description, ServiceId: &item.ServiceID, Assigners: &assigners, DateCreated: &dateCreated, DateUpdated: dateUpdated}
 }
 
-func applicationPermissionsToDef(items []model.Permission) []Def.PermissionFields {
-	result := make([]Def.PermissionFields, len(items))
+func applicationPermissionsToDef(items []model.Permission) []Def.Permission {
+	result := make([]Def.Permission, len(items))
 	for i, item := range items {
 		result[i] = applicationPermissionToDef(item)
 	}
@@ -91,12 +101,23 @@ func applicationPermissionsToDef(items []model.Permission) []Def.PermissionField
 }
 
 //AppOrgRole
-func appOrgRoleToDef(item model.AppOrgRole) Def.AppOrgRoleFields {
-	return Def.AppOrgRoleFields{Id: item.ID, Name: item.Name, System: &item.System}
+func appOrgRoleToDef(item model.AppOrgRole) Def.AppOrgRole {
+	permissions := applicationPermissionsToDef(item.Permissions)
+
+	//dates
+	var dateUpdated *string
+	dateCreated := utils.FormatTime(&item.DateCreated)
+	if item.DateUpdated != nil {
+		formatted := utils.FormatTime(item.DateUpdated)
+		dateUpdated = &formatted
+	}
+
+	fields := Def.AppOrgRoleFields{Id: item.ID, Name: item.Name, Description: &item.Description, System: &item.System, DateCreated: &dateCreated, DateUpdated: dateUpdated}
+	return Def.AppOrgRole{Fields: &fields, Permissions: &permissions}
 }
 
-func appOrgRolesToDef(items []model.AppOrgRole) []Def.AppOrgRoleFields {
-	result := make([]Def.AppOrgRoleFields, len(items))
+func appOrgRolesToDef(items []model.AppOrgRole) []Def.AppOrgRole {
+	result := make([]Def.AppOrgRole, len(items))
 	for i, item := range items {
 		result[i] = appOrgRoleToDef(item)
 	}
@@ -104,12 +125,24 @@ func appOrgRolesToDef(items []model.AppOrgRole) []Def.AppOrgRoleFields {
 }
 
 //AppOrgGroup
-func appOrgGroupToDef(item model.AppOrgGroup) Def.AppOrgGroupFields {
-	return Def.AppOrgGroupFields{Id: item.ID, Name: item.Name, System: &item.System}
+func appOrgGroupToDef(item model.AppOrgGroup) Def.AppOrgGroup {
+	permissions := applicationPermissionsToDef(item.Permissions)
+	roles := appOrgRolesToDef(item.Roles)
+
+	//dates
+	var dateUpdated *string
+	dateCreated := utils.FormatTime(&item.DateCreated)
+	if item.DateUpdated != nil {
+		formatted := utils.FormatTime(item.DateUpdated)
+		dateUpdated = &formatted
+	}
+
+	fields := Def.AppOrgGroupFields{Id: item.ID, Name: item.Name, Description: &item.Description, System: &item.System, DateCreated: &dateCreated, DateUpdated: dateUpdated}
+	return Def.AppOrgGroup{Fields: &fields, Permissions: &permissions, Roles: &roles}
 }
 
-func appOrgGroupsToDef(items []model.AppOrgGroup) []Def.AppOrgGroupFields {
-	result := make([]Def.AppOrgGroupFields, len(items))
+func appOrgGroupsToDef(items []model.AppOrgGroup) []Def.AppOrgGroup {
+	result := make([]Def.AppOrgGroup, len(items))
 	for i, item := range items {
 		result[i] = appOrgGroupToDef(item)
 	}

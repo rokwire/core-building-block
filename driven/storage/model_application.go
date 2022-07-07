@@ -93,8 +93,9 @@ type applicationOrganization struct {
 }
 
 type appOrgGroup struct {
-	ID   string `bson:"_id"`
-	Name string `bson:"name"`
+	ID          string `bson:"_id"`
+	Name        string `bson:"name"`
+	Description string `bson:"description"`
 
 	System bool `bson:"system"`
 

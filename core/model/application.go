@@ -57,8 +57,9 @@ const (
 
 //Permission represents permission entity
 type Permission struct {
-	ID   string `bson:"_id"`
-	Name string `bson:"name"`
+	ID          string `bson:"_id"`
+	Name        string `bson:"name"`
+	Description string `bson:"description"`
 
 	ServiceID string   `bson:"service_id"`
 	Assigners []string `bson:"assigners"`
@@ -135,8 +136,9 @@ func (c AppOrgRole) String() string {
 
 //AppOrgGroup represents application organization group entity. It is a collection of users
 type AppOrgGroup struct {
-	ID   string
-	Name string
+	ID          string
+	Name        string
+	Description string
 
 	System bool
 

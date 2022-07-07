@@ -282,9 +282,12 @@ type AppOrgGroup struct {
 
 // AppOrgGroupFields defines model for AppOrgGroupFields.
 type AppOrgGroupFields struct {
-	Id     string `json:"id"`
-	Name   string `json:"name"`
-	System *bool  `json:"system,omitempty"`
+	DateCreated *string `json:"date_created,omitempty"`
+	DateUpdated *string `json:"date_updated,omitempty"`
+	Description *string `json:"description,omitempty"`
+	Id          string  `json:"id"`
+	Name        string  `json:"name"`
+	System      *bool   `json:"system,omitempty"`
 }
 
 // AppOrgPair defines model for AppOrgPair.
@@ -302,9 +305,12 @@ type AppOrgRole struct {
 
 // AppOrgRoleFields defines model for AppOrgRoleFields.
 type AppOrgRoleFields struct {
-	Id     string `json:"id"`
-	Name   string `json:"name"`
-	System *bool  `json:"system,omitempty"`
+	DateCreated *string `json:"date_created,omitempty"`
+	DateUpdated *string `json:"date_updated,omitempty"`
+	Description *string `json:"description,omitempty"`
+	Id          string  `json:"id"`
+	Name        string  `json:"name"`
+	System      *bool   `json:"system,omitempty"`
 }
 
 // Application defines model for Application.
@@ -511,21 +517,19 @@ type PartialAccount struct {
 	LastName       string                  `json:"last_name"`
 	OrgId          string                  `json:"org_id"`
 	Params         *map[string]interface{} `json:"params"`
-	Permissions    []PermissionFields      `json:"permissions"`
+	Permissions    []Permission            `json:"permissions"`
 	Roles          []AppOrgRoleFields      `json:"roles"`
 }
 
 // Permission defines model for Permission.
 type Permission struct {
-	Fields *PermissionFields `json:"fields,omitempty"`
-}
-
-// PermissionFields defines model for PermissionFields.
-type PermissionFields struct {
-	Assigners *[]string `json:"assigners,omitempty"`
-	Id        string    `json:"id"`
-	Name      string    `json:"name"`
-	ServiceId *string   `json:"service_id,omitempty"`
+	Assigners   *[]string `json:"assigners,omitempty"`
+	DateCreated *string   `json:"date_created,omitempty"`
+	DateUpdated *string   `json:"date_updated,omitempty"`
+	Description *string   `json:"description,omitempty"`
+	Id          string    `json:"id"`
+	Name        string    `json:"name"`
+	ServiceId   *string   `json:"service_id,omitempty"`
 }
 
 // Profile defines model for Profile.
@@ -604,7 +608,6 @@ type ServiceScope struct {
 // AdminReqAddAccountsToGroup defines model for _admin_req_add-accounts-to-group.
 type AdminReqAddAccountsToGroup struct {
 	AccountIds []string `json:"account_ids"`
-	GroupId    string   `json:"group_id"`
 }
 
 // AdminReqCreateApplicationGroup defines model for _admin_req_create-application_group.
@@ -623,38 +626,32 @@ type AdminReqCreateApplicationRole struct {
 
 // AdminReqGrantPermissions defines model for _admin_req_grant-permissions.
 type AdminReqGrantPermissions struct {
-	AccountId   string   `json:"account_id"`
 	Permissions []string `json:"permissions"`
 }
 
 // AdminReqGrantPermissionsToRole defines model for _admin_req_grant-permissions-to-role.
 type AdminReqGrantPermissionsToRole struct {
 	Permissions []string `json:"permissions"`
-	RoleId      string   `json:"role_id"`
 }
 
 // AdminReqGrantRolesToAccount defines model for _admin_req_grant-roles-to-account.
 type AdminReqGrantRolesToAccount struct {
-	AccountId string   `json:"account_id"`
-	RoleIds   []string `json:"role_ids"`
+	RoleIds []string `json:"role_ids"`
 }
 
 // AdminReqRemoveAccountFromGroup defines model for _admin_req_remove-account-from-group.
 type AdminReqRemoveAccountFromGroup struct {
 	AccountIds []string `json:"account_ids"`
-	GroupId    string   `json:"group_id"`
 }
 
 // AdminReqRevokePermissions defines model for _admin_req_revoke-permissions.
 type AdminReqRevokePermissions struct {
-	AccountId   string   `json:"account_id"`
 	Permissions []string `json:"permissions"`
 }
 
 // AdminReqRevokeRolesFromAccount defines model for _admin_req_revoke-roles-from-account.
 type AdminReqRevokeRolesFromAccount struct {
-	AccountId string   `json:"account_id"`
-	RoleIds   []string `json:"role_ids"`
+	RoleIds []string `json:"role_ids"`
 }
 
 // AdminResAppToken defines model for _admin_res_app-token.
@@ -1000,7 +997,7 @@ type SharedResAccount struct {
 	Groups         *[]AppOrgGroupFields     `json:"groups,omitempty"`
 	HasPermissions *bool                    `json:"has_permissions,omitempty"`
 	Id             string                   `json:"id"`
-	Permissions    *[]PermissionFields      `json:"permissions,omitempty"`
+	Permissions    *[]Permission            `json:"permissions,omitempty"`
 	Preferences    *map[string]interface{}  `json:"preferences"`
 	Profile        *ProfileFields           `json:"profile,omitempty"`
 	Roles          *[]AppOrgRoleFields      `json:"roles,omitempty"`
@@ -1149,9 +1146,10 @@ type SystemReqCreateServiceAccount struct {
 type SystemReqPermissions struct {
 
 	// permissions that could assign current permission to accounts
-	Assigners *[]string `json:"assigners,omitempty"`
-	Name      string    `json:"name"`
-	ServiceId *string   `json:"service_id,omitempty"`
+	Assigners   *[]string `json:"assigners,omitempty"`
+	Description *string   `json:"description,omitempty"`
+	Name        string    `json:"name"`
+	ServiceId   *string   `json:"service_id,omitempty"`
 }
 
 // SystemReqUpdateOrganization defines model for _system_req_update_Organization.
@@ -1201,18 +1199,6 @@ type PostAdminAccountMfaParams struct {
 	Type string `json:"type"`
 }
 
-// DeleteAdminApplicationAccountPermissionsJSONBody defines parameters for DeleteAdminApplicationAccountPermissions.
-type DeleteAdminApplicationAccountPermissionsJSONBody AdminReqRevokePermissions
-
-// PutAdminApplicationAccountPermissionsJSONBody defines parameters for PutAdminApplicationAccountPermissions.
-type PutAdminApplicationAccountPermissionsJSONBody AdminReqGrantPermissions
-
-// DeleteAdminApplicationAccountRolesJSONBody defines parameters for DeleteAdminApplicationAccountRoles.
-type DeleteAdminApplicationAccountRolesJSONBody AdminReqRevokeRolesFromAccount
-
-// PutAdminApplicationAccountRolesJSONBody defines parameters for PutAdminApplicationAccountRoles.
-type PutAdminApplicationAccountRolesJSONBody AdminReqGrantRolesToAccount
-
 // GetAdminApplicationAccountsParams defines parameters for GetAdminApplicationAccounts.
 type GetAdminApplicationAccountsParams struct {
 
@@ -1256,14 +1242,26 @@ type PostAdminApplicationAccountsJSONBody SharedReqCreateAccount
 // PutAdminApplicationAccountsJSONBody defines parameters for PutAdminApplicationAccounts.
 type PutAdminApplicationAccountsJSONBody SharedReqUpdateAccount
 
-// DeleteAdminApplicationGroupAccountsJSONBody defines parameters for DeleteAdminApplicationGroupAccounts.
-type DeleteAdminApplicationGroupAccountsJSONBody AdminReqRemoveAccountFromGroup
+// DeleteAdminApplicationAccountsIdPermissionsJSONBody defines parameters for DeleteAdminApplicationAccountsIdPermissions.
+type DeleteAdminApplicationAccountsIdPermissionsJSONBody AdminReqRevokePermissions
 
-// PutAdminApplicationGroupAccountsJSONBody defines parameters for PutAdminApplicationGroupAccounts.
-type PutAdminApplicationGroupAccountsJSONBody AdminReqAddAccountsToGroup
+// PutAdminApplicationAccountsIdPermissionsJSONBody defines parameters for PutAdminApplicationAccountsIdPermissions.
+type PutAdminApplicationAccountsIdPermissionsJSONBody AdminReqGrantPermissions
+
+// DeleteAdminApplicationAccountsIdRolesJSONBody defines parameters for DeleteAdminApplicationAccountsIdRoles.
+type DeleteAdminApplicationAccountsIdRolesJSONBody AdminReqRevokeRolesFromAccount
+
+// PutAdminApplicationAccountsIdRolesJSONBody defines parameters for PutAdminApplicationAccountsIdRoles.
+type PutAdminApplicationAccountsIdRolesJSONBody AdminReqGrantRolesToAccount
 
 // PostAdminApplicationGroupsJSONBody defines parameters for PostAdminApplicationGroups.
 type PostAdminApplicationGroupsJSONBody AdminReqCreateApplicationGroup
+
+// DeleteAdminApplicationGroupsIdAccountsJSONBody defines parameters for DeleteAdminApplicationGroupsIdAccounts.
+type DeleteAdminApplicationGroupsIdAccountsJSONBody AdminReqRemoveAccountFromGroup
+
+// PutAdminApplicationGroupsIdAccountsJSONBody defines parameters for PutAdminApplicationGroupsIdAccounts.
+type PutAdminApplicationGroupsIdAccountsJSONBody AdminReqAddAccountsToGroup
 
 // GetAdminApplicationLoginSessionsParams defines parameters for GetAdminApplicationLoginSessions.
 type GetAdminApplicationLoginSessionsParams struct {
@@ -1290,11 +1288,11 @@ type GetAdminApplicationLoginSessionsParams struct {
 	IpAddress *string `json:"ip-address,omitempty"`
 }
 
-// PutAdminApplicationRolePermissionsJSONBody defines parameters for PutAdminApplicationRolePermissions.
-type PutAdminApplicationRolePermissionsJSONBody AdminReqGrantPermissionsToRole
-
 // PostAdminApplicationRolesJSONBody defines parameters for PostAdminApplicationRoles.
 type PostAdminApplicationRolesJSONBody AdminReqCreateApplicationRole
+
+// PutAdminApplicationRolesIdPermissionsJSONBody defines parameters for PutAdminApplicationRolesIdPermissions.
+type PutAdminApplicationRolesIdPermissionsJSONBody AdminReqGrantPermissionsToRole
 
 // GetAdminAuthAppTokenParams defines parameters for GetAdminAuthAppToken.
 type GetAdminAuthAppTokenParams struct {
@@ -1476,20 +1474,6 @@ type GetServicesAuthServiceRegsParams struct {
 // PostServicesAuthVerifyMfaJSONBody defines parameters for PostServicesAuthVerifyMfa.
 type PostServicesAuthVerifyMfaJSONBody SharedReqMfa
 
-// DeleteSystemAccountMfaParams defines parameters for DeleteSystemAccountMfa.
-type DeleteSystemAccountMfaParams struct {
-
-	// MFA type
-	Type string `json:"type"`
-}
-
-// PostSystemAccountMfaParams defines parameters for PostSystemAccountMfa.
-type PostSystemAccountMfaParams struct {
-
-	// MFA type
-	Type string `json:"type"`
-}
-
 // DeleteSystemApiKeysParams defines parameters for DeleteSystemApiKeys.
 type DeleteSystemApiKeysParams struct {
 
@@ -1534,28 +1518,6 @@ type PostSystemAuthTypesJSONBody SystemReqCreateAuthType
 
 // PutSystemAuthTypesIdJSONBody defines parameters for PutSystemAuthTypesId.
 type PutSystemAuthTypesIdJSONBody SystemReqUpdateAuthType
-
-// PostSystemAuthLoginJSONBody defines parameters for PostSystemAuthLogin.
-type PostSystemAuthLoginJSONBody SharedReqLogin
-
-// PostSystemAuthLoginUrlJSONBody defines parameters for PostSystemAuthLoginUrl.
-type PostSystemAuthLoginUrlJSONBody SharedReqLoginUrl
-
-// PostSystemAuthMfaJSONBody defines parameters for PostSystemAuthMfa.
-type PostSystemAuthMfaJSONBody SharedReqLoginMfa
-
-// PostSystemAuthMfaParams defines parameters for PostSystemAuthMfa.
-type PostSystemAuthMfaParams struct {
-
-	// Login state
-	State *string `json:"state,omitempty"`
-}
-
-// PostSystemAuthRefreshJSONBody defines parameters for PostSystemAuthRefresh.
-type PostSystemAuthRefreshJSONBody SharedReqRefresh
-
-// PostSystemAuthVerifyMfaJSONBody defines parameters for PostSystemAuthVerifyMfa.
-type PostSystemAuthVerifyMfaJSONBody SharedReqMfa
 
 // PostSystemGlobalConfigJSONBody defines parameters for PostSystemGlobalConfig.
 type PostSystemGlobalConfigJSONBody GlobalConfig
@@ -1713,38 +1675,38 @@ type GetUiCredentialVerifyParams struct {
 	Code string `json:"code"`
 }
 
-// DeleteAdminApplicationAccountPermissionsJSONRequestBody defines body for DeleteAdminApplicationAccountPermissions for application/json ContentType.
-type DeleteAdminApplicationAccountPermissionsJSONRequestBody DeleteAdminApplicationAccountPermissionsJSONBody
-
-// PutAdminApplicationAccountPermissionsJSONRequestBody defines body for PutAdminApplicationAccountPermissions for application/json ContentType.
-type PutAdminApplicationAccountPermissionsJSONRequestBody PutAdminApplicationAccountPermissionsJSONBody
-
-// DeleteAdminApplicationAccountRolesJSONRequestBody defines body for DeleteAdminApplicationAccountRoles for application/json ContentType.
-type DeleteAdminApplicationAccountRolesJSONRequestBody DeleteAdminApplicationAccountRolesJSONBody
-
-// PutAdminApplicationAccountRolesJSONRequestBody defines body for PutAdminApplicationAccountRoles for application/json ContentType.
-type PutAdminApplicationAccountRolesJSONRequestBody PutAdminApplicationAccountRolesJSONBody
-
 // PostAdminApplicationAccountsJSONRequestBody defines body for PostAdminApplicationAccounts for application/json ContentType.
 type PostAdminApplicationAccountsJSONRequestBody PostAdminApplicationAccountsJSONBody
 
 // PutAdminApplicationAccountsJSONRequestBody defines body for PutAdminApplicationAccounts for application/json ContentType.
 type PutAdminApplicationAccountsJSONRequestBody PutAdminApplicationAccountsJSONBody
 
-// DeleteAdminApplicationGroupAccountsJSONRequestBody defines body for DeleteAdminApplicationGroupAccounts for application/json ContentType.
-type DeleteAdminApplicationGroupAccountsJSONRequestBody DeleteAdminApplicationGroupAccountsJSONBody
+// DeleteAdminApplicationAccountsIdPermissionsJSONRequestBody defines body for DeleteAdminApplicationAccountsIdPermissions for application/json ContentType.
+type DeleteAdminApplicationAccountsIdPermissionsJSONRequestBody DeleteAdminApplicationAccountsIdPermissionsJSONBody
 
-// PutAdminApplicationGroupAccountsJSONRequestBody defines body for PutAdminApplicationGroupAccounts for application/json ContentType.
-type PutAdminApplicationGroupAccountsJSONRequestBody PutAdminApplicationGroupAccountsJSONBody
+// PutAdminApplicationAccountsIdPermissionsJSONRequestBody defines body for PutAdminApplicationAccountsIdPermissions for application/json ContentType.
+type PutAdminApplicationAccountsIdPermissionsJSONRequestBody PutAdminApplicationAccountsIdPermissionsJSONBody
+
+// DeleteAdminApplicationAccountsIdRolesJSONRequestBody defines body for DeleteAdminApplicationAccountsIdRoles for application/json ContentType.
+type DeleteAdminApplicationAccountsIdRolesJSONRequestBody DeleteAdminApplicationAccountsIdRolesJSONBody
+
+// PutAdminApplicationAccountsIdRolesJSONRequestBody defines body for PutAdminApplicationAccountsIdRoles for application/json ContentType.
+type PutAdminApplicationAccountsIdRolesJSONRequestBody PutAdminApplicationAccountsIdRolesJSONBody
 
 // PostAdminApplicationGroupsJSONRequestBody defines body for PostAdminApplicationGroups for application/json ContentType.
 type PostAdminApplicationGroupsJSONRequestBody PostAdminApplicationGroupsJSONBody
 
-// PutAdminApplicationRolePermissionsJSONRequestBody defines body for PutAdminApplicationRolePermissions for application/json ContentType.
-type PutAdminApplicationRolePermissionsJSONRequestBody PutAdminApplicationRolePermissionsJSONBody
+// DeleteAdminApplicationGroupsIdAccountsJSONRequestBody defines body for DeleteAdminApplicationGroupsIdAccounts for application/json ContentType.
+type DeleteAdminApplicationGroupsIdAccountsJSONRequestBody DeleteAdminApplicationGroupsIdAccountsJSONBody
+
+// PutAdminApplicationGroupsIdAccountsJSONRequestBody defines body for PutAdminApplicationGroupsIdAccounts for application/json ContentType.
+type PutAdminApplicationGroupsIdAccountsJSONRequestBody PutAdminApplicationGroupsIdAccountsJSONBody
 
 // PostAdminApplicationRolesJSONRequestBody defines body for PostAdminApplicationRoles for application/json ContentType.
 type PostAdminApplicationRolesJSONRequestBody PostAdminApplicationRolesJSONBody
+
+// PutAdminApplicationRolesIdPermissionsJSONRequestBody defines body for PutAdminApplicationRolesIdPermissions for application/json ContentType.
+type PutAdminApplicationRolesIdPermissionsJSONRequestBody PutAdminApplicationRolesIdPermissionsJSONBody
 
 // PostAdminAuthLoginJSONRequestBody defines body for PostAdminAuthLogin for application/json ContentType.
 type PostAdminAuthLoginJSONRequestBody PostAdminAuthLoginJSONBody
@@ -1862,21 +1824,6 @@ type PostSystemAuthTypesJSONRequestBody PostSystemAuthTypesJSONBody
 
 // PutSystemAuthTypesIdJSONRequestBody defines body for PutSystemAuthTypesId for application/json ContentType.
 type PutSystemAuthTypesIdJSONRequestBody PutSystemAuthTypesIdJSONBody
-
-// PostSystemAuthLoginJSONRequestBody defines body for PostSystemAuthLogin for application/json ContentType.
-type PostSystemAuthLoginJSONRequestBody PostSystemAuthLoginJSONBody
-
-// PostSystemAuthLoginUrlJSONRequestBody defines body for PostSystemAuthLoginUrl for application/json ContentType.
-type PostSystemAuthLoginUrlJSONRequestBody PostSystemAuthLoginUrlJSONBody
-
-// PostSystemAuthMfaJSONRequestBody defines body for PostSystemAuthMfa for application/json ContentType.
-type PostSystemAuthMfaJSONRequestBody PostSystemAuthMfaJSONBody
-
-// PostSystemAuthRefreshJSONRequestBody defines body for PostSystemAuthRefresh for application/json ContentType.
-type PostSystemAuthRefreshJSONRequestBody PostSystemAuthRefreshJSONBody
-
-// PostSystemAuthVerifyMfaJSONRequestBody defines body for PostSystemAuthVerifyMfa for application/json ContentType.
-type PostSystemAuthVerifyMfaJSONRequestBody PostSystemAuthVerifyMfaJSONBody
 
 // PostSystemGlobalConfigJSONRequestBody defines body for PostSystemGlobalConfig for application/json ContentType.
 type PostSystemGlobalConfigJSONRequestBody PostSystemGlobalConfigJSONBody

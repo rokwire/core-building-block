@@ -99,30 +99,30 @@ paths:
     $ref: "./resources/admin/account/mfa.yaml"
   /admin/application/accounts:
     $ref: "./resources/admin/application/accounts.yaml"
-  /admin/application/account/{id}/devices:
-    $ref: "./resources/admin/application/account/devices.yaml"
-  /admin/application/account/{account_id}/login-sessions/{session_id}:
-    $ref: "./resources/admin/application/account/login-sessions.yaml"
-  /admin/application/account/permissions:
-    $ref: "./resources/admin/application/account/permissions.yaml"
-  /admin/application/account/roles:
-    $ref: "./resources/admin/application/account/roles.yaml"
+  /admin/application/accounts/{id}/devices:
+    $ref: "./resources/admin/application/accounts/devices.yaml"
+  /admin/application/accounts/{account_id}/login-sessions/{session_id}:
+    $ref: "./resources/admin/application/accounts/login-sessions.yaml"
+  /admin/application/accounts/{id}/permissions:
+    $ref: "./resources/admin/application/accounts/permissions.yaml"
+  /admin/application/accounts/{id}/roles:
+    $ref: "./resources/admin/application/accounts/roles.yaml"
   /admin/application/login-sessions:
     $ref: "./resources/admin/application/login-sessions.yaml"
   /admin/application/groups:
     $ref: "./resources/admin/application/groups.yaml"
   /admin/application/groups/{id}:
     $ref: "./resources/admin/application/groupsID.yaml"
-  /admin/application/group/accounts:
-    $ref: "./resources/admin/application/group/accounts.yaml"
+  /admin/application/groups/{id}/accounts:
+    $ref: "./resources/admin/application/groups/accounts.yaml"
   /admin/application/permissions:
     $ref: "./resources/admin/application/permissions.yaml"
   /admin/application/roles:
     $ref: "./resources/admin/application/roles.yaml"
   /admin/application/roles/{id}:
     $ref: "./resources/admin/application/rolesID.yaml"
-  /admin/application/role/permissions:
-    $ref: "./resources/admin/application/role/permissions.yaml"
+  /admin/application/roles/{id}/permissions:
+    $ref: "./resources/admin/application/roles/permissions.yaml"
   /admin/organization/applications:
     $ref: "./resources/admin/organization/applications.yaml"
  
@@ -155,16 +155,6 @@ paths:
     $ref: "./resources/tps/access-tokens.yaml"
 
   #system
-  /system/auth/login:
-    $ref: "./resources/system/auth/login.yaml"
-  /system/auth/mfa:
-    $ref: "./resources/system/auth/mfa.yaml"
-  /system/auth/refresh:
-    $ref: "./resources/system/auth/refresh.yaml"
-  /system/auth/login-url:
-    $ref: "./resources/system/auth/login-url.yaml"
-  /system/auth/verify-mfa:
-    $ref: "./resources/system/auth/verify-mfa.yaml"
   /system/global-config:
     $ref: "./resources/system/global-config.yaml"
   /system/organizations/{id}:
@@ -193,8 +183,6 @@ paths:
     $ref: "./resources/system/accounts.yaml"
   /system/account:
     $ref: "./resources/system/account.yaml"
-  /system/account/mfa:
-    $ref: "./resources/system/account/mfa.yaml"
   /system/api-keys:
     $ref: "./resources/system/api-keys.yaml"
   /system/auth-types:

@@ -22,7 +22,7 @@
             schema:
               type: array
               items:
-                $ref: "../../../schemas/application/AppOrgRoleFields.yaml"
+                $ref: "../../../schemas/application/AppOrgRole.yaml"
       400:
         description: Bad request
       401:

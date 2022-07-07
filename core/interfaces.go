@@ -101,8 +101,8 @@ type System interface {
 	SysGetApplication(ID string) (*model.Application, error)
 	SysGetApplications() ([]model.Application, error)
 
-	SysCreatePermission(name string, serviceID string, assigners *[]string) (*model.Permission, error)
-	SysUpdatePermission(name string, serviceID *string, assigners *[]string) (*model.Permission, error)
+	SysCreatePermission(name string, description *string, serviceID *string, assigners *[]string) (*model.Permission, error)
+	SysUpdatePermission(name string, description *string, serviceID *string, assigners *[]string) (*model.Permission, error)
 
 	SysGetAppConfigs(appTypeID string, orgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error)
 	SysGetAppConfig(id string) (*model.ApplicationConfig, error)

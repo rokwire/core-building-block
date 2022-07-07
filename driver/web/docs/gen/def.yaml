@@ -1933,7 +1933,7 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  '/admin/application/account/{id}/devices':
+  '/admin/application/accounts/{id}/devices':
     get:
       tags:
         - Admin
@@ -1968,7 +1968,7 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  '/admin/application/account/{account_id}/login-sessions/{session_id}':
+  '/admin/application/accounts/{account_id}/login-sessions/{session_id}':
     delete:
       tags:
         - Admin
@@ -2008,7 +2008,7 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /admin/application/account/permissions:
+  '/admin/application/accounts/{id}/permissions':
     put:
       tags:
         - Admin
@@ -2019,6 +2019,15 @@ paths:
         **Auth:** Requires admin access token with `update_account-permissions` or `update_account-authorization` permission
       security:
         - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: The account ID
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
       requestBody:
         description: Permissions
         content:
@@ -2050,6 +2059,15 @@ paths:
         **Auth:** Requires admin access token with `update_account-permissions` or `update_account-authorization` permission
       security:
         - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: The account ID
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
       requestBody:
         description: Permissions
         content:
@@ -2070,7 +2088,7 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /admin/application/account/roles:
+  '/admin/application/accounts/{id}/roles':
     put:
       tags:
         - Admin
@@ -2081,6 +2099,15 @@ paths:
         **Auth:** Requires admin access token with `update_account-auth-roles` or `update_account-authorization` permission
       security:
         - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: The account ID
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
       requestBody:
         description: Roles
         content:
@@ -2112,6 +2139,15 @@ paths:
         **Auth:** Requires admin access token with `update_account-auth-roles` or `update_account-authorization` permission
       security:
         - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: The account ID
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
       requestBody:
         description: Roles
         content:
@@ -2240,7 +2276,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/AppOrgGroupFields'
+                  $ref: '#/components/schemas/AppOrgGroup'
         '400':
           description: Bad request
         '401':
@@ -2305,7 +2341,7 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /admin/application/group/accounts:
+  '/admin/application/groups/{id}/accounts':
     put:
       tags:
         - Admin
@@ -2316,6 +2352,15 @@ paths:
         **Auth:** Requires admin access token with `update_account-auth-groups` or `update_account-authorization` permission
       security:
         - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: The group ID
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
       requestBody:
         description: Roles
         content:
@@ -2347,6 +2392,15 @@ paths:
         **Auth:** Requires admin access token with `update_account-auth-groups` or `update_account-authorization` permission
       security:
         - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: The group ID
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
       requestBody:
         description: account ID for removing
         content:
@@ -2389,7 +2443,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/PermissionFields'
+                  $ref: '#/components/schemas/Permission'
         '400':
           description: Bad request
         '401':
@@ -2421,7 +2475,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/AppOrgRoleFields'
+                  $ref: '#/components/schemas/AppOrgRole'
         '400':
           description: Bad request
         '401':
@@ -2485,7 +2539,7 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /admin/application/role/permissions:
+  '/admin/application/roles/{id}/permissions':
     put:
       tags:
         - Admin
@@ -2496,6 +2550,13 @@ paths:
         **Auth:** Requires admin access token with `update_auth-roles` or `all_auth-roles` permission
       security:
         - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: The role ID
+          required: true
+          schema:
+            type: string
       requestBody:
         description: Permissions
         content:
@@ -2951,221 +3012,6 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/_services_res_service-accounts_access-tokens'
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal error
-  /system/auth/login:
-    post:
-      tags:
-        - System
-      summary: Login
-      description: |
-        Login using credentials to retrieve access token, refresh token, and user data
-
-        **Auth:** Requires API key
-      requestBody:
-        description: |
-          User credential details and parameters
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/_shared_req_Login'
-            examples:
-              email:
-                summary: Email
-                value: |
-                  {
-                    "auth_type": "email",
-                    "app_type_identifier": "edu.illinois.rokwire.admin",
-                    "org_id": "5d7ed0a6-48f2-4473-ae4e-120f2b541a22",
-                    "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
-                    "creds": {
-                      "email": "test@example.com", 
-                      "password": "test12345"
-                    },
-                    "device": {
-                      "type": "mobile",
-                      "device_id": "5555",
-                      "os": "Android"
-                    }
-                  }
-              illinois_oidc:
-                summary: Illinois OIDC login
-                value: |
-                  {
-                    "auth_type": "illinois_oidc",
-                    "app_type_identifier": "edu.illinois.rokwire.admin",
-                    "org_id": "5d7ed0a6-48f2-4473-ae4e-120f2b541a22",
-                    "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
-                    "creds": "https://redirect.example.com?code=ai324uith8gSEefesEguorgwsf43",
-                    "params": {
-                      "redirect_uri": "https://redirect.example.com",
-                      "pkce_verifier": "w4iuhfq0u43hfq38ghn3gnSFSFiqp3ugnpugnqiprgUGNPINfsdoirpgia"
-                    },
-                    "preferences":{
-                        "key1":"value1",
-                        "key2":"value2"
-                    },
-                    "profile":{
-                      "address": "address",
-                      "birth_year": 1990,
-                      "country": "county",
-                      "email": "email",
-                      "first_name": "first name",
-                      "last_name": "last name",
-                      "phone": "+000000000000",
-                      "photo_url": "photo url",
-                      "state": "state",
-                      "zip_code": "zip code"
-                    },
-                    "device": {
-                      "type": "mobile",
-                      "device_id": "5555",
-                      "os": "Android"
-                    }
-                  }
-        required: true
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                anyOf:
-                  - $ref: '#/components/schemas/_shared_res_Login_Mfa'
-                  - $ref: '#/components/schemas/_shared_res_Login'
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal error
-  /system/auth/mfa:
-    post:
-      tags:
-        - System
-      summary: MFA
-      description: |
-        Verify multi-factor authentication credentials to complete login
-
-        **Auth:** Requires system access token
-      parameters:
-        - name: state
-          in: query
-          description: Login state
-          required: false
-          style: form
-          explode: false
-          schema:
-            type: string
-      requestBody:
-        description: |
-          MFA credentials and parameters
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/_shared_req_Login_Mfa'
-        required: true
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/_shared_res_Login'
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal error
-  /system/auth/refresh:
-    post:
-      tags:
-        - System
-      summary: Refresh
-      description: |
-        Refresh access token using a refresh token
-
-        **Auth:** Requires API key
-      requestBody:
-        description: |
-          Refresh token
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/_shared_req_Refresh'
-        required: true
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/_shared_res_Refresh'
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal error
-  /system/auth/login-url:
-    post:
-      tags:
-        - System
-      summary: Get SSO login url
-      description: |
-        Retrieve a pre-formatted SSO login URL
-
-        **Auth:** Requires API key
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/_shared_req_LoginUrl'
-        required: true
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/_shared_res_LoginUrl'
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal error
-  /system/auth/verify-mfa:
-    post:
-      tags:
-        - System
-      summary: MFA
-      description: |
-        Verify multi-factor authentication credentials to complete MFA registration
-
-        **Auth:** Requires API key
-      requestBody:
-        description: |
-          MFA credentials and parameters
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/_shared_req_Mfa'
-        required: true
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: string
         '400':
           description: Bad request
         '401':
@@ -4352,92 +4198,6 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /system/account/mfa:
-    get:
-      tags:
-        - System
-      summary: Get account MFA types
-      description: |
-        Get MFA types set up for an account
-
-        **Auth:** Requires system access token
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/_shared_res_Mfa'
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal error
-    post:
-      tags:
-        - System
-      summary: Enroll in MFA type
-      description: |
-        Add MFA type to an account
-
-        **Auth:** Requires user auth token
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: type
-          in: query
-          description: MFA type
-          required: true
-          style: form
-          explode: false
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/_shared_res_Mfa'
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal error
-    delete:
-      tags:
-        - System
-      summary: Remove MFA type
-      description: |
-        Remove MFA type from an account
-
-        **Auth:** Requires user auth token
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: type
-          in: query
-          description: MFA type
-          required: true
-          style: form
-          explode: false
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Success
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal error
   /system/api-keys:
     get:
       tags:
@@ -4846,11 +4606,6 @@ components:
         TODO:
           type: string
     Permission:
-      type: object
-      properties:
-        fields:
-          $ref: '#/components/schemas/PermissionFields'
-    PermissionFields:
       required:
         - id
         - name
@@ -4860,12 +4615,18 @@ components:
           type: string
         name:
           type: string
+        description:
+          type: string
         service_id:
           type: string
         assigners:
           type: array
           items:
             type: string
+        date_created:
+          type: string
+        date_updated:
+          type: string
     AppOrgRole:
       type: object
       properties:
@@ -4887,8 +4648,14 @@ components:
           type: string
         name:
           type: string
+        description:
+          type: string
         system:
           type: boolean
+        date_created:
+          type: string
+        date_updated:
+          type: string
     AppOrgGroup:
       type: object
       properties:
@@ -4914,8 +4681,14 @@ components:
           type: string
         name:
           type: string
+        description:
+          type: string
         system:
           type: boolean
+        date_created:
+          type: string
+        date_updated:
+          type: string
     Organization:
       type: object
       properties:
@@ -5342,7 +5115,7 @@ components:
         permissions:
           type: array
           items:
-            $ref: '#/components/schemas/PermissionFields'
+            $ref: '#/components/schemas/Permission'
         roles:
           type: array
           items:
@@ -5921,7 +5694,7 @@ components:
         permissions:
           type: array
           items:
-            $ref: '#/components/schemas/PermissionFields'
+            $ref: '#/components/schemas/Permission'
         roles:
           type: array
           items:
@@ -6279,84 +6052,63 @@ components:
             type: string
     _admin_req_add-accounts-to-group:
       required:
-        - group_id
         - account_ids
       type: object
       properties:
-        group_id:
-          type: string
         account_ids:
           type: array
           items:
             type: string
     _admin_req_remove-account-from-group:
       required:
-        - group_id
         - account_ids
       type: object
       properties:
-        group_id:
-          type: string
         account_ids:
           type: array
           items:
             type: string
     _admin_req_grant-roles-to-account:
       required:
-        - account_id
         - role_ids
       type: object
       properties:
-        account_id:
-          type: string
         role_ids:
           type: array
           items:
             type: string
     _admin_req_revoke-roles-from-account:
       required:
-        - account_id
         - role_ids
       type: object
       properties:
-        account_id:
-          type: string
         role_ids:
           type: array
           items:
             type: string
     _admin_req_grant-permissions:
       required:
-        - account_id
         - permissions
       type: object
       properties:
-        account_id:
-          type: string
         permissions:
           type: array
           items:
             type: string
     _admin_req_revoke-permissions:
       required:
-        - account_id
         - permissions
       type: object
       properties:
-        account_id:
-          type: string
         permissions:
           type: array
           items:
             type: string
     _admin_req_grant-permissions-to-role:
       required:
-        - role_id
         - permissions
       type: object
       properties:
-        role_id:
-          type: string
         permissions:
           type: array
           items:
@@ -6588,6 +6340,8 @@ components:
       type: object
       properties:
         name:
+          type: string
+        description:
           type: string
         service_id:
           type: string
