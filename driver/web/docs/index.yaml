@@ -179,10 +179,6 @@ paths:
     $ref: "./resources/system/application-configs.yaml"
   /system/application/configs/{id}:
     $ref: "./resources/system/application-configsId.yaml"
-  /system/accounts:
-    $ref: "./resources/system/accounts.yaml"
-  /system/account:
-    $ref: "./resources/system/account.yaml"
   /system/api-keys:
     $ref: "./resources/system/api-keys.yaml"
   /system/auth-types:

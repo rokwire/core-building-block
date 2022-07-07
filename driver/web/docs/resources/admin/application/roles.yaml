@@ -52,7 +52,7 @@
       content:
         application/json:
           schema:
-            $ref: "../../../schemas/application/AppOrgRoleFields.yaml"
+            $ref: "../../../schemas/application/AppOrgRole.yaml"
     400:
       description: Bad request
     401:

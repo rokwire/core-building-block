@@ -2307,7 +2307,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AppOrgGroupFields'
+                $ref: '#/components/schemas/AppOrgGroup'
         '400':
           description: Bad request
         '401':
@@ -2505,7 +2505,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AppOrgRoleFields'
+                $ref: '#/components/schemas/AppOrgRole'
         '400':
           description: Bad request
         '401':
@@ -4150,54 +4150,6 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /system/accounts:
-    get:
-      tags:
-        - System
-      summary: Get user account
-      description: |
-        Get the user account
-
-        **Auth:** Requires user auth token
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PartialAccount'
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal error
-  /system/account:
-    get:
-      tags:
-        - System
-      summary: Get user account
-      description: |
-        Get the user account
-
-        **Auth:** Requires user auth token
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/_shared_res_Account'
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal error
   /system/api-keys:
     get:
       tags:
@@ -4628,17 +4580,6 @@ components:
         date_updated:
           type: string
     AppOrgRole:
-      type: object
-      properties:
-        fields:
-          $ref: '#/components/schemas/AppOrgRoleFields'
-        application:
-          $ref: '#/components/schemas/Application'
-        permissions:
-          type: array
-          items:
-            $ref: '#/components/schemas/Permission'
-    AppOrgRoleFields:
       required:
         - id
         - name
@@ -4646,6 +4587,7 @@ components:
       properties:
         id:
           type: string
+          readOnly: true
         name:
           type: string
         description:
@@ -4656,11 +4598,31 @@ components:
           type: string
         date_updated:
           type: string
+        application:
+          $ref: '#/components/schemas/Application'
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Permission'
     AppOrgGroup:
+      required:
+        - id
+        - name
       type: object
       properties:
-        fields:
-          $ref: '#/components/schemas/AppOrgGroupFields'
+        id:
+          type: string
+          readOnly: true
+        name:
+          type: string
+        description:
+          type: string
+        system:
+          type: boolean
+        date_created:
+          type: string
+        date_updated:
+          type: string
         application:
           $ref: '#/components/schemas/Application'
         permissions:
@@ -4671,24 +4633,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AppOrgRole'
-    AppOrgGroupFields:
-      required:
-        - id
-        - name
-      type: object
-      properties:
-        id:
-          type: string
-        name:
-          type: string
-        description:
-          type: string
-        system:
-          type: boolean
-        date_created:
-          type: string
-        date_updated:
-          type: string
     Organization:
       type: object
       properties:
@@ -5119,11 +5063,11 @@ components:
         roles:
           type: array
           items:
-            $ref: '#/components/schemas/AppOrgRoleFields'
+            $ref: '#/components/schemas/AppOrgRole'
         groups:
           type: array
           items:
-            $ref: '#/components/schemas/AppOrgGroupFields'
+            $ref: '#/components/schemas/AppOrgGroup'
         auth_types:
           type: array
           items:
@@ -5698,11 +5642,11 @@ components:
         roles:
           type: array
           items:
-            $ref: '#/components/schemas/AppOrgRoleFields'
+            $ref: '#/components/schemas/AppOrgRole'
         groups:
           type: array
           items:
-            $ref: '#/components/schemas/AppOrgGroupFields'
+            $ref: '#/components/schemas/AppOrgGroup'
         auth_types:
           type: array
           items:
