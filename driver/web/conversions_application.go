@@ -112,8 +112,7 @@ func appOrgRoleToDef(item model.AppOrgRole) Def.AppOrgRole {
 		dateUpdated = &formatted
 	}
 
-	fields := Def.AppOrgRoleFields{Id: item.ID, Name: item.Name, Description: &item.Description, System: &item.System, DateCreated: &dateCreated, DateUpdated: dateUpdated}
-	return Def.AppOrgRole{Fields: &fields, Permissions: &permissions}
+	return Def.AppOrgRole{Id: item.ID, Name: item.Name, Description: &item.Description, System: &item.System, DateCreated: &dateCreated, DateUpdated: dateUpdated, Permissions: &permissions}
 }
 
 func appOrgRolesToDef(items []model.AppOrgRole) []Def.AppOrgRole {
@@ -137,8 +136,7 @@ func appOrgGroupToDef(item model.AppOrgGroup) Def.AppOrgGroup {
 		dateUpdated = &formatted
 	}
 
-	fields := Def.AppOrgGroupFields{Id: item.ID, Name: item.Name, Description: &item.Description, System: &item.System, DateCreated: &dateCreated, DateUpdated: dateUpdated}
-	return Def.AppOrgGroup{Fields: &fields, Permissions: &permissions, Roles: &roles}
+	return Def.AppOrgGroup{Id: item.ID, Name: item.Name, Description: &item.Description, System: &item.System, DateCreated: &dateCreated, DateUpdated: dateUpdated, Permissions: &permissions, Roles: &roles}
 }
 
 func appOrgGroupsToDef(items []model.AppOrgGroup) []Def.AppOrgGroup {

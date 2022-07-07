@@ -72,8 +72,9 @@ func partialAccountToDef(item model.Account, params map[string]interface{}) *Def
 		paramsData = &params
 	}
 	return &Def.PartialAccount{Id: item.ID, AppId: item.AppOrg.Application.ID, OrgId: item.AppOrg.Organization.ID,
-		FirstName: item.Profile.FirstName, LastName: item.Profile.LastName, HasPermissions: item.HasPermissions, Permissions: permissions, Roles: roles, Groups: groups,
-		AuthTypes: authTypes, DateCreated: dateCreated, DateUpdated: dateUpdated, Params: paramsData}
+		FirstName: item.Profile.FirstName, LastName: item.Profile.LastName, HasPermissions: item.HasPermissions,
+		Permissions: permissions, Roles: roles, Groups: groups, AuthTypes: authTypes,
+		DateCreated: dateCreated, DateUpdated: dateUpdated, Params: paramsData}
 }
 
 func partialAccountsToDef(items []model.Account) []Def.PartialAccount {
@@ -101,12 +102,22 @@ func accountAuthTypesToDef(items []model.AccountAuthType) []Def.AccountAuthTypeF
 }
 
 //AccountRole
-func accountRoleToDef(item model.AccountRole) Def.AppOrgRoleFields {
-	return Def.AppOrgRoleFields{Id: item.Role.ID, Name: item.Role.Name}
+func accountRoleToDef(item model.AccountRole) Def.AppOrgRole {
+	permissions := applicationPermissionsToDef(item.Role.Permissions)
+
+	//dates
+	var dateUpdated *string
+	dateCreated := utils.FormatTime(&item.Role.DateCreated)
+	if item.Role.DateUpdated != nil {
+		formatted := utils.FormatTime(item.Role.DateUpdated)
+		dateUpdated = &formatted
+	}
+
+	return Def.AppOrgRole{Id: item.Role.ID, Name: item.Role.Name, Description: &item.Role.Description, System: &item.Role.System, DateCreated: &dateCreated, DateUpdated: dateUpdated, Permissions: &permissions}
 }
 
-func accountRolesToDef(items []model.AccountRole) []Def.AppOrgRoleFields {
-	result := make([]Def.AppOrgRoleFields, len(items))
+func accountRolesToDef(items []model.AccountRole) []Def.AppOrgRole {
+	result := make([]Def.AppOrgRole, len(items))
 	for i, item := range items {
 		result[i] = accountRoleToDef(item)
 	}
@@ -114,12 +125,23 @@ func accountRolesToDef(items []model.AccountRole) []Def.AppOrgRoleFields {
 }
 
 //AccountGroup
-func accountGroupToDef(item model.AccountGroup) Def.AppOrgGroupFields {
-	return Def.AppOrgGroupFields{Id: item.Group.ID, Name: item.Group.Name}
+func accountGroupToDef(item model.AccountGroup) Def.AppOrgGroup {
+	permissions := applicationPermissionsToDef(item.Group.Permissions)
+	roles := appOrgRolesToDef(item.Group.Roles)
+
+	//dates
+	var dateUpdated *string
+	dateCreated := utils.FormatTime(&item.Group.DateCreated)
+	if item.Group.DateUpdated != nil {
+		formatted := utils.FormatTime(item.Group.DateUpdated)
+		dateUpdated = &formatted
+	}
+
+	return Def.AppOrgGroup{Id: item.Group.ID, Name: item.Group.Name, Description: &item.Group.Description, System: &item.Group.System, DateCreated: &dateCreated, DateUpdated: dateUpdated, Permissions: &permissions, Roles: &roles}
 }
 
-func accountGroupsToDef(items []model.AccountGroup) []Def.AppOrgGroupFields {
-	result := make([]Def.AppOrgGroupFields, len(items))
+func accountGroupsToDef(items []model.AccountGroup) []Def.AppOrgGroup {
+	result := make([]Def.AppOrgGroup, len(items))
 	for i, item := range items {
 		result[i] = accountGroupToDef(item)
 	}
