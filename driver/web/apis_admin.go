@@ -973,8 +973,8 @@ func (h AdminApisHandler) revokeAccountRoles(l *logs.Log, r *http.Request, claim
 	return l.HttpResponseSuccess()
 }
 
-//adminGrantPermissionsToRole grants a role the given permission
-func (h AdminApisHandler) adminGrantPermissionsToRole(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+//grantPermissionsToRole grants a role the given permission
+func (h AdminApisHandler) grantPermissionsToRole(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	params := mux.Vars(r)
 	roleID := params["id"]
 	if len(roleID) <= 0 {
