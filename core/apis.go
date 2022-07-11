@@ -173,23 +173,35 @@ func (c *APIs) storeSystemData() error {
 			}
 		}
 
-		//5. insert all_system_core permission if does not exist
-		systemPermissions := []string{model.PermissionAllSystemCore}
-		allSystemPermissions, err := c.app.storage.FindPermissionsByName(context, systemPermissions)
+		//5. insert all_system_core permission and grant_all_permissions permission if they do not exist
+		requiredPermissions := []string{model.PermissionAllSystemCore, model.PermissionGrantAllPermissions}
+		existingPermissions, err := c.app.storage.FindPermissionsByName(context, requiredPermissions)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypePermission, &logutils.FieldArgs{"name": model.PermissionAllSystemCore}, err)
 		}
 
-		if len(allSystemPermissions) == 0 {
-			documentIDs["permission"] = uuid.NewString()
-			allSystemCore := model.Permission{ID: documentIDs["permission"], Name: model.PermissionAllSystemCore, ServiceID: "core",
-				Assigners: systemPermissions, DateCreated: time.Now().UTC()}
-			err = c.app.storage.InsertPermission(context, allSystemCore)
-			if err != nil {
-				return errors.WrapErrorAction(logutils.ActionInsert, model.TypePermission, nil, err)
-			}
+		if len(existingPermissions) < len(requiredPermissions) {
+			for _, required := range requiredPermissions {
+				found := false
+				for _, existing := range existingPermissions {
+					if existing.Name == required {
+						found = true
+						continue
+					}
+				}
+				if !found {
+					//TODO: use InsertMany
+					documentIDs["permission"] = uuid.NewString()
+					newPermission := model.Permission{ID: documentIDs["permission"], Name: required, ServiceID: "core",
+						Assigners: []string{model.PermissionAllSystemCore}, DateCreated: time.Now().UTC()}
+					err = c.app.storage.InsertPermission(context, newPermission)
+					if err != nil {
+						return errors.WrapErrorAction(logutils.ActionInsert, model.TypePermission, nil, err)
+					}
 
-			allSystemPermissions = append(allSystemPermissions, allSystemCore)
+					existingPermissions = append(existingPermissions, newPermission)
+				}
+			}
 		}
 
 		//6. insert system account if needed
