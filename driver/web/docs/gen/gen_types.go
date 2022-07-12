@@ -600,18 +600,18 @@ type AdminReqAddAccountsToGroup struct {
 	AccountIds []string `json:"account_ids"`
 }
 
+// AdminReqApplicationRole defines model for _admin_req_application_role.
+type AdminReqApplicationRole struct {
+	Description string   `json:"description"`
+	Name        string   `json:"name"`
+	Permissions []string `json:"permissions"`
+}
+
 // AdminReqCreateApplicationGroup defines model for _admin_req_create-application_group.
 type AdminReqCreateApplicationGroup struct {
 	Name        string    `json:"name"`
 	Permissions *[]string `json:"permissions,omitempty"`
 	Roles       *[]string `json:"roles,omitempty"`
-}
-
-// AdminReqCreateApplicationRole defines model for _admin_req_create-application_role.
-type AdminReqCreateApplicationRole struct {
-	Description string   `json:"description"`
-	Name        string   `json:"name"`
-	Permissions []string `json:"permissions"`
 }
 
 // AdminReqGrantPermissions defines model for _admin_req_grant-permissions.
@@ -1279,7 +1279,10 @@ type GetAdminApplicationLoginSessionsParams struct {
 }
 
 // PostAdminApplicationRolesJSONBody defines parameters for PostAdminApplicationRoles.
-type PostAdminApplicationRolesJSONBody AdminReqCreateApplicationRole
+type PostAdminApplicationRolesJSONBody AdminReqApplicationRole
+
+// PutAdminApplicationRolesIdJSONBody defines parameters for PutAdminApplicationRolesId.
+type PutAdminApplicationRolesIdJSONBody AdminReqApplicationRole
 
 // PutAdminApplicationRolesIdPermissionsJSONBody defines parameters for PutAdminApplicationRolesIdPermissions.
 type PutAdminApplicationRolesIdPermissionsJSONBody AdminReqGrantPermissionsToRole
@@ -1694,6 +1697,9 @@ type PutAdminApplicationGroupsIdAccountsJSONRequestBody PutAdminApplicationGroup
 
 // PostAdminApplicationRolesJSONRequestBody defines body for PostAdminApplicationRoles for application/json ContentType.
 type PostAdminApplicationRolesJSONRequestBody PostAdminApplicationRolesJSONBody
+
+// PutAdminApplicationRolesIdJSONRequestBody defines body for PutAdminApplicationRolesId for application/json ContentType.
+type PutAdminApplicationRolesIdJSONRequestBody PutAdminApplicationRolesIdJSONBody
 
 // PutAdminApplicationRolesIdPermissionsJSONRequestBody defines body for PutAdminApplicationRolesIdPermissions for application/json ContentType.
 type PutAdminApplicationRolesIdPermissionsJSONRequestBody PutAdminApplicationRolesIdPermissionsJSONBody

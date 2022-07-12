@@ -473,6 +473,10 @@ func (app *application) admGetAppOrgRoles(appID string, orgID string) ([]model.A
 	return getAppOrgRoles, nil
 }
 
+func (app *application) admUpdateAppOrgRole(ID string, name string, description string, permissionNames []string, appID string, orgID string, assignerPermissions []string, system bool, l *logs.Log) (*model.AppOrgRole, error) {
+	return nil, errors.New(logutils.Unimplemented)
+}
+
 func (app *application) admDeleteAppOrgRole(ID string, appID string, orgID string, assignerPermissions []string, system bool, l *logs.Log) error {
 	//1. get application organization entity
 	appOrg, err := app.storage.FindApplicationOrganization(appID, orgID)

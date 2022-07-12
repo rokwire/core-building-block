@@ -155,6 +155,7 @@ func (we Adapter) Start() {
 	adminSubrouter.HandleFunc("/application/roles", we.wrapFunc(we.adminApisHandler.getApplicationRoles, we.auth.admin.permissions)).Methods("GET")
 	adminSubrouter.HandleFunc("/application/roles", we.wrapFunc(we.adminApisHandler.createApplicationRole, we.auth.admin.permissions)).Methods("POST")
 	adminSubrouter.HandleFunc("/application/roles/{id}", we.wrapFunc(we.adminApisHandler.deleteApplicationRole, we.auth.admin.permissions)).Methods("DELETE")
+	adminSubrouter.HandleFunc("/application/roles/{id}", we.wrapFunc(we.adminApisHandler.updateApplicationRole, we.auth.admin.permissions)).Methods("PUT")
 	adminSubrouter.HandleFunc("/application/roles/{id}/permissions", we.wrapFunc(we.adminApisHandler.grantPermissionsToRole, we.auth.admin.permissions)).Methods("PUT")
 
 	adminSubrouter.HandleFunc("/application/permissions", we.wrapFunc(we.adminApisHandler.getApplicationPermissions, we.auth.admin.permissions)).Methods("GET")
