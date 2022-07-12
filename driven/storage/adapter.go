@@ -2390,18 +2390,47 @@ func (sa *Adapter) FindPermissionsByName(context TransactionContext, names []str
 	return permissionsResult, nil
 }
 
-//InsertPermission inserts a new  permission
-func (sa *Adapter) InsertPermission(context TransactionContext, permission model.Permission) error {
+//InsertPermission inserts a new permission
+func (sa *Adapter) InsertPermission(context TransactionContext, item model.Permission) error {
 	var err error
 	if context != nil {
-		_, err = sa.db.permissions.InsertOneWithContext(context, permission)
+		_, err = sa.db.permissions.InsertOneWithContext(context, item)
 	} else {
-		_, err = sa.db.permissions.InsertOne(permission)
+		_, err = sa.db.permissions.InsertOne(item)
 	}
 
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionInsert, model.TypePermission, &logutils.FieldArgs{"_id": permission.ID, "name": permission.Name}, err)
+		return errors.WrapErrorAction(logutils.ActionInsert, model.TypePermission, &logutils.FieldArgs{"_id": item.ID, "name": item.Name}, err)
 	}
+	return nil
+}
+
+//InsertPermissions inserts permissions
+func (sa *Adapter) InsertPermissions(context TransactionContext, items []model.Permission) error {
+	if len(items) == 0 {
+		return nil
+	}
+
+	stgPermissions := make([]interface{}, len(items))
+	for i, p := range items {
+		stgPermissions[i] = p
+	}
+
+	var res *mongo.InsertManyResult
+	var err error
+	if context != nil {
+		res, err = sa.db.permissions.InsertManyWithContext(context, stgPermissions, nil)
+	} else {
+		res, err = sa.db.permissions.InsertMany(stgPermissions, nil)
+	}
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionInsert, model.TypePermission, nil, err)
+	}
+
+	if len(res.InsertedIDs) != len(items) {
+		return errors.ErrorAction(logutils.ActionInsert, model.TypePermission, &logutils.FieldArgs{"inserted": len(res.InsertedIDs), "expected": len(items)})
+	}
+
 	return nil
 }
 
