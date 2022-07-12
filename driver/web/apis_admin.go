@@ -825,7 +825,7 @@ func (h AdminApisHandler) updateApplicationRole(l *logs.Log, r *http.Request, cl
 	assignerPermissions := strings.Split(claims.Permissions, ",")
 	role, err := h.coreAPIs.Administration.AdmUpdateAppOrgRole(rolesID, requestData.Name, requestData.Description, requestData.Permissions, claims.AppID, claims.OrgID, assignerPermissions, claims.System, l)
 	if err != nil || role == nil {
-		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeAppOrgRole, nil, err, http.StatusInternalServerError, true)
+		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeAppOrgRole, nil, err, http.StatusInternalServerError, true)
 	}
 
 	respRole := appOrgRoleToDef(*role)

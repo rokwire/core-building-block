@@ -474,7 +474,49 @@ func (app *application) admGetAppOrgRoles(appID string, orgID string) ([]model.A
 }
 
 func (app *application) admUpdateAppOrgRole(ID string, name string, description string, permissionNames []string, appID string, orgID string, assignerPermissions []string, system bool, l *logs.Log) (*model.AppOrgRole, error) {
-	return nil, errors.New(logutils.Unimplemented)
+	var updatedRole *model.AppOrgRole
+	transaction := func(context storage.TransactionContext) error {
+		//1. find application organization
+		appOrg, err := app.storage.FindApplicationOrganization(appID, orgID)
+		if err != nil || appOrg == nil {
+			return errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
+		}
+
+		//2. find role, check if update allowed by system flag
+		role, err := app.storage.FindAppOrgRole(ID, appOrg.ID)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgRole, nil, err)
+		}
+		if role.System && !system {
+			return errors.ErrorData(logutils.StatusInvalid, logutils.TypeClaim, logutils.StringArgs("system"))
+		}
+
+		//3. check role permissions
+		permissions, err := app.auth.CheckPermissions(context, appOrg, permissionNames, assignerPermissions)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionValidate, model.TypePermission, nil, err)
+		}
+
+		//4. update role (also updates all necessary groups and accounts)
+		now := time.Now().UTC()
+		role.Name = name
+		role.Description = description
+		role.Permissions = permissions
+		role.DateUpdated = &now
+		err = app.storage.UpdateAppOrgRole(context, *role)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAppOrgRole, nil, err)
+		}
+
+		updatedRole = role
+		return nil
+	}
+
+	err := app.storage.PerformTransaction(transaction)
+	if err != nil {
+		return nil, err
+	}
+	return updatedRole, nil
 }
 
 func (app *application) admDeleteAppOrgRole(ID string, appID string, orgID string, assignerPermissions []string, system bool, l *logs.Log) error {

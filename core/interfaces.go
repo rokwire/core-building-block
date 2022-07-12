@@ -163,7 +163,7 @@ type Storage interface {
 	FindAppOrgRolesByIDs(context storage.TransactionContext, ids []string, appOrgID string) ([]model.AppOrgRole, error)
 	FindAppOrgRole(id string, appOrgID string) (*model.AppOrgRole, error)
 	InsertAppOrgRole(context storage.TransactionContext, item model.AppOrgRole) error
-	UpdateAppOrgRole(item model.AppOrgRole) error
+	UpdateAppOrgRole(context storage.TransactionContext, item model.AppOrgRole) error
 	DeleteAppOrgRole(id string) error
 	InsertAppOrgRolePermissions(context storage.TransactionContext, roleID string, permissionNames []model.Permission) error
 
