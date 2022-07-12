@@ -80,6 +80,7 @@ func applicationPermissionToDef(item model.Permission) Def.Permission {
 	if assigners == nil {
 		assigners = make([]string, 0)
 	}
+	assigners = append(assigners, model.PermissionGrantAllPermissions)
 
 	//dates
 	var dateUpdated *string
