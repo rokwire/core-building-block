@@ -1319,6 +1319,41 @@ func (sa *Adapter) SaveAccount(context TransactionContext, account *model.Accoun
 	return nil
 }
 
+//UpdateAccountUsageInfo updates the usage information in accounts
+func (sa *Adapter) UpdateAccountUsageInfo(context TransactionContext, accountID string, updateLoginTime bool, updateAccessTokenTime bool, clientVersion *string) error {
+	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
+	now := time.Now().UTC()
+	update := bson.M{
+		"date_updated": now,
+	}
+	if updateLoginTime {
+		update["last_login_date"] = now
+	}
+	if updateAccessTokenTime {
+		update["last_access_token_date"] = now
+	}
+	if clientVersion != nil && *clientVersion != "" {
+		update["most_recent_client_version"] = *clientVersion
+	}
+	usageInfoUpdate := bson.M{"$set": update}
+
+	var res *mongo.UpdateResult
+	var err error
+	if context != nil {
+		res, err = sa.db.accounts.UpdateOneWithContext(context, filter, usageInfoUpdate, nil)
+	} else {
+		res, err = sa.db.accounts.UpdateOne(filter, usageInfoUpdate, nil)
+	}
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountUsageInfo, nil, err)
+	}
+	if res.ModifiedCount != 1 {
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccountUsageInfo, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
+	}
+
+	return nil
+}
+
 //DeleteAccount deletes an account
 func (sa *Adapter) DeleteAccount(context TransactionContext, id string) error {
 	//TODO - we have to decide what we do on delete user operation - removing all user relations, (or) mark the user disabled etc

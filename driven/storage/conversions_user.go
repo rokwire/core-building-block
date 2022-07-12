@@ -59,10 +59,13 @@ func accountToStorage(item *model.Account) *account {
 	devices := accountDevicesToStorage(item)
 	dateCreated := item.DateCreated
 	dateUpdated := item.DateUpdated
+	lastLoginDate := item.LastLoginDate
+	lastAccessTokenDate := item.LastAccessTokenDate
+	mostRecentClientVersion := item.MostRecentClientVersion
 
 	return &account{ID: id, AppOrgID: appOrgID, HasPermissions: item.HasPermissions, Permissions: permissions, Roles: roles, Groups: groups, AuthTypes: authTypes,
 		MFATypes: mfaTypes, ExternalIDs: item.ExternalIDs, Preferences: item.Preferences, Profile: profile, Devices: devices,
-		DateCreated: dateCreated, DateUpdated: dateUpdated}
+		DateCreated: dateCreated, DateUpdated: dateUpdated, LastLoginDate: lastLoginDate, LastAccessTokenDate: lastAccessTokenDate, MostRecentClientVersion: mostRecentClientVersion}
 }
 
 func accountDevicesFromStorage(item account) []model.Device {
