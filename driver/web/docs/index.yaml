@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Rokwire Core Building Block API
   description: Core Building Block API Documentation
-  version: 1.24.0
+  version: 1.24.1
 servers:
   - url: https://api.rokwire.illinois.edu/core
     description: Production server
@@ -179,10 +179,6 @@ paths:
     $ref: "./resources/system/application-configs.yaml"
   /system/application/configs/{id}:
     $ref: "./resources/system/application-configsId.yaml"
-  /system/accounts:
-    $ref: "./resources/system/accounts.yaml"
-  /system/account:
-    $ref: "./resources/system/account.yaml"
   /system/api-keys:
     $ref: "./resources/system/api-keys.yaml"
   /system/auth-types:
