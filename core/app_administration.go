@@ -487,6 +487,9 @@ func (app *application) admUpdateAppOrgRole(ID string, name string, description 
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgRole, nil, err)
 		}
+		if role == nil {
+			return errors.ErrorData(logutils.StatusMissing, model.TypeAppOrgRole, &logutils.FieldArgs{"id": ID})
+		}
 		if role.System && !systemClaim {
 			return errors.ErrorData(logutils.StatusInvalid, logutils.TypeClaim, logutils.StringArgs("system"))
 		}
@@ -561,7 +564,10 @@ func (app *application) admDeleteAppOrgRole(ID string, appID string, orgID strin
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgRole, nil, err)
 	}
 	if role == nil {
-		return errors.Newf("there is no role for id %s", ID)
+		return errors.ErrorData(logutils.StatusMissing, model.TypeAppOrgRole, &logutils.FieldArgs{"id": ID})
+	}
+	if role.System && !system {
+		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeClaim, logutils.StringArgs("system"))
 	}
 
 	//3. check assigners field
@@ -927,7 +933,9 @@ func (app *application) admGrantPermissionsToRole(appID string, orgID string, ro
 	if err != nil {
 		return errors.Wrap("error finding account on permissions granting", err)
 	}
-
+	if role == nil {
+		return errors.ErrorData(logutils.StatusMissing, model.TypeAppOrgRole, &logutils.FieldArgs{"id": roleID})
+	}
 	if role.System && !system {
 		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeClaim, logutils.StringArgs("system"))
 	}
