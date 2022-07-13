@@ -605,6 +605,7 @@ type AdminReqApplicationRole struct {
 	Description string   `json:"description"`
 	Name        string   `json:"name"`
 	Permissions []string `json:"permissions"`
+	System      *bool    `json:"system,omitempty"`
 }
 
 // AdminReqCreateApplicationGroup defines model for _admin_req_create-application_group.

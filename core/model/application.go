@@ -114,6 +114,15 @@ func (c AppOrgRole) GetPermissionNamed(name string) *Permission {
 	return nil
 }
 
+//GetAssignedPermissionNames returns a list of names of assigned permissions for this role
+func (c AppOrgRole) GetAssignedPermissionNames() []string {
+	names := make([]string, len(c.Permissions))
+	for i, permission := range c.Permissions {
+		names[i] = permission.Name
+	}
+	return names
+}
+
 //CheckAssigners checks if the passed permissions satisfy the needed assigners for all role permissions
 func (c AppOrgRole) CheckAssigners(assignerPermissions []string) error {
 	if len(c.Permissions) == 0 {

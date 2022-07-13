@@ -6012,6 +6012,8 @@ components:
           type: string
         description:
           type: string
+        system:
+          type: boolean
         permissions:
           type: array
           items:

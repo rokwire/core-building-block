@@ -208,13 +208,13 @@ func (app *application) admCreateAppOrgGroup(name string, permissionNames []stri
 		}
 
 		//2. validate permissions
-		permissions, err := app.auth.CheckPermissions(context, appOrg, permissionNames, assignerPermissions)
+		permissions, err := app.auth.CheckPermissions(context, appOrg, permissionNames, assignerPermissions, false)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionValidate, model.TypePermission, nil, err)
 		}
 
 		//3. check roles
-		roles, err := app.auth.CheckRoles(context, appOrg, rolesIDs, assignerPermissions)
+		roles, err := app.auth.CheckRoles(context, appOrg, rolesIDs, assignerPermissions, false)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionValidate, model.TypeAppOrgRole, nil, err)
 		}
@@ -421,7 +421,7 @@ func (app *application) admRemoveAccountsFromGroup(appID string, orgID string, g
 	return nil
 }
 
-func (app *application) admCreateAppOrgRole(name string, description string, permissionNames []string, appID string, orgID string, assignerPermissions []string, system bool, l *logs.Log) (*model.AppOrgRole, error) {
+func (app *application) admCreateAppOrgRole(name string, description string, system bool, permissionNames []string, appID string, orgID string, assignerPermissions []string, systemClaim bool, l *logs.Log) (*model.AppOrgRole, error) {
 	var newRole *model.AppOrgRole
 	transaction := func(context storage.TransactionContext) error {
 		//1. get application organization entity
@@ -431,7 +431,7 @@ func (app *application) admCreateAppOrgRole(name string, description string, per
 		}
 
 		//2. check role permissions
-		permissions, err := app.auth.CheckPermissions(context, appOrg, permissionNames, assignerPermissions)
+		permissions, err := app.auth.CheckPermissions(context, appOrg, permissionNames, assignerPermissions, false)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionValidate, model.TypePermission, nil, err)
 		}
@@ -439,7 +439,7 @@ func (app *application) admCreateAppOrgRole(name string, description string, per
 		//3. create and insert role
 		id, _ := uuid.NewUUID()
 		now := time.Now()
-		role := model.AppOrgRole{ID: id.String(), Name: name, Description: description, System: system, Permissions: permissions, AppOrg: *appOrg, DateCreated: now}
+		role := model.AppOrgRole{ID: id.String(), Name: name, Description: description, System: systemClaim && system, Permissions: permissions, AppOrg: *appOrg, DateCreated: now}
 		err = app.storage.InsertAppOrgRole(context, role)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAppOrgRole, nil, err)
@@ -473,7 +473,7 @@ func (app *application) admGetAppOrgRoles(appID string, orgID string) ([]model.A
 	return getAppOrgRoles, nil
 }
 
-func (app *application) admUpdateAppOrgRole(ID string, name string, description string, permissionNames []string, appID string, orgID string, assignerPermissions []string, system bool, l *logs.Log) (*model.AppOrgRole, error) {
+func (app *application) admUpdateAppOrgRole(ID string, name string, description string, system bool, permissionNames []string, appID string, orgID string, assignerPermissions []string, systemClaim bool, l *logs.Log) (*model.AppOrgRole, error) {
 	var updatedRole *model.AppOrgRole
 	transaction := func(context storage.TransactionContext) error {
 		//1. find application organization
@@ -487,25 +487,54 @@ func (app *application) admUpdateAppOrgRole(ID string, name string, description 
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgRole, nil, err)
 		}
-		if role.System && !system {
+		if role.System && !systemClaim {
 			return errors.ErrorData(logutils.StatusInvalid, logutils.TypeClaim, logutils.StringArgs("system"))
 		}
 
 		//3. check role permissions
-		permissions, err := app.auth.CheckPermissions(context, appOrg, permissionNames, assignerPermissions)
-		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionValidate, model.TypePermission, nil, err)
+		updated := false
+		newPermissions := []model.Permission{}
+		added, removed, unchanged := utils.StringListDiff(permissionNames, role.GetAssignedPermissionNames())
+		if len(added) > 0 || len(removed) > 0 {
+			if len(added) > 0 {
+				addedPermissions, err := app.auth.CheckPermissions(context, appOrg, added, assignerPermissions, false)
+				if err != nil {
+					return errors.WrapErrorAction("adding", model.TypePermission, nil, err)
+				}
+				newPermissions = append(newPermissions, addedPermissions...)
+			}
+
+			if len(removed) > 0 {
+				_, err := app.auth.CheckPermissions(context, appOrg, removed, assignerPermissions, true)
+				if err != nil {
+					return errors.WrapErrorAction("revoking", model.TypePermission, nil, err)
+				}
+			}
+
+			if len(unchanged) > 0 {
+				unchangedPermissions, err := app.storage.FindPermissionsByName(context, unchanged)
+				if err != nil {
+					return errors.WrapErrorAction(logutils.ActionFind, model.TypePermission, nil, err)
+				}
+				newPermissions = append(newPermissions, unchangedPermissions...)
+			}
+
+			role.Permissions = newPermissions
+			updated = true
 		}
 
 		//4. update role (also updates all necessary groups and accounts)
-		now := time.Now().UTC()
-		role.Name = name
-		role.Description = description
-		role.Permissions = permissions
-		role.DateUpdated = &now
-		err = app.storage.UpdateAppOrgRole(context, *role)
-		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAppOrgRole, nil, err)
+		updated = updated || (role.Name != name) || (role.Description != description) || (role.System != (systemClaim && system))
+		if updated {
+			now := time.Now().UTC()
+			role.Name = name
+			role.Description = description
+			role.System = systemClaim && system
+			role.DateUpdated = &now
+			err = app.storage.UpdateAppOrgRole(context, *role)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAppOrgRole, nil, err)
+			}
 		}
 
 		updatedRole = role

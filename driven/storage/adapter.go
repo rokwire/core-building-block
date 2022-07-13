@@ -2537,9 +2537,12 @@ func (sa *Adapter) InsertAppOrgRole(context TransactionContext, item model.AppOr
 
 //UpdateAppOrgRole updates application organization role
 func (sa *Adapter) UpdateAppOrgRole(context TransactionContext, item model.AppOrgRole) error {
-	//TODO: when is updating system flag allowed?
-	filter := bson.D{primitive.E{Key: "_id", Value: item.ID}}
+	if context == nil {
+		return errors.ErrorData(logutils.StatusMissing, "transaction context", nil)
+	}
 
+	// update role
+	roleFilter := bson.D{primitive.E{Key: "_id", Value: item.ID}}
 	roleUpdate := bson.D{
 		primitive.E{Key: "$set", Value: bson.D{
 			primitive.E{Key: "name", Value: item.Name},
@@ -2550,21 +2553,15 @@ func (sa *Adapter) UpdateAppOrgRole(context TransactionContext, item model.AppOr
 		}},
 	}
 
-	var res *mongo.UpdateResult
-	var err error
-	if context != nil {
-		res, err = sa.db.applicationsOrganizationsRoles.UpdateOneWithContext(context, filter, roleUpdate, nil)
-	} else {
-		res, err = sa.db.applicationsOrganizationsRoles.UpdateOne(filter, roleUpdate, nil)
-	}
+	res, err := sa.db.applicationsOrganizationsRoles.UpdateOneWithContext(context, roleFilter, roleUpdate, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAppOrgRole, &logutils.FieldArgs{"id": item.ID}, err)
 	}
-
 	if res.ModifiedCount != 1 {
 		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAppOrgRole, &logutils.FieldArgs{"id": item.ID, "modified": res.ModifiedCount, "expected": 1})
 	}
 
+	// update all groups that have the role
 	groupsFilter := bson.D{primitive.E{Key: "roles._id", Value: item.ID}}
 	groupsUpdate := bson.D{
 		primitive.E{Key: "$set", Value: bson.D{
@@ -2576,19 +2573,15 @@ func (sa *Adapter) UpdateAppOrgRole(context TransactionContext, item model.AppOr
 		}},
 	}
 
-	if context != nil {
-		res, err = sa.db.applicationsOrganizationsGroups.UpdateManyWithContext(context, groupsFilter, groupsUpdate, nil)
-	} else {
-		res, err = sa.db.applicationsOrganizationsGroups.UpdateMany(groupsFilter, groupsUpdate, nil)
-	}
+	res, err = sa.db.applicationsOrganizationsGroups.UpdateManyWithContext(context, groupsFilter, groupsUpdate, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAppOrgGroup, &logutils.FieldArgs{"roles._id": item.ID}, err)
 	}
-
 	if res.ModifiedCount != res.MatchedCount {
 		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAppOrgGroup, &logutils.FieldArgs{"roles._id": item.ID, "modified": res.ModifiedCount, "expected": res.MatchedCount})
 	}
 
+	// update all accounts that have the role
 	accountsFilter := bson.D{primitive.E{Key: "roles.role._id", Value: item.ID}}
 	accountsUpdate := bson.D{
 		primitive.E{Key: "$set", Value: bson.D{
@@ -2600,15 +2593,10 @@ func (sa *Adapter) UpdateAppOrgRole(context TransactionContext, item model.AppOr
 		}},
 	}
 
-	if context != nil {
-		res, err = sa.db.accounts.UpdateManyWithContext(context, accountsFilter, accountsUpdate, nil)
-	} else {
-		res, err = sa.db.accounts.UpdateMany(accountsFilter, accountsUpdate, nil)
-	}
+	res, err = sa.db.accounts.UpdateManyWithContext(context, accountsFilter, accountsUpdate, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"roles.role._id": item.ID}, err)
 	}
-
 	if res.ModifiedCount != res.MatchedCount {
 		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"roles.role._id": item.ID, "modified": res.ModifiedCount, "expected": res.MatchedCount})
 	}
