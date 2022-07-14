@@ -1321,7 +1321,7 @@ func (sa *Adapter) SaveAccount(context TransactionContext, account *model.Accoun
 
 //DeleteAccount deletes an account
 func (sa *Adapter) DeleteAccount(context TransactionContext, id string) error {
-	//TODO - we have to decide what we do on delete user operation - removing all user relations, (or) mark the user disabled etc
+	//TODO: - we have to decide what we do on delete user operation - removing all user relations, (or) mark the user disabled etc
 
 	filter := bson.M{"_id": id}
 	var res *mongo.DeleteResult
@@ -2407,10 +2407,10 @@ func (sa *Adapter) InsertPermission(context TransactionContext, permission model
 
 //UpdatePermission updates permission
 func (sa *Adapter) UpdatePermission(item model.Permission) error {
-	//TODO
+	//TODO:
 	//This will be slow operation as we keep a copy of the entity in the users collection without index.
 	//Maybe we need to up the transaction timeout for this operation because of this.
-	//TODO
+	//TODO:
 	//Update the permission in all collection where there is a copy of it - accounts, application_roles, application_groups, service_accounts
 
 	// Update serviceIDs
@@ -2439,7 +2439,7 @@ func (sa *Adapter) UpdatePermission(item model.Permission) error {
 
 //DeletePermission deletes permission
 func (sa *Adapter) DeletePermission(id string) error {
-	//TODO
+	//TODO:
 	//This will be slow operation as we keep a copy of the entity in the users collection without index.
 	//Maybe we need to up the transaction timeout for this operation because of this.
 	return errors.New(logutils.Unimplemented)
@@ -2544,7 +2544,7 @@ func (sa *Adapter) InsertAppOrgRole(context TransactionContext, item model.AppOr
 
 //UpdateAppOrgRole updates application organization role
 func (sa *Adapter) UpdateAppOrgRole(item model.AppOrgRole) error {
-	//TODO
+	//TODO:
 	//This will be slow operation as we keep a copy of the entity in the users collection without index.
 	//Maybe we need to up the transaction timeout for this operation because of this.
 	return errors.New(logutils.Unimplemented)
@@ -2681,7 +2681,7 @@ func (sa *Adapter) InsertAppOrgGroup(context TransactionContext, item model.AppO
 
 //UpdateAppOrgGroup updates application organization group
 func (sa *Adapter) UpdateAppOrgGroup(item model.AppOrgGroup) error {
-	//TODO
+	//TODO:
 	//This will be slow operation as we keep a copy of the entity in the users collection without index.
 	//Maybe we need to up the transaction timeout for this operation because of this.
 	return errors.New(logutils.Unimplemented)
@@ -2952,7 +2952,7 @@ func (sa *Adapter) InsertOrganization(context TransactionContext, organization m
 func (sa *Adapter) UpdateOrganization(ID string, name string, requestType string, organizationDomains []string) error {
 
 	now := time.Now()
-	//TODO - use pointers and update only what not nil
+	//TODO: - use pointers and update only what not nil
 	updatOrganizationFilter := bson.D{primitive.E{Key: "_id", Value: ID}}
 	updateOrganization := bson.D{
 		primitive.E{Key: "$set", Value: bson.D{
@@ -3115,7 +3115,7 @@ func (sa *Adapter) InsertAppConfig(item model.ApplicationConfig) (*model.Applica
 // UpdateAppConfig updates an appconfig
 func (sa *Adapter) UpdateAppConfig(ID string, appType model.ApplicationType, appOrg *model.ApplicationOrganization, version model.Version, data map[string]interface{}) error {
 	now := time.Now()
-	//TODO - use pointers and update only what not nil
+	//TODO: - use pointers and update only what not nil
 	updatAppConfigFilter := bson.D{primitive.E{Key: "_id", Value: ID}}
 	updateItem := bson.D{primitive.E{Key: "date_updated", Value: now}, primitive.E{Key: "app_type_id", Value: appType.ID}, primitive.E{Key: "version", Value: version}}
 	// if version != "" {
@@ -3572,7 +3572,9 @@ func NewStorageAdapter(mongoDBAuth string, mongoDBName string, mongoTimeout stri
 		cachedOrganizations: cachedOrganizations, organizationsLock: organizationsLock,
 		cachedApplications: cachedApplications, applicationsLock: applicationsLock,
 		cachedAuthTypes: cachedAuthTypes, authTypesLock: authTypesLock,
-		cachedApplicationsOrganizations: cachedApplicationsOrganizations, applicationsOrganizationsLock: applicationsOrganizationsLock, cachedApplicationConfigs: cachedApplicationConfigs, applicationConfigsLock: applicationConfigsLock}
+		cachedApplicationsOrganizations: cachedApplicationsOrganizations, applicationsOrganizationsLock: applicationsOrganizationsLock,
+		cachedApplicationConfigs: cachedApplicationConfigs, applicationConfigsLock: applicationConfigsLock,
+	}
 }
 
 type storageListener struct {

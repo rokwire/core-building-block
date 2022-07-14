@@ -11,6 +11,7 @@ require (
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
+	github.com/google/go-github/v44 v44.0.0
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
 	github.com/pkg/errors v0.9.1
@@ -21,8 +22,8 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/swaggo/http-swagger v1.2.6
 	go.mongodb.org/mongo-driver v1.7.1
-	golang.org/x/crypto v0.0.0-20210711020723-a769d52b0f97
-	golang.org/x/oauth2 v0.0.0-20210810183815-faf39c7919d5 // indirect
+	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5
+	golang.org/x/oauth2 v0.0.0-20210810183815-faf39c7919d5
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect

@@ -50,6 +50,26 @@ const (
 	TypeApplicationConfigsVersion logutils.MessageDataType = "app config version number"
 	//TypeVersionNumbers ...
 	TypeVersionNumbers logutils.MessageDataType = "version numbers"
+	//TypeWebhookRequest ...
+	TypeWebhookRequest logutils.MessageDataType = "github webhook request"
+	//TypeWebhookSecretToken ...
+	TypeWebhookSecretToken logutils.MessageDataType = "github Webhook secret token"
+	//TypeWebhookConfig ...
+	TypeWebhookConfig logutils.MessageDataType = "github webhook configs"
+	//TypeApplicationConfigWebhook ...
+	TypeApplicationConfigWebhook logutils.MessageDataType = "app config from github webhook request"
+	//TypeGithubContent ...
+	TypeGithubContent logutils.MessageDataType = "github content"
+	//TypeGithubCommit ...
+	TypeGithubCommit logutils.MessageDataType = "github commit"
+	//TypeGithubCommitAdded ...
+	TypeGithubCommitAdded logutils.MessageDataType = "github commit added files"
+	//TypeGithubCommitUpdated ...
+	TypeGithubCommitUpdated logutils.MessageDataType = "github commit updated files"
+	//TypeGithubCommitDeleted ...
+	TypeGithubCommitDeleted logutils.MessageDataType = "github commit deleted files"
+	//TypeOrganizationID ...
+	TypeOrganizationID logutils.MessageDataType = "organization id"
 
 	//PermissionAllSystemCore ...
 	PermissionAllSystemCore string = "all_system_core"
@@ -427,4 +447,52 @@ func VersionNumbersFromString(version string) *VersionNumbers {
 	}
 
 	return &VersionNumbers{Major: major, Minor: minor, Patch: patch}
+}
+
+// WebhookConfig is the organizaiton and application mapping config
+type WebhookConfig struct {
+	Organizations map[string]string            `json:"organizations"`
+	Applications  map[string]map[string]string `json:"applications"`
+}
+
+// WebhookRequest is the request from github webhook
+type WebhookRequest struct {
+	Ref     string   `json:"ref"`
+	Before  string   `json:"before"`
+	After   string   `json:"after"`
+	Created bool     `json:"created"`
+	Deleted bool     `json:"deleted"`
+	Forced  bool     `json:"forced"`
+	BaseRef string   `json:"base_ref"`
+	Compare string   `json:"compare"`
+	Commits []Commit `json:"commits"`
+}
+
+// Commit is the commit information of github push events
+type Commit struct {
+	ID        string    `json:"id"`
+	TreeID    string    `json:"tree_id"`
+	Distinct  bool      `json:"distinct"`
+	Message   string    `json:"message"`
+	Timestamp string    `json:"timestamp"`
+	URL       string    `json:"url"`
+	Author    Author    `json:"author"`
+	Committer Committer `json:"committer"`
+	Added     []string  `json:"added"`
+	Removed   []string  `json:"removed"`
+	Modified  []string  `json:"modified"`
+}
+
+// Author is the author of the commit
+type Author struct {
+	Name     string `json:"name"`
+	Email    string `json:"email"`
+	Username string `json:"username"`
+}
+
+// Committer is the commiter of the commit
+type Committer struct {
+	Name     string `json:"name"`
+	Email    string `json:"email"`
+	Username string `json:"username"`
 }

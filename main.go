@@ -18,6 +18,7 @@ import (
 	"core-building-block/core"
 	"core-building-block/core/auth"
 	"core-building-block/driven/emailer"
+	"core-building-block/driven/github"
 	"core-building-block/driven/profilebb"
 	"core-building-block/driven/storage"
 	"core-building-block/driver/web"
@@ -72,6 +73,19 @@ func main() {
 	mongoDBAuth := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_MONGO_AUTH", true, true)
 	mongoDBName := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_MONGO_DATABASE", true, false)
 	mongoTimeout := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_MONGO_TIMEOUT", false, false)
+	// webhook configs
+	githubWebhookRequestToken := envLoader.GetAndLogEnvVar("GITHUB_WEBHOOK_REQUEST_TOKEN", false, false)
+	githubToken := envLoader.GetAndLogEnvVar("GITHUB_TOKEN", false, false)
+	githubOrgnizationName := envLoader.GetAndLogEnvVar("GITHUB_ORG_NAME", false, false)
+	githubRepoName := envLoader.GetAndLogEnvVar("GITHUB_REPO_NAME", false, false)
+	githubWebhookConfigPath := envLoader.GetAndLogEnvVar("GITHUB_WEBHOOK_CONFIG_PATH", false, false)
+
+	githubAdapter := github.NewGitHubAdapter(githubToken, githubOrgnizationName, githubRepoName, githubWebhookConfigPath, logger)
+	err = githubAdapter.Start()
+	if err != nil {
+		logger.Fatalf("Cannot start the GitHub adapter: %v", err)
+	}
+
 	storageAdapter := storage.NewStorageAdapter(mongoDBAuth, mongoDBName, mongoTimeout, logger)
 	err = storageAdapter.Start()
 	if err != nil {
@@ -156,7 +170,7 @@ func main() {
 	}
 
 	//core
-	coreAPIs := core.NewCoreAPIs(env, Version, Build, storageAdapter, auth, systemInitSettings, logger)
+	coreAPIs := core.NewCoreAPIs(env, Version, Build, storageAdapter, githubAdapter, auth, systemInitSettings, githubWebhookRequestToken, logger)
 	coreAPIs.Start()
 
 	//web adapter

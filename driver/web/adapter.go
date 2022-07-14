@@ -85,6 +85,8 @@ func (we Adapter) Start() {
 	///default ///
 	subRouter.HandleFunc("/version", we.wrapFunc(we.defaultApisHandler.getVersion, nil)).Methods("GET")                                      //Public
 	subRouter.HandleFunc("/.well-known/openid-configuration", we.wrapFunc(we.defaultApisHandler.getOpenIDConfiguration, nil)).Methods("GET") //Public
+	//webhook
+	subRouter.HandleFunc("/application/configs/github-webhook", we.wrapFunc(we.defaultApisHandler.handleWebhookConfigChange, nil)).Methods("POST")
 	///
 
 	///services ///

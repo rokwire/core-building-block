@@ -36,7 +36,7 @@ type BBsApisHandler struct {
 	coreAPIs *core.APIs
 }
 
-//getTest TODO get test
+//getTest TODO: get test
 func (h BBsApisHandler) getTest(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	res := h.coreAPIs.BBs.BBsGetTest()
 

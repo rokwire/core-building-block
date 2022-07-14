@@ -21,6 +21,11 @@ import (
 	"github.com/rokwire/logging-library-go/logs"
 )
 
+//Default exposes APIs for the driver adapters
+type Default interface {
+	ProcessWebhookRequest([]model.Commit) error
+}
+
 //Services exposes APIs for the driver adapters
 type Services interface {
 	SerDeleteAccount(id string) error
@@ -202,6 +207,14 @@ type Storage interface {
 	InsertApplicationOrganization(context storage.TransactionContext, applicationOrganization model.ApplicationOrganization) (*model.ApplicationOrganization, error)
 
 	InsertAPIKey(context storage.TransactionContext, apiKey model.APIKey) (*model.APIKey, error)
+}
+
+//GitHub is used by core to load from and send data to GitHub
+type GitHub interface {
+	GetContents(path string) (string, bool, error)
+
+	FindWebhookConfig() (*model.WebhookConfig, error)
+	UpdateCachedWebhookConfigs() error
 }
 
 //StorageListener listenes for change data storage events
