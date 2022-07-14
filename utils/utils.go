@@ -1,3 +1,17 @@
+// Copyright 2022 Board of Trustees of the University of Illinois.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package utils
 
 import (
@@ -34,6 +48,12 @@ const (
 	ErrorStatusSharedCredentialUnverified string = "shared-credential-unverified"
 	//ErrorStatusNotAllowed ...
 	ErrorStatusNotAllowed string = "not-allowed"
+
+	//Character sets for password generation
+	upper   string = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	lower   string = "abcdefghijklmnopqrstuvwxyz"
+	digits  string = "0123456789"
+	special string = "!@#$%^&*()"
 )
 
 // SetRandomSeed sets the seed for random number generation
@@ -68,6 +88,19 @@ func GenerateRandomString(s int) (string, error) {
 // GenerateRandomInt returns a random integer between 0 and max
 func GenerateRandomInt(max int) int {
 	return rand.Intn(max)
+}
+
+// GenerateRandomPassword returns a randomly generated password string
+func GenerateRandomPassword(s int) string {
+	validCharacters := []byte(upper + lower + digits + special)
+	rand.Shuffle(len(validCharacters), func(i, j int) { validCharacters[i], validCharacters[j] = validCharacters[j], validCharacters[i] })
+
+	password := make([]byte, s)
+	for i := 0; i < s; i++ {
+		password[i] = validCharacters[rand.Intn(len(validCharacters))]
+	}
+
+	return string(password)
 }
 
 // ConvertToJSON converts to json
@@ -142,6 +175,26 @@ func Contains(list []string, value string) bool {
 	return false
 }
 
+//StringListDiff returns a list of added, removed, unchanged values between a new and old string list
+func StringListDiff(new []string, old []string) ([]string, []string, []string) {
+	added := []string{}
+	removed := []string{}
+	unchanged := []string{}
+	for _, newVal := range new {
+		if !Contains(old, newVal) {
+			added = append(added, newVal)
+		} else {
+			unchanged = append(unchanged, newVal)
+		}
+	}
+	for _, oldVal := range old {
+		if !Contains(new, oldVal) {
+			removed = append(removed, oldVal)
+		}
+	}
+	return added, removed, unchanged
+}
+
 //StringOrNil returns a pointer to the input string, but returns nil if input is empty
 func StringOrNil(v string) *string {
 	if v == "" {
@@ -150,12 +203,12 @@ func StringOrNil(v string) *string {
 	return &v
 }
 
-//GetPrintableString returns the string content of a pointer, and "nil" if pointer is nil
-func GetPrintableString(v *string) string {
+//GetPrintableString returns the string content of a pointer, and defaultVal if pointer is nil
+func GetPrintableString(v *string, defaultVal string) string {
 	if v != nil {
 		return *v
 	}
-	return "nil"
+	return defaultVal
 }
 
 // ParseWebhookFilePath parses the commited file path in the webhook request
