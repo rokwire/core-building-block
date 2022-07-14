@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Changed
-- Permission assigners should be OR instead of AND [#482](https://github.com/rokwire/core-building-block/issues/482)]
+- BREAKING: Permission assigners should be OR instead of AND [#482](https://github.com/rokwire/core-building-block/issues/482)]
 
 ## [1.24.1] - 2022-07-07
 ### Changed
