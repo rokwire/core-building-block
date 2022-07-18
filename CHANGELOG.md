@@ -6,16 +6,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [1.24.1] - 2022-07-07
+### Changed
+- Expose full roles/groups in accounts [#528](https://github.com/rokwire/core-building-block/issues/528)
+
+## [1.24.0] - 2022-07-07
 ### Added
 - Expose get services registration Admin API [#521](https://github.com/rokwire/core-building-block/issues/521)
+- Admin update account authorizations API [#484](https://github.com/rokwire/core-building-block/issues/484)
+- Set up admin create account endpoint [#365](https://github.com/rokwire/core-building-block/issues/365)
 - Prepare the project to become open source [#129](https://github.com/rokwire/core-building-block/issues/129)
 - Retrieve all service account tokens at once [#459](https://github.com/rokwire/core-building-block/issues/459)
 
 ### Fixed
+- Fix admin authorization endpoints [#515](https://github.com/rokwire/core-building-block/issues/515)
 - Clean up authorization policies [#499](https://github.com/rokwire/core-building-block/issues/499)
 - Prevent admins from using service account management endpoints [#500](https://github.com/rokwire/core-building-block/issues/500)
 
 ### Changed
+- Get all admin level accounts [#486](https://github.com/rokwire/core-building-block/issues/486)
 - Update SECURITY.md [#504](https://github.com/rokwire/core-building-block/issues/504)
 
 ## [1.23.0] - 2022-04-26
@@ -288,7 +298,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Users authentication polish [#155](https://github.com/rokwire/core-building-block/issues/155)
 - Optimise the Mongo DB collections indexes usage [#146](https://github.com/rokwire/core-building-block/issues/146)
 
-[Unreleased]: https://github.com/rokwire/core-building-block/compare/v1.23.0...HEAD
+[Unreleased]: https://github.com/rokwire/core-building-block/compare/v1.24.1...HEAD
+[1.24.1]: https://github.com/rokwire/core-building-block/compare/v1.24.0...v1.24.1
+[1.24.0]: https://github.com/rokwire/core-building-block/compare/v1.23.0...v1.24.0
 [1.23.0]: https://github.com/rokwire/core-building-block/compare/v1.22.0...v1.23.0
 [1.22.0]: https://github.com/rokwire/core-building-block/compare/v1.21.1...v1.22.0
 [1.21.1]: https://github.com/rokwire/core-building-block/compare/v1.21.0...v1.21.1

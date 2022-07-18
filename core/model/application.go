@@ -50,12 +50,16 @@ const (
 	TypeApplicationConfigsVersion logutils.MessageDataType = "app config version number"
 	//TypeVersionNumbers ...
 	TypeVersionNumbers logutils.MessageDataType = "version numbers"
+
+	//PermissionAllSystemCore ...
+	PermissionAllSystemCore string = "all_system_core"
 )
 
 //Permission represents permission entity
 type Permission struct {
-	ID   string `bson:"_id"`
-	Name string `bson:"name"`
+	ID          string `bson:"_id"`
+	Name        string `bson:"name"`
+	Description string `bson:"description"`
 
 	ServiceID string   `bson:"service_id"`
 	Assigners []string `bson:"assigners"`
@@ -119,10 +123,10 @@ func (c AppOrgRole) CheckAssigners(assignerPermissions []string) error {
 	for _, permission := range c.Permissions {
 		err := permission.CheckAssigners(assignerPermissions)
 		if err != nil {
-			errors.Wrapf("error checking role permission assigners", err)
+			return errors.Wrapf("error checking role permission assigners", err)
 		}
 	}
-	//it satisies all permissions
+	//it satisfies all permissions
 	return nil
 }
 
@@ -132,8 +136,9 @@ func (c AppOrgRole) String() string {
 
 //AppOrgGroup represents application organization group entity. It is a collection of users
 type AppOrgGroup struct {
-	ID   string
-	Name string
+	ID          string
+	Name        string
+	Description string
 
 	System bool
 

@@ -53,9 +53,10 @@ type Account struct {
 
 	AppOrg ApplicationOrganization
 
-	Permissions []Permission
-	Roles       []AccountRole
-	Groups      []AccountGroup
+	HasPermissions bool
+	Permissions    []Permission
+	Roles          []AccountRole
+	Groups         []AccountGroup
 
 	AuthTypes []AccountAuthType
 
@@ -183,6 +184,15 @@ func (a Account) GetPermissionNamed(name string) *Permission {
 	return nil
 }
 
+//GetAssignedPermissionNames returns a list of names of directly assigned permissions for this account
+func (a Account) GetAssignedPermissionNames() []string {
+	names := make([]string, len(a.Permissions))
+	for i, permission := range a.Permissions {
+		names[i] = permission.Name
+	}
+	return names
+}
+
 //GetActiveRoles returns all active roles
 func (a Account) GetActiveRoles() []AccountRole {
 	roles := []AccountRole{}
@@ -204,6 +214,41 @@ func (a Account) GetRole(id string) *AccountRole {
 	return nil
 }
 
+//GetAssignedRoleIDs returns a list of IDs of directly assigned roles for this account
+func (a Account) GetAssignedRoleIDs() []string {
+	ids := make([]string, len(a.Roles))
+	for i, role := range a.Roles {
+		ids[i] = role.Role.ID
+	}
+	return ids
+}
+
+//CheckForRoleChanges checks for changes to account roles given a potential list of new roles
+func (a Account) CheckForRoleChanges(new []string) bool {
+	unchanged := make([]bool, len(a.Roles))
+
+	for _, newR := range new {
+		found := false
+		for i, r := range a.Roles {
+			if r.Role.ID == newR {
+				found = true
+				unchanged[i] = true
+				break
+			}
+		}
+		if !found {
+			return true
+		}
+	}
+	for i := range a.Roles {
+		if !unchanged[i] {
+			return true
+		}
+	}
+
+	return false
+}
+
 //GetActiveGroups returns all active groups
 func (a Account) GetActiveGroups() []AccountGroup {
 	groups := []AccountGroup{}
@@ -223,6 +268,41 @@ func (a Account) GetGroup(id string) *AccountGroup {
 		}
 	}
 	return nil
+}
+
+//GetAssignedGroupIDs returns a list of IDs of directly assigned groups for this account
+func (a Account) GetAssignedGroupIDs() []string {
+	ids := make([]string, len(a.Groups))
+	for i, group := range a.Groups {
+		ids[i] = group.Group.ID
+	}
+	return ids
+}
+
+//CheckForGroupChanges checks for changes to account groups given a potential list of new groups
+func (a Account) CheckForGroupChanges(new []string) bool {
+	unchanged := make([]bool, len(a.Groups))
+
+	for _, newG := range new {
+		found := false
+		for i, g := range a.Groups {
+			if g.Group.ID == newG {
+				found = true
+				unchanged[i] = true
+				break
+			}
+		}
+		if !found {
+			return true
+		}
+	}
+	for i := range a.Groups {
+		if !unchanged[i] {
+			return true
+		}
+	}
+
+	return false
 }
 
 //AccountRole represents a role assigned to an account
@@ -275,6 +355,20 @@ type AccountAuthType struct {
 
 	DateCreated time.Time
 	DateUpdated *time.Time
+}
+
+//SetUnverified sets the Unverified flag to value in the account auth type itself and the appropriate account auth type within the account member
+func (aat *AccountAuthType) SetUnverified(value bool) {
+	if aat == nil {
+		return
+	}
+
+	aat.Unverified = false
+	for i := 0; i < len(aat.Account.AuthTypes); i++ {
+		if aat.Account.AuthTypes[i].ID == aat.ID {
+			aat.Account.AuthTypes[i].Unverified = false
+		}
+	}
 }
 
 //Credential represents a credential for account auth type/s

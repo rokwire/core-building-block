@@ -19,7 +19,7 @@ get:
           schema:
             type: array
             items:
-              $ref: "../../../schemas/application/PermissionFields.yaml"
+              $ref: "../../../schemas/application/Permission.yaml"
     400:
       description: Bad request
     401:

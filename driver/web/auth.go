@@ -173,6 +173,9 @@ func (auth *ServicesAuth) check(req *http.Request) (int, *tokenauth.Claims, erro
 	if claims.Admin {
 		return http.StatusUnauthorized, nil, errors.ErrorData(logutils.StatusInvalid, "admin claim", nil)
 	}
+	if claims.System {
+		return http.StatusUnauthorized, nil, errors.ErrorData(logutils.StatusInvalid, "system claim", nil)
+	}
 
 	err = auth.tokenAuth.AuthorizeRequestScope(claims, req)
 	if err != nil {
@@ -187,9 +190,10 @@ func (auth *ServicesAuth) getTokenAuth() *tokenauth.TokenAuth {
 }
 
 func newServicesAuth(coreAPIs *core.APIs, authService *authservice.AuthService, serviceID string, logger *logs.Logger) (*ServicesAuth, error) {
-	servicesScopeAuth := authorization.NewCasbinScopeAuthorization("driver/web/authorization_services_policy.csv", serviceID)
+	servicesScopeAuth := authorization.NewCasbinScopeAuthorization("driver/web/scope_authorization_services_policy.csv", serviceID)
+	servicesPermissionAuth := authorization.NewCasbinStringAuthorization("driver/web/authorization_services_policy.csv")
 
-	servicesTokenAuth, err := tokenauth.NewTokenAuth(true, authService, nil, servicesScopeAuth)
+	servicesTokenAuth, err := tokenauth.NewTokenAuth(true, authService, servicesPermissionAuth, servicesScopeAuth)
 
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionStart, "token auth for servicesAuth", nil, err)
@@ -358,10 +362,6 @@ func (auth *SystemAuth) check(req *http.Request) (int, *tokenauth.Claims, error)
 	claims, err := auth.tokenAuth.CheckRequestTokens(req)
 	if err != nil {
 		return http.StatusUnauthorized, nil, errors.WrapErrorAction(typeCheckSystemAuthRequestToken, logutils.TypeToken, nil, err)
-	}
-
-	if !claims.Admin {
-		return http.StatusUnauthorized, nil, errors.ErrorData(logutils.StatusInvalid, "admin claim", nil)
 	}
 
 	if !claims.System {

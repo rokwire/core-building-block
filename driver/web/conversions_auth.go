@@ -178,7 +178,7 @@ func serviceAccountCredentialToDef(item *model.ServiceAccountCredential) *Def.Se
 
 	id := item.ID
 	params := item.Params
-	dateCreated := item.DateCreated.Format("2006-01-02T15:04:05.000Z")
+	dateCreated := utils.FormatTime(&item.DateCreated)
 
 	return &Def.ServiceAccountCredential{Id: &id, Name: item.Name, Type: Def.ServiceAccountCredentialType(item.Type),
 		Params: &params, DateCreated: &dateCreated}
