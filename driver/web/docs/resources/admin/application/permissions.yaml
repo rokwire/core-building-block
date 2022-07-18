@@ -5,7 +5,7 @@ get:
   description: |
     Get application permissions
 
-    **Auth:** Requires admin access token with at least one of the following permissions:
+    **Auth:** Requires admin access token with 'get_permissions' permission:
     - 'get_permissions'
     - `update_account-permissions`
     - `update_account-authorization`

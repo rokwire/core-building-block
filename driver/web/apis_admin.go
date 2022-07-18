@@ -800,14 +800,14 @@ func (h AdminApisHandler) adminGrantPermissionsToRole(l *logs.Log, r *http.Reque
 func (h AdminApisHandler) getServiceRegistrations(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	//orgID
 	var orgID *string
-	orgIDParam := r.URL.Query().Get("orgID")
+	orgIDParam := r.URL.Query().Get("org-id")
 	if len(orgIDParam) > 0 {
 		orgID = &orgIDParam
 	}
 
 	//appID
 	var appID *string
-	appIDParam := r.URL.Query().Get("appID")
+	appIDParam := r.URL.Query().Get("app-id")
 	if len(appIDParam) > 0 {
 		appID = &appIDParam
 	}
