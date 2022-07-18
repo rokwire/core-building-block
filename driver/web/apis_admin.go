@@ -1001,6 +1001,35 @@ func (h AdminApisHandler) grantPermissionsToRole(l *logs.Log, r *http.Request, c
 	return l.HttpResponseSuccess()
 }
 
+func (h AdminApisHandler) getServiceRegistrations(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	//orgID
+	var orgID *string
+	orgIDParam := r.URL.Query().Get("org-id")
+	if len(orgIDParam) > 0 {
+		orgID = &orgIDParam
+	}
+
+	//appID
+	var appID *string
+	appIDParam := r.URL.Query().Get("app-id")
+	if len(appIDParam) > 0 {
+		appID = &appIDParam
+	}
+
+	getServiceRegs, err := h.coreAPIs.Administration.AdmGetServiceRegs(appID, orgID, l)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeServiceReg, nil, err, http.StatusInternalServerError, true)
+	}
+
+	response := serviceRegListToDef(getServiceRegs)
+
+	data, err := json.Marshal(response)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeAppOrgRole, nil, err, http.StatusInternalServerError, false)
+	}
+	return l.HttpResponseSuccessJSON(data)
+}
+
 //NewAdminApisHandler creates new admin rest Handler instance
 func NewAdminApisHandler(coreAPIs *core.APIs) AdminApisHandler {
 	return AdminApisHandler{coreAPIs: coreAPIs}

@@ -263,6 +263,18 @@ func applicationOrganizationFromStorage(item applicationOrganization, applicatio
 		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
+func applicationOrganizationsFromStorage(itemsList []applicationOrganization) []model.ApplicationOrganization {
+	if len(itemsList) == 0 {
+		return make([]model.ApplicationOrganization, 0)
+	}
+
+	var items []model.ApplicationOrganization
+	for _, appOrg := range itemsList {
+		items = append(items, applicationOrganizationFromStorage(appOrg, model.Application{}, model.Organization{}))
+	}
+	return items
+}
+
 func applicationTypeToStorage(item model.ApplicationType) applicationType {
 	return applicationType{ID: item.ID, Identifier: item.Identifier, Name: item.Name, Versions: versionsToStorage(item.Versions)}
 }

@@ -900,3 +900,29 @@ func (app *application) admGrantPermissionsToRole(appID string, orgID string, ro
 
 	return nil
 }
+
+func (app *application) admGetServiceRegs(appID *string, orgID *string, l *logs.Log) ([]model.ServiceReg, error) {
+	if appID != nil || orgID != nil {
+		appOrg, err := app.storage.FindApplicationsOrganizationsByAppAndOrgID(appID, orgID)
+		if err != nil {
+			return nil, errors.Wrapf("error finding app org on getting devices", err)
+		}
+		var serviceIDs []string
+		for _, appOrg := range appOrg {
+			if appOrg.ServicesIDs != nil {
+				serviceIDs = append(serviceIDs, appOrg.ServicesIDs...)
+			}
+		}
+		serviceRegs, err := app.storage.FindServiceRegs(serviceIDs)
+		if err != nil {
+			return nil, nil
+		}
+		return serviceRegs, nil
+	} else {
+		serviceRegs, err := app.storage.FindAllServiceRegs()
+		if err != nil {
+			return nil, nil
+		}
+		return serviceRegs, nil
+	}
+}

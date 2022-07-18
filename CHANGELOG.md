@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.24.0] - 2022-07-07
 ### Added
+- Expose get services registration Admin API [#521](https://github.com/rokwire/core-building-block/issues/521)
 - Admin update account authorizations API [#484](https://github.com/rokwire/core-building-block/issues/484)
 - Set up admin create account endpoint [#365](https://github.com/rokwire/core-building-block/issues/365)
 - Prepare the project to become open source [#129](https://github.com/rokwire/core-building-block/issues/129)

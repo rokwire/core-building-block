@@ -74,6 +74,7 @@ type Administration interface {
 	AdmDeleteApplicationLoginSession(appID string, orgID string, currentAccountID string, identifier string, sessionID string, l *logs.Log) error
 
 	AdmGetApplicationAccountDevices(appID string, orgID string, accountID string, l *logs.Log) ([]model.Device, error)
+	AdmGetServiceRegs(appID *string, orgID *string, l *logs.Log) ([]model.ServiceReg, error)
 }
 
 //Encryption exposes APIs for the Encryption building block
@@ -198,10 +199,13 @@ type Storage interface {
 	DeleteAppConfig(ID string) error
 
 	FindApplicationsOrganizationsByOrgID(orgID string) ([]model.ApplicationOrganization, error)
+	FindApplicationsOrganizationsByAppAndOrgID(appID *string, orgID *string) ([]model.ApplicationOrganization, error)
 	FindApplicationOrganization(appID string, orgID string) (*model.ApplicationOrganization, error)
 	InsertApplicationOrganization(context storage.TransactionContext, applicationOrganization model.ApplicationOrganization) (*model.ApplicationOrganization, error)
 
 	InsertAPIKey(context storage.TransactionContext, apiKey model.APIKey) (*model.APIKey, error)
+	FindServiceRegs(serviceIDs []string) ([]model.ServiceReg, error)
+	FindAllServiceRegs() ([]model.ServiceReg, error)
 }
 
 //StorageListener listenes for change data storage events

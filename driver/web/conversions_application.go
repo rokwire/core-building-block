@@ -62,7 +62,7 @@ func applicationTypeToDef(item *model.ApplicationType) *Def.ApplicationType {
 
 func applicationToDef(item model.Application) Def.ApplicationFields {
 
-	return Def.ApplicationFields{Id: item.ID, Name: item.Name, MultiTenant: &item.MultiTenant,
+	return Def.ApplicationFields{Id: &item.ID, Name: item.Name, MultiTenant: &item.MultiTenant,
 		SharedIdentities: &item.SharedIdentities}
 }
 
@@ -112,7 +112,7 @@ func appOrgRoleToDef(item model.AppOrgRole) Def.AppOrgRole {
 		dateUpdated = &formatted
 	}
 
-	return Def.AppOrgRole{Id: item.ID, Name: item.Name, Description: &item.Description, System: &item.System, DateCreated: &dateCreated, DateUpdated: dateUpdated, Permissions: &permissions}
+	return Def.AppOrgRole{Id: &item.ID, Name: item.Name, Description: &item.Description, System: &item.System, DateCreated: &dateCreated, DateUpdated: dateUpdated, Permissions: &permissions}
 }
 
 func appOrgRolesToDef(items []model.AppOrgRole) []Def.AppOrgRole {
@@ -136,7 +136,7 @@ func appOrgGroupToDef(item model.AppOrgGroup) Def.AppOrgGroup {
 		dateUpdated = &formatted
 	}
 
-	return Def.AppOrgGroup{Id: item.ID, Name: item.Name, Description: &item.Description, System: &item.System, DateCreated: &dateCreated, DateUpdated: dateUpdated, Permissions: &permissions, Roles: &roles}
+	return Def.AppOrgGroup{Id: &item.ID, Name: item.Name, Description: &item.Description, System: &item.System, DateCreated: &dateCreated, DateUpdated: dateUpdated, Permissions: &permissions, Roles: &roles}
 }
 
 func appOrgGroupsToDef(items []model.AppOrgGroup) []Def.AppOrgGroup {
@@ -153,7 +153,7 @@ func organizationToDef(item *model.Organization) *Def.Organization {
 		return nil
 	}
 
-	fields := Def.OrganizationFields{Id: item.ID, Name: item.Name, Type: Def.OrganizationFieldsType(item.Type)}
+	fields := Def.OrganizationFields{Id: &item.ID, Name: item.Name, Type: Def.OrganizationFieldsType(item.Type)}
 	config := item.Config
 
 	return &Def.Organization{Config: organizationConfigToDef(&config), Fields: &fields}
