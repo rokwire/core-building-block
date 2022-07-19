@@ -2044,7 +2044,7 @@ func (sa *Adapter) UpdateLoginSessionExternalIDs(accountID string, externalIDs m
 
 //CountAccountsByRoleID counts how many accounts there are with the passed role id
 func (sa *Adapter) CountAccountsByRoleID(roleID string) (*int64, error) {
-	filter := bson.D{primitive.E{Key: "roles._id", Value: roleID}}
+	filter := bson.D{primitive.E{Key: "roles.role._id", Value: roleID}}
 
 	count, err := sa.db.accounts.CountDocuments(filter)
 	if err != nil {
@@ -2055,7 +2055,7 @@ func (sa *Adapter) CountAccountsByRoleID(roleID string) (*int64, error) {
 
 //CountAccountsByGroupID counts how many accounts there are with the passed group id
 func (sa *Adapter) CountAccountsByGroupID(groupID string) (*int64, error) {
-	filter := bson.D{primitive.E{Key: "groups._id", Value: groupID}}
+	filter := bson.D{primitive.E{Key: "groups.group._id", Value: groupID}}
 
 	count, err := sa.db.accounts.CountDocuments(filter)
 	if err != nil {
