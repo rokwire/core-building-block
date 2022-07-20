@@ -214,7 +214,7 @@ _admin_req_create-application_role:
   $ref: "./apis/admin/application/roles/request/Request.yaml"
 
 ### admin application_groups API
-_admin_req_create-application_group:
+_admin_req_application_group:
   $ref: "./apis/admin/application/groups/request/Request.yaml"
 
 ### admin add-accounts-to-group API

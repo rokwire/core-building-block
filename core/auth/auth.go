@@ -1404,17 +1404,17 @@ func (a *Auth) constructAccount(context storage.TransactionContext, authType mod
 	var roles []model.AppOrgRole
 	var groups []model.AppOrgGroup
 	if adminSet {
-		permissions, err = a.CheckPermissions(context, &appOrg, permissionNames, assignerPermissions)
+		permissions, err = a.CheckPermissions(context, &appOrg, permissionNames, assignerPermissions, false)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypePermission, nil, err)
 		}
 
-		roles, err = a.CheckRoles(context, &appOrg, roleIDs, assignerPermissions)
+		roles, err = a.CheckRoles(context, &appOrg, roleIDs, assignerPermissions, false)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeAppOrgRole, nil, err)
 		}
 
-		groups, err = a.checkGroups(context, appOrg, groupIDs, assignerPermissions)
+		groups, err = a.CheckGroups(context, &appOrg, groupIDs, assignerPermissions, false)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeAppOrgGroup, nil, err)
 		}
@@ -1473,59 +1473,6 @@ func (a *Auth) storeNewAccountInfo(context storage.TransactionContext, account m
 		err = a.storage.UpdateProfile(context, profile)
 		if err != nil {
 			return errors.Wrapf("error updating profile on register", err)
-		}
-	}
-
-	return nil
-}
-
-func (a *Auth) checkGroups(context storage.TransactionContext, appOrg model.ApplicationOrganization, groupIDs []string, assignerPermissions []string) ([]model.AppOrgGroup, error) {
-	//find groups
-	groups, err := a.storage.FindAppOrgGroupsByIDs(context, groupIDs, appOrg.ID)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgGroup, nil, err)
-	}
-	if len(groups) != len(groupIDs) {
-		badIDs := make([]string, 0)
-		for _, gID := range groupIDs {
-			bad := true
-			for _, g := range groups {
-				if g.ID == gID {
-					bad = false
-					break
-				}
-			}
-			if bad {
-				badIDs = append(badIDs, gID)
-			}
-		}
-		return nil, errors.ErrorData(logutils.StatusInvalid, model.TypeAppOrgGroup, &logutils.FieldArgs{"ids": badIDs})
-	}
-
-	//check assigners
-	for _, group := range groups {
-		err = group.CheckAssigners(assignerPermissions)
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionValidate, "assigner permissions", &logutils.FieldArgs{"id": group.ID}, err)
-		}
-	}
-
-	return groups, nil
-}
-
-func (a *Auth) checkRevokedGroups(context storage.TransactionContext, appOrg model.ApplicationOrganization, groupIDs []string, assignerPermissions []string) error {
-	//find groups
-	groups, err := a.storage.FindAppOrgGroupsByIDs(context, groupIDs, appOrg.ID)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgGroup, nil, err)
-	}
-	//Revoke missing groups
-
-	//check assigners
-	for _, group := range groups {
-		err = group.CheckAssigners(assignerPermissions)
-		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionValidate, "assigner permissions", &logutils.FieldArgs{"id": group.ID}, err)
 		}
 	}
 
