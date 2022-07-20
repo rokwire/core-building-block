@@ -2685,6 +2685,8 @@ func (sa *Adapter) UpdateAppOrgGroup(context TransactionContext, item model.AppO
 		return errors.ErrorData(logutils.StatusMissing, "transaction context", nil)
 	}
 
+	roles := appOrgRolesToStorage(item.Roles)
+
 	// update group
 	groupFilter := bson.D{primitive.E{Key: "_id", Value: item.ID}}
 	groupUpdate := bson.D{
@@ -2692,7 +2694,7 @@ func (sa *Adapter) UpdateAppOrgGroup(context TransactionContext, item model.AppO
 			primitive.E{Key: "name", Value: item.Name},
 			primitive.E{Key: "description", Value: item.Description},
 			primitive.E{Key: "permissions", Value: item.Permissions},
-			primitive.E{Key: "roles", Value: item.Roles},
+			primitive.E{Key: "roles", Value: roles},
 			primitive.E{Key: "system", Value: item.System},
 			primitive.E{Key: "date_updated", Value: item.DateUpdated},
 		}},
@@ -2713,7 +2715,7 @@ func (sa *Adapter) UpdateAppOrgGroup(context TransactionContext, item model.AppO
 			primitive.E{Key: "groups.$.group.name", Value: item.Name},
 			primitive.E{Key: "groups.$.group.description", Value: item.Description},
 			primitive.E{Key: "groups.$.group.permissions", Value: item.Permissions},
-			primitive.E{Key: "groups.$.group.roles", Value: item.Roles},
+			primitive.E{Key: "groups.$.group.roles", Value: roles},
 			primitive.E{Key: "groups.$.group.system", Value: item.System},
 			primitive.E{Key: "groups.$.group.date_updated", Value: item.DateUpdated},
 		}},

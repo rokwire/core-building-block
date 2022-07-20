@@ -698,13 +698,13 @@ func (h AdminApisHandler) createApplicationGroup(l *logs.Log, r *http.Request, c
 	}
 
 	if len(permissionNames) == 0 && len(rolesIDs) == 0 {
-		return l.HttpResponseErrorData(logutils.StatusMissing, "permissions and application organization roles", nil, nil, http.StatusBadRequest, true)
+		return l.HttpResponseErrorData(logutils.StatusMissing, "permissions and application organization roles", nil, nil, http.StatusBadRequest, false)
 	}
 
 	assignerPermissions := strings.Split(claims.Permissions, ",")
 	group, err := h.coreAPIs.Administration.AdmCreateAppOrgGroup(requestData.Name, requestData.Description, system, permissionNames, rolesIDs, claims.AppID, claims.OrgID, assignerPermissions, claims.System, l)
 	if err != nil || group == nil {
-		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeAppOrgGroup, nil, err, http.StatusInternalServerError, true)
+		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypeAppOrgGroup, nil, err, http.StatusInternalServerError, true)
 	}
 
 	respGroup := appOrgGroupToDef(*group)
@@ -752,13 +752,13 @@ func (h AdminApisHandler) updateApplicationGroup(l *logs.Log, r *http.Request, c
 	}
 
 	if len(permissionNames) == 0 && len(rolesIDs) == 0 {
-		return l.HttpResponseErrorData(logutils.StatusMissing, "permissions and application organization roles", nil, nil, http.StatusBadRequest, true)
+		return l.HttpResponseErrorData(logutils.StatusMissing, "permissions and application organization roles", nil, nil, http.StatusBadRequest, false)
 	}
 
 	assignerPermissions := strings.Split(claims.Permissions, ",")
 	group, err := h.coreAPIs.Administration.AdmUpdateAppOrgGroup(groupID, requestData.Name, requestData.Description, system, permissionNames, rolesIDs, claims.AppID, claims.OrgID, assignerPermissions, claims.System, l)
 	if err != nil || group == nil {
-		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeAppOrgGroup, nil, err, http.StatusInternalServerError, true)
+		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeAppOrgGroup, nil, err, http.StatusInternalServerError, true)
 	}
 
 	respGroup := appOrgGroupToDef(*group)
