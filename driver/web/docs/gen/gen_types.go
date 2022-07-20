@@ -600,11 +600,13 @@ type AdminReqAddAccountsToGroup struct {
 	AccountIds []string `json:"account_ids"`
 }
 
-// AdminReqCreateApplicationGroup defines model for _admin_req_create-application_group.
-type AdminReqCreateApplicationGroup struct {
+// AdminReqApplicationGroup defines model for _admin_req_application_group.
+type AdminReqApplicationGroup struct {
+	Description string    `json:"description"`
 	Name        string    `json:"name"`
 	Permissions *[]string `json:"permissions,omitempty"`
 	Roles       *[]string `json:"roles,omitempty"`
+	System      *bool     `json:"system,omitempty"`
 }
 
 // AdminReqCreateApplicationRole defines model for _admin_req_create-application_role.
@@ -1245,7 +1247,10 @@ type DeleteAdminApplicationAccountsIdRolesJSONBody AdminReqRevokeRolesFromAccoun
 type PutAdminApplicationAccountsIdRolesJSONBody AdminReqGrantRolesToAccount
 
 // PostAdminApplicationGroupsJSONBody defines parameters for PostAdminApplicationGroups.
-type PostAdminApplicationGroupsJSONBody AdminReqCreateApplicationGroup
+type PostAdminApplicationGroupsJSONBody AdminReqApplicationGroup
+
+// PutAdminApplicationGroupsIdJSONBody defines parameters for PutAdminApplicationGroupsId.
+type PutAdminApplicationGroupsIdJSONBody AdminReqApplicationGroup
 
 // DeleteAdminApplicationGroupsIdAccountsJSONBody defines parameters for DeleteAdminApplicationGroupsIdAccounts.
 type DeleteAdminApplicationGroupsIdAccountsJSONBody AdminReqRemoveAccountFromGroup
@@ -1685,6 +1690,9 @@ type PutAdminApplicationAccountsIdRolesJSONRequestBody PutAdminApplicationAccoun
 
 // PostAdminApplicationGroupsJSONRequestBody defines body for PostAdminApplicationGroups for application/json ContentType.
 type PostAdminApplicationGroupsJSONRequestBody PostAdminApplicationGroupsJSONBody
+
+// PutAdminApplicationGroupsIdJSONRequestBody defines body for PutAdminApplicationGroupsId for application/json ContentType.
+type PutAdminApplicationGroupsIdJSONRequestBody PutAdminApplicationGroupsIdJSONBody
 
 // DeleteAdminApplicationGroupsIdAccountsJSONRequestBody defines body for DeleteAdminApplicationGroupsIdAccounts for application/json ContentType.
 type DeleteAdminApplicationGroupsIdAccountsJSONRequestBody DeleteAdminApplicationGroupsIdAccountsJSONBody
