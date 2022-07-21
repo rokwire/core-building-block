@@ -173,21 +173,24 @@ func (app *application) sysCreatePermission(name string, description *string, se
 	if description != nil {
 		descriptionVal = *description
 	}
+	assignersVal := make([]string, 0)
+	if assigners != nil {
+		assignersVal = *assigners
+	}
 
-	permission := model.Permission{ID: id.String(), Name: name, Description: descriptionVal, DateCreated: now, ServiceID: serviceIDVal, Assigners: *assigners}
-
+	permission := model.Permission{ID: id.String(), Name: name, Description: descriptionVal, DateCreated: now, ServiceID: serviceIDVal, Assigners: assignersVal}
 	err := app.storage.InsertPermission(nil, permission)
-
 	if err != nil {
 		return nil, err
 	}
+
 	return &permission, nil
 }
 
 func (app *application) sysUpdatePermission(name string, description *string, serviceID *string, assigners *[]string) (*model.Permission, error) {
 	var updatedPermission *model.Permission
 	transaction := func(context storage.TransactionContext) error {
-		//1.
+		//1. find permission
 		permissionNames := []string{name}
 		permissions, err := app.storage.FindPermissionsByName(context, permissionNames)
 		if err != nil {
@@ -197,6 +200,7 @@ func (app *application) sysUpdatePermission(name string, description *string, se
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypePermission, nil, err)
 		}
 
+		//2. update permission data as needed
 		permission := permissions[0]
 		updated := false
 		if description != nil {
@@ -212,6 +216,7 @@ func (app *application) sysUpdatePermission(name string, description *string, se
 			updated = true
 		}
 
+		//3. if permission data changed, update in storage
 		if updated {
 			now := time.Now().UTC()
 			permission.DateUpdated = &now
@@ -221,6 +226,7 @@ func (app *application) sysUpdatePermission(name string, description *string, se
 			}
 		}
 
+		updatedPermission = &permission
 		return nil
 	}
 
