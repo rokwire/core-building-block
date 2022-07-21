@@ -185,32 +185,51 @@ func (app *application) sysCreatePermission(name string, description *string, se
 }
 
 func (app *application) sysUpdatePermission(name string, description *string, serviceID *string, assigners *[]string) (*model.Permission, error) {
-	permissionNames := []string{name}
-	permissions, err := app.storage.FindPermissionsByName(nil, permissionNames)
+	var updatedPermission *model.Permission
+	transaction := func(context storage.TransactionContext) error {
+		//1.
+		permissionNames := []string{name}
+		permissions, err := app.storage.FindPermissionsByName(context, permissionNames)
+		if err != nil {
+			return err
+		}
+		if permissions == nil || len(permissions) < 1 {
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypePermission, nil, err)
+		}
+
+		permission := permissions[0]
+		updated := false
+		if description != nil {
+			permission.Description = *description
+			updated = true
+		}
+		if serviceID != nil {
+			permission.ServiceID = *serviceID
+			updated = true
+		}
+		if assigners != nil {
+			permission.Assigners = *assigners
+			updated = true
+		}
+
+		if updated {
+			now := time.Now().UTC()
+			permission.DateUpdated = &now
+			err = app.storage.UpdatePermission(context, permission)
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
+	}
+
+	err := app.storage.PerformTransaction(transaction)
 	if err != nil {
 		return nil, err
 	}
-	if permissions == nil || len(permissions) < 1 {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypePermission, nil, err)
-	}
 
-	permission := permissions[0]
-	if description != nil {
-		permission.Description = *description
-	}
-	if serviceID != nil {
-		permission.ServiceID = *serviceID
-	}
-	if assigners != nil {
-		permission.Assigners = *assigners
-	}
-
-	err = app.storage.UpdatePermission(permission)
-	if err != nil {
-		return nil, err
-	}
-
-	return &permission, nil
+	return updatedPermission, nil
 }
 
 func (app *application) sysGetAppConfigs(appTypeID string, orgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error) {
