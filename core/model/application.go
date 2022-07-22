@@ -428,3 +428,66 @@ func VersionNumbersFromString(version string) *VersionNumbers {
 
 	return &VersionNumbers{Major: major, Minor: minor, Patch: patch}
 }
+
+//GetMissingPermissionNames returns a list of permission names missing from items
+func GetMissingPermissionNames(items []Permission, names []string) ([]string, error) {
+	if len(items) != len(names) {
+		badNames := make([]string, 0)
+		for _, name := range names {
+			bad := true
+			for _, e := range items {
+				if e.Name == name {
+					bad = false
+					break
+				}
+			}
+			if bad {
+				badNames = append(badNames, name)
+			}
+		}
+		return nil, errors.ErrorData(logutils.StatusInvalid, TypePermission, &logutils.FieldArgs{"names": badNames})
+	}
+	return nil, nil
+}
+
+//GetMissingRoleIDs returns a list of role IDs missing from items
+func GetMissingRoleIDs(items []AppOrgRole, ids []string) ([]string, error) {
+	if len(items) != len(ids) {
+		badIDs := make([]string, 0)
+		for _, id := range ids {
+			bad := true
+			for _, e := range items {
+				if e.ID == id {
+					bad = false
+					break
+				}
+			}
+			if bad {
+				badIDs = append(badIDs, id)
+			}
+		}
+		return nil, errors.ErrorData(logutils.StatusInvalid, TypeAppOrgRole, &logutils.FieldArgs{"ids": badIDs})
+	}
+	return nil, nil
+}
+
+//GetMissingGroupIDs returns a list of group IDs missing from items
+func GetMissingGroupIDs(items []AppOrgGroup, ids []string) ([]string, error) {
+	if len(items) != len(ids) {
+		badIDs := make([]string, 0)
+		for _, id := range ids {
+			bad := true
+			for _, e := range items {
+				if e.ID == id {
+					bad = false
+					break
+				}
+			}
+			if bad {
+				badIDs = append(badIDs, id)
+			}
+		}
+		return nil, errors.ErrorData(logutils.StatusInvalid, TypeAppOrgGroup, &logutils.FieldArgs{"ids": badIDs})
+	}
+	return nil, nil
+}

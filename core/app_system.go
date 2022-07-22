@@ -17,6 +17,7 @@ package core
 import (
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
+	"core-building-block/utils"
 	"time"
 
 	"github.com/google/uuid"
@@ -162,32 +163,44 @@ func (app *application) sysGetApplications() ([]model.Application, error) {
 	return getApplications, nil
 }
 
-func (app *application) sysCreatePermission(name string, description *string, serviceID *string, assigners *[]string) (*model.Permission, error) {
-	id, _ := uuid.NewUUID()
-	now := time.Now()
-	serviceIDVal := ""
-	if serviceID != nil {
-		serviceIDVal = *serviceID
-	}
-	descriptionVal := ""
-	if description != nil {
-		descriptionVal = *description
-	}
-	assignersVal := make([]string, 0)
-	if assigners != nil {
-		assignersVal = *assigners
+func (app *application) sysCreatePermission(name string, description string, serviceID string, assigners *[]string) (*model.Permission, error) {
+	var newPermission *model.Permission
+	transaction := func(context storage.TransactionContext) error {
+		//1.
+		id, _ := uuid.NewUUID()
+		now := time.Now()
+		assignersVal := make([]string, 0)
+		if assigners != nil {
+			assignersVal = *assigners
+			assignerPermissions, err := app.storage.FindPermissionsByName(context, assignersVal)
+			if err != nil {
+				return err
+			}
+			_, err = model.GetMissingPermissionNames(assignerPermissions, assignersVal)
+			if err != nil {
+				return err
+			}
+		}
+
+		permission := model.Permission{ID: id.String(), Name: name, Description: description, DateCreated: now, ServiceID: serviceID, Assigners: assignersVal}
+		err := app.storage.InsertPermission(context, permission)
+		if err != nil {
+			return err
+		}
+
+		newPermission = &permission
+		return nil
 	}
 
-	permission := model.Permission{ID: id.String(), Name: name, Description: descriptionVal, DateCreated: now, ServiceID: serviceIDVal, Assigners: assignersVal}
-	err := app.storage.InsertPermission(nil, permission)
+	err := app.storage.PerformTransaction(transaction)
 	if err != nil {
 		return nil, err
 	}
 
-	return &permission, nil
+	return newPermission, nil
 }
 
-func (app *application) sysUpdatePermission(name string, description *string, serviceID *string, assigners *[]string) (*model.Permission, error) {
+func (app *application) sysUpdatePermission(name string, description string, serviceID string, assigners *[]string) (*model.Permission, error) {
 	var updatedPermission *model.Permission
 	transaction := func(context storage.TransactionContext) error {
 		//1. find permission
@@ -203,20 +216,35 @@ func (app *application) sysUpdatePermission(name string, description *string, se
 		//2. update permission data as needed
 		permission := permissions[0]
 		updated := false
-		if description != nil {
-			permission.Description = *description
+		if description != permission.Description {
+			permission.Description = description
 			updated = true
 		}
-		if serviceID != nil {
-			permission.ServiceID = *serviceID
+		if serviceID != permission.ServiceID {
+			permission.ServiceID = serviceID
 			updated = true
 		}
+
+		//3. if assigners changed, check that they exist
+		assignersVal := make([]string, 0)
 		if assigners != nil {
+			assignersVal = *assigners
+		}
+		if !utils.DeepEqual(assignersVal, permission.Assigners) {
+			assignerPermissions, err := app.storage.FindPermissionsByName(context, assignersVal)
+			if err != nil {
+				return err
+			}
+			_, err = model.GetMissingPermissionNames(assignerPermissions, assignersVal)
+			if err != nil {
+				return err
+			}
+
 			permission.Assigners = *assigners
 			updated = true
 		}
 
-		//3. if permission data changed, update in storage
+		//4. if permission data changed, update in storage
 		if updated {
 			now := time.Now().UTC()
 			permission.DateUpdated = &now

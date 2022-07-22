@@ -1137,9 +1137,9 @@ type SystemReqPermissions struct {
 
 	// permissions that could assign current permission to accounts
 	Assigners   *[]string `json:"assigners,omitempty"`
-	Description *string   `json:"description,omitempty"`
+	Description string    `json:"description"`
 	Name        string    `json:"name"`
-	ServiceId   *string   `json:"service_id,omitempty"`
+	ServiceId   string    `json:"service_id"`
 }
 
 // SystemReqUpdateOrganization defines model for _system_req_update_Organization.

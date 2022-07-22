@@ -1485,21 +1485,9 @@ func (a *Auth) checkGroups(context storage.TransactionContext, appOrg model.Appl
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgGroup, nil, err)
 	}
-	if len(groups) != len(groupIDs) {
-		badIDs := make([]string, 0)
-		for _, gID := range groupIDs {
-			bad := true
-			for _, g := range groups {
-				if g.ID == gID {
-					bad = false
-					break
-				}
-			}
-			if bad {
-				badIDs = append(badIDs, gID)
-			}
-		}
-		return nil, errors.ErrorData(logutils.StatusInvalid, model.TypeAppOrgGroup, &logutils.FieldArgs{"ids": badIDs})
+	_, err = model.GetMissingGroupIDs(groups, groupIDs)
+	if err != nil {
+		return nil, err
 	}
 
 	//check assigners

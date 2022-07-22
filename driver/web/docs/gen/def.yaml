@@ -6279,6 +6279,8 @@ components:
     _system_req_permissions:
       required:
         - name
+        - description
+        - service_id
       type: object
       properties:
         name:
