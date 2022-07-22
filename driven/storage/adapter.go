@@ -117,6 +117,7 @@ func (sa *Adapter) RegisterStorageListener(storageListener Listener) {
 
 //PerformTransaction performs a transaction
 func (sa *Adapter) PerformTransaction(transaction func(context TransactionContext) error) error {
+	//TODO: may want to add timeout arg to PerformTransaction to be able to specify individual timeouts (mainly for slow operations)
 	// transaction
 	err := sa.db.dbClient.UseSession(context.Background(), func(sessionContext mongo.SessionContext) error {
 		err := sessionContext.StartTransaction()
@@ -2406,32 +2407,67 @@ func (sa *Adapter) InsertPermission(context TransactionContext, permission model
 }
 
 //UpdatePermission updates permission
-func (sa *Adapter) UpdatePermission(item model.Permission) error {
+func (sa *Adapter) UpdatePermission(context TransactionContext, item model.Permission) error {
 	//TODO
 	//This will be slow operation as we keep a copy of the entity in the users collection without index.
 	//Maybe we need to up the transaction timeout for this operation because of this.
-	//TODO
-	//Update the permission in all collection where there is a copy of it - accounts, application_roles, application_groups, service_accounts
+	if context == nil {
+		return errors.ErrorData(logutils.StatusMissing, "transaction context", nil)
+	}
 
-	// Update serviceIDs
-	filter := bson.D{primitive.E{Key: "name", Value: item.Name}}
-
-	now := time.Now().UTC()
+	//update permission
+	permissionFilter := bson.D{primitive.E{Key: "name", Value: item.Name}}
 	permissionUpdate := bson.D{
 		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "description", Value: item.Description},
 			primitive.E{Key: "service_id", Value: item.ServiceID},
 			primitive.E{Key: "assigners", Value: item.Assigners},
-			primitive.E{Key: "date_updated", Value: &now},
+			primitive.E{Key: "date_updated", Value: item.DateUpdated},
 		}},
 	}
 
-	res, err := sa.db.permissions.UpdateOne(filter, permissionUpdate, nil)
+	res, err := sa.db.permissions.UpdateOneWithContext(context, permissionFilter, permissionUpdate, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypePermission, &logutils.FieldArgs{"name": item.Name}, err)
 	}
-
 	if res.ModifiedCount != 1 {
-		return errors.ErrorAction(logutils.ActionUpdate, model.TypePermission, logutils.StringArgs("unexpected modified count"))
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypePermission, &logutils.FieldArgs{"name": item.Name, "modified": res.ModifiedCount, "expected": 1})
+	}
+
+	//update all roles, groups, accounts, and service accounts that have the permission
+	dependentsFilter := bson.D{primitive.E{Key: "permissions.name", Value: item.Name}}
+	dependentsUpdate := bson.D{
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "permissions.$.description", Value: item.Description},
+			primitive.E{Key: "permissions.$.service_id", Value: item.ServiceID},
+			primitive.E{Key: "permissions.$.assigners", Value: item.Assigners},
+			primitive.E{Key: "permissions.$.date_updated", Value: item.DateUpdated},
+			// primitive.E{Key: "date_updated", Value: item.DateUpdated},
+		}},
+	}
+
+	//roles
+	res, err = sa.db.applicationsOrganizationsRoles.UpdateManyWithContext(context, dependentsFilter, dependentsUpdate, nil)
+	if err = sa.getUpdateManyError(res, err, model.TypeAppOrgRole, "permissions.name", item.Name); err != nil {
+		return err
+	}
+
+	//groups
+	res, err = sa.db.applicationsOrganizationsGroups.UpdateManyWithContext(context, dependentsFilter, dependentsUpdate, nil)
+	if err = sa.getUpdateManyError(res, err, model.TypeAppOrgGroup, "permissions.name", item.Name); err != nil {
+		return err
+	}
+
+	//accounts
+	res, err = sa.db.accounts.UpdateManyWithContext(context, dependentsFilter, dependentsUpdate, nil)
+	if err = sa.getUpdateManyError(res, err, model.TypeAccount, "permissions.name", item.Name); err != nil {
+		return err
+	}
+
+	//service accounts
+	res, err = sa.db.serviceAccounts.UpdateManyWithContext(context, dependentsFilter, dependentsUpdate, nil)
+	if err = sa.getUpdateManyError(res, err, model.TypeServiceAccount, "permissions.name", item.Name); err != nil {
+		return err
 	}
 
 	return nil
@@ -3538,6 +3574,16 @@ func (sa *Adapter) abortTransaction(sessionContext mongo.SessionContext) {
 	if err != nil {
 		sa.logger.Errorf("error aborting a transaction - %s", err)
 	}
+}
+
+func (sa *Adapter) getUpdateManyError(res *mongo.UpdateResult, err error, dataType logutils.MessageDataType, key string, value string) error {
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, dataType, &logutils.FieldArgs{key: value}, err)
+	}
+	if res.ModifiedCount != res.MatchedCount {
+		return errors.ErrorAction(logutils.ActionUpdate, dataType, &logutils.FieldArgs{key: value, "modified": res.ModifiedCount, "expected": res.MatchedCount})
+	}
+	return nil
 }
 
 //NewStorageAdapter creates a new storage adapter instance
