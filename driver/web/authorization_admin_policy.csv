@@ -46,7 +46,7 @@ p, update_account-auth-groups, /core/admin/application/groups, (GET),
 
 p, update_account-authorization, /core/admin/application/accounts/*/permissions, (PUT)|(DELETE), Add and remove permissions roles and groups from accounts
 p, update_account-authorization, /core/admin/application/accounts/*/roles, (PUT)|(DELETE),
-p, update_account-authorization, /core/admin/application/groups/*/accounts, (PUT)|(DELETE).
+p, update_account-authorization, /core/admin/application/groups/*/accounts, (PUT)|(DELETE),
 p, update_account-authorization, /core/admin/application/permissions, (GET),
 p, update_account-authorization, /core/admin/application/roles, (GET),
 p, update_account-authorization, /core/admin/application/groups, (GET),
