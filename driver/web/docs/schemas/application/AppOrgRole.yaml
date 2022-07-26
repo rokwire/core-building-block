@@ -1,7 +1,21 @@
+required:
+  - id
+  - name
 type: object
 properties:
-  fields:
-    $ref: "./AppOrgRoleFields.yaml"
+  id:
+    type: string
+    readOnly: true
+  name:
+    type: string
+  description:
+    type: string
+  system:
+    type: boolean
+  date_created:
+    type: string
+  date_updated:
+    type: string
   application:
     $ref: "./Application.yaml"
   permissions:

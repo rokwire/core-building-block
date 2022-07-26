@@ -1,0 +1,8 @@
+required:
+  - role_ids
+type: object
+properties:
+  role_ids:
+    type: array
+    items:
+      type: string

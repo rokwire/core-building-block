@@ -1,4 +1,4 @@
-p, all_system_core, /core/system/*, (GET)|(POST)|(DELETE)|(PUT), Access all Core BB system endpoints
+p, all_system_core, /core/system/*, (GET)|(POST)|(DELETE)|(PUT), Access all Core BB system and admin endpoints
 
 p, all_global-config, /core/system/global-config, (GET)|(POST)|(DELETE)|(PUT), All global config actions
 p, get_global-config, /core/system/global-config, (GET), Get global configs
@@ -20,9 +20,6 @@ p, update_applications, /core/system/applications, (GET)|(POST), Create applicat
 p, all_permissions, /core/system/permissions, (GET)|(POST)|(DELETE)|(PUT), All permission actions
 p, update_permissions, /core/system/permissions, (POST)|(PUT), Update and create permissions
 
-p, all_auth-roles, /core/system/application-roles, (GET)|(POST)|(DELETE)|(PUT), All auth role actions
-p, update_auth-roles, /core/system/application-roles, (POST), Update and create auth roles
-
 p, all_app-configs, /core/system/application/configs, (GET)|(POST)|(PUT)|(DELETE), All app config actions
 p, all_app-configs, /core/system/application/configs/*, (GET)|(POST)|(PUT)|(DELETE), All app config actions
 p, get_app-configs, /core/system/application/configs, (GET), Get app configs
@@ -31,12 +28,6 @@ p, update_app-configs, /core/system/application/configs, (GET)|(POST), Update an
 p, update_app-configs, /core/system/application/configs/*, (GET)|(PUT),
 p, delete_app-config, /core/system/application/configs/*, (GET)|(DELETE), Delete app configs
 p, delete_app-config, /core/system/application/configs, (GET),
-
-p, all_account-permissions, /core/system/account/permissions, (GET)|(POST)|(DELETE)|(PUT), All account permission actions
-p, update_account-permissions, /core/system/account/permissions, (POST)|(PUT), Grant and revoke account permissions
-
-p, all_account-roles, /core/system/account/roles, (GET)|(POST)|(DELETE)|(PUT), All account roles actions
-p, update_account-roles, /core/system/account/roles, (POST)|(PUT), Grant and revoke account roles
 
 p, all_service-regs, /core/system/service-regs, (GET)|(POST)|(DELETE)|(PUT), All service registration actions
 p, get_service-regs, /core/system/service-regs, (GET), Get service registrations
@@ -53,9 +44,7 @@ p, delete_service-accounts, /core/system/service-accounts, (GET)|(DELETE), Delet
 p, delete_service-accounts, /core/system/service-accounts/*, (GET)|(DELETE),
 
 p, all_api-keys, /core/system/api-keys, (GET)|(POST)|(DELETE)|(PUT), All api key actions
-p, all_api-keys, /core/system/application-api-keys, (GET),
 p, get_api-keys, /core/system/api-keys, (GET), Get api keys
-p, get_api-keys, /core/admin/application-api-keys, (GET),
 p, update_api-keys, /core/system/api-keys, (GET)|(POST)|(PUT), Update and create api keys
 p, delete_api-keys, /core/system/api-keys, (GET)|(DELETE), Delete api keys
 

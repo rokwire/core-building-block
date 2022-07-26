@@ -174,15 +174,16 @@ func (c *APIs) storeSystemData() error {
 		}
 
 		//5. insert all_system_core permission if does not exist
-		allSystemPermissions, err := c.app.storage.FindPermissionsByName([]string{"all_system_core"})
+		systemPermissions := []string{model.PermissionAllSystemCore}
+		allSystemPermissions, err := c.app.storage.FindPermissionsByName(context, systemPermissions)
 		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionFind, model.TypePermission, &logutils.FieldArgs{"name": "all_system_core"}, err)
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypePermission, &logutils.FieldArgs{"name": model.PermissionAllSystemCore}, err)
 		}
 
 		if len(allSystemPermissions) == 0 {
 			documentIDs["permission"] = uuid.NewString()
-			allSystemCore := model.Permission{ID: documentIDs["permission"], Name: "all_system_core", ServiceID: "core",
-				Assigners: []string{"all_system_core"}, DateCreated: time.Now().UTC()}
+			allSystemCore := model.Permission{ID: documentIDs["permission"], Name: model.PermissionAllSystemCore, ServiceID: "core",
+				Assigners: systemPermissions, DateCreated: time.Now().UTC()}
 			err = c.app.storage.InsertPermission(context, allSystemCore)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionInsert, model.TypePermission, nil, err)
@@ -196,7 +197,7 @@ func (c *APIs) storeSystemData() error {
 			if c.systemAccountEmail == "" || c.systemAccountPassword == "" {
 				return errors.ErrorData(logutils.StatusMissing, "initial system account email or password", nil)
 			}
-			documentIDs["account"], err = c.Auth.InitializeSystemAccount(context, *emailAuthType, systemAppOrg, allSystemPermissions[0].ID, c.systemAccountEmail, c.systemAccountPassword, c.logger.NewRequestLog(nil))
+			documentIDs["account"], err = c.Auth.InitializeSystemAccount(context, *emailAuthType, systemAppOrg, model.PermissionAllSystemCore, c.systemAccountEmail, c.systemAccountPassword, c.logger.NewRequestLog(nil))
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionInitialize, "system account", nil, err)
 			}
@@ -212,7 +213,7 @@ func (c *APIs) storeSystemData() error {
 			if doc == "auth_type" {
 				fields["code"] = auth.AuthTypeEmail
 			} else if doc == "permission" {
-				fields["name"] = "all_system_core"
+				fields["name"] = model.PermissionAllSystemCore
 			}
 			c.logger.InfoWithFields(fmt.Sprintf("new system %s created", doc), fields)
 		}
@@ -265,20 +266,25 @@ func (s *servicesImpl) SerGetPreferences(accountID string) (map[string]interface
 	return s.app.serGetPreferences(accountID)
 }
 
-func (s *servicesImpl) SerGetAuthTest(l *logs.Log) string {
-	return s.app.serGetAuthTest(l)
-}
-
-func (s *servicesImpl) SerGetCommonTest(l *logs.Log) string {
-	return s.app.serGetCommonTest(l)
-}
-
 func (s *servicesImpl) SerUpdateAccountPreferences(id string, preferences map[string]interface{}) error {
 	return s.app.serUpdateAccountPreferences(id, preferences)
 }
 
 func (s *servicesImpl) SerUpdateProfile(accountID string, profile model.Profile) error {
 	return s.app.serUpdateProfile(accountID, profile)
+}
+
+func (s *servicesImpl) SerGetAccounts(limit int, offset int, appID string, orgID string, accountID *string, firstName *string, lastName *string, authType *string,
+	authTypeIdentifier *string, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error) {
+	return s.app.serGetAccounts(limit, offset, appID, orgID, accountID, firstName, lastName, authType, authTypeIdentifier, hasPermissions, permissions, roleIDs, groupIDs)
+}
+
+func (s *servicesImpl) SerGetAuthTest(l *logs.Log) string {
+	return s.app.serGetAuthTest(l)
+}
+
+func (s *servicesImpl) SerGetCommonTest(l *logs.Log) string {
+	return s.app.serGetCommonTest(l)
 }
 
 func (s *servicesImpl) SerGetAppConfig(appTypeIdentifier string, orgID *string, versionNumbers model.VersionNumbers, apiKey *string) (*model.ApplicationConfig, error) {
@@ -305,16 +311,16 @@ func (s *administrationImpl) AdmGetApplications(orgID string) ([]model.Applicati
 	return s.app.admGetApplications(orgID)
 }
 
-func (s *administrationImpl) AdmCreateAppOrgGroup(name string, permissionIDs []string, rolesIDs []string, appID string, orgID string, assignerPermissions []string, l *logs.Log) (*model.AppOrgGroup, error) {
-	return s.app.admCreateAppOrgGroup(name, permissionIDs, rolesIDs, appID, orgID, assignerPermissions, l)
+func (s *administrationImpl) AdmCreateAppOrgGroup(name string, permissionNames []string, rolesIDs []string, appID string, orgID string, assignerPermissions []string, system bool, l *logs.Log) (*model.AppOrgGroup, error) {
+	return s.app.admCreateAppOrgGroup(name, permissionNames, rolesIDs, appID, orgID, assignerPermissions, system, l)
 }
 
 func (s *administrationImpl) AdmGetAppOrgGroups(appID string, orgID string) ([]model.AppOrgGroup, error) {
 	return s.app.admGetAppOrgGroups(appID, orgID)
 }
 
-func (s *administrationImpl) AdmDeleteAppOrgGroup(ID string, appID string, orgID string, assignerPermissions []string, l *logs.Log) error {
-	return s.app.admDeleteAppOrgGroup(ID, appID, orgID, assignerPermissions, l)
+func (s *administrationImpl) AdmDeleteAppOrgGroup(ID string, appID string, orgID string, assignerPermissions []string, system bool, l *logs.Log) error {
+	return s.app.admDeleteAppOrgGroup(ID, appID, orgID, assignerPermissions, system, l)
 }
 
 func (s *administrationImpl) AdmAddAccountsToGroup(appID string, orgID string, groupID string, accountIDs []string, assignerPermissions []string, l *logs.Log) error {
@@ -325,28 +331,29 @@ func (s *administrationImpl) AdmRemoveAccountsFromGroup(appID string, orgID stri
 	return s.app.admRemoveAccountsFromGroup(appID, orgID, groupID, accountIDs, assignerPermissions, l)
 }
 
-func (s *administrationImpl) AdmCreateAppOrgRole(name string, description string, permissionIDs []string, appID string, orgID string, assignerPermissions []string, l *logs.Log) (*model.AppOrgRole, error) {
-	return s.app.admCreateAppOrgRole(name, description, permissionIDs, appID, orgID, assignerPermissions, l)
+func (s *administrationImpl) AdmCreateAppOrgRole(name string, description string, permissionNames []string, appID string, orgID string, assignerPermissions []string, system bool, l *logs.Log) (*model.AppOrgRole, error) {
+	return s.app.admCreateAppOrgRole(name, description, permissionNames, appID, orgID, assignerPermissions, system, l)
 }
 
 func (s *administrationImpl) AdmGetAppOrgRoles(appID string, orgID string) ([]model.AppOrgRole, error) {
-	return s.app.AdmGetAppOrgRoles(appID, orgID)
+	return s.app.admGetAppOrgRoles(appID, orgID)
 }
 
-func (s *administrationImpl) AdmDeleteAppOrgRole(ID string, appID string, orgID string, assignerPermissions []string, l *logs.Log) error {
-	return s.app.admDeleteAppOrgRole(ID, appID, orgID, assignerPermissions, l)
+func (s *administrationImpl) AdmDeleteAppOrgRole(ID string, appID string, orgID string, assignerPermissions []string, system bool, l *logs.Log) error {
+	return s.app.admDeleteAppOrgRole(ID, appID, orgID, assignerPermissions, system, l)
 }
 
-func (s *administrationImpl) AdmGrantPermissionsToRole(appID string, orgID string, roleID string, permissionNames []string, assignerPermissions []string, l *logs.Log) error {
-	return s.app.admGrantPermissionsToRole(appID, orgID, roleID, permissionNames, assignerPermissions, l)
+func (s *administrationImpl) AdmGrantPermissionsToRole(appID string, orgID string, roleID string, permissionNames []string, assignerPermissions []string, system bool, l *logs.Log) error {
+	return s.app.admGrantPermissionsToRole(appID, orgID, roleID, permissionNames, assignerPermissions, system, l)
 }
 
 func (s *administrationImpl) AdmGetApplicationPermissions(appID string, orgID string, l *logs.Log) ([]model.Permission, error) {
 	return s.app.admGetApplicationPermissions(appID, orgID, l)
 }
 
-func (s *administrationImpl) AdmGetAccounts(appID string, orgID string, accountID *string, authTypeIdentifier *string) ([]model.Account, error) {
-	return s.app.admGetAccounts(appID, orgID, accountID, authTypeIdentifier)
+func (s *administrationImpl) AdmGetAccounts(limit int, offset int, appID string, orgID string, accountID *string, firstName *string, lastName *string, authType *string,
+	authTypeIdentifier *string, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error) {
+	return s.app.admGetAccounts(limit, offset, appID, orgID, accountID, firstName, lastName, authType, authTypeIdentifier, hasPermissions, permissions, roleIDs, groupIDs)
 }
 
 func (s *administrationImpl) AdmGetAccount(accountID string) (*model.Account, error) {
@@ -454,16 +461,12 @@ func (s *systemImpl) SysGetApplications() ([]model.Application, error) {
 	return s.app.sysGetApplications()
 }
 
-func (s *systemImpl) SysCreatePermission(name string, serviceID string, assigners *[]string) (*model.Permission, error) {
-	return s.app.sysCreatePermission(name, serviceID, assigners)
+func (s *systemImpl) SysCreatePermission(name string, description *string, serviceID *string, assigners *[]string) (*model.Permission, error) {
+	return s.app.sysCreatePermission(name, description, serviceID, assigners)
 }
 
-func (s *systemImpl) SysUpdatePermission(name string, serviceID *string, assigners *[]string) (*model.Permission, error) {
-	return s.app.sysUpdatePermission(name, serviceID, assigners)
-}
-
-func (s *systemImpl) SysCreateAppOrgRole(name string, appOrgID string, description string, permissionNames []string) (*model.AppOrgRole, error) {
-	return s.app.sysCreateAppOrgRole(name, appOrgID, description, permissionNames)
+func (s *systemImpl) SysUpdatePermission(name string, description *string, serviceID *string, assigners *[]string) (*model.Permission, error) {
+	return s.app.sysUpdatePermission(name, description, serviceID, assigners)
 }
 
 func (s *systemImpl) SysGetAppConfigs(appTypeID string, orgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error) {
@@ -484,14 +487,6 @@ func (s *systemImpl) SysUpdateAppConfig(id string, appTypeID string, orgID *stri
 
 func (s *systemImpl) SysDeleteAppConfig(id string) error {
 	return s.app.sysDeleteAppConfig(id)
-}
-
-func (s *systemImpl) SysGrantAccountPermissions(accountID string, permissionNames []string, assignerPermissions []string) error {
-	return s.app.sysGrantAccountPermissions(accountID, permissionNames, assignerPermissions)
-}
-
-func (s *systemImpl) SysGrantAccountRoles(accountID string, appID string, roleIDs []string) error {
-	return s.app.sysGrantAccountRoles(accountID, appID, roleIDs)
 }
 
 func (s *systemImpl) SysCreateAuthTypes(code string, description string, isExternal bool, isAnonymous bool, useCredentials bool, ignoreMFA bool, params map[string]interface{}) (*model.AuthType, error) {

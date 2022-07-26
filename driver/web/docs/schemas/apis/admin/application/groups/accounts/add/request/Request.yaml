@@ -1,0 +1,8 @@
+required:
+  - account_ids
+type: object
+properties:
+  account_ids:
+    type: array
+    items:
+      type: string

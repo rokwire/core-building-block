@@ -142,6 +142,10 @@ func (a *twilioPhoneAuthImpl) signUp(authType model.AuthType, appOrg model.Appli
 	return message, nil, nil
 }
 
+func (a *twilioPhoneAuthImpl) signUpAdmin(authType model.AuthType, appOrg model.ApplicationOrganization, identifier string, password string, newCredentialID string) (map[string]interface{}, map[string]interface{}, error) {
+	return nil, nil, nil
+}
+
 func (a *twilioPhoneAuthImpl) isCredentialVerified(credential *model.Credential, l *logs.Log) (*bool, *bool, error) {
 	return nil, nil, nil
 }

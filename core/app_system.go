@@ -20,7 +20,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/rokwire/core-auth-library-go/v2/authutils"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logutils"
 )
@@ -163,10 +162,19 @@ func (app *application) sysGetApplications() ([]model.Application, error) {
 	return getApplications, nil
 }
 
-func (app *application) sysCreatePermission(name string, serviceID string, assigners *[]string) (*model.Permission, error) {
+func (app *application) sysCreatePermission(name string, description *string, serviceID *string, assigners *[]string) (*model.Permission, error) {
 	id, _ := uuid.NewUUID()
 	now := time.Now()
-	permission := model.Permission{ID: id.String(), Name: name, DateCreated: now, ServiceID: serviceID, Assigners: *assigners}
+	serviceIDVal := ""
+	if serviceID != nil {
+		serviceIDVal = *serviceID
+	}
+	descriptionVal := ""
+	if description != nil {
+		descriptionVal = *description
+	}
+
+	permission := model.Permission{ID: id.String(), Name: name, Description: descriptionVal, DateCreated: now, ServiceID: serviceIDVal, Assigners: *assigners}
 
 	err := app.storage.InsertPermission(nil, permission)
 
@@ -176,9 +184,9 @@ func (app *application) sysCreatePermission(name string, serviceID string, assig
 	return &permission, nil
 }
 
-func (app *application) sysUpdatePermission(name string, serviceID *string, assigners *[]string) (*model.Permission, error) {
+func (app *application) sysUpdatePermission(name string, description *string, serviceID *string, assigners *[]string) (*model.Permission, error) {
 	permissionNames := []string{name}
-	permissions, err := app.storage.FindPermissionsByName(permissionNames)
+	permissions, err := app.storage.FindPermissionsByName(nil, permissionNames)
 	if err != nil {
 		return nil, err
 	}
@@ -187,6 +195,9 @@ func (app *application) sysUpdatePermission(name string, serviceID *string, assi
 	}
 
 	permission := permissions[0]
+	if description != nil {
+		permission.Description = *description
+	}
 	if serviceID != nil {
 		permission.ServiceID = *serviceID
 	}
@@ -200,24 +211,6 @@ func (app *application) sysUpdatePermission(name string, serviceID *string, assi
 	}
 
 	return &permission, nil
-}
-
-func (app *application) sysCreateAppOrgRole(name string, appOrgID string, description string, permissionNames []string) (*model.AppOrgRole, error) {
-	permissions, err := app.storage.FindPermissionsByName(permissionNames)
-	if err != nil {
-		return nil, err
-	}
-
-	//TODO - load ApplicationOrganization
-
-	id, _ := uuid.NewUUID()
-	now := time.Now()
-	role := model.AppOrgRole{ID: id.String(), Name: name, Description: description, AppOrg: model.ApplicationOrganization{ID: appOrgID}, Permissions: permissions, DateCreated: now}
-	err = app.storage.InsertAppOrgRole(role)
-	if err != nil {
-		return nil, err
-	}
-	return &role, nil
 }
 
 func (app *application) sysGetAppConfigs(appTypeID string, orgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error) {
@@ -338,57 +331,6 @@ func (app *application) sysDeleteAppConfig(id string) error {
 		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeApplicationConfig, nil, err)
 	}
 
-	return nil
-}
-
-func (app *application) sysGrantAccountPermissions(accountID string, permissionNames []string, assignerPermissions []string) error {
-	if assignerPermissions == nil {
-		return errors.New("no permissions from admin assigner")
-	}
-
-	permissions, err := app.storage.FindPermissionsByName(permissionNames)
-	if err != nil {
-		return err
-	}
-
-	if len(permissions) == 0 {
-		return errors.Newf("no permissions found for names: %v", permissionNames)
-	}
-
-	var authorizedPermissions []model.Permission
-	for _, permission := range permissions {
-		authorizedAssigners := permission.Assigners
-		for _, authorizedAssigner := range authorizedAssigners {
-			if authutils.ContainsString(assignerPermissions, authorizedAssigner) {
-				authorizedPermissions = append(authorizedPermissions, permission)
-			}
-		}
-	}
-	if authorizedPermissions == nil {
-		return errors.Newf("Assigner is not authorized to assign permissions for names: %v", permissionNames)
-	}
-
-	err = app.storage.InsertAccountPermissions(accountID, authorizedPermissions)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (app *application) sysGrantAccountRoles(accountID string, appOrgID string, roleIDs []string) error {
-	roles, err := app.storage.FindAppOrgRolesByIDs(nil, roleIDs, appOrgID)
-	if err != nil {
-		return err
-	}
-
-	if len(roles) == 0 {
-		return errors.Newf("no roles found for IDs: %v", roleIDs)
-	}
-
-	err = app.storage.InsertAccountRoles(accountID, appOrgID, model.AccountRolesFromAppOrgRoles(roles, true, true))
-	if err != nil {
-		return err
-	}
 	return nil
 }
 

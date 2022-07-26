@@ -300,6 +300,9 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 
 	identityProviderID, _ := authType.Params["identity_provider"].(string)
 	identityProviderSetting := appOrg.FindIdentityProviderSetting(identityProviderID)
+	if identityProviderSetting == nil {
+		return nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeIdentityProviderConfig, &logutils.FieldArgs{"app_org": appOrg.ID, "identity_provider_id": identityProviderID})
+	}
 
 	//identifier
 	identifier, _ := userClaims[identityProviderSetting.UserIdentifierField].(string)
@@ -337,13 +340,12 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 	//external ids
 	externalIDs := make(map[string]string)
 	for k, v := range identityProviderSetting.ExternalIDFields {
-		key := fmt.Sprintf("%s.%s", authType.Code, k)
 		externalID, ok := userClaims[v].(string)
 		if !ok {
-			a.auth.logger.ErrorWithFields("failed to parse external id", logutils.Fields{key: userClaims[v]})
+			a.auth.logger.ErrorWithFields("failed to parse external id", logutils.Fields{k: userClaims[v]})
 			continue
 		}
-		externalIDs[key] = externalID
+		externalIDs[k] = externalID
 	}
 
 	externalUser := model.ExternalSystemUser{Identifier: identifier, ExternalIDs: externalIDs, FirstName: firstName,
