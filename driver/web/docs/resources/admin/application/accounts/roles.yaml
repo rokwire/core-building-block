@@ -5,7 +5,7 @@ put:
   description: |
     Grant account roles
 
-    **Auth:** Requires admin access token with `update_account-auth-roles` or `update_accounts` permission
+    **Auth:** Requires admin access token with `update_account-auth-roles`, `update_accounts`, or `all_accounts` permission
   security:
     - bearerAuth: []
   parameters:
@@ -45,7 +45,7 @@ delete:
   description: |
     Deletes an existing roles from account
 
-    **Auth:** Requires admin access token with `update_account-auth-roles` or `update_accounts` permission
+    **Auth:** Requires admin access token with `update_account-auth-roles`, `update_accounts`, or `all_accounts` permission
   security:
     - bearerAuth: []
   parameters:

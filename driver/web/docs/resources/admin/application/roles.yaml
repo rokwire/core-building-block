@@ -11,7 +11,9 @@
     - `delete_auth-roles`
     - `all_auth-roles`
     - `update_account-auth-roles`
+    - `create_accounts`
     - `update_accounts`
+    - `all_accounts`
   security:
     - bearerAuth: []
   responses:

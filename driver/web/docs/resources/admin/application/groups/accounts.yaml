@@ -5,7 +5,7 @@ put:
   description: |
     Add accounts 
   
-    **Auth:** Requires admin access token with `update_account-auth-groups` or `update_accounts` permission
+    **Auth:** Requires admin access token with `update_account-auth-groups`, `update_accounts`, or `all_accounts` permission
   security:
     - bearerAuth: []
   parameters:
@@ -45,7 +45,7 @@ delete:
   description: |
     Deletes an existing accounts from group
 
-    **Auth:** Requires admin access token with `update_account-auth-groups` or `update_accounts` permission
+    **Auth:** Requires admin access token with `update_account-auth-groups`, `update_accounts`, or `all_accounts` permission
   security:
     - bearerAuth: []
   parameters:
