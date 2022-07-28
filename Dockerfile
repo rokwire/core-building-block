@@ -30,8 +30,8 @@ COPY --from=builder /core-app/driver/web/authorization_system_policy.csv /driver
 
 COPY --from=builder /core-app/driver/web/scope_authorization_services_policy.csv /driver/web/scope_authorization_services_policy.csv
 
-COPY --from=builder /core-app/vendor/github.com/rokwire/core-auth-library-go/authorization/authorization_model_scope.conf /core-app/vendor/github.com/rokwire/core-auth-library-go/authorization/authorization_model_scope.conf
-COPY --from=builder /core-app/vendor/github.com/rokwire/core-auth-library-go/authorization/authorization_model_string.conf /core-app/vendor/github.com/rokwire/core-auth-library-go/authorization/authorization_model_string.conf
+COPY --from=builder /core-app/vendor/github.com/rokwire/core-auth-library-go/v2/authorization/authorization_model_scope.conf /core-app/vendor/github.com/rokwire/core-auth-library-go/v2/authorization/authorization_model_scope.conf
+COPY --from=builder /core-app/vendor/github.com/rokwire/core-auth-library-go/v2/authorization/authorization_model_string.conf /core-app/vendor/github.com/rokwire/core-auth-library-go/v2/authorization/authorization_model_string.conf
 
 COPY --from=builder /etc/passwd /etc/passwd
 

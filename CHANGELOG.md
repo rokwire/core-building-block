@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Fixed
 - Update account permission duplication [#545](https://github.com/rokwire/core-building-block/issues/545)
+- Authorization policy comments not working [#506](https://github.com/rokwire/core-building-block/issues/506)
 
 ## [1.24.1] - 2022-07-07
 ### Changed
