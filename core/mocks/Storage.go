@@ -330,50 +330,68 @@ func (_m *Storage) FindAppConfigByID(ID string) (*model.ApplicationConfig, error
 	return r0, r1
 }
 
-// FindAppConfigByVersion provides a mock function with given fields: appTypeIdentifier, appOrgID, versionNumbers
-func (_m *Storage) FindAppConfigByVersion(appTypeIdentifier string, appOrgID *string, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error) {
-	ret := _m.Called(appTypeIdentifier, appOrgID, versionNumbers)
+// FindAppConfigByVersion provides a mock function with given fields: appID, appTypeIdentifier, appOrgID, versionNumbers
+func (_m *Storage) FindAppConfigByVersion(appID string, appTypeIdentifier string, appOrgID *string, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, []model.ApplicationConfig, error) {
+	ret := _m.Called(appID, appTypeIdentifier, appOrgID, versionNumbers)
 
 	var r0 *model.ApplicationConfig
-	if rf, ok := ret.Get(0).(func(string, *string, model.VersionNumbers) *model.ApplicationConfig); ok {
-		r0 = rf(appTypeIdentifier, appOrgID, versionNumbers)
+	if rf, ok := ret.Get(0).(func(string, string, *string, model.VersionNumbers) *model.ApplicationConfig); ok {
+		r0 = rf(appID, appTypeIdentifier, appOrgID, versionNumbers)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*model.ApplicationConfig)
 		}
 	}
 
-	var r1 error
-	if rf, ok := ret.Get(1).(func(string, *string, model.VersionNumbers) error); ok {
-		r1 = rf(appTypeIdentifier, appOrgID, versionNumbers)
+	var r1 []model.ApplicationConfig
+	if rf, ok := ret.Get(1).(func(string, string, *string, model.VersionNumbers) []model.ApplicationConfig); ok {
+		r1 = rf(appID, appTypeIdentifier, appOrgID, versionNumbers)
 	} else {
-		r1 = ret.Error(1)
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).([]model.ApplicationConfig)
+		}
 	}
 
-	return r0, r1
+	var r2 error
+	if rf, ok := ret.Get(2).(func(string, string, *string, model.VersionNumbers) error); ok {
+		r2 = rf(appID, appTypeIdentifier, appOrgID, versionNumbers)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
 }
 
-// FindAppConfigs provides a mock function with given fields: appTypeIdentifier, appOrgID, versionNumbers
-func (_m *Storage) FindAppConfigs(appTypeIdentifier string, appOrgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error) {
-	ret := _m.Called(appTypeIdentifier, appOrgID, versionNumbers)
+// FindAppConfigs provides a mock function with given fields: appID, appTypeIdentifier, appOrgID, versionNumbers
+func (_m *Storage) FindAppConfigs(appID string, appTypeIdentifier string, appOrgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, []model.ApplicationConfig, error) {
+	ret := _m.Called(appID, appTypeIdentifier, appOrgID, versionNumbers)
 
 	var r0 []model.ApplicationConfig
-	if rf, ok := ret.Get(0).(func(string, *string, *model.VersionNumbers) []model.ApplicationConfig); ok {
-		r0 = rf(appTypeIdentifier, appOrgID, versionNumbers)
+	if rf, ok := ret.Get(0).(func(string, string, *string, *model.VersionNumbers) []model.ApplicationConfig); ok {
+		r0 = rf(appID, appTypeIdentifier, appOrgID, versionNumbers)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]model.ApplicationConfig)
 		}
 	}
 
-	var r1 error
-	if rf, ok := ret.Get(1).(func(string, *string, *model.VersionNumbers) error); ok {
-		r1 = rf(appTypeIdentifier, appOrgID, versionNumbers)
+	var r1 []model.ApplicationConfig
+	if rf, ok := ret.Get(1).(func(string, string, *string, *model.VersionNumbers) []model.ApplicationConfig); ok {
+		r1 = rf(appID, appTypeIdentifier, appOrgID, versionNumbers)
 	} else {
-		r1 = ret.Error(1)
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).([]model.ApplicationConfig)
+		}
 	}
 
-	return r0, r1
+	var r2 error
+	if rf, ok := ret.Get(2).(func(string, string, *string, *model.VersionNumbers) error); ok {
+		r2 = rf(appID, appTypeIdentifier, appOrgID, versionNumbers)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
 }
 
 // FindAppOrgGroup provides a mock function with given fields: id, appOrgID
@@ -1134,11 +1152,11 @@ func (_m *Storage) UpdateAccountPreferences(accountID string, preferences map[st
 }
 
 // UpdateAppConfig provides a mock function with given fields: ID, appType, appOrg, version, data
-func (_m *Storage) UpdateAppConfig(ID string, appType model.ApplicationType, appOrg *model.ApplicationOrganization, version model.Version, data map[string]interface{}) error {
+func (_m *Storage) UpdateAppConfig(ID string, appType *model.ApplicationType, appOrg *model.ApplicationOrganization, version model.Version, data map[string]interface{}) error {
 	ret := _m.Called(ID, appType, appOrg, version, data)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(string, model.ApplicationType, *model.ApplicationOrganization, model.Version, map[string]interface{}) error); ok {
+	if rf, ok := ret.Get(0).(func(string, *model.ApplicationType, *model.ApplicationOrganization, model.Version, map[string]interface{}) error); ok {
 		r0 = rf(ID, appType, appOrg, version, data)
 	} else {
 		r0 = ret.Error(0)

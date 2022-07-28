@@ -809,7 +809,7 @@ func (h ServicesApisHandler) getApplicationConfigs(l *logs.Log, r *http.Request,
 		return l.HttpResponseErrorData(logutils.StatusInvalid, model.TypeVersionNumbers, nil, nil, http.StatusBadRequest, false)
 	}
 
-	appConfig, err := h.coreAPIs.Services.SerGetAppConfig(requestData.AppTypeIdentifier, nil, *version, &requestData.ApiKey)
+	appConfig, err := h.coreAPIs.Services.SerGetAppConfig(requestData.AppTypeIdentifier, nil, nil, *version, &requestData.ApiKey)
 	if err != nil || appConfig == nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeApplicationConfig, nil, err, http.StatusInternalServerError, true)
 	}
@@ -841,7 +841,7 @@ func (h ServicesApisHandler) getApplicationOrgConfigs(l *logs.Log, r *http.Reque
 		return l.HttpResponseErrorData(logutils.StatusInvalid, model.TypeVersionNumbers, nil, nil, http.StatusBadRequest, false)
 	}
 
-	appConfig, err := h.coreAPIs.Services.SerGetAppConfig(requestData.AppTypeIdentifier, &claims.OrgID, *version, nil)
+	appConfig, err := h.coreAPIs.Services.SerGetAppConfig(requestData.AppTypeIdentifier, nil, &claims.OrgID, *version, nil)
 	if err != nil || appConfig == nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeApplicationConfig, nil, err, http.StatusInternalServerError, true)
 	}

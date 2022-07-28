@@ -213,32 +213,73 @@ func (app *application) sysUpdatePermission(name string, description *string, se
 	return &permission, nil
 }
 
-func (app *application) sysGetAppConfigs(appTypeID string, orgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error) {
-	//get the app type
-	applicationType, err := app.storage.FindApplicationType(appTypeID)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationType, logutils.StringArgs(appTypeID), err)
-	}
-	if applicationType == nil {
-		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationType, logutils.StringArgs(appTypeID))
+func (app *application) sysGetAppConfigs(appTypeID string, appID *string, orgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error) {
+	if appTypeID != "" {
+		//get the app type
+		applicationType, err := app.storage.FindApplicationType(appTypeID)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationType, logutils.StringArgs(appTypeID), err)
+		}
+		if applicationType == nil {
+			return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationType, logutils.StringArgs(appTypeID))
+		}
+		appID = &applicationType.Application.ID
 	}
 
-	appID := applicationType.Application.ID
+	if appID == nil {
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationID, logutils.StringArgs(appTypeID))
+	}
+
 	var appOrgID *string
 	if orgID != nil {
-		appOrg, err := app.storage.FindApplicationOrganization(appID, *orgID)
+		appOrg, err := app.storage.FindApplicationOrganization(*appID, *orgID)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": appID, "org_id": *orgID}, err)
 		}
 		appOrgID = &appOrg.ID
 	}
 
-	appConfigs, err := app.storage.FindAppConfigs(appTypeID, appOrgID, versionNumbers)
+	defaultAppConfigs, patchAppConfigs, err := app.storage.FindAppConfigs(*appID, appTypeID, appOrgID, versionNumbers)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationConfig, nil, err)
 	}
+	println(len(defaultAppConfigs))
+	var resultAppConfigs []model.ApplicationConfig
 
-	return appConfigs, nil
+	if appTypeID != "" {
+		// need to apply a patch file on top of the default appConfig
+		var basePatchAppConfig *model.ApplicationConfig
+		var patchAppConfigMap map[model.VersionNumbers]model.ApplicationConfig
+
+		if len(patchAppConfigs) > 0 {
+			for _, patchAppConfig := range patchAppConfigs {
+				patchAppConfigMap[patchAppConfig.Version.VersionNumbers] = patchAppConfig
+			}
+
+			basePatchAppConfig = &patchAppConfigs[len(patchAppConfigs)-1]
+			if !basePatchAppConfig.IsBasePatchFile() {
+				// TODO: handle missing base patch file
+			}
+		}
+		println(basePatchAppConfig)
+
+		for _, defaultAppConfig := range defaultAppConfigs {
+			var mergedAppConfig model.ApplicationConfig
+			versionNumbers := defaultAppConfig.Version.VersionNumbers
+			if patch, ok := patchAppConfigMap[versionNumbers]; ok {
+				mergedAppConfig = defaultAppConfig.MergeAppConfig(&patch)
+			} else {
+				mergedAppConfig = defaultAppConfig.MergeAppConfig(basePatchAppConfig)
+			}
+			resultAppConfigs = append(resultAppConfigs, mergedAppConfig)
+		}
+
+		return resultAppConfigs, nil
+	}
+
+	// defaultAppConfigs, err := sa.getCachedDefaultAppConfigsByAppIDAndVersion(appID, appOrgID, versionNumbers)
+
+	return defaultAppConfigs, nil
 }
 
 func (app *application) sysGetAppConfig(id string) (*model.ApplicationConfig, error) {
@@ -250,43 +291,57 @@ func (app *application) sysGetAppConfig(id string) (*model.ApplicationConfig, er
 	return appConfig, nil
 }
 
-func (app *application) sysCreateAppConfig(appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error) {
-	//get the app type
-	applicationType, err := app.storage.FindApplicationType(appTypeID)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationType, logutils.StringArgs(appTypeID), err)
+func (app *application) sysCreateAppConfig(appTypeID string, appID *string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error) {
+	var applicationType *model.ApplicationType
+	var err error
+	if appTypeID != "" {
+		//get the app type
+		applicationType, err = app.storage.FindApplicationType(appTypeID)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationType, logutils.StringArgs(appTypeID), err)
+		}
+		if applicationType == nil {
+			return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationType, logutils.StringArgs(appTypeID))
+		}
+		// if len(applicationType.Versions) == 0 {
+		// 	return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationTypeVersionList, logutils.StringArgs(appTypeID))
+		// }
+		appID = &applicationType.Application.ID
 	}
-	if applicationType == nil {
-		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationType, logutils.StringArgs(appTypeID))
-	}
-	if len(applicationType.Versions) == 0 {
-		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationTypeVersionList, logutils.StringArgs(appTypeID))
+	if appID == nil || *appID == "" {
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationID, logutils.StringArgs(appTypeID))
 	}
 
 	var appOrg *model.ApplicationOrganization
 	if orgID != nil {
-		appOrg, err = app.storage.FindApplicationOrganization(applicationType.Application.ID, *orgID)
+		appOrg, err = app.storage.FindApplicationOrganization(*appID, *orgID)
 		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": applicationType.Application.ID, "org_id": *orgID}, err)
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": appID, "org_id": *orgID}, err)
 		}
+		// TODO: appOrg could be nil, but the ParseWebhookFilePath function assumes there's a orgName in the path for now
+		// if appOrg == nil {
+		// 	return nil, errors.ErrorData(logutils.StatusMissing, model.TypeOrganizationID, nil)
+		// }
 	}
 
-	// TODO: create the app config without checking if it's supported
 	var version *model.Version
-	for _, supportedVersion := range applicationType.Versions {
-		if versionNumbers == supportedVersion.VersionNumbers {
-			version = &supportedVersion
-			break
-			// now := time.Now()
-			// appConfigID, _ := uuid.NewUUID()
-			// applicationConfig := model.ApplicationConfig{ID: appConfigID.String(), Version: supportedVersion, ApplicationType: *applicationType, AppOrg: appOrg, Data: data, DateCreated: now}
+	if applicationType != nil {
+		// TODO: create the app config without checking if it's supported
+		for _, supportedVersion := range applicationType.Versions {
+			if versionNumbers == supportedVersion.VersionNumbers {
+				version = &supportedVersion
+				break
+				// now := time.Now()
+				// appConfigID, _ := uuid.NewUUID()
+				// applicationConfig := model.ApplicationConfig{ID: appConfigID.String(), Version: supportedVersion, ApplicationType: *applicationType, AppOrg: appOrg, Data: data, DateCreated: now}
 
-			// insertedConfig, err := app.storage.InsertAppConfig(applicationConfig)
-			// if err != nil {
-			// 	return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeApplicationConfig, nil, err)
-			// }
+				// insertedConfig, err := app.storage.InsertAppConfig(applicationConfig)
+				// if err != nil {
+				// 	return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeApplicationConfig, nil, err)
+				// }
 
-			// return insertedConfig, nil
+				// return insertedConfig, nil
+			}
 		}
 	}
 
@@ -297,7 +352,7 @@ func (app *application) sysCreateAppConfig(appTypeID string, orgID *string, data
 		version = &model.Version{VersionNumbers: versionNumbers, DateCreated: now}
 	}
 
-	applicationConfig := model.ApplicationConfig{ID: appConfigID.String(), Version: *version, ApplicationType: *applicationType, AppOrg: appOrg, Data: data, DateCreated: now}
+	applicationConfig := model.ApplicationConfig{ID: appConfigID.String(), AppID: *appID, Version: *version, ApplicationType: applicationType, AppOrg: appOrg, Data: data, DateCreated: now}
 
 	insertedConfig, err := app.storage.InsertAppConfig(applicationConfig)
 	if err != nil {
@@ -309,39 +364,50 @@ func (app *application) sysCreateAppConfig(appTypeID string, orgID *string, data
 	// return nil, errors.ErrorData(logutils.StatusInvalid, model.TypeApplicationConfigsVersion, logutils.StringArgs(versionNumbers.String()+" for app_type_id: "+appTypeID))
 }
 
-func (app *application) sysUpdateAppConfig(id string, appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) error {
-	applicationType, err := app.storage.FindApplicationType(appTypeID)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationType, logutils.StringArgs(appTypeID), err)
+func (app *application) sysUpdateAppConfig(id string, appTypeID string, appID *string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) error {
+	var applicationType *model.ApplicationType
+	var err error
 
+	if appTypeID != "" {
+		applicationType, err = app.storage.FindApplicationType(appTypeID)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationType, logutils.StringArgs(appTypeID), err)
+
+		}
+		if applicationType == nil {
+			return errors.ErrorData(logutils.StatusMissing, model.TypeApplicationType, logutils.StringArgs(appTypeID))
+		}
+		// if len(applicationType.Versions) == 0 {
+		// 	return errors.ErrorData(logutils.StatusMissing, model.TypeApplicationTypeVersionList, logutils.StringArgs(appTypeID))
+		// }
+		appID = &applicationType.Application.ID
 	}
-	if applicationType == nil {
-		return errors.ErrorData(logutils.StatusMissing, model.TypeApplicationType, logutils.StringArgs(appTypeID))
-	}
-	if len(applicationType.Versions) == 0 {
-		return errors.ErrorData(logutils.StatusMissing, model.TypeApplicationTypeVersionList, logutils.StringArgs(appTypeID))
+	if appID == nil || *appID == "" {
+		return errors.ErrorData(logutils.StatusMissing, model.TypeApplicationID, logutils.StringArgs(appTypeID))
 	}
 
 	var appOrg *model.ApplicationOrganization
 	if orgID != nil {
-		appOrg, err = app.storage.FindApplicationOrganization(applicationType.Application.ID, *orgID)
+		appOrg, err = app.storage.FindApplicationOrganization(*appID, *orgID)
 		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": applicationType.Application.ID, "org_id": *orgID}, err)
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": *appID, "org_id": *orgID}, err)
 		}
 	}
 
 	var version *model.Version
-	for _, supportedVersion := range applicationType.Versions {
-		if versionNumbers == supportedVersion.VersionNumbers {
-			version = &supportedVersion
-			break
+	if applicationType != nil {
+		for _, supportedVersion := range applicationType.Versions {
+			if versionNumbers == supportedVersion.VersionNumbers {
+				version = &supportedVersion
+				break
+			}
 		}
 	}
 	if version == nil {
 		version = &model.Version{VersionNumbers: versionNumbers}
 	}
 
-	err = app.storage.UpdateAppConfig(id, *applicationType, appOrg, *version, data)
+	err = app.storage.UpdateAppConfig(id, applicationType, appOrg, *version, data)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeApplicationConfig, nil, err)
 	}

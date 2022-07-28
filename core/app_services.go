@@ -100,21 +100,30 @@ func (app *application) serGetCommonTest(l *logs.Log) string {
 	return "Services - Common - test"
 }
 
-func (app *application) serGetAppConfig(appTypeIdentifier string, orgID *string, versionNumbers model.VersionNumbers, apiKey *string) (*model.ApplicationConfig, error) {
-	//get the app type
-	applicationType, err := app.storage.FindApplicationType(appTypeIdentifier)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationType, logutils.StringArgs(appTypeIdentifier), err)
-	}
-	if applicationType == nil {
-		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationType, logutils.StringArgs(appTypeIdentifier))
+func (app *application) serGetAppConfig(appTypeIdentifier string, appID *string, orgID *string, versionNumbers model.VersionNumbers, apiKey *string) (*model.ApplicationConfig, error) {
+	var appTypeID string
+	var err error
+	if appID == nil || *appID == "" {
+		//get the app type
+		applicationType, err := app.storage.FindApplicationType(appTypeIdentifier)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationType, logutils.StringArgs(appTypeIdentifier), err)
+		}
+		if applicationType == nil {
+			return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationType, logutils.StringArgs(appTypeIdentifier))
+		}
+
+		appID = &applicationType.Application.ID
+		appTypeID = applicationType.ID
 	}
 
-	appID := applicationType.Application.ID
+	if appID == nil {
+		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeApplicationID, nil, err)
+	}
 
 	if orgID == nil {
 		if apiKey != nil {
-			err = app.auth.ValidateAPIKey(appID, *apiKey)
+			err := app.auth.ValidateAPIKey(*appID, *apiKey)
 			if err != nil {
 				return nil, errors.WrapErrorData(logutils.StatusInvalid, model.TypeAPIKey, nil, err)
 			}
@@ -125,22 +134,42 @@ func (app *application) serGetAppConfig(appTypeIdentifier string, orgID *string,
 
 	var appOrgID *string
 	if orgID != nil {
-		appOrg, err := app.storage.FindApplicationOrganization(appID, *orgID)
+		appOrg, err := app.storage.FindApplicationOrganization(*appID, *orgID)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": appID, "org_id": *orgID}, err)
 		}
 		appOrgID = &appOrg.ID
 	}
 
-	// will return the latest appConfig with verion less than or equal to the versionNumbers provided
-	appConfigs, err := app.storage.FindAppConfigByVersion(applicationType.ID, appOrgID, versionNumbers)
+	// will return the latest defaultAppConfig with verion less than or equal to the versionNumbers provided
+	defaultAppConfig, patchAppConfigs, err := app.storage.FindAppConfigByVersion(*appID, appTypeID, appOrgID, versionNumbers)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationConfig, nil, err)
 	}
-
-	if appConfigs == nil {
+	if defaultAppConfig == nil {
 		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeApplicationConfig, nil, err)
 	}
 
-	return appConfigs, nil
+	if len(patchAppConfigs) > 0 {
+		var patchAppConfigMap map[model.VersionNumbers]model.ApplicationConfig
+		for _, patchAppConfig := range patchAppConfigs {
+			patchAppConfigMap[patchAppConfig.Version.VersionNumbers] = patchAppConfig
+		}
+
+		basePatchAppConfig := &patchAppConfigs[len(patchAppConfigs)-1]
+		if !basePatchAppConfig.IsBasePatchFile() {
+			// TODO: handle missing base patch file
+		}
+
+		var mergedAppConfig *model.ApplicationConfig
+		versionNumbers := defaultAppConfig.Version.VersionNumbers
+		if patch, ok := patchAppConfigMap[versionNumbers]; ok {
+			*mergedAppConfig = defaultAppConfig.MergeAppConfig(&patch)
+		} else {
+			*mergedAppConfig = defaultAppConfig.MergeAppConfig(basePatchAppConfig)
+		}
+		return mergedAppConfig, nil
+	}
+
+	return defaultAppConfig, nil
 }

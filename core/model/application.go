@@ -28,6 +28,8 @@ import (
 const (
 	//TypeApplication ...
 	TypeApplication logutils.MessageDataType = "application"
+	//TypeApplicationID ...
+	TypeApplicationID logutils.MessageDataType = "application id"
 	//TypePermission ...
 	TypePermission logutils.MessageDataType = "permission"
 	//TypeAppOrgRole ...
@@ -374,7 +376,8 @@ type AuthTypesSupport struct {
 //ApplicationConfig represents app configs
 type ApplicationConfig struct {
 	ID              string
-	ApplicationType ApplicationType
+	AppID           string
+	ApplicationType *ApplicationType
 	Version         Version
 	AppOrg          *ApplicationOrganization
 	Data            map[string]interface{}
@@ -383,12 +386,36 @@ type ApplicationConfig struct {
 	DateUpdated *time.Time
 }
 
+// IsBasePatchFile checks if the applicationConfig has the base/0.0.0 version numbers
+func (config ApplicationConfig) IsBasePatchFile() bool {
+	baseVersion := VersionNumbers{0, 0, 0}
+	return config.Version.VersionNumbers.LessThanOrEqualTo(&baseVersion)
+}
+
+// MergeAppConfig merges a patch file with a default appConfig file
+func (config ApplicationConfig) MergeAppConfig(patchConfig *ApplicationConfig) ApplicationConfig {
+	if patchConfig == nil {
+		return config
+	}
+
+	baseData := config.Data
+	for key, element := range patchConfig.Data {
+		baseData[key] = element
+		// if _, ok := baseData[key]; ok {
+		// }
+	}
+
+	config.Data = baseData
+
+	return config
+}
+
 // Version represents app config version information
 type Version struct {
 	ID             string
 	VersionNumbers VersionNumbers
 
-	ApplicationType ApplicationType
+	ApplicationType *ApplicationType
 	DateCreated     time.Time
 	DateUpdated     *time.Time
 }
@@ -451,8 +478,14 @@ func VersionNumbersFromString(version string) *VersionNumbers {
 
 // WebhookConfig is the organizaiton and application mapping config
 type WebhookConfig struct {
-	Organizations map[string]string            `json:"organizations"`
-	Applications  map[string]map[string]string `json:"applications"`
+	Organizations map[string]string           `json:"organizations"`
+	Applications  map[string]ApplicationTypes `json:"applications"`
+}
+
+// ApplicationTypes are the application types for different client platforms
+type ApplicationTypes struct {
+	ID    string            `json:"id"`
+	Types map[string]string `json:"types"`
 }
 
 // WebhookRequest is the request from github webhook

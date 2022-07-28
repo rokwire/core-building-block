@@ -305,8 +305,8 @@ func (s *servicesImpl) SerGetCommonTest(l *logs.Log) string {
 	return s.app.serGetCommonTest(l)
 }
 
-func (s *servicesImpl) SerGetAppConfig(appTypeIdentifier string, orgID *string, versionNumbers model.VersionNumbers, apiKey *string) (*model.ApplicationConfig, error) {
-	return s.app.serGetAppConfig(appTypeIdentifier, orgID, versionNumbers, apiKey)
+func (s *servicesImpl) SerGetAppConfig(appTypeIdentifier string, appID *string, orgID *string, versionNumbers model.VersionNumbers, apiKey *string) (*model.ApplicationConfig, error) {
+	return s.app.serGetAppConfig(appTypeIdentifier, appID, orgID, versionNumbers, apiKey)
 }
 
 ///
@@ -487,20 +487,20 @@ func (s *systemImpl) SysUpdatePermission(name string, description *string, servi
 	return s.app.sysUpdatePermission(name, description, serviceID, assigners)
 }
 
-func (s *systemImpl) SysGetAppConfigs(appTypeID string, orgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error) {
-	return s.app.sysGetAppConfigs(appTypeID, orgID, versionNumbers)
+func (s *systemImpl) SysGetAppConfigs(appTypeID string, appID *string, orgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error) {
+	return s.app.sysGetAppConfigs(appTypeID, appID, orgID, versionNumbers)
 }
 
 func (s *systemImpl) SysGetAppConfig(id string) (*model.ApplicationConfig, error) {
 	return s.app.sysGetAppConfig(id)
 }
 
-func (s *systemImpl) SysCreateAppConfig(appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error) {
-	return s.app.sysCreateAppConfig(appTypeID, orgID, data, versionNumbers)
+func (s *systemImpl) SysCreateAppConfig(appTypeID string, appID *string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error) {
+	return s.app.sysCreateAppConfig(appTypeID, appID, orgID, data, versionNumbers)
 }
 
-func (s *systemImpl) SysUpdateAppConfig(id string, appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) error {
-	return s.app.sysUpdateAppConfig(id, appTypeID, orgID, data, versionNumbers)
+func (s *systemImpl) SysUpdateAppConfig(id string, appTypeID string, appID *string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) error {
+	return s.app.sysUpdateAppConfig(id, appTypeID, appID, orgID, data, versionNumbers)
 }
 
 func (s *systemImpl) SysDeleteAppConfig(id string) error {
