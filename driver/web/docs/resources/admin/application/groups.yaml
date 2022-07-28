@@ -11,7 +11,7 @@
     - `delete_auth-groups`
     - `all_auth-groups`
     - `update_account-auth-groups`
-    - `update_account-authorization`
+    - `update_accounts`
   security:
     - bearerAuth: []
   responses:

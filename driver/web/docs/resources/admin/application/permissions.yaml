@@ -8,7 +8,7 @@ get:
     **Auth:** Requires admin access token with at least one of the following permissions:
     - `get_permissions`
     - `update_account-permissions`
-    - `update_account-authorization`
+    - `update_accounts`
   security:
     - bearerAuth: []
   responses:
