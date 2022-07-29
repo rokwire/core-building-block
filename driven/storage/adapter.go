@@ -1323,9 +1323,7 @@ func (sa *Adapter) SaveAccount(context TransactionContext, account *model.Accoun
 func (sa *Adapter) UpdateAccountUsageInfo(context TransactionContext, accountID string, updateLoginTime bool, updateAccessTokenTime bool, clientVersion *string) error {
 	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
 	now := time.Now().UTC()
-	update := bson.M{
-		"date_updated": now,
-	}
+	update := bson.M{}
 	if updateLoginTime {
 		update["last_login_date"] = now
 	}
