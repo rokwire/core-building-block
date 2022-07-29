@@ -186,11 +186,11 @@ func organizationConfigToDef(item *model.OrganizationConfig) *Def.OrganizationCo
 
 //App Config
 func appConfigToDef(item model.ApplicationConfig) Def.ApplicationConfig {
-	var appTypeID *string
+	var appTypeID string
 	if item.ApplicationType != nil {
-		appTypeID = &item.ApplicationType.ID
+		appTypeID = item.ApplicationType.ID
 	}
-	defConfig := Def.ApplicationConfig{Id: item.ID, AppTypeId: *appTypeID, Version: item.Version.VersionNumbers.String(), Data: item.Data}
+	defConfig := Def.ApplicationConfig{Id: item.ID, AppTypeId: appTypeID, Version: item.Version.VersionNumbers.String(), Data: item.Data}
 	if item.AppOrg != nil {
 		defConfig.OrgId = &item.AppOrg.Organization.ID
 	}

@@ -596,6 +596,10 @@ func (sa *Adapter) cacheApplicationConfigs() error {
 }
 
 func (sa *Adapter) setCachedApplicationConfigs(applicationConfigs *[]model.ApplicationConfig) {
+	if applicationConfigs == nil || len(*applicationConfigs) == 0 {
+		return
+	}
+
 	sa.applicationConfigsLock.Lock()
 	defer sa.applicationConfigsLock.Unlock()
 
@@ -615,9 +619,13 @@ func (sa *Adapter) setCachedApplicationConfigs(applicationConfigs *[]model.Appli
 			// key 1 - ID
 			sa.cachedApplicationConfigs.Store(config.ID, config)
 
+			var appOrgID string
+			if config.AppOrg != nil {
+				appOrgID = config.AppOrg.ID
+			}
+
 			// key 2 - cache pair {appID_appOrgID: []model.ApplicationConfigs}
 			var defaultFileKey string
-
 			// key 3 - cache pair {appTypeID_appOrgID: []model.ApplicationConfigs}
 			var patchFileKey string
 			if config.ApplicationType != nil {
@@ -626,41 +634,51 @@ func (sa *Adapter) setCachedApplicationConfigs(applicationConfigs *[]model.Appli
 				defaultFileKey = config.AppID
 			}
 
-			if config.AppOrg != nil {
-				appOrgID := config.AppOrg.ID
-				patchFileKey = fmt.Sprintf("%s_%s", patchFileKey, appOrgID)
-				defaultFileKey = fmt.Sprintf("%s_%s", defaultFileKey, appOrgID)
-			}
-
 			// store key 2 entry
-			if currentDefaultKey == "" {
-				currentDefaultKey = defaultFileKey
-			} else if currentDefaultKey != defaultFileKey {
-				// cache processed defaultFile list
-				sa.cachedApplicationConfigs.Store(currentDefaultKey, currentDefaultConfigList)
-				// init new defaultFile key and configList
-				currentDefaultKey = defaultFileKey
-				currentDefaultConfigList = make([]model.ApplicationConfig, 0)
+			if defaultFileKey != "" {
+				if appOrgID != "" {
+					defaultFileKey = fmt.Sprintf("%s_%s", defaultFileKey, appOrgID)
+				}
+
+				if currentDefaultKey == "" {
+					currentDefaultKey = defaultFileKey
+				} else if currentDefaultKey != defaultFileKey {
+					// cache processed defaultFile list
+					sa.cachedApplicationConfigs.Store(currentDefaultKey, currentDefaultConfigList)
+					// init new defaultFile key and configList
+					currentDefaultKey = defaultFileKey
+					currentDefaultConfigList = make([]model.ApplicationConfig, 0)
+				}
+				currentDefaultConfigList = append(currentDefaultConfigList, config)
 			}
-			currentDefaultConfigList = append(currentDefaultConfigList, config)
 
 			// store key 3 entry
-			if currentPatchKey == "" {
-				currentPatchKey = patchFileKey
-			} else if currentPatchKey != patchFileKey {
-				// cache processed list
-				sa.cachedApplicationConfigs.Store(currentPatchKey, currentPatchConfigList)
-				// init new key and configList
-				currentPatchKey = patchFileKey
-				currentPatchConfigList = make([]model.ApplicationConfig, 0)
+			if patchFileKey != "" {
+				if appOrgID != "" {
+					patchFileKey = fmt.Sprintf("%s_%s", patchFileKey, appOrgID)
+				}
+
+				if currentPatchKey == "" {
+					currentPatchKey = patchFileKey
+				} else if currentPatchKey != patchFileKey {
+					// cache processed list
+					sa.cachedApplicationConfigs.Store(currentPatchKey, currentPatchConfigList)
+					// init new key and configList
+					currentPatchKey = patchFileKey
+					currentPatchConfigList = make([]model.ApplicationConfig, 0)
+				}
+				currentPatchConfigList = append(currentPatchConfigList, config)
 			}
-			currentPatchConfigList = append(currentPatchConfigList, config)
 		}
 	}
 
 	// store last cache entries
-	sa.cachedApplicationConfigs.Store(currentPatchKey, currentPatchConfigList)
-	sa.cachedApplicationConfigs.Store(currentDefaultKey, currentDefaultConfigList)
+	if currentPatchKey != "" {
+		sa.cachedApplicationConfigs.Store(currentPatchKey, currentPatchConfigList)
+	}
+	if currentDefaultKey != "" {
+		sa.cachedApplicationConfigs.Store(currentDefaultKey, currentDefaultConfigList)
+	}
 }
 
 // get cached default appConfig files

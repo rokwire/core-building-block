@@ -156,7 +156,7 @@ func appConfigFromStorage(item *applicationConfig, appOrg *model.ApplicationOrga
 	if item == nil {
 		return model.ApplicationConfig{}
 	}
-	return model.ApplicationConfig{ID: item.ID, AppOrg: appOrg, ApplicationType: appType, Data: item.Data, Version: versionFromStorage(&item.Version, appType), DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+	return model.ApplicationConfig{ID: item.ID, AppID: item.AppID, AppOrg: appOrg, ApplicationType: appType, Data: item.Data, Version: versionFromStorage(&item.Version, appType), DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
 func appConfigsFromStorage(itemList []applicationConfig, appOrg *model.ApplicationOrganization, appType *model.ApplicationType) []model.ApplicationConfig {

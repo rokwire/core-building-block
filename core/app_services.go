@@ -151,7 +151,7 @@ func (app *application) serGetAppConfig(appTypeIdentifier string, appID *string,
 	}
 
 	if len(patchAppConfigs) > 0 {
-		var patchAppConfigMap map[model.VersionNumbers]model.ApplicationConfig
+		patchAppConfigMap := make(map[model.VersionNumbers]model.ApplicationConfig, 0)
 		for _, patchAppConfig := range patchAppConfigs {
 			patchAppConfigMap[patchAppConfig.Version.VersionNumbers] = patchAppConfig
 		}
@@ -161,14 +161,14 @@ func (app *application) serGetAppConfig(appTypeIdentifier string, appID *string,
 			// TODO: handle missing base patch file
 		}
 
-		var mergedAppConfig *model.ApplicationConfig
+		var mergedAppConfig model.ApplicationConfig
 		versionNumbers := defaultAppConfig.Version.VersionNumbers
 		if patch, ok := patchAppConfigMap[versionNumbers]; ok {
-			*mergedAppConfig = defaultAppConfig.MergeAppConfig(&patch)
+			mergedAppConfig = defaultAppConfig.MergeAppConfig(&patch)
 		} else {
-			*mergedAppConfig = defaultAppConfig.MergeAppConfig(basePatchAppConfig)
+			mergedAppConfig = defaultAppConfig.MergeAppConfig(basePatchAppConfig)
 		}
-		return mergedAppConfig, nil
+		return &mergedAppConfig, nil
 	}
 
 	return defaultAppConfig, nil

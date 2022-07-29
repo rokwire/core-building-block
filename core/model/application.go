@@ -406,6 +406,7 @@ func (config ApplicationConfig) MergeAppConfig(patchConfig *ApplicationConfig) A
 	}
 
 	config.Data = baseData
+	config.ApplicationType = patchConfig.ApplicationType
 
 	return config
 }
