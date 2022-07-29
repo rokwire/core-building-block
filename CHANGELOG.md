@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - Update role permissions admin API [#516](https://github.com/rokwire/core-building-block/issues/516)
+### Fixed
+- Authorization policy comments not working [#506](https://github.com/rokwire/core-building-block/issues/506)
 
 ## [1.24.1] - 2022-07-07
 ### Changed
