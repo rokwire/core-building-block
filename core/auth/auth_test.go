@@ -24,6 +24,7 @@ func TestSignUp(t *testing.T) {
 	// storage := genmocks.Storage{}
 	// auth, err := auth.NewAuth(serviceID, host, authPrivKey, storage, emailer, minTokenExp, maxTokenExp, twilioAccountSID, twilioToken, twilioServiceSID, profileBBAdapter, smtpHost, smtpPortNum, smtpUser, smtpPassword, smtpFrom, logger)
 
+	//TODO: auth.applySignUp (3) vs. emailAuthImpl.signUp (2), sent verification email only in sendVerifyCredential, not signUp
 	type args struct {
 	}
 	tests := []struct {
