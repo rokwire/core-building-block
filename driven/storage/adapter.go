@@ -2561,24 +2561,17 @@ func (sa *Adapter) UpdateAppOrgRole(context TransactionContext, item model.AppOr
 		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAppOrgRole, &logutils.FieldArgs{"id": item.ID, "modified": res.ModifiedCount, "expected": 1})
 	}
 
-	// update all groups that have the role
-	groupsFilter := bson.D{primitive.E{Key: "roles._id", Value: item.ID}}
-	groupsUpdate := bson.D{
-		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "roles.$.name", Value: item.Name},
-			primitive.E{Key: "roles.$.description", Value: item.Description},
-			primitive.E{Key: "roles.$.permissions", Value: item.Permissions},
-			primitive.E{Key: "roles.$.system", Value: item.System},
-			primitive.E{Key: "roles.$.date_updated", Value: item.DateUpdated},
-		}},
-	}
-
-	res, err = sa.db.applicationsOrganizationsGroups.UpdateManyWithContext(context, groupsFilter, groupsUpdate, nil)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAppOrgGroup, &logutils.FieldArgs{"roles._id": item.ID}, err)
-	}
-	if res.ModifiedCount != res.MatchedCount {
-		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAppOrgGroup, &logutils.FieldArgs{"roles._id": item.ID, "modified": res.ModifiedCount, "expected": res.MatchedCount})
+	// update all groups that have the role in all collections
+	key := "roles._id"
+	groups, err := sa.findAppOrgGroups(context, &key, item.ID, item.AppOrg.ID)
+	for _, g := range groups {
+		for ridx, r := range g.Roles {
+			if r.ID == item.ID {
+				g.Roles[ridx] = item
+				err = sa.UpdateAppOrgGroup(context, g)
+				break
+			}
+		}
 	}
 
 	// update all accounts that have the role
@@ -2646,21 +2639,7 @@ func (sa *Adapter) InsertAppOrgRolePermissions(context TransactionContext, roleI
 
 //FindAppOrgGroups finds all application organization groups for the provided AppOrg ID
 func (sa *Adapter) FindAppOrgGroups(appOrgID string) ([]model.AppOrgGroup, error) {
-	filter := bson.D{primitive.E{Key: "app_org_id", Value: appOrgID}}
-	var groupsResult []appOrgGroup
-	err := sa.db.applicationsOrganizationsGroups.Find(filter, &groupsResult, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	appOrg, err := sa.getCachedApplicationOrganizationByKey(appOrgID)
-	if err != nil {
-		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeOrganization, &logutils.FieldArgs{"app_org_id": appOrg}, err)
-	}
-
-	result := appOrgGroupsFromStorage(groupsResult, *appOrg)
-
-	return result, nil
+	return sa.findAppOrgGroups(nil, nil, "", appOrgID)
 }
 
 //FindAppOrgGroupsByIDs finds a set of application organization groups for the provided IDs
@@ -2715,6 +2694,32 @@ func (sa *Adapter) FindAppOrgGroup(id string, appOrgID string) (*model.AppOrgGro
 	}
 	result := appOrgGroupFromStorage(&group, *appOrg)
 	return &result, nil
+}
+
+func (sa *Adapter) findAppOrgGroups(context TransactionContext, key *string, id string, appOrgID string) ([]model.AppOrgGroup, error) {
+	filter := bson.D{primitive.E{Key: "app_org_id", Value: appOrgID}}
+	if key != nil {
+		filter = append(filter, primitive.E{Key: *key, Value: id})
+	}
+	var groupsResult []appOrgGroup
+	var err error
+	if context != nil {
+		err = sa.db.applicationsOrganizationsGroups.FindWithContext(context, filter, &groupsResult, nil)
+	} else {
+		err = sa.db.applicationsOrganizationsGroups.Find(filter, &groupsResult, nil)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	appOrg, err := sa.getCachedApplicationOrganizationByKey(appOrgID)
+	if err != nil {
+		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeOrganization, &logutils.FieldArgs{"app_org_id": appOrg}, err)
+	}
+
+	result := appOrgGroupsFromStorage(groupsResult, *appOrg)
+
+	return result, nil
 }
 
 //InsertAppOrgGroup inserts a new application organization group
