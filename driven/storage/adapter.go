@@ -2565,6 +2565,7 @@ func (sa *Adapter) findAppOrgRoles(context TransactionContext, key *string, id s
 		filter = append(filter, primitive.E{Key: "app_org_id", Value: appOrgID})
 		errFields["app_org_id"] = appOrgID
 	}
+
 	var rolesResult []appOrgRole
 	var err error
 	if context != nil {
@@ -2576,12 +2577,16 @@ func (sa *Adapter) findAppOrgRoles(context TransactionContext, key *string, id s
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgRole, &errFields, err)
 	}
 
-	appOrg, err := sa.getCachedApplicationOrganizationByKey(appOrgID)
-	if err != nil || appOrg == nil {
-		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_org_id": appOrg}, err)
+	var result []model.AppOrgRole
+	if len(rolesResult) > 0 {
+		appOrg, err := sa.getCachedApplicationOrganizationByKey(rolesResult[0].AppOrgID)
+		if err != nil || appOrg == nil {
+			return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_org_id": rolesResult[0].AppOrgID}, err)
+		}
+		result = appOrgRolesFromStorage(rolesResult, *appOrg)
+	} else {
+		result = make([]model.AppOrgRole, 0)
 	}
-
-	result := appOrgRolesFromStorage(rolesResult, *appOrg)
 
 	return result, nil
 }
@@ -2773,6 +2778,7 @@ func (sa *Adapter) findAppOrgGroups(context TransactionContext, key *string, id 
 		filter = append(filter, primitive.E{Key: "app_org_id", Value: appOrgID})
 		errFields["app_org_id"] = appOrgID
 	}
+
 	var groupsResult []appOrgGroup
 	var err error
 	if context != nil {
@@ -2784,12 +2790,16 @@ func (sa *Adapter) findAppOrgGroups(context TransactionContext, key *string, id 
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgGroup, &errFields, err)
 	}
 
-	appOrg, err := sa.getCachedApplicationOrganizationByKey(appOrgID)
-	if err != nil || appOrg == nil {
-		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_org_id": appOrg}, err)
+	var result []model.AppOrgGroup
+	if len(groupsResult) > 0 {
+		appOrg, err := sa.getCachedApplicationOrganizationByKey(groupsResult[0].AppOrgID)
+		if err != nil || appOrg == nil {
+			return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_org_id": groupsResult[0].AppOrgID}, err)
+		}
+		result = appOrgGroupsFromStorage(groupsResult, *appOrg)
+	} else {
+		result = make([]model.AppOrgGroup, 0)
 	}
-
-	result := appOrgGroupsFromStorage(groupsResult, *appOrg)
 
 	return result, nil
 }
