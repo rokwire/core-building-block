@@ -19,9 +19,9 @@ import (
 	"core-building-block/driven/storage"
 	"time"
 
-	"github.com/rokwire/core-auth-library-go/authorization"
-	"github.com/rokwire/core-auth-library-go/sigauth"
-	"github.com/rokwire/core-auth-library-go/tokenauth"
+	"github.com/rokwire/core-auth-library-go/v2/authorization"
+	"github.com/rokwire/core-auth-library-go/v2/sigauth"
+	"github.com/rokwire/core-auth-library-go/v2/tokenauth"
 	"github.com/rokwire/logging-library-go/logs"
 )
 
@@ -321,20 +321,20 @@ type APIs interface {
 	GetServiceAccounts(params map[string]interface{}) ([]model.ServiceAccount, error)
 
 	//RegisterServiceAccount registers a service account
-	RegisterServiceAccount(accountID *string, fromAppID *string, fromOrgID *string, name *string, appID *string, orgID *string,
+	RegisterServiceAccount(accountID *string, fromAppID *string, fromOrgID *string, name *string, appID string, orgID string,
 		permissions *[]string, firstParty *bool, creds []model.ServiceAccountCredential, assignerPermissions []string, l *logs.Log) (*model.ServiceAccount, error)
 
 	//DeregisterServiceAccount deregisters a service account
 	DeregisterServiceAccount(accountID string) error
 
 	//GetServiceAccountInstance gets a service account instance
-	GetServiceAccountInstance(accountID string, appID *string, orgID *string) (*model.ServiceAccount, error)
+	GetServiceAccountInstance(accountID string, appID string, orgID string) (*model.ServiceAccount, error)
 
 	//UpdateServiceAccountInstance updates a service account instance
-	UpdateServiceAccountInstance(id string, appID *string, orgID *string, name string, permissions []string, assignerPermissions []string) (*model.ServiceAccount, error)
+	UpdateServiceAccountInstance(id string, appID string, orgID string, name string, permissions []string, assignerPermissions []string) (*model.ServiceAccount, error)
 
 	//DeregisterServiceAccountInstance deregisters a service account instance
-	DeregisterServiceAccountInstance(id string, appID *string, orgID *string) error
+	DeregisterServiceAccountInstance(id string, appID string, orgID string) error
 
 	//AddServiceAccountCredential adds a credential to a service account
 	AddServiceAccountCredential(accountID string, creds *model.ServiceAccountCredential, l *logs.Log) (*model.ServiceAccountCredential, error)
@@ -388,17 +388,20 @@ type APIs interface {
 	//GrantAccountPermissions grants new permissions to an account after validating the assigner has required permissions
 	GrantAccountPermissions(context storage.TransactionContext, account *model.Account, permissionNames []string, assignerPermissions []string) error
 
-	//CheckPermissions loads permissions by names from storage and checks that they are assignable and valid for the given appOrg
-	CheckPermissions(context storage.TransactionContext, appOrg *model.ApplicationOrganization, permissionNames []string, assignerPermissions []string) ([]model.Permission, error)
+	//CheckPermissions loads permissions by names from storage and checks that they are assignable and valid for the given appOrg or revocable
+	CheckPermissions(context storage.TransactionContext, appOrg *model.ApplicationOrganization, permissionNames []string, assignerPermissions []string, revoke bool) ([]model.Permission, error)
 
 	//GrantAccountRoles grants new roles to an account after validating the assigner has required permissions
 	GrantAccountRoles(context storage.TransactionContext, account *model.Account, roleIDs []string, assignerPermissions []string) error
 
-	//CheckRoles loads appOrg roles by IDs from storage and checks that they are assignable
-	CheckRoles(context storage.TransactionContext, appOrg *model.ApplicationOrganization, roleIDs []string, assignerPermissions []string) ([]model.AppOrgRole, error)
+	//CheckRoles loads appOrg roles by IDs from storage and checks that they are assignable or revocable
+	CheckRoles(context storage.TransactionContext, appOrg *model.ApplicationOrganization, roleIDs []string, assignerPermissions []string, revoke bool) ([]model.AppOrgRole, error)
 
 	//GrantAccountGroups grants new groups to an account after validating the assigner has required permissions
 	GrantAccountGroups(context storage.TransactionContext, account *model.Account, groupIDs []string, assignerPermissions []string) error
+
+	//CheckGroups loads appOrg groups by IDs from storage and checks that they are assignable or revocable
+	CheckGroups(context storage.TransactionContext, appOrg *model.ApplicationOrganization, groupIDs []string, assignerPermissions []string, revoke bool) ([]model.AppOrgGroup, error)
 
 	//DeleteAccount deletes an account for the given id
 	DeleteAccount(id string) error
@@ -477,11 +480,11 @@ type Storage interface {
 	FindProfiles(appID string, authTypeID string, accountAuthTypeIdentifier string) ([]model.Profile, error)
 
 	//ServiceAccounts
-	FindServiceAccount(context storage.TransactionContext, accountID string, appID *string, orgID *string) (*model.ServiceAccount, error)
+	FindServiceAccount(context storage.TransactionContext, accountID string, appID string, orgID string) (*model.ServiceAccount, error)
 	FindServiceAccounts(params map[string]interface{}) ([]model.ServiceAccount, error)
 	InsertServiceAccount(account *model.ServiceAccount) error
 	UpdateServiceAccount(account *model.ServiceAccount) (*model.ServiceAccount, error)
-	DeleteServiceAccount(accountID string, appID *string, orgID *string) error
+	DeleteServiceAccount(accountID string, appID string, orgID string) error
 	DeleteServiceAccounts(accountID string) error
 
 	//ServiceAccountCredentials

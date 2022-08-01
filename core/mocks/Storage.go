@@ -1147,13 +1147,13 @@ func (_m *Storage) UpdateAppConfig(ID string, appType model.ApplicationType, app
 	return r0
 }
 
-// UpdateAppOrgGroup provides a mock function with given fields: item
-func (_m *Storage) UpdateAppOrgGroup(item model.AppOrgGroup) error {
-	ret := _m.Called(item)
+// UpdateAppOrgGroup provides a mock function with given fields: context, item
+func (_m *Storage) UpdateAppOrgGroup(context storage.TransactionContext, item model.AppOrgGroup) error {
+	ret := _m.Called(context, item)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(model.AppOrgGroup) error); ok {
-		r0 = rf(item)
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, model.AppOrgGroup) error); ok {
+		r0 = rf(context, item)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -1161,13 +1161,13 @@ func (_m *Storage) UpdateAppOrgGroup(item model.AppOrgGroup) error {
 	return r0
 }
 
-// UpdateAppOrgRole provides a mock function with given fields: item
-func (_m *Storage) UpdateAppOrgRole(item model.AppOrgRole) error {
-	ret := _m.Called(item)
+// UpdateAppOrgRole provides a mock function with given fields: context, item
+func (_m *Storage) UpdateAppOrgRole(context storage.TransactionContext, item model.AppOrgRole) error {
+	ret := _m.Called(context, item)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(model.AppOrgRole) error); ok {
-		r0 = rf(item)
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, model.AppOrgRole) error); ok {
+		r0 = rf(context, item)
 	} else {
 		r0 = ret.Error(0)
 	}

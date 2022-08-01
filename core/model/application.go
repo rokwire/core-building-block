@@ -20,7 +20,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/rokwire/core-auth-library-go/authutils"
+	"github.com/rokwire/core-auth-library-go/v2/authutils"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logutils"
 )
@@ -114,6 +114,15 @@ func (c AppOrgRole) GetPermissionNamed(name string) *Permission {
 	return nil
 }
 
+//GetAssignedPermissionNames returns a list of names of assigned permissions for this role
+func (c AppOrgRole) GetAssignedPermissionNames() []string {
+	names := make([]string, len(c.Permissions))
+	for i, permission := range c.Permissions {
+		names[i] = permission.Name
+	}
+	return names
+}
+
 //CheckAssigners checks if the passed permissions satisfy the needed assigners for all role permissions
 func (c AppOrgRole) CheckAssigners(assignerPermissions []string) error {
 	if len(c.Permissions) == 0 {
@@ -173,6 +182,24 @@ func (cg AppOrgGroup) CheckAssigners(assignerPermissions []string) error {
 	}
 	//all assigners are satisfied
 	return nil
+}
+
+//GetAssignedPermissionNames returns a list of names of assigned permissions for this group
+func (cg AppOrgGroup) GetAssignedPermissionNames() []string {
+	names := make([]string, len(cg.Permissions))
+	for i, permission := range cg.Permissions {
+		names[i] = permission.Name
+	}
+	return names
+}
+
+//GetAssignedRoleIDs returns a list of ids of assigned roles for this group
+func (cg AppOrgGroup) GetAssignedRoleIDs() []string {
+	ids := make([]string, len(cg.Roles))
+	for i, role := range cg.Roles {
+		ids[i] = role.ID
+	}
+	return ids
 }
 
 func (cg AppOrgGroup) String() string {

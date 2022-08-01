@@ -287,8 +287,8 @@ type AppOrgGroup struct {
 
 // AppOrgPair defines model for AppOrgPair.
 type AppOrgPair struct {
-	AppId *string `json:"app_id"`
-	OrgId *string `json:"org_id"`
+	AppId string `json:"app_id"`
+	OrgId string `json:"org_id"`
 }
 
 // AppOrgRole defines model for AppOrgRole.
@@ -552,11 +552,11 @@ type PubKey struct {
 // ServiceAccount defines model for ServiceAccount.
 type ServiceAccount struct {
 	AccountId   string                      `json:"account_id"`
-	AppId       *string                     `json:"app_id"`
+	AppId       string                      `json:"app_id"`
 	Creds       *[]ServiceAccountCredential `json:"creds,omitempty"`
 	FirstParty  bool                        `json:"first_party"`
 	Name        string                      `json:"name"`
-	OrgId       *string                     `json:"org_id"`
+	OrgId       string                      `json:"org_id"`
 	Permissions []string                    `json:"permissions"`
 }
 
@@ -600,18 +600,21 @@ type AdminReqAddAccountsToGroup struct {
 	AccountIds []string `json:"account_ids"`
 }
 
-// AdminReqCreateApplicationGroup defines model for _admin_req_create-application_group.
-type AdminReqCreateApplicationGroup struct {
+// AdminReqApplicationGroup defines model for _admin_req_application_group.
+type AdminReqApplicationGroup struct {
+	Description string    `json:"description"`
 	Name        string    `json:"name"`
 	Permissions *[]string `json:"permissions,omitempty"`
 	Roles       *[]string `json:"roles,omitempty"`
+	System      *bool     `json:"system,omitempty"`
 }
 
-// AdminReqCreateApplicationRole defines model for _admin_req_create-application_role.
-type AdminReqCreateApplicationRole struct {
+// AdminReqApplicationRole defines model for _admin_req_application_role.
+type AdminReqApplicationRole struct {
 	Description string   `json:"description"`
 	Name        string   `json:"name"`
 	Permissions []string `json:"permissions"`
+	System      *bool    `json:"system,omitempty"`
 }
 
 // AdminReqGrantPermissions defines model for _admin_req_grant-permissions.
@@ -735,12 +738,12 @@ type ServicesReqCredentialUpdate struct {
 // ServicesReqServiceAccountsAccessToken defines model for _services_req_service-accounts_access-token.
 type ServicesReqServiceAccountsAccessToken struct {
 	AccountId string                                        `json:"account_id"`
-	AppId     *string                                       `json:"app_id"`
+	AppId     string                                        `json:"app_id"`
 	AuthType  ServicesReqServiceAccountsAccessTokenAuthType `json:"auth_type"`
 
 	// Service account token for auth_type="static_token"
 	Creds *ServicesServiceAccountsCredsStaticToken `json:"creds,omitempty"`
-	OrgId *string                                  `json:"org_id"`
+	OrgId string                                   `json:"org_id"`
 }
 
 // ServicesReqServiceAccountsAccessTokenAuthType defines model for ServicesReqServiceAccountsAccessToken.AuthType.
@@ -792,8 +795,8 @@ type ServicesResAuthorizeServiceTokenType string
 
 // ServicesResServiceAccountsAccessTokens defines model for _services_res_service-accounts_access-tokens.
 type ServicesResServiceAccountsAccessTokens struct {
-	AppId *string               `json:"app_id"`
-	OrgId *string               `json:"org_id"`
+	AppId string                `json:"app_id"`
+	OrgId string                `json:"org_id"`
 	Token SharedResRokwireToken `json:"token"`
 }
 
@@ -1124,11 +1127,11 @@ type SystemReqCreateAuthType_Params struct {
 // SystemReqCreateServiceAccount defines model for _system_req_create_service-account.
 type SystemReqCreateServiceAccount struct {
 	AccountId   *string                     `json:"account_id,omitempty"`
-	AppId       *string                     `json:"app_id"`
+	AppId       string                      `json:"app_id"`
 	Creds       *[]ServiceAccountCredential `json:"creds,omitempty"`
 	FirstParty  *bool                       `json:"first_party,omitempty"`
 	Name        *string                     `json:"name,omitempty"`
-	OrgId       *string                     `json:"org_id"`
+	OrgId       string                      `json:"org_id"`
 	Permissions *[]string                   `json:"permissions,omitempty"`
 }
 
@@ -1245,7 +1248,10 @@ type DeleteAdminApplicationAccountsIdRolesJSONBody AdminReqRevokeRolesFromAccoun
 type PutAdminApplicationAccountsIdRolesJSONBody AdminReqGrantRolesToAccount
 
 // PostAdminApplicationGroupsJSONBody defines parameters for PostAdminApplicationGroups.
-type PostAdminApplicationGroupsJSONBody AdminReqCreateApplicationGroup
+type PostAdminApplicationGroupsJSONBody AdminReqApplicationGroup
+
+// PutAdminApplicationGroupsIdJSONBody defines parameters for PutAdminApplicationGroupsId.
+type PutAdminApplicationGroupsIdJSONBody AdminReqApplicationGroup
 
 // DeleteAdminApplicationGroupsIdAccountsJSONBody defines parameters for DeleteAdminApplicationGroupsIdAccounts.
 type DeleteAdminApplicationGroupsIdAccountsJSONBody AdminReqRemoveAccountFromGroup
@@ -1279,7 +1285,10 @@ type GetAdminApplicationLoginSessionsParams struct {
 }
 
 // PostAdminApplicationRolesJSONBody defines parameters for PostAdminApplicationRoles.
-type PostAdminApplicationRolesJSONBody AdminReqCreateApplicationRole
+type PostAdminApplicationRolesJSONBody AdminReqApplicationRole
+
+// PutAdminApplicationRolesIdJSONBody defines parameters for PutAdminApplicationRolesId.
+type PutAdminApplicationRolesIdJSONBody AdminReqApplicationRole
 
 // PutAdminApplicationRolesIdPermissionsJSONBody defines parameters for PutAdminApplicationRolesIdPermissions.
 type PutAdminApplicationRolesIdPermissionsJSONBody AdminReqGrantPermissionsToRole
@@ -1570,20 +1579,20 @@ type PostSystemServiceAccountsParams struct {
 type DeleteSystemServiceAccountsIdParams struct {
 
 	// Application ID of the service account instance
-	AppId *string `json:"app_id,omitempty"`
+	AppId string `json:"app_id"`
 
 	// Organization ID of the service account instance
-	OrgId *string `json:"org_id,omitempty"`
+	OrgId string `json:"org_id"`
 }
 
 // GetSystemServiceAccountsIdParams defines parameters for GetSystemServiceAccountsId.
 type GetSystemServiceAccountsIdParams struct {
 
 	// Application ID of the service account instance
-	AppId *string `json:"app_id,omitempty"`
+	AppId string `json:"app_id"`
 
 	// Organization ID of the service account instance
-	OrgId *string `json:"org_id,omitempty"`
+	OrgId string `json:"org_id"`
 }
 
 // PutSystemServiceAccountsIdJSONBody defines parameters for PutSystemServiceAccountsId.
@@ -1593,10 +1602,10 @@ type PutSystemServiceAccountsIdJSONBody SystemReqUpdateServiceAccount
 type PutSystemServiceAccountsIdParams struct {
 
 	// Application ID of the service account instance
-	AppId *string `json:"app_id,omitempty"`
+	AppId string `json:"app_id"`
 
 	// Organization ID of the service account instance
-	OrgId *string `json:"org_id,omitempty"`
+	OrgId string `json:"org_id"`
 }
 
 // DeleteSystemServiceAccountsIdCredsParams defines parameters for DeleteSystemServiceAccountsIdCreds.
@@ -1686,6 +1695,9 @@ type PutAdminApplicationAccountsIdRolesJSONRequestBody PutAdminApplicationAccoun
 // PostAdminApplicationGroupsJSONRequestBody defines body for PostAdminApplicationGroups for application/json ContentType.
 type PostAdminApplicationGroupsJSONRequestBody PostAdminApplicationGroupsJSONBody
 
+// PutAdminApplicationGroupsIdJSONRequestBody defines body for PutAdminApplicationGroupsId for application/json ContentType.
+type PutAdminApplicationGroupsIdJSONRequestBody PutAdminApplicationGroupsIdJSONBody
+
 // DeleteAdminApplicationGroupsIdAccountsJSONRequestBody defines body for DeleteAdminApplicationGroupsIdAccounts for application/json ContentType.
 type DeleteAdminApplicationGroupsIdAccountsJSONRequestBody DeleteAdminApplicationGroupsIdAccountsJSONBody
 
@@ -1694,6 +1706,9 @@ type PutAdminApplicationGroupsIdAccountsJSONRequestBody PutAdminApplicationGroup
 
 // PostAdminApplicationRolesJSONRequestBody defines body for PostAdminApplicationRoles for application/json ContentType.
 type PostAdminApplicationRolesJSONRequestBody PostAdminApplicationRolesJSONBody
+
+// PutAdminApplicationRolesIdJSONRequestBody defines body for PutAdminApplicationRolesId for application/json ContentType.
+type PutAdminApplicationRolesIdJSONRequestBody PutAdminApplicationRolesIdJSONBody
 
 // PutAdminApplicationRolesIdPermissionsJSONRequestBody defines body for PutAdminApplicationRolesIdPermissions for application/json ContentType.
 type PutAdminApplicationRolesIdPermissionsJSONRequestBody PutAdminApplicationRolesIdPermissionsJSONBody

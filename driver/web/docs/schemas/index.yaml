@@ -186,15 +186,15 @@ _services_res_authorize-service:
 
 ### service-accounts API
 _services_req_service-accounts_params:
-  $ref: "./apis/services/service-accounts/params/request/Request.yaml"
+  $ref: "./apis/shared/requests/service-accounts/params/Request.yaml"
 _services_req_service-accounts_access-token:
-  $ref: "./apis/services/service-accounts/access-token/request/Request.yaml"
+  $ref: "./apis/shared/requests/service-accounts/access-token/Request.yaml"
 _services_req_service-accounts_access-tokens:
-  $ref: "./apis/services/service-accounts/access-tokens/request/Request.yaml"
+  $ref: "./apis/shared/requests/service-accounts/access-tokens/Request.yaml"
 _services_res_service-accounts_access-tokens:
-  $ref: "./apis/services/service-accounts/access-tokens/response/Response.yaml"
+  $ref: "./apis/shared/responses/service-accounts/access-tokens/Response.yaml"
 _services_service-accounts_CredsStaticToken:
-  $ref: "./apis/services/service-accounts/CredsStaticToken.yaml"
+  $ref: "./apis/shared/requests/service-accounts/CredsStaticToken.yaml"
 
 ### app-configs API
 _services_req_application_configs:
@@ -210,11 +210,11 @@ _admin_res_app-token:
   $ref: "./apis/admin/app-token/response/Response.yaml"
 
 ### admin application_roles API
-_admin_req_create-application_role:
+_admin_req_application_role:
   $ref: "./apis/admin/application/roles/request/Request.yaml"
 
 ### admin application_groups API
-_admin_req_create-application_group:
+_admin_req_application_group:
   $ref: "./apis/admin/application/groups/request/Request.yaml"
 
 ### admin add-accounts-to-group API

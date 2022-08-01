@@ -28,11 +28,11 @@ import (
 
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
-	"github.com/rokwire/core-auth-library-go/authorization"
-	"github.com/rokwire/core-auth-library-go/authservice"
-	"github.com/rokwire/core-auth-library-go/authutils"
-	"github.com/rokwire/core-auth-library-go/sigauth"
-	"github.com/rokwire/core-auth-library-go/tokenauth"
+	"github.com/rokwire/core-auth-library-go/v2/authorization"
+	"github.com/rokwire/core-auth-library-go/v2/authservice"
+	"github.com/rokwire/core-auth-library-go/v2/authutils"
+	"github.com/rokwire/core-auth-library-go/v2/sigauth"
+	"github.com/rokwire/core-auth-library-go/v2/tokenauth"
 	"golang.org/x/sync/syncmap"
 	"gopkg.in/go-playground/validator.v9"
 	"gopkg.in/gomail.v2"
@@ -48,6 +48,8 @@ const (
 	rokwireKeyword string = "ROKWIRE"
 
 	rokwireTokenAud string = "rokwire"
+
+	allServices string = "all"
 
 	typeMail              logutils.MessageDataType = "mail"
 	typeAuthType          logutils.MessageDataType = "auth type"
@@ -86,8 +88,8 @@ type Auth struct {
 
 	authPrivKey *rsa.PrivateKey
 
-	AuthService   *authservice.AuthService
-	SignatureAuth *sigauth.SignatureAuth
+	ServiceRegManager *authservice.ServiceRegManager
+	SignatureAuth     *sigauth.SignatureAuth
 
 	serviceID   string
 	host        string //Service host
@@ -140,7 +142,7 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 	timerDone := make(chan bool)
 
 	auth := &Auth{storage: storage, emailer: emailer, logger: logger, authTypes: authTypes, externalAuthTypes: externalAuthTypes, anonymousAuthTypes: anonymousAuthTypes,
-		serviceAuthTypes: serviceAuthTypes, mfaTypes: mfaTypes, authPrivKey: authPrivKey, AuthService: nil, serviceID: serviceID, host: host, minTokenExp: *minTokenExp,
+		serviceAuthTypes: serviceAuthTypes, mfaTypes: mfaTypes, authPrivKey: authPrivKey, ServiceRegManager: nil, serviceID: serviceID, host: host, minTokenExp: *minTokenExp,
 		maxTokenExp: *maxTokenExp, profileBB: profileBB, cachedIdentityProviders: cachedIdentityProviders, identityProvidersLock: identityProvidersLock,
 		timerDone: timerDone, emailDialer: emailDialer, emailFrom: smtpFrom, apiKeys: apiKeys, apiKeysLock: apiKeysLock}
 
@@ -149,16 +151,23 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 		return nil, errors.WrapErrorAction(logutils.ActionSave, "reg", nil, err)
 	}
 
-	dataLoader := NewLocalDataLoader(storage)
-
-	authService, err := authservice.NewAuthService(serviceID, host, dataLoader)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionInitialize, "auth service", nil, err)
+	authService := authservice.AuthService{
+		ServiceID:   serviceID,
+		ServiceHost: host,
+		FirstParty:  true,
 	}
 
-	auth.AuthService = authService
+	serviceRegLoader := NewLocalServiceRegLoader(storage)
 
-	signatureAuth, err := sigauth.NewSignatureAuth(authPrivKey, authService, true)
+	// Instantiate a ServiceRegManager to manage the service registration data loaded by serviceRegLoader
+	serviceRegManager, err := authservice.NewServiceRegManager(&authService, serviceRegLoader)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionInitialize, "service reg manager", nil, err)
+	}
+
+	auth.ServiceRegManager = serviceRegManager
+
+	signatureAuth, err := sigauth.NewSignatureAuth(authPrivKey, serviceRegManager, true)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionInitialize, "signature auth", nil, err)
 	}
@@ -1404,17 +1413,17 @@ func (a *Auth) constructAccount(context storage.TransactionContext, authType mod
 	var roles []model.AppOrgRole
 	var groups []model.AppOrgGroup
 	if adminSet {
-		permissions, err = a.CheckPermissions(context, &appOrg, permissionNames, assignerPermissions)
+		permissions, err = a.CheckPermissions(context, &appOrg, permissionNames, assignerPermissions, false)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypePermission, nil, err)
 		}
 
-		roles, err = a.CheckRoles(context, &appOrg, roleIDs, assignerPermissions)
+		roles, err = a.CheckRoles(context, &appOrg, roleIDs, assignerPermissions, false)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeAppOrgRole, nil, err)
 		}
 
-		groups, err = a.checkGroups(context, appOrg, groupIDs, assignerPermissions)
+		groups, err = a.CheckGroups(context, &appOrg, groupIDs, assignerPermissions, false)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeAppOrgGroup, nil, err)
 		}
@@ -1473,47 +1482,6 @@ func (a *Auth) storeNewAccountInfo(context storage.TransactionContext, account m
 		err = a.storage.UpdateProfile(context, profile)
 		if err != nil {
 			return errors.Wrapf("error updating profile on register", err)
-		}
-	}
-
-	return nil
-}
-
-func (a *Auth) checkGroups(context storage.TransactionContext, appOrg model.ApplicationOrganization, groupIDs []string, assignerPermissions []string) ([]model.AppOrgGroup, error) {
-	//find groups
-	groups, err := a.storage.FindAppOrgGroupsByIDs(context, groupIDs, appOrg.ID)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgGroup, nil, err)
-	}
-	_, err = model.GetMissingGroupIDs(groups, groupIDs)
-	if err != nil {
-		return nil, err
-	}
-
-	//check assigners
-	for _, group := range groups {
-		err = group.CheckAssigners(assignerPermissions)
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionValidate, "assigner permissions", &logutils.FieldArgs{"id": group.ID}, err)
-		}
-	}
-
-	return groups, nil
-}
-
-func (a *Auth) checkRevokedGroups(context storage.TransactionContext, appOrg model.ApplicationOrganization, groupIDs []string, assignerPermissions []string) error {
-	//find groups
-	groups, err := a.storage.FindAppOrgGroupsByIDs(context, groupIDs, appOrg.ID)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgGroup, nil, err)
-	}
-	//Revoke missing groups
-
-	//check assigners
-	for _, group := range groups {
-		err = group.CheckAssigners(assignerPermissions)
-		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionValidate, "assigner permissions", &logutils.FieldArgs{"id": group.ID}, err)
 		}
 	}
 
@@ -1845,7 +1813,7 @@ func (a *Auth) deleteAccount(context storage.TransactionContext, account model.A
 	return nil
 }
 
-func (a *Auth) constructServiceAccount(accountID string, name string, appID *string, orgID *string, permissions []string, firstParty bool, assignerPermissions []string) (*model.ServiceAccount, error) {
+func (a *Auth) constructServiceAccount(accountID string, name string, appID string, orgID string, permissions []string, firstParty bool, assignerPermissions []string) (*model.ServiceAccount, error) {
 	permissionList, err := a.storage.FindPermissionsByName(nil, permissions)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypePermission, nil, err)
@@ -1858,16 +1826,16 @@ func (a *Auth) constructServiceAccount(accountID string, name string, appID *str
 	}
 
 	var application *model.Application
-	if appID != nil {
-		application, err = a.storage.FindApplication(*appID)
-		if err != nil {
+	if appID != model.AllApps {
+		application, err = a.storage.FindApplication(appID)
+		if err != nil || application == nil {
 			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
 		}
 	}
 	var organization *model.Organization
-	if orgID != nil {
-		organization, err = a.storage.FindOrganization(*orgID)
-		if err != nil {
+	if orgID != model.AllOrgs {
+		organization, err = a.storage.FindOrganization(orgID)
+		if err != nil || organization == nil {
 			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
 		}
 	}
@@ -1910,11 +1878,11 @@ func (a *Auth) checkServiceAccountCreds(r *sigauth.Request, accountID *string, f
 
 func (a *Auth) buildAccessTokenForServiceAccount(account model.ServiceAccount, authType string) (string, *model.AppOrgPair, error) {
 	permissions := account.GetPermissionNames()
-	var appID string
+	appID := model.AllApps
 	if account.Application != nil {
 		appID = account.Application.ID
 	}
-	var orgID string
+	orgID := model.AllOrgs
 	if account.Organization != nil {
 		orgID = account.Organization.ID
 	}
@@ -1924,7 +1892,7 @@ func (a *Auth) buildAccessTokenForServiceAccount(account model.ServiceAccount, a
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
 	}
-	return accessToken, &model.AppOrgPair{AppID: utils.StringOrNil(appID), OrgID: utils.StringOrNil(orgID)}, nil
+	return accessToken, &model.AppOrgPair{AppID: appID, OrgID: orgID}, nil
 }
 
 func (a *Auth) registerAuthType(name string, auth authType) error {
@@ -2533,25 +2501,14 @@ func (a *Auth) deleteExpiredSessions() {
 	}
 }
 
-//LocalDataLoaderImpl provides a local implementation for AuthDataLoader
-type LocalDataLoaderImpl struct {
+//LocalServiceRegLoaderImpl provides a local implementation for AuthDataLoader
+type LocalServiceRegLoaderImpl struct {
 	storage Storage
 	*authservice.ServiceRegSubscriptions
 }
 
-//GetAccessToken implements AuthDataLoader interface
-func (l *LocalDataLoaderImpl) GetAccessToken() error {
-	return nil
-}
-
-//GetDeletedAccounts implements AuthDataLoader interface
-func (l *LocalDataLoaderImpl) GetDeletedAccounts() ([]string, error) {
-	//TODO: get deleted accounts from storage here
-	return nil, nil
-}
-
 //LoadServices implements ServiceRegLoader interface
-func (l *LocalDataLoaderImpl) LoadServices() ([]authservice.ServiceReg, error) {
+func (l *LocalServiceRegLoaderImpl) LoadServices() ([]authservice.ServiceReg, error) {
 	regs, err := l.storage.FindServiceRegs(l.GetSubscribedServices())
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceReg, nil, err)
@@ -2567,10 +2524,10 @@ func (l *LocalDataLoaderImpl) LoadServices() ([]authservice.ServiceReg, error) {
 	return authRegs, nil
 }
 
-//NewLocalDataLoader creates and configures a new LocalDataLoaderImpl instance
-func NewLocalDataLoader(storage Storage) *LocalDataLoaderImpl {
-	subscriptions := authservice.NewServiceRegSubscriptions([]string{"all"})
-	return &LocalDataLoaderImpl{storage: storage, ServiceRegSubscriptions: subscriptions}
+//NewLocalServiceRegLoader creates and configures a new LocalServiceRegLoaderImpl instance
+func NewLocalServiceRegLoader(storage Storage) *LocalServiceRegLoaderImpl {
+	subscriptions := authservice.NewServiceRegSubscriptions([]string{allServices})
+	return &LocalServiceRegLoaderImpl{storage: storage, ServiceRegSubscriptions: subscriptions}
 }
 
 //StorageListener represents storage listener implementation for the auth package
@@ -2591,5 +2548,5 @@ func (al *StorageListener) OnAPIKeysUpdated() {
 
 //OnServiceRegsUpdated notifies that a service registration has been updated
 func (al *StorageListener) OnServiceRegsUpdated() {
-	al.auth.AuthService.LoadServices()
+	al.auth.ServiceRegManager.LoadServices()
 }

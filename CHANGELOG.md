@@ -6,8 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- Update role permissions admin API [#516](https://github.com/rokwire/core-building-block/issues/516)
+- Update group admin API [#518](https://github.com/rokwire/core-building-block/issues/518)
+- 
 ### Fixed
 - Update permission should change roles/groups/accounts [#542](https://github.com/rokwire/core-building-block/issues/542)
+- Authorization policy comments not working [#506](https://github.com/rokwire/core-building-block/issues/506)
 
 ## [1.24.1] - 2022-07-07
 ### Changed
