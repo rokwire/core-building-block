@@ -86,7 +86,7 @@ func (h DefaultApisHandler) handleWebhookConfigChange(l *logs.Log, r *http.Reque
 	}
 	err = h.coreAPIs.Default.ProcessGitHubAppConfigWebhook(commits, l)
 	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeApplicationConfigWebhook, nil, err, http.StatusBadRequest, true)
+		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeApplicationConfigWebhook, nil, err, http.StatusInternalServerError, true)
 	}
 
 	return l.HttpResponseSuccess()
