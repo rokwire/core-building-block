@@ -2216,6 +2216,17 @@ func (sa *Adapter) UpdatePermission(context TransactionContext, item model.Permi
 	//This will be slow operation as we keep a copy of the entity in the users collection without index.
 	//Maybe we need to up the transaction timeout for this operation because of this.
 	if context == nil {
+		transaction := func(newContext TransactionContext) error {
+			return sa.updatePermission(newContext, item)
+		}
+		return sa.PerformTransaction(transaction)
+	}
+
+	return sa.updatePermission(context, item)
+}
+
+func (sa *Adapter) updatePermission(context TransactionContext, item model.Permission) error {
+	if context == nil {
 		return errors.ErrorData(logutils.StatusMissing, "transaction context", nil)
 	}
 
@@ -2271,7 +2282,6 @@ func (sa *Adapter) UpdatePermission(context TransactionContext, item model.Permi
 			primitive.E{Key: "permissions.$.service_id", Value: item.ServiceID},
 			primitive.E{Key: "permissions.$.assigners", Value: item.Assigners},
 			primitive.E{Key: "permissions.$.date_updated", Value: item.DateUpdated},
-			// primitive.E{Key: "date_updated", Value: item.DateUpdated},
 		}},
 	}
 
