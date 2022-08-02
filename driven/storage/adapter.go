@@ -2226,10 +2226,6 @@ func (sa *Adapter) UpdatePermission(context TransactionContext, item model.Permi
 }
 
 func (sa *Adapter) updatePermission(context TransactionContext, item model.Permission) error {
-	if context == nil {
-		return errors.ErrorData(logutils.StatusMissing, "transaction context", nil)
-	}
-
 	//update permission
 	permissionFilter := bson.D{primitive.E{Key: "name", Value: item.Name}}
 	permissionUpdate := bson.D{
