@@ -2849,6 +2849,19 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+  /tps/test:
+    get:
+      tags:
+        - TPs
+      summary: Test API..
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Echooo
   /tps/service-regs:
     get:
       tags:
