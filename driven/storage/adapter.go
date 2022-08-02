@@ -2491,12 +2491,7 @@ func (sa *Adapter) findAppOrgGroups(context TransactionContext, key *string, id 
 		filter = append(filter, primitive.E{Key: *key, Value: id})
 	}
 	var groupsResult []appOrgGroup
-	var err error
-	if context != nil {
-		err = sa.db.applicationsOrganizationsGroups.FindWithContext(context, filter, &groupsResult, nil)
-	} else {
-		err = sa.db.applicationsOrganizationsGroups.Find(filter, &groupsResult, nil)
-	}
+	err := sa.db.applicationsOrganizationsGroups.FindWithContext(context, filter, &groupsResult, nil)
 	if err != nil {
 		return nil, err
 	}
