@@ -2814,6 +2814,41 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+  /bbs/permissions:
+    put:
+      tags:
+        - BBs
+      summary: Updates service permissions
+      description: |
+        Updates the permissions used by a service
+
+        **Auth:** Requires service auth token
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: Service permission list
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/Permission'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json: null
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/Permission'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   /tps/service-regs:
     get:
       tags:
@@ -3012,6 +3047,41 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/_services_res_service-accounts_access-tokens'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /tps/permissions:
+    put:
+      tags:
+        - Third-Party Services
+      summary: Updates service permissions
+      description: |
+        Updates the permissions used by a service
+
+        **Auth:** Requires service auth token
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: Service permission list
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/Permission'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json: null
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/Permission'
         '400':
           description: Bad request
         '401':
@@ -4561,15 +4631,19 @@ components:
       required:
         - id
         - name
+        - description
+        - service_id
       type: object
       properties:
         id:
+          readOnly: true
           type: string
         name:
           type: string
         description:
           type: string
         service_id:
+          readOnly: true
           type: string
         assigners:
           type: array

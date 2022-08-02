@@ -20,6 +20,7 @@ import (
 	Def "core-building-block/driver/web/docs/gen"
 	"core-building-block/utils"
 	"encoding/json"
+	"io/ioutil"
 	"net/http"
 	"strings"
 
@@ -34,6 +35,12 @@ import (
 //TPSApisHandler handles the APIs implementation used by third-party services
 type TPSApisHandler struct {
 	coreAPIs *core.APIs
+}
+
+func (h TPSApisHandler) getTest(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	res := h.coreAPIs.TPs.TPsGetTest()
+
+	return l.HttpResponseSuccessMessage(res)
 }
 
 func (h TPSApisHandler) getServiceRegistrations(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
@@ -164,6 +171,32 @@ func (h TPSApisHandler) getServiceAccessTokens(l *logs.Log, r *http.Request, cla
 	}
 
 	respData, err := json.Marshal(rokwireTokens)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("service access tokens response"), nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessJSON(respData)
+}
+
+func (h TPSApisHandler) updatePermissions(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorData(logutils.StatusInvalid, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData []Def.Permission
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeAPIKey, nil, err, http.StatusBadRequest, true)
+	}
+
+	permissions := applicationPermissionsFromDef(requestData)
+	permissions, err = h.coreAPIs.TPs.TPsUpdatePermissions(permissions, claims.Subject)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypePermission, nil, err, http.StatusInternalServerError, true)
+	}
+
+	respData, err := json.Marshal(permissions)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("service access tokens response"), nil, err, http.StatusInternalServerError, false)
 	}

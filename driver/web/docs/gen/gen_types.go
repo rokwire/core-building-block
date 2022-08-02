@@ -516,10 +516,10 @@ type Permission struct {
 	Assigners   *[]string `json:"assigners,omitempty"`
 	DateCreated *string   `json:"date_created,omitempty"`
 	DateUpdated *string   `json:"date_updated,omitempty"`
-	Description *string   `json:"description,omitempty"`
+	Description string    `json:"description"`
 	Id          string    `json:"id"`
 	Name        string    `json:"name"`
-	ServiceId   *string   `json:"service_id,omitempty"`
+	ServiceId   string    `json:"service_id"`
 }
 
 // Profile defines model for Profile.
@@ -1319,6 +1319,9 @@ type PostBbsAccessTokenJSONBody ServicesReqServiceAccountsAccessToken
 // PostBbsAccessTokensJSONBody defines parameters for PostBbsAccessTokens.
 type PostBbsAccessTokensJSONBody ServicesReqServiceAccountsAccessTokens
 
+// PutBbsPermissionsJSONBody defines parameters for PutBbsPermissions.
+type PutBbsPermissionsJSONBody []Permission
+
 // PostBbsServiceAccountIdJSONBody defines parameters for PostBbsServiceAccountId.
 type PostBbsServiceAccountIdJSONBody ServicesReqServiceAccountsParams
 
@@ -1635,6 +1638,9 @@ type PostTpsAccessTokenJSONBody ServicesReqServiceAccountsAccessToken
 // PostTpsAccessTokensJSONBody defines parameters for PostTpsAccessTokens.
 type PostTpsAccessTokensJSONBody ServicesReqServiceAccountsAccessTokens
 
+// PutTpsPermissionsJSONBody defines parameters for PutTpsPermissions.
+type PutTpsPermissionsJSONBody []Permission
+
 // PostTpsServiceAccountIdJSONBody defines parameters for PostTpsServiceAccountId.
 type PostTpsServiceAccountIdJSONBody ServicesReqServiceAccountsParams
 
@@ -1718,6 +1724,9 @@ type PostBbsAccessTokenJSONRequestBody PostBbsAccessTokenJSONBody
 
 // PostBbsAccessTokensJSONRequestBody defines body for PostBbsAccessTokens for application/json ContentType.
 type PostBbsAccessTokensJSONRequestBody PostBbsAccessTokensJSONBody
+
+// PutBbsPermissionsJSONRequestBody defines body for PutBbsPermissions for application/json ContentType.
+type PutBbsPermissionsJSONRequestBody PutBbsPermissionsJSONBody
 
 // PostBbsServiceAccountIdJSONRequestBody defines body for PostBbsServiceAccountId for application/json ContentType.
 type PostBbsServiceAccountIdJSONRequestBody PostBbsServiceAccountIdJSONBody
@@ -1853,6 +1862,9 @@ type PostTpsAccessTokenJSONRequestBody PostTpsAccessTokenJSONBody
 
 // PostTpsAccessTokensJSONRequestBody defines body for PostTpsAccessTokens for application/json ContentType.
 type PostTpsAccessTokensJSONRequestBody PostTpsAccessTokensJSONBody
+
+// PutTpsPermissionsJSONRequestBody defines body for PutTpsPermissions for application/json ContentType.
+type PutTpsPermissionsJSONRequestBody PutTpsPermissionsJSONBody
 
 // PostTpsServiceAccountIdJSONRequestBody defines body for PostTpsServiceAccountId for application/json ContentType.
 type PostTpsServiceAccountIdJSONRequestBody PostTpsServiceAccountIdJSONBody

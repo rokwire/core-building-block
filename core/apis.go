@@ -33,6 +33,7 @@ type APIs struct {
 	Administration Administration //expose to the drivers adapters
 	Encryption     Encryption     //expose to the drivers adapters
 	BBs            BBs            //expose to the drivers adapters
+	TPs            TPs            //expose to the drivers adapters
 	System         System         //expose to the drivers adapters
 
 	Auth auth.APIs //expose to the drivers auth
@@ -232,11 +233,12 @@ func NewCoreAPIs(env string, version string, build string, storage Storage, auth
 	administrationImpl := &administrationImpl{app: &application}
 	encryptionImpl := &encryptionImpl{app: &application}
 	bbsImpl := &bbsImpl{app: &application}
+	tpsImpl := &tpsImpl{app: &application}
 	systemImpl := &systemImpl{app: &application}
 
 	//+ auth
 	coreAPIs := APIs{Services: servicesImpl, Administration: administrationImpl, Encryption: encryptionImpl,
-		BBs: bbsImpl, System: systemImpl, Auth: auth, app: &application, systemAppTypeIdentifier: systemInitSettings["app_type_id"],
+		BBs: bbsImpl, TPs: tpsImpl, System: systemImpl, Auth: auth, app: &application, systemAppTypeIdentifier: systemInitSettings["app_type_id"],
 		systemAppTypeName: systemInitSettings["app_type_name"], systemAPIKey: systemInitSettings["api_key"],
 		systemAccountEmail: systemInitSettings["email"], systemAccountPassword: systemInitSettings["password"], logger: logger}
 
@@ -411,6 +413,26 @@ type bbsImpl struct {
 
 func (s *bbsImpl) BBsGetTest() string {
 	return s.app.bbsGetTest()
+}
+
+func (s *bbsImpl) BBsUpdatePermissions(permissions []model.Permission, accountID string) ([]model.Permission, error) {
+	return s.app.bbsUpdatePermissions(permissions, accountID)
+}
+
+///
+
+//tpsImpl
+
+type tpsImpl struct {
+	app *application
+}
+
+func (s *tpsImpl) TPsGetTest() string {
+	return s.app.tpsGetTest()
+}
+
+func (s *tpsImpl) TPsUpdatePermissions(permissions []model.Permission, accountID string) ([]model.Permission, error) {
+	return s.app.tpsUpdatePermissions(permissions, accountID)
 }
 
 ///

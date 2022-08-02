@@ -84,6 +84,13 @@ type Encryption interface {
 //BBs exposes users related APIs used by the platform building blocks
 type BBs interface {
 	BBsGetTest() string
+	BBsUpdatePermissions(permissions []model.Permission, accountID string) ([]model.Permission, error)
+}
+
+//TPs exposes users related APIs used by third-party services
+type TPs interface {
+	TPsGetTest() string
+	TPsUpdatePermissions(permissions []model.Permission, accountID string) ([]model.Permission, error)
 }
 
 //System exposes system APIs for the driver adapters

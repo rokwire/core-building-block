@@ -89,13 +89,32 @@ func applicationPermissionToDef(item model.Permission) Def.Permission {
 		dateUpdated = &formatted
 	}
 
-	return Def.Permission{Id: item.ID, Name: item.Name, Description: &item.Description, ServiceId: &item.ServiceID, Assigners: &assigners, DateCreated: &dateCreated, DateUpdated: dateUpdated}
+	return Def.Permission{Id: item.ID, Name: item.Name, Description: item.Description, ServiceId: item.ServiceID, Assigners: &assigners, DateCreated: &dateCreated, DateUpdated: dateUpdated}
+}
+
+func applicationPermissionFromDef(item Def.Permission) model.Permission {
+	assigners := make([]string, 0)
+	if item.Assigners != nil {
+		for _, a := range *item.Assigners {
+			assigners = append(assigners, a)
+		}
+	}
+
+	return model.Permission{Name: item.Name, Description: item.Description, Assigners: assigners}
 }
 
 func applicationPermissionsToDef(items []model.Permission) []Def.Permission {
 	result := make([]Def.Permission, len(items))
 	for i, item := range items {
 		result[i] = applicationPermissionToDef(item)
+	}
+	return result
+}
+
+func applicationPermissionsFromDef(items []Def.Permission) []model.Permission {
+	result := make([]model.Permission, len(items))
+	for i, item := range items {
+		result[i] = applicationPermissionFromDef(item)
 	}
 	return result
 }
