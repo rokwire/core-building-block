@@ -2332,9 +2332,16 @@ func (sa *Adapter) InsertAppOrgRole(context TransactionContext, item model.AppOr
 //UpdateAppOrgRole updates application organization role
 func (sa *Adapter) UpdateAppOrgRole(context TransactionContext, item model.AppOrgRole) error {
 	if context == nil {
-		return errors.ErrorData(logutils.StatusMissing, "transaction context", nil)
+		transaction := func(newContext TransactionContext) error {
+			return sa.updateAppOrgRole(newContext, item)
+		}
+		return sa.PerformTransaction(transaction)
 	}
 
+	return sa.updateAppOrgRole(context, item)
+}
+
+func (sa *Adapter) updateAppOrgRole(context TransactionContext, item model.AppOrgRole) error {
 	// update role
 	roleFilter := bson.D{primitive.E{Key: "_id", Value: item.ID}}
 	roleUpdate := bson.D{
@@ -2520,9 +2527,16 @@ func (sa *Adapter) InsertAppOrgGroup(context TransactionContext, item model.AppO
 //UpdateAppOrgGroup updates application organization group
 func (sa *Adapter) UpdateAppOrgGroup(context TransactionContext, item model.AppOrgGroup) error {
 	if context == nil {
-		return errors.ErrorData(logutils.StatusMissing, "transaction context", nil)
+		transaction := func(newContext TransactionContext) error {
+			return sa.updateAppOrgGroup(newContext, item)
+		}
+		return sa.PerformTransaction(transaction)
 	}
 
+	return sa.updateAppOrgGroup(context, item)
+}
+
+func (sa *Adapter) updateAppOrgGroup(context TransactionContext, item model.AppOrgGroup) error {
 	roles := appOrgRolesToStorage(item.Roles)
 
 	// update group
