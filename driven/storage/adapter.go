@@ -2366,12 +2366,7 @@ func (sa *Adapter) findAppOrgRoles(context TransactionContext, key *string, id s
 	}
 
 	var rolesResult []appOrgRole
-	var err error
-	if context != nil {
-		err = sa.db.applicationsOrganizationsRoles.FindWithContext(context, filter, &rolesResult, nil)
-	} else {
-		err = sa.db.applicationsOrganizationsRoles.Find(filter, &rolesResult, nil)
-	}
+	err := sa.db.applicationsOrganizationsRoles.FindWithContext(context, filter, &rolesResult, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgRole, &errFields, err)
 	}
@@ -2569,12 +2564,7 @@ func (sa *Adapter) findAppOrgGroups(context TransactionContext, key *string, id 
 	}
 
 	var groupsResult []appOrgGroup
-	var err error
-	if context != nil {
-		err = sa.db.applicationsOrganizationsGroups.FindWithContext(context, filter, &groupsResult, nil)
-	} else {
-		err = sa.db.applicationsOrganizationsGroups.Find(filter, &groupsResult, nil)
-	}
+	err := sa.db.applicationsOrganizationsGroups.FindWithContext(context, filter, &groupsResult, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgGroup, &errFields, err)
 	}
