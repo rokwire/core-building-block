@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - Update group admin API [#518](https://github.com/rokwire/core-building-block/issues/518)
+- Allow passing nil context to WithContext storage functions [#494](https://github.com/rokwire/core-building-block/issues/494)
+
 ### Fixed
 - Authorization policy comments not working [#506](https://github.com/rokwire/core-building-block/issues/506)
 
