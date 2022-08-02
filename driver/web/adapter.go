@@ -31,8 +31,8 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/rokwire/core-auth-library-go/authservice"
-	"github.com/rokwire/core-auth-library-go/tokenauth"
+	"github.com/rokwire/core-auth-library-go/v2/authservice"
+	"github.com/rokwire/core-auth-library-go/v2/tokenauth"
 
 	httpSwagger "github.com/swaggo/http-swagger"
 )
@@ -424,7 +424,7 @@ func (we Adapter) validateResponse(requestValidationInput *openapi3filter.Reques
 }
 
 //NewWebAdapter creates new WebAdapter instance
-func NewWebAdapter(env string, serviceID string, authService *authservice.AuthService, port string, coreAPIs *core.APIs, host string, logger *logs.Logger) Adapter {
+func NewWebAdapter(env string, serviceID string, serviceRegManager *authservice.ServiceRegManager, port string, coreAPIs *core.APIs, host string, logger *logs.Logger) Adapter {
 	//openAPI doc
 	loader := &openapi3.Loader{Context: context.Background(), IsExternalRefsAllowed: true}
 	doc, err := loader.LoadFromFile("driver/web/docs/gen/def.yaml")
@@ -451,7 +451,7 @@ func NewWebAdapter(env string, serviceID string, authService *authservice.AuthSe
 		logger.Fatalf("error on openapi3 gorillamux router - %s", err.Error())
 	}
 
-	auth, err := NewAuth(coreAPIs, serviceID, authService, logger)
+	auth, err := NewAuth(coreAPIs, serviceID, serviceRegManager, logger)
 	if err != nil {
 		logger.Fatal(err.Error())
 	}

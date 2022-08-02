@@ -29,7 +29,7 @@ import (
 
 	"github.com/golang-jwt/jwt"
 
-	"github.com/rokwire/core-auth-library-go/envloader"
+	"github.com/rokwire/core-auth-library-go/v2/envloader"
 	"github.com/rokwire/logging-library-go/logs"
 )
 
@@ -175,6 +175,6 @@ func main() {
 	coreAPIs.Start()
 
 	//web adapter
-	webAdapter := web.NewWebAdapter(env, serviceID, auth.AuthService, port, coreAPIs, host, logger)
+	webAdapter := web.NewWebAdapter(env, serviceID, auth.ServiceRegManager, port, coreAPIs, host, logger)
 	webAdapter.Start()
 }

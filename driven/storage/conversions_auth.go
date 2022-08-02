@@ -123,17 +123,17 @@ func loginSessionToStorage(item model.LoginSession) *loginSession {
 func serviceAccountFromStorage(item serviceAccount, sa *Adapter) (*model.ServiceAccount, error) {
 	var err error
 	var application *model.Application
-	if item.AppID != nil {
-		application, err = sa.getCachedApplication(*item.AppID)
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, &logutils.FieldArgs{"app_id": *item.AppID}, err)
+	if item.AppID != model.AllApps {
+		application, err = sa.getCachedApplication(item.AppID)
+		if err != nil || application == nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, &logutils.FieldArgs{"app_id": item.AppID}, err)
 		}
 	}
 	var organization *model.Organization
-	if item.OrgID != nil {
-		organization, err = sa.getCachedOrganization(*item.OrgID)
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, &logutils.FieldArgs{"org_id": *item.OrgID}, err)
+	if item.OrgID != model.AllOrgs {
+		organization, err = sa.getCachedOrganization(item.OrgID)
+		if err != nil || organization == nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, &logutils.FieldArgs{"org_id": item.OrgID}, err)
 		}
 	}
 
@@ -155,13 +155,13 @@ func serviceAccountListFromStorage(items []serviceAccount, sa *Adapter) []model.
 }
 
 func serviceAccountToStorage(item model.ServiceAccount) *serviceAccount {
-	var appID *string
+	appID := model.AllApps
 	if item.Application != nil {
-		appID = &item.Application.ID
+		appID = item.Application.ID
 	}
-	var orgID *string
+	orgID := model.AllOrgs
 	if item.Organization != nil {
-		orgID = &item.Organization.ID
+		orgID = item.Organization.ID
 	}
 
 	return &serviceAccount{AccountID: item.AccountID, Name: item.Name, AppID: appID, OrgID: orgID, Permissions: item.Permissions,
