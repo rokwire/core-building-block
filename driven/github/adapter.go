@@ -21,6 +21,7 @@ type Adapter struct {
 	githubOrgnizationName   string
 	githubRepoName          string
 	githubWebhookConfigPath string
+	githubAppConfigBranch   string
 
 	logger *logs.Logger
 
@@ -118,7 +119,7 @@ func (sa *Adapter) GetContents(path string) (string, bool, error) {
 
 	client := github.NewClient(tc)
 
-	fileContent, _, _, err := client.Repositories.GetContents(ctx, sa.githubOrgnizationName, sa.githubRepoName, path, &github.RepositoryContentGetOptions{Ref: "develop"})
+	fileContent, _, _, err := client.Repositories.GetContents(ctx, sa.githubOrgnizationName, sa.githubRepoName, path, &github.RepositoryContentGetOptions{Ref: sa.githubAppConfigBranch})
 	if err != nil || fileContent == nil {
 		return "", isWebhookConfigPath, errors.WrapErrorAction(logutils.ActionGet, model.TypeGithubContent, nil, err)
 	}
@@ -132,9 +133,9 @@ func (sa *Adapter) GetContents(path string) (string, bool, error) {
 }
 
 //NewGitHubAdapter creates a new GitHub adapter instance
-func NewGitHubAdapter(githubToken string, githubOrgnizationName string, githubRepoName string, githubWebhookConfigPath string, logger *logs.Logger) *Adapter {
+func NewGitHubAdapter(githubToken string, githubOrgnizationName string, githubRepoName string, githubWebhookConfigPath string, githubAppConfigBranch string, logger *logs.Logger) *Adapter {
 	cachedWebhookConfigs := &model.WebhookConfig{}
 	webhookConfigsLock := &sync.RWMutex{}
 
-	return &Adapter{cachedWebhookConfig: cachedWebhookConfigs, webhookConfigsLock: webhookConfigsLock, githubToken: githubToken, githubOrgnizationName: githubOrgnizationName, githubRepoName: githubRepoName, githubWebhookConfigPath: githubWebhookConfigPath, logger: logger}
+	return &Adapter{cachedWebhookConfig: cachedWebhookConfigs, webhookConfigsLock: webhookConfigsLock, githubToken: githubToken, githubOrgnizationName: githubOrgnizationName, githubRepoName: githubRepoName, githubWebhookConfigPath: githubWebhookConfigPath, githubAppConfigBranch: githubAppConfigBranch, logger: logger}
 }

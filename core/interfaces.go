@@ -23,7 +23,7 @@ import (
 
 //Default exposes APIs for the driver adapters
 type Default interface {
-	ProcessWebhookRequest([]model.Commit) error
+	ProcessGitHubAppConfigWebhook(commits []model.Commit, l *logs.Log) error
 }
 
 //Services exposes APIs for the driver adapters

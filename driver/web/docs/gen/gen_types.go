@@ -1181,7 +1181,6 @@ type PostAdminAccountMfaParams struct {
 
 // GetAdminApplicationAccountsParams defines parameters for GetAdminApplicationAccounts.
 type GetAdminApplicationAccountsParams struct {
-
 	// The maximum number of accounts to return
 	Limit *int `json:"limit,omitempty"`
 
@@ -1332,7 +1331,6 @@ type PutServicesAccountProfileJSONBody SharedReqProfile
 
 // GetServicesAccountsParams defines parameters for GetServicesAccounts.
 type GetServicesAccountsParams struct {
-
 	// The maximum number of accounts to return
 	Limit *int `json:"limit,omitempty"`
 
@@ -1458,7 +1456,6 @@ type DeleteSystemApiKeysParams struct {
 
 // GetSystemApiKeysParams defines parameters for GetSystemApiKeys.
 type GetSystemApiKeysParams struct {
-
 	// The ID of the API key to return. Required if `app_id` is not provided.
 	Id *string `json:"id,omitempty"`
 
