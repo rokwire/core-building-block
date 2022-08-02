@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - Add default assigners permission [#477](https://github.com/rokwire/core-building-block/issues/477)
+- Allow passing nil context to WithContext storage functions [#494](https://github.com/rokwire/core-building-block/issues/494)
+
+### Fixed
+- Authorization policy comments not working [#506](https://github.com/rokwire/core-building-block/issues/506)
 
 ## [1.24.1] - 2022-07-07
 ### Changed
