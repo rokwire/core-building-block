@@ -29,7 +29,7 @@ import (
 
 	"github.com/golang-jwt/jwt"
 
-	"github.com/rokwire/core-auth-library-go/envloader"
+	"github.com/rokwire/core-auth-library-go/v2/envloader"
 	"github.com/rokwire/logging-library-go/logs"
 )
 
@@ -74,13 +74,14 @@ func main() {
 	mongoDBName := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_MONGO_DATABASE", true, false)
 	mongoTimeout := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_MONGO_TIMEOUT", false, false)
 	// webhook configs
-	githubWebhookRequestToken := envLoader.GetAndLogEnvVar("GITHUB_WEBHOOK_REQUEST_TOKEN", false, false)
 	githubToken := envLoader.GetAndLogEnvVar("GITHUB_TOKEN", false, false)
-	githubOrgnizationName := envLoader.GetAndLogEnvVar("GITHUB_ORG_NAME", false, false)
-	githubRepoName := envLoader.GetAndLogEnvVar("GITHUB_REPO_NAME", false, false)
-	githubWebhookConfigPath := envLoader.GetAndLogEnvVar("GITHUB_WEBHOOK_CONFIG_PATH", false, false)
+	githubWebhookRequestToken := envLoader.GetAndLogEnvVar("GITHUB_APP_CONFIG_WEBHOOK_REQUEST_TOKEN", false, false)
+	githubOrgnizationName := envLoader.GetAndLogEnvVar("GITHUB_APP_CONFIG_ORG_NAME", false, false)
+	githubRepoName := envLoader.GetAndLogEnvVar("GITHUB_APP_CONFIG_REPO_NAME", false, false)
+	githubWebhookConfigPath := envLoader.GetAndLogEnvVar("GITHUB_APP_CONFIG_WEBHOOK_CONFIG_PATH", false, false)
+	githubAppConfigBranch := envLoader.GetAndLogEnvVar("GITHUB_APP_CONFIG_BRANCH", false, false)
 
-	githubAdapter := github.NewGitHubAdapter(githubToken, githubOrgnizationName, githubRepoName, githubWebhookConfigPath, logger)
+	githubAdapter := github.NewGitHubAdapter(githubToken, githubOrgnizationName, githubRepoName, githubWebhookConfigPath, githubAppConfigBranch, logger)
 	err = githubAdapter.Start()
 	if err != nil {
 		logger.Fatalf("Cannot start the GitHub adapter: %v", err)
@@ -170,10 +171,10 @@ func main() {
 	}
 
 	//core
-	coreAPIs := core.NewCoreAPIs(env, Version, Build, storageAdapter, githubAdapter, auth, systemInitSettings, githubWebhookRequestToken, logger)
+	coreAPIs := core.NewCoreAPIs(env, Version, Build, storageAdapter, githubAdapter, auth, systemInitSettings, githubWebhookRequestToken, githubAppConfigBranch, logger)
 	coreAPIs.Start()
 
 	//web adapter
-	webAdapter := web.NewWebAdapter(env, serviceID, auth.AuthService, port, coreAPIs, host, logger)
+	webAdapter := web.NewWebAdapter(env, serviceID, auth.ServiceRegManager, port, coreAPIs, host, logger)
 	webAdapter.Start()
 }

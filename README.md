@@ -58,11 +58,12 @@ ROKWIRE_CORE_SYSTEM_APP_TYPE_NAME | < string > | yes | Name for system admin app
 ROKWIRE_CORE_SYSTEM_API_KEY | < string > | yes | API key for system admin application. Only required for first run.
 ROKWIRE_CORE_SYSTEM_ACCOUNT_EMAIL | < string > | yes | Email address for initial system admin account. Only required for first run.
 ROKWIRE_CORE_SYSTEM_ACCOUNT_PASSWORD | < string > | yes | Password for initial system admin account. Only required for first run.
-GITHUB_WEBHOOK_TOKEN | < string > | yes | Secret token that validates webhook requests are expected.
-GITHUB_TOKEN | < string > | yes | Access token that authenticates with GitHub.
-GITHUB_ORG_NAME | < string > | yes | Organization name of the target repository.
-GITHUB_REPO_NAME | < string > | yes | Target GitHub repository name.
-GITHUB_WEBHOOK_CONFIG_PATH | < string > | yes | File path of webhook-config.json in the target repository.
+GITHUB_APP_CONFIG_WEBHOOK_REQUEST_TOKEN | < string > | no | Secret token in the webhook request header.
+GITHUB_TOKEN | < string > | no | Access token that authenticates with GitHub.
+GITHUB_APP_CONFIG_ORG_NAME | < string > | no | Organization name of the target repository.
+GITHUB_APP_CONFIG_REPO_NAME | < string > | no | Target GitHub repository name.
+GITHUB_APP_CONFIG_WEBHOOK_CONFIG_PATH | < string > | no | File path of webhook-config.json in the target repository.
+GITHUB_APP_CONFIG_BRANCH | < string > | no | Branch name of the app config files repository.
 ### Run Application
 
 #### Run locally without Docker

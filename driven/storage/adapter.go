@@ -811,13 +811,7 @@ func (sa *Adapter) FindAuthTypes() ([]model.AuthType, error) {
 func (sa *Adapter) InsertLoginSession(context TransactionContext, session model.LoginSession) error {
 	storageLoginSession := loginSessionToStorage(session)
 
-	var err error
-	if context != nil {
-		_, err = sa.db.loginsSessions.InsertOneWithContext(context, storageLoginSession)
-	} else {
-		_, err = sa.db.loginsSessions.InsertOne(storageLoginSession)
-	}
-
+	_, err := sa.db.loginsSessions.InsertOneWithContext(context, storageLoginSession)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeLoginSession, nil, err)
 	}
@@ -832,13 +826,7 @@ func (sa *Adapter) FindLoginSessions(context TransactionContext, identifier stri
 	opts.SetSort(bson.D{primitive.E{Key: "date_created", Value: 1}})
 
 	var loginSessions []loginSession
-	var err error
-	if context != nil {
-		err = sa.db.loginsSessions.FindWithContext(context, filter, &loginSessions, opts)
-	} else {
-		err = sa.db.loginsSessions.Find(filter, &loginSessions, opts)
-	}
-
+	err := sa.db.loginsSessions.FindWithContext(context, filter, &loginSessions, opts)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, &logutils.FieldArgs{"identifier": identifier}, err)
 	}
@@ -973,13 +961,7 @@ func (sa *Adapter) FindAndUpdateLoginSession(context TransactionContext, id stri
 	opts.SetReturnDocument(options.Before)
 
 	var loginSession loginSession
-	var err error
-	if context != nil {
-		err = sa.db.loginsSessions.FindOneAndUpdateWithContext(context, filter, update, &loginSession, &opts)
-	} else {
-		err = sa.db.loginsSessions.FindOneAndUpdate(filter, update, &loginSession, &opts)
-	}
-
+	err := sa.db.loginsSessions.FindOneAndUpdateWithContext(context, filter, update, &loginSession, &opts)
 	if err != nil {
 		return nil, errors.WrapErrorAction("finding and updating", model.TypeLoginSession, &logutils.FieldArgs{"_id": id}, err)
 	}
@@ -1025,13 +1007,7 @@ func (sa *Adapter) UpdateLoginSession(context TransactionContext, loginSession m
 	storageLoginSession := loginSessionToStorage(loginSession)
 
 	filter := bson.D{primitive.E{Key: "_id", Value: storageLoginSession.ID}}
-	var err error
-	if context != nil {
-		err = sa.db.loginsSessions.ReplaceOneWithContext(context, filter, storageLoginSession, nil)
-	} else {
-		err = sa.db.loginsSessions.ReplaceOne(filter, storageLoginSession, nil)
-	}
-
+	err := sa.db.loginsSessions.ReplaceOneWithContext(context, filter, storageLoginSession, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeLoginSession, &logutils.FieldArgs{"_id": storageLoginSession.ID}, err)
 	}
@@ -1043,14 +1019,7 @@ func (sa *Adapter) UpdateLoginSession(context TransactionContext, loginSession m
 func (sa *Adapter) DeleteLoginSession(context TransactionContext, id string) error {
 	filter := bson.M{"_id": id}
 
-	var res *mongo.DeleteResult
-	var err error
-	if context != nil {
-		res, err = sa.db.loginsSessions.DeleteOneWithContext(context, filter, nil)
-	} else {
-		res, err = sa.db.loginsSessions.DeleteOne(filter, nil)
-	}
-
+	res, err := sa.db.loginsSessions.DeleteOneWithContext(context, filter, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, &logutils.FieldArgs{"_id": id}, err)
 	}
@@ -1100,14 +1069,7 @@ func (sa *Adapter) DeleteLoginSessionsByAccountAuthTypeID(context TransactionCon
 func (sa *Adapter) deleteLoginSessions(context TransactionContext, key string, value string, checkDeletedCount bool) error {
 	filter := bson.M{key: value}
 
-	var res *mongo.DeleteResult
-	var err error
-	if context != nil {
-		res, err = sa.db.loginsSessions.DeleteManyWithContext(context, filter, nil)
-	} else {
-		res, err = sa.db.loginsSessions.DeleteMany(filter, nil)
-	}
-
+	res, err := sa.db.loginsSessions.DeleteManyWithContext(context, filter, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, &logutils.FieldArgs{key: value}, err)
 	}
@@ -1193,12 +1155,7 @@ func (sa *Adapter) FindAccount(context TransactionContext, appOrgID string, auth
 		primitive.E{Key: "auth_types.auth_type_id", Value: authTypeID},
 		primitive.E{Key: "auth_types.identifier", Value: accountAuthTypeIdentifier}}
 	var accounts []account
-	var err error
-	if context != nil {
-		err = sa.db.accounts.FindWithContext(context, filter, &accounts, nil)
-	} else {
-		err = sa.db.accounts.Find(filter, &accounts, nil)
-	}
+	err := sa.db.accounts.FindWithContext(context, filter, &accounts, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
@@ -1342,13 +1299,7 @@ func (sa *Adapter) findAccount(context TransactionContext, key string, id string
 func (sa *Adapter) findStorageAccount(context TransactionContext, key string, id string) (*account, error) {
 	filter := bson.M{key: id}
 	var accounts []account
-	var err error
-	if context != nil {
-		err = sa.db.accounts.FindWithContext(context, filter, &accounts, nil)
-	} else {
-		err = sa.db.accounts.Find(filter, &accounts, nil)
-	}
-
+	err := sa.db.accounts.FindWithContext(context, filter, &accounts, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{key: id}, err)
 	}
@@ -1365,12 +1316,7 @@ func (sa *Adapter) findStorageAccount(context TransactionContext, key string, id
 func (sa *Adapter) InsertAccount(context TransactionContext, account model.Account) (*model.Account, error) {
 	storageAccount := accountToStorage(&account)
 
-	var err error
-	if context != nil {
-		_, err = sa.db.accounts.InsertOneWithContext(context, storageAccount)
-	} else {
-		_, err = sa.db.accounts.InsertOne(storageAccount)
-	}
+	_, err := sa.db.accounts.InsertOneWithContext(context, storageAccount)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeAccount, nil, err)
 	}
@@ -1386,14 +1332,8 @@ func (sa *Adapter) SaveAccount(context TransactionContext, account *model.Accoun
 
 	storageAccount := accountToStorage(account)
 
-	var err error
 	filter := bson.M{"_id": account.ID}
-	if context != nil {
-		err = sa.db.accounts.ReplaceOneWithContext(context, filter, storageAccount, nil)
-	} else {
-		err = sa.db.accounts.ReplaceOne(filter, storageAccount, nil)
-	}
-
+	err := sa.db.accounts.ReplaceOneWithContext(context, filter, storageAccount, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionSave, model.TypeAccount, &logutils.FieldArgs{"_id": account.ID}, nil)
 	}
@@ -1406,14 +1346,7 @@ func (sa *Adapter) DeleteAccount(context TransactionContext, id string) error {
 	//TODO: - we have to decide what we do on delete user operation - removing all user relations, (or) mark the user disabled etc
 
 	filter := bson.M{"_id": id}
-	var res *mongo.DeleteResult
-	var err error
-	if context != nil {
-		res, err = sa.db.accounts.DeleteOneWithContext(context, filter, nil)
-	} else {
-		res, err = sa.db.accounts.DeleteOne(filter, nil)
-	}
-
+	res, err := sa.db.accounts.DeleteOneWithContext(context, filter, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
 	}
@@ -1425,17 +1358,12 @@ func (sa *Adapter) DeleteAccount(context TransactionContext, id string) error {
 }
 
 //FindServiceAccount finds a service account by accountID, appID, and orgID
-func (sa *Adapter) FindServiceAccount(context TransactionContext, accountID string, appID *string, orgID *string) (*model.ServiceAccount, error) {
+func (sa *Adapter) FindServiceAccount(context TransactionContext, accountID string, appID string, orgID string) (*model.ServiceAccount, error) {
 	filter := bson.D{primitive.E{Key: "account_id", Value: accountID}, primitive.E{Key: "app_id", Value: appID}, primitive.E{Key: "org_id", Value: orgID}}
 
 	var account serviceAccount
-	var err error
-	errFields := logutils.FieldArgs{"account_id": accountID, "app_id": utils.GetPrintableString(appID, "nil"), "org_id": utils.GetPrintableString(orgID, "nil")}
-	if context != nil {
-		err = sa.db.serviceAccounts.FindOneWithContext(context, filter, &account, nil)
-	} else {
-		err = sa.db.serviceAccounts.FindOne(filter, &account, nil)
-	}
+	errFields := logutils.FieldArgs{"account_id": accountID, "app_id": appID, "org_id": orgID}
+	err := sa.db.serviceAccounts.FindOneWithContext(context, filter, &account, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, &errFields, err)
 	}
@@ -1508,7 +1436,7 @@ func (sa *Adapter) UpdateServiceAccount(account *model.ServiceAccount) (*model.S
 	opts.SetProjection(bson.D{bson.E{Key: "secrets", Value: 0}})
 
 	var updated serviceAccount
-	errFields := logutils.FieldArgs{"account_id": storageAccount.AccountID, "app_id": utils.GetPrintableString(storageAccount.AppID, "nil"), "org_id": utils.GetPrintableString(storageAccount.OrgID, "nil")}
+	errFields := logutils.FieldArgs{"account_id": storageAccount.AccountID, "app_id": storageAccount.AppID, "org_id": storageAccount.OrgID}
 	err := sa.db.serviceAccounts.FindOneAndUpdate(filter, update, &updated, &opts)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeServiceAccount, &errFields, err)
@@ -1523,10 +1451,10 @@ func (sa *Adapter) UpdateServiceAccount(account *model.ServiceAccount) (*model.S
 }
 
 //DeleteServiceAccount deletes a service account
-func (sa *Adapter) DeleteServiceAccount(accountID string, appID *string, orgID *string) error {
+func (sa *Adapter) DeleteServiceAccount(accountID string, appID string, orgID string) error {
 	filter := bson.D{primitive.E{Key: "account_id", Value: accountID}, primitive.E{Key: "app_id", Value: appID}, primitive.E{Key: "org_id", Value: orgID}}
 
-	errFields := logutils.FieldArgs{"account_id": accountID, "app_id": utils.GetPrintableString(appID, "nil"), "org_id": utils.GetPrintableString(orgID, "nil")}
+	errFields := logutils.FieldArgs{"account_id": accountID, "app_id": appID, "org_id": orgID}
 	res, err := sa.db.serviceAccounts.DeleteOne(filter, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeServiceAccount, &errFields, err)
@@ -1645,13 +1573,7 @@ func (sa *Adapter) InsertAccountPermissions(context TransactionContext, accountI
 		}},
 	}
 
-	var res *mongo.UpdateResult
-	var err error
-	if context != nil {
-		res, err = sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
-	} else {
-		res, err = sa.db.accounts.UpdateOne(filter, update, nil)
-	}
+	res, err := sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, nil, err)
 	}
@@ -1673,13 +1595,7 @@ func (sa *Adapter) UpdateAccountPermissions(context TransactionContext, accountI
 		}},
 	}
 
-	var res *mongo.UpdateResult
-	var err error
-	if context != nil {
-		res, err = sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
-	} else {
-		res, err = sa.db.accounts.UpdateOne(filter, update, nil)
-	}
+	res, err := sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, nil, err)
 	}
@@ -1710,14 +1626,7 @@ func (sa *Adapter) DeleteAccountPermissions(context TransactionContext, accountI
 		}},
 	}
 
-	var res *mongo.UpdateResult
-	var err error
-	if context != nil {
-		res, err = sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
-	} else {
-		res, err = sa.db.accounts.UpdateOne(filter, update, nil)
-	}
-
+	res, err := sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, nil, err)
 	}
@@ -1743,13 +1652,7 @@ func (sa *Adapter) InsertAccountRoles(context TransactionContext, accountID stri
 		}},
 	}
 
-	var res *mongo.UpdateResult
-	var err error
-	if context != nil {
-		res, err = sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
-	} else {
-		res, err = sa.db.accounts.UpdateOne(filter, update, nil)
-	}
+	res, err := sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, nil, err)
 	}
@@ -1776,13 +1679,7 @@ func (sa *Adapter) InsertAccountGroups(context TransactionContext, accountID str
 		}},
 	}
 
-	var res *mongo.UpdateResult
-	var err error
-	if context != nil {
-		res, err = sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
-	} else {
-		res, err = sa.db.accounts.UpdateOne(filter, update, nil)
-	}
+	res, err := sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"_id": accountID, "app_org_id": appOrgID}, err)
 	}
@@ -1887,13 +1784,7 @@ func (sa *Adapter) UpdateAccountRoles(context TransactionContext, accountID stri
 		}},
 	}
 
-	var res *mongo.UpdateResult
-	var err error
-	if context != nil {
-		res, err = sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
-	} else {
-		res, err = sa.db.accounts.UpdateOne(filter, update, nil)
-	}
+	res, err := sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
@@ -1920,14 +1811,7 @@ func (sa *Adapter) DeleteAccountRoles(context TransactionContext, accountID stri
 		}},
 	}
 
-	var res *mongo.UpdateResult
-	var err error
-	if context != nil {
-		res, err = sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
-	} else {
-		res, err = sa.db.accounts.UpdateOne(filter, update, nil)
-	}
-
+	res, err := sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
@@ -1950,13 +1834,7 @@ func (sa *Adapter) UpdateAccountGroups(context TransactionContext, accountID str
 		}},
 	}
 
-	var res *mongo.UpdateResult
-	var err error
-	if context != nil {
-		res, err = sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
-	} else {
-		res, err = sa.db.accounts.UpdateOne(filter, update, nil)
-	}
+	res, err := sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
@@ -2065,14 +1943,7 @@ func (sa *Adapter) DeleteAccountAuthType(context TransactionContext, item model.
 		}},
 	}
 
-	var res *mongo.UpdateResult
-	var err error
-	if context != nil {
-		res, err = sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
-	} else {
-		res, err = sa.db.accounts.UpdateOne(filter, update, nil)
-	}
-
+	res, err := sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccountAuthType, nil, err)
 	}
@@ -2151,13 +2022,7 @@ func (sa *Adapter) FindCredential(context TransactionContext, ID string) (*model
 	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
 
 	var creds credential
-	var err error
-	if context != nil {
-		err = sa.db.credentials.FindOneWithContext(context, filter, &creds, nil)
-	} else {
-		err = sa.db.credentials.FindOne(filter, &creds, nil)
-	}
-
+	err := sa.db.credentials.FindOneWithContext(context, filter, &creds, nil)
 	if err != nil {
 		if err.Error() == "mongo: no documents in result" {
 			return nil, nil
@@ -2177,12 +2042,7 @@ func (sa *Adapter) InsertCredential(context TransactionContext, creds *model.Cre
 		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeCredential))
 	}
 
-	var err error
-	if context != nil {
-		_, err = sa.db.credentials.InsertOneWithContext(context, storageCreds)
-	} else {
-		_, err = sa.db.credentials.InsertOne(storageCreds)
-	}
+	_, err := sa.db.credentials.InsertOneWithContext(context, storageCreds)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeCredential, nil, err)
 	}
@@ -2199,13 +2059,7 @@ func (sa *Adapter) UpdateCredential(context TransactionContext, creds *model.Cre
 	}
 
 	filter := bson.D{primitive.E{Key: "_id", Value: storageCreds.ID}}
-	var err error
-	if context != nil {
-		err = sa.db.credentials.ReplaceOneWithContext(context, filter, storageCreds, nil)
-	} else {
-		err = sa.db.credentials.ReplaceOne(filter, storageCreds, nil)
-	}
-
+	err := sa.db.credentials.ReplaceOneWithContext(context, filter, storageCreds, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, &logutils.FieldArgs{"_id": storageCreds.ID}, err)
 	}
@@ -2237,14 +2091,7 @@ func (sa *Adapter) UpdateCredentialValue(ID string, value map[string]interface{}
 func (sa *Adapter) DeleteCredential(context TransactionContext, ID string) error {
 	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
 
-	var res *mongo.DeleteResult
-	var err error
-	if context != nil {
-		res, err = sa.db.credentials.DeleteOneWithContext(context, filter, nil)
-	} else {
-		res, err = sa.db.credentials.DeleteOne(filter, nil)
-	}
-
+	res, err := sa.db.credentials.DeleteOneWithContext(context, filter, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeCredential, &logutils.FieldArgs{"_id": ID}, err)
 	}
@@ -2264,13 +2111,7 @@ func (sa *Adapter) FindMFAType(context TransactionContext, accountID string, ide
 	}
 
 	var account account
-	var err error
-	if context != nil {
-		err = sa.db.accounts.FindOneWithContext(context, filter, &account, nil)
-	} else {
-		err = sa.db.accounts.FindOne(filter, &account, nil)
-	}
-
+	err := sa.db.accounts.FindOneWithContext(context, filter, &account, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
@@ -2322,14 +2163,7 @@ func (sa *Adapter) InsertMFAType(context TransactionContext, mfa *model.MFAType,
 		}},
 	}
 
-	var res *mongo.UpdateResult
-	var err error
-	if context != nil {
-		res, err = sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
-	} else {
-		res, err = sa.db.accounts.UpdateOne(filter, update, nil)
-	}
-
+	res, err := sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, logutils.StringArgs("inserting mfa type"), err)
 	}
@@ -2360,14 +2194,7 @@ func (sa *Adapter) UpdateMFAType(context TransactionContext, mfa *model.MFAType,
 		}},
 	}
 
-	var res *mongo.UpdateResult
-	var err error
-	if context != nil {
-		res, err = sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
-	} else {
-		res, err = sa.db.accounts.UpdateOne(filter, update, nil)
-	}
-
+	res, err := sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, logutils.StringArgs("updating mfa type"), err)
 	}
@@ -2393,14 +2220,7 @@ func (sa *Adapter) DeleteMFAType(context TransactionContext, accountID string, i
 		}},
 	}
 
-	var res *mongo.UpdateResult
-	var err error
-	if context != nil {
-		res, err = sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
-	} else {
-		res, err = sa.db.accounts.UpdateOne(filter, update, nil)
-	}
-
+	res, err := sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, logutils.StringArgs("deleting mfa type"), err)
 	}
@@ -2422,12 +2242,7 @@ func (sa *Adapter) FindPermissions(context TransactionContext, ids []string) ([]
 
 	permissionsFilter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
 	var permissionsResult []model.Permission
-	var err error
-	if context != nil {
-		err = sa.db.permissions.FindWithContext(context, permissionsFilter, &permissionsResult, nil)
-	} else {
-		err = sa.db.permissions.Find(permissionsFilter, &permissionsResult, nil)
-	}
+	err := sa.db.permissions.FindWithContext(context, permissionsFilter, &permissionsResult, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -2459,12 +2274,7 @@ func (sa *Adapter) FindPermissionsByName(context TransactionContext, names []str
 
 	permissionsFilter := bson.D{primitive.E{Key: "name", Value: bson.M{"$in": names}}}
 	var permissionsResult []model.Permission
-	var err error
-	if context != nil {
-		err = sa.db.permissions.FindWithContext(context, permissionsFilter, &permissionsResult, nil)
-	} else {
-		err = sa.db.permissions.Find(permissionsFilter, &permissionsResult, nil)
-	}
+	err := sa.db.permissions.FindWithContext(context, permissionsFilter, &permissionsResult, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -2474,13 +2284,7 @@ func (sa *Adapter) FindPermissionsByName(context TransactionContext, names []str
 
 //InsertPermission inserts a new  permission
 func (sa *Adapter) InsertPermission(context TransactionContext, permission model.Permission) error {
-	var err error
-	if context != nil {
-		_, err = sa.db.permissions.InsertOneWithContext(context, permission)
-	} else {
-		_, err = sa.db.permissions.InsertOne(permission)
-	}
-
+	_, err := sa.db.permissions.InsertOneWithContext(context, permission)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionInsert, model.TypePermission, &logutils.FieldArgs{"_id": permission.ID, "name": permission.Name}, err)
 	}
@@ -2555,12 +2359,7 @@ func (sa *Adapter) FindAppOrgRolesByIDs(context TransactionContext, ids []string
 
 	rolesFilter := bson.D{primitive.E{Key: "app_org_id", Value: appOrgID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
 	var rolesResult []appOrgRole
-	var err error
-	if context != nil {
-		err = sa.db.applicationsOrganizationsRoles.FindWithContext(context, rolesFilter, &rolesResult, nil)
-	} else {
-		err = sa.db.applicationsOrganizationsRoles.Find(rolesFilter, &rolesResult, nil)
-	}
+	err := sa.db.applicationsOrganizationsRoles.FindWithContext(context, rolesFilter, &rolesResult, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -2613,11 +2412,7 @@ func (sa *Adapter) InsertAppOrgRole(context TransactionContext, item model.AppOr
 	}
 
 	role := appOrgRoleToStorage(item)
-	if context != nil {
-		_, err = sa.db.applicationsOrganizationsRoles.InsertOneWithContext(context, role)
-	} else {
-		_, err = sa.db.applicationsOrganizationsRoles.InsertOne(role)
-	}
+	_, err = sa.db.applicationsOrganizationsRoles.InsertOneWithContext(context, role)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAppOrgRole, nil, err)
 	}
@@ -2699,12 +2494,7 @@ func (sa *Adapter) FindAppOrgGroupsByIDs(context TransactionContext, ids []strin
 
 	filter := bson.D{primitive.E{Key: "app_org_id", Value: appOrgID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
 	var groupsResult []appOrgGroup
-	var err error
-	if context != nil {
-		err = sa.db.applicationsOrganizationsGroups.FindWithContext(context, filter, &groupsResult, nil)
-	} else {
-		err = sa.db.applicationsOrganizationsGroups.Find(filter, &groupsResult, nil)
-	}
+	err := sa.db.applicationsOrganizationsGroups.FindWithContext(context, filter, &groupsResult, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -2749,12 +2539,7 @@ func (sa *Adapter) FindAppOrgGroup(id string, appOrgID string) (*model.AppOrgGro
 func (sa *Adapter) InsertAppOrgGroup(context TransactionContext, item model.AppOrgGroup) error {
 	group := appOrgGroupToStorage(item)
 
-	var err error
-	if context != nil {
-		_, err = sa.db.applicationsOrganizationsGroups.InsertOneWithContext(context, group)
-	} else {
-		_, err = sa.db.applicationsOrganizationsGroups.InsertOne(group)
-	}
+	_, err := sa.db.applicationsOrganizationsGroups.InsertOneWithContext(context, group)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAppOrgGroup, nil, err)
 	}
@@ -2814,13 +2599,7 @@ func (sa *Adapter) LoadAPIKeys() ([]model.APIKey, error) {
 
 //InsertAPIKey inserts an API key
 func (sa *Adapter) InsertAPIKey(context TransactionContext, apiKey model.APIKey) (*model.APIKey, error) {
-	var err error
-	if context != nil {
-		_, err = sa.db.apiKeys.InsertOneWithContext(context, apiKey)
-	} else {
-		_, err = sa.db.apiKeys.InsertOne(apiKey)
-	}
-
+	_, err := sa.db.apiKeys.InsertOneWithContext(context, apiKey)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeAPIKey, &logutils.FieldArgs{"_id": apiKey.ID}, err)
 	}
@@ -2893,13 +2672,7 @@ func (sa *Adapter) UpdateProfile(context TransactionContext, profile model.Profi
 		}},
 	}
 
-	var res *mongo.UpdateResult
-	var err error
-	if context != nil {
-		res, err = sa.db.accounts.UpdateManyWithContext(context, filter, profileUpdate, nil)
-	} else {
-		res, err = sa.db.accounts.UpdateMany(filter, profileUpdate, nil)
-	}
+	res, err := sa.db.accounts.UpdateManyWithContext(context, filter, profileUpdate, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeProfile, nil, err)
 	}
@@ -2939,13 +2712,7 @@ func (sa *Adapter) CreateGlobalConfig(context TransactionContext, globalConfig *
 		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs("global_config"))
 	}
 
-	var err error
-	if context != nil {
-		_, err = sa.db.globalConfig.InsertOneWithContext(context, globalConfig)
-	} else {
-		_, err = sa.db.globalConfig.InsertOne(globalConfig)
-	}
-
+	_, err := sa.db.globalConfig.InsertOneWithContext(context, globalConfig)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeGlobalConfig, &logutils.FieldArgs{"setting": globalConfig.Setting}, err)
 	}
@@ -2972,13 +2739,7 @@ func (sa *Adapter) GetGlobalConfig() (*model.GlobalConfig, error) {
 //DeleteGlobalConfig deletes the global configuration from storage
 func (sa *Adapter) DeleteGlobalConfig(context TransactionContext) error {
 	delFilter := bson.D{}
-	var err error
-	if context != nil {
-		_, err = sa.db.globalConfig.DeleteManyWithContext(context, delFilter, nil)
-	} else {
-		_, err = sa.db.globalConfig.DeleteMany(delFilter, nil)
-	}
-
+	_, err := sa.db.globalConfig.DeleteManyWithContext(context, delFilter, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeGlobalConfig, nil, err)
 	}
@@ -3016,13 +2777,7 @@ func (sa *Adapter) FindOrganizations() ([]model.Organization, error) {
 func (sa *Adapter) InsertOrganization(context TransactionContext, organization model.Organization) (*model.Organization, error) {
 	org := organizationToStorage(&organization)
 
-	var err error
-	if context != nil {
-		_, err = sa.db.organizations.InsertOneWithContext(context, org)
-	} else {
-		_, err = sa.db.organizations.InsertOne(org)
-	}
-
+	_, err := sa.db.organizations.InsertOneWithContext(context, org)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeOrganization, nil, err)
 	}
@@ -3100,13 +2855,7 @@ func (sa *Adapter) loadApplications() ([]model.Application, error) {
 func (sa *Adapter) InsertApplication(context TransactionContext, application model.Application) (*model.Application, error) {
 	app := applicationToStorage(&application)
 
-	var err error
-	if context != nil {
-		_, err = sa.db.applications.InsertOneWithContext(context, app)
-	} else {
-		_, err = sa.db.applications.InsertOne(app)
-	}
-
+	_, err := sa.db.applications.InsertOneWithContext(context, app)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeApplication, nil, err)
 	}
@@ -3349,13 +3098,7 @@ func (sa *Adapter) FindApplicationsOrganizationsByOrgID(orgID string) ([]model.A
 func (sa *Adapter) InsertApplicationOrganization(context TransactionContext, applicationOrganization model.ApplicationOrganization) (*model.ApplicationOrganization, error) {
 	appOrg := applicationOrganizationToStorage(applicationOrganization)
 
-	var err error
-	if context != nil {
-		_, err = sa.db.applicationsOrganizations.InsertOneWithContext(context, appOrg)
-	} else {
-		_, err = sa.db.applicationsOrganizations.InsertOne(appOrg)
-	}
-
+	_, err := sa.db.applicationsOrganizations.InsertOneWithContext(context, appOrg)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeApplicationOrganization, nil, err)
 	}
@@ -3369,13 +3112,7 @@ func (sa *Adapter) FindDevice(context TransactionContext, deviceID string, accou
 		primitive.E{Key: "account_id", Value: accountID}}
 	var result []device
 
-	var err error
-	if context != nil {
-		err = sa.db.devices.FindWithContext(context, filter, &result, nil)
-	} else {
-		err = sa.db.devices.Find(filter, &result, nil)
-	}
-
+	err := sa.db.devices.FindWithContext(context, filter, &result, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeDevice, nil, err)
 	}
@@ -3393,12 +3130,7 @@ func (sa *Adapter) FindDevice(context TransactionContext, deviceID string, accou
 func (sa *Adapter) InsertDevice(context TransactionContext, device model.Device) (*model.Device, error) {
 	//insert in devices
 	storageDevice := deviceToStorage(&device)
-	var err error
-	if context != nil {
-		_, err = sa.db.devices.InsertOneWithContext(context, storageDevice)
-	} else {
-		_, err = sa.db.devices.InsertOne(storageDevice)
-	}
+	_, err := sa.db.devices.InsertOneWithContext(context, storageDevice)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeDevice, nil, err)
 	}
@@ -3410,12 +3142,7 @@ func (sa *Adapter) InsertDevice(context TransactionContext, device model.Device)
 			primitive.E{Key: "devices", Value: storageDevice},
 		}},
 	}
-	var res *mongo.UpdateResult
-	if context != nil {
-		res, err = sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
-	} else {
-		res, err = sa.db.accounts.UpdateOne(filter, update, nil)
-	}
+	res, err := sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, logutils.StringArgs("inserting device"), err)
 	}
@@ -3428,13 +3155,7 @@ func (sa *Adapter) InsertDevice(context TransactionContext, device model.Device)
 
 //InsertAuthType inserts an auth type
 func (sa *Adapter) InsertAuthType(context TransactionContext, authType model.AuthType) (*model.AuthType, error) {
-	var err error
-	if context != nil {
-		_, err = sa.db.authTypes.InsertOneWithContext(context, authType)
-	} else {
-		_, err = sa.db.authTypes.InsertOne(authType)
-	}
-
+	_, err := sa.db.authTypes.InsertOneWithContext(context, authType)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeAuthType, nil, err)
 	}
@@ -3601,15 +3322,9 @@ func (sa *Adapter) SaveDevice(context TransactionContext, device *model.Device) 
 
 	storageDevice := deviceToStorage(device)
 
-	var err error
 	filter := bson.M{"_id": device.ID}
 	opts := options.Replace().SetUpsert(true)
-	if context != nil {
-		err = sa.db.devices.ReplaceOneWithContext(context, filter, storageDevice, opts)
-	} else {
-		err = sa.db.devices.ReplaceOne(filter, storageDevice, opts)
-	}
-
+	err := sa.db.devices.ReplaceOneWithContext(context, filter, storageDevice, opts)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionSave, "device", &logutils.FieldArgs{"device_id": device.ID}, nil)
 	}
@@ -3620,14 +3335,7 @@ func (sa *Adapter) SaveDevice(context TransactionContext, device *model.Device) 
 //DeleteDevice deletes a device
 func (sa *Adapter) DeleteDevice(context TransactionContext, id string) error {
 	filter := bson.M{"_id": id}
-	var res *mongo.DeleteResult
-	var err error
-	if context != nil {
-		res, err = sa.db.devices.DeleteOneWithContext(context, filter, nil)
-	} else {
-		res, err = sa.db.devices.DeleteOne(filter, nil)
-	}
-
+	res, err := sa.db.devices.DeleteOneWithContext(context, filter, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeDevice, nil, err)
 	}

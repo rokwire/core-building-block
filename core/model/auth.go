@@ -24,12 +24,17 @@ import (
 
 	"github.com/rokwire/logging-library-go/errors"
 
-	"github.com/rokwire/core-auth-library-go/authorization"
-	"github.com/rokwire/core-auth-library-go/authservice"
+	"github.com/rokwire/core-auth-library-go/v2/authorization"
+	"github.com/rokwire/core-auth-library-go/v2/authservice"
 	"github.com/rokwire/logging-library-go/logutils"
 )
 
 const (
+	//AllApps indicates that all apps may be accessed
+	AllApps string = "all"
+	//AllOrgs indicates that all orgs may be accessed
+	AllOrgs string = "all"
+
 	//TypeLoginSession auth type type
 	TypeLoginSession logutils.MessageDataType = "login session"
 	//TypeAuthType auth type type
@@ -344,8 +349,8 @@ func (s ServiceAccount) GetPermissionNames() []string {
 
 //AppOrgPair represents an appID, orgID pair entity
 type AppOrgPair struct {
-	AppID *string
-	OrgID *string
+	AppID string
+	OrgID string
 }
 
 //ServiceAccountCredential represents a service account credential entity
@@ -412,7 +417,7 @@ func JSONWebKeyFromPubKey(key *authservice.PubKey) (*JSONWebKey, error) {
 	nString := base64.URLEncoding.EncodeToString(n)
 	eString := base64.URLEncoding.EncodeToString(e)
 
-	return &JSONWebKey{Kty: "RSA", Use: "sig", Kid: key.Kid, Alg: key.Alg, N: nString, E: eString}, nil
+	return &JSONWebKey{Kty: "RSA", Use: "sig", Kid: key.KeyID, Alg: key.Alg, N: nString, E: eString}, nil
 }
 
 func rsaPublicKeyByteValuesFromRaw(rawKey *rsa.PublicKey) ([]byte, []byte, error) {

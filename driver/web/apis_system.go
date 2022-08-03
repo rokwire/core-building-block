@@ -25,7 +25,7 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
-	"github.com/rokwire/core-auth-library-go/tokenauth"
+	"github.com/rokwire/core-auth-library-go/v2/tokenauth"
 	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
 )
@@ -289,10 +289,10 @@ func (h SystemApisHandler) getServiceAccounts(l *logs.Log, r *http.Request, clai
 		searchParams["name"] = query.Get("name")
 	}
 	if query.Get("app_id") != "" {
-		searchParams["app_id"] = utils.StringOrNil(query.Get("app_id"))
+		searchParams["app_id"] = query.Get("app_id")
 	}
 	if query.Get("org_id") != "" {
-		searchParams["org_id"] = utils.StringOrNil(query.Get("org_id"))
+		searchParams["org_id"] = query.Get("org_id")
 	}
 	if query.Get("permissions") != "" {
 		searchParams["permissions"] = strings.Split(query.Get("permissions"), ",")
@@ -371,8 +371,14 @@ func (h SystemApisHandler) getServiceAccountInstance(l *logs.Log, r *http.Reques
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
 	}
 
-	appID := utils.StringOrNil(r.URL.Query().Get("app_id"))
-	orgID := utils.StringOrNil(r.URL.Query().Get("org_id"))
+	appID := r.URL.Query().Get("app_id")
+	if len(id) <= 0 {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("app_id"), nil, http.StatusBadRequest, false)
+	}
+	orgID := r.URL.Query().Get("org_id")
+	if len(id) <= 0 {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("org_id"), nil, http.StatusBadRequest, false)
+	}
 
 	serviceAccount, err := h.coreAPIs.Auth.GetServiceAccountInstance(id, appID, orgID)
 	if err != nil {
@@ -396,8 +402,14 @@ func (h SystemApisHandler) updateServiceAccountInstance(l *logs.Log, r *http.Req
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
 	}
 
-	appID := utils.StringOrNil(r.URL.Query().Get("app_id"))
-	orgID := utils.StringOrNil(r.URL.Query().Get("org_id"))
+	appID := r.URL.Query().Get("app_id")
+	if len(id) <= 0 {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("app_id"), nil, http.StatusBadRequest, false)
+	}
+	orgID := r.URL.Query().Get("org_id")
+	if len(id) <= 0 {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("org_id"), nil, http.StatusBadRequest, false)
+	}
 
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -433,8 +445,14 @@ func (h SystemApisHandler) deregisterServiceAccountInstance(l *logs.Log, r *http
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
 	}
 
-	appID := utils.StringOrNil(r.URL.Query().Get("app_id"))
-	orgID := utils.StringOrNil(r.URL.Query().Get("org_id"))
+	appID := r.URL.Query().Get("app_id")
+	if len(id) <= 0 {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("app_id"), nil, http.StatusBadRequest, false)
+	}
+	orgID := r.URL.Query().Get("org_id")
+	if len(id) <= 0 {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("org_id"), nil, http.StatusBadRequest, false)
+	}
 
 	err := h.coreAPIs.Auth.DeregisterServiceAccountInstance(id, appID, orgID)
 	if err != nil {

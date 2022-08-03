@@ -20,9 +20,10 @@ import (
 	Def "core-building-block/driver/web/docs/gen"
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	"github.com/google/go-github/v44/github"
-	"github.com/rokwire/core-auth-library-go/tokenauth"
+	"github.com/rokwire/core-auth-library-go/v2/tokenauth"
 	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
 )
@@ -31,6 +32,7 @@ import (
 type DefaultApisHandler struct {
 	coreAPIs                  *core.APIs
 	githubWebhookRequestToken string
+	githubAppConfigBranch     string
 }
 
 //getVersion gives the service version
@@ -69,14 +71,24 @@ func (h DefaultApisHandler) handleWebhookConfigChange(l *logs.Log, r *http.Reque
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeApplicationConfigWebhook, nil, err, http.StatusBadRequest, true)
 	}
+	gitRefs := strings.Split(requestData.Ref, "/")
+	if len(gitRefs) == 0 {
+		return l.HttpResponseErrorData(logutils.StatusInvalid, logutils.MessageDataType("github webhook repository branch"), nil, nil, http.StatusBadRequest, false)
+	}
+	branchName := gitRefs[len(gitRefs)-1]
+	if branchName != h.githubAppConfigBranch {
+		return l.HttpResponseErrorData(logutils.StatusInvalid, logutils.MessageDataType("github webhook repository branch"), nil, nil, http.StatusBadRequest, false)
+	}
 
 	commits := requestData.Commits
 	if len(commits) < 1 {
 		return l.HttpResponseErrorData(logutils.StatusInvalid, model.TypeGithubCommit, nil, nil, http.StatusBadRequest, false)
 	}
-	err = h.coreAPIs.Default.ProcessWebhookRequest(commits)
+	err = h.coreAPIs.Default.ProcessGitHubAppConfigWebhook(commits, l)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeApplicationConfigWebhook, nil, err, http.StatusInternalServerError, true)
+	}
 
-	// TODO: when and what do we return if all update attempts failed
 	return l.HttpResponseSuccess()
 }
 

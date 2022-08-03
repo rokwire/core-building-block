@@ -4,92 +4,63 @@ import (
 	"core-building-block/core/model"
 	"core-building-block/utils"
 	"encoding/json"
+	"fmt"
 
 	"github.com/rokwire/logging-library-go/errors"
+	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
 )
 
-func (app *application) processWebhookRequest(commits []model.Commit) error {
+func (app *application) processGitHubAppConfigWebhook(commits []model.Commit, l *logs.Log) error {
 
 	for _, commit := range commits {
-		addedFiles := commit.Added
-		if len(addedFiles) > 0 {
-			// return l.HttpResponseErrorData(logutils.StatusInvalid, model.TypeGithubCommitAdded, nil, nil, http.StatusBadRequest, false)
-			for _, path := range addedFiles {
-				contentString, isWebhookConfigPath, err := app.github.GetContents(path)
-				if err != nil {
-					// fmt.Printf("fileContent.GetContent returned error: %v", err)
-					continue
-				}
+		err := app.processGitHubWebhookFiles(commit.Added, false, l)
+		if err != nil {
+			l.LogError("error processing GitHub webhook added files", err)
+		}
+		err = app.processGitHubWebhookFiles(commit.Modified, false, l)
+		if err != nil {
+			l.LogError("error processing GitHub webhook changed files", err)
+		}
+		err = app.processGitHubWebhookFiles(commit.Removed, true, l)
+		if err != nil {
+			l.LogError("error processing GitHub webhook deleted files", err)
+		}
+	}
 
-				if isWebhookConfigPath {
-					err = app.github.UpdateCachedWebhookConfigs()
-					if err != nil {
-						// TODO: add logging
-					}
-				} else {
-					// update appplication config files in db
-					valid, appType, envString, orgName, appName, major, minor, patch := utils.ParseWebhookFilePath(path)
-					if valid != nil && *valid == true {
-						versionNumber := model.VersionNumbers{Major: major, Minor: minor, Patch: patch}
+	return nil
+}
 
-						data := make(map[string]interface{})
-						json.Unmarshal([]byte(contentString), &data)
-
-						_, err = app.updateAppConfigFromWebhook(*envString, *orgName, *appName, appType, versionNumber, nil, false, data)
-						if err != nil {
-							// TODO: error logging
-						}
-					}
-				}
-			}
+func (app *application) processGitHubWebhookFiles(files []string, isDelete bool, l *logs.Log) error {
+	if len(files) < 1 {
+		return nil
+	}
+	for _, path := range files {
+		contentString, isWebhookConfigPath, err := app.github.GetContents(path)
+		if err != nil {
+			// fmt.Printf("fileContent.GetContent returned error: %v", err)
+			continue
 		}
 
-		modifiedFiles := commit.Modified
-		if len(modifiedFiles) > 0 {
-			for _, path := range modifiedFiles {
-				contentString, isWebhookConfigPath, err := app.github.GetContents(path)
+		if isWebhookConfigPath {
+			err = app.github.UpdateCachedWebhookConfigs()
+			if err != nil {
 				if err != nil {
-					continue
-				}
-
-				if isWebhookConfigPath {
-					err = app.github.UpdateCachedWebhookConfigs()
-					if err != nil {
-						// TODO: handle error
-					}
-				} else {
-					valid, appType, envString, orgName, appName, major, minor, patch := utils.ParseWebhookFilePath(path)
-					if valid != nil && *valid == true {
-						versionNumber := model.VersionNumbers{Major: major, Minor: minor, Patch: patch}
-
-						data := make(map[string]interface{})
-						json.Unmarshal([]byte(contentString), &data)
-						_, _ = app.updateAppConfigFromWebhook(*envString, *orgName, *appName, appType, versionNumber, nil, false, data)
-					}
+					l.LogError("error updating GitHub webhook config file cache", err)
 				}
 			}
-		}
+		} else {
+			// update appplication config files in db
+			valid, appType, envString, orgName, appName, major, minor, patch := utils.ParseWebhookFilePath(path)
+			if valid == true {
+				versionNumber := model.VersionNumbers{Major: major, Minor: minor, Patch: patch}
 
-		removedFiles := commit.Removed
-		if len(removedFiles) > 0 {
-			for _, path := range removedFiles {
-				_, isWebhookConfigPath, err := app.github.GetContents(path)
+				data := make(map[string]interface{})
+				json.Unmarshal([]byte(contentString), &data)
+
+				_, err = app.updateAppConfigFromWebhook(*envString, *orgName, *appName, appType, versionNumber, nil, isDelete, data)
 				if err != nil {
-
-				}
-				if isWebhookConfigPath {
-					err = app.updateCachedWebhookConfigs()
-					if err != nil {
-					}
-				} else {
-					// remove appplication config files in db
-					valid, appType, envString, orgName, appName, major, minor, patch := utils.ParseWebhookFilePath(path)
-					if valid != nil && *valid == true {
-						versionNumber := model.VersionNumbers{Major: major, Minor: minor, Patch: patch}
-
-						_, _ = app.updateAppConfigFromWebhook(*envString, *orgName, *appName, appType, versionNumber, nil, true, make(map[string]interface{}))
-					}
+					l.LogError(fmt.Sprintf("error updating file with path: %s", path), err)
 				}
 			}
 		}

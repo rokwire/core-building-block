@@ -20,7 +20,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/rokwire/core-auth-library-go/authutils"
+	"github.com/rokwire/core-auth-library-go/v2/authutils"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logutils"
 )
@@ -59,7 +59,7 @@ const (
 	//TypeWebhookConfig ...
 	TypeWebhookConfig logutils.MessageDataType = "github webhook configs"
 	//TypeApplicationConfigWebhook ...
-	TypeApplicationConfigWebhook logutils.MessageDataType = "app config from github webhook request"
+	TypeApplicationConfigWebhook logutils.MessageDataType = "app config from github webhook"
 	//TypeGithubContent ...
 	TypeGithubContent logutils.MessageDataType = "github content"
 	//TypeGithubCommit ...
@@ -487,34 +487,6 @@ type WebhookConfig struct {
 type ApplicationTypes struct {
 	ID    string            `json:"id"`
 	Types map[string]string `json:"types"`
-}
-
-// WebhookRequest is the request from github webhook
-type WebhookRequest struct {
-	Ref     string   `json:"ref"`
-	Before  string   `json:"before"`
-	After   string   `json:"after"`
-	Created bool     `json:"created"`
-	Deleted bool     `json:"deleted"`
-	Forced  bool     `json:"forced"`
-	BaseRef string   `json:"base_ref"`
-	Compare string   `json:"compare"`
-	Commits []Commit `json:"commits"`
-}
-
-// Commit is the commit information of github push events
-type Commit struct {
-	ID        string    `json:"id"`
-	TreeID    string    `json:"tree_id"`
-	Distinct  bool      `json:"distinct"`
-	Message   string    `json:"message"`
-	Timestamp string    `json:"timestamp"`
-	URL       string    `json:"url"`
-	Author    Author    `json:"author"`
-	Committer Committer `json:"committer"`
-	Added     []string  `json:"added"`
-	Removed   []string  `json:"removed"`
-	Modified  []string  `json:"modified"`
 }
 
 // Author is the author of the commit
