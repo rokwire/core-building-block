@@ -32,7 +32,7 @@ import (
 	"github.com/rokwire/logging-library-go/logutils"
 )
 
-//TPSApisHandler handles the APIs implementation used by third-party services
+// TPSApisHandler handles the APIs implementation used by third-party services
 type TPSApisHandler struct {
 	coreAPIs *core.APIs
 }
@@ -204,7 +204,7 @@ func (h TPSApisHandler) updatePermissions(l *logs.Log, r *http.Request, claims *
 	return l.HttpResponseSuccessJSON(respData)
 }
 
-//NewTPSApisHandler creates new tps Handler instance
+// NewTPSApisHandler creates new tps Handler instance
 func NewTPSApisHandler(coreAPIs *core.APIs) TPSApisHandler {
 	return TPSApisHandler{coreAPIs: coreAPIs}
 }

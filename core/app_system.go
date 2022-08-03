@@ -205,7 +205,7 @@ func (app *application) sysUpdatePermission(name string, description *string, se
 		permission.Assigners = *assigners
 	}
 
-	err = app.storage.UpdatePermission(permission)
+	err = app.storage.UpdatePermission(nil, permission)
 	if err != nil {
 		return nil, err
 	}

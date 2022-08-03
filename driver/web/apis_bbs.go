@@ -32,12 +32,12 @@ import (
 	"github.com/rokwire/logging-library-go/logutils"
 )
 
-//BBsApisHandler handles the APIs implementation used by the platform building blocks
+// BBsApisHandler handles the APIs implementation used by the platform building blocks
 type BBsApisHandler struct {
 	coreAPIs *core.APIs
 }
 
-//getTest TODO get test
+// getTest TODO get test
 func (h BBsApisHandler) getTest(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	res := h.coreAPIs.BBs.BBsGetTest()
 
@@ -189,7 +189,7 @@ func (h BBsApisHandler) updatePermissions(l *logs.Log, r *http.Request, claims *
 	return l.HttpResponseSuccessJSON(respData)
 }
 
-//NewBBsApisHandler creates new bbs Handler instance
+// NewBBsApisHandler creates new bbs Handler instance
 func NewBBsApisHandler(coreAPIs *core.APIs) BBsApisHandler {
 	return BBsApisHandler{coreAPIs: coreAPIs}
 }

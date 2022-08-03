@@ -539,7 +539,7 @@ func (app *application) admGetApplicationPermissions(appID string, orgID string,
 	}
 
 	//2. find permissions by the service ids
-	permissions, err := app.storage.FindPermissionsByServiceIDs(appOrg.ServicesIDs)
+	permissions, err := app.storage.FindPermissionsByServiceIDs(nil, appOrg.ServicesIDs)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypePermission, nil, err)
 	}

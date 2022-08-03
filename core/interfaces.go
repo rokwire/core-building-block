@@ -21,7 +21,7 @@ import (
 	"github.com/rokwire/logging-library-go/logs"
 )
 
-//Services exposes APIs for the driver adapters
+// Services exposes APIs for the driver adapters
 type Services interface {
 	SerDeleteAccount(id string) error
 	SerGetAccount(accountID string) (*model.Account, error)
@@ -39,7 +39,7 @@ type Services interface {
 	SerGetAppConfig(appTypeIdentifier string, orgID *string, versionNumbers model.VersionNumbers, apiKey *string) (*model.ApplicationConfig, error)
 }
 
-//Administration exposes administration APIs for the driver adapters
+// Administration exposes administration APIs for the driver adapters
 type Administration interface {
 	AdmGetTest() string
 	AdmGetTestModel() string
@@ -76,24 +76,24 @@ type Administration interface {
 	AdmGetApplicationAccountDevices(appID string, orgID string, accountID string, l *logs.Log) ([]model.Device, error)
 }
 
-//Encryption exposes APIs for the Encryption building block
+// Encryption exposes APIs for the Encryption building block
 type Encryption interface {
 	EncGetTest() string
 }
 
-//BBs exposes users related APIs used by the platform building blocks
+// BBs exposes users related APIs used by the platform building blocks
 type BBs interface {
 	BBsGetTest() string
 	BBsUpdatePermissions(permissions []model.Permission, accountID string) ([]model.Permission, error)
 }
 
-//TPs exposes users related APIs used by third-party services
+// TPs exposes users related APIs used by third-party services
 type TPs interface {
 	TPsGetTest() string
 	TPsUpdatePermissions(permissions []model.Permission, accountID string) ([]model.Permission, error)
 }
 
-//System exposes system APIs for the driver adapters
+// System exposes system APIs for the driver adapters
 type System interface {
 	SysCreateGlobalConfig(setting string) (*model.GlobalConfig, error)
 	SysGetGlobalConfig() (*model.GlobalConfig, error)
@@ -122,7 +122,7 @@ type System interface {
 	SysUpdateAuthTypes(ID string, code string, description string, isExternal bool, isAnonymous bool, useCredentials bool, ignoreMFA bool, params map[string]interface{}) error
 }
 
-//Storage is used by core to storage data - DB storage adapter, file storage adapter etc
+// Storage is used by core to storage data - DB storage adapter, file storage adapter etc
 type Storage interface {
 	RegisterStorageListener(storageListener storage.Listener)
 
@@ -160,9 +160,9 @@ type Storage interface {
 	DeleteGlobalConfig(context storage.TransactionContext) error
 
 	FindPermissionsByName(context storage.TransactionContext, names []string) ([]model.Permission, error)
-	FindPermissionsByServiceIDs(serviceIDs []string) ([]model.Permission, error)
+	FindPermissionsByServiceIDs(context storage.TransactionContext, serviceIDs []string) ([]model.Permission, error)
 	InsertPermission(context storage.TransactionContext, item model.Permission) error
-	UpdatePermission(item model.Permission) error
+	UpdatePermission(context storage.TransactionContext, item model.Permission) error
 	DeletePermission(id string) error
 
 	FindAppOrgRoles(appOrgID string) ([]model.AppOrgRole, error)
@@ -209,14 +209,16 @@ type Storage interface {
 	InsertApplicationOrganization(context storage.TransactionContext, applicationOrganization model.ApplicationOrganization) (*model.ApplicationOrganization, error)
 
 	InsertAPIKey(context storage.TransactionContext, apiKey model.APIKey) (*model.APIKey, error)
+
+	FindServiceRegByServiceAccountID(accountID string) (*model.ServiceReg, error)
 }
 
-//StorageListener listenes for change data storage events
+// StorageListener listenes for change data storage events
 type StorageListener struct {
 	app *application
 	storage.DefaultListenerImpl
 }
 
-//ApplicationListener represents application listener
+// ApplicationListener represents application listener
 type ApplicationListener interface {
 }

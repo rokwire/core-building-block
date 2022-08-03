@@ -31,7 +31,7 @@ import (
 	"github.com/rokwire/logging-library-go/logutils"
 )
 
-//ServicesApisHandler handles the rest APIs implementation
+// ServicesApisHandler handles the rest APIs implementation
 type ServicesApisHandler struct {
 	coreAPIs *core.APIs
 }
@@ -766,14 +766,14 @@ func (h ServicesApisHandler) getAccounts(l *logs.Log, r *http.Request, claims *t
 	return l.HttpResponseSuccessJSON(data)
 }
 
-//getCommonTest TODO get test
+// getCommonTest TODO get test
 func (h ServicesApisHandler) getTest(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	res := h.coreAPIs.Services.SerGetCommonTest(l)
 
 	return l.HttpResponseSuccessMessage(res)
 }
 
-//Handler for verify endpoint
+// Handler for verify endpoint
 func (h ServicesApisHandler) verifyCredential(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	id := r.URL.Query().Get("id")
 	if id == "" {
@@ -856,7 +856,7 @@ func (h ServicesApisHandler) getApplicationOrgConfigs(l *logs.Log, r *http.Reque
 	return l.HttpResponseSuccessJSON(response)
 }
 
-//Handler for reset password endpoint from client application
+// Handler for reset password endpoint from client application
 func (h ServicesApisHandler) updateCredential(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	accountID := claims.Subject
 	data, err := ioutil.ReadAll(r.Body)
@@ -883,7 +883,7 @@ func (h ServicesApisHandler) updateCredential(l *logs.Log, r *http.Request, clai
 	return l.HttpResponseSuccessMessage("Reset Password from client successfully")
 }
 
-//Handler for reset password endpoint from reset link
+// Handler for reset password endpoint from reset link
 func (h ServicesApisHandler) forgotCredentialComplete(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -909,7 +909,7 @@ func (h ServicesApisHandler) forgotCredentialComplete(l *logs.Log, r *http.Reque
 	return l.HttpResponseSuccessMessage("Reset Password from link successfully")
 }
 
-//Handler for forgot credential endpoint
+// Handler for forgot credential endpoint
 func (h ServicesApisHandler) forgotCredentialInitiate(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -930,7 +930,7 @@ func (h ServicesApisHandler) forgotCredentialInitiate(l *logs.Log, r *http.Reque
 	return l.HttpResponseSuccessMessage("Sent forgot password link successfully")
 }
 
-//Handler for resending verify code
+// Handler for resending verify code
 func (h ServicesApisHandler) sendVerifyCredential(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -1006,12 +1006,12 @@ func (h ServicesApisHandler) logout(l *logs.Log, r *http.Request, claims *tokena
 	return l.HttpResponseSuccess()
 }
 
-//NewServicesApisHandler creates new rest services Handler instance
+// NewServicesApisHandler creates new rest services Handler instance
 func NewServicesApisHandler(coreAPIs *core.APIs) ServicesApisHandler {
 	return ServicesApisHandler{coreAPIs: coreAPIs}
 }
 
-//HTMLResponseTemplate represents html response template
+// HTMLResponseTemplate represents html response template
 type HTMLResponseTemplate struct {
 	Message string
 }

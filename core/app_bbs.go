@@ -16,7 +16,11 @@ package core
 
 import (
 	"core-building-block/core/model"
+	"core-building-block/driven/storage"
+	"core-building-block/utils"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logutils"
 )
@@ -26,6 +30,143 @@ func (app *application) bbsGetTest() string {
 }
 
 func (app *application) bbsUpdatePermissions(permissions []model.Permission, accountID string) ([]model.Permission, error) {
-	//TODO: implement
-	return nil, errors.New(logutils.Unimplemented)
+	//find the service registration record
+	serviceReg, err := app.storage.FindServiceRegByServiceAccountID(accountID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, nil, err)
+	}
+	if serviceReg == nil {
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeServiceReg, &logutils.FieldArgs{"service_account_id": accountID})
+	}
+
+	servicePermissions := make([]model.Permission, 0)
+	transaction := func(context storage.TransactionContext) error {
+		newNames := make([]string, len(permissions))
+		newNamesMap := make(map[string]model.Permission)
+		allAssigners := make([]string, 0)
+		for i, p := range permissions {
+			newNames[i] = p.Name
+			newNamesMap[p.Name] = p
+			allAssigners = append(allAssigners, p.Assigners...)
+		}
+
+		//1. check if any incoming permissions have the same name as another service's permission
+		invalidNames := make(map[string][]string)
+		existingPermissions, err := app.storage.FindPermissionsByName(context, newNames)
+		if err != nil {
+			return err
+		}
+		for _, p := range existingPermissions {
+			if p.ServiceID != serviceReg.Registration.ServiceID {
+				if invalidNames[p.ServiceID] == nil {
+					invalidNames[p.ServiceID] = []string{}
+				}
+				invalidNames[p.ServiceID] = append(invalidNames[p.ServiceID], p.Name)
+			}
+		}
+		if len(invalidNames) > 0 {
+			return errors.ErrorData(logutils.StatusInvalid, model.TypePermission, &logutils.FieldArgs{"names": invalidNames})
+		}
+
+		//2. get the list of existing assigner permissions from the incoming permission list
+		existingAssigners, err := app.storage.FindPermissionsByName(context, allAssigners)
+		if err != nil {
+			return err
+		}
+
+		//3. get current list of service permissions
+		serviceIDs := []string{serviceReg.Registration.ServiceID}
+		currentPermissions, err := app.storage.FindPermissionsByServiceIDs(context, serviceIDs)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypePermission, &logutils.FieldArgs{"service_id": serviceReg.Registration.ServiceID}, err)
+		}
+
+		currentNames := make([]string, len(currentPermissions))
+		currentNamesMap := make(map[string]model.Permission)
+		for i, p := range currentPermissions {
+			currentNames[i] = p.Name
+			currentNamesMap[p.Name] = p
+		}
+
+		now := time.Now().UTC()
+		added, removed, unchanged := utils.StringListDiff(newNames, currentNames)
+
+		//4. if added, create a new permission
+		for _, name := range added {
+			permission := newNamesMap[name]
+			err = app.validateAssigners(permission.Assigners, existingAssigners, permissions)
+			if err != nil {
+				return err
+			}
+
+			permission.ID = uuid.NewString()
+			permission.ServiceID = serviceReg.Registration.ServiceID
+			permission.Inactive = false
+			permission.DateCreated = now
+			err = app.storage.InsertPermission(context, permission)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionInsert, model.TypePermission, &logutils.FieldArgs{"name": name}, err)
+			}
+
+			servicePermissions = append(servicePermissions, permission)
+		}
+
+		//5. if removed, mark existing permission as inactive
+		for _, name := range removed {
+			permission := currentNamesMap[name]
+			if !permission.Inactive {
+				permission.Inactive = true
+				permission.DateUpdated = &now
+				err = app.storage.UpdatePermission(context, permission)
+				if err != nil {
+					return errors.WrapErrorAction(logutils.ActionUpdate, model.TypePermission, &logutils.FieldArgs{"name": name}, err)
+				}
+			}
+		}
+
+		//6. if unchanged, update permission data if necessary
+		for _, name := range unchanged {
+			currentPermission := currentNamesMap[name]
+			newPermission := newNamesMap[name]
+			err = app.validateAssigners(newPermission.Assigners, existingAssigners, permissions)
+			if err != nil {
+				return err
+			}
+
+			updated := currentPermission.Inactive || (newPermission.Description != currentPermission.Description) || !utils.DeepEqual(newPermission.Assigners, currentPermission.Assigners)
+			if updated {
+				newPermission.ServiceID = serviceReg.Registration.ServiceID
+				newPermission.Inactive = false
+				newPermission.DateUpdated = &now
+				err = app.storage.UpdatePermission(context, newPermission)
+				if err != nil {
+					return err
+				}
+			}
+
+			servicePermissions = append(servicePermissions, newPermission)
+		}
+
+		return nil
+	}
+
+	err = app.storage.PerformTransaction(transaction)
+	if err != nil {
+		return nil, err
+	}
+
+	return servicePermissions, nil
+}
+
+func (app *application) validateAssigners(assigners []string, existing []model.Permission, incoming []model.Permission) error {
+	//assigners must already exist or be included in incoming permissions
+	missing := model.GetMissingPermissionNames(existing, assigners)
+	if len(missing) > 0 {
+		missing = model.GetMissingPermissionNames(incoming, missing)
+		if len(missing) > 0 {
+			return errors.ErrorData(logutils.StatusInvalid, model.TypePermission, &logutils.FieldArgs{"names": missing})
+		}
+	}
+
+	return nil
 }

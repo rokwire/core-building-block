@@ -72,7 +72,7 @@ func (a *usernameAuthImpl) forgotCredential(credential *model.Credential, identi
 	return nil, nil
 }
 
-//initUsernameAuth initializes and registers a new username auth instance
+// initUsernameAuth initializes and registers a new username auth instance
 func initUsernameAuth(auth *Auth) (*usernameAuthImpl, error) {
 	username := &usernameAuthImpl{auth: auth, authType: authTypeUsername}
 
