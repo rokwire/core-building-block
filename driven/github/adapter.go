@@ -34,7 +34,7 @@ func (sa *Adapter) Start() error {
 	// cache webhook config
 	err := sa.cacheWebhookConfigs()
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionCache, model.TypeWebhookConfig, nil, err)
+		return errors.WrapErrorAction(logutils.ActionCache, model.TypeGitHubWebhookConfigFile, nil, err)
 	}
 
 	return err
@@ -50,7 +50,7 @@ func (sa *Adapter) cacheWebhookConfigs() error {
 
 	webhookConfigs, err := sa.loadWebhookConfigs()
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionFind, model.TypeWebhookConfig, nil, err)
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeGitHubWebhookConfigFile, nil, err)
 	}
 
 	sa.setCachedWebhookConfigs(webhookConfigs)
@@ -93,12 +93,13 @@ func (sa *Adapter) loadWebhookConfigs() (*model.WebhookConfig, error) {
 	contentString, _, err := sa.GetContents(sa.githubWebhookConfigPath)
 	if err != nil {
 		fmt.Printf("fileContent.GetContent returned error: %v", err)
+		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeGitHubWebhookConfigFile, nil, err)
 	}
 
 	var webhookConfig model.WebhookConfig
 	err = json.Unmarshal([]byte(contentString), &webhookConfig)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, model.TypeWebhookConfig, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, model.TypeGitHubWebhookConfigFile, nil, err)
 	}
 
 	return &webhookConfig, nil

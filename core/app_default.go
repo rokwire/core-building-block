@@ -72,7 +72,7 @@ func (app *application) processGitHubWebhookFiles(files []string, isDelete bool,
 func (app *application) updateAppConfigFromWebhook(enviromentString string, orgName string, appName string, appType string, versionNumbers model.VersionNumbers, apiKey *string, isDelete bool, data map[string]interface{}) (*model.ApplicationConfig, error) {
 	webhookConfig, err := app.github.FindWebhookConfig()
 	if err != nil || webhookConfig == nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeWebhookConfig, logutils.StringArgs(orgName), err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeGitHubWebhookConfigFile, logutils.StringArgs(orgName), err)
 	}
 
 	var orgID *string

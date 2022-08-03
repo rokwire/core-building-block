@@ -69,7 +69,7 @@ func (h DefaultApisHandler) handleWebhookConfigChange(l *logs.Log, r *http.Reque
 	var requestData model.WebhookRequest
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeApplicationConfigWebhook, nil, err, http.StatusBadRequest, true)
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeWebhookRequest, nil, err, http.StatusBadRequest, true)
 	}
 	gitRefs := strings.Split(requestData.Ref, "/")
 	if len(gitRefs) == 0 {
@@ -86,7 +86,7 @@ func (h DefaultApisHandler) handleWebhookConfigChange(l *logs.Log, r *http.Reque
 	}
 	err = h.coreAPIs.Default.ProcessGitHubAppConfigWebhook(commits, l)
 	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeApplicationConfigWebhook, nil, err, http.StatusInternalServerError, true)
+		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeAppConfigFromWebhook, nil, err, http.StatusInternalServerError, true)
 	}
 
 	return l.HttpResponseSuccess()
