@@ -34,9 +34,10 @@ type account struct {
 
 	MFATypes []mfaType `bson:"mfa_types,omitempty"`
 
-	ExternalIDs map[string]string      `bson:"external_ids"`
-	Preferences map[string]interface{} `bson:"preferences"`
-	Profile     profile                `bson:"profile"`
+	ExternalIDs   map[string]string      `bson:"external_ids"`
+	Preferences   map[string]interface{} `bson:"preferences"`
+	SystemConfigs map[string]interface{} `bson:"system_configs"`
+	Profile       profile                `bson:"profile"`
 
 	Devices []userDevice `bson:"devices,omitempty"`
 

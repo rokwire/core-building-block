@@ -42,6 +42,9 @@ properties:
     type: array
     items:
       $ref: "../user/AccountAuthTypeFields.yaml"
+  system_configs:
+    type: object
+    nullable: true
   params:
     type: object
     nullable: true

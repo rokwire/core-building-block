@@ -1316,6 +1316,31 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+  /services/account/system-configs:
+    get:
+      tags:
+        - Services
+      summary: Get system configs
+      description: |
+        Returns account system configs
+
+        **Auth:** Requires user auth token
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                nullable: true
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   /services/test:
     get:
       tags:
@@ -1878,7 +1903,7 @@ paths:
       description: |
         Create a new admin account
 
-        **Auth:** Requires auth token with `create_accounts` or `all_accounts` permission
+        **Auth:** Requires admin access token with `create_accounts` or `all_accounts` permission
       security:
         - bearerAuth: []
       requestBody:
@@ -1909,7 +1934,7 @@ paths:
       description: |
         Update an existing admin account
 
-        **Auth:** Requires auth token with `update_accounts` or `all_accounts` permission
+        **Auth:** Requires admin access token with `update_accounts` or `all_accounts` permission
       security:
         - bearerAuth: []
       requestBody:
@@ -2154,6 +2179,80 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/_admin_req_revoke-roles-from-account'
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  '/admin/application/accounts/{id}/system-configs':
+    get:
+      tags:
+        - Admin
+      summary: Get system configs
+      description: |
+        Returns account system configs
+
+        **Auth:** Requires admin access token with `get_account-system-configs` or `all_account-system-configs` permission
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: The account ID
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                nullable: true
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+    put:
+      tags:
+        - Admin
+      summary: Update account system configs
+      description: |
+        Updates account system configs
+
+        **Auth:** Requires admin access token with `update_account-system-configs` or `all_account-system-configs` permission
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: The account ID
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+      requestBody:
+        description: Account system configs (will be merged with existing configs)
+        content:
+          application/json:
+            schema:
+              type: object
+        required: true
       responses:
         '200':
           description: Success
@@ -5018,6 +5117,10 @@ components:
             $ref: '#/components/schemas/AccountAuthType'
         preferences:
           type: object
+          nullable: true
+        system_configs:
+          type: object
+          nullable: true
         profile:
           $ref: '#/components/schemas/Profile'
         devices:
@@ -5071,6 +5174,9 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AccountAuthTypeFields'
+        system_configs:
+          type: object
+          nullable: true
         params:
           type: object
           nullable: true
@@ -5632,6 +5738,9 @@ components:
         profile:
           $ref: '#/components/schemas/ProfileFields'
         preferences:
+          type: object
+          nullable: true
+        system_configs:
           type: object
           nullable: true
         has_permissions:

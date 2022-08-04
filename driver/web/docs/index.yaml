@@ -73,6 +73,8 @@ paths:
     $ref: "./resources/services/account/preferences.yaml"
   /services/account/profile:
     $ref: "./resources/services/account/profile.yaml"
+  /services/account/system-configs:
+    $ref: "./resources/services/account/system-configs.yaml"
   /services/test:
     $ref: "./resources/services/test.yaml"
   /services/application/configs:
@@ -107,6 +109,8 @@ paths:
     $ref: "./resources/admin/application/accounts/permissions.yaml"
   /admin/application/accounts/{id}/roles:
     $ref: "./resources/admin/application/accounts/roles.yaml"
+  /admin/application/accounts/{id}/system-configs:
+    $ref: "./resources/admin/application/accounts/system-configs.yaml"
   /admin/application/login-sessions:
     $ref: "./resources/admin/application/login-sessions.yaml"
   /admin/application/groups:
