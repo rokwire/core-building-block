@@ -181,9 +181,10 @@ func (h BBsApisHandler) updatePermissions(l *logs.Log, r *http.Request, claims *
 		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypePermission, nil, err, http.StatusInternalServerError, true)
 	}
 
-	respData, err := json.Marshal(permissions)
+	permissionsResp := applicationPermissionsToDef(permissions)
+	respData, err := json.Marshal(permissionsResp)
 	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("service access tokens response"), nil, err, http.StatusInternalServerError, false)
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("permissions response"), nil, err, http.StatusInternalServerError, false)
 	}
 
 	return l.HttpResponseSuccessJSON(respData)

@@ -103,12 +103,11 @@ func (app *application) bbsUpdatePermissions(permissions []model.Permission, acc
 			permission.ServiceID = serviceReg.Registration.ServiceID
 			permission.Inactive = false
 			permission.DateCreated = now
-			err = app.storage.InsertPermission(context, permission)
-			if err != nil {
-				return errors.WrapErrorAction(logutils.ActionInsert, model.TypePermission, &logutils.FieldArgs{"name": name}, err)
-			}
-
 			servicePermissions = append(servicePermissions, permission)
+		}
+		err = app.storage.InsertPermissions(context, servicePermissions)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionInsert, model.TypePermission, &logutils.FieldArgs{"name": added}, err)
 		}
 
 		//5. if removed, mark existing permission as inactive
@@ -133,9 +132,13 @@ func (app *application) bbsUpdatePermissions(permissions []model.Permission, acc
 				return err
 			}
 
-			updated := currentPermission.Inactive || (newPermission.Description != currentPermission.Description) || !utils.DeepEqual(newPermission.Assigners, currentPermission.Assigners)
+			description := newPermission.Description
+			assigners := newPermission.Assigners
+			updated := currentPermission.Inactive || (description != currentPermission.Description) || !utils.DeepEqual(assigners, currentPermission.Assigners)
+			newPermission = currentPermission
 			if updated {
-				newPermission.ServiceID = serviceReg.Registration.ServiceID
+				newPermission.Description = description
+				newPermission.Assigners = assigners
 				newPermission.Inactive = false
 				newPermission.DateUpdated = &now
 				err = app.storage.UpdatePermission(context, newPermission)
@@ -164,7 +167,7 @@ func (app *application) validateAssigners(assigners []string, existing []model.P
 	if len(missing) > 0 {
 		missing = model.GetMissingPermissionNames(incoming, missing)
 		if len(missing) > 0 {
-			return errors.ErrorData(logutils.StatusInvalid, model.TypePermission, &logutils.FieldArgs{"names": missing})
+			return errors.ErrorData(logutils.StatusInvalid, "assigner permission", &logutils.FieldArgs{"names": missing})
 		}
 	}
 

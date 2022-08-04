@@ -2838,11 +2838,11 @@ paths:
         '200':
           description: Success
           content:
-            application/json: null
-            schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/Permission'
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Permission'
         '400':
           description: Bad request
         '401':
@@ -3090,11 +3090,11 @@ paths:
         '200':
           description: Success
           content:
-            application/json: null
-            schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/Permission'
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Permission'
         '400':
           description: Bad request
         '401':

@@ -168,7 +168,9 @@ func (sa *Adapter) setCachedServiceRegs(serviceRegs *[]model.ServiceReg) {
 		err := validate.Struct(serviceReg)
 		if err == nil {
 			sa.cachedServiceRegs.Store(serviceReg.Registration.ServiceID, serviceReg)
-			sa.cachedServiceRegs.Store(serviceReg.Registration.ServiceAccountID, serviceReg)
+			if serviceReg.Registration.ServiceAccountID != "" {
+				sa.cachedServiceRegs.Store(serviceReg.Registration.ServiceAccountID, serviceReg)
+			}
 		} else {
 			sa.logger.Errorf("failed to validate and cache service registration with registration.service_id %s, registration.service_account_id %s: %s", serviceReg.Registration.ServiceID, serviceReg.Registration.ServiceAccountID, err.Error())
 		}
@@ -2213,6 +2215,35 @@ func (sa *Adapter) InsertPermission(context TransactionContext, permission model
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionInsert, model.TypePermission, &logutils.FieldArgs{"_id": permission.ID, "name": permission.Name}, err)
 	}
+	return nil
+}
+
+// InsertPermissions inserts permissions
+func (sa *Adapter) InsertPermissions(context TransactionContext, items []model.Permission) error {
+	if len(items) == 0 {
+		return nil
+	}
+
+	stgPermissions := make([]interface{}, len(items))
+	for i, p := range items {
+		stgPermissions[i] = p
+	}
+
+	var res *mongo.InsertManyResult
+	var err error
+	if context != nil {
+		res, err = sa.db.permissions.InsertManyWithContext(context, stgPermissions, nil)
+	} else {
+		res, err = sa.db.permissions.InsertMany(stgPermissions, nil)
+	}
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionInsert, model.TypePermission, nil, err)
+	}
+
+	if len(res.InsertedIDs) != len(items) {
+		return errors.ErrorAction(logutils.ActionInsert, model.TypePermission, &logutils.FieldArgs{"inserted": len(res.InsertedIDs), "expected": len(items)})
+	}
+
 	return nil
 }
 

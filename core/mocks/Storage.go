@@ -1095,6 +1095,20 @@ func (_m *Storage) InsertPermission(context storage.TransactionContext, item mod
 	return r0
 }
 
+// InsertPermissions provides a mock function with given fields: context, items
+func (_m *Storage) InsertPermissions(context storage.TransactionContext, items []model.Permission) error {
+	ret := _m.Called(context, items)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, []model.Permission) error); ok {
+		r0 = rf(context, items)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // PerformTransaction provides a mock function with given fields: _a0
 func (_m *Storage) PerformTransaction(_a0 func(storage.TransactionContext) error) error {
 	ret := _m.Called(_a0)
