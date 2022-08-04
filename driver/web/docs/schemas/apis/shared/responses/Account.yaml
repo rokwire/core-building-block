@@ -9,6 +9,9 @@ properties:
   preferences:
     type: object
     nullable: true
+  system_configs:
+    type: object
+    nullable: true
   has_permissions:
     type: boolean
   permissions:

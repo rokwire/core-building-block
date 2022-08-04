@@ -1,0 +1,23 @@
+get:
+  tags:
+  - Services
+  summary: Get system configs
+  description: |
+    Returns account system configs
+
+    **Auth:** Requires user auth token
+  security:
+    - bearerAuth: []
+  responses:
+     200:
+      description: Success
+      content:
+        application/json:
+          schema: 
+            type: object
+     400:
+      description: Bad request
+     401:
+      description: Unauthorized
+     500:
+      description: Internal error
