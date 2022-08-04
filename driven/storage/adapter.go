@@ -2264,6 +2264,7 @@ func (sa *Adapter) updatePermission(context TransactionContext, item model.Permi
 			primitive.E{Key: "description", Value: item.Description},
 			primitive.E{Key: "service_id", Value: item.ServiceID},
 			primitive.E{Key: "assigners", Value: item.Assigners},
+			primitive.E{Key: "inactive", Value: item.Inactive},
 			primitive.E{Key: "date_updated", Value: item.DateUpdated},
 		}},
 	}
@@ -2320,6 +2321,7 @@ func (sa *Adapter) updatePermission(context TransactionContext, item model.Permi
 			primitive.E{Key: "permissions.$.description", Value: item.Description},
 			primitive.E{Key: "permissions.$.service_id", Value: item.ServiceID},
 			primitive.E{Key: "permissions.$.assigners", Value: item.Assigners},
+			primitive.E{Key: "permissions.$.inactive", Value: item.Inactive},
 			primitive.E{Key: "permissions.$.date_updated", Value: item.DateUpdated},
 		}},
 	}
