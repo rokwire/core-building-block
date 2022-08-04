@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Allow passing nil context to WithContext storage functions [#494](https://github.com/rokwire/core-building-block/issues/494)
 - Account system configs [#558](https://github.com/rokwire/core-building-block/issues/558)
+- Anonymous accounts [#559](https://github.com/rokwire/core-building-block/issues/559)
 ### Fixed
 - Authorization policy comments not working [#506](https://github.com/rokwire/core-building-block/issues/506)
 
