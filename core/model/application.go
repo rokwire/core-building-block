@@ -476,6 +476,19 @@ func GetMissingPermissionNames(items []Permission, names []string) []string {
 	return missingNames
 }
 
+// CheckPermissionsExist checks if permissions already exist or are included in list of incoming permissions
+func CheckPermissionsExist(names []string, existing []Permission, incoming []Permission) error {
+	missing := GetMissingPermissionNames(existing, names)
+	if len(missing) > 0 {
+		missing = GetMissingPermissionNames(incoming, missing)
+		if len(missing) > 0 {
+			return errors.ErrorData(logutils.StatusInvalid, TypePermission, &logutils.FieldArgs{"names": missing})
+		}
+	}
+
+	return nil
+}
+
 // GetMissingRoleIDs returns a list of role IDs missing from items
 func GetMissingRoleIDs(items []AppOrgRole, ids []string) []string {
 	missingIDs := make([]string, 0)
