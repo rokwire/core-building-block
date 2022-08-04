@@ -34,7 +34,7 @@ func accountToDef(item model.Account) *Def.SharedResAccount {
 	groups := accountGroupsToDef(item.GetActiveGroups())
 	//account auth types
 	authTypes := accountAuthTypesToDef(item.AuthTypes)
-	return &Def.SharedResAccount{Id: item.ID, HasPermissions: &item.HasPermissions, Permissions: &permissions, Roles: &roles, Groups: &groups,
+	return &Def.SharedResAccount{Id: item.ID, Anonymous: &item.Anonymous, HasPermissions: &item.HasPermissions, Permissions: &permissions, Roles: &roles, Groups: &groups,
 		AuthTypes: &authTypes, Profile: profile, Preferences: preferences}
 }
 
@@ -71,7 +71,7 @@ func partialAccountToDef(item model.Account, params map[string]interface{}) *Def
 	if params != nil {
 		paramsData = &params
 	}
-	return &Def.PartialAccount{Id: item.ID, AppId: item.AppOrg.Application.ID, OrgId: item.AppOrg.Organization.ID,
+	return &Def.PartialAccount{Id: item.ID, Anonymous: item.Anonymous, AppId: item.AppOrg.Application.ID, OrgId: item.AppOrg.Organization.ID,
 		FirstName: item.Profile.FirstName, LastName: item.Profile.LastName, HasPermissions: item.HasPermissions,
 		Permissions: permissions, Roles: roles, Groups: groups, AuthTypes: authTypes,
 		DateCreated: dateCreated, DateUpdated: dateUpdated, Params: paramsData}

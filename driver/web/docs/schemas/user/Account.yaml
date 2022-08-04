@@ -28,3 +28,5 @@ properties:
     type: array
     items:
       $ref: "./Device.yaml"
+  anonymous:
+    type: boolean

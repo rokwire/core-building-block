@@ -542,19 +542,27 @@ func (a *Auth) updateProfileIfNeeded(account model.Account, externalUser model.E
 	return nil
 }
 
-func (a *Auth) applyAnonymousAuthType(authType model.AuthType, creds string) (string, map[string]interface{}, error) { //auth type
+func (a *Auth) applyAnonymousAuthType(authType model.AuthType, creds string) (string, *model.Account, map[string]interface{}, error) { //auth type
 	authImpl, err := a.getAnonymousAuthTypeImpl(authType)
 	if err != nil {
-		return "", nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeAnonymousAuthType, nil, err)
+		return "", nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeAnonymousAuthType, nil, err)
 	}
 
 	//Check the credentials
 	anonymousID, anonymousParams, err := authImpl.checkCredentials(creds)
 	if err != nil {
-		return "", nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeCreds, nil, err)
+		return "", nil, nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeCreds, nil, err)
 	}
 
-	return anonymousID, anonymousParams, nil
+	account, err := a.storage.FindAccountByID(nil, anonymousID)
+	if err != nil {
+		return "", nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"id": anonymousID}, err)
+	}
+	if account != nil && !account.Anonymous {
+		return "", nil, nil, errors.ErrorData(logutils.StatusInvalid, "anonymous account", &logutils.FieldArgs{"id": anonymousID})
+	}
+
+	return anonymousID, account, anonymousParams, nil
 }
 
 func (a *Auth) applyAuthType(authType model.AuthType, appOrg model.ApplicationOrganization, creds string, params string,

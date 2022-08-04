@@ -352,6 +352,16 @@ func (h AdminApisHandler) getApplicationAccounts(l *logs.Log, r *http.Request, c
 		}
 		hasPermissions = &hasPermissionsVal
 	}
+	//anonymous
+	var anonymous *bool
+	anonymousArg := r.URL.Query().Get("anonymous")
+	if anonymousArg != "" {
+		anonymousVal, err := strconv.ParseBool(anonymousArg)
+		if err != nil {
+			return l.HttpResponseErrorAction(logutils.ActionParse, logutils.TypeArg, logutils.StringArgs("anonymous"), err, http.StatusBadRequest, false)
+		}
+		anonymous = &anonymousVal
+	}
 	//permissions
 	var permissions []string
 	permissionsArg := r.URL.Query().Get("permissions")
@@ -371,7 +381,7 @@ func (h AdminApisHandler) getApplicationAccounts(l *logs.Log, r *http.Request, c
 		groupIDs = strings.Split(groupsArg, ",")
 	}
 
-	accounts, err := h.coreAPIs.Administration.AdmGetAccounts(limit, offset, claims.AppID, claims.OrgID, accountID, firstName, lastName, authType, authTypeIdentifier, hasPermissions, permissions, roleIDs, groupIDs)
+	accounts, err := h.coreAPIs.Administration.AdmGetAccounts(limit, offset, claims.AppID, claims.OrgID, accountID, firstName, lastName, authType, authTypeIdentifier, anonymous, hasPermissions, permissions, roleIDs, groupIDs)
 	if err != nil {
 		return l.HttpResponseErrorAction("error finding accounts", model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}

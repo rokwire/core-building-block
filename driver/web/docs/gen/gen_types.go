@@ -232,6 +232,7 @@ type APIKey struct {
 
 // Account defines model for Account.
 type Account struct {
+	Anonymous   *bool                    `json:"anonymous,omitempty"`
 	AppOrg      *ApplicationOrganization `json:"app_org,omitempty"`
 	AuthTypes   *[]AccountAuthType       `json:"auth_types,omitempty"`
 	Devices     *[]Device                `json:"devices,omitempty"`
@@ -496,6 +497,7 @@ type OrganizationFieldsType string
 
 // PartialAccount defines model for PartialAccount.
 type PartialAccount struct {
+	Anonymous      bool                    `json:"anonymous"`
 	AppId          string                  `json:"app_id"`
 	AuthTypes      []AccountAuthTypeFields `json:"auth_types"`
 	DateCreated    string                  `json:"date_created"`
@@ -983,6 +985,7 @@ type SharedReqUpdateAccountAuthType string
 
 // SharedResAccount defines model for _shared_res_Account.
 type SharedResAccount struct {
+	Anonymous      *bool                    `json:"anonymous,omitempty"`
 	AuthTypes      *[]AccountAuthTypeFields `json:"auth_types,omitempty"`
 	Groups         *[]AppOrgGroup           `json:"groups,omitempty"`
 	HasPermissions *bool                    `json:"has_permissions,omitempty"`

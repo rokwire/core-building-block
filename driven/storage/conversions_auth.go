@@ -83,7 +83,7 @@ func loginSessionToStorage(item model.LoginSession) *loginSession {
 	externalIDs := item.ExternalIDs
 	var accountAuthTypeID *string
 	var accountAuthTypeIdentifier *string
-	if item.AccountAuthType != nil {
+	if item.AccountAuthType != nil && len(item.AccountAuthType.ID) != 0 {
 		accountAuthTypeID = &item.AccountAuthType.ID
 		accountAuthTypeIdentifier = &item.AccountAuthType.Identifier
 	}

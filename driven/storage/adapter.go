@@ -1098,7 +1098,7 @@ func (sa *Adapter) FindAccount(context TransactionContext, appOrgID string, auth
 
 //FindAccounts finds accounts
 func (sa *Adapter) FindAccounts(limit int, offset int, appID string, orgID string, accountID *string, firstName *string, lastName *string, authType *string,
-	authTypeIdentifier *string, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error) {
+	authTypeIdentifier *string, anonymous *bool, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error) {
 	//find app org id
 	appOrg, err := sa.getCachedApplicationOrganization(appID, orgID)
 	if err != nil {
@@ -1126,6 +1126,9 @@ func (sa *Adapter) FindAccounts(limit int, offset int, appID string, orgID strin
 	}
 	if authTypeIdentifier != nil {
 		filter = append(filter, primitive.E{Key: "auth_types.identifier", Value: *authTypeIdentifier})
+	}
+	if anonymous != nil {
+		filter = append(filter, primitive.E{Key: "anonymous", Value: *anonymous})
 	}
 
 	//authorization filters

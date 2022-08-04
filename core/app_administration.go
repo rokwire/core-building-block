@@ -347,6 +347,9 @@ func (app *application) admAddAccountsToGroup(appID string, orgID string, groupI
 	//ensure that the accounts do not have the group before adding
 	updateAccounts := make([]model.Account, 0)
 	for _, account := range accounts {
+		if account.Anonymous {
+			return errors.Newf("cannot grant permissions to anonymous accounts: ID=%s", account.ID)
+		}
 		if account.GetGroup(groupID) == nil {
 			updateAccounts = append(updateAccounts, account)
 		}
@@ -547,9 +550,9 @@ func (app *application) admGetApplicationPermissions(appID string, orgID string,
 }
 
 func (app *application) admGetAccounts(limit int, offset int, appID string, orgID string, accountID *string, firstName *string, lastName *string, authType *string,
-	authTypeIdentifier *string, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error) {
+	authTypeIdentifier *string, anonymous *bool, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error) {
 	//find the accounts
-	accounts, err := app.storage.FindAccounts(limit, offset, appID, orgID, accountID, firstName, lastName, authType, authTypeIdentifier, hasPermissions, permissions, roleIDs, groupIDs)
+	accounts, err := app.storage.FindAccounts(limit, offset, appID, orgID, accountID, firstName, lastName, authType, authTypeIdentifier, anonymous, hasPermissions, permissions, roleIDs, groupIDs)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
@@ -632,6 +635,9 @@ func (app *application) admGrantAccountPermissions(appID string, orgID string, a
 		account, err := app.storage.FindAccountByID(context, accountID)
 		if err != nil {
 			return errors.Wrap("error finding account on permissions granting", err)
+		}
+		if account.Anonymous {
+			return errors.Newf("cannot grant permissions to anonymous accounts: ID=%s", accountID)
 		}
 		if (account.AppOrg.Application.ID != appID) || (account.AppOrg.Organization.ID != orgID) {
 			l.Warnf("someone is trying to grant permissions to %s for different app/org", accountID)
@@ -740,6 +746,9 @@ func (app *application) admGrantAccountRoles(appID string, orgID string, account
 		account, err := app.storage.FindAccountByID(context, accountID)
 		if err != nil {
 			return errors.Wrap("error finding account on roles granting", err)
+		}
+		if account.Anonymous {
+			return errors.Newf("cannot grant roles to anonymous accounts: ID=%s", accountID)
 		}
 		if (account.AppOrg.Application.ID != appID) || (account.AppOrg.Organization.ID != orgID) {
 			l.Warnf("someone is trying to grant roles to %s for different app/org", accountID)

@@ -5024,6 +5024,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Device'
+        anonymous:
+          type: boolean
     PartialAccount:
       required:
         - id
@@ -5035,6 +5037,7 @@ components:
         - permissions
         - roles
         - groups
+        - anonymous
         - auth_types
         - date_created
       type: object
@@ -5071,6 +5074,8 @@ components:
         params:
           type: object
           nullable: true
+        anonymous:
+          type: boolean
         date_created:
           type: string
         date_updated:
@@ -5647,6 +5652,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AccountAuthTypeFields'
+        anonymous:
+          type: boolean
     _shared_res_AccountCheck:
       type: boolean
     _shared_res_RokwireToken:

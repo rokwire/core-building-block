@@ -8,6 +8,7 @@ required:
   - permissions
   - roles
   - groups
+  - anonymous
   - auth_types
   - date_created
 type: object
@@ -44,6 +45,8 @@ properties:
   params:
     type: object
     nullable: true
+  anonymous:
+    type: boolean
   date_created:
     type: string
   date_updated:

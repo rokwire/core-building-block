@@ -110,12 +110,16 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 		anonymous = true
 
 		anonymousID := ""
-		anonymousID, responseParams, err = a.applyAnonymousAuthType(*authType, creds)
+		var account *model.Account
+		anonymousID, account, responseParams, err = a.applyAnonymousAuthType(*authType, creds)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction("apply anonymous auth type", "user", nil, err)
 		}
 		sub = anonymousID
 
+		if account != nil {
+			accountAuthType = &model.AccountAuthType{Account: *account}
+		}
 	} else if authType.IsExternal {
 		accountAuthType, responseParams, mfaTypes, externalIDs, err = a.applyExternalAuthType(*authType, *appType, *appOrg, creds, params, profile, preferences, admin, l)
 		if err != nil {

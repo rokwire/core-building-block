@@ -35,7 +35,7 @@ func authBuildLoginResponse(l *logs.Log, loginSession *model.LoginSession) logs.
 
 	//account
 	var accountData *Def.SharedResAccount
-	if !loginSession.Anonymous {
+	if loginSession.AccountAuthType != nil {
 		account := loginSession.AccountAuthType.Account
 		accountData = accountToDef(account)
 	}

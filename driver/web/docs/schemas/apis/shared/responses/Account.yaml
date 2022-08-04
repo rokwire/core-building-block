@@ -27,5 +27,7 @@ properties:
     type: array
     items:
       $ref: "../../../user/AccountAuthTypeFields.yaml"
+  anonymous:
+    type: boolean
 
 
