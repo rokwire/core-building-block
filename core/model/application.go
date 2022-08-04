@@ -115,6 +115,15 @@ func (c AppOrgRole) GetPermissionNamed(name string) *Permission {
 	return nil
 }
 
+// GetAssignedPermissionNames returns a list of names of assigned permissions for this role
+func (c AppOrgRole) GetAssignedPermissionNames() []string {
+	names := make([]string, len(c.Permissions))
+	for i, permission := range c.Permissions {
+		names[i] = permission.Name
+	}
+	return names
+}
+
 // CheckAssigners checks if the passed permissions satisfy the needed assigners for all role permissions
 func (c AppOrgRole) CheckAssigners(assignerPermissions []string) error {
 	if len(c.Permissions) == 0 {
@@ -174,6 +183,24 @@ func (cg AppOrgGroup) CheckAssigners(assignerPermissions []string) error {
 	}
 	//all assigners are satisfied
 	return nil
+}
+
+// GetAssignedPermissionNames returns a list of names of assigned permissions for this group
+func (cg AppOrgGroup) GetAssignedPermissionNames() []string {
+	names := make([]string, len(cg.Permissions))
+	for i, permission := range cg.Permissions {
+		names[i] = permission.Name
+	}
+	return names
+}
+
+// GetAssignedRoleIDs returns a list of ids of assigned roles for this group
+func (cg AppOrgGroup) GetAssignedRoleIDs() []string {
+	ids := make([]string, len(cg.Roles))
+	for i, role := range cg.Roles {
+		ids[i] = role.ID
+	}
+	return ids
 }
 
 func (cg AppOrgGroup) String() string {
@@ -447,4 +474,46 @@ func GetMissingPermissionNames(items []Permission, names []string) []string {
 		}
 	}
 	return badNames
+}
+
+// GetMissingRoleIDs returns a list of role IDs missing from items
+func GetMissingRoleIDs(items []AppOrgRole, ids []string) ([]string, error) {
+	if len(items) != len(ids) {
+		badIDs := make([]string, 0)
+		for _, id := range ids {
+			bad := true
+			for _, e := range items {
+				if e.ID == id {
+					bad = false
+					break
+				}
+			}
+			if bad {
+				badIDs = append(badIDs, id)
+			}
+		}
+		return nil, errors.ErrorData(logutils.StatusInvalid, TypeAppOrgRole, &logutils.FieldArgs{"ids": badIDs})
+	}
+	return nil, nil
+}
+
+// GetMissingGroupIDs returns a list of group IDs missing from items
+func GetMissingGroupIDs(items []AppOrgGroup, ids []string) ([]string, error) {
+	if len(items) != len(ids) {
+		badIDs := make([]string, 0)
+		for _, id := range ids {
+			bad := true
+			for _, e := range items {
+				if e.ID == id {
+					bad = false
+					break
+				}
+			}
+			if bad {
+				badIDs = append(badIDs, id)
+			}
+		}
+		return nil, errors.ErrorData(logutils.StatusInvalid, TypeAppOrgGroup, &logutils.FieldArgs{"ids": badIDs})
+	}
+	return nil, nil
 }

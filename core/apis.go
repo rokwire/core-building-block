@@ -313,8 +313,12 @@ func (s *administrationImpl) AdmGetApplications(orgID string) ([]model.Applicati
 	return s.app.admGetApplications(orgID)
 }
 
-func (s *administrationImpl) AdmCreateAppOrgGroup(name string, permissionNames []string, rolesIDs []string, appID string, orgID string, assignerPermissions []string, system bool, l *logs.Log) (*model.AppOrgGroup, error) {
-	return s.app.admCreateAppOrgGroup(name, permissionNames, rolesIDs, appID, orgID, assignerPermissions, system, l)
+func (s *administrationImpl) AdmCreateAppOrgGroup(name string, description string, system bool, permissionNames []string, rolesIDs []string, appID string, orgID string, assignerPermissions []string, systemClaim bool, l *logs.Log) (*model.AppOrgGroup, error) {
+	return s.app.admCreateAppOrgGroup(name, description, system, permissionNames, rolesIDs, appID, orgID, assignerPermissions, systemClaim, l)
+}
+
+func (s *administrationImpl) AdmUpdateAppOrgGroup(ID string, name string, description string, system bool, permissionNames []string, rolesIDs []string, appID string, orgID string, assignerPermissions []string, systemClaim bool, l *logs.Log) (*model.AppOrgGroup, error) {
+	return s.app.admUpdateAppOrgGroup(ID, name, description, system, permissionNames, rolesIDs, appID, orgID, assignerPermissions, systemClaim, l)
 }
 
 func (s *administrationImpl) AdmGetAppOrgGroups(appID string, orgID string) ([]model.AppOrgGroup, error) {
@@ -333,8 +337,8 @@ func (s *administrationImpl) AdmRemoveAccountsFromGroup(appID string, orgID stri
 	return s.app.admRemoveAccountsFromGroup(appID, orgID, groupID, accountIDs, assignerPermissions, l)
 }
 
-func (s *administrationImpl) AdmCreateAppOrgRole(name string, description string, permissionNames []string, appID string, orgID string, assignerPermissions []string, system bool, l *logs.Log) (*model.AppOrgRole, error) {
-	return s.app.admCreateAppOrgRole(name, description, permissionNames, appID, orgID, assignerPermissions, system, l)
+func (s *administrationImpl) AdmCreateAppOrgRole(name string, description string, system bool, permissionNames []string, appID string, orgID string, assignerPermissions []string, systemClaim bool, l *logs.Log) (*model.AppOrgRole, error) {
+	return s.app.admCreateAppOrgRole(name, description, system, permissionNames, appID, orgID, assignerPermissions, systemClaim, l)
 }
 
 func (s *administrationImpl) AdmGetAppOrgRoles(appID string, orgID string) ([]model.AppOrgRole, error) {
@@ -343,6 +347,10 @@ func (s *administrationImpl) AdmGetAppOrgRoles(appID string, orgID string) ([]mo
 
 func (s *administrationImpl) AdmDeleteAppOrgRole(ID string, appID string, orgID string, assignerPermissions []string, system bool, l *logs.Log) error {
 	return s.app.admDeleteAppOrgRole(ID, appID, orgID, assignerPermissions, system, l)
+}
+
+func (s *administrationImpl) AdmUpdateAppOrgRole(ID string, name string, description string, system bool, permissionNames []string, appID string, orgID string, assignerPermissions []string, systemClaim bool, l *logs.Log) (*model.AppOrgRole, error) {
+	return s.app.admUpdateAppOrgRole(ID, name, description, system, permissionNames, appID, orgID, assignerPermissions, systemClaim, l)
 }
 
 func (s *administrationImpl) AdmGrantPermissionsToRole(appID string, orgID string, roleID string, permissionNames []string, assignerPermissions []string, system bool, l *logs.Log) error {
@@ -483,11 +491,11 @@ func (s *systemImpl) SysGetApplications() ([]model.Application, error) {
 	return s.app.sysGetApplications()
 }
 
-func (s *systemImpl) SysCreatePermission(name string, description *string, serviceID *string, assigners *[]string) (*model.Permission, error) {
+func (s *systemImpl) SysCreatePermission(name string, description string, serviceID string, assigners *[]string) (*model.Permission, error) {
 	return s.app.sysCreatePermission(name, description, serviceID, assigners)
 }
 
-func (s *systemImpl) SysUpdatePermission(name string, description *string, serviceID *string, assigners *[]string) (*model.Permission, error) {
+func (s *systemImpl) SysUpdatePermission(name string, description string, serviceID string, assigners *[]string) (*model.Permission, error) {
 	return s.app.sysUpdatePermission(name, description, serviceID, assigners)
 }
 
