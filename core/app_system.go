@@ -166,6 +166,8 @@ func (app *application) sysGetApplications() ([]model.Application, error) {
 func (app *application) sysCreatePermission(name string, description string, serviceID string, assigners *[]string) (*model.Permission, error) {
 	var newPermission *model.Permission
 	transaction := func(context storage.TransactionContext) error {
+		permission := model.Permission{Name: name}
+
 		//1. make sure all assigners already exist
 		assignersVal := make([]string, 0)
 		if assigners != nil {
@@ -175,15 +177,19 @@ func (app *application) sysCreatePermission(name string, description string, ser
 				return err
 			}
 			if len(assignerPermissions) < len(assignersVal) {
-				missing := model.GetMissingPermissionNames(assignerPermissions, assignersVal)
-				return errors.ErrorData(logutils.StatusInvalid, "assigner permission", &logutils.FieldArgs{"names": missing})
+				err := model.CheckPermissionsExist(assignersVal, assignerPermissions, []model.Permission{permission})
+				if err != nil {
+					return errors.WrapErrorAction(logutils.ActionValidate, "assigners", nil, err)
+				}
 			}
 		}
 
 		//2. create permission
-		id, _ := uuid.NewUUID()
-		now := time.Now()
-		permission := model.Permission{ID: id.String(), Name: name, Description: description, DateCreated: now, ServiceID: serviceID, Assigners: assignersVal}
+		permission.ID = uuid.NewString()
+		permission.Description = description
+		permission.ServiceID = serviceID
+		permission.Assigners = assignersVal
+		permission.DateCreated = time.Now()
 		err := app.storage.InsertPermission(context, permission)
 		if err != nil {
 			return err
