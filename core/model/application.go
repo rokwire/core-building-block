@@ -63,7 +63,9 @@ type Permission struct {
 
 	ServiceID string   `bson:"service_id"`
 	Assigners []string `bson:"assigners"`
-	Inactive  bool     `bson:"inactive"`
+
+	AdminManaged bool `bson:"admin_managed"`
+	Inactive     bool `bson:"inactive"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`

@@ -19,6 +19,10 @@ properties:
     type: array
     items:
       type: string
+  admin_managed:
+    type: boolean
+  inactive:
+    type: boolean
   date_created:
     type: string
   date_updated:

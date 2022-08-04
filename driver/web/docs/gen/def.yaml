@@ -4734,6 +4734,10 @@ components:
           type: array
           items:
             type: string
+        admin_managed:
+          type: boolean
+        inactive:
+          type: boolean
         date_created:
           type: string
         date_updated:
@@ -6454,6 +6458,10 @@ components:
           description: permissions that could assign current permission to accounts
           items:
             type: string
+        admin_managed:
+          type: boolean
+        inactive:
+          type: boolean
     _system_req_create_auth_type:
       type: object
       required:

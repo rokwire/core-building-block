@@ -39,7 +39,7 @@ func (app *application) tpsUpdatePermissions(permissions []model.Permission, acc
 		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeServiceReg, &logutils.FieldArgs{"service_account_id": accountID})
 	}
 
-	servicePermissions := make([]model.Permission, 0)
+	activePermissions := make([]model.Permission, 0)
 	transaction := func(context storage.TransactionContext) error {
 		newNames := make([]string, len(permissions))
 		newNamesMap := make(map[string]model.Permission)
@@ -103,9 +103,9 @@ func (app *application) tpsUpdatePermissions(permissions []model.Permission, acc
 			permission.ServiceID = serviceReg.Registration.ServiceID
 			permission.Inactive = false
 			permission.DateCreated = now
-			servicePermissions = append(servicePermissions, permission)
+			activePermissions = append(activePermissions, permission)
 		}
-		err = app.storage.InsertPermissions(context, servicePermissions)
+		err = app.storage.InsertPermissions(context, activePermissions)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionInsert, model.TypePermission, &logutils.FieldArgs{"name": added}, err)
 		}
@@ -147,7 +147,7 @@ func (app *application) tpsUpdatePermissions(permissions []model.Permission, acc
 				}
 			}
 
-			servicePermissions = append(servicePermissions, newPermission)
+			activePermissions = append(activePermissions, newPermission)
 		}
 
 		return nil
@@ -158,5 +158,5 @@ func (app *application) tpsUpdatePermissions(permissions []model.Permission, acc
 		return nil, err
 	}
 
-	return servicePermissions, nil
+	return activePermissions, nil
 }

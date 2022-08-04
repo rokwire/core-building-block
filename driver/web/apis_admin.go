@@ -715,7 +715,7 @@ func (h AdminApisHandler) createApplicationGroup(l *logs.Log, r *http.Request, c
 	return l.HttpResponseSuccessJSON(response)
 }
 
-//updateApplicationGroup updates an application group
+// updateApplicationGroup updates an application group
 func (h AdminApisHandler) updateApplicationGroup(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	params := mux.Vars(r)
 	groupID := params["id"]

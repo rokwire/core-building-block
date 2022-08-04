@@ -15,3 +15,7 @@ properties:
     description: permissions that could assign current permission to accounts
     items:
       type: string
+  admin_managed:
+    type: boolean
+  inactive:
+    type: boolean
