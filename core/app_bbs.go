@@ -94,9 +94,9 @@ func (app *application) bbsUpdatePermissions(permissions []model.Permission, acc
 		//4. if added, create a new permission
 		for _, name := range added {
 			permission := newNamesMap[name]
-			err = app.validateAssigners(permission.Assigners, existingAssigners, permissions)
+			err = model.CheckPermissionsExist(permission.Assigners, existingAssigners, permissions)
 			if err != nil {
-				return err
+				return errors.WrapErrorAction(logutils.ActionValidate, "assigners", nil, err)
 			}
 
 			permission.ID = uuid.NewString()
@@ -127,9 +127,9 @@ func (app *application) bbsUpdatePermissions(permissions []model.Permission, acc
 		for _, name := range unchanged {
 			currentPermission := currentNamesMap[name]
 			newPermission := newNamesMap[name]
-			err = app.validateAssigners(newPermission.Assigners, existingAssigners, permissions)
+			err = model.CheckPermissionsExist(newPermission.Assigners, existingAssigners, permissions)
 			if err != nil {
-				return err
+				return errors.WrapErrorAction(logutils.ActionValidate, "assigners", nil, err)
 			}
 
 			description := newPermission.Description
@@ -159,17 +159,4 @@ func (app *application) bbsUpdatePermissions(permissions []model.Permission, acc
 	}
 
 	return servicePermissions, nil
-}
-
-func (app *application) validateAssigners(assigners []string, existing []model.Permission, incoming []model.Permission) error {
-	//assigners must already exist or be included in incoming permissions
-	missing := model.GetMissingPermissionNames(existing, assigners)
-	if len(missing) > 0 {
-		missing = model.GetMissingPermissionNames(incoming, missing)
-		if len(missing) > 0 {
-			return errors.ErrorData(logutils.StatusInvalid, "assigner permission", &logutils.FieldArgs{"names": missing})
-		}
-	}
-
-	return nil
 }
