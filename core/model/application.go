@@ -460,60 +460,54 @@ func VersionNumbersFromString(version string) *VersionNumbers {
 
 // GetMissingPermissionNames returns a list of permission names missing from items
 func GetMissingPermissionNames(items []Permission, names []string) []string {
-	badNames := make([]string, 0)
+	missingNames := make([]string, 0)
 	for _, name := range names {
-		bad := true
+		missing := true
 		for _, e := range items {
-			if e.Name == name && !e.Inactive {
-				bad = false
+			if e.Name == name {
+				missing = false
 				break
 			}
 		}
-		if bad {
-			badNames = append(badNames, name)
+		if missing {
+			missingNames = append(missingNames, name)
 		}
 	}
-	return badNames
+	return missingNames
 }
 
 // GetMissingRoleIDs returns a list of role IDs missing from items
-func GetMissingRoleIDs(items []AppOrgRole, ids []string) ([]string, error) {
-	if len(items) != len(ids) {
-		badIDs := make([]string, 0)
-		for _, id := range ids {
-			bad := true
-			for _, e := range items {
-				if e.ID == id {
-					bad = false
-					break
-				}
-			}
-			if bad {
-				badIDs = append(badIDs, id)
+func GetMissingRoleIDs(items []AppOrgRole, ids []string) []string {
+	missingIDs := make([]string, 0)
+	for _, id := range ids {
+		missing := true
+		for _, e := range items {
+			if e.ID == id {
+				missing = false
+				break
 			}
 		}
-		return nil, errors.ErrorData(logutils.StatusInvalid, TypeAppOrgRole, &logutils.FieldArgs{"ids": badIDs})
+		if missing {
+			missingIDs = append(missingIDs, id)
+		}
 	}
-	return nil, nil
+	return missingIDs
 }
 
 // GetMissingGroupIDs returns a list of group IDs missing from items
-func GetMissingGroupIDs(items []AppOrgGroup, ids []string) ([]string, error) {
-	if len(items) != len(ids) {
-		badIDs := make([]string, 0)
-		for _, id := range ids {
-			bad := true
-			for _, e := range items {
-				if e.ID == id {
-					bad = false
-					break
-				}
-			}
-			if bad {
-				badIDs = append(badIDs, id)
+func GetMissingGroupIDs(items []AppOrgGroup, ids []string) []string {
+	missingIDs := make([]string, 0)
+	for _, id := range ids {
+		missing := true
+		for _, e := range items {
+			if e.ID == id {
+				missing = false
+				break
 			}
 		}
-		return nil, errors.ErrorData(logutils.StatusInvalid, TypeAppOrgGroup, &logutils.FieldArgs{"ids": badIDs})
+		if missing {
+			missingIDs = append(missingIDs, id)
+		}
 	}
-	return nil, nil
+	return missingIDs
 }

@@ -2279,11 +2279,17 @@ func (sa *Adapter) updatePermission(context TransactionContext, item model.Permi
 	// update all roles that have the permission
 	key := "permissions.name"
 	roles, err := sa.findAppOrgRoles(context, &key, item.Name, "")
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgRole, nil, err)
+	}
 	for _, r := range roles {
 		for pidx, p := range r.Permissions {
 			if p.Name == item.Name {
 				r.Permissions[pidx] = item
 				err = sa.UpdateAppOrgRole(context, r)
+				if err != nil {
+					return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAppOrgRole, nil, err)
+				}
 				break
 			}
 		}
@@ -2291,11 +2297,17 @@ func (sa *Adapter) updatePermission(context TransactionContext, item model.Permi
 
 	// update all groups that have the permission
 	groups, err := sa.findAppOrgGroups(context, &key, item.Name, "")
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgGroup, nil, err)
+	}
 	for _, g := range groups {
 		for pidx, p := range g.Permissions {
 			if p.Name == item.Name {
 				g.Permissions[pidx] = item
 				err = sa.UpdateAppOrgGroup(context, g)
+				if err != nil {
+					return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAppOrgGroup, nil, err)
+				}
 				break
 			}
 		}
@@ -2468,11 +2480,17 @@ func (sa *Adapter) updateAppOrgRole(context TransactionContext, item model.AppOr
 	// update all groups that have the role
 	key := "roles._id"
 	groups, err := sa.findAppOrgGroups(context, &key, item.ID, item.AppOrg.ID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgGroup, nil, err)
+	}
 	for _, g := range groups {
 		for ridx, r := range g.Roles {
 			if r.ID == item.ID {
 				g.Roles[ridx] = item
 				err = sa.UpdateAppOrgGroup(context, g)
+				if err != nil {
+					return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAppOrgGroup, nil, err)
+				}
 				break
 			}
 		}
