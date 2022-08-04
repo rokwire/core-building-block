@@ -24,6 +24,7 @@ get:
         application/json:
           schema: 
             type: object
+            nullable: true
      400:
       description: Bad request
      401:

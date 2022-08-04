@@ -599,6 +599,9 @@ func (app *application) admUpdateAccountSystemConfigs(appID string, orgID string
 
 		//2. merge new configs on top of existing ones
 		accountConfigs := account.SystemConfigs
+		if accountConfigs == nil {
+			accountConfigs = map[string]interface{}{}
+		}
 		for key, val := range configs {
 			if val != nil {
 				accountConfigs[key] = val
