@@ -1253,6 +1253,13 @@ type PutAdminApplicationAccountsIdRolesJSONBody AdminReqGrantRolesToAccount
 // PutAdminApplicationAccountsIdSystemConfigsJSONBody defines parameters for PutAdminApplicationAccountsIdSystemConfigs.
 type PutAdminApplicationAccountsIdSystemConfigsJSONBody map[string]interface{}
 
+// PutAdminApplicationAccountsIdSystemConfigsParams defines parameters for PutAdminApplicationAccountsIdSystemConfigs.
+type PutAdminApplicationAccountsIdSystemConfigsParams struct {
+
+	// Create anonymous account if account with ID cannot be found. Default is `false`
+	CreateAnonymous *bool `json:"create-anonymous,omitempty"`
+}
+
 // PostAdminApplicationGroupsJSONBody defines parameters for PostAdminApplicationGroups.
 type PostAdminApplicationGroupsJSONBody AdminReqCreateApplicationGroup
 

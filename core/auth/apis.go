@@ -796,6 +796,49 @@ func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID
 	return updatedAccount, params, nil
 }
 
+//CreateAnonymousAccount creates a new anonymous account
+func (a *Auth) CreateAnonymousAccount(context storage.TransactionContext, appID string, orgID string, anonymousID string, preferences map[string]interface{},
+	systemConfigs map[string]interface{}, skipExistsCheck bool, l *logs.Log) (*model.Account, error) {
+	// check if the provided auth type is supported by the provided application and organization
+	authType, appOrg, err := a.validateAuthTypeForAppOrg(AuthTypeAnonymous, appID, orgID)
+	if err != nil || appOrg == nil {
+		return nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
+	}
+
+	// create account
+	var newAccount *model.Account
+	transaction := func(context storage.TransactionContext) error {
+		//1. check if the user exists
+		if context == nil || !skipExistsCheck {
+			account, err := a.storage.FindAccountByID(context, anonymousID)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+			}
+			if account != nil {
+				return errors.ErrorData(logutils.StatusFound, model.TypeAccount, &logutils.FieldArgs{"app_org_id": appOrg.ID, "auth_type": authType.Code, "account_id": anonymousID})
+			}
+		}
+
+		newAccount, err = a.applyCreateAnonymousAccount(context, *appOrg, anonymousID, preferences, systemConfigs, l)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionCreate, "anonymous account", &logutils.FieldArgs{"account_id": anonymousID}, err)
+		}
+
+		return nil
+	}
+
+	if context == nil {
+		err = a.storage.PerformTransaction(transaction)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionCreate, "anonymous account", nil, err)
+		}
+	} else {
+		transaction(context)
+	}
+
+	return newAccount, nil
+}
+
 //VerifyCredential verifies credential (checks the verification code in the credentials collection)
 func (a *Auth) VerifyCredential(id string, verification string, l *logs.Log) error {
 	credential, err := a.storage.FindCredential(nil, id)

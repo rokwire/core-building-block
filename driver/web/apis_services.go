@@ -649,9 +649,13 @@ func (h ServicesApisHandler) updateAccountPreferences(l *logs.Log, r *http.Reque
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, "account preferences update request", nil, err, http.StatusBadRequest, true)
 	}
 
-	err = h.coreAPIs.Services.SerUpdateAccountPreferences(claims.Subject, preferences)
+	created, err := h.coreAPIs.Services.SerUpdateAccountPreferences(claims.Subject, claims.AppID, claims.OrgID, claims.Anonymous, preferences, l)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeAccountPreferences, nil, err, http.StatusInternalServerError, true)
+	}
+
+	if created {
+		return l.HttpResponseSuccessMessage("Created new anonymous account with ID " + claims.Subject)
 	}
 
 	return l.HttpResponseSuccess()

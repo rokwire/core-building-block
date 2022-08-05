@@ -62,5 +62,8 @@ func (app *application) getAccount(accountID string) (*model.Account, error) {
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
+	if account == nil {
+		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeAccount, nil, err)
+	}
 	return account, nil
 }

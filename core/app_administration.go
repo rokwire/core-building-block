@@ -580,12 +580,13 @@ func (app *application) admGetAccountSystemConfigs(appID string, orgID string, a
 	return account.SystemConfigs, nil
 }
 
-func (app *application) admUpdateAccountSystemConfigs(appID string, orgID string, accountID string, configs map[string]interface{}, l *logs.Log) error {
+func (app *application) admUpdateAccountSystemConfigs(appID string, orgID string, accountID string, configs map[string]interface{}, createAnonymous bool, l *logs.Log) (bool, error) {
 	//TODO: If account does not exist, create anonymous account
 	if len(configs) == 0 {
-		return errors.New("no new configs")
+		return false, errors.New("no new configs")
 	}
 
+	created := false
 	transaction := func(context storage.TransactionContext) error {
 		//1. verify that the account is for the current app/org
 		account, err := app.storage.FindAccountByID(context, accountID)
@@ -593,7 +594,16 @@ func (app *application) admUpdateAccountSystemConfigs(appID string, orgID string
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountSystemConfigs, &logutils.FieldArgs{"account_id": accountID}, err)
 		}
 		if account == nil {
-			return errors.WrapErrorData(logutils.StatusMissing, model.TypeAccountSystemConfigs, &logutils.FieldArgs{"account_id": accountID}, err)
+			if !createAnonymous {
+				return errors.WrapErrorData(logutils.StatusMissing, model.TypeAccountSystemConfigs, &logutils.FieldArgs{"account_id": accountID}, err)
+			}
+
+			created = true
+			_, err = app.auth.CreateAnonymousAccount(context, appID, orgID, accountID, nil, configs, true, l)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionCreate, model.TypeAccount, nil, err)
+			}
+			return nil
 		}
 		if account.AppOrg.Application.ID != appID || account.AppOrg.Organization.ID != orgID {
 			l.Warnf("someone is trying to update system configs for %s for different app/org", accountID)
@@ -622,7 +632,8 @@ func (app *application) admUpdateAccountSystemConfigs(appID string, orgID string
 		return nil
 	}
 
-	return app.storage.PerformTransaction(transaction)
+	err := app.storage.PerformTransaction(transaction)
+	return created, err
 }
 
 func (app *application) admGetApplicationLoginSessions(appID string, orgID string, identifier *string, accountAuthTypeIdentifier *string,

@@ -1018,6 +1018,12 @@ func (h AdminApisHandler) updateAccountSystemConfigs(l *logs.Log, r *http.Reques
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
 	}
 
+	var createAnonymous bool
+	createAnonymousArg := r.URL.Query().Get("create-anonymous")
+	if createAnonymousArg != "" {
+		createAnonymous, _ = strconv.ParseBool(createAnonymousArg)
+	}
+
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
@@ -1029,13 +1035,17 @@ func (h AdminApisHandler) updateAccountSystemConfigs(l *logs.Log, r *http.Reques
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, "system configs update request", nil, err, http.StatusBadRequest, true)
 	}
 
-	err = h.coreAPIs.Administration.AdmUpdateAccountSystemConfigs(claims.AppID, claims.OrgID, accountID, configs, l)
+	created, err := h.coreAPIs.Administration.AdmUpdateAccountSystemConfigs(claims.AppID, claims.OrgID, accountID, configs, createAnonymous, l)
 	if err != nil {
 		loggingErr, ok := err.(*errors.Error)
 		if ok && loggingErr.Status() == utils.ErrorStatusNotAllowed {
 			return l.HttpResponseError(http.StatusText(http.StatusForbidden), nil, http.StatusForbidden, false)
 		}
 		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeAccountSystemConfigs, nil, err, http.StatusInternalServerError, true)
+	}
+
+	if created {
+		return l.HttpResponseSuccessMessage("Created new anonymous account with ID " + accountID)
 	}
 
 	return l.HttpResponseSuccess()

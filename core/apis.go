@@ -270,8 +270,8 @@ func (s *servicesImpl) SerGetAccountSystemConfigs(accountID string) (map[string]
 	return s.app.serGetAccountSystemConfigs(accountID)
 }
 
-func (s *servicesImpl) SerUpdateAccountPreferences(id string, preferences map[string]interface{}) error {
-	return s.app.serUpdateAccountPreferences(id, preferences)
+func (s *servicesImpl) SerUpdateAccountPreferences(id string, appID string, orgID string, anonymous bool, preferences map[string]interface{}, l *logs.Log) (bool, error) {
+	return s.app.serUpdateAccountPreferences(id, appID, orgID, anonymous, preferences, l)
 }
 
 func (s *servicesImpl) SerUpdateProfile(accountID string, profile model.Profile) error {
@@ -368,8 +368,8 @@ func (s *administrationImpl) AdmGetAccountSystemConfigs(appID string, orgID stri
 	return s.app.admGetAccountSystemConfigs(appID, orgID, accountID, l)
 }
 
-func (s *administrationImpl) AdmUpdateAccountSystemConfigs(appID string, orgID string, accountID string, configs map[string]interface{}, l *logs.Log) error {
-	return s.app.admUpdateAccountSystemConfigs(appID, orgID, accountID, configs, l)
+func (s *administrationImpl) AdmUpdateAccountSystemConfigs(appID string, orgID string, accountID string, configs map[string]interface{}, createAnonymous bool, l *logs.Log) (bool, error) {
+	return s.app.admUpdateAccountSystemConfigs(appID, orgID, accountID, configs, createAnonymous, l)
 }
 
 func (s *administrationImpl) AdmGrantAccountPermissions(appID string, orgID string, accountID string, permissionNames []string, assignerPermissions []string, l *logs.Log) error {
