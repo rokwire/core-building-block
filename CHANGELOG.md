@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Allow services to manage their own permissions [#475](https://github.com/rokwire/core-building-block/issues/475)
 - Update role permissions admin API [#516](https://github.com/rokwire/core-building-block/issues/516)
 - Update group admin API [#518](https://github.com/rokwire/core-building-block/issues/518)
 - Allow passing nil context to WithContext storage functions [#494](https://github.com/rokwire/core-building-block/issues/494)
