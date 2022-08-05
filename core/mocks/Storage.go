@@ -1119,13 +1119,13 @@ func (_m *Storage) SaveDevice(context storage.TransactionContext, device *model.
 	return r0
 }
 
-// UpdateAccountPreferences provides a mock function with given fields: accountID, preferences
-func (_m *Storage) UpdateAccountPreferences(accountID string, preferences map[string]interface{}) error {
-	ret := _m.Called(accountID, preferences)
+// UpdateAccountPreferences provides a mock function with given fields: context, accountID, preferences
+func (_m *Storage) UpdateAccountPreferences(context storage.TransactionContext, accountID string, preferences map[string]interface{}) error {
+	ret := _m.Called(context, accountID, preferences)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(string, map[string]interface{}) error); ok {
-		r0 = rf(accountID, preferences)
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, map[string]interface{}) error); ok {
+		r0 = rf(context, accountID, preferences)
 	} else {
 		r0 = ret.Error(0)
 	}
