@@ -139,12 +139,12 @@ func (app *application) tpsUpdatePermissions(permissions []model.Permission, acc
 
 			description := newPermission.Description
 			assigners := newPermission.Assigners
-			updated := currentPermission.Inactive || (description != currentPermission.Description) || !utils.DeepEqual(assigners, currentPermission.Assigners)
+			updated := (currentPermission.Inactive && currentPermission.ServiceManaged) || (description != currentPermission.Description) || !utils.DeepEqual(assigners, currentPermission.Assigners)
 			newPermission = currentPermission
 			if updated {
 				newPermission.Description = description
 				newPermission.Assigners = assigners
-				newPermission.Inactive = false
+				newPermission.Inactive = newPermission.Inactive && !newPermission.ServiceManaged
 				newPermission.DateUpdated = &now
 				err = app.storage.UpdatePermission(context, newPermission)
 				if err != nil {
