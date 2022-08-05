@@ -19,7 +19,7 @@ properties:
     type: array
     items:
       type: string
-  admin_managed:
+  service_managed:
     type: boolean
   inactive:
     type: boolean

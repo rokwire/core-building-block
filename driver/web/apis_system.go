@@ -721,15 +721,15 @@ func (h SystemApisHandler) createPermission(l *logs.Log, r *http.Request, claims
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypePermission, nil, err, http.StatusBadRequest, true)
 	}
 
-	adminManaged := false
-	if requestData.AdminManaged != nil {
-		adminManaged = *requestData.AdminManaged
+	serviceManaged := false
+	if requestData.ServiceManaged != nil {
+		serviceManaged = *requestData.ServiceManaged
 	}
 	inactive := false
 	if requestData.Inactive != nil {
 		inactive = *requestData.Inactive
 	}
-	permission, err := h.coreAPIs.System.SysCreatePermission(requestData.Name, requestData.Description, requestData.ServiceId, requestData.Assigners, adminManaged, inactive)
+	permission, err := h.coreAPIs.System.SysCreatePermission(requestData.Name, requestData.Description, requestData.ServiceId, requestData.Assigners, serviceManaged, inactive)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypePermission, nil, err, http.StatusInternalServerError, true)
 	}
@@ -756,15 +756,15 @@ func (h SystemApisHandler) updatePermission(l *logs.Log, r *http.Request, claims
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypePermission, nil, err, http.StatusBadRequest, true)
 	}
 
-	adminManaged := false
-	if requestData.AdminManaged != nil {
-		adminManaged = *requestData.AdminManaged
+	serviceManaged := false
+	if requestData.ServiceManaged != nil {
+		serviceManaged = *requestData.ServiceManaged
 	}
 	inactive := false
 	if requestData.Inactive != nil {
 		inactive = *requestData.Inactive
 	}
-	permission, err := h.coreAPIs.System.SysUpdatePermission(requestData.Name, requestData.Description, requestData.ServiceId, requestData.Assigners, adminManaged, inactive)
+	permission, err := h.coreAPIs.System.SysUpdatePermission(requestData.Name, requestData.Description, requestData.ServiceId, requestData.Assigners, serviceManaged, inactive)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypePermission, nil, err, http.StatusInternalServerError, true)
 	}

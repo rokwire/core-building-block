@@ -163,7 +163,7 @@ func (app *application) sysGetApplications() ([]model.Application, error) {
 	return getApplications, nil
 }
 
-func (app *application) sysCreatePermission(name string, description string, serviceID string, assigners *[]string, adminManaged bool, inactive bool) (*model.Permission, error) {
+func (app *application) sysCreatePermission(name string, description string, serviceID string, assigners *[]string, serviceManaged bool, inactive bool) (*model.Permission, error) {
 	var newPermission *model.Permission
 	transaction := func(context storage.TransactionContext) error {
 		permission := model.Permission{Name: name}
@@ -189,7 +189,7 @@ func (app *application) sysCreatePermission(name string, description string, ser
 		permission.Description = description
 		permission.ServiceID = serviceID
 		permission.Assigners = assignersVal
-		permission.AdminManaged = adminManaged
+		permission.ServiceManaged = serviceManaged
 		permission.Inactive = inactive
 		permission.DateCreated = time.Now()
 		err := app.storage.InsertPermission(context, permission)
@@ -209,7 +209,7 @@ func (app *application) sysCreatePermission(name string, description string, ser
 	return newPermission, nil
 }
 
-func (app *application) sysUpdatePermission(name string, description string, serviceID string, assigners *[]string, adminManaged bool, inactive bool) (*model.Permission, error) {
+func (app *application) sysUpdatePermission(name string, description string, serviceID string, assigners *[]string, serviceManaged bool, inactive bool) (*model.Permission, error) {
 	var updatedPermission *model.Permission
 	transaction := func(context storage.TransactionContext) error {
 		//1. find permission
@@ -224,10 +224,10 @@ func (app *application) sysUpdatePermission(name string, description string, ser
 
 		//2. update permission data as needed
 		permission := permissions[0]
-		updated := (description != permission.Description) || (serviceID != permission.ServiceID) || (adminManaged != permission.AdminManaged) || (inactive != permission.Inactive)
+		updated := (description != permission.Description) || (serviceID != permission.ServiceID) || (serviceManaged != permission.ServiceManaged) || (inactive != permission.Inactive)
 		permission.Description = description
 		permission.ServiceID = serviceID
-		permission.AdminManaged = adminManaged
+		permission.ServiceManaged = serviceManaged
 		permission.Inactive = inactive
 
 		//3. if assigners changed, check that they exist

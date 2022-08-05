@@ -491,12 +491,12 @@ func (s *systemImpl) SysGetApplications() ([]model.Application, error) {
 	return s.app.sysGetApplications()
 }
 
-func (s *systemImpl) SysCreatePermission(name string, description string, serviceID string, assigners *[]string, adminManaged bool, inactive bool) (*model.Permission, error) {
-	return s.app.sysCreatePermission(name, description, serviceID, assigners, adminManaged, inactive)
+func (s *systemImpl) SysCreatePermission(name string, description string, serviceID string, assigners *[]string, serviceManaged bool, inactive bool) (*model.Permission, error) {
+	return s.app.sysCreatePermission(name, description, serviceID, assigners, serviceManaged, inactive)
 }
 
-func (s *systemImpl) SysUpdatePermission(name string, description string, serviceID string, assigners *[]string, adminManaged bool, inactive bool) (*model.Permission, error) {
-	return s.app.sysUpdatePermission(name, description, serviceID, assigners, adminManaged, inactive)
+func (s *systemImpl) SysUpdatePermission(name string, description string, serviceID string, assigners *[]string, serviceManaged bool, inactive bool) (*model.Permission, error) {
+	return s.app.sysUpdatePermission(name, description, serviceID, assigners, serviceManaged, inactive)
 }
 
 func (s *systemImpl) SysGetAppConfigs(appTypeID string, orgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error) {

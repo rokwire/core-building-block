@@ -101,6 +101,7 @@ func (app *application) bbsUpdatePermissions(permissions []model.Permission, acc
 
 			permission.ID = uuid.NewString()
 			permission.ServiceID = serviceReg.Registration.ServiceID
+			permission.ServiceManaged = true
 			permission.Inactive = false
 			permission.DateCreated = now
 			activePermissions = append(activePermissions, permission)
@@ -114,11 +115,15 @@ func (app *application) bbsUpdatePermissions(permissions []model.Permission, acc
 		for _, name := range removed {
 			permission := currentNamesMap[name]
 			if !permission.Inactive {
-				permission.Inactive = true
-				permission.DateUpdated = &now
-				err = app.storage.UpdatePermission(context, permission)
-				if err != nil {
-					return errors.WrapErrorAction(logutils.ActionUpdate, model.TypePermission, &logutils.FieldArgs{"name": name}, err)
+				if permission.ServiceManaged {
+					permission.Inactive = true
+					permission.DateUpdated = &now
+					err = app.storage.UpdatePermission(context, permission)
+					if err != nil {
+						return errors.WrapErrorAction(logutils.ActionUpdate, model.TypePermission, &logutils.FieldArgs{"name": name}, err)
+					}
+				} else {
+					activePermissions = append(activePermissions, permission)
 				}
 			}
 		}

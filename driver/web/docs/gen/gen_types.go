@@ -513,15 +513,15 @@ type PartialAccount struct {
 
 // Permission defines model for Permission.
 type Permission struct {
-	AdminManaged *bool     `json:"admin_managed,omitempty"`
-	Assigners    *[]string `json:"assigners,omitempty"`
-	DateCreated  *string   `json:"date_created,omitempty"`
-	DateUpdated  *string   `json:"date_updated,omitempty"`
-	Description  string    `json:"description"`
-	Id           string    `json:"id"`
-	Inactive     *bool     `json:"inactive,omitempty"`
-	Name         string    `json:"name"`
-	ServiceId    string    `json:"service_id"`
+	Assigners      *[]string `json:"assigners,omitempty"`
+	DateCreated    *string   `json:"date_created,omitempty"`
+	DateUpdated    *string   `json:"date_updated,omitempty"`
+	Description    string    `json:"description"`
+	Id             string    `json:"id"`
+	Inactive       *bool     `json:"inactive,omitempty"`
+	Name           string    `json:"name"`
+	ServiceId      string    `json:"service_id"`
+	ServiceManaged *bool     `json:"service_managed,omitempty"`
 }
 
 // Profile defines model for Profile.
@@ -1139,14 +1139,14 @@ type SystemReqCreateServiceAccount struct {
 
 // SystemReqPermissions defines model for _system_req_permissions.
 type SystemReqPermissions struct {
-	AdminManaged *bool `json:"admin_managed,omitempty"`
 
 	// permissions that could assign current permission to accounts
-	Assigners   *[]string `json:"assigners,omitempty"`
-	Description string    `json:"description"`
-	Inactive    *bool     `json:"inactive,omitempty"`
-	Name        string    `json:"name"`
-	ServiceId   string    `json:"service_id"`
+	Assigners      *[]string `json:"assigners,omitempty"`
+	Description    string    `json:"description"`
+	Inactive       *bool     `json:"inactive,omitempty"`
+	Name           string    `json:"name"`
+	ServiceId      string    `json:"service_id"`
+	ServiceManaged *bool     `json:"service_managed,omitempty"`
 }
 
 // SystemReqUpdateOrganization defines model for _system_req_update_Organization.
