@@ -273,6 +273,11 @@ type AccountFields struct {
 	Id             string `json:"id"`
 }
 
+// AdminToken defines model for AdminToken.
+type AdminToken struct {
+	Token string `json:"token"`
+}
+
 // AppOrgGroup defines model for AppOrgGroup.
 type AppOrgGroup struct {
 	Application *Application  `json:"application,omitempty"`
@@ -644,11 +649,6 @@ type AdminReqRevokePermissions struct {
 // AdminReqRevokeRolesFromAccount defines model for _admin_req_revoke-roles-from-account.
 type AdminReqRevokeRolesFromAccount struct {
 	RoleIds []string `json:"role_ids"`
-}
-
-// AdminResAppToken defines model for _admin_res_app-token.
-type AdminResAppToken struct {
-	Token string `json:"token"`
 }
 
 // ServicesReqAccountAuthTypeLink defines model for _services_req_account_auth-type-link.
@@ -1514,6 +1514,16 @@ type PostSystemAuthTypesJSONBody SystemReqCreateAuthType
 
 // PutSystemAuthTypesIdJSONBody defines parameters for PutSystemAuthTypesId.
 type PutSystemAuthTypesIdJSONBody SystemReqUpdateAuthType
+
+// GetSystemAuthAppOrgTokenParams defines parameters for GetSystemAuthAppOrgToken.
+type GetSystemAuthAppOrgTokenParams struct {
+
+	// The application ID of the token to return
+	AppId string `json:"app_id"`
+
+	// The organization ID of the token to return
+	OrgId string `json:"org_id"`
+}
 
 // PostSystemGlobalConfigJSONBody defines parameters for PostSystemGlobalConfig.
 type PostSystemGlobalConfigJSONBody GlobalConfig
