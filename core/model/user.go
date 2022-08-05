@@ -27,6 +27,8 @@ const (
 	TypeAccount logutils.MessageDataType = "account"
 	//TypeAccountPreferences account preferences
 	TypeAccountPreferences logutils.MessageDataType = "account preferences"
+	//TypeAccountSystemConfigs account system configs
+	TypeAccountSystemConfigs logutils.MessageDataType = "account system configs"
 	//TypeAccountAuthType account auth type
 	TypeAccountAuthType logutils.MessageDataType = "account auth type"
 	//TypeAccountPermissions account permissions
@@ -63,9 +65,10 @@ type Account struct {
 
 	MFATypes []MFAType
 
-	ExternalIDs map[string]string
-	Preferences map[string]interface{}
-	Profile     Profile //one account has one profile, one profile can be shared between many accounts
+	ExternalIDs   map[string]string
+	Preferences   map[string]interface{}
+	SystemConfigs map[string]interface{}
+	Profile       Profile //one account has one profile, one profile can be shared between many accounts
 
 	Devices []Device
 

@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update role permissions admin API [#516](https://github.com/rokwire/core-building-block/issues/516)
 - Update group admin API [#518](https://github.com/rokwire/core-building-block/issues/518)
 - Allow passing nil context to WithContext storage functions [#494](https://github.com/rokwire/core-building-block/issues/494)
+- Account system configs [#558](https://github.com/rokwire/core-building-block/issues/558)
 
 ### Fixed
 - Update permission should change roles/groups/accounts [#542](https://github.com/rokwire/core-building-block/issues/542)
