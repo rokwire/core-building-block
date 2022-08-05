@@ -636,8 +636,6 @@ func (h ServicesApisHandler) updateProfile(l *logs.Log, r *http.Request, claims 
 }
 
 func (h ServicesApisHandler) updateAccountPreferences(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	//TODO: create anonymous accounts if missing
-
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)

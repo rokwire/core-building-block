@@ -581,7 +581,6 @@ func (app *application) admGetAccountSystemConfigs(appID string, orgID string, a
 }
 
 func (app *application) admUpdateAccountSystemConfigs(appID string, orgID string, accountID string, configs map[string]interface{}, createAnonymous bool, l *logs.Log) (bool, error) {
-	//TODO: If account does not exist, create anonymous account
 	if len(configs) == 0 {
 		return false, errors.New("no new configs")
 	}
