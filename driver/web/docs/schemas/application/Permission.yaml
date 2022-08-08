@@ -1,20 +1,28 @@
 required:
   - id
   - name
+  - service_id
 type: object
 properties:
   id:
+    readOnly: true
     type: string
   name:
     type: string
   description:
+    readOnly: true
     type: string
   service_id:
+    readOnly: true
     type: string
   assigners:
     type: array
     items:
       type: string
+  service_managed:
+    type: boolean
+  inactive:
+    type: boolean
   date_created:
     type: string
   date_updated:

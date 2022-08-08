@@ -1,5 +1,7 @@
 required:
   - name
+  - description
+  - service_id
 type: object
 properties:
   name:
@@ -13,3 +15,7 @@ properties:
     description: permissions that could assign current permission to accounts
     items:
       type: string
+  service_managed:
+    type: boolean
+  inactive:
+    type: boolean

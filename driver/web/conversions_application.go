@@ -74,12 +74,16 @@ func applicationsToDef(item []model.Application) []Def.ApplicationFields {
 	return result
 }
 
-//ApplicationPermission
+// ApplicationPermission
 func applicationPermissionToDef(item model.Permission) Def.Permission {
 	assigners := item.Assigners
 	if assigners == nil {
 		assigners = make([]string, 0)
 	}
+
+	description := &item.Description
+	serviceManaged := &item.ServiceManaged
+	inactive := &item.Inactive
 
 	//dates
 	var dateUpdated *string
@@ -89,7 +93,21 @@ func applicationPermissionToDef(item model.Permission) Def.Permission {
 		dateUpdated = &formatted
 	}
 
-	return Def.Permission{Id: item.ID, Name: item.Name, Description: &item.Description, ServiceId: &item.ServiceID, Assigners: &assigners, DateCreated: &dateCreated, DateUpdated: dateUpdated}
+	return Def.Permission{Id: item.ID, Name: item.Name, Description: description, ServiceId: item.ServiceID, Assigners: &assigners,
+		ServiceManaged: serviceManaged, Inactive: inactive, DateCreated: &dateCreated, DateUpdated: dateUpdated}
+}
+
+func applicationPermissionFromDef(item Def.Permission) model.Permission {
+	description := ""
+	if item.Description != nil {
+		description = *item.Description
+	}
+	var assigners []string
+	if item.Assigners != nil {
+		assigners = *item.Assigners
+	}
+
+	return model.Permission{Name: item.Name, Description: description, Assigners: assigners}
 }
 
 func applicationPermissionsToDef(items []model.Permission) []Def.Permission {
@@ -100,7 +118,15 @@ func applicationPermissionsToDef(items []model.Permission) []Def.Permission {
 	return result
 }
 
-//AppOrgRole
+func applicationPermissionsFromDef(items []Def.Permission) []model.Permission {
+	result := make([]model.Permission, len(items))
+	for i, item := range items {
+		result[i] = applicationPermissionFromDef(item)
+	}
+	return result
+}
+
+// AppOrgRole
 func appOrgRoleToDef(item model.AppOrgRole) Def.AppOrgRole {
 	permissions := applicationPermissionsToDef(item.Permissions)
 
@@ -123,7 +149,7 @@ func appOrgRolesToDef(items []model.AppOrgRole) []Def.AppOrgRole {
 	return result
 }
 
-//AppOrgGroup
+// AppOrgGroup
 func appOrgGroupToDef(item model.AppOrgGroup) Def.AppOrgGroup {
 	permissions := applicationPermissionsToDef(item.Permissions)
 	roles := appOrgRolesToDef(item.Roles)
@@ -147,7 +173,7 @@ func appOrgGroupsToDef(items []model.AppOrgGroup) []Def.AppOrgGroup {
 	return result
 }
 
-//Organization
+// Organization
 func organizationToDef(item *model.Organization) *Def.Organization {
 	if item == nil {
 		return nil
@@ -184,7 +210,7 @@ func organizationConfigToDef(item *model.OrganizationConfig) *Def.OrganizationCo
 	return &Def.OrganizationConfigFields{Id: id, Domains: domains}
 }
 
-//App Config
+// App Config
 func appConfigToDef(item model.ApplicationConfig) Def.ApplicationConfig {
 	defConfig := Def.ApplicationConfig{Id: item.ID, AppTypeId: item.ApplicationType.ID, Version: item.Version.VersionNumbers.String(), Data: item.Data}
 	if item.AppOrg != nil {

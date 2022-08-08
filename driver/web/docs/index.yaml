@@ -145,8 +145,12 @@ paths:
     $ref: "./resources/bbs/access-token.yaml"
   /bbs/access-tokens:
     $ref: "./resources/bbs/access-tokens.yaml"
+  /bbs/permissions:
+    $ref: "./resources/bbs/permissions.yaml"
 
   #third-party services
+  /tps/test:
+    $ref: "./resources/tps/test.yaml"
   /tps/service-regs:
     $ref: "./resources/tps/service-regs.yaml"
   /tps/auth-keys:
@@ -157,6 +161,8 @@ paths:
     $ref: "./resources/tps/access-token.yaml"
   /tps/access-tokens:
     $ref: "./resources/tps/access-tokens.yaml"
+  /tps/permissions:
+    $ref: "./resources/tps/permissions.yaml"
 
   #system
   /system/global-config:

@@ -25,7 +25,7 @@ import (
 	"github.com/rokwire/logging-library-go/logs"
 )
 
-//authType is the interface for authentication for auth types which are not external for the system(the users do not come from external system)
+// authType is the interface for authentication for auth types which are not external for the system(the users do not come from external system)
 type authType interface {
 	//signUp applies sign up operation
 	// Returns:
@@ -73,8 +73,8 @@ type authType interface {
 	checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, error)
 }
 
-//externalAuthType is the interface for authentication for auth types which are external for the system(the users comes from external system).
-//these are the different identity providers - illinois_oidc etc
+// externalAuthType is the interface for authentication for auth types which are external for the system(the users comes from external system).
+// these are the different identity providers - illinois_oidc etc
 type externalAuthType interface {
 	//getLoginUrl retrieves and pre-formats a login url and params for the SSO provider
 	getLoginURL(authType model.AuthType, appType model.ApplicationType, redirectURI string, l *logs.Log) (string, map[string]interface{}, error)
@@ -84,20 +84,20 @@ type externalAuthType interface {
 	refresh(params map[string]interface{}, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error)
 }
 
-//anonymousAuthType is the interface for authentication for auth types which are anonymous
+// anonymousAuthType is the interface for authentication for auth types which are anonymous
 type anonymousAuthType interface {
 	//checkCredentials checks the credentials for the provided app and organization
 	//	Returns anonymous profile identifier
 	checkCredentials(creds string) (string, map[string]interface{}, error)
 }
 
-//serviceAuthType is the interface for authentication for non-human clients
+// serviceAuthType is the interface for authentication for non-human clients
 type serviceAuthType interface {
 	checkCredentials(r *sigauth.Request, creds interface{}, params map[string]interface{}) ([]model.ServiceAccount, error)
 	addCredentials(creds *model.ServiceAccountCredential) (map[string]interface{}, error)
 }
 
-//mfaType is the interface for multi-factor authentication
+// mfaType is the interface for multi-factor authentication
 type mfaType interface {
 	//verify verifies the code based on stored mfa params
 	verify(context storage.TransactionContext, mfa *model.MFAType, accountID string, code string) (*string, error)
@@ -107,7 +107,7 @@ type mfaType interface {
 	sendCode(identifier string) (string, *time.Time, error)
 }
 
-//APIs is the interface which defines the APIs provided by the auth package
+// APIs is the interface which defines the APIs provided by the auth package
 type APIs interface {
 	//Start starts the auth service
 	Start()
@@ -388,17 +388,20 @@ type APIs interface {
 	//GrantAccountPermissions grants new permissions to an account after validating the assigner has required permissions
 	GrantAccountPermissions(context storage.TransactionContext, account *model.Account, permissionNames []string, assignerPermissions []string) error
 
-	//CheckPermissions loads permissions by names from storage and checks that they are assignable and valid for the given appOrg
-	CheckPermissions(context storage.TransactionContext, appOrg *model.ApplicationOrganization, permissionNames []string, assignerPermissions []string) ([]model.Permission, error)
+	//CheckPermissions loads permissions by names from storage and checks that they are assignable and valid for the given appOrg or revocable
+	CheckPermissions(context storage.TransactionContext, appOrg *model.ApplicationOrganization, permissionNames []string, assignerPermissions []string, revoke bool) ([]model.Permission, error)
 
 	//GrantAccountRoles grants new roles to an account after validating the assigner has required permissions
 	GrantAccountRoles(context storage.TransactionContext, account *model.Account, roleIDs []string, assignerPermissions []string) error
 
-	//CheckRoles loads appOrg roles by IDs from storage and checks that they are assignable
-	CheckRoles(context storage.TransactionContext, appOrg *model.ApplicationOrganization, roleIDs []string, assignerPermissions []string) ([]model.AppOrgRole, error)
+	//CheckRoles loads appOrg roles by IDs from storage and checks that they are assignable or revocable
+	CheckRoles(context storage.TransactionContext, appOrg *model.ApplicationOrganization, roleIDs []string, assignerPermissions []string, revoke bool) ([]model.AppOrgRole, error)
 
 	//GrantAccountGroups grants new groups to an account after validating the assigner has required permissions
 	GrantAccountGroups(context storage.TransactionContext, account *model.Account, groupIDs []string, assignerPermissions []string) error
+
+	//CheckGroups loads appOrg groups by IDs from storage and checks that they are assignable or revocable
+	CheckGroups(context storage.TransactionContext, appOrg *model.ApplicationOrganization, groupIDs []string, assignerPermissions []string, revoke bool) ([]model.AppOrgGroup, error)
 
 	//DeleteAccount deletes an account for the given id
 	DeleteAccount(id string) error
@@ -440,7 +443,7 @@ type APIs interface {
 	ValidateAPIKey(appID string, apiKey string) error
 }
 
-//Storage interface to communicate with the storage
+// Storage interface to communicate with the storage
 type Storage interface {
 	RegisterStorageListener(storageListener storage.Listener)
 
@@ -571,12 +574,12 @@ type Storage interface {
 	InsertAccountGroups(context storage.TransactionContext, accountID string, appOrgID string, groups []model.AccountGroup) error
 }
 
-//ProfileBuildingBlock is used by auth to communicate with the profile building block.
+// ProfileBuildingBlock is used by auth to communicate with the profile building block.
 type ProfileBuildingBlock interface {
 	GetProfileBBData(queryParams map[string]string, l *logs.Log) (*model.Profile, map[string]interface{}, error)
 }
 
-//Emailer is used by core to send emails
+// Emailer is used by core to send emails
 type Emailer interface {
 	Send(toEmail string, subject string, body string, attachmentFilename *string) error
 }

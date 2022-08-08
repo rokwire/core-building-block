@@ -21,7 +21,7 @@ import (
 	"github.com/rokwire/logging-library-go/logs"
 )
 
-//Services exposes APIs for the driver adapters
+// Services exposes APIs for the driver adapters
 type Services interface {
 	SerDeleteAccount(id string) error
 	SerGetAccount(accountID string) (*model.Account, error)
@@ -40,21 +40,23 @@ type Services interface {
 	SerGetAppConfig(appTypeIdentifier string, orgID *string, versionNumbers model.VersionNumbers, apiKey *string) (*model.ApplicationConfig, error)
 }
 
-//Administration exposes administration APIs for the driver adapters
+// Administration exposes administration APIs for the driver adapters
 type Administration interface {
 	AdmGetTest() string
 	AdmGetTestModel() string
 
 	AdmGetApplications(orgID string) ([]model.Application, error)
 
-	AdmCreateAppOrgGroup(name string, permissionNames []string, rolesIDs []string, appID string, orgID string, assignerPermissions []string, system bool, l *logs.Log) (*model.AppOrgGroup, error)
+	AdmCreateAppOrgGroup(name string, description string, system bool, permissionNames []string, rolesIDs []string, appID string, orgID string, assignerPermissions []string, systemClaim bool, l *logs.Log) (*model.AppOrgGroup, error)
+	AdmUpdateAppOrgGroup(ID string, name string, description string, system bool, permissionNames []string, rolesIDs []string, appID string, orgID string, assignerPermissions []string, systemClaim bool, l *logs.Log) (*model.AppOrgGroup, error)
 	AdmGetAppOrgGroups(appID string, orgID string) ([]model.AppOrgGroup, error)
 	AdmAddAccountsToGroup(appID string, orgID string, groupID string, accountIDs []string, assignerPermissions []string, l *logs.Log) error
 	AdmRemoveAccountsFromGroup(appID string, orgID string, groupID string, accountIDs []string, assignerPermissions []string, l *logs.Log) error
 	AdmDeleteAppOrgGroup(ID string, appID string, orgID string, assignerPermissions []string, system bool, l *logs.Log) error
 
-	AdmCreateAppOrgRole(name string, description string, permissionNames []string, appID string, orgID string, assignerPermissions []string, system bool, l *logs.Log) (*model.AppOrgRole, error)
+	AdmCreateAppOrgRole(name string, description string, system bool, permissionNames []string, appID string, orgID string, assignerPermissions []string, systemClaim bool, l *logs.Log) (*model.AppOrgRole, error)
 	AdmGetAppOrgRoles(appID string, orgID string) ([]model.AppOrgRole, error)
+	AdmUpdateAppOrgRole(ID string, name string, description string, system bool, permissionNames []string, appID string, orgID string, assignerPermissions []string, systemClaim bool, l *logs.Log) (*model.AppOrgRole, error)
 	AdmGrantPermissionsToRole(appID string, orgID string, roleID string, permissionNames []string, assignerPermissions []string, system bool, l *logs.Log) error
 	AdmDeleteAppOrgRole(ID string, appID string, orgID string, assignerPermissions []string, system bool, l *logs.Log) error
 
@@ -80,17 +82,24 @@ type Administration interface {
 	AdmGetApplicationAccountDevices(appID string, orgID string, accountID string, l *logs.Log) ([]model.Device, error)
 }
 
-//Encryption exposes APIs for the Encryption building block
+// Encryption exposes APIs for the Encryption building block
 type Encryption interface {
 	EncGetTest() string
 }
 
-//BBs exposes users related APIs used by the platform building blocks
+// BBs exposes users related APIs used by the platform building blocks
 type BBs interface {
 	BBsGetTest() string
+	BBsUpdatePermissions(permissions []model.Permission, accountID string) ([]model.Permission, error)
 }
 
-//System exposes system APIs for the driver adapters
+// TPs exposes users related APIs used by third-party services
+type TPs interface {
+	TPsGetTest() string
+	TPsUpdatePermissions(permissions []model.Permission, accountID string) ([]model.Permission, error)
+}
+
+// System exposes system APIs for the driver adapters
 type System interface {
 	SysCreateGlobalConfig(setting string) (*model.GlobalConfig, error)
 	SysGetGlobalConfig() (*model.GlobalConfig, error)
@@ -105,8 +114,8 @@ type System interface {
 	SysGetApplication(ID string) (*model.Application, error)
 	SysGetApplications() ([]model.Application, error)
 
-	SysCreatePermission(name string, description *string, serviceID *string, assigners *[]string) (*model.Permission, error)
-	SysUpdatePermission(name string, description *string, serviceID *string, assigners *[]string) (*model.Permission, error)
+	SysCreatePermission(name string, description string, serviceID string, assigners *[]string, serviceManaged bool, inactive bool) (*model.Permission, error)
+	SysUpdatePermission(name string, description string, serviceID string, assigners *[]string, serviceManaged bool, inactive bool) (*model.Permission, error)
 
 	SysGetAppConfigs(appTypeID string, orgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error)
 	SysGetAppConfig(id string) (*model.ApplicationConfig, error)
@@ -119,7 +128,7 @@ type System interface {
 	SysUpdateAuthTypes(ID string, code string, description string, isExternal bool, isAnonymous bool, useCredentials bool, ignoreMFA bool, params map[string]interface{}) error
 }
 
-//Storage is used by core to storage data - DB storage adapter, file storage adapter etc
+// Storage is used by core to storage data - DB storage adapter, file storage adapter etc
 type Storage interface {
 	RegisterStorageListener(storageListener storage.Listener)
 
@@ -158,16 +167,17 @@ type Storage interface {
 	DeleteGlobalConfig(context storage.TransactionContext) error
 
 	FindPermissionsByName(context storage.TransactionContext, names []string) ([]model.Permission, error)
-	FindPermissionsByServiceIDs(serviceIDs []string) ([]model.Permission, error)
+	FindPermissionsByServiceIDs(context storage.TransactionContext, serviceIDs []string) ([]model.Permission, error)
 	InsertPermission(context storage.TransactionContext, item model.Permission) error
-	UpdatePermission(item model.Permission) error
+	InsertPermissions(context storage.TransactionContext, items []model.Permission) error
+	UpdatePermission(context storage.TransactionContext, item model.Permission) error
 	DeletePermission(id string) error
 
 	FindAppOrgRoles(appOrgID string) ([]model.AppOrgRole, error)
 	FindAppOrgRolesByIDs(context storage.TransactionContext, ids []string, appOrgID string) ([]model.AppOrgRole, error)
 	FindAppOrgRole(id string, appOrgID string) (*model.AppOrgRole, error)
 	InsertAppOrgRole(context storage.TransactionContext, item model.AppOrgRole) error
-	UpdateAppOrgRole(item model.AppOrgRole) error
+	UpdateAppOrgRole(context storage.TransactionContext, item model.AppOrgRole) error
 	DeleteAppOrgRole(id string) error
 	InsertAppOrgRolePermissions(context storage.TransactionContext, roleID string, permissionNames []model.Permission) error
 
@@ -175,7 +185,7 @@ type Storage interface {
 	FindAppOrgGroupsByIDs(context storage.TransactionContext, ids []string, appOrgID string) ([]model.AppOrgGroup, error)
 	FindAppOrgGroup(id string, appOrgID string) (*model.AppOrgGroup, error)
 	InsertAppOrgGroup(context storage.TransactionContext, item model.AppOrgGroup) error
-	UpdateAppOrgGroup(item model.AppOrgGroup) error
+	UpdateAppOrgGroup(context storage.TransactionContext, item model.AppOrgGroup) error
 	DeleteAppOrgGroup(id string) error
 	CountGroupsByRoleID(roleID string) (*int64, error)
 
@@ -207,14 +217,16 @@ type Storage interface {
 	InsertApplicationOrganization(context storage.TransactionContext, applicationOrganization model.ApplicationOrganization) (*model.ApplicationOrganization, error)
 
 	InsertAPIKey(context storage.TransactionContext, apiKey model.APIKey) (*model.APIKey, error)
+
+	FindServiceRegByServiceAccountID(accountID string) (*model.ServiceReg, error)
 }
 
-//StorageListener listenes for change data storage events
+// StorageListener listenes for change data storage events
 type StorageListener struct {
 	app *application
 	storage.DefaultListenerImpl
 }
 
-//ApplicationListener represents application listener
+// ApplicationListener represents application listener
 type ApplicationListener interface {
 }

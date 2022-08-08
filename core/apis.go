@@ -27,12 +27,13 @@ import (
 	"github.com/rokwire/logging-library-go/logutils"
 )
 
-//APIs exposes to the drivers adapters access to the core functionality
+// APIs exposes to the drivers adapters access to the core functionality
 type APIs struct {
 	Services       Services       //expose to the drivers adapters
 	Administration Administration //expose to the drivers adapters
 	Encryption     Encryption     //expose to the drivers adapters
 	BBs            BBs            //expose to the drivers adapters
+	TPs            TPs            //expose to the drivers adapters
 	System         System         //expose to the drivers adapters
 
 	Auth auth.APIs //expose to the drivers auth
@@ -48,7 +49,7 @@ type APIs struct {
 	logger *logs.Logger
 }
 
-//Start starts the core part of the application
+// Start starts the core part of the application
 func (c *APIs) Start() {
 	c.app.start()
 	c.Auth.Start()
@@ -59,12 +60,12 @@ func (c *APIs) Start() {
 	}
 }
 
-//AddListener adds application listener
+// AddListener adds application listener
 func (c *APIs) AddListener(listener ApplicationListener) {
 	c.app.addListener(listener)
 }
 
-//GetVersion gives the service version
+// GetVersion gives the service version
 func (c *APIs) GetVersion() string {
 	return c.app.version
 }
@@ -221,7 +222,7 @@ func (c *APIs) storeSystemData() error {
 	return err
 }
 
-//NewCoreAPIs creates new CoreAPIs
+// NewCoreAPIs creates new CoreAPIs
 func NewCoreAPIs(env string, version string, build string, storage Storage, auth auth.APIs, systemInitSettings map[string]string, logger *logs.Logger) *APIs {
 	//add application instance
 	listeners := []ApplicationListener{}
@@ -232,11 +233,12 @@ func NewCoreAPIs(env string, version string, build string, storage Storage, auth
 	administrationImpl := &administrationImpl{app: &application}
 	encryptionImpl := &encryptionImpl{app: &application}
 	bbsImpl := &bbsImpl{app: &application}
+	tpsImpl := &tpsImpl{app: &application}
 	systemImpl := &systemImpl{app: &application}
 
 	//+ auth
 	coreAPIs := APIs{Services: servicesImpl, Administration: administrationImpl, Encryption: encryptionImpl,
-		BBs: bbsImpl, System: systemImpl, Auth: auth, app: &application, systemAppTypeIdentifier: systemInitSettings["app_type_id"],
+		BBs: bbsImpl, TPs: tpsImpl, System: systemImpl, Auth: auth, app: &application, systemAppTypeIdentifier: systemInitSettings["app_type_id"],
 		systemAppTypeName: systemInitSettings["app_type_name"], systemAPIKey: systemInitSettings["api_key"],
 		systemAccountEmail: systemInitSettings["email"], systemAccountPassword: systemInitSettings["password"], logger: logger}
 
@@ -245,7 +247,7 @@ func NewCoreAPIs(env string, version string, build string, storage Storage, auth
 
 ///
 
-//servicesImpl
+// servicesImpl
 type servicesImpl struct {
 	app *application
 }
@@ -315,8 +317,12 @@ func (s *administrationImpl) AdmGetApplications(orgID string) ([]model.Applicati
 	return s.app.admGetApplications(orgID)
 }
 
-func (s *administrationImpl) AdmCreateAppOrgGroup(name string, permissionNames []string, rolesIDs []string, appID string, orgID string, assignerPermissions []string, system bool, l *logs.Log) (*model.AppOrgGroup, error) {
-	return s.app.admCreateAppOrgGroup(name, permissionNames, rolesIDs, appID, orgID, assignerPermissions, system, l)
+func (s *administrationImpl) AdmCreateAppOrgGroup(name string, description string, system bool, permissionNames []string, rolesIDs []string, appID string, orgID string, assignerPermissions []string, systemClaim bool, l *logs.Log) (*model.AppOrgGroup, error) {
+	return s.app.admCreateAppOrgGroup(name, description, system, permissionNames, rolesIDs, appID, orgID, assignerPermissions, systemClaim, l)
+}
+
+func (s *administrationImpl) AdmUpdateAppOrgGroup(ID string, name string, description string, system bool, permissionNames []string, rolesIDs []string, appID string, orgID string, assignerPermissions []string, systemClaim bool, l *logs.Log) (*model.AppOrgGroup, error) {
+	return s.app.admUpdateAppOrgGroup(ID, name, description, system, permissionNames, rolesIDs, appID, orgID, assignerPermissions, systemClaim, l)
 }
 
 func (s *administrationImpl) AdmGetAppOrgGroups(appID string, orgID string) ([]model.AppOrgGroup, error) {
@@ -335,8 +341,8 @@ func (s *administrationImpl) AdmRemoveAccountsFromGroup(appID string, orgID stri
 	return s.app.admRemoveAccountsFromGroup(appID, orgID, groupID, accountIDs, assignerPermissions, l)
 }
 
-func (s *administrationImpl) AdmCreateAppOrgRole(name string, description string, permissionNames []string, appID string, orgID string, assignerPermissions []string, system bool, l *logs.Log) (*model.AppOrgRole, error) {
-	return s.app.admCreateAppOrgRole(name, description, permissionNames, appID, orgID, assignerPermissions, system, l)
+func (s *administrationImpl) AdmCreateAppOrgRole(name string, description string, system bool, permissionNames []string, appID string, orgID string, assignerPermissions []string, systemClaim bool, l *logs.Log) (*model.AppOrgRole, error) {
+	return s.app.admCreateAppOrgRole(name, description, system, permissionNames, appID, orgID, assignerPermissions, systemClaim, l)
 }
 
 func (s *administrationImpl) AdmGetAppOrgRoles(appID string, orgID string) ([]model.AppOrgRole, error) {
@@ -345,6 +351,10 @@ func (s *administrationImpl) AdmGetAppOrgRoles(appID string, orgID string) ([]mo
 
 func (s *administrationImpl) AdmDeleteAppOrgRole(ID string, appID string, orgID string, assignerPermissions []string, system bool, l *logs.Log) error {
 	return s.app.admDeleteAppOrgRole(ID, appID, orgID, assignerPermissions, system, l)
+}
+
+func (s *administrationImpl) AdmUpdateAppOrgRole(ID string, name string, description string, system bool, permissionNames []string, appID string, orgID string, assignerPermissions []string, systemClaim bool, l *logs.Log) (*model.AppOrgRole, error) {
+	return s.app.admUpdateAppOrgRole(ID, name, description, system, permissionNames, appID, orgID, assignerPermissions, systemClaim, l)
 }
 
 func (s *administrationImpl) AdmGrantPermissionsToRole(appID string, orgID string, roleID string, permissionNames []string, assignerPermissions []string, system bool, l *logs.Log) error {
@@ -425,6 +435,26 @@ func (s *bbsImpl) BBsGetTest() string {
 	return s.app.bbsGetTest()
 }
 
+func (s *bbsImpl) BBsUpdatePermissions(permissions []model.Permission, accountID string) ([]model.Permission, error) {
+	return s.app.bbsUpdatePermissions(permissions, accountID)
+}
+
+///
+
+//tpsImpl
+
+type tpsImpl struct {
+	app *application
+}
+
+func (s *tpsImpl) TPsGetTest() string {
+	return s.app.tpsGetTest()
+}
+
+func (s *tpsImpl) TPsUpdatePermissions(permissions []model.Permission, accountID string) ([]model.Permission, error) {
+	return s.app.tpsUpdatePermissions(permissions, accountID)
+}
+
 ///
 
 //systemImpl
@@ -473,12 +503,12 @@ func (s *systemImpl) SysGetApplications() ([]model.Application, error) {
 	return s.app.sysGetApplications()
 }
 
-func (s *systemImpl) SysCreatePermission(name string, description *string, serviceID *string, assigners *[]string) (*model.Permission, error) {
-	return s.app.sysCreatePermission(name, description, serviceID, assigners)
+func (s *systemImpl) SysCreatePermission(name string, description string, serviceID string, assigners *[]string, serviceManaged bool, inactive bool) (*model.Permission, error) {
+	return s.app.sysCreatePermission(name, description, serviceID, assigners, serviceManaged, inactive)
 }
 
-func (s *systemImpl) SysUpdatePermission(name string, description *string, serviceID *string, assigners *[]string) (*model.Permission, error) {
-	return s.app.sysUpdatePermission(name, description, serviceID, assigners)
+func (s *systemImpl) SysUpdatePermission(name string, description string, serviceID string, assigners *[]string, serviceManaged bool, inactive bool) (*model.Permission, error) {
+	return s.app.sysUpdatePermission(name, description, serviceID, assigners, serviceManaged, inactive)
 }
 
 func (s *systemImpl) SysGetAppConfigs(appTypeID string, orgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error) {

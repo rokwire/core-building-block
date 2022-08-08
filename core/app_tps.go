@@ -25,11 +25,11 @@ import (
 	"github.com/rokwire/logging-library-go/logutils"
 )
 
-func (app *application) bbsGetTest() string {
-	return "BBs - test"
+func (app *application) tpsGetTest() string {
+	return "TPs - test"
 }
 
-func (app *application) bbsUpdatePermissions(permissions []model.Permission, accountID string) ([]model.Permission, error) {
+func (app *application) tpsUpdatePermissions(permissions []model.Permission, accountID string) ([]model.Permission, error) {
 	//find the service registration record
 	serviceReg, err := app.storage.FindServiceRegByServiceAccountID(accountID)
 	if err != nil {

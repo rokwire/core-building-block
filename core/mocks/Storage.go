@@ -767,13 +767,13 @@ func (_m *Storage) FindPermissionsByName(context storage.TransactionContext, nam
 	return r0, r1
 }
 
-// FindPermissionsByServiceIDs provides a mock function with given fields: serviceIDs
-func (_m *Storage) FindPermissionsByServiceIDs(serviceIDs []string) ([]model.Permission, error) {
-	ret := _m.Called(serviceIDs)
+// FindPermissionsByServiceIDs provides a mock function with given fields: context, serviceIDs
+func (_m *Storage) FindPermissionsByServiceIDs(context storage.TransactionContext, serviceIDs []string) ([]model.Permission, error) {
+	ret := _m.Called(context, serviceIDs)
 
 	var r0 []model.Permission
-	if rf, ok := ret.Get(0).(func([]string) []model.Permission); ok {
-		r0 = rf(serviceIDs)
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, []string) []model.Permission); ok {
+		r0 = rf(context, serviceIDs)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]model.Permission)
@@ -781,8 +781,31 @@ func (_m *Storage) FindPermissionsByServiceIDs(serviceIDs []string) ([]model.Per
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func([]string) error); ok {
-		r1 = rf(serviceIDs)
+	if rf, ok := ret.Get(1).(func(storage.TransactionContext, []string) error); ok {
+		r1 = rf(context, serviceIDs)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// FindServiceRegByServiceAccountID provides a mock function with given fields: accountID
+func (_m *Storage) FindServiceRegByServiceAccountID(accountID string) (*model.ServiceReg, error) {
+	ret := _m.Called(accountID)
+
+	var r0 *model.ServiceReg
+	if rf, ok := ret.Get(0).(func(string) *model.ServiceReg); ok {
+		r0 = rf(accountID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.ServiceReg)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(accountID)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -1072,6 +1095,20 @@ func (_m *Storage) InsertPermission(context storage.TransactionContext, item mod
 	return r0
 }
 
+// InsertPermissions provides a mock function with given fields: context, items
+func (_m *Storage) InsertPermissions(context storage.TransactionContext, items []model.Permission) error {
+	ret := _m.Called(context, items)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, []model.Permission) error); ok {
+		r0 = rf(context, items)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // PerformTransaction provides a mock function with given fields: _a0
 func (_m *Storage) PerformTransaction(_a0 func(storage.TransactionContext) error) error {
 	ret := _m.Called(_a0)
@@ -1161,13 +1198,13 @@ func (_m *Storage) UpdateAppConfig(ID string, appType model.ApplicationType, app
 	return r0
 }
 
-// UpdateAppOrgGroup provides a mock function with given fields: item
-func (_m *Storage) UpdateAppOrgGroup(item model.AppOrgGroup) error {
-	ret := _m.Called(item)
+// UpdateAppOrgGroup provides a mock function with given fields: context, item
+func (_m *Storage) UpdateAppOrgGroup(context storage.TransactionContext, item model.AppOrgGroup) error {
+	ret := _m.Called(context, item)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(model.AppOrgGroup) error); ok {
-		r0 = rf(item)
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, model.AppOrgGroup) error); ok {
+		r0 = rf(context, item)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -1175,13 +1212,13 @@ func (_m *Storage) UpdateAppOrgGroup(item model.AppOrgGroup) error {
 	return r0
 }
 
-// UpdateAppOrgRole provides a mock function with given fields: item
-func (_m *Storage) UpdateAppOrgRole(item model.AppOrgRole) error {
-	ret := _m.Called(item)
+// UpdateAppOrgRole provides a mock function with given fields: context, item
+func (_m *Storage) UpdateAppOrgRole(context storage.TransactionContext, item model.AppOrgRole) error {
+	ret := _m.Called(context, item)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(model.AppOrgRole) error); ok {
-		r0 = rf(item)
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, model.AppOrgRole) error); ok {
+		r0 = rf(context, item)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -1217,13 +1254,13 @@ func (_m *Storage) UpdateOrganization(ID string, name string, requestType string
 	return r0
 }
 
-// UpdatePermission provides a mock function with given fields: item
-func (_m *Storage) UpdatePermission(item model.Permission) error {
-	ret := _m.Called(item)
+// UpdatePermission provides a mock function with given fields: context, item
+func (_m *Storage) UpdatePermission(context storage.TransactionContext, item model.Permission) error {
+	ret := _m.Called(context, item)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(model.Permission) error); ok {
-		r0 = rf(item)
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, model.Permission) error); ok {
+		r0 = rf(context, item)
 	} else {
 		r0 = ret.Error(0)
 	}
