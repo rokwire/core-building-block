@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Add system flag to login response [#552](https://github.com/rokwire/core-building-block/issues/552)
 - Allow passing nil context to WithContext storage functions [#494](https://github.com/rokwire/core-building-block/issues/494)
 - Account system configs [#558](https://github.com/rokwire/core-building-block/issues/558)
 ### Fixed
