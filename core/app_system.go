@@ -239,47 +239,44 @@ func (app *application) sysGetAppConfigs(appTypeID string, appID *string, orgID 
 		appOrgID = &appOrg.ID
 	}
 
-	defaultAppConfigs, patchAppConfigs, err := app.storage.FindAppConfigs(*appID, appTypeID, appOrgID, versionNumbers)
+	_, patchAppConfigs, err := app.storage.FindAppConfigs(*appID, appTypeID, appOrgID, versionNumbers)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationConfig, nil, err)
 	}
-	println(len(defaultAppConfigs))
-	var resultAppConfigs []model.ApplicationConfig
+	// var resultAppConfigs []model.ApplicationConfig
 
-	if appTypeID != "" {
-		// need to apply a patch file on top of the default appConfig
-		var basePatchAppConfig *model.ApplicationConfig
-		var patchAppConfigMap map[model.VersionNumbers]model.ApplicationConfig
+	// if appTypeID != "" {
+	// 	// need to apply a patch file on top of the default appConfig
+	// 	var basePatchAppConfig *model.ApplicationConfig
+	// 	var patchAppConfigMap map[model.VersionNumbers]model.ApplicationConfig
 
-		if len(patchAppConfigs) > 0 {
-			for _, patchAppConfig := range patchAppConfigs {
-				patchAppConfigMap[patchAppConfig.Version.VersionNumbers] = patchAppConfig
-			}
+	// 	if len(patchAppConfigs) > 0 {
+	// 		for _, patchAppConfig := range patchAppConfigs {
+	// 			patchAppConfigMap[patchAppConfig.Version.VersionNumbers] = patchAppConfig
+	// 		}
 
-			basePatchAppConfig = &patchAppConfigs[len(patchAppConfigs)-1]
-			if !basePatchAppConfig.IsBasePatchFile() {
-				// TODO: handle missing base patch file
-			}
-		}
-		println(basePatchAppConfig)
+	// 		basePatchAppConfig = &patchAppConfigs[len(patchAppConfigs)-1]
+	// 		if !basePatchAppConfig.IsBasePatchFile() {
+	// 			// TODO: handle missing base patch file
+	// 		}
+	// 	}
+	// 	println(basePatchAppConfig)
 
-		for _, defaultAppConfig := range defaultAppConfigs {
-			var mergedAppConfig model.ApplicationConfig
-			versionNumbers := defaultAppConfig.Version.VersionNumbers
-			if patch, ok := patchAppConfigMap[versionNumbers]; ok {
-				mergedAppConfig = defaultAppConfig.MergeAppConfig(&patch)
-			} else {
-				mergedAppConfig = defaultAppConfig.MergeAppConfig(basePatchAppConfig)
-			}
-			resultAppConfigs = append(resultAppConfigs, mergedAppConfig)
-		}
+	// 	for _, defaultAppConfig := range defaultAppConfigs {
+	// 		var mergedAppConfig model.ApplicationConfig
+	// 		versionNumbers := defaultAppConfig.Version.VersionNumbers
+	// 		if patch, ok := patchAppConfigMap[versionNumbers]; ok {
+	// 			mergedAppConfig = defaultAppConfig.MergeAppConfig(&patch)
+	// 		} else {
+	// 			mergedAppConfig = defaultAppConfig.MergeAppConfig(basePatchAppConfig)
+	// 		}
+	// 		resultAppConfigs = append(resultAppConfigs, mergedAppConfig)
+	// 	}
 
-		return resultAppConfigs, nil
-	}
+	// 	return resultAppConfigs, nil
+	// }
 
-	// defaultAppConfigs, err := sa.getCachedDefaultAppConfigsByAppIDAndVersion(appID, appOrgID, versionNumbers)
-
-	return defaultAppConfigs, nil
+	return patchAppConfigs, nil
 }
 
 func (app *application) sysGetAppConfig(id string) (*model.ApplicationConfig, error) {
@@ -295,7 +292,6 @@ func (app *application) sysCreateAppConfig(appTypeID string, appID *string, orgI
 	var applicationType *model.ApplicationType
 	var err error
 	if appTypeID != "" {
-		//get the app type
 		applicationType, err = app.storage.FindApplicationType(appTypeID)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationType, logutils.StringArgs(appTypeID), err)
@@ -303,9 +299,7 @@ func (app *application) sysCreateAppConfig(appTypeID string, appID *string, orgI
 		if applicationType == nil {
 			return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationType, logutils.StringArgs(appTypeID))
 		}
-		// if len(applicationType.Versions) == 0 {
-		// 	return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationTypeVersionList, logutils.StringArgs(appTypeID))
-		// }
+
 		appID = &applicationType.Application.ID
 	}
 	if appID == nil || *appID == "" {
@@ -326,28 +320,17 @@ func (app *application) sysCreateAppConfig(appTypeID string, appID *string, orgI
 
 	var version *model.Version
 	if applicationType != nil {
-		// TODO: create the app config without checking if it's supported
+		// Create the app config without checking if it's a supported version
 		for _, supportedVersion := range applicationType.Versions {
 			if versionNumbers == supportedVersion.VersionNumbers {
 				version = &supportedVersion
 				break
-				// now := time.Now()
-				// appConfigID, _ := uuid.NewUUID()
-				// applicationConfig := model.ApplicationConfig{ID: appConfigID.String(), Version: supportedVersion, ApplicationType: *applicationType, AppOrg: appOrg, Data: data, DateCreated: now}
-
-				// insertedConfig, err := app.storage.InsertAppConfig(applicationConfig)
-				// if err != nil {
-				// 	return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeApplicationConfig, nil, err)
-				// }
-
-				// return insertedConfig, nil
 			}
 		}
 	}
 
 	now := time.Now()
 	appConfigID, _ := uuid.NewUUID()
-
 	if version == nil {
 		version = &model.Version{VersionNumbers: versionNumbers, DateCreated: now}
 	}
@@ -360,8 +343,6 @@ func (app *application) sysCreateAppConfig(appTypeID string, appID *string, orgI
 	}
 
 	return insertedConfig, nil
-
-	// return nil, errors.ErrorData(logutils.StatusInvalid, model.TypeApplicationConfigsVersion, logutils.StringArgs(versionNumbers.String()+" for app_type_id: "+appTypeID))
 }
 
 func (app *application) sysUpdateAppConfig(id string, appTypeID string, appID *string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) error {
@@ -413,8 +394,6 @@ func (app *application) sysUpdateAppConfig(id string, appTypeID string, appID *s
 	}
 
 	return nil
-
-	// return errors.ErrorData(logutils.StatusInvalid, model.TypeApplicationConfigsVersion, logutils.StringArgs(versionNumbers.String()+" for app_type_id: "+appTypeID))
 }
 
 func (app *application) sysDeleteAppConfig(id string) error {

@@ -18,6 +18,7 @@ import (
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
 
+	"github.com/google/go-github/v44/github"
 	"github.com/rokwire/logging-library-go/logs"
 )
 
@@ -211,7 +212,8 @@ type Storage interface {
 
 //GitHub is used by core to load from and send data to GitHub
 type GitHub interface {
-	GetContents(path string) (string, bool, error)
+	GetContents(path string) (*github.RepositoryContent, []*github.RepositoryContent, error)
+	IsWebhookConfigPath(path string) bool
 
 	FindWebhookConfig() (*model.WebhookConfig, error)
 	UpdateCachedWebhookConfigs() error

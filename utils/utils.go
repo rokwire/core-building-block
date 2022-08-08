@@ -227,8 +227,19 @@ func ParseWebhookFilePath(path string) (valid bool, appType string, envString *s
 			appType = ""
 		}
 
+		major, minor, patch = GetFileVersion(path)
+	}
+
+	valid = true
+
+	return
+}
+
+// GetFileVersion gets the version numbers for a appConfig file
+func GetFileVersion(path string) (major int, minor int, patch int) {
+	dirs := strings.Split(path, "/")
+	if len(dirs) == 4 || len(dirs) == 5 {
 		fileName := strings.Split(dirs[len(dirs)-1], ".")
-		// var versionNumbers *model.VersionNumbers
 		if len(fileName) == 5 {
 			tmp, err := strconv.Atoi(fileName[1])
 			if err != nil {
@@ -249,8 +260,6 @@ func ParseWebhookFilePath(path string) (valid bool, appType string, envString *s
 			patch = tmp
 		}
 	}
-
-	valid = true
 
 	return
 }

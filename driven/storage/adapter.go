@@ -681,8 +681,8 @@ func (sa *Adapter) setCachedApplicationConfigs(applicationConfigs *[]model.Appli
 	}
 }
 
-// get cached default appConfig files
-func (sa *Adapter) getCachedDefaultAppConfigsByAppIDAndVersion(appID string, appOrgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error) {
+// get cached appConfig files
+func (sa *Adapter) getCachedAppConfigsByAppIDAndVersion(appID string, appOrgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error) {
 	sa.applicationConfigsLock.RLock()
 	defer sa.applicationConfigsLock.RUnlock()
 
@@ -2921,30 +2921,30 @@ func (sa *Adapter) FindAppConfigs(appID string, appTypeID string, appOrgID *stri
 		return nil, nil, err
 	}
 
-	defaultAppConfigs, err := sa.getCachedDefaultAppConfigsByAppIDAndVersion(appID, appOrgID, versionNumbers)
-	if err != nil {
-		return nil, nil, err
-	}
+	// defaultAppConfigs, err := sa.getCachedAppConfigsByAppIDAndVersion(appID, appOrgID, versionNumbers)
+	// if err != nil {
+	// 	return nil, nil, err
+	// }
 
-	return defaultAppConfigs, patchAppConfigs, nil
+	return nil, patchAppConfigs, nil
 }
 
 //FindAppConfigByVersion finds the most recent app config for the specified version
 func (sa *Adapter) FindAppConfigByVersion(appID string, appTypeID string, appOrgID *string, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, []model.ApplicationConfig, error) {
-	defaultConfigs, err := sa.getCachedDefaultAppConfigsByAppIDAndVersion(appID, appOrgID, &versionNumbers)
-	if err != nil {
-		return nil, nil, err
-	}
-	if len(defaultConfigs) == 0 {
-		return nil, nil, nil
-	}
+	// defaultConfigs, err := sa.getCachedAppConfigsByAppIDAndVersion(appID, appOrgID, &versionNumbers)
+	// if err != nil {
+	// 	return nil, nil, err
+	// }
+	// if len(defaultConfigs) == 0 {
+	// 	return nil, nil, nil
+	// }
 
 	patchConfigs, err := sa.getCachedPatchAppConfigsByAppTypeIDAndVersion(appTypeID, appOrgID, &versionNumbers)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	return &defaultConfigs[0], patchConfigs, nil
+	return nil, patchConfigs, nil
 }
 
 //FindAppConfigByID finds appconfig by ID

@@ -41,3 +41,9 @@ type Commit struct {
 	Removed   []string  `json:"removed"`
 	Modified  []string  `json:"modified"`
 }
+
+// AppConfigFile is the file information in a commit of github push event
+type AppConfigFile struct {
+	Name     string `json:"name"`
+	IsDelete bool   `json:"is_delete"`
+}

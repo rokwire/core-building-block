@@ -141,35 +141,15 @@ func (app *application) serGetAppConfig(appTypeIdentifier string, appID *string,
 		appOrgID = &appOrg.ID
 	}
 
-	// will return the latest defaultAppConfig with verion less than or equal to the versionNumbers provided
-	defaultAppConfig, patchAppConfigs, err := app.storage.FindAppConfigByVersion(*appID, appTypeID, appOrgID, versionNumbers)
+	// will return the patchAppConfig with greatest verion less than or equal to the versionNumbers provided
+	_, patchAppConfigs, err := app.storage.FindAppConfigByVersion(*appID, appTypeID, appOrgID, versionNumbers)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationConfig, nil, err)
 	}
-	if defaultAppConfig == nil {
-		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeApplicationConfig, nil, err)
-	}
 
 	if len(patchAppConfigs) > 0 {
-		patchAppConfigMap := make(map[model.VersionNumbers]model.ApplicationConfig, 0)
-		for _, patchAppConfig := range patchAppConfigs {
-			patchAppConfigMap[patchAppConfig.Version.VersionNumbers] = patchAppConfig
-		}
-
-		basePatchAppConfig := &patchAppConfigs[len(patchAppConfigs)-1]
-		if !basePatchAppConfig.IsBasePatchFile() {
-			// TODO: handle missing base patch file
-		}
-
-		var mergedAppConfig model.ApplicationConfig
-		versionNumbers := defaultAppConfig.Version.VersionNumbers
-		if patch, ok := patchAppConfigMap[versionNumbers]; ok {
-			mergedAppConfig = defaultAppConfig.MergeAppConfig(&patch)
-		} else {
-			mergedAppConfig = defaultAppConfig.MergeAppConfig(basePatchAppConfig)
-		}
-		return &mergedAppConfig, nil
+		return &patchAppConfigs[0], nil
 	}
 
-	return defaultAppConfig, nil
+	return nil, nil
 }

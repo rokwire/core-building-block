@@ -57,11 +57,6 @@ func (h DefaultApisHandler) getOpenIDConfiguration(l *logs.Log, r *http.Request,
 func (h DefaultApisHandler) handleWebhookConfigChange(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	// verify webhook request signature
 	data, err := github.ValidatePayload(r, []byte(h.githubWebhookRequestToken))
-
-	// if string(payload) != body {
-	// err = fmt.Errorf("ValidatePayload = %q, want %q", payload, body)
-	// }
-
 	if err != nil {
 		return l.HttpResponseErrorData(logutils.MessageDataStatus(logutils.ActionValidate), model.TypeWebhookSecretToken, nil, nil, http.StatusBadRequest, false)
 	}
@@ -73,11 +68,11 @@ func (h DefaultApisHandler) handleWebhookConfigChange(l *logs.Log, r *http.Reque
 	}
 	gitRefs := strings.Split(requestData.Ref, "/")
 	if len(gitRefs) == 0 {
-		return l.HttpResponseErrorData(logutils.StatusInvalid, logutils.MessageDataType("github webhook repository branch"), nil, nil, http.StatusBadRequest, false)
+		return l.HttpResponseErrorData(logutils.StatusInvalid, logutils.MessageDataType("github webhook repository branch"), logutils.StringArgs(requestData.Ref), nil, http.StatusBadRequest, false)
 	}
 	branchName := gitRefs[len(gitRefs)-1]
 	if branchName != h.githubAppConfigBranch {
-		return l.HttpResponseErrorData(logutils.StatusInvalid, logutils.MessageDataType("github webhook repository branch"), nil, nil, http.StatusBadRequest, false)
+		return l.HttpResponseErrorData(logutils.StatusInvalid, logutils.MessageDataType("github webhook repository branch"), logutils.StringArgs(branchName), nil, http.StatusBadRequest, false)
 	}
 
 	commits := requestData.Commits
@@ -93,6 +88,6 @@ func (h DefaultApisHandler) handleWebhookConfigChange(l *logs.Log, r *http.Reque
 }
 
 //NewDefaultApisHandler creates new rest services Handler instance
-func NewDefaultApisHandler(coreAPIs *core.APIs) DefaultApisHandler {
-	return DefaultApisHandler{coreAPIs: coreAPIs}
+func NewDefaultApisHandler(coreAPIs *core.APIs, githubWebhookRequestToken string, githubAppConfigBranch string) DefaultApisHandler {
+	return DefaultApisHandler{coreAPIs: coreAPIs, githubWebhookRequestToken: githubWebhookRequestToken, githubAppConfigBranch: githubAppConfigBranch}
 }

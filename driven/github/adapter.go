@@ -23,6 +23,8 @@ type Adapter struct {
 	githubWebhookConfigPath string
 	githubAppConfigBranch   string
 
+	client *github.Client
+
 	logger *logs.Logger
 
 	cachedWebhookConfig *model.WebhookConfig
@@ -37,7 +39,17 @@ func (sa *Adapter) Start() error {
 		return errors.WrapErrorAction(logutils.ActionCache, model.TypeGitHubWebhookConfigFile, nil, err)
 	}
 
-	return err
+	if sa.client == nil {
+		ctx := context.Background()
+		ts := oauth2.StaticTokenSource(
+			&oauth2.Token{AccessToken: sa.githubToken},
+		)
+		tc := oauth2.NewClient(ctx, ts)
+
+		sa.client = github.NewClient(tc)
+	}
+
+	return nil
 }
 
 // UpdateCachedWebhookConfigs updates the webhook configs cache
@@ -90,10 +102,14 @@ func (sa *Adapter) getCachedWebhookConfig() (*model.WebhookConfig, error) {
 }
 
 func (sa *Adapter) loadWebhookConfigs() (*model.WebhookConfig, error) {
-	contentString, _, err := sa.GetContents(sa.githubWebhookConfigPath)
+	fileContent, _, err := sa.GetContents(sa.githubWebhookConfigPath)
 	if err != nil {
-		fmt.Printf("fileContent.GetContent returned error: %v", err)
+		fmt.Printf("fileContent.GetContents returned error: %v", err)
 		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeGitHubWebhookConfigFile, nil, err)
+	}
+	contentString, err := fileContent.GetContent()
+	if err != nil {
+		return nil, err
 	}
 
 	var webhookConfig model.WebhookConfig
@@ -106,37 +122,27 @@ func (sa *Adapter) loadWebhookConfigs() (*model.WebhookConfig, error) {
 }
 
 // GetContents get file content from GitHub
-func (sa *Adapter) GetContents(path string) (string, bool, error) {
-	isWebhookConfigPath := false
-	if path == sa.githubWebhookConfigPath {
-		isWebhookConfigPath = true
-	}
+func (sa *Adapter) GetContents(path string) (*github.RepositoryContent, []*github.RepositoryContent, error) {
+	fileContent, directoryContent, _, err := sa.client.Repositories.GetContents(context.Background(), sa.githubOrgnizationName, sa.githubRepoName, path, &github.RepositoryContentGetOptions{Ref: sa.githubAppConfigBranch})
 
-	ctx := context.Background()
-	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: sa.githubToken},
-	)
-	tc := oauth2.NewClient(ctx, ts)
+	return fileContent, directoryContent, err
+}
 
-	client := github.NewClient(tc)
-
-	fileContent, _, _, err := client.Repositories.GetContents(ctx, sa.githubOrgnizationName, sa.githubRepoName, path, &github.RepositoryContentGetOptions{Ref: sa.githubAppConfigBranch})
-	if err != nil || fileContent == nil {
-		return "", isWebhookConfigPath, errors.WrapErrorAction(logutils.ActionGet, model.TypeGithubContent, nil, err)
-	}
-
-	contentString, err := fileContent.GetContent()
-	if err != nil {
-		return "", isWebhookConfigPath, errors.WrapErrorAction(logutils.ActionDecode, model.TypeGithubContent, nil, err)
-	}
-
-	return contentString, isWebhookConfigPath, nil
+// IsWebhookConfigPath checks if a file is the webhook config file
+func (sa *Adapter) IsWebhookConfigPath(path string) bool {
+	return path == sa.githubWebhookConfigPath
 }
 
 //NewGitHubAdapter creates a new GitHub adapter instance
 func NewGitHubAdapter(githubToken string, githubOrgnizationName string, githubRepoName string, githubWebhookConfigPath string, githubAppConfigBranch string, logger *logs.Logger) *Adapter {
 	cachedWebhookConfigs := &model.WebhookConfig{}
 	webhookConfigsLock := &sync.RWMutex{}
+	ctx := context.Background()
+	ts := oauth2.StaticTokenSource(
+		&oauth2.Token{AccessToken: githubToken},
+	)
+	tc := oauth2.NewClient(ctx, ts)
+	client := github.NewClient(tc)
 
-	return &Adapter{cachedWebhookConfig: cachedWebhookConfigs, webhookConfigsLock: webhookConfigsLock, githubToken: githubToken, githubOrgnizationName: githubOrgnizationName, githubRepoName: githubRepoName, githubWebhookConfigPath: githubWebhookConfigPath, githubAppConfigBranch: githubAppConfigBranch, logger: logger}
+	return &Adapter{client: client, cachedWebhookConfig: cachedWebhookConfigs, webhookConfigsLock: webhookConfigsLock, githubToken: githubToken, githubOrgnizationName: githubOrgnizationName, githubRepoName: githubRepoName, githubWebhookConfigPath: githubWebhookConfigPath, githubAppConfigBranch: githubAppConfigBranch, logger: logger}
 }
