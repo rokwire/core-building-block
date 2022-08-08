@@ -21,11 +21,9 @@ put:
     200:
       description: Success
       content:
-        application/json:
+        text/plain:
           schema:
-            type: array
-            items:
-              $ref: "../../schemas/application/Permission.yaml"
+            type: string
     400:
       description: Bad request
     401:

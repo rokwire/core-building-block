@@ -81,6 +81,7 @@ func applicationPermissionToDef(item model.Permission) Def.Permission {
 		assigners = make([]string, 0)
 	}
 
+	description := &item.Description
 	serviceManaged := &item.ServiceManaged
 	inactive := &item.Inactive
 
@@ -92,17 +93,21 @@ func applicationPermissionToDef(item model.Permission) Def.Permission {
 		dateUpdated = &formatted
 	}
 
-	return Def.Permission{Id: item.ID, Name: item.Name, Description: item.Description, ServiceId: item.ServiceID, Assigners: &assigners,
+	return Def.Permission{Id: item.ID, Name: item.Name, Description: description, ServiceId: item.ServiceID, Assigners: &assigners,
 		ServiceManaged: serviceManaged, Inactive: inactive, DateCreated: &dateCreated, DateUpdated: dateUpdated}
 }
 
 func applicationPermissionFromDef(item Def.Permission) model.Permission {
-	assigners := make([]string, 0)
+	description := ""
+	if item.Description != nil {
+		description = *item.Description
+	}
+	var assigners []string
 	if item.Assigners != nil {
-		assigners = append(assigners, *item.Assigners...)
+		assigners = *item.Assigners
 	}
 
-	return model.Permission{Name: item.Name, Description: item.Description, Assigners: assigners}
+	return model.Permission{Name: item.Name, Description: description, Assigners: assigners}
 }
 
 func applicationPermissionsToDef(items []model.Permission) []Def.Permission {

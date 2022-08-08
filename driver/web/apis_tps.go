@@ -191,17 +191,17 @@ func (h TPSApisHandler) updatePermissions(l *logs.Log, r *http.Request, claims *
 	}
 
 	permissions := applicationPermissionsFromDef(requestData)
-	permissions, err = h.coreAPIs.TPs.TPsUpdatePermissions(permissions, claims.Subject)
+	_, err = h.coreAPIs.TPs.TPsUpdatePermissions(permissions, claims.Subject)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypePermission, nil, err, http.StatusInternalServerError, true)
 	}
 
-	respData, err := json.Marshal(permissions)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("service access tokens response"), nil, err, http.StatusInternalServerError, false)
-	}
+	// respData, err := json.Marshal(permissions)
+	// if err != nil {
+	// 	return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("service access tokens response"), nil, err, http.StatusInternalServerError, false)
+	// }
 
-	return l.HttpResponseSuccessJSON(respData)
+	return l.HttpResponseSuccess()
 }
 
 // NewTPSApisHandler creates new tps Handler instance

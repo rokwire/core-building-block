@@ -176,18 +176,18 @@ func (h BBsApisHandler) updatePermissions(l *logs.Log, r *http.Request, claims *
 	}
 
 	permissions := applicationPermissionsFromDef(requestData)
-	permissions, err = h.coreAPIs.BBs.BBsUpdatePermissions(permissions, claims.Subject)
+	_, err = h.coreAPIs.BBs.BBsUpdatePermissions(permissions, claims.Subject)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypePermission, nil, err, http.StatusInternalServerError, true)
 	}
 
-	permissionsResp := applicationPermissionsToDef(permissions)
-	respData, err := json.Marshal(permissionsResp)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("permissions response"), nil, err, http.StatusInternalServerError, false)
-	}
+	// permissionsResp := applicationPermissionsToDef(permissions)
+	// respData, err := json.Marshal(permissionsResp)
+	// if err != nil {
+	// 	return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("permissions response"), nil, err, http.StatusInternalServerError, false)
+	// }
 
-	return l.HttpResponseSuccessJSON(respData)
+	return l.HttpResponseSuccess()
 }
 
 // NewBBsApisHandler creates new bbs Handler instance

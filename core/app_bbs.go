@@ -138,12 +138,19 @@ func (app *application) bbsUpdatePermissions(permissions []model.Permission, acc
 			}
 
 			description := newPermission.Description
+			if description == "" {
+				description = currentPermission.Description
+			}
+			assignersGiven := newPermission.Assigners != nil
 			assigners := newPermission.Assigners
-			updated := (currentPermission.Inactive && currentPermission.ServiceManaged) || (description != currentPermission.Description) || !utils.DeepEqual(assigners, currentPermission.Assigners)
+
+			updated := (currentPermission.Inactive && currentPermission.ServiceManaged) || (description != currentPermission.Description) || (assignersGiven && !utils.DeepEqual(assigners, currentPermission.Assigners))
 			newPermission = currentPermission
 			if updated {
 				newPermission.Description = description
-				newPermission.Assigners = assigners
+				if assignersGiven {
+					newPermission.Assigners = assigners
+				}
 				newPermission.Inactive = newPermission.Inactive && !newPermission.ServiceManaged
 				newPermission.DateUpdated = &now
 				err = app.storage.UpdatePermission(context, newPermission)

@@ -518,7 +518,7 @@ type Permission struct {
 	Assigners      *[]string `json:"assigners,omitempty"`
 	DateCreated    *string   `json:"date_created,omitempty"`
 	DateUpdated    *string   `json:"date_updated,omitempty"`
-	Description    string    `json:"description"`
+	Description    *string   `json:"description,omitempty"`
 	Id             string    `json:"id"`
 	Inactive       *bool     `json:"inactive,omitempty"`
 	Name           string    `json:"name"`

@@ -3011,11 +3011,9 @@ paths:
         '200':
           description: Success
           content:
-            application/json:
+            text/plain:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Permission'
+                type: string
         '400':
           description: Bad request
         '401':
@@ -3263,11 +3261,9 @@ paths:
         '200':
           description: Success
           content:
-            application/json:
+            text/plain:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Permission'
+                type: string
         '400':
           description: Bad request
         '401':
@@ -4815,7 +4811,6 @@ components:
       required:
         - id
         - name
-        - description
         - service_id
       type: object
       properties:
@@ -4825,6 +4820,7 @@ components:
         name:
           type: string
         description:
+          readOnly: true
           type: string
         service_id:
           readOnly: true
