@@ -28,6 +28,8 @@ import (
 const (
 	//TypeApplication ...
 	TypeApplication logutils.MessageDataType = "application"
+	//TypeApplicationID ...
+	TypeApplicationID logutils.MessageDataType = "application id"
 	//TypePermission ...
 	TypePermission logutils.MessageDataType = "permission"
 	//TypeAppOrgRole ...
@@ -50,6 +52,26 @@ const (
 	TypeApplicationConfigsVersion logutils.MessageDataType = "app config version number"
 	//TypeVersionNumbers ...
 	TypeVersionNumbers logutils.MessageDataType = "version numbers"
+	//TypeWebhookRequest ...
+	TypeWebhookRequest logutils.MessageDataType = "github webhook request"
+	//TypeWebhookSecretToken ...
+	TypeWebhookSecretToken logutils.MessageDataType = "github Webhook secret token"
+	//TypeGitHubWebhookConfigFile ...
+	TypeGitHubWebhookConfigFile logutils.MessageDataType = "github webhook config file"
+	//TypeAppConfigFromWebhook ...
+	TypeAppConfigFromWebhook logutils.MessageDataType = "app config files from github webhook request"
+	//TypeGithubContent ...
+	TypeGithubContent logutils.MessageDataType = "github content"
+	//TypeGithubCommit ...
+	TypeGithubCommit logutils.MessageDataType = "github commit"
+	//TypeGithubCommitAdded ...
+	TypeGithubCommitAdded logutils.MessageDataType = "github commit added files"
+	//TypeGithubCommitUpdated ...
+	TypeGithubCommitUpdated logutils.MessageDataType = "github commit updated files"
+	//TypeGithubCommitDeleted ...
+	TypeGithubCommitDeleted logutils.MessageDataType = "github commit deleted files"
+	//TypeOrganizationID ...
+	TypeOrganizationID logutils.MessageDataType = "organization id"
 
 	//PermissionAllSystemCore ...
 	PermissionAllSystemCore string = "all_system_core"
@@ -354,7 +376,8 @@ type AuthTypesSupport struct {
 //ApplicationConfig represents app configs
 type ApplicationConfig struct {
 	ID              string
-	ApplicationType ApplicationType
+	AppID           string
+	ApplicationType *ApplicationType
 	Version         Version
 	AppOrg          *ApplicationOrganization
 	Data            map[string]interface{}
@@ -363,12 +386,37 @@ type ApplicationConfig struct {
 	DateUpdated *time.Time
 }
 
+// IsBasePatchFile checks if the applicationConfig has the base/0.0.0 version numbers
+func (config ApplicationConfig) IsBasePatchFile() bool {
+	baseVersion := VersionNumbers{0, 0, 0}
+	return config.Version.VersionNumbers.LessThanOrEqualTo(&baseVersion)
+}
+
+// MergeAppConfig merges a patch file with a default appConfig file
+func (config ApplicationConfig) MergeAppConfig(patchConfig *ApplicationConfig) ApplicationConfig {
+	if patchConfig == nil {
+		return config
+	}
+
+	baseData := config.Data
+	for key, element := range patchConfig.Data {
+		baseData[key] = element
+		// if _, ok := baseData[key]; ok {
+		// }
+	}
+
+	config.Data = baseData
+	config.ApplicationType = patchConfig.ApplicationType
+
+	return config
+}
+
 // Version represents app config version information
 type Version struct {
 	ID             string
 	VersionNumbers VersionNumbers
 
-	ApplicationType ApplicationType
+	ApplicationType *ApplicationType
 	DateCreated     time.Time
 	DateUpdated     *time.Time
 }
@@ -427,4 +475,30 @@ func VersionNumbersFromString(version string) *VersionNumbers {
 	}
 
 	return &VersionNumbers{Major: major, Minor: minor, Patch: patch}
+}
+
+// WebhookConfig is the organizaiton and application mapping config
+type WebhookConfig struct {
+	Organizations map[string]string           `json:"organizations"`
+	Applications  map[string]ApplicationTypes `json:"applications"`
+}
+
+// ApplicationTypes are the application types for different client platforms
+type ApplicationTypes struct {
+	ID    string            `json:"id"`
+	Types map[string]string `json:"types"`
+}
+
+// Author is the author of the commit
+type Author struct {
+	Name     string `json:"name"`
+	Email    string `json:"email"`
+	Username string `json:"username"`
+}
+
+// Committer is the commiter of the commit
+type Committer struct {
+	Name     string `json:"name"`
+	Email    string `json:"email"`
+	Username string `json:"username"`
 }

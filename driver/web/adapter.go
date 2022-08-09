@@ -85,6 +85,8 @@ func (we Adapter) Start() {
 	///default ///
 	subRouter.HandleFunc("/version", we.wrapFunc(we.defaultApisHandler.getVersion, nil)).Methods("GET")                                      //Public
 	subRouter.HandleFunc("/.well-known/openid-configuration", we.wrapFunc(we.defaultApisHandler.getOpenIDConfiguration, nil)).Methods("GET") //Public
+	//webhook
+	subRouter.HandleFunc("/application/configs/github-webhook", we.wrapFunc(we.defaultApisHandler.handleWebhookConfigChange, nil)).Methods("POST")
 	///
 
 	///services ///
@@ -425,7 +427,7 @@ func (we Adapter) validateResponse(requestValidationInput *openapi3filter.Reques
 }
 
 //NewWebAdapter creates new WebAdapter instance
-func NewWebAdapter(env string, serviceID string, serviceRegManager *authservice.ServiceRegManager, port string, coreAPIs *core.APIs, host string, logger *logs.Logger) Adapter {
+func NewWebAdapter(env string, serviceID string, serviceRegManager *authservice.ServiceRegManager, port string, coreAPIs *core.APIs, host string, githubWebhookRequestToken string, githubAppConfigBranch string, logger *logs.Logger) Adapter {
 	//openAPI doc
 	loader := &openapi3.Loader{Context: context.Background(), IsExternalRefsAllowed: true}
 	doc, err := loader.LoadFromFile("driver/web/docs/gen/def.yaml")
@@ -457,7 +459,8 @@ func NewWebAdapter(env string, serviceID string, serviceRegManager *authservice.
 		logger.Fatal(err.Error())
 	}
 
-	defaultApisHandler := NewDefaultApisHandler(coreAPIs)
+	// TODO: fix githubWebhookRequestToken
+	defaultApisHandler := NewDefaultApisHandler(coreAPIs, "", githubAppConfigBranch)
 	servicesApisHandler := NewServicesApisHandler(coreAPIs)
 	adminApisHandler := NewAdminApisHandler(coreAPIs)
 	encApisHandler := NewEncApisHandler(coreAPIs)

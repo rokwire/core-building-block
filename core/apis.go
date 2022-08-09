@@ -25,6 +25,7 @@ import (
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
+	// with go modules enabled (GO111MODULE=on or outside GOPATH)
 )
 
 //APIs exposes to the drivers adapters access to the core functionality
@@ -34,6 +35,7 @@ type APIs struct {
 	Encryption     Encryption     //expose to the drivers adapters
 	BBs            BBs            //expose to the drivers adapters
 	System         System         //expose to the drivers adapters
+	Default        Default        //expose to the drivers adapters
 
 	Auth auth.APIs //expose to the drivers auth
 
@@ -222,20 +224,21 @@ func (c *APIs) storeSystemData() error {
 }
 
 //NewCoreAPIs creates new CoreAPIs
-func NewCoreAPIs(env string, version string, build string, storage Storage, auth auth.APIs, systemInitSettings map[string]string, logger *logs.Logger) *APIs {
+func NewCoreAPIs(env string, version string, build string, storage Storage, github GitHub, auth auth.APIs, systemInitSettings map[string]string, githubWebhookRequestToken string, githubAppConfigBranch string, logger *logs.Logger) *APIs {
 	//add application instance
 	listeners := []ApplicationListener{}
-	application := application{env: env, version: version, build: build, storage: storage, listeners: listeners, auth: auth}
+	application := application{env: env, version: version, build: build, storage: storage, github: github, listeners: listeners, auth: auth}
 
 	//add coreAPIs instance
-	servicesImpl := &servicesImpl{app: &application}
+	servicesImpl := &servicesImpl{app: &application, auth: auth}
 	administrationImpl := &administrationImpl{app: &application}
 	encryptionImpl := &encryptionImpl{app: &application}
 	bbsImpl := &bbsImpl{app: &application}
 	systemImpl := &systemImpl{app: &application}
+	defaultImpl := &defaultImpl{app: &application, githubWebhookRequestToken: githubWebhookRequestToken, githubAppConfigBranch: githubAppConfigBranch}
 
 	//+ auth
-	coreAPIs := APIs{Services: servicesImpl, Administration: administrationImpl, Encryption: encryptionImpl,
+	coreAPIs := APIs{Default: defaultImpl, Services: servicesImpl, Administration: administrationImpl, Encryption: encryptionImpl,
 		BBs: bbsImpl, System: systemImpl, Auth: auth, app: &application, systemAppTypeIdentifier: systemInitSettings["app_type_id"],
 		systemAppTypeName: systemInitSettings["app_type_name"], systemAPIKey: systemInitSettings["api_key"],
 		systemAccountEmail: systemInitSettings["email"], systemAccountPassword: systemInitSettings["password"], logger: logger}
@@ -245,9 +248,25 @@ func NewCoreAPIs(env string, version string, build string, storage Storage, auth
 
 ///
 
+//defaultImpl
+type defaultImpl struct {
+	githubWebhookRequestToken string
+	githubAppConfigBranch     string
+	app                       *application
+}
+
+func (s *defaultImpl) ProcessGitHubAppConfigWebhook(commits []model.Commit, l *logs.Log) error {
+	return s.app.processGitHubAppConfigWebhook(commits, l)
+}
+
+func (s *defaultImpl) UpdateCachedWebhookConfigs() error {
+	return s.app.updateCachedWebhookConfigs()
+}
+
 //servicesImpl
 type servicesImpl struct {
-	app *application
+	auth auth.APIs
+	app  *application
 }
 
 func (s *servicesImpl) SerDeleteAccount(id string) error {
@@ -291,8 +310,8 @@ func (s *servicesImpl) SerGetCommonTest(l *logs.Log) string {
 	return s.app.serGetCommonTest(l)
 }
 
-func (s *servicesImpl) SerGetAppConfig(appTypeIdentifier string, orgID *string, versionNumbers model.VersionNumbers, apiKey *string) (*model.ApplicationConfig, error) {
-	return s.app.serGetAppConfig(appTypeIdentifier, orgID, versionNumbers, apiKey)
+func (s *servicesImpl) SerGetAppConfig(appTypeIdentifier string, appID *string, orgID *string, versionNumbers model.VersionNumbers, apiKey *string) (*model.ApplicationConfig, error) {
+	return s.app.serGetAppConfig(appTypeIdentifier, appID, orgID, versionNumbers, apiKey)
 }
 
 ///
@@ -481,20 +500,20 @@ func (s *systemImpl) SysUpdatePermission(name string, description *string, servi
 	return s.app.sysUpdatePermission(name, description, serviceID, assigners)
 }
 
-func (s *systemImpl) SysGetAppConfigs(appTypeID string, orgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error) {
-	return s.app.sysGetAppConfigs(appTypeID, orgID, versionNumbers)
+func (s *systemImpl) SysGetAppConfigs(appTypeID string, appID *string, orgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error) {
+	return s.app.sysGetAppConfigs(appTypeID, appID, orgID, versionNumbers)
 }
 
 func (s *systemImpl) SysGetAppConfig(id string) (*model.ApplicationConfig, error) {
 	return s.app.sysGetAppConfig(id)
 }
 
-func (s *systemImpl) SysCreateAppConfig(appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error) {
-	return s.app.sysCreateAppConfig(appTypeID, orgID, data, versionNumbers)
+func (s *systemImpl) SysCreateAppConfig(appTypeID string, appID *string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error) {
+	return s.app.sysCreateAppConfig(appTypeID, appID, orgID, data, versionNumbers)
 }
 
-func (s *systemImpl) SysUpdateAppConfig(id string, appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) error {
-	return s.app.sysUpdateAppConfig(id, appTypeID, orgID, data, versionNumbers)
+func (s *systemImpl) SysUpdateAppConfig(id string, appTypeID string, appID *string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) error {
+	return s.app.sysUpdateAppConfig(id, appTypeID, appID, orgID, data, versionNumbers)
 }
 
 func (s *systemImpl) SysDeleteAppConfig(id string) error {

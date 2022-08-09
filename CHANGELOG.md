@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ## [1.24.2] - 2022-08-08
 ### Added
+- Default app config across app types [#491](https://github.com/rokwire/core-building-block/issues/491)
+- App config version control integration [#358](https://github.com/rokwire/core-building-block/issues/358)
 - Allow passing nil context to WithContext storage functions [#494](https://github.com/rokwire/core-building-block/issues/494)
 - Account system configs [#558](https://github.com/rokwire/core-building-block/issues/558)
 ### Fixed

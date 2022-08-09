@@ -21,7 +21,7 @@ import (
 )
 
 //Application
-//TODO
+//TODO:
 /*
 func applicationToDef(item *model.Application) *Def.Application {
 	if item == nil {
@@ -186,7 +186,11 @@ func organizationConfigToDef(item *model.OrganizationConfig) *Def.OrganizationCo
 
 //App Config
 func appConfigToDef(item model.ApplicationConfig) Def.ApplicationConfig {
-	defConfig := Def.ApplicationConfig{Id: item.ID, AppTypeId: item.ApplicationType.ID, Version: item.Version.VersionNumbers.String(), Data: item.Data}
+	var appTypeID string
+	if item.ApplicationType != nil {
+		appTypeID = item.ApplicationType.ID
+	}
+	defConfig := Def.ApplicationConfig{Id: item.ID, AppTypeId: appTypeID, Version: item.Version.VersionNumbers.String(), Data: item.Data}
 	if item.AppOrg != nil {
 		defConfig.OrgId = &item.AppOrg.Organization.ID
 	}

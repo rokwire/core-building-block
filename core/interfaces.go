@@ -18,8 +18,14 @@ import (
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
 
+	"github.com/google/go-github/v44/github"
 	"github.com/rokwire/logging-library-go/logs"
 )
+
+//Default exposes APIs for the driver adapters
+type Default interface {
+	ProcessGitHubAppConfigWebhook(commits []model.Commit, l *logs.Log) error
+}
 
 //Services exposes APIs for the driver adapters
 type Services interface {
@@ -37,7 +43,7 @@ type Services interface {
 	SerGetAuthTest(l *logs.Log) string
 	SerGetCommonTest(l *logs.Log) string
 
-	SerGetAppConfig(appTypeIdentifier string, orgID *string, versionNumbers model.VersionNumbers, apiKey *string) (*model.ApplicationConfig, error)
+	SerGetAppConfig(appTypeIdentifier string, appID *string, orgID *string, versionNumbers model.VersionNumbers, apiKey *string) (*model.ApplicationConfig, error)
 }
 
 //Administration exposes administration APIs for the driver adapters
@@ -108,10 +114,10 @@ type System interface {
 	SysCreatePermission(name string, description *string, serviceID *string, assigners *[]string) (*model.Permission, error)
 	SysUpdatePermission(name string, description *string, serviceID *string, assigners *[]string) (*model.Permission, error)
 
-	SysGetAppConfigs(appTypeID string, orgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error)
+	SysGetAppConfigs(appTypeID string, appID *string, orgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error)
 	SysGetAppConfig(id string) (*model.ApplicationConfig, error)
-	SysCreateAppConfig(appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error)
-	SysUpdateAppConfig(id string, appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) error
+	SysCreateAppConfig(appTypeID string, appID *string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error)
+	SysUpdateAppConfig(id string, appTypeID string, appID *string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) error
 	SysDeleteAppConfig(id string) error
 
 	SysCreateAuthTypes(code string, description string, isExternal bool, isAnonymous bool, useCredentials bool, ignoreMFA bool, params map[string]interface{}) (*model.AuthType, error)
@@ -195,11 +201,11 @@ type Storage interface {
 
 	FindApplicationType(id string) (*model.ApplicationType, error)
 
-	FindAppConfigs(appTypeIdentifier string, appOrgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error)
-	FindAppConfigByVersion(appTypeIdentifier string, appOrgID *string, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error)
+	FindAppConfigs(appID string, appTypeIdentifier string, appOrgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, []model.ApplicationConfig, error)
+	FindAppConfigByVersion(appID string, appTypeIdentifier string, appOrgID *string, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, []model.ApplicationConfig, error)
 	FindAppConfigByID(ID string) (*model.ApplicationConfig, error)
 	InsertAppConfig(item model.ApplicationConfig) (*model.ApplicationConfig, error)
-	UpdateAppConfig(ID string, appType model.ApplicationType, appOrg *model.ApplicationOrganization, version model.Version, data map[string]interface{}) error
+	UpdateAppConfig(ID string, appType *model.ApplicationType, appOrg *model.ApplicationOrganization, version model.Version, data map[string]interface{}) error
 	DeleteAppConfig(ID string) error
 
 	FindApplicationsOrganizationsByOrgID(orgID string) ([]model.ApplicationOrganization, error)
@@ -207,6 +213,15 @@ type Storage interface {
 	InsertApplicationOrganization(context storage.TransactionContext, applicationOrganization model.ApplicationOrganization) (*model.ApplicationOrganization, error)
 
 	InsertAPIKey(context storage.TransactionContext, apiKey model.APIKey) (*model.APIKey, error)
+}
+
+//GitHub is used by core to load from and send data to GitHub
+type GitHub interface {
+	GetContents(path string) (*github.RepositoryContent, []*github.RepositoryContent, error)
+	IsWebhookConfigPath(path string) bool
+
+	FindWebhookConfig() (*model.WebhookConfig, error)
+	UpdateCachedWebhookConfigs() error
 }
 
 //StorageListener listenes for change data storage events

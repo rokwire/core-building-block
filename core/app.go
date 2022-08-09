@@ -29,6 +29,7 @@ type application struct {
 	build   string
 
 	storage Storage
+	github  GitHub
 
 	listeners []ApplicationListener
 
@@ -52,7 +53,7 @@ func (app *application) addListener(listener ApplicationListener) {
 
 func (app *application) notifyListeners(message string, data interface{}) {
 	go func() {
-		// TODO
+		// TODO:
 	}()
 }
 

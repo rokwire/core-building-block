@@ -43,7 +43,7 @@ type applicationType struct {
 type version struct {
 	ID             string               `bson:"_id"`
 	VersionNumbers model.VersionNumbers `bson:"version_numbers"`
-	AppTypeID      string               `bson:"app_type_id"`
+	AppTypeID      *string              `bson:"app_type_id"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
@@ -51,7 +51,8 @@ type version struct {
 
 type applicationConfig struct {
 	ID        string  `bson:"_id"`
-	AppTypeID string  `bson:"app_type_id"`
+	AppID     string  `bson:"app_id"`
+	AppTypeID *string `bson:"app_type_id"`
 	Version   version `bson:"version"`
 	AppOrgID  *string `bson:"app_org_id"`
 
