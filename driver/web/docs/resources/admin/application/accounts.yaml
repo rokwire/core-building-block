@@ -119,7 +119,7 @@ post:
   description: |
     Create a new admin account
 
-    **Auth:** Requires auth token with `create_accounts` or `all_accounts` permission
+    **Auth:** Requires admin access token with `create_accounts` or `all_accounts` permission
   security:
     - bearerAuth: []
   requestBody:
@@ -150,7 +150,7 @@ put:
   description: |
     Update an existing admin account
 
-    **Auth:** Requires auth token with `update_accounts` or `all_accounts` permission
+    **Auth:** Requires admin access token with `update_accounts` or `all_accounts` permission
   security:
     - bearerAuth: []
   requestBody:
