@@ -315,12 +315,12 @@ func (s *administrationImpl) AdmGetApplications(orgID string) ([]model.Applicati
 	return s.app.admGetApplications(orgID)
 }
 
-func (s *administrationImpl) AdmCreateAppOrgGroup(name string, description string, system bool, permissionNames []string, rolesIDs []string, appID string, orgID string, assignerPermissions []string, systemClaim bool, l *logs.Log) (*model.AppOrgGroup, error) {
-	return s.app.admCreateAppOrgGroup(name, description, system, permissionNames, rolesIDs, appID, orgID, assignerPermissions, systemClaim, l)
+func (s *administrationImpl) AdmCreateAppOrgGroup(name string, description string, system bool, permissionNames []string, rolesIDs []string, accountIDs []string, appID string, orgID string, assignerPermissions []string, systemClaim bool, l *logs.Log) (*model.AppOrgGroup, error) {
+	return s.app.admCreateAppOrgGroup(name, description, system, permissionNames, rolesIDs, accountIDs, appID, orgID, assignerPermissions, systemClaim, l)
 }
 
-func (s *administrationImpl) AdmUpdateAppOrgGroup(ID string, name string, description string, system bool, permissionNames []string, rolesIDs []string, appID string, orgID string, assignerPermissions []string, systemClaim bool, l *logs.Log) (*model.AppOrgGroup, error) {
-	return s.app.admUpdateAppOrgGroup(ID, name, description, system, permissionNames, rolesIDs, appID, orgID, assignerPermissions, systemClaim, l)
+func (s *administrationImpl) AdmUpdateAppOrgGroup(ID string, name string, description string, system bool, permissionNames []string, rolesIDs []string, accountIDs []string, appID string, orgID string, assignerPermissions []string, systemClaim bool, l *logs.Log) (*model.AppOrgGroup, error) {
+	return s.app.admUpdateAppOrgGroup(ID, name, description, system, permissionNames, rolesIDs, accountIDs, appID, orgID, assignerPermissions, systemClaim, l)
 }
 
 func (s *administrationImpl) AdmGetAppOrgGroups(appID string, orgID string) ([]model.AppOrgGroup, error) {

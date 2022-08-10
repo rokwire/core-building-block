@@ -175,7 +175,7 @@ func (cg AppOrgGroup) CheckAssigners(assignerPermissions []string) error {
 	return nil
 }
 
-//GetAssignedPermissionNames returns a list of names of assigned permissions for this group
+// GetAssignedPermissionNames returns a list of names of assigned permissions for this group
 func (cg AppOrgGroup) GetAssignedPermissionNames() []string {
 	names := make([]string, len(cg.Permissions))
 	for i, permission := range cg.Permissions {
@@ -184,7 +184,7 @@ func (cg AppOrgGroup) GetAssignedPermissionNames() []string {
 	return names
 }
 
-//GetAssignedRoleIDs returns a list of ids of assigned roles for this group
+// GetAssignedRoleIDs returns a list of ids of assigned roles for this group
 func (cg AppOrgGroup) GetAssignedRoleIDs() []string {
 	ids := make([]string, len(cg.Roles))
 	for i, role := range cg.Roles {
@@ -446,4 +446,22 @@ func VersionNumbersFromString(version string) *VersionNumbers {
 	}
 
 	return &VersionNumbers{Major: major, Minor: minor, Patch: patch}
+}
+
+// GetMissingAccountIDs returns a list of account IDs missing from items
+func GetMissingAccountIDs(items []Account, ids []string) []string {
+	missingIDs := make([]string, 0)
+	for _, id := range ids {
+		missing := true
+		for _, e := range items {
+			if e.ID == id {
+				missing = false
+				break
+			}
+		}
+		if missing {
+			missingIDs = append(missingIDs, id)
+		}
+	}
+	return missingIDs
 }

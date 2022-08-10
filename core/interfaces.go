@@ -47,8 +47,8 @@ type Administration interface {
 
 	AdmGetApplications(orgID string) ([]model.Application, error)
 
-	AdmCreateAppOrgGroup(name string, description string, system bool, permissionNames []string, rolesIDs []string, appID string, orgID string, assignerPermissions []string, systemClaim bool, l *logs.Log) (*model.AppOrgGroup, error)
-	AdmUpdateAppOrgGroup(ID string, name string, description string, system bool, permissionNames []string, rolesIDs []string, appID string, orgID string, assignerPermissions []string, systemClaim bool, l *logs.Log) (*model.AppOrgGroup, error)
+	AdmCreateAppOrgGroup(name string, description string, system bool, permissionNames []string, rolesIDs []string, accountIDs []string, appID string, orgID string, assignerPermissions []string, systemClaim bool, l *logs.Log) (*model.AppOrgGroup, error)
+	AdmUpdateAppOrgGroup(ID string, name string, description string, system bool, permissionNames []string, rolesIDs []string, accountIDs []string, appID string, orgID string, assignerPermissions []string, systemClaim bool, l *logs.Log) (*model.AppOrgGroup, error)
 	AdmGetAppOrgGroups(appID string, orgID string) ([]model.AppOrgGroup, error)
 	AdmAddAccountsToGroup(appID string, orgID string, groupID string, accountIDs []string, assignerPermissions []string, l *logs.Log) error
 	AdmRemoveAccountsFromGroup(appID string, orgID string, groupID string, accountIDs []string, assignerPermissions []string, l *logs.Log) error
@@ -129,9 +129,9 @@ type Storage interface {
 	FindAuthType(codeOrID string) (*model.AuthType, error)
 
 	FindAccountByID(context storage.TransactionContext, id string) (*model.Account, error)
-	FindAccounts(limit int, offset int, appID string, orgID string, accountID *string, firstName *string, lastName *string, authType *string,
+	FindAccounts(context storage.TransactionContext, limit *int, offset *int, appID string, orgID string, accountID *string, firstName *string, lastName *string, authType *string,
 		authTypeIdentifier *string, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error)
-	FindAccountsByAccountID(appID string, orgID string, accountIDs []string) ([]model.Account, error)
+	FindAccountsByAccountID(context storage.TransactionContext, appID string, orgID string, accountIDs []string) ([]model.Account, error)
 
 	UpdateAccountPreferences(accountID string, preferences map[string]interface{}) error
 	UpdateAccountSystemConfigs(context storage.TransactionContext, accountID string, configs map[string]interface{}) error
@@ -139,8 +139,8 @@ type Storage interface {
 	DeleteAccountPermissions(context storage.TransactionContext, accountID string, hasPermissions bool, permissions []model.Permission) error
 	InsertAccountRoles(context storage.TransactionContext, accountID string, appOrgID string, roles []model.AccountRole) error
 	DeleteAccountRoles(context storage.TransactionContext, accountID string, hasPermissions bool, roleIDs []string) error
-	InsertAccountsGroup(group model.AccountGroup, accounts []model.Account) error
-	RemoveAccountsGroup(groupID string, accounts []model.Account, hasPermissions []bool) error
+	InsertAccountsGroup(context storage.TransactionContext, group model.AccountGroup, accountIDs []string) error
+	RemoveAccountsGroup(context storage.TransactionContext, groupID string, accountIDs []string, hasPermissions []bool) error
 	CountAccountsByRoleID(roleID string) (*int64, error)
 	CountAccountsByGroupID(groupID string) (*int64, error)
 
@@ -174,7 +174,7 @@ type Storage interface {
 
 	FindAppOrgGroups(appOrgID string) ([]model.AppOrgGroup, error)
 	FindAppOrgGroupsByIDs(context storage.TransactionContext, ids []string, appOrgID string) ([]model.AppOrgGroup, error)
-	FindAppOrgGroup(id string, appOrgID string) (*model.AppOrgGroup, error)
+	FindAppOrgGroup(context storage.TransactionContext, id string, appOrgID string) (*model.AppOrgGroup, error)
 	InsertAppOrgGroup(context storage.TransactionContext, item model.AppOrgGroup) error
 	UpdateAppOrgGroup(context storage.TransactionContext, item model.AppOrgGroup) error
 	DeleteAppOrgGroup(id string) error

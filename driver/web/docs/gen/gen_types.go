@@ -604,6 +604,7 @@ type AdminReqAddAccountsToGroup struct {
 
 // AdminReqApplicationGroup defines model for _admin_req_application_group.
 type AdminReqApplicationGroup struct {
+	AccountIds  *[]string `json:"account_ids,omitempty"`
 	Description string    `json:"description"`
 	Name        string    `json:"name"`
 	Permissions *[]string `json:"permissions,omitempty"`

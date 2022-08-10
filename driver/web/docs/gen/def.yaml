@@ -6137,6 +6137,10 @@ components:
           type: array
           items:
             type: string
+        account_ids:
+          type: array
+          items:
+            type: string
     _admin_req_add-accounts-to-group:
       required:
         - account_ids

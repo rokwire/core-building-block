@@ -17,3 +17,7 @@ properties:
     type: array
     items:
       type: string
+  account_ids:
+    type: array
+    items:
+      type: string
