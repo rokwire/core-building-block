@@ -236,6 +236,8 @@ func (app *application) admCreateAppOrgGroup(name string, description string, sy
 
 		//5. assign group to given accounts
 		if len(accountIDs) > 0 {
+			//the group must be assignable because it was just created by the assigner
+
 			accounts, err := app.storage.FindAccountsByAccountID(context, appID, orgID, accountIDs)
 			if err != nil {
 				return errors.Wrap("error finding account", err)
