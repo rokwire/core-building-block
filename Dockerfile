@@ -1,4 +1,4 @@
-FROM golang:1.16-buster as builder
+FROM golang:1.18-buster as builder
 
 ENV CGO_ENABLED=0
 
@@ -8,7 +8,7 @@ WORKDIR /core-app
 COPY . .
 RUN make
 
-FROM alpine:3.11.6
+FROM alpine:3.16.2
 
 #we need timezone database
 RUN apk --no-cache add tzdata

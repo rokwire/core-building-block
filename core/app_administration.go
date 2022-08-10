@@ -669,6 +669,68 @@ func (app *application) admGetAccount(accountID string) (*model.Account, error) 
 	return app.getAccount(accountID)
 }
 
+func (app *application) admGetAccountSystemConfigs(appID string, orgID string, accountID string, l *logs.Log) (map[string]interface{}, error) {
+	//find the account
+	account, err := app.storage.FindAccountByID(nil, accountID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountSystemConfigs, &logutils.FieldArgs{"account_id": accountID}, err)
+	}
+	if account == nil {
+		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeAccountSystemConfigs, &logutils.FieldArgs{"account_id": accountID}, err)
+	}
+	if account.AppOrg.Application.ID != appID || account.AppOrg.Organization.ID != orgID {
+		l.Warnf("someone is trying to get system configs for %s for different app/org", accountID)
+		return nil, errors.Newf("not allowed").SetStatus(utils.ErrorStatusNotAllowed)
+	}
+
+	return account.SystemConfigs, nil
+}
+
+func (app *application) admUpdateAccountSystemConfigs(appID string, orgID string, accountID string, configs map[string]interface{}, l *logs.Log) error {
+	//TODO: If account does not exist, create anonymous account
+	if len(configs) == 0 {
+		return errors.New("no new configs")
+	}
+
+	transaction := func(context storage.TransactionContext) error {
+		//1. verify that the account is for the current app/org
+		account, err := app.storage.FindAccountByID(context, accountID)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountSystemConfigs, &logutils.FieldArgs{"account_id": accountID}, err)
+		}
+		if account == nil {
+			return errors.WrapErrorData(logutils.StatusMissing, model.TypeAccountSystemConfigs, &logutils.FieldArgs{"account_id": accountID}, err)
+		}
+		if account.AppOrg.Application.ID != appID || account.AppOrg.Organization.ID != orgID {
+			l.Warnf("someone is trying to update system configs for %s for different app/org", accountID)
+			return errors.Newf("not allowed").SetStatus(utils.ErrorStatusNotAllowed)
+		}
+
+		//2. merge new configs on top of existing ones
+		accountConfigs := account.SystemConfigs
+		if accountConfigs == nil {
+			accountConfigs = map[string]interface{}{}
+		}
+		for key, val := range configs {
+			if val != nil {
+				accountConfigs[key] = val
+			} else {
+				delete(accountConfigs, key)
+			}
+		}
+
+		//3. update configs
+		err = app.storage.UpdateAccountSystemConfigs(context, accountID, accountConfigs)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountSystemConfigs, &logutils.FieldArgs{"account_id": accountID}, err)
+		}
+
+		return nil
+	}
+
+	return app.storage.PerformTransaction(transaction)
+}
+
 func (app *application) admGetApplicationLoginSessions(appID string, orgID string, identifier *string, accountAuthTypeIdentifier *string,
 	appTypeID *string, appTypeIdentifier *string, anonymous *bool, deviceID *string, ipAddress *string) ([]model.LoginSession, error) {
 	//find the login sessions
@@ -741,6 +803,9 @@ func (app *application) admGrantAccountPermissions(appID string, orgID string, a
 		account, err := app.storage.FindAccountByID(context, accountID)
 		if err != nil {
 			return errors.Wrap("error finding account on permissions granting", err)
+		}
+		if account == nil {
+			return errors.WrapErrorData(logutils.StatusMissing, model.TypeAccount, &logutils.FieldArgs{"account_id": accountID}, err)
 		}
 		if (account.AppOrg.Application.ID != appID) || (account.AppOrg.Organization.ID != orgID) {
 			l.Warnf("someone is trying to grant permissions to %s for different app/org", accountID)
@@ -849,6 +914,9 @@ func (app *application) admGrantAccountRoles(appID string, orgID string, account
 		account, err := app.storage.FindAccountByID(context, accountID)
 		if err != nil {
 			return errors.Wrap("error finding account on roles granting", err)
+		}
+		if account == nil {
+			return errors.WrapErrorData(logutils.StatusMissing, model.TypeAccount, &logutils.FieldArgs{"account_id": accountID}, err)
 		}
 		if (account.AppOrg.Application.ID != appID) || (account.AppOrg.Organization.ID != orgID) {
 			l.Warnf("someone is trying to grant roles to %s for different app/org", accountID)

@@ -37,7 +37,7 @@ import (
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
-//Adapter entity
+// Adapter entity
 type Adapter struct {
 	env       string
 	serviceID string
@@ -62,7 +62,7 @@ type Adapter struct {
 
 type handlerFunc = func(*logs.Log, *http.Request, *tokenauth.Claims) logs.HttpResponse
 
-//Start starts the module
+// Start starts the module
 func (we Adapter) Start() {
 
 	//add listener to the application
@@ -119,6 +119,7 @@ func (we Adapter) Start() {
 	servicesSubRouter.HandleFunc("/account/preferences", we.wrapFunc(we.servicesApisHandler.getPreferences, we.auth.services.user)).Methods("GET")
 	servicesSubRouter.HandleFunc("/account/profile", we.wrapFunc(we.servicesApisHandler.getProfile, we.auth.services.user)).Methods("GET")
 	servicesSubRouter.HandleFunc("/account/profile", we.wrapFunc(we.servicesApisHandler.updateProfile, we.auth.services.user)).Methods("PUT")
+	servicesSubRouter.HandleFunc("/account/system-configs", we.wrapFunc(we.servicesApisHandler.getAccountSystemConfigs, we.auth.services.user)).Methods("GET")
 	servicesSubRouter.HandleFunc("/test", we.wrapFunc(we.servicesApisHandler.getTest, nil)).Methods("GET")                               //Public
 	servicesSubRouter.HandleFunc("/application/configs", we.wrapFunc(we.servicesApisHandler.getApplicationConfigs, nil)).Methods("POST") //Requires API key in request
 	servicesSubRouter.HandleFunc("/application/organization/configs", we.wrapFunc(we.servicesApisHandler.getApplicationOrgConfigs, we.auth.services.standard)).Methods("POST")
@@ -170,6 +171,8 @@ func (we Adapter) Start() {
 	adminSubrouter.HandleFunc("/application/accounts/{id}/permissions", we.wrapFunc(we.adminApisHandler.revokeAccountPermissions, we.auth.admin.permissions)).Methods("DELETE")
 	adminSubrouter.HandleFunc("/application/accounts/{id}/roles", we.wrapFunc(we.adminApisHandler.grantAccountRoles, we.auth.admin.permissions)).Methods("PUT")
 	adminSubrouter.HandleFunc("/application/accounts/{id}/roles", we.wrapFunc(we.adminApisHandler.revokeAccountRoles, we.auth.admin.permissions)).Methods("DELETE")
+	adminSubrouter.HandleFunc("/application/accounts/{id}/system-configs", we.wrapFunc(we.adminApisHandler.getAccountSystemConfigs, we.auth.admin.permissions)).Methods("GET")
+	adminSubrouter.HandleFunc("/application/accounts/{id}/system-configs", we.wrapFunc(we.adminApisHandler.updateAccountSystemConfigs, we.auth.admin.permissions)).Methods("PUT")
 	///
 
 	///enc ///
@@ -422,7 +425,7 @@ func (we Adapter) validateResponse(requestValidationInput *openapi3filter.Reques
 	return nil
 }
 
-//NewWebAdapter creates new WebAdapter instance
+// NewWebAdapter creates new WebAdapter instance
 func NewWebAdapter(env string, serviceID string, serviceRegManager *authservice.ServiceRegManager, port string, coreAPIs *core.APIs, host string, logger *logs.Logger) Adapter {
 	//openAPI doc
 	loader := &openapi3.Loader{Context: context.Background(), IsExternalRefsAllowed: true}
@@ -466,7 +469,7 @@ func NewWebAdapter(env string, serviceID string, serviceRegManager *authservice.
 		encApisHandler: encApisHandler, bbsApisHandler: bbsApisHandler, tpsApisHandler: tpsApisHandler, systemApisHandler: systemApisHandler, coreAPIs: coreAPIs}
 }
 
-//AppListener implements core.ApplicationListener interface
+// AppListener implements core.ApplicationListener interface
 type AppListener struct {
 	adapter *Adapter
 }
