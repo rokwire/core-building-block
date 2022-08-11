@@ -45,7 +45,7 @@ func (h SystemApisHandler) getAppOrgToken(l *logs.Log, r *http.Request, claims *
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("org_id"), nil, http.StatusBadRequest, false)
 	}
 
-	token, err := h.coreAPIs.Auth.GetSystemToken(*claims, appID, orgID, l)
+	token, err := h.coreAPIs.Auth.GetAdminToken(*claims, appID, orgID, l)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, "app org token", nil, err, http.StatusInternalServerError, true)
 	}

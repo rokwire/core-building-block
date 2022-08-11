@@ -1507,25 +1507,9 @@ func (a *Auth) AuthorizeService(claims tokenauth.Claims, serviceID string, appro
 	return token, authorization.Scopes, nil, nil
 }
 
-// GetAdminToken returns an admin token for the specified application
-func (a *Auth) GetAdminToken(claims tokenauth.Claims, appID string, l *logs.Log) (string, error) {
+// GetAdminToken returns an admin token for the specified application and organization
+func (a *Auth) GetAdminToken(claims tokenauth.Claims, appID string, orgID string, l *logs.Log) (string, error) {
 	//verify that the provided appID is valid for the organization
-	appOrg, err := a.storage.FindApplicationOrganization(appID, claims.OrgID)
-	if err != nil {
-		return "", errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"org_id": claims.OrgID, "app_id": appID}, err)
-	}
-	if appOrg == nil {
-		return "", errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"org_id": claims.OrgID, "app_id": appID})
-	}
-
-	adminClaims := a.getStandardClaims(claims.Subject, claims.UID, claims.Name, claims.Email, claims.Phone, claims.Audience, claims.OrgID, appID, claims.AuthType,
-		claims.ExternalIDs, &claims.ExpiresAt, false, false, true, claims.System, claims.Service, claims.FirstParty, claims.SessionID)
-	return a.buildAccessToken(adminClaims, claims.Permissions, claims.Scope)
-}
-
-// GetSystemToken returns a system token for the specified application and organization
-func (a *Auth) GetSystemToken(claims tokenauth.Claims, appID string, orgID string, l *logs.Log) (string, error) {
-	//verify that the requested application organization exists
 	appOrg, err := a.storage.FindApplicationOrganization(appID, orgID)
 	if err != nil {
 		return "", errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"org_id": orgID, "app_id": appID}, err)
@@ -1535,7 +1519,7 @@ func (a *Auth) GetSystemToken(claims tokenauth.Claims, appID string, orgID strin
 	}
 
 	adminClaims := a.getStandardClaims(claims.Subject, claims.UID, claims.Name, claims.Email, claims.Phone, claims.Audience, orgID, appID, claims.AuthType,
-		claims.ExternalIDs, &claims.ExpiresAt, false, false, true, true, claims.Service, claims.FirstParty, claims.SessionID)
+		claims.ExternalIDs, &claims.ExpiresAt, false, false, true, claims.System, claims.Service, claims.FirstParty, claims.SessionID)
 	return a.buildAccessToken(adminClaims, claims.Permissions, claims.Scope)
 }
 
