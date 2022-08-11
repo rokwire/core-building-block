@@ -22,6 +22,7 @@ import (
 
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
+	"github.com/rokwire/core-auth-library-go/v2/authservice"
 	"github.com/rokwire/core-auth-library-go/v2/sigauth"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logutils"
@@ -79,13 +80,27 @@ func (s *signatureServiceAuthImpl) addCredentials(creds *model.ServiceAccountCre
 		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeServiceAccountCredential, nil)
 	}
 
-	now := time.Now().UTC()
-	id, _ := uuid.NewUUID()
+	pubKeyPem, ok := creds.Params["pub_key"].(string)
+	if !ok {
+		return nil, errors.ErrorAction(logutils.ActionParse, "public key", nil)
+	}
+	pubKey := authservice.PubKey{KeyPem: pubKeyPem}
+	if err := pubKey.LoadKeyFromPem(); err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionLoad, "public key", nil, err)
+	}
 
-	creds.ID = id.String()
-	creds.DateCreated = now
+	creds.ID = uuid.NewString()
+	creds.Params = map[string]interface{}{
+		"key_pem": pubKey.KeyPem,
+		"alg":     pubKey.Alg,
+		"key_id":  pubKey.KeyID,
+	}
+	creds.DateCreated = time.Now().UTC()
 
-	return creds.Params, nil
+	displayParams := map[string]interface{}{
+		"pub_key": pubKey.KeyPem,
+	}
+	return displayParams, nil
 }
 
 // initSignatureServiceAuth initializes and registers a new signature service auth instance
