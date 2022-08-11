@@ -18,6 +18,7 @@ properties:
     items:
       type: string
   account_ids:
+    nullable: true
     type: array
     items:
       type: string
