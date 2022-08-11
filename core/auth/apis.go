@@ -45,7 +45,7 @@ func (a *Auth) GetHost() string {
 	return a.host
 }
 
-// Login logs a user in a specific application using the specified credentials and authentication method.
+// Login logs a user into a specific application using the specified credentials and authentication method.
 // The authentication method must be one of the supported for the application.
 //
 //	Input:
@@ -168,7 +168,7 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 	return nil, &model.LoginSession{ID: loginSession.ID, Identifier: loginSession.Identifier, Params: responseParams, State: loginSession.State}, mfaTypes, nil
 }
 
-// Logout logouts an account from app/org
+// Logout logs out an account from app/org
 //
 //	Input:
 //		allSessions (bool): If to remove the current session only or all sessions for the app/org for the account

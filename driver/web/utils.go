@@ -24,7 +24,7 @@ import (
 	"github.com/rokwire/logging-library-go/logutils"
 )
 
-//Helper for authLogin and authLoginMFA
+// Helper for authLogin and authLoginMFA
 func authBuildLoginResponse(l *logs.Log, loginSession *model.LoginSession) logs.HttpResponse {
 	//token
 	accessToken := loginSession.AccessToken
