@@ -6,8 +6,6 @@ require (
 	github.com/coreos/go-oidc v2.2.1+incompatible
 	github.com/getkin/kin-openapi v0.98.0
 	github.com/golang-jwt/jwt v3.2.2+incompatible
-	github.com/golang/protobuf v1.5.2 // indirect
-	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/go-github/v44 v44.1.0
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
@@ -19,13 +17,12 @@ require (
 	github.com/swaggo/http-swagger v1.3.3
 	go.mongodb.org/mongo-driver v1.10.1
 	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa
+	golang.org/x/oauth2 v0.0.0-20220808172628-8227340efae7
 	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4
 	gopkg.in/go-playground/validator.v9 v9.31.0
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	gotest.tools v2.2.0+incompatible
 )
-
-require golang.org/x/oauth2 v0.0.0-20220808172628-8227340efae7
 
 require (
 	github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible // indirect
@@ -40,6 +37,8 @@ require (
 	github.com/go-openapi/swag v0.22.0 // indirect
 	github.com/go-playground/locales v0.14.0 // indirect
 	github.com/go-playground/universal-translator v0.18.0 // indirect
+	github.com/golang/protobuf v1.5.2 // indirect
+	github.com/golang/snappy v0.0.1 // indirect
 	github.com/google/go-cmp v0.5.8 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/invopop/yaml v0.2.0 // indirect
