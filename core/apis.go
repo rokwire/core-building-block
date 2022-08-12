@@ -27,7 +27,7 @@ import (
 	"github.com/rokwire/logging-library-go/logutils"
 )
 
-//APIs exposes to the drivers adapters access to the core functionality
+// APIs exposes to the drivers adapters access to the core functionality
 type APIs struct {
 	Services       Services       //expose to the drivers adapters
 	Administration Administration //expose to the drivers adapters
@@ -48,7 +48,7 @@ type APIs struct {
 	logger *logs.Logger
 }
 
-//Start starts the core part of the application
+// Start starts the core part of the application
 func (c *APIs) Start() {
 	c.app.start()
 	c.Auth.Start()
@@ -59,12 +59,12 @@ func (c *APIs) Start() {
 	}
 }
 
-//AddListener adds application listener
+// AddListener adds application listener
 func (c *APIs) AddListener(listener ApplicationListener) {
 	c.app.addListener(listener)
 }
 
-//GetVersion gives the service version
+// GetVersion gives the service version
 func (c *APIs) GetVersion() string {
 	return c.app.version
 }
@@ -221,7 +221,7 @@ func (c *APIs) storeSystemData() error {
 	return err
 }
 
-//NewCoreAPIs creates new CoreAPIs
+// NewCoreAPIs creates new CoreAPIs
 func NewCoreAPIs(env string, version string, build string, storage Storage, auth auth.APIs, systemInitSettings map[string]string, logger *logs.Logger) *APIs {
 	//add application instance
 	listeners := []ApplicationListener{}
@@ -245,7 +245,7 @@ func NewCoreAPIs(env string, version string, build string, storage Storage, auth
 
 ///
 
-//servicesImpl
+// servicesImpl
 type servicesImpl struct {
 	app *application
 }

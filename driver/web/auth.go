@@ -36,7 +36,7 @@ const (
 	typeCheckServicesAuthRequestToken logutils.MessageActionType = "checking services auth"
 )
 
-//Auth handler
+// Auth handler
 type Auth struct {
 	services *TokenAuthHandlers
 	admin    *TokenAuthHandlers
@@ -48,19 +48,19 @@ type Auth struct {
 	logger *logs.Logger
 }
 
-//Authorization is an interface for auth types
+// Authorization is an interface for auth types
 type Authorization interface {
 	check(req *http.Request) (int, *tokenauth.Claims, error)
 	start()
 }
 
-//TokenAuthorization is an interface for auth types
+// TokenAuthorization is an interface for auth types
 type TokenAuthorization interface {
 	Authorization
 	getTokenAuth() *tokenauth.TokenAuth
 }
 
-//Start starts the auth module
+// Start starts the auth module
 func (auth *Auth) Start() error {
 	auth.logger.Info("Auth -> start")
 
@@ -74,7 +74,7 @@ func (auth *Auth) Start() error {
 	return nil
 }
 
-//NewAuth creates new auth handler
+// NewAuth creates new auth handler
 func NewAuth(coreAPIs *core.APIs, serviceID string, serviceRegManager *authservice.ServiceRegManager, logger *logs.Logger) (*Auth, error) {
 	servicesAuth, err := newServicesAuth(coreAPIs, serviceRegManager, serviceID, logger)
 	if err != nil {
@@ -128,7 +128,7 @@ func NewAuth(coreAPIs *core.APIs, serviceID string, serviceRegManager *authservi
 	return &auth, nil
 }
 
-//TokenAuthHandlers represents token auth handlers
+// TokenAuthHandlers represents token auth handlers
 type TokenAuthHandlers struct {
 	standard      TokenAuthorization
 	permissions   *PermissionsAuth
@@ -143,7 +143,7 @@ func (auth *TokenAuthHandlers) start() {
 	auth.authenticated.start()
 }
 
-//newTokenAuthHandlers creates new auth handlers for a
+// newTokenAuthHandlers creates new auth handlers for a
 func newTokenAuthHandlers(auth TokenAuthorization) (*TokenAuthHandlers, error) {
 	permissionsAuth := newPermissionsAuth(auth)
 	userAuth := newUserAuth(auth)
@@ -153,7 +153,7 @@ func newTokenAuthHandlers(auth TokenAuthorization) (*TokenAuthHandlers, error) {
 	return &authWrappers, nil
 }
 
-//ServicesAuth entity
+// ServicesAuth entity
 type ServicesAuth struct {
 	coreAPIs  *core.APIs
 	tokenAuth *tokenauth.TokenAuth
@@ -203,7 +203,7 @@ func newServicesAuth(coreAPIs *core.APIs, serviceRegManager *authservice.Service
 	return &auth, nil
 }
 
-//AdminAuth entity
+// AdminAuth entity
 type AdminAuth struct {
 	coreAPIs  *core.APIs
 	tokenAuth *tokenauth.TokenAuth
@@ -243,7 +243,7 @@ func newAdminAuth(coreAPIs *core.APIs, serviceRegManager *authservice.ServiceReg
 	return &auth, nil
 }
 
-//EncAuth entity
+// EncAuth entity
 type EncAuth struct {
 	coreAPIs *core.APIs
 
@@ -259,7 +259,7 @@ func newEncAuth(coreAPIs *core.APIs, logger *logs.Logger) *EncAuth {
 	return &auth
 }
 
-//BBsAuth entity
+// BBsAuth entity
 type BBsAuth struct {
 	coreAPIs  *core.APIs
 	tokenAuth *tokenauth.TokenAuth
@@ -303,7 +303,7 @@ func newBBsAuth(coreAPIs *core.APIs, serviceRegManager *authservice.ServiceRegMa
 	return &auth, nil
 }
 
-//TPsAuth entity
+// TPsAuth entity
 type TPsAuth struct {
 	coreAPIs  *core.APIs
 	tokenAuth *tokenauth.TokenAuth
@@ -347,7 +347,7 @@ func newTPsAuth(coreAPIs *core.APIs, serviceRegManager *authservice.ServiceRegMa
 	return &auth, nil
 }
 
-//SystemAuth entity
+// SystemAuth entity
 type SystemAuth struct {
 	coreAPIs  *core.APIs
 	tokenAuth *tokenauth.TokenAuth
@@ -387,8 +387,8 @@ func newSystemAuth(coreAPIs *core.APIs, serviceRegManager *authservice.ServiceRe
 	return &auth, nil
 }
 
-//PermissionsAuth entity
-//This enforces that the user has permissions matching the policy
+// PermissionsAuth entity
+// This enforces that the user has permissions matching the policy
 type PermissionsAuth struct {
 	auth TokenAuthorization
 }
@@ -413,7 +413,7 @@ func newPermissionsAuth(auth TokenAuthorization) *PermissionsAuth {
 	return &permissionsAuth
 }
 
-//UserAuth entity
+// UserAuth entity
 // This enforces that the user is not anonymous
 type UserAuth struct {
 	auth Authorization
@@ -438,7 +438,7 @@ func newUserAuth(auth Authorization) *UserAuth {
 	return &userAuth
 }
 
-//AuthenticatedAuth entity
+// AuthenticatedAuth entity
 // This enforces that the token was the result of direct user authentication. It should be used to protect sensitive account settings
 type AuthenticatedAuth struct {
 	userAuth UserAuth

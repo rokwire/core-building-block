@@ -41,7 +41,7 @@ import (
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
-//Adapter entity
+// Adapter entity
 type Adapter struct {
 	env       string
 	serviceID string
@@ -72,7 +72,7 @@ type Adapter struct {
 
 type handlerFunc = func(*logs.Log, *http.Request, *tokenauth.Claims) logs.HttpResponse
 
-//Start starts the module
+// Start starts the module
 func (we Adapter) Start() {
 
 	//add listener to the application
@@ -540,7 +540,7 @@ func NewWebAdapter(env string, serviceID string, serviceRegManager *authservice.
 		encApisHandler: encApisHandler, bbsApisHandler: bbsApisHandler, tpsApisHandler: tpsApisHandler, systemApisHandler: systemApisHandler, coreAPIs: coreAPIs}
 }
 
-//AppListener implements core.ApplicationListener interface
+// AppListener implements core.ApplicationListener interface
 type AppListener struct {
 	adapter *Adapter
 }
