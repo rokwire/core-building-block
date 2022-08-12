@@ -15,11 +15,14 @@
 package web
 
 import (
+	"bytes"
 	"context"
 	"core-building-block/core"
 	"fmt"
 	"html/template"
 	"net/http"
+	"os"
+	"time"
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/getkin/kin-openapi/openapi3filter"
@@ -28,6 +31,7 @@ import (
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
+	"gopkg.in/yaml.v2"
 
 	"github.com/gorilla/mux"
 
@@ -42,6 +46,12 @@ type Adapter struct {
 	env       string
 	serviceID string
 	port      string
+
+	productionServerURL  string
+	testServerURL        string
+	developmentServerURL string
+
+	cachedYamlDoc []byte
 
 	openAPIRouter routers.Router
 	host          string
@@ -261,7 +271,60 @@ func (we Adapter) serveResetCredential(w http.ResponseWriter, r *http.Request) {
 
 func (we Adapter) serveDoc(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("access-control-allow-origin", "*")
-	http.ServeFile(w, r, "./driver/web/docs/gen/def.yaml")
+	// http.ServeFile(w, r, "./driver/web/docs/gen/def.yaml")
+
+	if we.cachedYamlDoc != nil {
+		http.ServeContent(w, r, "", time.Now(), bytes.NewReader([]byte(we.cachedYamlDoc)))
+	}
+}
+
+func loadYamlDoc(productionServerURL string, testServerURL string, developmentServerURL string) ([]byte, error) {
+	data, _ := os.ReadFile("./driver/web/docs/gen/def.yaml")
+	// yamlMap := make(map[string]interface{})
+	yamlMap := yaml.MapSlice{}
+	err := yaml.Unmarshal(data, &yamlMap)
+	if err != nil {
+		return nil, err
+	}
+	for _, item := range yamlMap {
+		if item.Key == "servers" {
+			if serverList, ok := item.Value.([]interface{}); ok {
+				if len(serverList) == 4 {
+					serverList[0] = overrideBaseURL(productionServerURL, serverList, 0)
+					serverList[1] = overrideBaseURL(testServerURL, serverList, 1)
+					serverList[2] = overrideBaseURL(developmentServerURL, serverList, 2)
+
+					item.Value = serverList
+					break
+				}
+			}
+		}
+	}
+
+	yamlDoc, err := yaml.Marshal(&yamlMap)
+	if err != nil {
+		return nil, err
+	}
+
+	return yamlDoc, nil
+}
+
+func overrideBaseURL(serverURL string, serverList []interface{}, index int) yaml.MapSlice {
+	if serverURL != "" {
+		if serverInfo, ok := serverList[index].(yaml.MapSlice); ok {
+			if len(serverInfo) == 2 {
+				for idx, serverItem := range serverInfo {
+					if serverItem.Key == "url" {
+						serverItem.Value = serverURL
+						serverInfo[idx] = serverItem
+						return serverInfo
+					}
+				}
+			}
+		}
+	}
+
+	return nil
 }
 
 func (we Adapter) serveDocUI() http.Handler {
@@ -425,12 +488,21 @@ func (we Adapter) validateResponse(requestValidationInput *openapi3filter.Reques
 }
 
 //NewWebAdapter creates new WebAdapter instance
-func NewWebAdapter(env string, serviceID string, serviceRegManager *authservice.ServiceRegManager, port string, coreAPIs *core.APIs, host string, logger *logs.Logger) Adapter {
+func NewWebAdapter(env string, serviceID string, serviceRegManager *authservice.ServiceRegManager, port string, coreAPIs *core.APIs, host string, prodServerURL string, testServerURL string, devServerURL string, logger *logs.Logger) Adapter {
 	//openAPI doc
 	loader := &openapi3.Loader{Context: context.Background(), IsExternalRefsAllowed: true}
-	doc, err := loader.LoadFromFile("driver/web/docs/gen/def.yaml")
+	// doc, err := loader.LoadFromFile("driver/web/docs/gen/def.yaml")
+	// if err != nil {
+	// 	logger.Fatalf("error on openapi3 load from file - %s", err.Error())
+	// }
+
+	yamlDoc, err := loadYamlDoc(prodServerURL, testServerURL, devServerURL)
 	if err != nil {
-		logger.Fatalf("error on openapi3 load from file - %s", err.Error())
+
+	}
+	doc, err := loader.LoadFromData(yamlDoc)
+	if err != nil {
+
 	}
 	err = doc.Validate(loader.Context)
 	if err != nil {
@@ -464,7 +536,7 @@ func NewWebAdapter(env string, serviceID string, serviceRegManager *authservice.
 	bbsApisHandler := NewBBsApisHandler(coreAPIs)
 	tpsApisHandler := NewTPSApisHandler(coreAPIs)
 	systemApisHandler := NewSystemApisHandler(coreAPIs)
-	return Adapter{env: env, port: port, openAPIRouter: openAPIRouter, host: host, auth: auth, logger: logger, defaultApisHandler: defaultApisHandler, servicesApisHandler: servicesApisHandler, adminApisHandler: adminApisHandler,
+	return Adapter{env: env, port: port, productionServerURL: prodServerURL, testServerURL: testServerURL, developmentServerURL: devServerURL, cachedYamlDoc: yamlDoc, openAPIRouter: openAPIRouter, host: host, auth: auth, logger: logger, defaultApisHandler: defaultApisHandler, servicesApisHandler: servicesApisHandler, adminApisHandler: adminApisHandler,
 		encApisHandler: encApisHandler, bbsApisHandler: bbsApisHandler, tpsApisHandler: tpsApisHandler, systemApisHandler: systemApisHandler, coreAPIs: coreAPIs}
 }
 
