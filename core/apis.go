@@ -28,7 +28,7 @@ import (
 	// with go modules enabled (GO111MODULE=on or outside GOPATH)
 )
 
-//APIs exposes to the drivers adapters access to the core functionality
+// APIs exposes to the drivers adapters access to the core functionality
 type APIs struct {
 	Services       Services       //expose to the drivers adapters
 	Administration Administration //expose to the drivers adapters
@@ -50,7 +50,7 @@ type APIs struct {
 	logger *logs.Logger
 }
 
-//Start starts the core part of the application
+// Start starts the core part of the application
 func (c *APIs) Start() {
 	c.app.start()
 	c.Auth.Start()
@@ -61,12 +61,12 @@ func (c *APIs) Start() {
 	}
 }
 
-//AddListener adds application listener
+// AddListener adds application listener
 func (c *APIs) AddListener(listener ApplicationListener) {
 	c.app.addListener(listener)
 }
 
-//GetVersion gives the service version
+// GetVersion gives the service version
 func (c *APIs) GetVersion() string {
 	return c.app.version
 }
@@ -223,7 +223,7 @@ func (c *APIs) storeSystemData() error {
 	return err
 }
 
-//NewCoreAPIs creates new CoreAPIs
+// NewCoreAPIs creates new CoreAPIs
 func NewCoreAPIs(env string, version string, build string, storage Storage, github GitHub, auth auth.APIs, systemInitSettings map[string]string, githubWebhookRequestToken string, githubAppConfigBranch string, logger *logs.Logger) *APIs {
 	//add application instance
 	listeners := []ApplicationListener{}
@@ -283,6 +283,10 @@ func (s *servicesImpl) SerGetProfile(accountID string) (*model.Profile, error) {
 
 func (s *servicesImpl) SerGetPreferences(accountID string) (map[string]interface{}, error) {
 	return s.app.serGetPreferences(accountID)
+}
+
+func (s *servicesImpl) SerGetAccountSystemConfigs(accountID string) (map[string]interface{}, error) {
+	return s.app.serGetAccountSystemConfigs(accountID)
 }
 
 func (s *servicesImpl) SerUpdateAccountPreferences(id string, preferences map[string]interface{}) error {
@@ -377,6 +381,14 @@ func (s *administrationImpl) AdmGetAccounts(limit int, offset int, appID string,
 
 func (s *administrationImpl) AdmGetAccount(accountID string) (*model.Account, error) {
 	return s.app.admGetAccount(accountID)
+}
+
+func (s *administrationImpl) AdmGetAccountSystemConfigs(appID string, orgID string, accountID string, l *logs.Log) (map[string]interface{}, error) {
+	return s.app.admGetAccountSystemConfigs(appID, orgID, accountID, l)
+}
+
+func (s *administrationImpl) AdmUpdateAccountSystemConfigs(appID string, orgID string, accountID string, configs map[string]interface{}, l *logs.Log) error {
+	return s.app.admUpdateAccountSystemConfigs(appID, orgID, accountID, configs, l)
 }
 
 func (s *administrationImpl) AdmGrantAccountPermissions(appID string, orgID string, accountID string, permissionNames []string, assignerPermissions []string, l *logs.Log) error {

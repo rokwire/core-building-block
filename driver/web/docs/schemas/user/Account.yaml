@@ -22,6 +22,10 @@ properties:
       $ref: "./AccountAuthType.yaml"
   preferences:
     type: object
+    nullable: true
+  system_configs:
+    type: object
+    nullable: true
   profile:
     $ref: "./Profile.yaml"
   devices:

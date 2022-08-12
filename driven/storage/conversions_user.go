@@ -18,7 +18,7 @@ import (
 	"core-building-block/core/model"
 )
 
-//Account
+// Account
 func accountFromStorage(item account, appOrg model.ApplicationOrganization) model.Account {
 	id := item.ID
 	permissions := item.Permissions
@@ -32,7 +32,7 @@ func accountFromStorage(item account, appOrg model.ApplicationOrganization) mode
 	dateUpdated := item.DateUpdated
 	return model.Account{ID: id, AppOrg: appOrg, HasPermissions: item.HasPermissions, Permissions: permissions,
 		Roles: roles, Groups: groups, AuthTypes: authTypes, MFATypes: mfaTypes, ExternalIDs: item.ExternalIDs,
-		Preferences: item.Preferences, Profile: profile, Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated}
+		Preferences: item.Preferences, Profile: profile, SystemConfigs: item.SystemConfigs, Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated}
 }
 
 func accountsFromStorage(items []account, appOrg model.ApplicationOrganization) []model.Account {
@@ -61,7 +61,7 @@ func accountToStorage(item *model.Account) *account {
 	dateUpdated := item.DateUpdated
 
 	return &account{ID: id, AppOrgID: appOrgID, HasPermissions: item.HasPermissions, Permissions: permissions, Roles: roles, Groups: groups, AuthTypes: authTypes,
-		MFATypes: mfaTypes, ExternalIDs: item.ExternalIDs, Preferences: item.Preferences, Profile: profile, Devices: devices,
+		MFATypes: mfaTypes, ExternalIDs: item.ExternalIDs, Preferences: item.Preferences, Profile: profile, SystemConfigs: item.SystemConfigs, Devices: devices,
 		DateCreated: dateCreated, DateUpdated: dateUpdated}
 }
 
@@ -93,7 +93,7 @@ func accountDeviceToStorage(item model.Device) userDevice {
 		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
-//AccountAuthType
+// AccountAuthType
 func accountAuthTypeFromStorage(item accountAuthType) model.AccountAuthType {
 	id := item.ID
 	authType := model.AuthType{ID: item.AuthTypeID, Code: item.AuthTypeCode}
@@ -141,7 +141,7 @@ func accountAuthTypesToStorage(items []model.AccountAuthType) []accountAuthType 
 	return res
 }
 
-//AccountRole
+// AccountRole
 func accountRoleFromStorage(item *accountRole, appOrg model.ApplicationOrganization) model.AccountRole {
 	if item == nil {
 		return model.AccountRole{}
@@ -180,7 +180,7 @@ func accountRolesToStorage(items []model.AccountRole) []accountRole {
 	return res
 }
 
-//ApplicationGroup
+// ApplicationGroup
 func accountGroupFromStorage(item *accountGroup, appOrg model.ApplicationOrganization) model.AccountGroup {
 	if item == nil {
 		return model.AccountGroup{}
@@ -219,7 +219,7 @@ func accountGroupsToStorage(items []model.AccountGroup) []accountGroup {
 	return res
 }
 
-//Profile
+// Profile
 func profileFromStorage(item profile) model.Profile {
 	return model.Profile{ID: item.ID, PhotoURL: item.PhotoURL, FirstName: item.FirstName, LastName: item.LastName,
 		Email: item.Email, Phone: item.Phone, BirthYear: item.BirthYear, Address: item.Address, ZipCode: item.ZipCode,
@@ -264,7 +264,7 @@ func profileToStorage(item model.Profile) profile {
 		State: item.State, Country: item.Country, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
-//Device
+// Device
 func deviceToStorage(item *model.Device) *device {
 	if item == nil {
 		return nil
@@ -278,7 +278,7 @@ func deviceFromStorage(item device) model.Device {
 	return model.Device{ID: item.ID, DeviceID: item.DeviceID, Type: item.Type, OS: item.OS, DateUpdated: item.DateUpdated}
 }
 
-//Credential
+// Credential
 func credentialFromStorage(item credential) model.Credential {
 	accountAuthTypes := make([]model.AccountAuthType, len(item.AccountsAuthTypes))
 	for i, id := range item.AccountsAuthTypes {
@@ -302,7 +302,7 @@ func credentialToStorage(item *model.Credential) *credential {
 		Value: item.Value, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
-//MFA
+// MFA
 func mfaTypesFromStorage(items []mfaType) []model.MFAType {
 	res := make([]model.MFAType, len(items))
 	for i, mfa := range items {

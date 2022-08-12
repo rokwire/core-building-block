@@ -6,9 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [1.24.2] - 2022-08-08
 ### Added
 - App config version control integration [#358](https://github.com/rokwire/core-building-block/issues/358)
 - Allow passing nil context to WithContext storage functions [#494](https://github.com/rokwire/core-building-block/issues/494)
+- Account system configs [#558](https://github.com/rokwire/core-building-block/issues/558)
 ### Fixed
 - Authorization policy comments not working [#506](https://github.com/rokwire/core-building-block/issues/506)
 

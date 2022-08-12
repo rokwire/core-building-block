@@ -42,14 +42,27 @@ func (app *application) serGetPreferences(accountID string) (map[string]interfac
 	//find the account
 	account, err := app.storage.FindAccountByID(nil, accountID)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountPreferences, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountPreferences, &logutils.FieldArgs{"account_id": accountID}, err)
 	}
 	if account == nil {
-		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeAccountPreferences, nil, err)
+		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeAccountPreferences, &logutils.FieldArgs{"account_id": accountID}, err)
 	}
 
 	preferences := account.Preferences
 	return preferences, nil
+}
+
+func (app *application) serGetAccountSystemConfigs(accountID string) (map[string]interface{}, error) {
+	//find the account
+	account, err := app.storage.FindAccountByID(nil, accountID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountSystemConfigs, &logutils.FieldArgs{"account_id": accountID}, err)
+	}
+	if account == nil {
+		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeAccountSystemConfigs, &logutils.FieldArgs{"account_id": accountID}, err)
+	}
+
+	return account.SystemConfigs, nil
 }
 
 func (app *application) serUpdateProfile(accountID string, profile model.Profile) error {

@@ -29,7 +29,7 @@ const (
 	typeAnonymousCreds logutils.MessageDataType = "anonymous creds"
 )
 
-//API Key implementation of authType
+// API Key implementation of authType
 type anonymousAuthImpl struct {
 	auth     *Auth
 	authType string
@@ -57,7 +57,7 @@ func (a *anonymousAuthImpl) checkCredentials(creds string) (string, map[string]i
 	return anonymousID, params, nil
 }
 
-//initAnonymousAuth initializes and registers a new API key auth instance
+// initAnonymousAuth initializes and registers a new API key auth instance
 func initAnonymousAuth(auth *Auth) (*anonymousAuthImpl, error) {
 	anonymous := &anonymousAuthImpl{auth: auth, authType: AuthTypeAnonymous}
 

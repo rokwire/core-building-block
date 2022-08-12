@@ -28,21 +28,21 @@ import (
 	"github.com/rokwire/logging-library-go/logutils"
 )
 
-//DefaultApisHandler handles default APIs implementation - version etc
+// DefaultApisHandler handles default APIs implementation - version etc
 type DefaultApisHandler struct {
 	coreAPIs                  *core.APIs
 	githubWebhookRequestToken string
 	githubAppConfigBranch     string
 }
 
-//getVersion gives the service version
+// getVersion gives the service version
 func (h DefaultApisHandler) getVersion(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	version := h.coreAPIs.GetVersion()
 
 	return l.HttpResponseSuccessMessage(version)
 }
 
-//getOpenIDConfiguration gives the OpenID Connect Discovery page
+// getOpenIDConfiguration gives the OpenID Connect Discovery page
 func (h DefaultApisHandler) getOpenIDConfiguration(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	discovery := Def.OIDCDiscovery{Issuer: h.coreAPIs.Auth.GetHost(), JwksUri: h.coreAPIs.Auth.GetHost() + "/tps/auth-keys"}
 
@@ -92,7 +92,7 @@ func (h DefaultApisHandler) handleWebhookConfigChange(l *logs.Log, r *http.Reque
 	return l.HttpResponseSuccess()
 }
 
-//NewDefaultApisHandler creates new rest services Handler instance
+// NewDefaultApisHandler creates new rest services Handler instance
 func NewDefaultApisHandler(coreAPIs *core.APIs) DefaultApisHandler {
 	return DefaultApisHandler{coreAPIs: coreAPIs}
 }

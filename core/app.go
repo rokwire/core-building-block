@@ -22,7 +22,7 @@ import (
 	"github.com/rokwire/logging-library-go/logutils"
 )
 
-//application represents the core application code based on hexagonal architecture
+// application represents the core application code based on hexagonal architecture
 type application struct {
 	env     string
 	version string
@@ -36,14 +36,14 @@ type application struct {
 	auth auth.APIs
 }
 
-//start starts the core part of the application
+// start starts the core part of the application
 func (app *application) start() {
 	//set storage listener
 	storageListener := StorageListener{app: app}
 	app.storage.RegisterStorageListener(&storageListener)
 }
 
-//addListener adds application listener
+// addListener adds application listener
 func (app *application) addListener(listener ApplicationListener) {
 	//TODO
 	//logs.Println("Application -> AddListener")
