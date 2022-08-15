@@ -97,12 +97,12 @@ func (m *recoveryMfaImpl) enroll(identifier string) (*model.MFAType, error) {
 	return &model.MFAType{ID: id.String(), Type: MfaTypeRecovery, Verified: true, Params: params, DateCreated: time.Now().UTC()}, nil
 }
 
-//sendCode not used for recovery
+// sendCode not used for recovery
 func (m *recoveryMfaImpl) sendCode(identifier string) (string, *time.Time, error) {
 	return "", nil, errors.New(logutils.Unimplemented)
 }
 
-//initRecoveryMfa initializes and registers a new recovery mfa instance
+// initRecoveryMfa initializes and registers a new recovery mfa instance
 func initRecoveryMfa(auth *Auth) (*recoveryMfaImpl, error) {
 	recovery := &recoveryMfaImpl{auth: auth, mfaType: MfaTypeRecovery}
 
