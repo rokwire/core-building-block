@@ -248,7 +248,7 @@ func NewCoreAPIs(env string, version string, build string, storage Storage, gith
 
 ///
 
-//defaultImpl
+// defaultImpl
 type defaultImpl struct {
 	app *application
 }
@@ -261,7 +261,7 @@ func (s *defaultImpl) UpdateCachedWebhookConfigs() error {
 	return s.app.updateCachedWebhookConfigs()
 }
 
-//servicesImpl
+// servicesImpl
 type servicesImpl struct {
 	auth auth.APIs
 	app  *application

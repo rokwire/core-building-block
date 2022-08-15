@@ -15,7 +15,7 @@ import (
 	"gopkg.in/go-playground/validator.v9"
 )
 
-//Adapter implements the GitHub interface
+// Adapter implements the GitHub interface
 type Adapter struct {
 	githubToken             string
 	githubOrganizationName  string
@@ -29,7 +29,7 @@ type Adapter struct {
 	webhookConfigsLock  *sync.RWMutex
 }
 
-//Start starts the github adapter
+// Start starts the github adapter
 func (a *Adapter) Start() error {
 	// cache webhook config
 	err := a.cacheWebhookConfigs()
@@ -132,7 +132,7 @@ func (a *Adapter) GetContents(path string) (string, bool, error) {
 	return contentString, isWebhookConfigPath, nil
 }
 
-//NewGitHubAdapter creates a new GitHub adapter instance
+// NewGitHubAdapter creates a new GitHub adapter instance
 func NewGitHubAdapter(githubToken string, githubOrgnizationName string, githubRepoName string, githubWebhookConfigPath string, githubAppConfigBranch string, logger *logs.Logger) *Adapter {
 	cachedWebhookConfigs := &model.WebhookConfig{}
 	webhookConfigsLock := &sync.RWMutex{}
