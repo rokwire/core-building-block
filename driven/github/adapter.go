@@ -18,7 +18,7 @@ import (
 //Adapter implements the GitHub interface
 type Adapter struct {
 	githubToken             string
-	githubOrgnizationName   string
+	githubOrganizationName  string
 	githubRepoName          string
 	githubWebhookConfigPath string
 	githubAppConfigBranch   string
@@ -30,9 +30,9 @@ type Adapter struct {
 }
 
 //Start starts the github adapter
-func (sa *Adapter) Start() error {
+func (a *Adapter) Start() error {
 	// cache webhook config
-	err := sa.cacheWebhookConfigs()
+	err := a.cacheWebhookConfigs()
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionCache, model.TypeWebhookConfig, nil, err)
 	}
@@ -41,56 +41,56 @@ func (sa *Adapter) Start() error {
 }
 
 // UpdateCachedWebhookConfigs updates the webhook configs cache
-func (sa *Adapter) UpdateCachedWebhookConfigs() error {
-	return sa.cacheWebhookConfigs()
+func (a *Adapter) UpdateCachedWebhookConfigs() error {
+	return a.cacheWebhookConfigs()
 }
 
-func (sa *Adapter) cacheWebhookConfigs() error {
-	sa.logger.Info("cacheWebhookConfigs..")
+func (a *Adapter) cacheWebhookConfigs() error {
+	a.logger.Info("cacheWebhookConfigs..")
 
-	webhookConfigs, err := sa.loadWebhookConfigs()
+	webhookConfigs, err := a.loadWebhookConfigs()
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeWebhookConfig, nil, err)
 	}
 
-	sa.setCachedWebhookConfigs(webhookConfigs)
+	a.setCachedWebhookConfigs(webhookConfigs)
 
 	return nil
 }
 
 // FindWebhookConfig finds webhook configs
-func (sa *Adapter) FindWebhookConfig() (*model.WebhookConfig, error) {
-	return sa.getCachedWebhookConfig()
+func (a *Adapter) FindWebhookConfig() (*model.WebhookConfig, error) {
+	return a.getCachedWebhookConfig()
 }
 
-func (sa *Adapter) setCachedWebhookConfigs(webhookConfigs *model.WebhookConfig) {
+func (a *Adapter) setCachedWebhookConfigs(webhookConfigs *model.WebhookConfig) {
 	if webhookConfigs == nil {
 		return
 	}
 
-	sa.webhookConfigsLock.Lock()
-	defer sa.webhookConfigsLock.Unlock()
+	a.webhookConfigsLock.Lock()
+	defer a.webhookConfigsLock.Unlock()
 
 	// sa.cachedWebhookConfigs = &syncmap.Map{}
 	validate := validator.New()
 
 	err := validate.Struct(webhookConfigs)
 	if err != nil {
-		sa.logger.Errorf("failed to validate and cache webhook config: %s", err.Error())
+		a.logger.Errorf("failed to validate and cache webhook config: %s", err.Error())
 	} else {
-		sa.cachedWebhookConfig = webhookConfigs
+		a.cachedWebhookConfig = webhookConfigs
 	}
 }
 
-func (sa *Adapter) getCachedWebhookConfig() (*model.WebhookConfig, error) {
-	sa.webhookConfigsLock.Lock()
-	defer sa.webhookConfigsLock.Unlock()
+func (a *Adapter) getCachedWebhookConfig() (*model.WebhookConfig, error) {
+	a.webhookConfigsLock.Lock()
+	defer a.webhookConfigsLock.Unlock()
 
-	return sa.cachedWebhookConfig, nil
+	return a.cachedWebhookConfig, nil
 }
 
-func (sa *Adapter) loadWebhookConfigs() (*model.WebhookConfig, error) {
-	contentString, _, err := sa.GetContents(sa.githubWebhookConfigPath)
+func (a *Adapter) loadWebhookConfigs() (*model.WebhookConfig, error) {
+	contentString, _, err := a.GetContents(a.githubWebhookConfigPath)
 	if err != nil {
 		fmt.Printf("fileContent.GetContent returned error: %v", err)
 	}
@@ -105,21 +105,21 @@ func (sa *Adapter) loadWebhookConfigs() (*model.WebhookConfig, error) {
 }
 
 // GetContents get file content from GitHub
-func (sa *Adapter) GetContents(path string) (string, bool, error) {
+func (a *Adapter) GetContents(path string) (string, bool, error) {
 	isWebhookConfigPath := false
-	if path == sa.githubWebhookConfigPath {
+	if path == a.githubWebhookConfigPath {
 		isWebhookConfigPath = true
 	}
 
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: sa.githubToken},
+		&oauth2.Token{AccessToken: a.githubToken},
 	)
 	tc := oauth2.NewClient(ctx, ts)
 
 	client := github.NewClient(tc)
 
-	fileContent, _, _, err := client.Repositories.GetContents(ctx, sa.githubOrgnizationName, sa.githubRepoName, path, &github.RepositoryContentGetOptions{Ref: sa.githubAppConfigBranch})
+	fileContent, _, _, err := client.Repositories.GetContents(ctx, a.githubOrganizationName, a.githubRepoName, path, &github.RepositoryContentGetOptions{Ref: a.githubAppConfigBranch})
 	if err != nil || fileContent == nil {
 		return "", isWebhookConfigPath, errors.WrapErrorAction(logutils.ActionGet, model.TypeGithubContent, nil, err)
 	}
@@ -137,5 +137,5 @@ func NewGitHubAdapter(githubToken string, githubOrgnizationName string, githubRe
 	cachedWebhookConfigs := &model.WebhookConfig{}
 	webhookConfigsLock := &sync.RWMutex{}
 
-	return &Adapter{cachedWebhookConfig: cachedWebhookConfigs, webhookConfigsLock: webhookConfigsLock, githubToken: githubToken, githubOrgnizationName: githubOrgnizationName, githubRepoName: githubRepoName, githubWebhookConfigPath: githubWebhookConfigPath, githubAppConfigBranch: githubAppConfigBranch, logger: logger}
+	return &Adapter{cachedWebhookConfig: cachedWebhookConfigs, webhookConfigsLock: webhookConfigsLock, githubToken: githubToken, githubOrganizationName: githubOrgnizationName, githubRepoName: githubRepoName, githubWebhookConfigPath: githubWebhookConfigPath, githubAppConfigBranch: githubAppConfigBranch, logger: logger}
 }

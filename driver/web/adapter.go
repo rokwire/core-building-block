@@ -427,7 +427,7 @@ func (we Adapter) validateResponse(requestValidationInput *openapi3filter.Reques
 }
 
 // NewWebAdapter creates new WebAdapter instance
-func NewWebAdapter(env string, serviceID string, serviceRegManager *authservice.ServiceRegManager, port string, coreAPIs *core.APIs, host string, logger *logs.Logger) Adapter {
+func NewWebAdapter(env string, serviceID string, serviceRegManager *authservice.ServiceRegManager, port string, coreAPIs *core.APIs, host string, githubWebhookSecret string, githubAppConfigBranch string, logger *logs.Logger) Adapter {
 	//openAPI doc
 	loader := &openapi3.Loader{Context: context.Background(), IsExternalRefsAllowed: true}
 	doc, err := loader.LoadFromFile("driver/web/docs/gen/def.yaml")
@@ -459,7 +459,7 @@ func NewWebAdapter(env string, serviceID string, serviceRegManager *authservice.
 		logger.Fatal(err.Error())
 	}
 
-	defaultApisHandler := NewDefaultApisHandler(coreAPIs)
+	defaultApisHandler := NewDefaultApisHandler(coreAPIs, githubWebhookSecret, githubAppConfigBranch)
 	servicesApisHandler := NewServicesApisHandler(coreAPIs)
 	adminApisHandler := NewAdminApisHandler(coreAPIs)
 	encApisHandler := NewEncApisHandler(coreAPIs)

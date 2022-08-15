@@ -75,16 +75,16 @@ func main() {
 	mongoTimeout := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_MONGO_TIMEOUT", false, false)
 	// webhook configs
 	githubToken := envLoader.GetAndLogEnvVar("GITHUB_TOKEN", false, false)
-	githubWebhookRequestToken := envLoader.GetAndLogEnvVar("GITHUB_APP_CONFIG_WEBHOOK_REQUEST_TOKEN", false, false)
-	githubOrgnizationName := envLoader.GetAndLogEnvVar("GITHUB_APP_CONFIG_ORG_NAME", false, false)
+	githubWebhookSecret := envLoader.GetAndLogEnvVar("GITHUB_APP_CONFIG_WEBHOOK_SECRET", false, false)
+	githubOrganizationName := envLoader.GetAndLogEnvVar("GITHUB_APP_CONFIG_ORG_NAME", false, false)
 	githubRepoName := envLoader.GetAndLogEnvVar("GITHUB_APP_CONFIG_REPO_NAME", false, false)
 	githubWebhookConfigPath := envLoader.GetAndLogEnvVar("GITHUB_APP_CONFIG_WEBHOOK_CONFIG_PATH", false, false)
 	githubAppConfigBranch := envLoader.GetAndLogEnvVar("GITHUB_APP_CONFIG_BRANCH", false, false)
 
-	githubAdapter := github.NewGitHubAdapter(githubToken, githubOrgnizationName, githubRepoName, githubWebhookConfigPath, githubAppConfigBranch, logger)
+	githubAdapter := github.NewGitHubAdapter(githubToken, githubOrganizationName, githubRepoName, githubWebhookConfigPath, githubAppConfigBranch, logger)
 	err = githubAdapter.Start()
 	if err != nil {
-		logger.Fatalf("Cannot start the GitHub adapter: %v", err)
+		logger.Warnf("Cannot start the GitHub adapter: %v", err)
 	}
 
 	storageAdapter := storage.NewStorageAdapter(mongoDBAuth, mongoDBName, mongoTimeout, logger)
@@ -171,10 +171,10 @@ func main() {
 	}
 
 	//core
-	coreAPIs := core.NewCoreAPIs(env, Version, Build, storageAdapter, githubAdapter, auth, systemInitSettings, githubWebhookRequestToken, githubAppConfigBranch, logger)
+	coreAPIs := core.NewCoreAPIs(env, Version, Build, storageAdapter, githubAdapter, auth, systemInitSettings, logger)
 	coreAPIs.Start()
 
 	//web adapter
-	webAdapter := web.NewWebAdapter(env, serviceID, auth.ServiceRegManager, port, coreAPIs, host, logger)
+	webAdapter := web.NewWebAdapter(env, serviceID, auth.ServiceRegManager, port, coreAPIs, host, githubWebhookSecret, githubAppConfigBranch, logger)
 	webAdapter.Start()
 }

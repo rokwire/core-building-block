@@ -224,7 +224,7 @@ func (c *APIs) storeSystemData() error {
 }
 
 // NewCoreAPIs creates new CoreAPIs
-func NewCoreAPIs(env string, version string, build string, storage Storage, github GitHub, auth auth.APIs, systemInitSettings map[string]string, githubWebhookRequestToken string, githubAppConfigBranch string, logger *logs.Logger) *APIs {
+func NewCoreAPIs(env string, version string, build string, storage Storage, github GitHub, auth auth.APIs, systemInitSettings map[string]string, logger *logs.Logger) *APIs {
 	//add application instance
 	listeners := []ApplicationListener{}
 	application := application{env: env, version: version, build: build, storage: storage, github: github, listeners: listeners, auth: auth}
@@ -235,7 +235,7 @@ func NewCoreAPIs(env string, version string, build string, storage Storage, gith
 	encryptionImpl := &encryptionImpl{app: &application}
 	bbsImpl := &bbsImpl{app: &application}
 	systemImpl := &systemImpl{app: &application}
-	defaultImpl := &defaultImpl{app: &application, githubWebhookRequestToken: githubWebhookRequestToken, githubAppConfigBranch: githubAppConfigBranch}
+	defaultImpl := &defaultImpl{app: &application}
 
 	//+ auth
 	coreAPIs := APIs{Default: defaultImpl, Services: servicesImpl, Administration: administrationImpl, Encryption: encryptionImpl,
@@ -250,9 +250,7 @@ func NewCoreAPIs(env string, version string, build string, storage Storage, gith
 
 //defaultImpl
 type defaultImpl struct {
-	githubWebhookRequestToken string
-	githubAppConfigBranch     string
-	app                       *application
+	app *application
 }
 
 func (s *defaultImpl) ProcessGitHubAppConfigWebhook(commits []model.Commit, l *logs.Log) error {

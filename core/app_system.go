@@ -259,9 +259,9 @@ func (app *application) sysCreateAppConfig(appTypeID string, orgID *string, data
 	if applicationType == nil {
 		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationType, logutils.StringArgs(appTypeID))
 	}
-	if len(applicationType.Versions) == 0 {
-		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationTypeVersionList, logutils.StringArgs(appTypeID))
-	}
+	// if len(applicationType.Versions) == 0 {
+	// 	return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationTypeVersionList, logutils.StringArgs(appTypeID))
+	// }
 
 	var appOrg *model.ApplicationOrganization
 	if orgID != nil {

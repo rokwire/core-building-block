@@ -30,9 +30,9 @@ import (
 
 // DefaultApisHandler handles default APIs implementation - version etc
 type DefaultApisHandler struct {
-	coreAPIs                  *core.APIs
-	githubWebhookRequestToken string
-	githubAppConfigBranch     string
+	coreAPIs              *core.APIs
+	githubWebhookSecret   string
+	githubAppConfigBranch string
 }
 
 // getVersion gives the service version
@@ -55,15 +55,13 @@ func (h DefaultApisHandler) getOpenIDConfiguration(l *logs.Log, r *http.Request,
 }
 
 func (h DefaultApisHandler) handleWebhookConfigChange(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	if h.githubWebhookSecret == "" {
+		return l.HttpResponseErrorData(logutils.StatusMissing, "config", logutils.StringArgs("github webhook secret"), nil, http.StatusInternalServerError, false)
+	}
 	// verify webhook request signature
-	data, err := github.ValidatePayload(r, []byte(h.githubWebhookRequestToken))
-
-	// if string(payload) != body {
-	// err = fmt.Errorf("ValidatePayload = %q, want %q", payload, body)
-	// }
-
+	data, err := github.ValidatePayload(r, []byte(h.githubWebhookSecret))
 	if err != nil {
-		return l.HttpResponseErrorData(logutils.MessageDataStatus(logutils.ActionValidate), model.TypeWebhookSecretToken, nil, nil, http.StatusBadRequest, false)
+		return l.HttpResponseErrorData(logutils.MessageDataStatus(logutils.ActionValidate), model.TypeWebhookSecretToken, nil, err, http.StatusBadRequest, false)
 	}
 
 	var requestData model.WebhookRequest
@@ -93,6 +91,6 @@ func (h DefaultApisHandler) handleWebhookConfigChange(l *logs.Log, r *http.Reque
 }
 
 // NewDefaultApisHandler creates new rest services Handler instance
-func NewDefaultApisHandler(coreAPIs *core.APIs) DefaultApisHandler {
-	return DefaultApisHandler{coreAPIs: coreAPIs}
+func NewDefaultApisHandler(coreAPIs *core.APIs, githubWebhookSecret string, githubAppConfigBranch string) DefaultApisHandler {
+	return DefaultApisHandler{coreAPIs: coreAPIs, githubWebhookSecret: githubWebhookSecret, githubAppConfigBranch: githubAppConfigBranch}
 }
