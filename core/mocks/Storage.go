@@ -1133,6 +1133,20 @@ func (_m *Storage) UpdateAccountPreferences(accountID string, preferences map[st
 	return r0
 }
 
+// UpdateAccountSystemConfigs provides a mock function with given fields: context, accountID, configs
+func (_m *Storage) UpdateAccountSystemConfigs(context storage.TransactionContext, accountID string, configs map[string]interface{}) error {
+	ret := _m.Called(context, accountID, configs)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, map[string]interface{}) error); ok {
+		r0 = rf(context, accountID, configs)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // UpdateAppConfig provides a mock function with given fields: ID, appType, appOrg, version, data
 func (_m *Storage) UpdateAppConfig(ID string, appType model.ApplicationType, appOrg *model.ApplicationOrganization, version model.Version, data map[string]interface{}) error {
 	ret := _m.Called(ID, appType, appOrg, version, data)

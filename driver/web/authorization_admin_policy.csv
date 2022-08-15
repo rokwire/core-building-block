@@ -52,3 +52,7 @@ p, update_account-authorization, /core/admin/application/groups/*/accounts, (PUT
 p, update_account-authorization, /core/admin/application/permissions, (GET),
 p, update_account-authorization, /core/admin/application/roles, (GET),
 p, update_account-authorization, /core/admin/application/groups, (GET),
+
+p, all_account-system-configs, /core/admin/application/accounts/*/system-configs, (GET)|(POST)|(PUT)|(DELETE), All account system config actions
+p, get_account-system-configs, /core/admin/application/accounts/*/system-configs, (GET), Get account system configs
+p, update_account-system-configs, /core/admin/application/accounts/*/system-configs, (PUT), Update account system configs

@@ -21,12 +21,13 @@ import (
 	"github.com/rokwire/logging-library-go/logs"
 )
 
-//Services exposes APIs for the driver adapters
+// Services exposes APIs for the driver adapters
 type Services interface {
 	SerDeleteAccount(id string) error
 	SerGetAccount(accountID string) (*model.Account, error)
 	SerGetProfile(accountID string) (*model.Profile, error)
 	SerGetPreferences(accountID string) (map[string]interface{}, error)
+	SerGetAccountSystemConfigs(accountID string) (map[string]interface{}, error)
 	SerUpdateAccountPreferences(id string, preferences map[string]interface{}) error
 	SerUpdateProfile(accountID string, profile model.Profile) error
 
@@ -39,7 +40,7 @@ type Services interface {
 	SerGetAppConfig(appTypeIdentifier string, orgID *string, versionNumbers model.VersionNumbers, apiKey *string) (*model.ApplicationConfig, error)
 }
 
-//Administration exposes administration APIs for the driver adapters
+// Administration exposes administration APIs for the driver adapters
 type Administration interface {
 	AdmGetTest() string
 	AdmGetTestModel() string
@@ -65,6 +66,9 @@ type Administration interface {
 		authTypeIdentifier *string, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error)
 	AdmGetAccount(accountID string) (*model.Account, error)
 
+	AdmGetAccountSystemConfigs(appID string, orgID string, accountID string, l *logs.Log) (map[string]interface{}, error)
+	AdmUpdateAccountSystemConfigs(appID string, orgID string, accountID string, configs map[string]interface{}, l *logs.Log) error
+
 	AdmGrantAccountPermissions(appID string, orgID string, accountID string, permissionNames []string, assignerPermissions []string, l *logs.Log) error
 	AdmRevokeAccountPermissions(appID string, orgID string, accountID string, permissions []string, assignerPermissions []string, l *logs.Log) error
 
@@ -78,17 +82,17 @@ type Administration interface {
 	AdmGetApplicationAccountDevices(appID string, orgID string, accountID string, l *logs.Log) ([]model.Device, error)
 }
 
-//Encryption exposes APIs for the Encryption building block
+// Encryption exposes APIs for the Encryption building block
 type Encryption interface {
 	EncGetTest() string
 }
 
-//BBs exposes users related APIs used by the platform building blocks
+// BBs exposes users related APIs used by the platform building blocks
 type BBs interface {
 	BBsGetTest() string
 }
 
-//System exposes system APIs for the driver adapters
+// System exposes system APIs for the driver adapters
 type System interface {
 	SysCreateGlobalConfig(setting string) (*model.GlobalConfig, error)
 	SysGetGlobalConfig() (*model.GlobalConfig, error)
@@ -117,7 +121,7 @@ type System interface {
 	SysUpdateAuthTypes(ID string, code string, description string, isExternal bool, isAnonymous bool, useCredentials bool, ignoreMFA bool, params map[string]interface{}) error
 }
 
-//Storage is used by core to storage data - DB storage adapter, file storage adapter etc
+// Storage is used by core to storage data - DB storage adapter, file storage adapter etc
 type Storage interface {
 	RegisterStorageListener(storageListener storage.Listener)
 
@@ -131,6 +135,7 @@ type Storage interface {
 	FindAccountsByAccountID(appID string, orgID string, accountIDs []string) ([]model.Account, error)
 
 	UpdateAccountPreferences(accountID string, preferences map[string]interface{}) error
+	UpdateAccountSystemConfigs(context storage.TransactionContext, accountID string, configs map[string]interface{}) error
 	InsertAccountPermissions(context storage.TransactionContext, accountID string, permissions []model.Permission) error
 	DeleteAccountPermissions(context storage.TransactionContext, accountID string, hasPermissions bool, permissions []model.Permission) error
 	InsertAccountRoles(context storage.TransactionContext, accountID string, appOrgID string, roles []model.AccountRole) error
@@ -206,12 +211,12 @@ type Storage interface {
 	InsertAPIKey(context storage.TransactionContext, apiKey model.APIKey) (*model.APIKey, error)
 }
 
-//StorageListener listenes for change data storage events
+// StorageListener listenes for change data storage events
 type StorageListener struct {
 	app *application
 	storage.DefaultListenerImpl
 }
 
-//ApplicationListener represents application listener
+// ApplicationListener represents application listener
 type ApplicationListener interface {
 }

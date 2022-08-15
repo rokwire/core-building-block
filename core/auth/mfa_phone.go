@@ -97,7 +97,7 @@ func (m *phoneMfaImpl) sendCode(identifier string) (string, *time.Time, error) {
 	return code, &expires, errors.New(logutils.Unimplemented)
 }
 
-//initPhoneMfa initializes and registers a new phone mfa instance
+// initPhoneMfa initializes and registers a new phone mfa instance
 func initPhoneMfa(auth *Auth) (*phoneMfaImpl, error) {
 	phone := &phoneMfaImpl{auth: auth, mfaType: MfaTypePhone}
 

@@ -35,7 +35,7 @@ const (
 	TypeStaticTokenCreds logutils.MessageDataType = "static token creds"
 )
 
-//staticTokenCreds represents the creds struct for static token auth
+// staticTokenCreds represents the creds struct for static token auth
 type staticTokenCreds struct {
 	Token string `json:"token" validate:"required"`
 }
@@ -123,7 +123,7 @@ func (s *staticTokenServiceAuthImpl) hashAndEncodeToken(token string) string {
 	return base64.StdEncoding.EncodeToString(hashedToken)
 }
 
-//initStaticTokenServiceAuth initializes and registers a new static token service auth instance
+// initStaticTokenServiceAuth initializes and registers a new static token service auth instance
 func initStaticTokenServiceAuth(auth *Auth) (*staticTokenServiceAuthImpl, error) {
 	staticToken := &staticTokenServiceAuthImpl{auth: auth, serviceAuthType: ServiceAuthTypeStaticToken}
 

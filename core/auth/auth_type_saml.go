@@ -45,7 +45,7 @@ func (a *samlAuthImpl) refresh(params map[string]interface{}, authType model.Aut
 	return nil, nil, nil
 }
 
-//initSamlAuth initializes and registers a new SAML auth instance
+// initSamlAuth initializes and registers a new SAML auth instance
 func initSamlAuth(auth *Auth) (*samlAuthImpl, error) {
 	saml := &samlAuthImpl{auth: auth, authType: AuthTypeSaml}
 
