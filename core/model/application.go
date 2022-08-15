@@ -523,3 +523,21 @@ func GetMissingGroupIDs(items []AppOrgGroup, ids []string) []string {
 	}
 	return missingIDs
 }
+
+// GetMissingAccountIDs returns a list of account IDs missing from items
+func GetMissingAccountIDs(items []Account, ids []string) []string {
+	missingIDs := make([]string, 0)
+	for _, id := range ids {
+		missing := true
+		for _, e := range items {
+			if e.ID == id {
+				missing = false
+				break
+			}
+		}
+		if missing {
+			missingIDs = append(missingIDs, id)
+		}
+	}
+	return missingIDs
+}
