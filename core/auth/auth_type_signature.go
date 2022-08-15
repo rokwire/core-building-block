@@ -27,7 +27,7 @@ const (
 	AuthTypeSignature string = "signature"
 )
 
-//Signature implementation of authType
+// Signature implementation of authType
 type signatureAuthImpl struct {
 	auth     *Auth
 	authType string
@@ -73,7 +73,7 @@ func (a *signatureAuthImpl) forgotCredential(credential *model.Credential, ident
 	return nil, nil
 }
 
-//initSignatureAuth initializes and registers a new signature auth instance
+// initSignatureAuth initializes and registers a new signature auth instance
 func initSignatureAuth(auth *Auth) (*signatureAuthImpl, error) {
 	signature := &signatureAuthImpl{auth: auth, authType: AuthTypeSignature}
 

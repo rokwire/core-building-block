@@ -320,7 +320,7 @@ func (a *twilioPhoneAuthImpl) forgotCredential(credential *model.Credential, ide
 	return nil, nil
 }
 
-//initPhoneAuth initializes and registers a new phone auth instance
+// initPhoneAuth initializes and registers a new phone auth instance
 func initPhoneAuth(auth *Auth, twilioAccountSID string, twilioToken string, twilioServiceSID string) (*twilioPhoneAuthImpl, error) {
 	phone := &twilioPhoneAuthImpl{auth: auth, authType: AuthTypeTwilioPhone, twilioAccountSID: twilioAccountSID, twilioToken: twilioToken, twilioServiceSID: twilioServiceSID}
 
