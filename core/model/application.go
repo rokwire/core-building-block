@@ -70,6 +70,16 @@ type Permission struct {
 	DateUpdated *time.Time `bson:"date_updated"`
 }
 
+// PermissionContainer is a set of functions used to interact with objects containing permissions
+type PermissionContainer interface {
+	// GetPermissionNamed returns the permission for a name if the container has it directly
+	GetPermissionNamed(name string) *Permission
+	// GetAssignedPermissionNames returns a list of names of directly assigned permissions
+	GetAssignedPermissionNames() []string
+	// GetAppOrg returns the container's application organization
+	GetAppOrg() ApplicationOrganization
+}
+
 // CheckAssigners checks if the passed permissions satisfy the needed assigners for the permission
 func (p Permission) CheckAssigners(assignerPermissions []string) error {
 	if len(p.Assigners) == 0 {
@@ -90,16 +100,6 @@ func (p Permission) String() string {
 	return fmt.Sprintf("[ID:%s\nName:%s\nServiceID:%s]", p.ID, p.Name, p.ServiceID)
 }
 
-// PermissionContainer is a set of functions used to interact with objects containing permissions
-type PermissionContainer interface {
-	// GetPermissionNamed returns the permission for a name if the container has it
-	GetPermissionNamed(name string) *Permission
-	// GetAssignedPermissionNames returns a list of names of directly assigned permissions
-	GetAssignedPermissionNames() []string
-	// GetServiceIDs returns a list of service IDs the container has access to
-	GetServiceIDs() []string
-}
-
 // AppOrgRole represents application organization role entity. It is a collection of permissions
 type AppOrgRole struct {
 	ID          string
@@ -114,6 +114,16 @@ type AppOrgRole struct {
 
 	DateCreated time.Time
 	DateUpdated *time.Time
+}
+
+// RoleContainer is a set of functions used to interact with objects containing roles
+type RoleContainer interface {
+	// GetRole returns the role for an ID if the container has it directly
+	GetRole(id string) *AppOrgRole
+	// GetAssignedRoleIDs returns a list of ids of directly assigned roles
+	GetAssignedRoleIDs() []string
+	// GetAppOrg returns the container's application organization
+	GetAppOrg() ApplicationOrganization
 }
 
 // CheckAssigners checks if the passed permissions satisfy the needed assigners for all role permissions
@@ -151,9 +161,9 @@ func (c AppOrgRole) GetAssignedPermissionNames() []string {
 	return names
 }
 
-// GetServiceIDs returns a list of service IDs the role has access to
-func (c AppOrgRole) GetServiceIDs() []string {
-	return c.AppOrg.ServicesIDs
+// GetAppOrg returns the role's application organization
+func (c AppOrgRole) GetAppOrg() ApplicationOrganization {
+	return c.AppOrg
 }
 
 func (c AppOrgRole) String() string {
@@ -220,9 +230,14 @@ func (cg AppOrgGroup) GetAssignedPermissionNames() []string {
 	return names
 }
 
-// GetServiceIDs returns a list of service IDs the group has access to
-func (cg AppOrgGroup) GetServiceIDs() []string {
-	return cg.AppOrg.ServicesIDs
+// GetRole returns the role for an ID if the group has it
+func (cg AppOrgGroup) GetRole(id string) *AppOrgRole {
+	for _, role := range cg.Roles {
+		if role.ID == id {
+			return &role
+		}
+	}
+	return nil
 }
 
 // GetAssignedRoleIDs returns a list of ids of assigned roles for this group
@@ -232,6 +247,11 @@ func (cg AppOrgGroup) GetAssignedRoleIDs() []string {
 		ids[i] = role.ID
 	}
 	return ids
+}
+
+// GetAppOrg returns the group's application organization
+func (cg AppOrgGroup) GetAppOrg() ApplicationOrganization {
+	return cg.AppOrg
 }
 
 func (cg AppOrgGroup) String() string {

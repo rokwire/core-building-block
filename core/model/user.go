@@ -208,11 +208,11 @@ func (a Account) GetActiveRoles() []AccountRole {
 	return roles
 }
 
-// GetRole returns the role for an id if the account has it
-func (a Account) GetRole(id string) *AccountRole {
+// GetRole returns the role for an id if the account has it directly
+func (a Account) GetRole(id string) *AppOrgRole {
 	for _, role := range a.Roles {
 		if role.Role.ID == id {
-			return &role
+			return &role.Role
 		}
 	}
 	return nil
@@ -225,32 +225,6 @@ func (a Account) GetAssignedRoleIDs() []string {
 		ids[i] = role.Role.ID
 	}
 	return ids
-}
-
-// CheckForRoleChanges checks for changes to account roles given a potential list of new roles
-func (a Account) CheckForRoleChanges(new []string) bool {
-	unchanged := make([]bool, len(a.Roles))
-
-	for _, newR := range new {
-		found := false
-		for i, r := range a.Roles {
-			if r.Role.ID == newR {
-				found = true
-				unchanged[i] = true
-				break
-			}
-		}
-		if !found {
-			return true
-		}
-	}
-	for i := range a.Roles {
-		if !unchanged[i] {
-			return true
-		}
-	}
-
-	return false
 }
 
 // GetActiveGroups returns all active groups
@@ -283,35 +257,9 @@ func (a Account) GetAssignedGroupIDs() []string {
 	return ids
 }
 
-// CheckForGroupChanges checks for changes to account groups given a potential list of new groups
-func (a Account) CheckForGroupChanges(new []string) bool {
-	unchanged := make([]bool, len(a.Groups))
-
-	for _, newG := range new {
-		found := false
-		for i, g := range a.Groups {
-			if g.Group.ID == newG {
-				found = true
-				unchanged[i] = true
-				break
-			}
-		}
-		if !found {
-			return true
-		}
-	}
-	for i := range a.Groups {
-		if !unchanged[i] {
-			return true
-		}
-	}
-
-	return false
-}
-
-// GetServiceIDs returns a list of service IDs the account has access to
-func (a Account) GetServiceIDs() []string {
-	return a.AppOrg.ServicesIDs
+// GetAppOrg returns the account's application organization
+func (a Account) GetAppOrg() ApplicationOrganization {
+	return a.AppOrg
 }
 
 // AccountRole represents a role assigned to an account

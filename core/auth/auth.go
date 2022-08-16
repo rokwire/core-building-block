@@ -1400,7 +1400,7 @@ func (a *Auth) constructAccount(context storage.TransactionContext, authType mod
 	appOrg model.ApplicationOrganization, credential *model.Credential, unverified bool, externalIDs map[string]string, profile model.Profile,
 	preferences map[string]interface{}, permissionNames []string, roleIDs []string, groupIDs []string, assignerPermissions []string, l *logs.Log) (*model.AccountAuthType, error) {
 	//create account auth type
-	accountAuthType, credential, err := a.prepareAccountAuthType(authType, userIdentifier, accountAuthTypeParams, credential, unverified, false)
+	accountAuthType, _, err := a.prepareAccountAuthType(authType, userIdentifier, accountAuthTypeParams, credential, unverified, false)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeAccountAuthType, nil, err)
 	}
@@ -1420,7 +1420,7 @@ func (a *Auth) constructAccount(context storage.TransactionContext, authType mod
 			return nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypePermission, nil, err)
 		}
 
-		roles, err = a.CheckRoles(context, &appOrg, roleIDs, assignerPermissions, false)
+		roles, err = a.CheckRoles(context, appOrg.ID, roleIDs, assignerPermissions, false)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeAppOrgRole, nil, err)
 		}

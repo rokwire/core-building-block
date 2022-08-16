@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - Update group admin API [#518](https://github.com/rokwire/core-building-block/issues/518)
-- Update role permissions admin API [#516](https://github.com/rokwire/core-building-block/issues/516)
+- Update role admin API [#516](https://github.com/rokwire/core-building-block/issues/516)
 
 ## [1.24.2] - 2022-08-08
 ### Added
