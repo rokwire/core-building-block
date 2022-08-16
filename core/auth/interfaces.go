@@ -385,11 +385,11 @@ type APIs interface {
 	//InitializeSystemAccount initializes the first system account
 	InitializeSystemAccount(context storage.TransactionContext, authType model.AuthType, appOrg model.ApplicationOrganization, allSystemPermission string, email string, password string, l *logs.Log) (string, error)
 
-	//GrantAccountPermissions grants new permissions to an account after validating the assigner has required permissions
-	GrantAccountPermissions(context storage.TransactionContext, account *model.Account, permissionNames []string, assignerPermissions []string) error
+	//GrantPermissions grants new permissions to a container after validating the assigner has required permissions
+	GrantPermissions(context storage.TransactionContext, container model.PermissionContainer, permissionNames []string, assignerPermissions []string) error
 
-	//CheckPermissions loads permissions by names from storage and checks that they are assignable and valid for the given appOrg or revocable
-	CheckPermissions(context storage.TransactionContext, appOrg *model.ApplicationOrganization, permissionNames []string, assignerPermissions []string, revoke bool) ([]model.Permission, error)
+	//CheckPermissions loads permissions by names from storage and checks that they are assignable and valid for the given serviceIDs or revocable
+	CheckPermissions(context storage.TransactionContext, serviceIDs []string, permissionNames []string, assignerPermissions []string, revoke bool) ([]model.Permission, error)
 
 	//GrantAccountRoles grants new roles to an account after validating the assigner has required permissions
 	GrantAccountRoles(context storage.TransactionContext, account *model.Account, roleIDs []string, assignerPermissions []string) error
@@ -563,6 +563,7 @@ type Storage interface {
 
 	//ApplicationRoles
 	FindAppOrgRolesByIDs(context storage.TransactionContext, ids []string, appOrgID string) ([]model.AppOrgRole, error)
+	UpdateAppOrgRole(context storage.TransactionContext, item model.AppOrgRole) error
 	//AccountRoles
 	UpdateAccountRoles(context storage.TransactionContext, accountID string, hasPermissions bool, roles []model.AccountRole) error
 	InsertAccountRoles(context storage.TransactionContext, accountID string, appOrgID string, roles []model.AccountRole) error

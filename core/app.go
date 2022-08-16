@@ -17,6 +17,7 @@ package core
 import (
 	"core-building-block/core/auth"
 	"core-building-block/core/model"
+	"core-building-block/driven/storage"
 
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logutils"
@@ -56,11 +57,42 @@ func (app *application) notifyListeners(message string, data interface{}) {
 	}()
 }
 
-func (app *application) getAccount(accountID string) (*model.Account, error) {
+func (app *application) getAccount(context storage.TransactionContext, accountID string) (*model.Account, error) {
 	//find the account
-	account, err := app.storage.FindAccountByID(nil, accountID)
+	account, err := app.storage.FindAccountByID(context, accountID)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"id": accountID}, err)
 	}
+	if account == nil {
+		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeAccount, &logutils.FieldArgs{"id": accountID}, err)
+	}
+
 	return account, nil
+}
+
+func (app *application) getApplicationOrganization(appID string, orgID string) (*model.ApplicationOrganization, error) {
+	appOrg, err := app.storage.FindApplicationOrganization(appID, orgID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
+	}
+	if appOrg == nil {
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": appID, "org_id": orgID})
+	}
+
+	return appOrg, nil
+}
+
+func (app *application) getAppOrgRole(context storage.TransactionContext, id string, appOrgID string, systemAdmin bool) (*model.AppOrgRole, error) {
+	role, err := app.storage.FindAppOrgRole(context, id, appOrgID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgRole, &logutils.FieldArgs{"id": id}, err)
+	}
+	if role == nil {
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeAppOrgRole, &logutils.FieldArgs{"id": id})
+	}
+	if role.System && !systemAdmin {
+		return nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeClaim, logutils.StringArgs("system"))
+	}
+
+	return role, nil
 }

@@ -1415,7 +1415,7 @@ func (a *Auth) constructAccount(context storage.TransactionContext, authType mod
 	var roles []model.AppOrgRole
 	var groups []model.AppOrgGroup
 	if adminSet {
-		permissions, err = a.CheckPermissions(context, &appOrg, permissionNames, assignerPermissions, false)
+		permissions, err = a.CheckPermissions(context, appOrg.ServicesIDs, permissionNames, assignerPermissions, false)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypePermission, nil, err)
 		}

@@ -1529,7 +1529,7 @@ func (sa *Adapter) InsertAccountPermissions(context TransactionContext, accountI
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, nil, err)
 	}
 	if res.ModifiedCount != 1 {
-		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"id": accountID, "modified": res.ModifiedCount, "expected": 1})
 	}
 
 	return nil
@@ -2333,10 +2333,10 @@ func (sa *Adapter) FindAppOrgRolesByIDs(context TransactionContext, ids []string
 }
 
 // FindAppOrgRole finds an application organization role
-func (sa *Adapter) FindAppOrgRole(id string, appOrgID string) (*model.AppOrgRole, error) {
+func (sa *Adapter) FindAppOrgRole(context TransactionContext, id string, appOrgID string) (*model.AppOrgRole, error) {
 	filter := bson.D{primitive.E{Key: "_id", Value: id}, primitive.E{Key: "app_org_id", Value: appOrgID}}
 	var rolesResult []appOrgRole
-	err := sa.db.applicationsOrganizationsRoles.Find(filter, &rolesResult, nil)
+	err := sa.db.applicationsOrganizationsRoles.FindWithContext(context, filter, &rolesResult, nil)
 	if err != nil {
 		return nil, err
 	}

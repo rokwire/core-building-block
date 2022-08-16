@@ -32,6 +32,8 @@ const (
 	TypePermission logutils.MessageDataType = "permission"
 	//TypeAppOrgRole ...
 	TypeAppOrgRole logutils.MessageDataType = "application organization role"
+	//TypeAppOrgRolePermissions ...
+	TypeAppOrgRolePermissions logutils.MessageDataType = "application organization role permissions"
 	//TypeAppOrgGroup ...
 	TypeAppOrgGroup logutils.MessageDataType = "application organization group"
 	//TypeOrganization ...
@@ -88,6 +90,16 @@ func (p Permission) String() string {
 	return fmt.Sprintf("[ID:%s\nName:%s\nServiceID:%s]", p.ID, p.Name, p.ServiceID)
 }
 
+// PermissionContainer is a set of functions used to interact with objects containing permissions
+type PermissionContainer interface {
+	// GetPermissionNamed returns the permission for a name if the container has it
+	GetPermissionNamed(name string) *Permission
+	// GetAssignedPermissionNames returns a list of names of directly assigned permissions
+	GetAssignedPermissionNames() []string
+	// GetServiceIDs returns a list of service IDs the container has access to
+	GetServiceIDs() []string
+}
+
 // AppOrgRole represents application organization role entity. It is a collection of permissions
 type AppOrgRole struct {
 	ID          string
@@ -104,7 +116,23 @@ type AppOrgRole struct {
 	DateUpdated *time.Time
 }
 
-// GetPermissionNamed returns the permission for a name if the role has it
+// CheckAssigners checks if the passed permissions satisfy the needed assigners for all role permissions
+func (c AppOrgRole) CheckAssigners(assignerPermissions []string) error {
+	if len(c.Permissions) == 0 {
+		return nil //no permission
+	}
+
+	for _, permission := range c.Permissions {
+		err := permission.CheckAssigners(assignerPermissions)
+		if err != nil {
+			return errors.Wrapf("error checking role permission assigners", err)
+		}
+	}
+	//it satisfies all permissions
+	return nil
+}
+
+// GetPermissionNamed returns the permission for a name if the role has it directly
 func (c AppOrgRole) GetPermissionNamed(name string) *Permission {
 	for _, permission := range c.Permissions {
 		if permission.Name == name {
@@ -123,20 +151,9 @@ func (c AppOrgRole) GetAssignedPermissionNames() []string {
 	return names
 }
 
-// CheckAssigners checks if the passed permissions satisfy the needed assigners for all role permissions
-func (c AppOrgRole) CheckAssigners(assignerPermissions []string) error {
-	if len(c.Permissions) == 0 {
-		return nil //no permission
-	}
-
-	for _, permission := range c.Permissions {
-		err := permission.CheckAssigners(assignerPermissions)
-		if err != nil {
-			return errors.Wrapf("error checking role permission assigners", err)
-		}
-	}
-	//it satisfies all permissions
-	return nil
+// GetServiceIDs returns a list of service IDs the role has access to
+func (c AppOrgRole) GetServiceIDs() []string {
+	return c.AppOrg.ServicesIDs
 }
 
 func (c AppOrgRole) String() string {
@@ -184,13 +201,28 @@ func (cg AppOrgGroup) CheckAssigners(assignerPermissions []string) error {
 	return nil
 }
 
-// GetAssignedPermissionNames returns a list of names of assigned permissions for this group
+// GetPermissionNamed returns the permission for a name if the group has it directly
+func (cg AppOrgGroup) GetPermissionNamed(name string) *Permission {
+	for _, permission := range cg.Permissions {
+		if permission.Name == name {
+			return &permission
+		}
+	}
+	return nil
+}
+
+// GetAssignedPermissionNames returns a list of names of directly assigned permissions for this group
 func (cg AppOrgGroup) GetAssignedPermissionNames() []string {
 	names := make([]string, len(cg.Permissions))
 	for i, permission := range cg.Permissions {
 		names[i] = permission.Name
 	}
 	return names
+}
+
+// GetServiceIDs returns a list of service IDs the group has access to
+func (cg AppOrgGroup) GetServiceIDs() []string {
+	return cg.AppOrg.ServicesIDs
 }
 
 // GetAssignedRoleIDs returns a list of ids of assigned roles for this group

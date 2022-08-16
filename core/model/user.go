@@ -309,6 +309,11 @@ func (a Account) CheckForGroupChanges(new []string) bool {
 	return false
 }
 
+// GetServiceIDs returns a list of service IDs the account has access to
+func (a Account) GetServiceIDs() []string {
+	return a.AppOrg.ServicesIDs
+}
+
 // AccountRole represents a role assigned to an account
 type AccountRole struct {
 	Role     AppOrgRole
