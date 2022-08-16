@@ -1634,61 +1634,6 @@ func (a *Auth) InitializeSystemAccount(context storage.TransactionContext, authT
 	return accountAuthType.Account.ID, nil
 }
 
-// GrantPermissions grants new permissions to a container after validating the assigner has required permissions
-//
-//	Requires container to be pointer to type implementing model.PermissionContainer
-func (a *Auth) GrantPermissions(context storage.TransactionContext, container model.PermissionContainer, permissionNames []string, assignerPermissions []string) error {
-	//check if there is data
-	if container == nil {
-		return errors.New("nothing to grant permissions")
-	}
-
-	//only grant permissions the container does not already have
-	newPermissions := make([]string, 0)
-	for _, current := range permissionNames {
-		if container.GetPermissionNamed(current) == nil {
-			newPermissions = append(newPermissions, current)
-		}
-	}
-	//no error if no zero new permissions are being granted
-	if len(newPermissions) == 0 {
-		return nil
-	}
-
-	//check permissions
-	permissions, err := a.CheckPermissions(context, container.GetServiceIDs(), newPermissions, assignerPermissions, false)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionValidate, model.TypePermission, nil, err)
-	}
-
-	now := time.Now().UTC()
-	switch c := container.(type) {
-	case *model.Account:
-		{
-			//update account
-			err = a.storage.InsertAccountPermissions(context, c.ID, permissions)
-			if err != nil {
-				return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAccountPermissions, &logutils.FieldArgs{"account_id": c.ID}, err)
-			}
-
-			c.Permissions = append(c.Permissions, permissions...)
-			c.DateUpdated = &now
-		}
-	case *model.AppOrgRole:
-		{
-			//update role
-			c.Permissions = append(c.Permissions, permissions...)
-			c.DateUpdated = &now
-			err = a.storage.UpdateAppOrgRole(context, *c)
-			if err != nil {
-				return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAppOrgRole, nil, err)
-			}
-		}
-	}
-
-	return nil
-}
-
 // CheckPermissions loads permissions by names from storage and checks that they are assignable and valid for the given serviceIDs or revocable
 func (a *Auth) CheckPermissions(context storage.TransactionContext, serviceIDs []string, permissionNames []string, assignerPermissions []string, revoke bool) ([]model.Permission, error) {
 	if len(serviceIDs) == 0 {

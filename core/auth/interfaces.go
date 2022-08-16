@@ -385,9 +385,6 @@ type APIs interface {
 	//InitializeSystemAccount initializes the first system account
 	InitializeSystemAccount(context storage.TransactionContext, authType model.AuthType, appOrg model.ApplicationOrganization, allSystemPermission string, email string, password string, l *logs.Log) (string, error)
 
-	//GrantPermissions grants new permissions to a container after validating the assigner has required permissions
-	GrantPermissions(context storage.TransactionContext, container model.PermissionContainer, permissionNames []string, assignerPermissions []string) error
-
 	//CheckPermissions loads permissions by names from storage and checks that they are assignable and valid for the given serviceIDs or revocable
 	CheckPermissions(context storage.TransactionContext, serviceIDs []string, permissionNames []string, assignerPermissions []string, revoke bool) ([]model.Permission, error)
 
@@ -558,12 +555,10 @@ type Storage interface {
 	//Permissions
 	FindPermissions(context storage.TransactionContext, ids []string) ([]model.Permission, error)
 	FindPermissionsByName(context storage.TransactionContext, names []string) ([]model.Permission, error)
-	InsertAccountPermissions(context storage.TransactionContext, accountID string, permissions []model.Permission) error
 	UpdateAccountPermissions(context storage.TransactionContext, accountID string, hasPermissions bool, permissions []model.Permission) error
 
 	//ApplicationRoles
 	FindAppOrgRolesByIDs(context storage.TransactionContext, ids []string, appOrgID string) ([]model.AppOrgRole, error)
-	UpdateAppOrgRole(context storage.TransactionContext, item model.AppOrgRole) error
 	//AccountRoles
 	UpdateAccountRoles(context storage.TransactionContext, accountID string, hasPermissions bool, roles []model.AccountRole) error
 	InsertAccountRoles(context storage.TransactionContext, accountID string, appOrgID string, roles []model.AccountRole) error

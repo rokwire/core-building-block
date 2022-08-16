@@ -18,6 +18,7 @@ import (
 	"core-building-block/core/auth"
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
+	"time"
 
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logutils"
@@ -95,4 +96,72 @@ func (app *application) getAppOrgRole(context storage.TransactionContext, id str
 	}
 
 	return role, nil
+}
+
+// grantOrRevokePermissions grants or revokes permissions after validating the assigner has required permissions
+//
+//	Expects container to be pointer to type implementing model.PermissionContainer
+func (app *application) grantOrRevokePermissions(context storage.TransactionContext, container model.PermissionContainer, permissionNames []string, assignerPermissions []string, revoke bool) error {
+	//check if there is data
+	if container == nil {
+		return errors.ErrorData(logutils.StatusMissing, "permissions container", nil)
+	}
+
+	//only grant permissions container does not have, revoke permissions container does have
+	checkPermissions := make([]string, 0)
+	for _, current := range permissionNames {
+		hasP := container.GetPermissionNamed(current) != nil
+		if revoke == hasP {
+			checkPermissions = append(checkPermissions, current)
+		}
+	}
+	//no error if no permissions to grant or revoke
+	if len(checkPermissions) == 0 {
+		return nil
+	}
+
+	//check permissions
+	permissions, err := app.auth.CheckPermissions(context, container.GetServiceIDs(), checkPermissions, assignerPermissions, revoke)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionValidate, model.TypePermission, nil, err)
+	}
+
+	now := time.Now().UTC()
+	switch c := container.(type) {
+	case *model.Account:
+		{
+			if revoke {
+				hasPermissions := len(c.Permissions) > len(checkPermissions) || len(c.Roles) > 0 || len(c.Groups) > 0
+				//delete permissions from an account
+				err = app.storage.DeleteAccountPermissions(context, c.ID, hasPermissions, permissions)
+				if err != nil {
+					return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccountPermissions, nil, err)
+				}
+
+				//delete all sessions for the account
+				err = app.storage.DeleteLoginSessionsByIdentifier(context, c.ID)
+				if err != nil {
+					return errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, nil, err)
+				}
+			} else {
+				//add permissions to account
+				err = app.storage.InsertAccountPermissions(context, c.ID, permissions)
+				if err != nil {
+					return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAccountPermissions, nil, err)
+				}
+			}
+		}
+	case *model.AppOrgRole:
+		{
+			//update role
+			c.Permissions = append(c.Permissions, permissions...)
+			c.DateUpdated = &now
+			err = app.storage.UpdateAppOrgRole(context, *c)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAppOrgRole, nil, err)
+			}
+		}
+	}
+
+	return nil
 }
