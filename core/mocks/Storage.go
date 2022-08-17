@@ -261,13 +261,13 @@ func (_m *Storage) FindAccountByID(context storage.TransactionContext, id string
 	return r0, r1
 }
 
-// FindAccounts provides a mock function with given fields: limit, offset, appID, orgID, accountID, firstName, lastName, authType, authTypeIdentifier, hasPermissions, permissions, roleIDs, groupIDs
-func (_m *Storage) FindAccounts(limit int, offset int, appID string, orgID string, accountID *string, firstName *string, lastName *string, authType *string, authTypeIdentifier *string, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error) {
-	ret := _m.Called(limit, offset, appID, orgID, accountID, firstName, lastName, authType, authTypeIdentifier, hasPermissions, permissions, roleIDs, groupIDs)
+// FindAccounts provides a mock function with given fields: context, limit, offset, appID, orgID, accountID, firstName, lastName, authType, authTypeIdentifier, hasPermissions, permissions, roleIDs, groupIDs
+func (_m *Storage) FindAccounts(context storage.TransactionContext, limit *int, offset *int, appID string, orgID string, accountID *string, firstName *string, lastName *string, authType *string, authTypeIdentifier *string, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error) {
+	ret := _m.Called(context, limit, offset, appID, orgID, accountID, firstName, lastName, authType, authTypeIdentifier, hasPermissions, permissions, roleIDs, groupIDs)
 
 	var r0 []model.Account
-	if rf, ok := ret.Get(0).(func(int, int, string, string, *string, *string, *string, *string, *string, *bool, []string, []string, []string) []model.Account); ok {
-		r0 = rf(limit, offset, appID, orgID, accountID, firstName, lastName, authType, authTypeIdentifier, hasPermissions, permissions, roleIDs, groupIDs)
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, *int, *int, string, string, *string, *string, *string, *string, *string, *bool, []string, []string, []string) []model.Account); ok {
+		r0 = rf(context, limit, offset, appID, orgID, accountID, firstName, lastName, authType, authTypeIdentifier, hasPermissions, permissions, roleIDs, groupIDs)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]model.Account)
@@ -275,8 +275,8 @@ func (_m *Storage) FindAccounts(limit int, offset int, appID string, orgID strin
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(int, int, string, string, *string, *string, *string, *string, *string, *bool, []string, []string, []string) error); ok {
-		r1 = rf(limit, offset, appID, orgID, accountID, firstName, lastName, authType, authTypeIdentifier, hasPermissions, permissions, roleIDs, groupIDs)
+	if rf, ok := ret.Get(1).(func(storage.TransactionContext, *int, *int, string, string, *string, *string, *string, *string, *string, *bool, []string, []string, []string) error); ok {
+		r1 = rf(context, limit, offset, appID, orgID, accountID, firstName, lastName, authType, authTypeIdentifier, hasPermissions, permissions, roleIDs, groupIDs)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -284,13 +284,13 @@ func (_m *Storage) FindAccounts(limit int, offset int, appID string, orgID strin
 	return r0, r1
 }
 
-// FindAccountsByAccountID provides a mock function with given fields: appID, orgID, accountIDs
-func (_m *Storage) FindAccountsByAccountID(appID string, orgID string, accountIDs []string) ([]model.Account, error) {
-	ret := _m.Called(appID, orgID, accountIDs)
+// FindAccountsByAccountID provides a mock function with given fields: context, appID, orgID, accountIDs
+func (_m *Storage) FindAccountsByAccountID(context storage.TransactionContext, appID string, orgID string, accountIDs []string) ([]model.Account, error) {
+	ret := _m.Called(context, appID, orgID, accountIDs)
 
 	var r0 []model.Account
-	if rf, ok := ret.Get(0).(func(string, string, []string) []model.Account); ok {
-		r0 = rf(appID, orgID, accountIDs)
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, string, []string) []model.Account); ok {
+		r0 = rf(context, appID, orgID, accountIDs)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]model.Account)
@@ -298,8 +298,8 @@ func (_m *Storage) FindAccountsByAccountID(appID string, orgID string, accountID
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(string, string, []string) error); ok {
-		r1 = rf(appID, orgID, accountIDs)
+	if rf, ok := ret.Get(1).(func(storage.TransactionContext, string, string, []string) error); ok {
+		r1 = rf(context, appID, orgID, accountIDs)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -376,13 +376,13 @@ func (_m *Storage) FindAppConfigs(appTypeIdentifier string, appOrgID *string, ve
 	return r0, r1
 }
 
-// FindAppOrgGroup provides a mock function with given fields: id, appOrgID
-func (_m *Storage) FindAppOrgGroup(id string, appOrgID string) (*model.AppOrgGroup, error) {
-	ret := _m.Called(id, appOrgID)
+// FindAppOrgGroup provides a mock function with given fields: context, id, appOrgID
+func (_m *Storage) FindAppOrgGroup(context storage.TransactionContext, id string, appOrgID string) (*model.AppOrgGroup, error) {
+	ret := _m.Called(context, id, appOrgID)
 
 	var r0 *model.AppOrgGroup
-	if rf, ok := ret.Get(0).(func(string, string) *model.AppOrgGroup); ok {
-		r0 = rf(id, appOrgID)
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, string) *model.AppOrgGroup); ok {
+		r0 = rf(context, id, appOrgID)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*model.AppOrgGroup)
@@ -390,8 +390,8 @@ func (_m *Storage) FindAppOrgGroup(id string, appOrgID string) (*model.AppOrgGro
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(string, string) error); ok {
-		r1 = rf(id, appOrgID)
+	if rf, ok := ret.Get(1).(func(storage.TransactionContext, string, string) error); ok {
+		r1 = rf(context, id, appOrgID)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -887,13 +887,13 @@ func (_m *Storage) InsertAccountRoles(context storage.TransactionContext, accoun
 	return r0
 }
 
-// InsertAccountsGroup provides a mock function with given fields: group, accounts
-func (_m *Storage) InsertAccountsGroup(group model.AccountGroup, accounts []model.Account) error {
-	ret := _m.Called(group, accounts)
+// InsertAccountsGroup provides a mock function with given fields: context, group, accountIDs
+func (_m *Storage) InsertAccountsGroup(context storage.TransactionContext, group model.AccountGroup, accountIDs []string) error {
+	ret := _m.Called(context, group, accountIDs)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(model.AccountGroup, []model.Account) error); ok {
-		r0 = rf(group, accounts)
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, model.AccountGroup, []string) error); ok {
+		r0 = rf(context, group, accountIDs)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -1091,13 +1091,13 @@ func (_m *Storage) RegisterStorageListener(storageListener storage.Listener) {
 	_m.Called(storageListener)
 }
 
-// RemoveAccountsGroup provides a mock function with given fields: groupID, accounts, hasPermissions
-func (_m *Storage) RemoveAccountsGroup(groupID string, accounts []model.Account, hasPermissions []bool) error {
-	ret := _m.Called(groupID, accounts, hasPermissions)
+// RemoveAccountsGroup provides a mock function with given fields: context, groupID, accountIDs, hasPermissions
+func (_m *Storage) RemoveAccountsGroup(context storage.TransactionContext, groupID string, accountIDs []string, hasPermissions []bool) error {
+	ret := _m.Called(context, groupID, accountIDs, hasPermissions)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(string, []model.Account, []bool) error); ok {
-		r0 = rf(groupID, accounts, hasPermissions)
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, []string, []bool) error); ok {
+		r0 = rf(context, groupID, accountIDs, hasPermissions)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -1126,6 +1126,20 @@ func (_m *Storage) UpdateAccountPreferences(accountID string, preferences map[st
 	var r0 error
 	if rf, ok := ret.Get(0).(func(string, map[string]interface{}) error); ok {
 		r0 = rf(accountID, preferences)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// UpdateAccountSystemConfigs provides a mock function with given fields: context, accountID, configs
+func (_m *Storage) UpdateAccountSystemConfigs(context storage.TransactionContext, accountID string, configs map[string]interface{}) error {
+	ret := _m.Called(context, accountID, configs)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, map[string]interface{}) error); ok {
+		r0 = rf(context, accountID, configs)
 	} else {
 		r0 = ret.Error(0)
 	}

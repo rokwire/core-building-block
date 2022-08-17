@@ -88,7 +88,7 @@ func (s *signatureServiceAuthImpl) addCredentials(creds *model.ServiceAccountCre
 	return creds.Params, nil
 }
 
-//initSignatureServiceAuth initializes and registers a new signature service auth instance
+// initSignatureServiceAuth initializes and registers a new signature service auth instance
 func initSignatureServiceAuth(auth *Auth) (*signatureServiceAuthImpl, error) {
 	signature := &signatureServiceAuthImpl{auth: auth, serviceAuthType: ServiceAuthTypeSignature}
 

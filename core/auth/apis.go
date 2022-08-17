@@ -1680,7 +1680,7 @@ func (a *Auth) CheckPermissions(context storage.TransactionContext, appOrg *mode
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypePermission, nil, err)
 	}
-	if len(permissions) < len(permissionNames) {
+	if len(permissions) < len(permissionNames) && !revoke {
 		missing := model.GetMissingPermissionNames(permissions, permissionNames)
 		return nil, errors.ErrorData(logutils.StatusInvalid, model.TypePermission, &logutils.FieldArgs{"names": missing})
 	}
@@ -1750,7 +1750,7 @@ func (a *Auth) CheckRoles(context storage.TransactionContext, appOrg *model.Appl
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgRole, nil, err)
 	}
-	if len(roles) < len(roleIDs) {
+	if len(roles) < len(roleIDs) && !revoke {
 		missing := model.GetMissingRoleIDs(roles, roleIDs)
 		return nil, errors.ErrorData(logutils.StatusInvalid, model.TypeAppOrgRole, &logutils.FieldArgs{"ids": missing})
 	}
