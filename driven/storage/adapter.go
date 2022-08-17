@@ -2389,15 +2389,27 @@ func (sa *Adapter) findAppOrgRoles(context TransactionContext, key *string, id s
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgRole, &errFields, err)
 	}
 
-	var result []model.AppOrgRole
-	if len(rolesResult) > 0 {
-		appOrg, err := sa.getCachedApplicationOrganizationByKey(rolesResult[0].AppOrgID)
+	result := make([]model.AppOrgRole, 0)
+	if len(rolesResult) == 0 {
+		return result, nil
+	}
+
+	if appOrgID != "" {
+		appOrg, err := sa.getCachedApplicationOrganizationByKey(appOrgID)
 		if err != nil || appOrg == nil {
-			return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_org_id": rolesResult[0].AppOrgID}, err)
+			return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_org_id": appOrgID}, err)
 		}
+
 		result = appOrgRolesFromStorage(rolesResult, *appOrg)
 	} else {
-		result = make([]model.AppOrgRole, 0)
+		for _, r := range rolesResult {
+			appOrg, err := sa.getCachedApplicationOrganizationByKey(r.AppOrgID)
+			if err != nil || appOrg == nil {
+				return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_org_id": r.AppOrgID}, err)
+			}
+
+			result = append(result, appOrgRoleFromStorage(&r, *appOrg))
+		}
 	}
 
 	return result, nil
@@ -2600,15 +2612,27 @@ func (sa *Adapter) findAppOrgGroups(context TransactionContext, key *string, id 
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgGroup, &errFields, err)
 	}
 
-	var result []model.AppOrgGroup
-	if len(groupsResult) > 0 {
-		appOrg, err := sa.getCachedApplicationOrganizationByKey(groupsResult[0].AppOrgID)
+	result := make([]model.AppOrgGroup, 0)
+	if len(groupsResult) == 0 {
+		return result, nil
+	}
+
+	if appOrgID != "" {
+		appOrg, err := sa.getCachedApplicationOrganizationByKey(appOrgID)
 		if err != nil || appOrg == nil {
-			return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_org_id": groupsResult[0].AppOrgID}, err)
+			return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_org_id": appOrgID}, err)
 		}
+
 		result = appOrgGroupsFromStorage(groupsResult, *appOrg)
 	} else {
-		result = make([]model.AppOrgGroup, 0)
+		for _, g := range groupsResult {
+			appOrg, err := sa.getCachedApplicationOrganizationByKey(g.AppOrgID)
+			if err != nil || appOrg == nil {
+				return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_org_id": g.AppOrgID}, err)
+			}
+
+			result = append(result, appOrgGroupFromStorage(&g, *appOrg))
+		}
 	}
 
 	return result, nil
