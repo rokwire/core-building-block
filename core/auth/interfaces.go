@@ -385,17 +385,11 @@ type APIs interface {
 	//InitializeSystemAccount initializes the first system account
 	InitializeSystemAccount(context storage.TransactionContext, authType model.AuthType, appOrg model.ApplicationOrganization, allSystemPermission string, email string, password string, l *logs.Log) (string, error)
 
-	//GrantAccountPermissions grants new permissions to an account after validating the assigner has required permissions
-	GrantAccountPermissions(context storage.TransactionContext, account *model.Account, permissionNames []string, assignerPermissions []string) error
-
-	//CheckPermissions loads permissions by names from storage and checks that they are assignable and valid for the given appOrg or revocable
-	CheckPermissions(context storage.TransactionContext, appOrg *model.ApplicationOrganization, permissionNames []string, assignerPermissions []string, revoke bool) ([]model.Permission, error)
-
-	//GrantAccountRoles grants new roles to an account after validating the assigner has required permissions
-	GrantAccountRoles(context storage.TransactionContext, account *model.Account, roleIDs []string, assignerPermissions []string) error
+	//CheckPermissions loads permissions by names from storage and checks that they are assignable and valid for the given serviceIDs or revocable
+	CheckPermissions(context storage.TransactionContext, serviceIDs []string, permissionNames []string, assignerPermissions []string, revoke bool) ([]model.Permission, error)
 
 	//CheckRoles loads appOrg roles by IDs from storage and checks that they are assignable or revocable
-	CheckRoles(context storage.TransactionContext, appOrg *model.ApplicationOrganization, roleIDs []string, assignerPermissions []string, revoke bool) ([]model.AppOrgRole, error)
+	CheckRoles(context storage.TransactionContext, appOrgID string, roleIDs []string, assignerPermissions []string, revoke bool) ([]model.AppOrgRole, error)
 
 	//GrantAccountGroups grants new groups to an account after validating the assigner has required permissions
 	GrantAccountGroups(context storage.TransactionContext, account *model.Account, groupIDs []string, assignerPermissions []string) error
@@ -558,7 +552,6 @@ type Storage interface {
 	//Permissions
 	FindPermissions(context storage.TransactionContext, ids []string) ([]model.Permission, error)
 	FindPermissionsByName(context storage.TransactionContext, names []string) ([]model.Permission, error)
-	InsertAccountPermissions(context storage.TransactionContext, accountID string, permissions []model.Permission) error
 	UpdateAccountPermissions(context storage.TransactionContext, accountID string, hasPermissions bool, permissions []model.Permission) error
 
 	//ApplicationRoles

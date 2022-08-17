@@ -20,7 +20,7 @@ import (
 	Def "core-building-block/driver/web/docs/gen"
 	"core-building-block/utils"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -33,7 +33,10 @@ import (
 )
 
 const (
-	actionGrant logutils.MessageActionType = "granting"
+	actionGrant  logutils.MessageActionType = "granting"
+	actionAdd    logutils.MessageActionType = "adding"
+	actionRevoke logutils.MessageActionType = "revoking"
+	actionRemove logutils.MessageActionType = "removing"
 )
 
 // AdminApisHandler handles the admin rest APIs implementation
@@ -56,7 +59,7 @@ func (h AdminApisHandler) getTestModel(l *logs.Log, r *http.Request, claims *tok
 }
 
 func (h AdminApisHandler) login(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	data, err := ioutil.ReadAll(r.Body)
+	data, err := io.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
@@ -140,7 +143,7 @@ func (h AdminApisHandler) login(l *logs.Log, r *http.Request, claims *tokenauth.
 }
 
 func (h AdminApisHandler) loginMFA(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	data, err := ioutil.ReadAll(r.Body)
+	data, err := io.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
@@ -163,7 +166,7 @@ func (h AdminApisHandler) loginMFA(l *logs.Log, r *http.Request, claims *tokenau
 }
 
 func (h AdminApisHandler) loginURL(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	data, err := ioutil.ReadAll(r.Body)
+	data, err := io.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
@@ -189,7 +192,7 @@ func (h AdminApisHandler) loginURL(l *logs.Log, r *http.Request, claims *tokenau
 }
 
 func (h AdminApisHandler) refresh(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	data, err := ioutil.ReadAll(r.Body)
+	data, err := io.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
@@ -465,7 +468,7 @@ func (h AdminApisHandler) getAccount(l *logs.Log, r *http.Request, claims *token
 }
 
 func (h AdminApisHandler) createAdminAccount(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	data, err := ioutil.ReadAll(r.Body)
+	data, err := io.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
@@ -508,7 +511,7 @@ func (h AdminApisHandler) createAdminAccount(l *logs.Log, r *http.Request, claim
 }
 
 func (h AdminApisHandler) updateAdminAccount(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	data, err := ioutil.ReadAll(r.Body)
+	data, err := io.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
@@ -565,7 +568,7 @@ func (h AdminApisHandler) getMFATypes(l *logs.Log, r *http.Request, claims *toke
 }
 
 func (h AdminApisHandler) addMFAType(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	data, err := ioutil.ReadAll(r.Body)
+	data, err := io.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
@@ -592,7 +595,7 @@ func (h AdminApisHandler) addMFAType(l *logs.Log, r *http.Request, claims *token
 }
 
 func (h AdminApisHandler) removeMFAType(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	data, err := ioutil.ReadAll(r.Body)
+	data, err := io.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
@@ -612,7 +615,7 @@ func (h AdminApisHandler) removeMFAType(l *logs.Log, r *http.Request, claims *to
 }
 
 func (h AdminApisHandler) verifyMFA(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	data, err := ioutil.ReadAll(r.Body)
+	data, err := io.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
@@ -669,7 +672,7 @@ func (h AdminApisHandler) getAppToken(l *logs.Log, r *http.Request, claims *toke
 
 // createApplicationGroup creates an application group
 func (h AdminApisHandler) createApplicationGroup(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	data, err := ioutil.ReadAll(r.Body)
+	data, err := io.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
@@ -729,7 +732,7 @@ func (h AdminApisHandler) updateApplicationGroup(l *logs.Log, r *http.Request, c
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
 	}
 
-	data, err := ioutil.ReadAll(r.Body)
+	data, err := io.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
@@ -804,7 +807,7 @@ func (h AdminApisHandler) addAccountsToGroup(l *logs.Log, r *http.Request, claim
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
 	}
 
-	data, err := ioutil.ReadAll(r.Body)
+	data, err := io.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
@@ -818,7 +821,7 @@ func (h AdminApisHandler) addAccountsToGroup(l *logs.Log, r *http.Request, claim
 	assignerPermissions := strings.Split(claims.Permissions, ",")
 	err = h.coreAPIs.Administration.AdmAddAccountsToGroup(claims.AppID, claims.OrgID, groupID, requestData.AccountIds, assignerPermissions, l)
 	if err != nil {
-		return l.HttpResponseErrorAction(actionGrant, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
+		return l.HttpResponseErrorAction(actionAdd, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}
 
 	return l.HttpResponseSuccess()
@@ -832,7 +835,7 @@ func (h AdminApisHandler) removeAccountsFromGroup(l *logs.Log, r *http.Request, 
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
 	}
 
-	data, err := ioutil.ReadAll(r.Body)
+	data, err := io.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
@@ -846,7 +849,7 @@ func (h AdminApisHandler) removeAccountsFromGroup(l *logs.Log, r *http.Request, 
 	assignerPermissions := strings.Split(claims.Permissions, ",")
 	err = h.coreAPIs.Administration.AdmRemoveAccountsFromGroup(claims.AppID, claims.OrgID, groupID, requestData.AccountIds, assignerPermissions, l)
 	if err != nil {
-		return l.HttpResponseErrorAction(actionGrant, model.TypeAppOrgRole, nil, err, http.StatusInternalServerError, true)
+		return l.HttpResponseErrorAction(actionRemove, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}
 
 	return l.HttpResponseSuccess()
@@ -854,7 +857,7 @@ func (h AdminApisHandler) removeAccountsFromGroup(l *logs.Log, r *http.Request, 
 
 // createApplicationRole creates an application role
 func (h AdminApisHandler) createApplicationRole(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	data, err := ioutil.ReadAll(r.Body)
+	data, err := io.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
@@ -891,7 +894,7 @@ func (h AdminApisHandler) updateApplicationRole(l *logs.Log, r *http.Request, cl
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
 	}
 
-	data, err := ioutil.ReadAll(r.Body)
+	data, err := io.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
@@ -987,7 +990,7 @@ func (h AdminApisHandler) grantAccountPermissions(l *logs.Log, r *http.Request, 
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
 	}
 
-	data, err := ioutil.ReadAll(r.Body)
+	data, err := io.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
@@ -1015,7 +1018,7 @@ func (h AdminApisHandler) revokeAccountPermissions(l *logs.Log, r *http.Request,
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
 	}
 
-	data, err := ioutil.ReadAll(r.Body)
+	data, err := io.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
@@ -1028,7 +1031,7 @@ func (h AdminApisHandler) revokeAccountPermissions(l *logs.Log, r *http.Request,
 	assignerPermissions := strings.Split(claims.Permissions, ",")
 	err = h.coreAPIs.Administration.AdmRevokeAccountPermissions(claims.AppID, claims.OrgID, accountID, requestData.Permissions, assignerPermissions, l)
 	if err != nil {
-		return l.HttpResponseErrorAction(actionGrant, model.TypePermission, nil, err, http.StatusInternalServerError, true)
+		return l.HttpResponseErrorAction(actionRevoke, model.TypePermission, nil, err, http.StatusInternalServerError, true)
 	}
 
 	return l.HttpResponseSuccess()
@@ -1042,7 +1045,7 @@ func (h AdminApisHandler) grantAccountRoles(l *logs.Log, r *http.Request, claims
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
 	}
 
-	data, err := ioutil.ReadAll(r.Body)
+	data, err := io.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
@@ -1070,7 +1073,7 @@ func (h AdminApisHandler) revokeAccountRoles(l *logs.Log, r *http.Request, claim
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
 	}
 
-	data, err := ioutil.ReadAll(r.Body)
+	data, err := io.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
@@ -1084,7 +1087,7 @@ func (h AdminApisHandler) revokeAccountRoles(l *logs.Log, r *http.Request, claim
 	assignerPermissions := strings.Split(claims.Permissions, ",")
 	err = h.coreAPIs.Administration.AdmRevokeAccountRoles(claims.AppID, claims.OrgID, accountID, requestData.RoleIds, assignerPermissions, l)
 	if err != nil {
-		return l.HttpResponseErrorAction(actionGrant, model.TypeAppOrgRole, nil, err, http.StatusInternalServerError, true)
+		return l.HttpResponseErrorAction(actionRevoke, model.TypeAppOrgRole, nil, err, http.StatusInternalServerError, true)
 	}
 
 	return l.HttpResponseSuccess()
@@ -1125,7 +1128,7 @@ func (h AdminApisHandler) updateAccountSystemConfigs(l *logs.Log, r *http.Reques
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
 	}
 
-	data, err := ioutil.ReadAll(r.Body)
+	data, err := io.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
@@ -1156,7 +1159,7 @@ func (h AdminApisHandler) grantPermissionsToRole(l *logs.Log, r *http.Request, c
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
 	}
 
-	data, err := ioutil.ReadAll(r.Body)
+	data, err := io.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
@@ -1170,7 +1173,7 @@ func (h AdminApisHandler) grantPermissionsToRole(l *logs.Log, r *http.Request, c
 	assignerPermissions := strings.Split(claims.Permissions, ",")
 	err = h.coreAPIs.Administration.AdmGrantPermissionsToRole(claims.AppID, claims.OrgID, roleID, requestData.Permissions, assignerPermissions, claims.System, l)
 	if err != nil {
-		return l.HttpResponseErrorAction(actionGrant, model.TypeAppOrgRole, nil, err, http.StatusInternalServerError, true)
+		return l.HttpResponseErrorAction(actionGrant, model.TypePermission, nil, err, http.StatusInternalServerError, true)
 	}
 
 	return l.HttpResponseSuccess()

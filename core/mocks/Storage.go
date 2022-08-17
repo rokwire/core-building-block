@@ -98,13 +98,13 @@ func (_m *Storage) CreateGlobalConfig(context storage.TransactionContext, global
 	return r0
 }
 
-// DeleteAccountPermissions provides a mock function with given fields: context, accountID, hasPermissions, permissions
-func (_m *Storage) DeleteAccountPermissions(context storage.TransactionContext, accountID string, hasPermissions bool, permissions []model.Permission) error {
-	ret := _m.Called(context, accountID, hasPermissions, permissions)
+// DeleteAccountPermissions provides a mock function with given fields: context, accountID, hasPermissions, permissionNames
+func (_m *Storage) DeleteAccountPermissions(context storage.TransactionContext, accountID string, hasPermissions bool, permissionNames []string) error {
+	ret := _m.Called(context, accountID, hasPermissions, permissionNames)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, bool, []model.Permission) error); ok {
-		r0 = rf(context, accountID, hasPermissions, permissions)
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, bool, []string) error); ok {
+		r0 = rf(context, accountID, hasPermissions, permissionNames)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -445,13 +445,13 @@ func (_m *Storage) FindAppOrgGroupsByIDs(context storage.TransactionContext, ids
 	return r0, r1
 }
 
-// FindAppOrgRole provides a mock function with given fields: id, appOrgID
-func (_m *Storage) FindAppOrgRole(id string, appOrgID string) (*model.AppOrgRole, error) {
-	ret := _m.Called(id, appOrgID)
+// FindAppOrgRole provides a mock function with given fields: context, id, appOrgID
+func (_m *Storage) FindAppOrgRole(context storage.TransactionContext, id string, appOrgID string) (*model.AppOrgRole, error) {
+	ret := _m.Called(context, id, appOrgID)
 
 	var r0 *model.AppOrgRole
-	if rf, ok := ret.Get(0).(func(string, string) *model.AppOrgRole); ok {
-		r0 = rf(id, appOrgID)
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, string) *model.AppOrgRole); ok {
+		r0 = rf(context, id, appOrgID)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*model.AppOrgRole)
@@ -459,8 +459,8 @@ func (_m *Storage) FindAppOrgRole(id string, appOrgID string) (*model.AppOrgRole
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(string, string) error); ok {
-		r1 = rf(id, appOrgID)
+	if rf, ok := ret.Get(1).(func(storage.TransactionContext, string, string) error); ok {
+		r1 = rf(context, id, appOrgID)
 	} else {
 		r1 = ret.Error(1)
 	}

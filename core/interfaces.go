@@ -137,7 +137,7 @@ type Storage interface {
 	UpdateAccountPreferences(accountID string, preferences map[string]interface{}) error
 	UpdateAccountSystemConfigs(context storage.TransactionContext, accountID string, configs map[string]interface{}) error
 	InsertAccountPermissions(context storage.TransactionContext, accountID string, permissions []model.Permission) error
-	DeleteAccountPermissions(context storage.TransactionContext, accountID string, hasPermissions bool, permissions []model.Permission) error
+	DeleteAccountPermissions(context storage.TransactionContext, accountID string, hasPermissions bool, permissionNames []string) error
 	InsertAccountRoles(context storage.TransactionContext, accountID string, appOrgID string, roles []model.AccountRole) error
 	DeleteAccountRoles(context storage.TransactionContext, accountID string, hasPermissions bool, roleIDs []string) error
 	InsertAccountsGroup(context storage.TransactionContext, group model.AccountGroup, accountIDs []string) error
@@ -167,7 +167,7 @@ type Storage interface {
 
 	FindAppOrgRoles(appOrgID string) ([]model.AppOrgRole, error)
 	FindAppOrgRolesByIDs(context storage.TransactionContext, ids []string, appOrgID string) ([]model.AppOrgRole, error)
-	FindAppOrgRole(id string, appOrgID string) (*model.AppOrgRole, error)
+	FindAppOrgRole(context storage.TransactionContext, id string, appOrgID string) (*model.AppOrgRole, error)
 	InsertAppOrgRole(context storage.TransactionContext, item model.AppOrgRole) error
 	UpdateAppOrgRole(context storage.TransactionContext, item model.AppOrgRole) error
 	DeleteAppOrgRole(id string) error
