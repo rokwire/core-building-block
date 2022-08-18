@@ -46,7 +46,6 @@ func (s *signatureServiceAuthImpl) checkCredentials(r *sigauth.Request, _ interf
 		return nil, errors.WrapErrorAction(logutils.ActionParse, "request signature and header", nil, err).SetStatus(utils.ErrorStatusInvalid)
 	}
 
-	params["credentials.params.key_id"] = sigAuthHeader.KeyID
 	accounts, err := s.auth.storage.FindServiceAccounts(params)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, nil, err)
