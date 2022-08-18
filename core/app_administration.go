@@ -561,6 +561,15 @@ func (app *application) admGetAccount(accountID string) (*model.Account, error) 
 }
 
 func (app *application) admUpdateAccountUsername(accountID string, appID string, orgID string, username string) error {
+	//find the app/org
+	appOrg, err := app.storage.FindApplicationOrganization(appID, orgID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": appID, "org_id": orgID}, err)
+	}
+	if appOrg == nil {
+		return errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": appID, "org_id": orgID})
+	}
+
 	transaction := func(context storage.TransactionContext) error {
 		return errors.New(logutils.Unimplemented)
 	}

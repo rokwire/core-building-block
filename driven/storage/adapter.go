@@ -1109,12 +1109,13 @@ func (sa *Adapter) FindAccounts(limit int, offset int, appID string, orgID strin
 	}
 
 	//find the accounts
-	filter := bson.D{primitive.E{Key: "app_org_id", Value: appOrg.ID}}
+	filter := bson.D{}
 
 	//ID, profile, and auth type filters
 	if accountID != nil {
 		filter = append(filter, primitive.E{Key: "_id", Value: *accountID})
 	}
+	filter = append(filter, primitive.E{Key: "app_org_id", Value: appOrg.ID})
 	if firstName != nil {
 		filter = append(filter, primitive.E{Key: "profile.first_name", Value: *firstName})
 	}
