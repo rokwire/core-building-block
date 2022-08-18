@@ -30,8 +30,14 @@ func accountFromStorage(item account, appOrg model.ApplicationOrganization) mode
 	devices := accountDevicesFromStorage(item)
 	dateCreated := item.DateCreated
 	dateUpdated := item.DateUpdated
+
+	username := ""
+	if item.Username != nil {
+		username = *item.Username
+	}
+
 	return model.Account{ID: id, AppOrg: appOrg, HasPermissions: item.HasPermissions, Permissions: permissions,
-		Roles: roles, Groups: groups, AuthTypes: authTypes, MFATypes: mfaTypes, ExternalIDs: item.ExternalIDs,
+		Roles: roles, Groups: groups, AuthTypes: authTypes, MFATypes: mfaTypes, Username: username, ExternalIDs: item.ExternalIDs,
 		Preferences: item.Preferences, Profile: profile, SystemConfigs: item.SystemConfigs, Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated}
 }
 
@@ -60,9 +66,14 @@ func accountToStorage(item *model.Account) *account {
 	dateCreated := item.DateCreated
 	dateUpdated := item.DateUpdated
 
+	var username *string
+	if item.Username != "" {
+		username = &item.Username
+	}
+
 	return &account{ID: id, AppOrgID: appOrgID, HasPermissions: item.HasPermissions, Permissions: permissions, Roles: roles, Groups: groups, AuthTypes: authTypes,
-		MFATypes: mfaTypes, ExternalIDs: item.ExternalIDs, Preferences: item.Preferences, Profile: profile, SystemConfigs: item.SystemConfigs, Devices: devices,
-		DateCreated: dateCreated, DateUpdated: dateUpdated}
+		MFATypes: mfaTypes, Username: username, ExternalIDs: item.ExternalIDs, Preferences: item.Preferences, Profile: profile, SystemConfigs: item.SystemConfigs,
+		Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated}
 }
 
 func accountDevicesFromStorage(item account) []model.Device {

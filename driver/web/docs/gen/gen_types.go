@@ -242,6 +242,7 @@ type Account struct {
 	Profile       *Profile                 `json:"profile,omitempty"`
 	Roles         *[]AppOrgRole            `json:"roles,omitempty"`
 	SystemConfigs *map[string]interface{}  `json:"system_configs"`
+	Username      *string                  `json:"username,omitempty"`
 }
 
 // AccountAuthType defines model for AccountAuthType.
@@ -511,6 +512,7 @@ type PartialAccount struct {
 	Permissions    []Permission            `json:"permissions"`
 	Roles          []AppOrgRole            `json:"roles"`
 	SystemConfigs  *map[string]interface{} `json:"system_configs"`
+	Username       *string                 `json:"username,omitempty"`
 }
 
 // Permission defines model for Permission.
@@ -595,6 +597,11 @@ type ServiceScope struct {
 	Explanation *string `json:"explanation,omitempty"`
 	Required    bool    `json:"required"`
 	Scope       string  `json:"scope"`
+}
+
+// Username defines model for Username.
+type Username struct {
+	Username string `json:"username"`
 }
 
 // AdminReqAddAccountsToGroup defines model for _admin_req_add-accounts-to-group.
@@ -994,6 +1001,7 @@ type SharedResAccount struct {
 	Profile        *ProfileFields           `json:"profile,omitempty"`
 	Roles          *[]AppOrgRole            `json:"roles,omitempty"`
 	SystemConfigs  *map[string]interface{}  `json:"system_configs"`
+	Username       *string                  `json:"username,omitempty"`
 }
 
 // SharedResAccountCheck defines model for _shared_res_AccountCheck.
@@ -1192,6 +1200,9 @@ type PostAdminAccountMfaParams struct {
 	Type string `json:"type"`
 }
 
+// PutAdminAccountUsernameJSONBody defines parameters for PutAdminAccountUsername.
+type PutAdminAccountUsernameJSONBody Username
+
 // GetAdminApplicationAccountsParams defines parameters for GetAdminApplicationAccounts.
 type GetAdminApplicationAccountsParams struct {
 
@@ -1346,6 +1357,9 @@ type PutServicesAccountPreferencesJSONBody map[string]interface{}
 
 // PutServicesAccountProfileJSONBody defines parameters for PutServicesAccountProfile.
 type PutServicesAccountProfileJSONBody SharedReqProfile
+
+// PutServicesAccountUsernameJSONBody defines parameters for PutServicesAccountUsername.
+type PutServicesAccountUsernameJSONBody Username
 
 // GetServicesAccountsParams defines parameters for GetServicesAccounts.
 type GetServicesAccountsParams struct {
@@ -1671,6 +1685,9 @@ type GetUiCredentialVerifyParams struct {
 	Code string `json:"code"`
 }
 
+// PutAdminAccountUsernameJSONRequestBody defines body for PutAdminAccountUsername for application/json ContentType.
+type PutAdminAccountUsernameJSONRequestBody PutAdminAccountUsernameJSONBody
+
 // PostAdminApplicationAccountsJSONRequestBody defines body for PostAdminApplicationAccounts for application/json ContentType.
 type PostAdminApplicationAccountsJSONRequestBody PostAdminApplicationAccountsJSONBody
 
@@ -1742,6 +1759,9 @@ type PutServicesAccountPreferencesJSONRequestBody PutServicesAccountPreferencesJ
 
 // PutServicesAccountProfileJSONRequestBody defines body for PutServicesAccountProfile for application/json ContentType.
 type PutServicesAccountProfileJSONRequestBody PutServicesAccountProfileJSONBody
+
+// PutServicesAccountUsernameJSONRequestBody defines body for PutServicesAccountUsername for application/json ContentType.
+type PutServicesAccountUsernameJSONRequestBody PutServicesAccountUsernameJSONBody
 
 // PostServicesAccountsJSONRequestBody defines body for PostServicesAccounts for application/json ContentType.
 type PostServicesAccountsJSONRequestBody PostServicesAccountsJSONBody

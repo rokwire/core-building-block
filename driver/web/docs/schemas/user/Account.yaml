@@ -4,6 +4,8 @@ properties:
     $ref: "./AccountFields.yaml"
   app_org:
     $ref: "../application/ApplicationOrganization.yaml"
+  username:
+    type: string
   permissions:
     type: array
     items:

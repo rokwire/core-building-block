@@ -27,6 +27,8 @@ const (
 	TypeAccount logutils.MessageDataType = "account"
 	//TypeAccountPreferences account preferences
 	TypeAccountPreferences logutils.MessageDataType = "account preferences"
+	//TypeAccountUsername account username
+	TypeAccountUsername logutils.MessageDataType = "account username"
 	//TypeAccountSystemConfigs account system configs
 	TypeAccountSystemConfigs logutils.MessageDataType = "account system configs"
 	//TypeAccountAuthType account auth type
@@ -65,6 +67,7 @@ type Account struct {
 
 	MFATypes []MFAType
 
+	Username      string
 	ExternalIDs   map[string]string
 	Preferences   map[string]interface{}
 	SystemConfigs map[string]interface{}

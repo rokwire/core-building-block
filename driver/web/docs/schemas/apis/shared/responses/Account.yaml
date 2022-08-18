@@ -4,6 +4,8 @@ type: object
 properties:
   id:
     type: string
+  username:
+    type: string
   profile:
     $ref: "../../../user/ProfileFields.yaml"
   preferences:

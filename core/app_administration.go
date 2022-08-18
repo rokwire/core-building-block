@@ -560,6 +560,14 @@ func (app *application) admGetAccount(accountID string) (*model.Account, error) 
 	return app.getAccount(accountID)
 }
 
+func (app *application) admUpdateAccountUsername(accountID string, appID string, orgID string, username string) error {
+	transaction := func(context storage.TransactionContext) error {
+		return errors.New(logutils.Unimplemented)
+	}
+
+	return app.storage.PerformTransaction(transaction)
+}
+
 func (app *application) admGetAccountSystemConfigs(appID string, orgID string, accountID string, l *logs.Log) (map[string]interface{}, error) {
 	//find the account
 	account, err := app.storage.FindAccountByID(nil, accountID)

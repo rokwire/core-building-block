@@ -16,6 +16,7 @@ package core
 
 import (
 	"core-building-block/core/model"
+	"core-building-block/driven/storage"
 
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
@@ -89,6 +90,14 @@ func (app *application) serUpdateAccountPreferences(id string, preferences map[s
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, nil, err)
 	}
 	return nil
+}
+
+func (app *application) serUpdateAccountUsername(accountID string, appID string, orgID string, username string) error {
+	transaction := func(context storage.TransactionContext) error {
+		return errors.New(logutils.Unimplemented)
+	}
+
+	return app.storage.PerformTransaction(transaction)
 }
 
 func (app *application) serDeleteAccount(id string) error {
