@@ -100,21 +100,15 @@ func (s *staticTokenServiceAuthImpl) addCredentials(creds *model.ServiceAccountC
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
 	}
 
-	encodedToken := s.hashAndEncodeToken(token)
-
-	now := time.Now().UTC()
-	id, _ := uuid.NewUUID()
-
-	creds.ID = id.String()
+	creds.ID = uuid.NewString()
 	creds.Secrets = map[string]interface{}{
-		"token": encodedToken,
+		"token": s.hashAndEncodeToken(token),
 	}
-	creds.DateCreated = now
+	creds.DateCreated = time.Now().UTC()
 
 	displayParams := map[string]interface{}{
 		"token": token,
 	}
-
 	return displayParams, nil
 }
 

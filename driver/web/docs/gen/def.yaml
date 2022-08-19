@@ -3808,7 +3808,7 @@ paths:
                         "name": "initial_signature",
                         "type": "signature",
                         "params": {
-                          "pub_key": "public_key_pem"
+                          "key_pem": "public_key_pem"
                         }
                       }
                     ]
@@ -3916,7 +3916,7 @@ paths:
                     "name": "signature_cred",
                     "type": "signature",
                     "params": {
-                      "pub_key": "public_key_pem"
+                      "key_pem": "public_key_pem"
                     }
                   }
         required: true

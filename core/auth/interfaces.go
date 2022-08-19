@@ -410,7 +410,7 @@ type APIs interface {
 	GetAuthKeySet() (*model.JSONWebKeySet, error)
 
 	//GetServiceRegistrations retrieves all service registrations
-	GetServiceRegistrations(serviceIDs []string) ([]model.ServiceReg, error)
+	GetServiceRegistrations(serviceIDs []string) []model.ServiceReg
 
 	//RegisterService creates a new service registration
 	RegisterService(reg *model.ServiceReg) error
@@ -520,7 +520,7 @@ type Storage interface {
 	DeleteMFAType(context storage.TransactionContext, accountID string, identifier string, mfaType string) error
 
 	//ServiceRegs
-	FindServiceRegs(serviceIDs []string) ([]model.ServiceReg, error)
+	FindServiceRegs(serviceIDs []string) []model.ServiceReg
 	FindServiceReg(serviceID string) (*model.ServiceReg, error)
 	InsertServiceReg(reg *model.ServiceReg) error
 	UpdateServiceReg(reg *model.ServiceReg) error
