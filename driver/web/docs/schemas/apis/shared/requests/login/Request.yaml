@@ -38,3 +38,5 @@ properties:
   preferences:
     type: object
     nullable: true
+  username:
+    type: string

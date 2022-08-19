@@ -242,14 +242,14 @@ func (m *database) applyIdentityProvidersChecks(identityProviders *collectionWra
 func (m *database) applyAccountsChecks(accounts *collectionWrapper) error {
 	m.logger.Info("apply accounts checks.....")
 
-	//add compound index - app_org_id + username
-	err := accounts.AddIndex(bson.D{primitive.E{Key: "app_org_id", Value: 1}, primitive.E{Key: "username", Value: 1}}, false)
+	//add compound index - auth_type identifier + auth_type_id
+	err := accounts.AddIndex(bson.D{primitive.E{Key: "auth_types.identifier", Value: 1}, primitive.E{Key: "auth_types.auth_type_id", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
 
-	//add compound index - auth_type_id + auth_type identifier
-	err = accounts.AddIndex(bson.D{primitive.E{Key: "auth_types.auth_type_id", Value: 1}, primitive.E{Key: "auth_types.identifier", Value: 1}}, false)
+	//add compound index - app_org_id + username
+	err = accounts.AddIndex(bson.D{primitive.E{Key: "app_org_id", Value: 1}, primitive.E{Key: "username", Value: 1}}, false)
 	if err != nil {
 		return err
 	}

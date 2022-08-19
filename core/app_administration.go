@@ -561,17 +561,47 @@ func (app *application) admGetAccount(accountID string) (*model.Account, error) 
 }
 
 func (app *application) admUpdateAccountUsername(accountID string, appID string, orgID string, username string) error {
-	//find the app/org
-	appOrg, err := app.storage.FindApplicationOrganization(appID, orgID)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": appID, "org_id": orgID}, err)
-	}
-	if appOrg == nil {
-		return errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": appID, "org_id": orgID})
+	if username == "" {
+		err := app.storage.UpdateAccountUsername(nil, accountID, username)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountUsername, nil, err)
+		}
+
+		return nil
 	}
 
 	transaction := func(context storage.TransactionContext) error {
-		return errors.New(logutils.Unimplemented)
+		//1. find the app/org
+		appOrg, err := app.storage.FindApplicationOrganization(appID, orgID)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": appID, "org_id": orgID}, err)
+		}
+		if appOrg == nil {
+			return errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": appID, "org_id": orgID})
+		}
+
+		//2. check if any accounts in the app/org use the username
+		accounts, err := app.storage.FindAccountsByUsername(context, appOrg, username)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+		}
+		if len(accounts) > 0 {
+			for _, account := range accounts {
+				//skip update if account already has the requested username
+				if account.ID == accountID {
+					return nil
+				}
+			}
+			return errors.ErrorData(logutils.StatusInvalid, model.TypeAccountUsername, logutils.StringArgs(username+" taken"))
+		}
+
+		//3. update the username
+		err = app.storage.UpdateAccountUsername(context, accountID, username)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountUsername, nil, err)
+		}
+
+		return nil
 	}
 
 	return app.storage.PerformTransaction(transaction)

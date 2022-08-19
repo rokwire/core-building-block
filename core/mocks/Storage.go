@@ -307,6 +307,29 @@ func (_m *Storage) FindAccountsByAccountID(appID string, orgID string, accountID
 	return r0, r1
 }
 
+// FindAccountsByUsername provides a mock function with given fields: context, appOrg, username
+func (_m *Storage) FindAccountsByUsername(context storage.TransactionContext, appOrg *model.ApplicationOrganization, username string) ([]model.Account, error) {
+	ret := _m.Called(context, appOrg, username)
+
+	var r0 []model.Account
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, *model.ApplicationOrganization, string) []model.Account); ok {
+		r0 = rf(context, appOrg, username)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]model.Account)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(storage.TransactionContext, *model.ApplicationOrganization, string) error); ok {
+		r1 = rf(context, appOrg, username)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // FindAppConfigByID provides a mock function with given fields: ID
 func (_m *Storage) FindAppConfigByID(ID string) (*model.ApplicationConfig, error) {
 	ret := _m.Called(ID)
@@ -1140,6 +1163,20 @@ func (_m *Storage) UpdateAccountSystemConfigs(context storage.TransactionContext
 	var r0 error
 	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, map[string]interface{}) error); ok {
 		r0 = rf(context, accountID, configs)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// UpdateAccountUsername provides a mock function with given fields: context, accountID, username
+func (_m *Storage) UpdateAccountUsername(context storage.TransactionContext, accountID string, username string) error {
+	ret := _m.Called(context, accountID, username)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, string) error); ok {
+		r0 = rf(context, accountID, username)
 	} else {
 		r0 = ret.Error(0)
 	}

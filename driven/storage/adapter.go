@@ -1123,7 +1123,14 @@ func (sa *Adapter) FindAccounts(limit int, offset int, appID string, orgID strin
 		filter = append(filter, primitive.E{Key: "profile.last_name", Value: *lastName})
 	}
 	if authType != nil {
-		filter = append(filter, primitive.E{Key: "auth_types.auth_type_code", Value: *authType})
+		cachedAuthType, err := sa.getCachedAuthType(*authType)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeAuthType, &logutils.FieldArgs{"code": *authType}, err)
+		}
+		if cachedAuthType == nil {
+			return nil, errors.ErrorData(logutils.StatusMissing, model.TypeAuthType, &logutils.FieldArgs{"code": *authType})
+		}
+		filter = append(filter, primitive.E{Key: "auth_types.auth_type_id", Value: cachedAuthType.ID})
 	}
 	if authTypeIdentifier != nil {
 		filter = append(filter, primitive.E{Key: "auth_types.identifier", Value: *authTypeIdentifier})
@@ -1177,6 +1184,27 @@ func (sa *Adapter) FindAccountsByAccountID(appID string, orgID string, accountID
 	if err != nil {
 		return nil, err
 	}
+	accounts := accountsFromStorage(accountResult, *appOrg)
+	return accounts, nil
+}
+
+// FindAccountsByUsername finds accounts with a username for a given appOrg
+func (sa *Adapter) FindAccountsByUsername(context TransactionContext, appOrg *model.ApplicationOrganization, username string) ([]model.Account, error) {
+	if appOrg == nil {
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, nil)
+	}
+
+	filter := bson.D{primitive.E{Key: "app_org_id", Value: appOrg.ID}, primitive.E{Key: "username", Value: username}}
+
+	var accountResult []account
+	err := sa.db.accounts.Find(filter, &accountResult, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"app_org_id": appOrg.ID, "username": username}, err)
+	}
+	if len(accountResult) > 1 {
+		sa.logger.WarnWithFields("duplicate username", logutils.Fields{"number": len(accountResult), "app_org_id": appOrg.ID, "username": username})
+	}
+
 	accounts := accountsFromStorage(accountResult, *appOrg)
 	return accounts, nil
 }
@@ -1574,6 +1602,27 @@ func (sa *Adapter) DeleteAccountPermissions(context TransactionContext, accountI
 	if res.ModifiedCount != 1 {
 		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
 	}
+	return nil
+}
+
+// UpdateAccountUsername updates an account's username
+func (sa *Adapter) UpdateAccountUsername(context TransactionContext, accountID string, username string) error {
+	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
+	update := bson.D{
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "username", Value: username},
+			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
+		}},
+	}
+
+	res, err := sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"id": accountID}, err)
+	}
+	if res.ModifiedCount != 1 {
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"id": accountID, "modified": res.ModifiedCount, "expected": 1})
+	}
+
 	return nil
 }
 

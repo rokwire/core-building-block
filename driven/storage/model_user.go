@@ -34,7 +34,7 @@ type account struct {
 
 	MFATypes []mfaType `bson:"mfa_types,omitempty"`
 
-	Username      *string                `bson:"username,omitempty"`
+	Username      string                 `bson:"username"`
 	ExternalIDs   map[string]string      `bson:"external_ids"`
 	Preferences   map[string]interface{} `bson:"preferences"`
 	SystemConfigs map[string]interface{} `bson:"system_configs"`
