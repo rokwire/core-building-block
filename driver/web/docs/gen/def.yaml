@@ -5105,6 +5105,8 @@ components:
           $ref: '#/components/schemas/AccountFields'
         app_org:
           $ref: '#/components/schemas/ApplicationOrganization'
+        system:
+          type: boolean
         permissions:
           type: array
           items:
@@ -5140,7 +5142,6 @@ components:
         - org_id
         - first_name
         - last_name
-        - has_permissions
         - permissions
         - roles
         - groups
@@ -5159,6 +5160,8 @@ components:
           type: string
         last_name:
           type: string
+        system:
+          type: boolean
         has_permissions:
           type: boolean
         permissions:
@@ -5184,6 +5187,7 @@ components:
           type: object
           nullable: true
         date_created:
+          readOnly: true
           type: string
         date_updated:
           type: string
@@ -5745,6 +5749,8 @@ components:
           type: object
           nullable: true
         has_permissions:
+          type: boolean
+        system:
           type: boolean
         permissions:
           type: array
