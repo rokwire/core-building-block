@@ -1875,7 +1875,7 @@ func (a *Auth) GrantAccountGroups(context storage.TransactionContext, account *m
 }
 
 // GetServiceRegistrations retrieves all service registrations
-func (a *Auth) GetServiceRegistrations(serviceIDs []string) ([]model.ServiceReg, error) {
+func (a *Auth) GetServiceRegistrations(serviceIDs []string) []model.ServiceReg {
 	return a.storage.FindServiceRegs(serviceIDs)
 }
 

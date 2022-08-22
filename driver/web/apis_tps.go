@@ -43,11 +43,7 @@ func (h TPSApisHandler) getServiceRegistrations(l *logs.Log, r *http.Request, cl
 	}
 	serviceIDs := strings.Split(serviceIDsParam, ",")
 
-	serviceRegs, err := h.coreAPIs.Auth.GetServiceRegistrations(serviceIDs)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeServiceReg, nil, err, http.StatusInternalServerError, true)
-	}
-
+	serviceRegs := h.coreAPIs.Auth.GetServiceRegistrations(serviceIDs)
 	serviceRegResp := authServiceRegListToDef(serviceRegs)
 
 	data, err := json.Marshal(serviceRegResp)
