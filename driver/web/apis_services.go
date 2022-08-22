@@ -131,6 +131,7 @@ func (h ServicesApisHandler) loginMFA(l *logs.Log, r *http.Request, claims *toke
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("login mfa request"), nil, err, http.StatusBadRequest, true)
 	}
 
+	l.AddContext("account_id", mfaData.AccountId)
 	message, loginSession, err := h.coreAPIs.Auth.LoginMFA(mfaData.ApiKey, mfaData.AccountId, mfaData.SessionId, mfaData.Identifier, string(mfaData.Type), mfaData.Code, mfaData.State, l)
 	if message != nil {
 		return l.HttpResponseError(*message, err, http.StatusUnauthorized, false)

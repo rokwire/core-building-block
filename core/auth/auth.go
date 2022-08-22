@@ -231,6 +231,8 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 	if err != nil {
 		return nil, nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
+	a.setLogContext(account, l)
+
 	canSignIn := a.canSignIn(account, authType.ID, externalUser.Identifier)
 	if canSignIn {
 		//account exists
@@ -584,6 +586,7 @@ func (a *Auth) applyAuthType(authType model.AuthType, appOrg model.ApplicationOr
 	if err != nil {
 		return "", nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err) //TODO add args..
 	}
+	a.setLogContext(account, l)
 
 	canSignIn := a.canSignIn(account, authType.ID, userIdentifier)
 
@@ -1915,8 +1918,10 @@ func (a *Auth) checkServiceAccountCreds(r *sigauth.Request, accountID *string, f
 	params := map[string]interface{}{"first_party": firstParty}
 	if accountID == nil {
 		params["account_id"] = requestData.AccountID
+		l.AddContext("account_id", requestData.AccountID)
 	} else {
 		params["account_id"] = *accountID
+		l.AddContext("account_id", *accountID)
 	}
 	if single {
 		params["app_id"] = requestData.AppID
@@ -2287,6 +2292,14 @@ func (a *Auth) updateExternalAccountGroups(account *model.Account, newExternalGr
 
 	account.Groups = newGroups
 	return updated, nil
+}
+
+func (a *Auth) setLogContext(account *model.Account, l *logs.Log) {
+	accountID := "nil"
+	if account != nil {
+		accountID = account.ID
+	}
+	l.SetContext("account_id", accountID)
 }
 
 // storeReg stores the service registration record
