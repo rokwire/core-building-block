@@ -271,10 +271,11 @@ func (we Adapter) serveResetCredential(w http.ResponseWriter, r *http.Request) {
 
 func (we Adapter) serveDoc(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("access-control-allow-origin", "*")
-	// http.ServeFile(w, r, "./driver/web/docs/gen/def.yaml")
 
 	if we.cachedYamlDoc != nil {
 		http.ServeContent(w, r, "", time.Now(), bytes.NewReader([]byte(we.cachedYamlDoc)))
+	} else {
+		http.ServeFile(w, r, "./driver/web/docs/gen/def.yaml")
 	}
 }
 
