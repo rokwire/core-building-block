@@ -144,6 +144,8 @@ const (
 
 	SharedReqLoginAuthTypeEmail SharedReqLoginAuthType = "email"
 
+	SharedReqLoginAuthTypeGithubOauth2 SharedReqLoginAuthType = "github_oauth2"
+
 	SharedReqLoginAuthTypeIllinoisOidc SharedReqLoginAuthType = "illinois_oidc"
 
 	SharedReqLoginAuthTypeTwilioPhone SharedReqLoginAuthType = "twilio_phone"
@@ -151,6 +153,8 @@ const (
 
 // Defines values for SharedReqLoginUrlAuthType.
 const (
+	SharedReqLoginUrlAuthTypeGithubOauth2 SharedReqLoginUrlAuthType = "github_oauth2"
+
 	SharedReqLoginUrlAuthTypeIllinoisOidc SharedReqLoginUrlAuthType = "illinois_oidc"
 )
 

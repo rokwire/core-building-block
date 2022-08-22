@@ -2074,6 +2074,10 @@ func (a *Auth) getExternalAuthTypeImpl(authType model.AuthType) (externalAuthTyp
 	if strings.HasSuffix(authType.Code, "_oidc") {
 		key = "oidc"
 	}
+	//github_oauth2, other_oauth2
+	if strings.HasSuffix(authType.Code, "_oauth2") {
+		key = "oauth2"
+	}
 
 	if auth, ok := a.externalAuthTypes[key]; ok {
 		return auth, nil

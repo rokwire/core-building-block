@@ -5302,6 +5302,7 @@ components:
             - email
             - twilio_phone
             - illinois_oidc
+            - github_oauth2
             - anonymous
         app_type_identifier:
           type: string
@@ -5314,6 +5315,10 @@ components:
             - $ref: '#/components/schemas/_shared_req_CredsEmail'
             - $ref: '#/components/schemas/_shared_req_CredsTwilioPhone'
             - $ref: '#/components/schemas/_shared_req_CredsOIDC'
+            - type: string
+              description: |
+                Auth login creds for auth_type="oauth2" (or variants)
+                  - full redirect URI received from OAuth2 provider
             - $ref: '#/components/schemas/_shared_req_CredsAPIKey'
         params:
           type: object
@@ -5388,6 +5393,7 @@ components:
           type: string
           enum:
             - illinois_oidc
+            - github_oauth2
         app_type_identifier:
           type: string
         org_id:

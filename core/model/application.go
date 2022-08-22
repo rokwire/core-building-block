@@ -289,6 +289,7 @@ type IdentityProviderSetting struct {
 	UserIdentifierField string            `bson:"user_identifier_field"`
 	ExternalIDFields    map[string]string `bson:"external_id_fields"`
 
+	NameField       string `bson:"name_field"`
 	FirstNameField  string `bson:"first_name_field"`
 	MiddleNameField string `bson:"middle_name_field"`
 	LastNameField   string `bson:"last_name_field"`
