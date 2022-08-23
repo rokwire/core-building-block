@@ -252,7 +252,7 @@ func (a *oidcAuthImpl) newToken(code string, authType model.AuthType, appType mo
 func (a *oidcAuthImpl) refreshToken(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization,
 	params *oidcRefreshParams, oidcConfig *oidcAuthConfig, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error) {
 	if !oidcConfig.UseRefresh {
-		return nil, nil, errors.Newf("refresh tokens not enabled for org_id=%s, app_id=%s",
+		return nil, nil, errors.Newf("oidc refresh tokens not enabled for org_id=%s, app_id=%s",
 			appOrg.Organization.ID, appOrg.Application.ID)
 	}
 

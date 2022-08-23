@@ -55,6 +55,7 @@ type oauth2AuthConfig struct {
 	Scopes       string `json:"scopes"`
 	AllowSignUp  bool   `json:"allow_signup"`
 	UseState     bool   `json:"use_state"`
+	UseRefresh   bool   `json:"use_refresh"`
 	ClientID     string `json:"client_id" validate:"required"`
 	ClientSecret string `json:"client_secret" validate:"required"`
 }
@@ -71,6 +72,20 @@ type oauth2Token struct {
 
 type oauth2RefreshParams struct {
 	RefreshToken string `json:"refresh_token" bson:"refresh_token" validate:"required"`
+}
+
+func oauth2RefreshParamsFromMap(val map[string]interface{}) (*oauth2RefreshParams, error) {
+	oauth2Token, ok := val["oauth2_token"].(map[string]interface{})
+	if !ok {
+		return nil, errors.ErrorData(logutils.StatusMissing, "oauth2 token", nil)
+	}
+
+	refreshToken, ok := oauth2Token["refresh_token"].(string)
+	if !ok {
+		return nil, errors.ErrorData(logutils.StatusMissing, "refresh token", nil)
+	}
+
+	return &oauth2RefreshParams{RefreshToken: refreshToken}, nil
 }
 
 func (a *oauth2AuthImpl) externalLogin(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error) {
@@ -111,7 +126,17 @@ func (a *oauth2AuthImpl) externalLogin(authType model.AuthType, appType model.Ap
 }
 
 func (a *oauth2AuthImpl) refresh(params map[string]interface{}, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error) {
-	return nil, nil, errors.New(logutils.Unimplemented)
+	refreshParams, err := oauth2RefreshParamsFromMap(params)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionParse, typeAuthRefreshParams, nil, err)
+	}
+
+	oauth2Config, err := a.getOAuth2AuthConfig(authType, appType)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionGet, typeOAuth2AuthConfig, nil, err)
+	}
+
+	return a.refreshToken(authType, appType, appOrg, refreshParams, oauth2Config, l)
 }
 
 func (a *oauth2AuthImpl) getLoginURL(authType model.AuthType, appType model.ApplicationType, redirectURI string, l *logs.Log) (string, map[string]interface{}, error) {
@@ -156,6 +181,22 @@ func (a *oauth2AuthImpl) newToken(code string, authType model.AuthType, appType 
 	bodyData := map[string]string{
 		"client_id": oauth2Config.ClientID,
 		"code":      code,
+	}
+
+	return a.loadOAuth2TokensAndInfo(bodyData, oauth2Config, authType, appType, appOrg, l)
+}
+
+func (a *oauth2AuthImpl) refreshToken(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization,
+	params *oauth2RefreshParams, oauth2Config *oauth2AuthConfig, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error) {
+	if !oauth2Config.UseRefresh {
+		return nil, nil, errors.Newf("oauth2 refresh tokens not enabled for org_id=%s, app_id=%s",
+			appOrg.Organization.ID, appOrg.Application.ID)
+	}
+
+	bodyData := map[string]string{
+		"refresh_token": params.RefreshToken,
+		"grant_type":    "refresh_token",
+		"client_id":     oauth2Config.ClientID,
 	}
 
 	return a.loadOAuth2TokensAndInfo(bodyData, oauth2Config, authType, appType, appOrg, l)
