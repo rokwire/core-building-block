@@ -14,6 +14,8 @@ properties:
     nullable: true
   has_permissions:
     type: boolean
+  system:
+    type: boolean
   permissions:
     type: array
     items:

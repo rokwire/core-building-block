@@ -5,7 +5,7 @@ put:
   description: |
     Grant account permissions
 
-    **Auth:** Requires admin access token with `update_account-permissions` or `update_account-authorization` permission
+    **Auth:** Requires admin access token with `update_account-permissions`, `update_accounts`, or `all_accounts` permission
   security:
     - bearerAuth: []
   parameters:
@@ -45,7 +45,7 @@ delete:
   description: |
     Deletes an existing permissions from account
 
-    **Auth:** Requires admin access token with `update_account-permissions` or `update_account-authorization` permission
+    **Auth:** Requires admin access token with `update_account-permissions`, `update_accounts`, or `all_accounts` permission
   security:
     - bearerAuth: []
   parameters:

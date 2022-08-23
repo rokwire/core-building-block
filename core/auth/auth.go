@@ -2569,11 +2569,7 @@ type LocalServiceRegLoaderImpl struct {
 
 // LoadServices implements ServiceRegLoader interface
 func (l *LocalServiceRegLoaderImpl) LoadServices() ([]authservice.ServiceReg, error) {
-	regs, err := l.storage.FindServiceRegs(l.GetSubscribedServices())
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceReg, nil, err)
-	}
-
+	regs := l.storage.FindServiceRegs(l.GetSubscribedServices())
 	authRegs := make([]authservice.ServiceReg, len(regs))
 	for i, serviceReg := range regs {
 		reg := serviceReg.Registration

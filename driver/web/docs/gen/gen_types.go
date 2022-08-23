@@ -245,6 +245,7 @@ type Account struct {
 	Preferences   *map[string]interface{}  `json:"preferences"`
 	Profile       *Profile                 `json:"profile,omitempty"`
 	Roles         *[]AppOrgRole            `json:"roles,omitempty"`
+	System        *bool                    `json:"system,omitempty"`
 	SystemConfigs *map[string]interface{}  `json:"system_configs"`
 }
 
@@ -507,13 +508,14 @@ type PartialAccount struct {
 	DateUpdated    *string                 `json:"date_updated"`
 	FirstName      string                  `json:"first_name"`
 	Groups         []AppOrgGroup           `json:"groups"`
-	HasPermissions bool                    `json:"has_permissions"`
+	HasPermissions *bool                   `json:"has_permissions,omitempty"`
 	Id             string                  `json:"id"`
 	LastName       string                  `json:"last_name"`
 	OrgId          string                  `json:"org_id"`
 	Params         *map[string]interface{} `json:"params"`
 	Permissions    []Permission            `json:"permissions"`
 	Roles          []AppOrgRole            `json:"roles"`
+	System         *bool                   `json:"system,omitempty"`
 	SystemConfigs  *map[string]interface{} `json:"system_configs"`
 }
 
@@ -997,6 +999,7 @@ type SharedResAccount struct {
 	Preferences    *map[string]interface{}  `json:"preferences"`
 	Profile        *ProfileFields           `json:"profile,omitempty"`
 	Roles          *[]AppOrgRole            `json:"roles,omitempty"`
+	System         *bool                    `json:"system,omitempty"`
 	SystemConfigs  *map[string]interface{}  `json:"system_configs"`
 }
 
