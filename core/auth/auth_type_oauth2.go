@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/url"
 	"strconv"
 	"strings"
 
@@ -61,6 +60,129 @@ type oauth2AuthConfig struct {
 	ClientSecret string `json:"client_secret" validate:"required"`
 }
 
+func (o *oauth2AuthConfig) getAuthorizeURL() string {
+	url := o.Host + "/login/oauth/authorize"
+	if len(o.AuthorizeURL) > 0 {
+		url = o.AuthorizeURL
+	}
+
+	return url
+}
+
+func (o *oauth2AuthConfig) getTokenURL() string {
+	tokenURL := o.Host + "/login/oauth/access_token"
+	if len(o.TokenURL) > 0 {
+		tokenURL = o.TokenURL
+	}
+
+	url := ""
+	if strings.Contains(tokenURL, "{client_id}") {
+		url = strings.ReplaceAll(tokenURL, "{client_id}", o.ClientID)
+		url = strings.ReplaceAll(url, "{client_secret}", o.ClientSecret)
+	} else {
+		url = tokenURL
+	}
+
+	return url
+}
+
+func (o *oauth2AuthConfig) getUserInfoURL() string {
+	url := o.Host + "/login/oauth/user"
+	if len(o.UserInfoURL) > 0 {
+		url = o.UserInfoURL
+	}
+
+	return url
+}
+
+func (o *oauth2AuthConfig) getAuthorizationCode(auth *Auth, creds string, params string) (string, error) {
+	var loginParams oauth2LoginParams
+	if o.UseState {
+		err := json.Unmarshal([]byte(params), &loginParams)
+		if err != nil {
+			return "", errors.WrapErrorAction(logutils.ActionUnmarshal, typeOAuth2LoginParams, nil, err)
+		}
+		validate := validator.New()
+		err = validate.Struct(loginParams)
+		if err != nil {
+			return "", errors.WrapErrorAction(logutils.ActionValidate, typeOAuth2LoginParams, nil, err)
+		}
+	}
+
+	parsedCreds, err := auth.queryValuesFromURL(creds)
+	if err != nil {
+		return "", errors.WrapErrorAction(logutils.ActionParse, "oauth2 creds", nil, err)
+	}
+	//state in creds must match state generated for login url (if used)
+	if o.UseState && loginParams.State != parsedCreds.Get("state") {
+		return "", errors.ErrorData(logutils.StatusInvalid, "oauth2 login", &logutils.FieldArgs{"state": parsedCreds.Get("state")})
+	}
+
+	return parsedCreds.Get("code"), nil
+}
+
+func (o *oauth2AuthConfig) buildNewTokenRequest(auth *Auth, token string, refresh bool) (*http.Request, error) {
+	body := map[string]string{
+		"client_id":    o.ClientID,
+		"redirect_uri": o.RedirectURI,
+	}
+	if o.ClientSecret != "" {
+		body["client_secret"] = o.ClientSecret
+	}
+	if refresh {
+		body["refresh_token"] = token
+		body["grant_type"] = "refresh_token"
+	} else {
+		body["code"] = token
+	}
+
+	encoded := auth.encodeQueryValues(body)
+	headers := map[string]string{
+		"Accept":         "application/json",
+		"Content-Type":   "application/x-www-form-urlencoded",
+		"Content-Length": strconv.Itoa(len(body)),
+	}
+
+	req, err := http.NewRequest(http.MethodPost, o.getTokenURL(), strings.NewReader(encoded))
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeRequest, nil, err)
+	}
+	for k, v := range headers {
+		req.Header.Set(k, v)
+	}
+
+	return req, nil
+}
+
+func (o *oauth2AuthConfig) checkIDToken(token oauthToken) (string, error) {
+	return "", nil
+}
+
+func (o *oauth2AuthConfig) checkSubject(tokenSubject string, userSubject string) bool {
+	return true
+}
+
+func (o *oauth2AuthConfig) buildLoginURLResponse(auth *Auth) (string, map[string]interface{}, error) {
+	query := map[string]string{
+		"client_id":    o.ClientID,
+		"redirect_uri": o.RedirectURI,
+		"scope":        o.Scopes,
+		"allow_signup": strconv.FormatBool(o.AllowSignUp),
+	}
+
+	responseParams := make(map[string]interface{})
+	if o.UseState {
+		state, err := generateState()
+		if err != nil {
+			return "", nil, errors.WrapErrorAction("generating", "random state", nil, err)
+		}
+		query["state"] = state
+		responseParams["state"] = state
+	}
+
+	return o.getAuthorizeURL() + "?" + auth.encodeQueryValues(query), responseParams, nil
+}
+
 type oauth2LoginParams struct {
 	State string `json:"state"`
 }
@@ -71,22 +193,22 @@ type oauth2Token struct {
 	TokenType   string `json:"token_type" validate:"required"`
 }
 
-type oauth2RefreshParams struct {
-	RefreshToken string `json:"refresh_token" bson:"refresh_token" validate:"required"`
+func (t *oauth2Token) getAuthorizationHeader() string {
+	return fmt.Sprintf("%s %s", t.TokenType, t.AccessToken)
 }
 
-func oauth2RefreshParamsFromMap(val map[string]interface{}) (*oauth2RefreshParams, error) {
-	oauth2Token, ok := val["oauth2_token"].(map[string]interface{})
-	if !ok {
-		return nil, errors.ErrorData(logutils.StatusMissing, "oauth2 token", nil)
-	}
+func (t *oauth2Token) getResponse() map[string]interface{} {
+	tokenParams := map[string]interface{}{}
+	tokenParams["access_token"] = t.AccessToken
+	tokenParams["token_type"] = t.TokenType
 
-	refreshToken, ok := oauth2Token["refresh_token"].(string)
-	if !ok {
-		return nil, errors.ErrorData(logutils.StatusMissing, "refresh token", nil)
-	}
+	params := map[string]interface{}{}
+	params["oauth2_token"] = tokenParams
+	return params
+}
 
-	return &oauth2RefreshParams{RefreshToken: refreshToken}, nil
+type oauth2RefreshParams struct {
+	RefreshToken string `json:"refresh_token" bson:"refresh_token" validate:"required"`
 }
 
 func (a *oauth2AuthImpl) externalLogin(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error) {
@@ -95,30 +217,12 @@ func (a *oauth2AuthImpl) externalLogin(authType model.AuthType, appType model.Ap
 		return nil, nil, errors.WrapErrorAction(logutils.ActionGet, typeOAuth2AuthConfig, nil, err)
 	}
 
-	var loginParams oauth2LoginParams
-	if oauth2Config.UseState {
-		err := json.Unmarshal([]byte(params), &loginParams)
-		if err != nil {
-			return nil, nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeOAuth2LoginParams, nil, err)
-		}
-		validate := validator.New()
-		err = validate.Struct(loginParams)
-		if err != nil {
-			return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeOAuth2LoginParams, nil, err)
-		}
-	}
-
-	parsedCreds, err := a.auth.queryValuesFromURL(creds)
+	code, err := oauth2Config.getAuthorizationCode(a.auth, creds, params)
 	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionParse, "oauth2 creds", nil, err)
+		return nil, nil, errors.WrapErrorAction(logutils.ActionGet, "authorization code", nil, err)
 	}
 
-	//state in creds must match state generated for login url (if used)
-	if oauth2Config.UseState && loginParams.State != parsedCreds.Get("state") {
-		return nil, nil, errors.ErrorData(logutils.StatusInvalid, "oauth2 login", &logutils.FieldArgs{"state": parsedCreds.Get("state")})
-	}
-
-	externalUser, parameters, err := a.newToken(parsedCreds.Get("code"), authType, appType, appOrg, oauth2Config, l)
+	externalUser, parameters, err := a.loadOAuth2TokensAndInfo(oauth2Config, authType, appType, appOrg, code, false, l)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -127,17 +231,20 @@ func (a *oauth2AuthImpl) externalLogin(authType model.AuthType, appType model.Ap
 }
 
 func (a *oauth2AuthImpl) refresh(params map[string]interface{}, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error) {
-	refreshParams, err := oauth2RefreshParamsFromMap(params)
-	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionParse, typeAuthRefreshParams, nil, err)
-	}
-
 	oauth2Config, err := a.getOAuth2AuthConfig(authType, appType)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionGet, typeOAuth2AuthConfig, nil, err)
 	}
+	if !oauth2Config.UseRefresh {
+		return nil, nil, errors.Newf("oauth2 refresh tokens not enabled for org_id=%s, app_id=%s", appOrg.Organization.ID, appOrg.Application.ID)
+	}
 
-	return a.refreshToken(authType, appType, appOrg, refreshParams, oauth2Config, l)
+	refreshParams, err := refreshParamsFromMap(params, AuthTypeOAuth2)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionParse, typeAuthRefreshParams, nil, err)
+	}
+
+	return a.loadOAuth2TokensAndInfo(oauth2Config, authType, appType, appOrg, refreshParams.RefreshToken, true, l)
 }
 
 func (a *oauth2AuthImpl) getLoginURL(authType model.AuthType, appType model.ApplicationType, l *logs.Log) (string, map[string]interface{}, error) {
@@ -146,73 +253,22 @@ func (a *oauth2AuthImpl) getLoginURL(authType model.AuthType, appType model.Appl
 		return "", nil, errors.WrapErrorAction(logutils.ActionGet, typeOAuth2AuthConfig, nil, err)
 	}
 
-	bodyData := map[string]string{
-		"client_id":    oauth2Config.ClientID,
-		"redirect_uri": oauth2Config.RedirectURI,
-		"scope":        oauth2Config.Scopes,
-		"allow_signup": strconv.FormatBool(oauth2Config.AllowSignUp),
-	}
-
-	responseParams := make(map[string]interface{})
-	if oauth2Config.UseState {
-		state, err := generateState()
-		if err != nil {
-			return "", nil, errors.WrapErrorAction("generating", "random state", nil, err)
-		}
-		bodyData["state"] = state
-		responseParams["state"] = state
-	}
-
-	authURL := oauth2Config.Host + "/login/oauth/authorize"
-	if len(oauth2Config.AuthorizeURL) > 0 {
-		authURL = oauth2Config.AuthorizeURL
-	}
-
-	query := url.Values{}
-	for k, v := range bodyData {
-		query.Set(k, v)
-	}
-	return authURL + "?" + query.Encode(), responseParams, nil
+	return oauth2Config.buildLoginURLResponse(a.auth)
 }
 
-func (a *oauth2AuthImpl) newToken(code string, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, oauth2Config *oauth2AuthConfig, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error) {
-	bodyData := map[string]string{
-		"client_id":    oauth2Config.ClientID,
-		"code":         code,
-		"redirect_uri": oauth2Config.RedirectURI,
-	}
-
-	return a.loadOAuth2TokensAndInfo(bodyData, oauth2Config, authType, appType, appOrg, l)
-}
-
-func (a *oauth2AuthImpl) refreshToken(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization,
-	params *oauth2RefreshParams, oauth2Config *oauth2AuthConfig, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error) {
-	if !oauth2Config.UseRefresh {
-		return nil, nil, errors.Newf("oauth2 refresh tokens not enabled for org_id=%s, app_id=%s",
-			appOrg.Organization.ID, appOrg.Application.ID)
-	}
-
-	bodyData := map[string]string{
-		"refresh_token": params.RefreshToken,
-		"grant_type":    "refresh_token",
-		"client_id":     oauth2Config.ClientID,
-	}
-
-	return a.loadOAuth2TokensAndInfo(bodyData, oauth2Config, authType, appType, appOrg, l)
-}
-
-func (a *oauth2AuthImpl) loadOAuth2TokensAndInfo(bodyData map[string]string, oauth2Config *oauth2AuthConfig, authType model.AuthType, appType model.ApplicationType,
-	appOrg model.ApplicationOrganization, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error) {
-	token, err := a.loadOAuth2TokenWithParams(bodyData, oauth2Config)
+func (a *oauth2AuthImpl) loadOAuth2TokensAndInfo(oauth2Config *oauth2AuthConfig, authType model.AuthType, appType model.ApplicationType,
+	appOrg model.ApplicationOrganization, token string, refresh bool, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error) {
+	newToken, err := a.loadOAuth2TokenWithParams(oauth2Config, token, refresh)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionGet, typeOAuth2Token, nil, err)
 	}
 
-	userInfoURL := oauth2Config.Host + "/login/oauth/user"
-	if len(oauth2Config.UserInfoURL) > 0 {
-		userInfoURL = oauth2Config.UserInfoURL
+	sub, err := oauth2Config.checkIDToken(newToken)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeOidcToken, nil, err)
 	}
-	userInfo, err := a.loadOAuth2UserInfo(token, userInfoURL)
+
+	userInfo, err := a.loadOAuth2UserInfo(oauth2Config, newToken)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionGet, "user info", nil, err)
 	}
@@ -221,6 +277,11 @@ func (a *oauth2AuthImpl) loadOAuth2TokensAndInfo(bodyData map[string]string, oau
 	err = json.Unmarshal(userInfo, &userClaims)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionUnmarshal, "user info", nil, err)
+	}
+
+	userClaimsSub, _ := userClaims["sub"].(string)
+	if !oauth2Config.checkSubject(sub, userClaimsSub) {
+		return nil, nil, errors.Newf("mismatching user info sub %s and id token sub %s", userClaimsSub, sub)
 	}
 
 	identityProviderID, _ := authType.Params["identity_provider"].(string)
@@ -250,7 +311,7 @@ func (a *oauth2AuthImpl) loadOAuth2TokensAndInfo(bodyData map[string]string, oau
 	for k, v := range identityProviderSetting.ExternalIDFields {
 		externalID, ok := userClaims[v].(string)
 		if !ok {
-			a.auth.logger.ErrorWithFields("failed to parse external id", logutils.Fields{k: userClaims[v]})
+			l.ErrorWithDetails("failed to parse external id", logutils.Fields{k: userClaims[v]})
 			continue
 		}
 		externalIDs[k] = externalID
@@ -259,49 +320,16 @@ func (a *oauth2AuthImpl) loadOAuth2TokensAndInfo(bodyData map[string]string, oau
 	externalUser := model.ExternalSystemUser{Identifier: identifier, ExternalIDs: externalIDs, FirstName: names[0],
 		LastName: names[len(names)-1], Email: email, SystemSpecific: systemSpecific}
 
-	oauth2Params := map[string]interface{}{}
-	oauth2Params["access_token"] = token.AccessToken
-	oauth2Params["token_type"] = token.TokenType
-
-	params := map[string]interface{}{}
-	params["oauth2_token"] = oauth2Params
-	return &externalUser, params, nil
+	return &externalUser, newToken.getResponse(), nil
 }
 
-func (a *oauth2AuthImpl) loadOAuth2TokenWithParams(params map[string]string, oauth2Config *oauth2AuthConfig) (*oauth2Token, error) {
-	tokenURI := ""
-	oauth2TokenURL := oauth2Config.Host + "/login/oauth/access_token"
-	if len(oauth2Config.TokenURL) > 0 {
-		oauth2TokenURL = oauth2Config.TokenURL
-	}
-	if strings.Contains(oauth2TokenURL, "{client_id}") {
-		tokenURI = strings.ReplaceAll(oauth2TokenURL, "{client_id}", oauth2Config.ClientID)
-		tokenURI = strings.ReplaceAll(tokenURI, "{client_secret}", oauth2Config.ClientSecret)
-	} else if len(oauth2Config.ClientSecret) > 0 {
-		tokenURI = oauth2TokenURL
-		params["client_secret"] = oauth2Config.ClientSecret
-	} else {
-		tokenURI = oauth2TokenURL
-	}
-
-	data := url.Values{}
-	for k, v := range params {
-		data.Set(k, v)
-	}
-	headers := map[string]string{
-		"Accept":         "application/json",
-		"Content-Type":   "application/x-www-form-urlencoded",
-		"Content-Length": strconv.Itoa(len(data.Encode())),
+func (a *oauth2AuthImpl) loadOAuth2TokenWithParams(oauth2Config *oauth2AuthConfig, token string, refresh bool) (*oauth2Token, error) {
+	req, err := oauth2Config.buildNewTokenRequest(a.auth, token, refresh)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionCreate, "oauth2 token request", nil, err)
 	}
 
 	client := &http.Client{}
-	req, err := http.NewRequest(http.MethodPost, tokenURI, strings.NewReader(data.Encode()))
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeRequest, nil, err)
-	}
-	for k, v := range headers {
-		req.Header.Set(k, v)
-	}
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionSend, logutils.TypeRequest, nil, err)
@@ -330,23 +358,13 @@ func (a *oauth2AuthImpl) loadOAuth2TokenWithParams(params map[string]string, oau
 	return &authToken, nil
 }
 
-func (a *oauth2AuthImpl) loadOAuth2UserInfo(token *oauth2Token, url string) ([]byte, error) {
-	if len(token.AccessToken) == 0 {
-		return nil, errors.ErrorData(logutils.StatusMissing, "access token", nil)
-	}
-	if len(token.TokenType) == 0 {
-		return nil, errors.ErrorData(logutils.StatusMissing, "token type", nil)
-	}
-	if len(url) == 0 {
-		return nil, errors.ErrorData(logutils.StatusMissing, "user info url", nil)
-	}
-
+func (a *oauth2AuthImpl) loadOAuth2UserInfo(oauth2Config *oauth2AuthConfig, token *oauth2Token) ([]byte, error) {
 	client := &http.Client{}
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+	req, err := http.NewRequest(http.MethodGet, oauth2Config.getUserInfoURL(), nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeRequest, nil, err)
 	}
-	req.Header.Set("Authorization", fmt.Sprintf("%s %s", token.TokenType, token.AccessToken))
+	req.Header.Set("Authorization", token.getAuthorizationHeader())
 
 	resp, err := client.Do(req)
 	if err != nil {

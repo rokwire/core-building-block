@@ -2086,6 +2086,15 @@ func (a *Auth) queryValuesFromURL(urlStr string) (url.Values, error) {
 	return parsedCreds, nil
 }
 
+func (a *Auth) encodeQueryValues(values map[string]string) string {
+	data := url.Values{}
+	for k, v := range values {
+		data.Set(k, v)
+	}
+
+	return data.Encode()
+}
+
 func (a *Auth) getAuthTypeImpl(authType model.AuthType) (authType, error) {
 	if auth, ok := a.authTypes[authType.Code]; ok {
 		return auth, nil
