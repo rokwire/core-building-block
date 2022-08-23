@@ -894,7 +894,6 @@ type SharedReqLoginUrl struct {
 	AppTypeIdentifier string                    `json:"app_type_identifier"`
 	AuthType          SharedReqLoginUrlAuthType `json:"auth_type"`
 	OrgId             string                    `json:"org_id"`
-	RedirectUri       string                    `json:"redirect_uri"`
 }
 
 // SharedReqLoginUrlAuthType defines model for SharedReqLoginUrl.AuthType.
@@ -953,7 +952,6 @@ type SharedReqParamsOAuth2 struct {
 // Auth login params for auth_type="oidc" (or variants)
 type SharedReqParamsOIDC struct {
 	PkceVerifier *string `json:"pkce_verifier,omitempty"`
-	RedirectUri  *string `json:"redirect_uri,omitempty"`
 }
 
 // SharedReqParamsSetEmailCredential defines model for _shared_req_ParamsSetEmailCredential.

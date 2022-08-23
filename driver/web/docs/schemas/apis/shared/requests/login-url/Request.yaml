@@ -3,7 +3,6 @@ required:
   - app_type_identifier
   - org_id
   - api_key
-  - redirect_uri
 type: object
 properties:
   auth_type:
@@ -16,6 +15,4 @@ properties:
   org_id:
     type: string
   api_key:
-    type: string
-  redirect_uri:
     type: string

@@ -52,8 +52,20 @@ post:
                 "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
                 "creds": "https://redirect.example.com?code=ai324uith8gSEefesEguorgwsf43",
                 "params": {
-                  "redirect_uri": "https://redirect.example.com",
                   "pkce_verifier": "w4iuhfq0u43hfq38ghn3gnSFSFiqp3ugnpugnqiprgUGNPINfsdoirpgia"
+                }
+              }
+          github_oauth2:
+            summary: GitHub OAuth2
+            value: |
+              {
+                "auth_type": "github_oauth2",
+                "app_type_identifier": "edu.illinois.rokwire",
+                "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
+                "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
+                "creds": "https://redirect.example.com?code=ai324uith8gSEefesEguorgwsf43&state=vrH0c-seVXlmROlKa7ILgPw0d2Ukk8GjjOzhFJ2qmVDbL_MNy6mRcTH4tmDCvKIUxHQ=",
+                "params": {
+                  "state": "vrH0c-seVXlmROlKa7ILgPw0d2Ukk8GjjOzhFJ2qmVDbL_MNy6mRcTH4tmDCvKIUxHQ="
                 }
               }
     required: true
@@ -130,6 +142,14 @@ delete:
             value: |
               {
                 "auth_type": "illinois_oidc",
+                "app_type_identifier": "edu.illinois.rokwire",
+                "identifier": "123456789"
+              }
+          github_oauth2:
+            summary: GitHub OAuth2
+            value: |
+              {
+                "auth_type": "github_oauth2",
                 "app_type_identifier": "edu.illinois.rokwire",
                 "identifier": "123456789"
               }

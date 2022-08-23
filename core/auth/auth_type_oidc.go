@@ -55,6 +55,7 @@ type oidcAuthImpl struct {
 
 type oidcAuthConfig struct {
 	Host               string            `json:"host" validate:"required"`
+	RedirectURI        string            `json:"redirect_uri" validate:"required"`
 	AuthorizeURL       string            `json:"authorize_url"`
 	TokenURL           string            `json:"token_url"`
 	UserInfoURL        string            `json:"userinfo_url"`
@@ -84,7 +85,6 @@ type oidcToken struct {
 
 type oidcRefreshParams struct {
 	RefreshToken string `json:"refresh_token" bson:"refresh_token" validate:"required"`
-	RedirectURI  string `json:"redirect_uri" bson:"redirect_uri" validate:"required"`
 }
 
 func oidcRefreshParamsFromMap(val map[string]interface{}) (*oidcRefreshParams, error) {
@@ -97,12 +97,8 @@ func oidcRefreshParamsFromMap(val map[string]interface{}) (*oidcRefreshParams, e
 	if !ok {
 		return nil, errors.ErrorData(logutils.StatusMissing, "refresh token", nil)
 	}
-	redirectURI, ok := val["redirect_uri"].(string)
-	if !ok {
-		return nil, errors.ErrorData(logutils.StatusMissing, "redirect uri", nil)
-	}
 
-	return &oidcRefreshParams{RefreshToken: refreshToken, RedirectURI: redirectURI}, nil
+	return &oidcRefreshParams{RefreshToken: refreshToken}, nil
 }
 
 func (a *oidcAuthImpl) externalLogin(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error) {
@@ -150,14 +146,10 @@ func (a *oidcAuthImpl) refresh(params map[string]interface{}, authType model.Aut
 	return a.refreshToken(authType, appType, appOrg, refreshParams, oidcConfig, l)
 }
 
-func (a *oidcAuthImpl) getLoginURL(authType model.AuthType, appType model.ApplicationType, redirectURI string, l *logs.Log) (string, map[string]interface{}, error) {
+func (a *oidcAuthImpl) getLoginURL(authType model.AuthType, appType model.ApplicationType, l *logs.Log) (string, map[string]interface{}, error) {
 	oidcConfig, err := a.getOidcAuthConfig(authType, appType)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionGet, typeOidcAuthConfig, nil, err)
-	}
-
-	responseParams := map[string]interface{}{
-		"redirect_uri": redirectURI,
 	}
 
 	scopes := oidcConfig.Scopes
@@ -168,7 +160,7 @@ func (a *oidcAuthImpl) getLoginURL(authType model.AuthType, appType model.Applic
 	bodyData := map[string]string{
 		"scope":         scopes,
 		"response_type": "code",
-		"redirect_uri":  redirectURI,
+		"redirect_uri":  oidcConfig.RedirectURI,
 		"client_id":     oidcConfig.ClientID,
 	}
 
@@ -176,6 +168,7 @@ func (a *oidcAuthImpl) getLoginURL(authType model.AuthType, appType model.Applic
 		bodyData["claims"] = oidcConfig.AuthorizeClaims
 	}
 
+	responseParams := make(map[string]interface{})
 	if oidcConfig.UsePKCE {
 		codeChallenge, codeVerifier, err := generatePkceChallenge()
 		if err != nil {
@@ -246,7 +239,7 @@ func (a *oidcAuthImpl) newToken(code string, authType model.AuthType, appType mo
 		bodyData["code_verifier"] = params.CodeVerifier
 	}
 
-	return a.loadOidcTokensAndInfo(bodyData, oidcConfig, authType, appType, appOrg, params.RedirectURI, l)
+	return a.loadOidcTokensAndInfo(bodyData, oidcConfig, authType, appType, appOrg, l)
 }
 
 func (a *oidcAuthImpl) refreshToken(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization,
@@ -259,15 +252,15 @@ func (a *oidcAuthImpl) refreshToken(authType model.AuthType, appType model.Appli
 	bodyData := map[string]string{
 		"refresh_token": params.RefreshToken,
 		"grant_type":    "refresh_token",
-		"redirect_uri":  params.RedirectURI,
+		"redirect_uri":  oidcConfig.RedirectURI,
 		"client_id":     oidcConfig.ClientID,
 	}
 
-	return a.loadOidcTokensAndInfo(bodyData, oidcConfig, authType, appType, appOrg, params.RedirectURI, l)
+	return a.loadOidcTokensAndInfo(bodyData, oidcConfig, authType, appType, appOrg, l)
 }
 
 func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcConfig *oidcAuthConfig, authType model.AuthType, appType model.ApplicationType,
-	appOrg model.ApplicationOrganization, redirectURI string, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error) {
+	appOrg model.ApplicationOrganization, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error) {
 	token, err := a.loadOidcTokenWithParams(bodyData, oidcConfig)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionGet, typeOidcToken, nil, err)
@@ -359,7 +352,6 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 
 	params := map[string]interface{}{}
 	params["oidc_token"] = oidcParams
-	params["redirect_uri"] = redirectURI
 	return &externalUser, params, nil
 }
 

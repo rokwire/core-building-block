@@ -49,6 +49,7 @@ type oauth2AuthImpl struct {
 
 type oauth2AuthConfig struct {
 	Host         string `json:"host" validate:"required"`
+	RedirectURI  string `json:"redirect_uri" validate:"required"`
 	AuthorizeURL string `json:"authorize_url"`
 	TokenURL     string `json:"token_url"`
 	UserInfoURL  string `json:"userinfo_url"`
@@ -139,23 +140,20 @@ func (a *oauth2AuthImpl) refresh(params map[string]interface{}, authType model.A
 	return a.refreshToken(authType, appType, appOrg, refreshParams, oauth2Config, l)
 }
 
-func (a *oauth2AuthImpl) getLoginURL(authType model.AuthType, appType model.ApplicationType, redirectURI string, l *logs.Log) (string, map[string]interface{}, error) {
+func (a *oauth2AuthImpl) getLoginURL(authType model.AuthType, appType model.ApplicationType, l *logs.Log) (string, map[string]interface{}, error) {
 	oauth2Config, err := a.getOAuth2AuthConfig(authType, appType)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionGet, typeOAuth2AuthConfig, nil, err)
 	}
 
-	responseParams := map[string]interface{}{
-		"redirect_uri": redirectURI,
-	}
-
 	bodyData := map[string]string{
 		"client_id":    oauth2Config.ClientID,
-		"redirect_uri": redirectURI,
+		"redirect_uri": oauth2Config.RedirectURI,
 		"scope":        oauth2Config.Scopes,
 		"allow_signup": strconv.FormatBool(oauth2Config.AllowSignUp),
 	}
 
+	responseParams := make(map[string]interface{})
 	if oauth2Config.UseState {
 		state, err := generateState()
 		if err != nil {
@@ -179,8 +177,9 @@ func (a *oauth2AuthImpl) getLoginURL(authType model.AuthType, appType model.Appl
 
 func (a *oauth2AuthImpl) newToken(code string, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, oauth2Config *oauth2AuthConfig, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error) {
 	bodyData := map[string]string{
-		"client_id": oauth2Config.ClientID,
-		"code":      code,
+		"client_id":    oauth2Config.ClientID,
+		"code":         code,
+		"redirect_uri": oauth2Config.RedirectURI,
 	}
 
 	return a.loadOAuth2TokensAndInfo(bodyData, oauth2Config, authType, appType, appOrg, l)
