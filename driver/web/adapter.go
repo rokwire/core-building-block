@@ -279,7 +279,7 @@ func (we Adapter) serveDoc(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func loadYamlDoc(productionServerURL string, testServerURL string, developmentServerURL string) ([]byte, error) {
+func loadYamlDoc(baseServerURL string, productionServerURL string, testServerURL string, developmentServerURL string) ([]byte, error) {
 	data, _ := os.ReadFile("./driver/web/docs/gen/def.yaml")
 	// yamlMap := make(map[string]interface{})
 	yamlMap := yaml.MapSlice{}
@@ -287,17 +287,30 @@ func loadYamlDoc(productionServerURL string, testServerURL string, developmentSe
 	if err != nil {
 		return nil, err
 	}
-	for _, item := range yamlMap {
+	for index, item := range yamlMap {
 		if item.Key == "servers" {
 			if serverList, ok := item.Value.([]interface{}); ok {
-				if len(serverList) == 4 {
+				if baseServerURL != "" {
+					serverList = serverList[:1]
+					serverList[0] = yaml.MapSlice{
+						yaml.MapItem{
+							Key:   "url",
+							Value: baseServerURL,
+						},
+						yaml.MapItem{
+							Key:   "description",
+							Value: "User Specified Base Server",
+						},
+					}
+				} else if len(serverList) == 4 {
 					serverList[0] = overrideBaseURL(productionServerURL, serverList, 0)
 					serverList[1] = overrideBaseURL(testServerURL, serverList, 1)
 					serverList[2] = overrideBaseURL(developmentServerURL, serverList, 2)
-
-					item.Value = serverList
-					break
 				}
+
+				item.Value = serverList
+				yamlMap[index] = item
+				break
 			}
 		}
 	}
@@ -489,7 +502,7 @@ func (we Adapter) validateResponse(requestValidationInput *openapi3filter.Reques
 }
 
 //NewWebAdapter creates new WebAdapter instance
-func NewWebAdapter(env string, serviceID string, serviceRegManager *authservice.ServiceRegManager, port string, coreAPIs *core.APIs, host string, prodServerURL string, testServerURL string, devServerURL string, logger *logs.Logger) Adapter {
+func NewWebAdapter(env string, serviceID string, serviceRegManager *authservice.ServiceRegManager, port string, coreAPIs *core.APIs, host string, baseServerURL string, prodServerURL string, testServerURL string, devServerURL string, logger *logs.Logger) Adapter {
 	//openAPI doc
 	loader := &openapi3.Loader{Context: context.Background(), IsExternalRefsAllowed: true}
 	// doc, err := loader.LoadFromFile("driver/web/docs/gen/def.yaml")
@@ -497,7 +510,7 @@ func NewWebAdapter(env string, serviceID string, serviceRegManager *authservice.
 	// 	logger.Fatalf("error on openapi3 load from file - %s", err.Error())
 	// }
 
-	yamlDoc, err := loadYamlDoc(prodServerURL, testServerURL, devServerURL)
+	yamlDoc, err := loadYamlDoc(baseServerURL, prodServerURL, testServerURL, devServerURL)
 	if err != nil {
 
 	}

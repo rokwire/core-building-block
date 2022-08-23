@@ -58,6 +58,7 @@ ROKWIRE_CORE_SYSTEM_APP_TYPE_NAME | < string > | yes | Name for system admin app
 ROKWIRE_CORE_SYSTEM_API_KEY | < string > | yes | API key for system admin application. Only required for first run.
 ROKWIRE_CORE_SYSTEM_ACCOUNT_EMAIL | < string > | yes | Email address for initial system admin account. Only required for first run.
 ROKWIRE_CORE_SYSTEM_ACCOUNT_PASSWORD | < string > | yes | Password for initial system admin account. Only required for first run.
+CORE_BASE_SERVER_URL | < string > | false | Url of base server which overrides all of the servers listed in the docs.
 
 ### Run Application
 

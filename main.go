@@ -68,6 +68,7 @@ func main() {
 	serviceID := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SERVICE_ID", true, false)
 	host := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_HOST", true, false)
 
+	baseServerURL := envLoader.GetAndLogEnvVar("CORE_BASE_SERVER_URL", false, false)
 	prodServerURL := envLoader.GetAndLogEnvVar("CORE_PRODUCTION_SERVER_URL", false, false)
 	testServerURL := envLoader.GetAndLogEnvVar("CORE_TEST_SERVER_URL", false, false)
 	devServerURL := envLoader.GetAndLogEnvVar("CORE_DEVELOPMENT_SERVER_URL", false, false)
@@ -164,6 +165,6 @@ func main() {
 	coreAPIs.Start()
 
 	//web adapter
-	webAdapter := web.NewWebAdapter(env, serviceID, auth.ServiceRegManager, port, coreAPIs, host, prodServerURL, testServerURL, devServerURL, logger)
+	webAdapter := web.NewWebAdapter(env, serviceID, auth.ServiceRegManager, port, coreAPIs, host, baseServerURL, prodServerURL, testServerURL, devServerURL, logger)
 	webAdapter.Start()
 }
