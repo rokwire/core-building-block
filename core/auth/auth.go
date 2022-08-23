@@ -22,6 +22,8 @@ import (
 	"crypto/rsa"
 	"encoding/json"
 	"fmt"
+	"net/url"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -2057,6 +2059,31 @@ func (a *Auth) validateAuthTypeForAppOrg(authenticationType string, appID string
 	}
 
 	return nil, nil, errors.ErrorData(logutils.StatusInvalid, typeAuthType, &logutils.FieldArgs{"app_org_id": appOrg.ID, "auth_type": authenticationType})
+}
+
+func (a *Auth) isValidAdminAuthType(authenticationType string) bool {
+	return authenticationType == AuthTypeOidc || authenticationType == AuthTypeOAuth2 || authenticationType == AuthTypeEmail || strings.HasSuffix(authenticationType, "_oidc") || strings.HasSuffix(authenticationType, "_oauth2")
+}
+
+func (a *Auth) queryValuesFromURL(urlStr string) (url.Values, error) {
+	unquotedCreds, err := strconv.Unquote(urlStr)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionParse, "raw url", nil, err)
+	}
+	parsedURL, err := url.Parse(unquotedCreds)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionParse, "unquoted url", nil, err)
+	}
+	unescapedQuery, err := url.QueryUnescape(parsedURL.RawQuery)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionParse, "raw url query", nil, err)
+	}
+	parsedCreds, err := url.ParseQuery(unescapedQuery)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionParse, "unescaped url query", nil, err)
+	}
+
+	return parsedCreds, nil
 }
 
 func (a *Auth) getAuthTypeImpl(authType model.AuthType) (authType, error) {

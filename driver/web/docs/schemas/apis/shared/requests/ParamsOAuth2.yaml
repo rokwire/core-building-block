@@ -1,0 +1,5 @@
+type: object
+description: Auth login params for auth_type="oauth2" (or variants)
+properties:
+  state:
+    type: string

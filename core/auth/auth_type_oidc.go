@@ -122,12 +122,12 @@ func (a *oidcAuthImpl) externalLogin(authType model.AuthType, appType model.Appl
 		return nil, nil, errors.WrapErrorAction(logutils.ActionGet, typeOidcAuthConfig, nil, err)
 	}
 
-	parsedCreds, err := url.Parse(strings.ReplaceAll(creds, `"`, ""))
+	parsedCreds, err := a.auth.queryValuesFromURL(creds)
 	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionParse, "oidc login creds", nil, err)
+		return nil, nil, errors.WrapErrorAction(logutils.ActionParse, "oidc creds", nil, err)
 	}
 
-	externalUser, parameters, err := a.newToken(parsedCreds.Query().Get("code"), authType, appType, appOrg, &loginParams, oidcConfig, l)
+	externalUser, parameters, err := a.newToken(parsedCreds.Get("code"), authType, appType, appOrg, &loginParams, oidcConfig, l)
 	if err != nil {
 		return nil, nil, err
 	}

@@ -32,6 +32,7 @@ properties:
     anyOf:
       - $ref: "../ParamsEmail.yaml"
       - $ref: "../ParamsOIDC.yaml"
+      - $ref: "../ParamsOAuth2.yaml"
       - $ref: "../ParamsNone.yaml"
   device:
     $ref: "./Device.yaml"

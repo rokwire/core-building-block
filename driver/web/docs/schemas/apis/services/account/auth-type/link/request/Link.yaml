@@ -10,6 +10,7 @@ properties:
       - email
       - twilio_phone
       - illinois_oidc
+      - github_oauth2
       - username
   app_type_identifier:
     type: string

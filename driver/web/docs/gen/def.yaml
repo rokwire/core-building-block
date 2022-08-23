@@ -5325,16 +5325,14 @@ components:
             - $ref: '#/components/schemas/_shared_req_CredsEmail'
             - $ref: '#/components/schemas/_shared_req_CredsTwilioPhone'
             - $ref: '#/components/schemas/_shared_req_CredsOIDC'
-            - type: string
-              description: |
-                Auth login creds for auth_type="oauth2" (or variants)
-                  - full redirect URI received from OAuth2 provider
+            - $ref: '#/components/schemas/_shared_req_CredsOAuth2'
             - $ref: '#/components/schemas/_shared_req_CredsAPIKey'
         params:
           type: object
           anyOf:
             - $ref: '#/components/schemas/_shared_req_ParamsEmail'
             - $ref: '#/components/schemas/_shared_req_ParamsOIDC'
+            - $ref: '#/components/schemas/_shared_req_ParamsOAuth2'
             - $ref: '#/components/schemas/_shared_req_ParamsNone'
         device:
           $ref: '#/components/schemas/_shared_req_Login_Device'
@@ -5449,6 +5447,7 @@ components:
           enum:
             - email
             - illinois_oidc
+            - github_oauth2
         identifier:
           type: string
         permissions:
@@ -5476,6 +5475,7 @@ components:
           enum:
             - email
             - illinois_oidc
+            - github_oauth2
         identifier:
           type: string
         permissions:
@@ -5506,6 +5506,7 @@ components:
             - email
             - twilio_phone
             - illinois_oidc
+            - github_oauth2
             - anonymous
         app_type_identifier:
           type: string
@@ -5541,6 +5542,11 @@ components:
       description: |
         Auth login creds for auth_type="oidc" (or variants)
           - full redirect URI received from OIDC provider
+    _shared_req_CredsOAuth2:
+      type: string
+      description: |
+        Auth login creds for auth_type="oauth2" (or variants)
+          - full redirect URI received from OAuth2 provider
     _shared_req_CredsAPIKey:
       type: object
       description: Auth login creds for auth_type="anonymous"
@@ -5564,6 +5570,12 @@ components:
         redirect_uri:
           type: string
         pkce_verifier:
+          type: string
+    _shared_req_ParamsOAuth2:
+      type: object
+      description: Auth login params for auth_type="oauth2" (or variants)
+      properties:
+        state:
           type: string
     _shared_req_ParamsNone:
       type: object
@@ -5843,6 +5855,7 @@ components:
             - email
             - twilio_phone
             - illinois_oidc
+            - github_oauth2
             - username
         app_type_identifier:
           type: string
@@ -5870,6 +5883,7 @@ components:
             - email
             - twilio_phone
             - illinois_oidc
+            - github_oauth2
             - username
         app_type_identifier:
           type: string
