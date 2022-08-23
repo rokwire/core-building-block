@@ -72,7 +72,6 @@ type oidcAuthConfig struct {
 
 type oidcLoginParams struct {
 	CodeVerifier string `json:"pkce_verifier"`
-	RedirectURI  string `json:"redirect_uri" validate:"required"`
 }
 
 type oidcToken struct {
@@ -232,7 +231,7 @@ func (a *oidcAuthImpl) newToken(code string, authType model.AuthType, appType mo
 	bodyData := map[string]string{
 		"code":         code,
 		"grant_type":   "authorization_code",
-		"redirect_uri": params.RedirectURI,
+		"redirect_uri": oidcConfig.RedirectURI,
 		"client_id":    oidcConfig.ClientID,
 	}
 	if len(params.CodeVerifier) > 0 {
