@@ -9,9 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Use signature Key ID to check specific key for service account auth [#481](https://github.com/rokwire/core-building-block/issues/481)
 - Allow overriding docs base URLs [#513](https://github.com/rokwire/core-building-block/issues/513)
+- Include account ID in request logs [#562](https://github.com/rokwire/core-building-block/issues/562)
+- Add system flag to login response [#552](https://github.com/rokwire/core-building-block/issues/552)
 
 ### Fixed
 - Service registration error handling change [#468](https://github.com/rokwire/core-building-block/issues/468)
+- Update account permission duplication [#545](https://github.com/rokwire/core-building-block/issues/545)
 
 ## [1.24.2] - 2022-08-08
 ### Added

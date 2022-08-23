@@ -369,6 +369,8 @@ func (we Adapter) wrapFunc(handler handlerFunc, authorization Authorization) htt
 				logObj.RequestErrorAction(w, logutils.ActionValidate, logutils.TypeRequest, nil, err, responseStatus, true)
 				return
 			}
+
+			logObj.SetContext("account_id", claims.Subject)
 			response = handler(logObj, req, claims)
 		} else {
 			response = handler(logObj, req, nil)
