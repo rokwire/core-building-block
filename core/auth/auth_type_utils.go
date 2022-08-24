@@ -33,7 +33,7 @@ type oauthConfig interface {
 	getUserInfoURL() string
 
 	getAuthorizationCode(auth *Auth, creds string, params string) (string, error)
-	buildNewTokenRequest(auth *Auth, token string, refresh bool) (*http.Request, error)
+	buildNewTokenRequest(auth *Auth, creds string, params string, refresh bool) (*http.Request, error)
 	checkIDToken(token oauthToken) (string, error)
 	checkSubject(tokenSubject string, userSubject string) bool
 	buildLoginURLResponse(auth *Auth) (string, map[string]interface{}, error)
@@ -42,9 +42,14 @@ type oauthConfig interface {
 type oauthToken interface {
 	getAuthorizationHeader() string
 	getResponse() map[string]interface{}
+	getIDToken() string
 }
 
-func (a *Auth) getOAuthConfig(authType model.AuthType, appType model.ApplicationType) (*oauthConfig, error) {
+type oauthRefreshParams struct {
+	RefreshToken string `json:"refresh_token" bson:"refresh_token" validate:"required"`
+}
+
+func (a *Auth) getOAuthConfig(authType model.AuthType, appType model.ApplicationType) (oauthConfig, error) {
 	errFields := &logutils.FieldArgs{"auth_type_id": authType.ID, "app_type_id": appType}
 
 	identityProviderID, ok := authType.Params["identity_provider"].(string)
@@ -63,18 +68,24 @@ func (a *Auth) getOAuthConfig(authType model.AuthType, appType model.Application
 	}
 
 	var config oauthConfig
+	if strings.HasSuffix("_"+authType.Code, "_oidc") {
+		var oidcConfig oidcAuthConfig
+		config = &oidcConfig
+	} else if strings.HasSuffix("_"+authType.Code, "_oauth2") {
+		var oauth2Config oauth2AuthConfig
+		config = &oauth2Config
+	}
 	err = json.Unmarshal(configBytes, &config)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, model.TypeIdentityProviderConfig, errFields, err)
 	}
-
 	validate := validator.New()
 	err = validate.Struct(config)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeIdentityProviderConfig, errFields, err)
 	}
 
-	return &config, nil
+	return config, nil
 }
 
 func (a *Auth) getExternalUser(claims map[string]interface{}, authType model.AuthType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.ExternalSystemUser, error) {
@@ -141,7 +152,7 @@ func (a *Auth) getExternalUser(claims map[string]interface{}, authType model.Aut
 		MiddleName: middleName, LastName: lastName, Email: email, Roles: roles, Groups: groups, SystemSpecific: systemSpecific}, nil
 }
 
-func refreshParamsFromMap(val map[string]interface{}, oauthType string) (*oauth2RefreshParams, error) {
+func refreshParamsFromMap(val map[string]interface{}, oauthType string) (*oauthRefreshParams, error) {
 	oauth2Token, ok := val[fmt.Sprintf("%s_token", oauthType)].(map[string]interface{})
 	if !ok {
 		return nil, errors.ErrorData(logutils.StatusMissing, logutils.MessageDataType(fmt.Sprintf("%s token", oauthType)), nil)
@@ -152,5 +163,5 @@ func refreshParamsFromMap(val map[string]interface{}, oauthType string) (*oauth2
 		return nil, errors.ErrorData(logutils.StatusMissing, "refresh token", nil)
 	}
 
-	return &oauth2RefreshParams{RefreshToken: refreshToken}, nil
+	return &oauthRefreshParams{RefreshToken: refreshToken}, nil
 }

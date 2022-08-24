@@ -2062,7 +2062,7 @@ func (a *Auth) validateAuthTypeForAppOrg(authenticationType string, appID string
 }
 
 func (a *Auth) isValidAdminAuthType(authenticationType string) bool {
-	return authenticationType == AuthTypeOidc || authenticationType == AuthTypeOAuth2 || authenticationType == AuthTypeEmail || strings.HasSuffix(authenticationType, "_oidc") || strings.HasSuffix(authenticationType, "_oauth2")
+	return authenticationType == AuthTypeEmail || strings.HasSuffix("_"+authenticationType, "_oidc") || strings.HasSuffix("_"+authenticationType, "_oauth2")
 }
 
 func (a *Auth) queryValuesFromURL(urlStr string) (url.Values, error) {

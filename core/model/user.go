@@ -43,6 +43,8 @@ const (
 	TypeProfile logutils.MessageDataType = "profile"
 	//TypeDevice device
 	TypeDevice logutils.MessageDataType = "device"
+	//TypeExternalSystemUser external system user
+	TypeExternalSystemUser logutils.MessageDataType = "external system user"
 )
 
 // Account represents account entity
