@@ -15,17 +15,14 @@
 package auth
 
 import (
-	"core-building-block/core/model"
 	"core-building-block/utils"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"strconv"
 	"strings"
 
 	"github.com/rokwire/logging-library-go/errors"
-	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
 	"gopkg.in/go-playground/validator.v9"
 )
@@ -34,17 +31,8 @@ const (
 	//AuthTypeOAuth2 oauth2 auth type
 	AuthTypeOAuth2 string = "oauth2"
 
-	typeOAuth2AuthConfig    logutils.MessageDataType = "oauth2 auth config"
-	typeOAuth2LoginParams   logutils.MessageDataType = "oauth2 login params"
-	typeOAuth2RefreshParams logutils.MessageDataType = "oauth2 refresh params"
-	typeOAuth2Token         logutils.MessageDataType = "oauth2 token"
+	typeOAuth2LoginParams logutils.MessageDataType = "oauth2 login params"
 )
-
-// OAuth2 implementation of authType
-type oauth2AuthImpl struct {
-	auth     *Auth
-	authType string
-}
 
 type oauth2AuthConfig struct {
 	Host         string `json:"host" validate:"required"`
@@ -122,6 +110,10 @@ func (o *oauth2AuthConfig) getAuthorizationCode(auth *Auth, creds string, params
 }
 
 func (o *oauth2AuthConfig) buildNewTokenRequest(auth *Auth, creds string, params string, refresh bool) (*http.Request, error) {
+	if refresh && !o.UseRefresh {
+		return nil, nil
+	}
+
 	body := map[string]string{
 		"client_id":    o.ClientID,
 		"redirect_uri": o.RedirectURI,
@@ -172,7 +164,7 @@ func (o *oauth2AuthConfig) buildLoginURLResponse(auth *Auth) (string, map[string
 
 	responseParams := make(map[string]interface{})
 	if o.UseState {
-		state, err := generateState()
+		state, err := o.generateState()
 		if err != nil {
 			return "", nil, errors.WrapErrorAction("generating", "random state", nil, err)
 		}
@@ -183,8 +175,16 @@ func (o *oauth2AuthConfig) buildLoginURLResponse(auth *Auth) (string, map[string
 	return o.getAuthorizeURL() + "?" + auth.encodeQueryValues(query), responseParams, nil
 }
 
-type oauth2LoginParams struct {
-	State string `json:"state"`
+// --- Helper functions ---
+
+// generateState generates and returns a randomized state string
+func (o *oauth2AuthConfig) generateState() (string, error) {
+	state, err := utils.GenerateRandomString(50)
+	if err != nil {
+		return "", errors.WrapErrorAction("generating", "state string", nil, err)
+	}
+
+	return state, nil
 }
 
 type oauth2Token struct {
@@ -211,169 +211,17 @@ func (t *oauth2Token) getIDToken() string {
 	return ""
 }
 
-func (a *oauth2AuthImpl) externalLogin(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error) {
-	config, err := a.auth.getOAuthConfig(authType, appType)
-	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionGet, typeOAuth2AuthConfig, nil, err)
-	}
-
-	code, err := config.getAuthorizationCode(a.auth, creds, params)
-	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionGet, "authorization code", nil, err)
-	}
-
-	externalUser, parameters, err := a.loadOAuth2TokensAndInfo(config, authType, appOrg, code, params, false, l)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return externalUser, parameters, nil
+type oauth2LoginParams struct {
+	State string `json:"state"`
 }
 
-func (a *oauth2AuthImpl) refresh(params map[string]interface{}, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error) {
-	config, err := a.auth.getOAuthConfig(authType, appType)
+// initOAuth2Auth initializes and registers a new OAuth auth instance for OAuth2
+func initOAuth2Auth(auth *Auth) (*oauthAuthImpl, error) {
+	oauth2 := &oauthAuthImpl{auth: auth, authType: AuthTypeOAuth2}
+
+	err := auth.registerExternalAuthType(AuthTypeOAuth2, oauth2)
 	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionGet, typeOAuth2AuthConfig, nil, err)
-	}
-	// if !config.UseRefresh {
-	// 	return nil, nil, errors.Newf("oauth2 refresh tokens not enabled for org_id=%s, app_id=%s", appOrg.Organization.ID, appOrg.Application.ID)
-	// }
-
-	refreshParams, err := refreshParamsFromMap(params, AuthTypeOAuth2)
-	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionParse, typeAuthRefreshParams, nil, err)
-	}
-
-	return a.loadOAuth2TokensAndInfo(config, authType, appOrg, refreshParams.RefreshToken, "", true, l)
-}
-
-func (a *oauth2AuthImpl) getLoginURL(authType model.AuthType, appType model.ApplicationType, l *logs.Log) (string, map[string]interface{}, error) {
-	config, err := a.auth.getOAuthConfig(authType, appType)
-	if err != nil {
-		return "", nil, errors.WrapErrorAction(logutils.ActionGet, typeOAuth2AuthConfig, nil, err)
-	}
-
-	return config.buildLoginURLResponse(a.auth)
-}
-
-func (a *oauth2AuthImpl) loadOAuth2TokensAndInfo(config oauthConfig, authType model.AuthType, appOrg model.ApplicationOrganization, creds string,
-	params string, refresh bool, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error) {
-	newToken, err := a.loadOAuth2TokenWithParams(config, creds, params, refresh)
-	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionGet, typeOAuth2Token, nil, err)
-	}
-
-	sub, err := config.checkIDToken(newToken)
-	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeOAuth2Token, nil, err)
-	}
-
-	userInfo, err := a.loadOAuth2UserInfo(config, newToken)
-	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionGet, "user info", nil, err)
-	}
-
-	var userClaims map[string]interface{}
-	err = json.Unmarshal(userInfo, &userClaims)
-	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionUnmarshal, "user info", nil, err)
-	}
-
-	userClaimsSub, _ := userClaims["sub"].(string)
-	if !config.checkSubject(sub, userClaimsSub) {
-		return nil, nil, errors.Newf("mismatching user info sub %s and id token sub %s", userClaimsSub, sub)
-	}
-
-	externalUser, err := a.auth.getExternalUser(userClaims, authType, appOrg, l)
-	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeExternalSystemUser, nil, err)
-	}
-
-	return externalUser, newToken.getResponse(), nil
-}
-
-func (a *oauth2AuthImpl) loadOAuth2TokenWithParams(config oauthConfig, creds string, params string, refresh bool) (oauthToken, error) {
-	req, err := config.buildNewTokenRequest(a.auth, creds, params, refresh)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionCreate, "oauth2 token request", nil, err)
-	}
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionSend, logutils.TypeRequest, nil, err)
-	}
-
-	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err)
-	}
-	if resp.StatusCode != 200 {
-		return nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeResponse, &logutils.FieldArgs{"status_code": resp.StatusCode, "error": string(body)})
-	}
-
-	var authToken oauth2Token
-	err = json.Unmarshal(body, &authToken)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, logutils.TypeToken, nil, err)
-	}
-	validate := validator.New()
-	err = validate.Struct(authToken)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionValidate, logutils.TypeToken, nil, err)
-	}
-
-	return &authToken, nil
-}
-
-func (a *oauth2AuthImpl) loadOAuth2UserInfo(config oauthConfig, token oauthToken) ([]byte, error) {
-	client := &http.Client{}
-	req, err := http.NewRequest(http.MethodGet, config.getUserInfoURL(), nil)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeRequest, nil, err)
-	}
-	req.Header.Set("Authorization", token.getAuthorizationHeader())
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionSend, logutils.TypeRequest, nil, err)
-	}
-
-	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionRead, logutils.TypeResponse, nil, err)
-	}
-	if resp.StatusCode != 200 {
-		return nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeResponse, &logutils.FieldArgs{"status_code": resp.StatusCode, "error": string(body)})
-	}
-	if len(body) == 0 {
-		return nil, errors.ErrorData(logutils.StatusMissing, logutils.TypeResponseBody, nil)
-	}
-
-	return body, nil
-}
-
-// --- Helper functions ---
-
-// generateState generates and returns a randomized state string
-func generateState() (string, error) {
-	state, err := utils.GenerateRandomString(50)
-	if err != nil {
-		return "", errors.WrapErrorAction("generating", "state string", nil, err)
-	}
-
-	return state, nil
-}
-
-// initOAuth2Auth initializes and registers a new OAuth2 auth instance
-func initOAuth2Auth(auth *Auth) (*oauth2AuthImpl, error) {
-	oauth2 := &oauth2AuthImpl{auth: auth, authType: AuthTypeOAuth2}
-
-	err := auth.registerExternalAuthType(oauth2.authType, oauth2)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionRegister, typeAuthType, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionRegister, typeAuthType, logutils.StringArgs(AuthTypeOAuth2), err)
 	}
 
 	return oauth2, nil

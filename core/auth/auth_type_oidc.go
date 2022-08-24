@@ -16,12 +16,10 @@ package auth
 
 import (
 	"context"
-	"core-building-block/core/model"
 	"core-building-block/utils"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -31,7 +29,6 @@ import (
 	"github.com/coreos/go-oidc"
 	"github.com/rokwire/core-auth-library-go/v2/authutils"
 	"github.com/rokwire/logging-library-go/errors"
-	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
 )
 
@@ -39,18 +36,8 @@ const (
 	//AuthTypeOidc oidc auth type
 	AuthTypeOidc string = "oidc"
 
-	typeOidcAuthConfig    logutils.MessageDataType = "oidc auth config"
-	typeOidcCheckParams   logutils.MessageDataType = "oidc check params"
-	typeOidcLoginParams   logutils.MessageDataType = "oidc login params"
-	typeOidcRefreshParams logutils.MessageDataType = "oidc refresh params"
-	typeOidcToken         logutils.MessageDataType = "oidc token"
+	typeOidcLoginParams logutils.MessageDataType = "oidc login params"
 )
-
-// OIDC implementation of authType
-type oidcAuthImpl struct {
-	auth     *Auth
-	authType string
-}
 
 type oidcAuthConfig struct {
 	Host               string            `json:"host" validate:"required"`
@@ -114,6 +101,10 @@ func (o *oidcAuthConfig) getAuthorizationCode(auth *Auth, creds string, params s
 }
 
 func (o *oidcAuthConfig) buildNewTokenRequest(auth *Auth, creds string, params string, refresh bool) (*http.Request, error) {
+	if refresh && !o.UseRefresh {
+		return nil, nil
+	}
+
 	body := map[string]string{
 		"client_id":    o.ClientID,
 		"redirect_uri": o.RedirectURI,
@@ -185,7 +176,7 @@ func (o *oidcAuthConfig) checkIDToken(token oauthToken) (string, error) {
 }
 
 func (o *oidcAuthConfig) checkSubject(tokenSubject string, userSubject string) bool {
-	return true
+	return tokenSubject == userSubject
 }
 
 func (o *oidcAuthConfig) buildLoginURLResponse(auth *Auth) (string, map[string]interface{}, error) {
@@ -207,7 +198,7 @@ func (o *oidcAuthConfig) buildLoginURLResponse(auth *Auth) (string, map[string]i
 
 	responseParams := make(map[string]interface{})
 	if o.UsePKCE {
-		codeChallenge, codeVerifier, err := generatePkceChallenge()
+		codeChallenge, codeVerifier, err := o.generatePkceChallenge()
 		if err != nil {
 			return "", nil, errors.WrapErrorAction("generating", "pkce challenge", nil, err)
 		}
@@ -219,8 +210,22 @@ func (o *oidcAuthConfig) buildLoginURLResponse(auth *Auth) (string, map[string]i
 	return o.getAuthorizeURL() + "?" + auth.encodeQueryValues(query), responseParams, nil
 }
 
-type oidcLoginParams struct {
-	CodeVerifier string `json:"pkce_verifier"`
+// --- Helper functions ---
+
+// generatePkceChallenge generates and returns a PKCE code challenge and verifier
+func (o *oidcAuthConfig) generatePkceChallenge() (string, string, error) {
+	codeVerifier, err := utils.GenerateRandomString(50)
+	if err != nil {
+		return "", "", errors.WrapErrorAction("generating", "code verifier", nil, err)
+	}
+
+	codeChallengeBytes, err := authutils.HashSha256([]byte(codeVerifier))
+	if err != nil {
+		return "", "", errors.WrapErrorAction("hashing", "code verifier", nil, err)
+	}
+	codeChallenge := base64.URLEncoding.EncodeToString(codeChallengeBytes)
+
+	return codeChallenge, codeVerifier, nil
 }
 
 type oidcToken struct {
@@ -251,176 +256,17 @@ func (t *oidcToken) getIDToken() string {
 	return t.IDToken
 }
 
-func (a *oidcAuthImpl) externalLogin(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error) {
-	config, err := a.auth.getOAuthConfig(authType, appType)
-	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionGet, typeOidcAuthConfig, nil, err)
-	}
-
-	code, err := config.getAuthorizationCode(a.auth, creds, params)
-	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionGet, "authorization code", nil, err)
-	}
-
-	externalUser, parameters, err := a.loadOidcTokensAndInfo(config, authType, appOrg, code, params, false, l)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return externalUser, parameters, nil
+type oidcLoginParams struct {
+	CodeVerifier string `json:"pkce_verifier"`
 }
 
-// refresh must be implemented for OIDC auth
-func (a *oidcAuthImpl) refresh(params map[string]interface{}, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error) {
-	config, err := a.auth.getOAuthConfig(authType, appType)
+// initOidcAuth initializes and registers a new OAuth auth instance for OIDC
+func initOidcAuth(auth *Auth) (*oauthAuthImpl, error) {
+	oidc := &oauthAuthImpl{auth: auth, authType: AuthTypeOidc}
+
+	err := auth.registerExternalAuthType(AuthTypeOidc, oidc)
 	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionGet, typeOidcAuthConfig, nil, err)
-	}
-	// if !config.UseRefresh {
-	// 	return nil, nil, errors.Newf("oidc refresh tokens not enabled for org_id=%s, app_id=%s", appOrg.Organization.ID, appOrg.Application.ID)
-	// }
-
-	refreshParams, err := refreshParamsFromMap(params, AuthTypeOidc)
-	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionParse, typeAuthRefreshParams, nil, err)
-	}
-
-	return a.loadOidcTokensAndInfo(config, authType, appOrg, refreshParams.RefreshToken, "", true, l)
-}
-
-func (a *oidcAuthImpl) getLoginURL(authType model.AuthType, appType model.ApplicationType, l *logs.Log) (string, map[string]interface{}, error) {
-	config, err := a.auth.getOAuthConfig(authType, appType)
-	if err != nil {
-		return "", nil, errors.WrapErrorAction(logutils.ActionGet, typeOidcAuthConfig, nil, err)
-	}
-
-	return config.buildLoginURLResponse(a.auth)
-}
-
-func (a *oidcAuthImpl) loadOidcTokensAndInfo(config oauthConfig, authType model.AuthType, appOrg model.ApplicationOrganization, creds string,
-	params string, refresh bool, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error) {
-	newToken, err := a.loadOidcTokenWithParams(config, creds, params, refresh)
-	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionGet, typeOidcToken, nil, err)
-	}
-
-	sub, err := config.checkIDToken(newToken)
-	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeOidcToken, nil, err)
-	}
-
-	userInfo, err := a.loadOidcUserInfo(config, newToken)
-	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionGet, "user info", nil, err)
-	}
-
-	var userClaims map[string]interface{}
-	err = json.Unmarshal(userInfo, &userClaims)
-	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionUnmarshal, "user info", nil, err)
-	}
-
-	userClaimsSub, _ := userClaims["sub"].(string)
-	if !config.checkSubject(sub, userClaimsSub) {
-		return nil, nil, errors.Newf("mismatching user info sub %s and id token sub %s", userClaimsSub, sub)
-	}
-
-	externalUser, err := a.auth.getExternalUser(userClaims, authType, appOrg, l)
-	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeExternalSystemUser, nil, err)
-	}
-
-	return externalUser, newToken.getResponse(), nil
-}
-
-func (a *oidcAuthImpl) loadOidcTokenWithParams(config oauthConfig, creds string, params string, refresh bool) (oauthToken, error) {
-	req, err := config.buildNewTokenRequest(a.auth, creds, params, refresh)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionCreate, "oidc token request", nil, err)
-	}
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionSend, logutils.TypeRequest, nil, err)
-	}
-
-	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err)
-	}
-	if resp.StatusCode != 200 {
-		return nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeResponse, &logutils.FieldArgs{"status_code": resp.StatusCode, "error": string(body)})
-	}
-
-	var authToken oidcToken
-	err = json.Unmarshal(body, &authToken)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, logutils.TypeToken, nil, err)
-	}
-	validate := validator.New()
-	err = validate.Struct(authToken)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionValidate, logutils.TypeToken, nil, err)
-	}
-
-	return &authToken, nil
-}
-
-func (a *oidcAuthImpl) loadOidcUserInfo(config oauthConfig, token oauthToken) ([]byte, error) {
-	client := &http.Client{}
-	req, err := http.NewRequest(http.MethodGet, config.getUserInfoURL(), nil)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeRequest, nil, err)
-	}
-	req.Header.Set("Authorization", token.getAuthorizationHeader())
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionSend, logutils.TypeRequest, nil, err)
-	}
-
-	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionRead, logutils.TypeResponse, nil, err)
-	}
-	if resp.StatusCode != 200 {
-		return nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeResponse, &logutils.FieldArgs{"status_code": resp.StatusCode, "error": string(body)})
-	}
-	if len(body) == 0 {
-		return nil, errors.ErrorData(logutils.StatusMissing, logutils.TypeResponseBody, nil)
-	}
-
-	return body, nil
-}
-
-// --- Helper functions ---
-
-// generatePkceChallenge generates and returns a PKCE code challenge and verifier
-func generatePkceChallenge() (string, string, error) {
-	codeVerifier, err := utils.GenerateRandomString(50)
-	if err != nil {
-		return "", "", errors.WrapErrorAction("generating", "code verifier", nil, err)
-	}
-
-	codeChallengeBytes, err := authutils.HashSha256([]byte(codeVerifier))
-	if err != nil {
-		return "", "", errors.WrapErrorAction("hashing", "code verifier", nil, err)
-	}
-	codeChallenge := base64.URLEncoding.EncodeToString(codeChallengeBytes)
-
-	return codeChallenge, codeVerifier, nil
-}
-
-// initOidcAuth initializes and registers a new OIDC auth instance
-func initOidcAuth(auth *Auth) (*oidcAuthImpl, error) {
-	oidc := &oidcAuthImpl{auth: auth, authType: AuthTypeOidc}
-
-	err := auth.registerExternalAuthType(oidc.authType, oidc)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionRegister, typeAuthType, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionRegister, typeAuthType, logutils.StringArgs(AuthTypeOidc), err)
 	}
 
 	return oidc, nil
