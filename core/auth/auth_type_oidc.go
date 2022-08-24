@@ -241,14 +241,14 @@ func (t *oidcToken) getAuthorizationHeader() string {
 }
 
 func (t *oidcToken) getResponse() map[string]interface{} {
-	tokenParams := map[string]interface{}{}
-	tokenParams["id_token"] = t.IDToken
-	tokenParams["access_token"] = t.AccessToken
-	tokenParams["refresh_token"] = t.RefreshToken
-	tokenParams["token_type"] = t.TokenType
+	tokenParams := map[string]interface{}{
+		"id_token":      t.IDToken,
+		"access_token":  t.AccessToken,
+		"refresh_token": t.RefreshToken,
+		"token_type":    t.TokenType,
+	}
 
-	params := map[string]interface{}{}
-	params["oidc_token"] = tokenParams
+	params := map[string]interface{}{"oidc_token": tokenParams}
 	return params
 }
 

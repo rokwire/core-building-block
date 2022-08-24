@@ -188,9 +188,10 @@ func (o *oauth2AuthConfig) generateState() (string, error) {
 }
 
 type oauth2Token struct {
-	AccessToken string `json:"access_token" validate:"required"`
-	Scope       string `json:"scope" validate:"required"`
-	TokenType   string `json:"token_type" validate:"required"`
+	AccessToken  string `json:"access_token" validate:"required"`
+	RefreshToken string `json:"refresh_token"`
+	TokenType    string `json:"token_type" validate:"required"`
+	Scope        string `json:"scope" validate:"required"`
 }
 
 func (t *oauth2Token) getAuthorizationHeader() string {
@@ -198,12 +199,14 @@ func (t *oauth2Token) getAuthorizationHeader() string {
 }
 
 func (t *oauth2Token) getResponse() map[string]interface{} {
-	tokenParams := map[string]interface{}{}
-	tokenParams["access_token"] = t.AccessToken
-	tokenParams["token_type"] = t.TokenType
+	tokenParams := map[string]interface{}{
+		"access_token":  t.AccessToken,
+		"refresh_token": t.RefreshToken,
+		"token_type":    t.TokenType,
+		"scope":         t.Scope,
+	}
 
-	params := map[string]interface{}{}
-	params["oauth2_token"] = tokenParams
+	params := map[string]interface{}{"oauth2_token": tokenParams}
 	return params
 }
 

@@ -347,16 +347,15 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.
 		if externalUser != nil {
 			//check if need to update the account data
 			authType, err := a.storage.FindAuthType(loginSession.AuthType.ID)
-			if err != nil || authType == nil {
-				l.Infof("error getting auth type - %s", refreshToken)
-				if err == nil {
-					err = errors.ErrorData(logutils.StatusMissing, model.TypeAuthType, &logutils.FieldArgs{"id": loginSession.AuthType.ID})
-				}
-				return nil, errors.WrapErrorAction("error getting auth type", "", nil, err)
+			if err != nil {
+				return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeAuthType, nil, err)
+			}
+			if authType == nil {
+				return nil, errors.ErrorData(logutils.StatusMissing, model.TypeAuthType, &logutils.FieldArgs{"id": loginSession.AuthType.ID})
 			}
 			externalIDChanges, err := a.updateDataIfNeeded(*loginSession.AccountAuthType, *externalUser, *authType, loginSession.AppOrg, l)
 			if err != nil {
-				return nil, errors.WrapErrorAction("update account if needed on refresh", "", nil, err)
+				return nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, logutils.StringArgs("refresh"), err)
 			}
 			for k, v := range externalIDChanges {
 				if loginSession.ExternalIDs == nil {

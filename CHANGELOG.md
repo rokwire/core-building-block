@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Support for OAuth 2.0 Access Tokens [#523](https://github.com/rokwire/core-building-block/issues/523)
 - Use signature Key ID to check specific key for service account auth [#481](https://github.com/rokwire/core-building-block/issues/481)
 - Include account ID in request logs [#562](https://github.com/rokwire/core-building-block/issues/562)
 - Add system flag to login response [#552](https://github.com/rokwire/core-building-block/issues/552)
