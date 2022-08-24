@@ -19,13 +19,13 @@ import (
 	Def "core-building-block/driver/web/docs/gen"
 	"core-building-block/utils"
 
-	"github.com/rokwire/core-auth-library-go/authorization"
-	"github.com/rokwire/core-auth-library-go/authservice"
+	"github.com/rokwire/core-auth-library-go/v2/authorization"
+	"github.com/rokwire/core-auth-library-go/v2/authservice"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logutils"
 )
 
-//LoginSession
+// LoginSession
 func loginSessionToDef(item model.LoginSession) Def.SharedResLoginSession {
 	var accountAuthTypeID *string
 	var accountAuthTypeIdentifier *string
@@ -121,13 +121,13 @@ func serviceAccountToDef(item *model.ServiceAccount) *Def.ServiceAccount {
 
 	accountID := item.AccountID
 	name := item.Name
-	var appID *string
+	appID := model.AllApps
 	if item.Application != nil {
-		appID = &item.Application.ID
+		appID = item.Application.ID
 	}
-	var orgID *string
+	orgID := model.AllOrgs
 	if item.Organization != nil {
-		orgID = &item.Organization.ID
+		orgID = item.Organization.ID
 	}
 	permissions := make([]string, len(item.Permissions))
 	for i, p := range item.Permissions {
@@ -388,7 +388,7 @@ func jsonWebKeySetDef(items *model.JSONWebKeySet) *Def.JWKS {
 	return &Def.JWKS{Keys: out}
 }
 
-//AuthType
+// AuthType
 func authTypeToDef(item *model.AuthType) *Def.AuthTypeFields {
 	if item == nil {
 		return nil

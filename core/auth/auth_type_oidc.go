@@ -30,7 +30,7 @@ import (
 	"gopkg.in/go-playground/validator.v9"
 
 	"github.com/coreos/go-oidc"
-	"github.com/rokwire/core-auth-library-go/authutils"
+	"github.com/rokwire/core-auth-library-go/v2/authutils"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
@@ -135,7 +135,7 @@ func (a *oidcAuthImpl) externalLogin(authType model.AuthType, appType model.Appl
 	return externalUser, parameters, nil
 }
 
-//refresh must be implemented for OIDC auth
+// refresh must be implemented for OIDC auth
 func (a *oidcAuthImpl) refresh(params map[string]interface{}, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error) {
 	refreshParams, err := oidcRefreshParamsFromMap(params)
 	if err != nil {
@@ -497,7 +497,7 @@ func (a *oidcAuthImpl) getOidcAuthConfig(authType model.AuthType, appType model.
 
 // --- Helper functions ---
 
-//generatePkceChallenge generates and returns a PKCE code challenge and verifier
+// generatePkceChallenge generates and returns a PKCE code challenge and verifier
 func generatePkceChallenge() (string, string, error) {
 	codeVerifier, err := utils.GenerateRandomString(50)
 	if err != nil {
@@ -513,7 +513,7 @@ func generatePkceChallenge() (string, string, error) {
 	return codeChallenge, codeVerifier, nil
 }
 
-//initOidcAuth initializes and registers a new OIDC auth instance
+// initOidcAuth initializes and registers a new OIDC auth instance
 func initOidcAuth(auth *Auth) (*oidcAuthImpl, error) {
 	oidc := &oidcAuthImpl{auth: auth, authType: AuthTypeOidc}
 

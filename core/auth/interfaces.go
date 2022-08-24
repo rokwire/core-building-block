@@ -19,13 +19,13 @@ import (
 	"core-building-block/driven/storage"
 	"time"
 
-	"github.com/rokwire/core-auth-library-go/authorization"
-	"github.com/rokwire/core-auth-library-go/sigauth"
-	"github.com/rokwire/core-auth-library-go/tokenauth"
+	"github.com/rokwire/core-auth-library-go/v2/authorization"
+	"github.com/rokwire/core-auth-library-go/v2/sigauth"
+	"github.com/rokwire/core-auth-library-go/v2/tokenauth"
 	"github.com/rokwire/logging-library-go/logs"
 )
 
-//authType is the interface for authentication for auth types which are not external for the system(the users do not come from external system)
+// authType is the interface for authentication for auth types which are not external for the system(the users do not come from external system)
 type authType interface {
 	//signUp applies sign up operation
 	// Returns:
@@ -73,8 +73,8 @@ type authType interface {
 	checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, error)
 }
 
-//externalAuthType is the interface for authentication for auth types which are external for the system(the users comes from external system).
-//these are the different identity providers - illinois_oidc etc
+// externalAuthType is the interface for authentication for auth types which are external for the system(the users comes from external system).
+// these are the different identity providers - illinois_oidc etc
 type externalAuthType interface {
 	//getLoginUrl retrieves and pre-formats a login url and params for the SSO provider
 	getLoginURL(authType model.AuthType, appType model.ApplicationType, redirectURI string, l *logs.Log) (string, map[string]interface{}, error)
@@ -84,20 +84,20 @@ type externalAuthType interface {
 	refresh(params map[string]interface{}, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error)
 }
 
-//anonymousAuthType is the interface for authentication for auth types which are anonymous
+// anonymousAuthType is the interface for authentication for auth types which are anonymous
 type anonymousAuthType interface {
 	//checkCredentials checks the credentials for the provided app and organization
 	//	Returns anonymous profile identifier
 	checkCredentials(creds string) (string, map[string]interface{}, error)
 }
 
-//serviceAuthType is the interface for authentication for non-human clients
+// serviceAuthType is the interface for authentication for non-human clients
 type serviceAuthType interface {
 	checkCredentials(r *sigauth.Request, creds interface{}, params map[string]interface{}) ([]model.ServiceAccount, error)
 	addCredentials(creds *model.ServiceAccountCredential) (map[string]interface{}, error)
 }
 
-//mfaType is the interface for multi-factor authentication
+// mfaType is the interface for multi-factor authentication
 type mfaType interface {
 	//verify verifies the code based on stored mfa params
 	verify(context storage.TransactionContext, mfa *model.MFAType, accountID string, code string) (*string, error)
@@ -107,7 +107,7 @@ type mfaType interface {
 	sendCode(identifier string) (string, *time.Time, error)
 }
 
-//APIs is the interface which defines the APIs provided by the auth package
+// APIs is the interface which defines the APIs provided by the auth package
 type APIs interface {
 	//Start starts the auth service
 	Start()
@@ -321,20 +321,20 @@ type APIs interface {
 	GetServiceAccounts(params map[string]interface{}) ([]model.ServiceAccount, error)
 
 	//RegisterServiceAccount registers a service account
-	RegisterServiceAccount(accountID *string, fromAppID *string, fromOrgID *string, name *string, appID *string, orgID *string,
+	RegisterServiceAccount(accountID *string, fromAppID *string, fromOrgID *string, name *string, appID string, orgID string,
 		permissions *[]string, firstParty *bool, creds []model.ServiceAccountCredential, assignerPermissions []string, l *logs.Log) (*model.ServiceAccount, error)
 
 	//DeregisterServiceAccount deregisters a service account
 	DeregisterServiceAccount(accountID string) error
 
 	//GetServiceAccountInstance gets a service account instance
-	GetServiceAccountInstance(accountID string, appID *string, orgID *string) (*model.ServiceAccount, error)
+	GetServiceAccountInstance(accountID string, appID string, orgID string) (*model.ServiceAccount, error)
 
 	//UpdateServiceAccountInstance updates a service account instance
-	UpdateServiceAccountInstance(id string, appID *string, orgID *string, name string, permissions []string, assignerPermissions []string) (*model.ServiceAccount, error)
+	UpdateServiceAccountInstance(id string, appID string, orgID string, name string, permissions []string, assignerPermissions []string) (*model.ServiceAccount, error)
 
 	//DeregisterServiceAccountInstance deregisters a service account instance
-	DeregisterServiceAccountInstance(id string, appID *string, orgID *string) error
+	DeregisterServiceAccountInstance(id string, appID string, orgID string) error
 
 	//AddServiceAccountCredential adds a credential to a service account
 	AddServiceAccountCredential(accountID string, creds *model.ServiceAccountCredential, l *logs.Log) (*model.ServiceAccountCredential, error)
@@ -410,7 +410,7 @@ type APIs interface {
 	GetAuthKeySet() (*model.JSONWebKeySet, error)
 
 	//GetServiceRegistrations retrieves all service registrations
-	GetServiceRegistrations(serviceIDs []string) ([]model.ServiceReg, error)
+	GetServiceRegistrations(serviceIDs []string) []model.ServiceReg
 
 	//RegisterService creates a new service registration
 	RegisterService(reg *model.ServiceReg) error
@@ -440,7 +440,7 @@ type APIs interface {
 	ValidateAPIKey(appID string, apiKey string) error
 }
 
-//Storage interface to communicate with the storage
+// Storage interface to communicate with the storage
 type Storage interface {
 	RegisterStorageListener(storageListener storage.Listener)
 
@@ -477,11 +477,11 @@ type Storage interface {
 	FindProfiles(appID string, authTypeID string, accountAuthTypeIdentifier string) ([]model.Profile, error)
 
 	//ServiceAccounts
-	FindServiceAccount(context storage.TransactionContext, accountID string, appID *string, orgID *string) (*model.ServiceAccount, error)
+	FindServiceAccount(context storage.TransactionContext, accountID string, appID string, orgID string) (*model.ServiceAccount, error)
 	FindServiceAccounts(params map[string]interface{}) ([]model.ServiceAccount, error)
 	InsertServiceAccount(account *model.ServiceAccount) error
 	UpdateServiceAccount(account *model.ServiceAccount) (*model.ServiceAccount, error)
-	DeleteServiceAccount(accountID string, appID *string, orgID *string) error
+	DeleteServiceAccount(accountID string, appID string, orgID string) error
 	DeleteServiceAccounts(accountID string) error
 
 	//ServiceAccountCredentials
@@ -519,7 +519,7 @@ type Storage interface {
 	DeleteMFAType(context storage.TransactionContext, accountID string, identifier string, mfaType string) error
 
 	//ServiceRegs
-	FindServiceRegs(serviceIDs []string) ([]model.ServiceReg, error)
+	FindServiceRegs(serviceIDs []string) []model.ServiceReg
 	FindServiceReg(serviceID string) (*model.ServiceReg, error)
 	InsertServiceReg(reg *model.ServiceReg) error
 	UpdateServiceReg(reg *model.ServiceReg) error
@@ -571,12 +571,12 @@ type Storage interface {
 	InsertAccountGroups(context storage.TransactionContext, accountID string, appOrgID string, groups []model.AccountGroup) error
 }
 
-//ProfileBuildingBlock is used by auth to communicate with the profile building block.
+// ProfileBuildingBlock is used by auth to communicate with the profile building block.
 type ProfileBuildingBlock interface {
 	GetProfileBBData(queryParams map[string]string, l *logs.Log) (*model.Profile, map[string]interface{}, error)
 }
 
-//Emailer is used by core to send emails
+// Emailer is used by core to send emails
 type Emailer interface {
 	Send(toEmail string, subject string, body string, attachmentFilename *string) error
 }

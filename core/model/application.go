@@ -20,7 +20,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/rokwire/core-auth-library-go/authutils"
+	"github.com/rokwire/core-auth-library-go/v2/authutils"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logutils"
 )
@@ -55,7 +55,7 @@ const (
 	PermissionAllSystemCore string = "all_system_core"
 )
 
-//Permission represents permission entity
+// Permission represents permission entity
 type Permission struct {
 	ID          string `bson:"_id"`
 	Name        string `bson:"name"`
@@ -68,7 +68,7 @@ type Permission struct {
 	DateUpdated *time.Time `bson:"date_updated"`
 }
 
-//CheckAssigners checks if the passed permissions satisfy the needed assigners for the permission
+// CheckAssigners checks if the passed permissions satisfy the needed assigners for the permission
 func (p Permission) CheckAssigners(assignerPermissions []string) error {
 	if len(p.Assigners) == 0 {
 		return errors.Newf("not defined assigners for %s permission", p.Name)
@@ -88,7 +88,7 @@ func (p Permission) String() string {
 	return fmt.Sprintf("[ID:%s\nName:%s\nServiceID:%s]", p.ID, p.Name, p.ServiceID)
 }
 
-//AppOrgRole represents application organization role entity. It is a collection of permissions
+// AppOrgRole represents application organization role entity. It is a collection of permissions
 type AppOrgRole struct {
 	ID          string
 	Name        string
@@ -104,7 +104,7 @@ type AppOrgRole struct {
 	DateUpdated *time.Time
 }
 
-//GetPermissionNamed returns the permission for a name if the role has it
+// GetPermissionNamed returns the permission for a name if the role has it
 func (c AppOrgRole) GetPermissionNamed(name string) *Permission {
 	for _, permission := range c.Permissions {
 		if permission.Name == name {
@@ -114,7 +114,7 @@ func (c AppOrgRole) GetPermissionNamed(name string) *Permission {
 	return nil
 }
 
-//CheckAssigners checks if the passed permissions satisfy the needed assigners for all role permissions
+// CheckAssigners checks if the passed permissions satisfy the needed assigners for all role permissions
 func (c AppOrgRole) CheckAssigners(assignerPermissions []string) error {
 	if len(c.Permissions) == 0 {
 		return nil //no permission
@@ -134,7 +134,7 @@ func (c AppOrgRole) String() string {
 	return fmt.Sprintf("[ID:%s\tName:%s\tPermissions:%s\tAppOrg:%s]", c.ID, c.Name, c.Permissions, c.AppOrg.ID)
 }
 
-//AppOrgGroup represents application organization group entity. It is a collection of users
+// AppOrgGroup represents application organization group entity. It is a collection of users
 type AppOrgGroup struct {
 	ID          string
 	Name        string
@@ -151,7 +151,7 @@ type AppOrgGroup struct {
 	DateUpdated *time.Time
 }
 
-//CheckAssigners checks if the passed permissions satisfy the needed assigners for the group
+// CheckAssigners checks if the passed permissions satisfy the needed assigners for the group
 func (cg AppOrgGroup) CheckAssigners(assignerPermissions []string) error {
 	//check permission
 	if len(cg.Permissions) > 0 {
@@ -179,7 +179,7 @@ func (cg AppOrgGroup) String() string {
 	return fmt.Sprintf("[ID:%s\nName:%s\nAppOrg:%s]", cg.ID, cg.Name, cg.AppOrg.ID)
 }
 
-//Application represents users application entity - safer community, uuic, etc
+// Application represents users application entity - safer community, uuic, etc
 type Application struct {
 	ID   string
 	Name string //safer community, uuic, etc
@@ -200,7 +200,7 @@ type Application struct {
 	DateUpdated *time.Time
 }
 
-//FindApplicationType finds app type
+// FindApplicationType finds app type
 func (a Application) FindApplicationType(id string) *ApplicationType {
 	for _, appType := range a.Types {
 		if appType.Identifier == id || appType.ID == id {
@@ -210,7 +210,7 @@ func (a Application) FindApplicationType(id string) *ApplicationType {
 	return nil
 }
 
-//Organization represents organization entity
+// Organization represents organization entity
 type Organization struct {
 	ID   string
 	Name string
@@ -230,7 +230,7 @@ func (c Organization) String() string {
 	return fmt.Sprintf("[ID:%s\tName:%s\tType:%s\tConfig:%s]", c.ID, c.Name, c.Type, c.Config)
 }
 
-//ApplicationOrganization represents application organization entity
+// ApplicationOrganization represents application organization entity
 type ApplicationOrganization struct {
 	ID string
 
@@ -249,7 +249,7 @@ type ApplicationOrganization struct {
 	DateUpdated *time.Time
 }
 
-//FindIdentityProviderSetting finds the identity provider setting for the application
+// FindIdentityProviderSetting finds the identity provider setting for the application
 func (ao ApplicationOrganization) FindIdentityProviderSetting(identityProviderID string) *IdentityProviderSetting {
 	for _, idPrSetting := range ao.IdentityProvidersSettings {
 		if idPrSetting.IdentityProviderID == identityProviderID {
@@ -259,7 +259,7 @@ func (ao ApplicationOrganization) FindIdentityProviderSetting(identityProviderID
 	return nil
 }
 
-//IsAuthTypeSupported checks if an auth type is supported for application type
+// IsAuthTypeSupported checks if an auth type is supported for application type
 func (ao ApplicationOrganization) IsAuthTypeSupported(appType ApplicationType, authType AuthType) bool {
 	for _, sat := range ao.SupportedAuthTypes {
 		if sat.AppTypeID == appType.ID {
@@ -273,15 +273,16 @@ func (ao ApplicationOrganization) IsAuthTypeSupported(appType ApplicationType, a
 	return false
 }
 
-//IdentityProviderSetting represents identity provider setting for an organization in an application
-//  User specific fields
-//  For example:
-//		UIUC Application has uiucedu_uin specific field for Illinois identity provider
+// IdentityProviderSetting represents identity provider setting for an organization in an application
 //
-//  Groups mapping: maps an identity provider groups to application groups
-//	For example:
-//  	for the UIUC application the Illinois group "urn:mace:uiuc.edu:urbana:authman:app-rokwire-service-policy-rokwire groups access" is mapped to an application group called "groups access"
-//  	for the Safer Illinois application the Illinois group "urn:mace:uiuc.edu:urbana:authman:app-rokwire-service-policy-rokwire health test verify" is mapped to an application group called "tests verifiers"
+//	 User specific fields
+//	 For example:
+//			UIUC Application has uiucedu_uin specific field for Illinois identity provider
+//
+//	 Groups mapping: maps an identity provider groups to application groups
+//		For example:
+//	 	for the UIUC application the Illinois group "urn:mace:uiuc.edu:urbana:authman:app-rokwire-service-policy-rokwire groups access" is mapped to an application group called "groups access"
+//	 	for the Safer Illinois application the Illinois group "urn:mace:uiuc.edu:urbana:authman:app-rokwire-service-policy-rokwire health test verify" is mapped to an application group called "tests verifiers"
 type IdentityProviderSetting struct {
 	IdentityProviderID string `bson:"identity_provider_id"`
 
@@ -301,7 +302,7 @@ type IdentityProviderSetting struct {
 	Groups map[string]string `bson:"groups"` //map[identity_provider_group]app_group_id
 }
 
-//LoginsSessionsSetting represents logins sessions setting for an organization in an application
+// LoginsSessionsSetting represents logins sessions setting for an organization in an application
 type LoginsSessionsSetting struct {
 	MaxConcurrentSessions int `bson:"max_concurrent_sessions"`
 
@@ -310,19 +311,19 @@ type LoginsSessionsSetting struct {
 	YearlyExpirePolicy     YearlyExpirePolicy     `bson:"yearly_expire_policy"`
 }
 
-//InactivityExpirePolicy represents expires policy based on inactivity
+// InactivityExpirePolicy represents expires policy based on inactivity
 type InactivityExpirePolicy struct {
 	Active           bool `bson:"active"`
 	InactivityPeriod int  `bson:"inactivity_period"` //in minutes
 }
 
-//TSLExpirePolicy represents expires policy based on the time since login
+// TSLExpirePolicy represents expires policy based on the time since login
 type TSLExpirePolicy struct {
 	Active               bool `bson:"active"`
 	TimeSinceLoginPeriod int  `bson:"time_since_login_period"` //in minutes
 }
 
-//YearlyExpirePolicy represents expires policy based on fixed date
+// YearlyExpirePolicy represents expires policy based on fixed date
 type YearlyExpirePolicy struct {
 	Active bool `bson:"active"`
 	Day    int  `bson:"day"`
@@ -331,7 +332,7 @@ type YearlyExpirePolicy struct {
 	Min    int  `bson:"min"`
 }
 
-//ApplicationType represents users application type entity - safer community android, safer community ios, safer community web, uuic android etc
+// ApplicationType represents users application type entity - safer community android, safer community ios, safer community web, uuic android etc
 type ApplicationType struct {
 	ID         string
 	Identifier string    //edu.illinois.rokwire etc
@@ -341,7 +342,7 @@ type ApplicationType struct {
 	Application Application
 }
 
-//AuthTypesSupport represents supported auth types for an organization in an application type with configs/params
+// AuthTypesSupport represents supported auth types for an organization in an application type with configs/params
 type AuthTypesSupport struct {
 	AppTypeID string `bson:"app_type_id"`
 
@@ -351,7 +352,7 @@ type AuthTypesSupport struct {
 	} `bson:"supported_auth_types"`
 }
 
-//ApplicationConfig represents app configs
+// ApplicationConfig represents app configs
 type ApplicationConfig struct {
 	ID              string
 	ApplicationType ApplicationType
@@ -373,7 +374,7 @@ type Version struct {
 	DateUpdated     *time.Time
 }
 
-//VersionNumbers represents app config version numbers
+// VersionNumbers represents app config version numbers
 type VersionNumbers struct {
 	Major int `json:"major" bson:"major"`
 	Minor int `json:"minor" bson:"minor"`
@@ -406,7 +407,7 @@ func (v VersionNumbers) LessThanOrEqualTo(v1 *VersionNumbers) bool {
 	return false
 }
 
-//VersionNumbersFromString parses a string into a VersionNumbers struct. Returns nil if invalid format.
+// VersionNumbersFromString parses a string into a VersionNumbers struct. Returns nil if invalid format.
 func VersionNumbersFromString(version string) *VersionNumbers {
 	parts := strings.Split(version, ".")
 	if len(parts) != 3 {

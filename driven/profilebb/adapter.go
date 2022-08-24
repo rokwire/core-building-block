@@ -27,7 +27,7 @@ import (
 	"github.com/rokwire/logging-library-go/logutils"
 )
 
-//Adapter implements the ProfileBuildingBlock interface
+// Adapter implements the ProfileBuildingBlock interface
 type Adapter struct {
 	migrate bool
 	host    string
@@ -118,7 +118,7 @@ type interest struct {
 	Subcategories []string `json:"subcategories"`
 }
 
-//GetProfileBBData gets profile data by queryParams
+// GetProfileBBData gets profile data by queryParams
 func (a *Adapter) GetProfileBBData(queryParams map[string]string, l *logs.Log) (*model.Profile, map[string]interface{}, error) {
 	if !a.migrate {
 		return nil, nil, nil
@@ -219,7 +219,7 @@ func parseTime(timeString string) (*time.Time, error) {
 	return &parsedTime, nil
 }
 
-//NewProfileBBAdapter creates a new profile building block adapter instance
+// NewProfileBBAdapter creates a new profile building block adapter instance
 func NewProfileBBAdapter(migrate bool, profileHost string, apiKey string) *Adapter {
 	return &Adapter{migrate: migrate, host: profileHost, apiKey: apiKey}
 }

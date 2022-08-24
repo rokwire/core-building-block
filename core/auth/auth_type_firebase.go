@@ -73,7 +73,7 @@ func (a *firebaseAuthImpl) forgotCredential(credential *model.Credential, identi
 	return nil, nil
 }
 
-//initFirebaseAuth initializes and registers a new Firebase auth instance
+// initFirebaseAuth initializes and registers a new Firebase auth instance
 func initFirebaseAuth(auth *Auth) (*firebaseAuthImpl, error) {
 	firebase := &firebaseAuthImpl{auth: auth, authType: AuthTypeFirebase}
 
