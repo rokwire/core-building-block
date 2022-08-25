@@ -190,50 +190,46 @@ func (sa *Adapter) getCachedServiceReg(serviceID string) (*model.ServiceReg, err
 	return nil, nil
 }
 
-func (sa *Adapter) getCachedServiceRegs(serviceIDs []string) ([]model.ServiceReg, error) {
+func (sa *Adapter) getCachedServiceRegs(serviceIDs []string) []model.ServiceReg {
 	sa.serviceRegsLock.RLock()
 	defer sa.serviceRegsLock.RUnlock()
 
-	var serviceRegList []model.ServiceReg
-	var err error
+	serviceRegList := make([]model.ServiceReg, 0)
 	if !utils.Contains(serviceIDs, "all") {
-		serviceRegList = make([]model.ServiceReg, len(serviceIDs))
-		for i, serviceID := range serviceIDs {
+		for _, serviceID := range serviceIDs {
 			item, _ := sa.cachedServiceRegs.Load(serviceID)
-			serviceReg, err := sa.processCachedServiceReg(serviceID, item)
-			if err != nil {
-				return nil, err
+			serviceReg := sa.processCachedServiceReg(serviceID, item)
+			if serviceReg != nil {
+				serviceRegList = append(serviceRegList, *serviceReg)
 			}
-			serviceRegList[i] = *serviceReg
 		}
 	} else {
-		serviceRegList = make([]model.ServiceReg, 0)
 		sa.cachedServiceRegs.Range(func(key, item interface{}) bool {
-			serviceReg, err := sa.processCachedServiceReg(key, item)
-			if err != nil {
-				return false
+			serviceReg := sa.processCachedServiceReg(key, item)
+			if serviceReg != nil {
+				serviceRegList = append(serviceRegList, *serviceReg)
 			}
-			serviceRegList = append(serviceRegList, *serviceReg)
-
 			return true
 		})
 	}
 
-	return serviceRegList, err
+	return serviceRegList
 }
 
-func (sa *Adapter) processCachedServiceReg(key, item interface{}) (*model.ServiceReg, error) {
+func (sa *Adapter) processCachedServiceReg(key, item interface{}) *model.ServiceReg {
 	errArgs := &logutils.FieldArgs{"registration.service_id": key}
 	if item == nil {
-		return nil, errors.ErrorData(logutils.StatusInvalid, model.TypeServiceReg, errArgs)
+		sa.logger.Warn(errors.ErrorData(logutils.StatusInvalid, model.TypeServiceReg, errArgs).Error())
+		return nil
 	}
 
 	serviceReg, ok := item.(model.ServiceReg)
 	if !ok {
-		return nil, errors.ErrorAction(logutils.ActionCast, model.TypeServiceReg, errArgs)
+		sa.logger.Warn(errors.ErrorAction(logutils.ActionCast, model.TypeServiceReg, errArgs).Error())
+		return nil
 	}
 
-	return &serviceReg, nil
+	return &serviceReg
 }
 
 // cacheOrganizations caches the organizations from the DB
@@ -3154,7 +3150,7 @@ func (sa *Adapter) loadServiceRegs() ([]model.ServiceReg, error) {
 }
 
 // FindServiceRegs fetches the requested service registration records
-func (sa *Adapter) FindServiceRegs(serviceIDs []string) ([]model.ServiceReg, error) {
+func (sa *Adapter) FindServiceRegs(serviceIDs []string) []model.ServiceReg {
 	return sa.getCachedServiceRegs(serviceIDs)
 }
 

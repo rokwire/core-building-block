@@ -11,13 +11,12 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/pkg/errors v0.9.1
 	github.com/pquerna/otp v1.3.0
-	github.com/rokwire/core-auth-library-go/v2 v2.0.1
+	github.com/rokwire/core-auth-library-go/v2 v2.0.2
 	github.com/rokwire/logging-library-go v1.0.3
 	github.com/stretchr/testify v1.8.0
 	github.com/swaggo/http-swagger v1.3.3
 	go.mongodb.org/mongo-driver v1.10.1
-	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa
-	golang.org/x/oauth2 v0.0.0-20220808172628-8227340efae7
+	golang.org/x/crypto v0.0.0-20220817201139-bc19a97f63c8
 	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4
 	gopkg.in/go-playground/validator.v9 v9.31.0
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
@@ -27,14 +26,13 @@ require (
 require (
 	github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible // indirect
 	github.com/KyleBanks/depth v1.2.1 // indirect
-	github.com/aws/aws-sdk-go v1.44.76 // indirect
 	github.com/boombuler/barcode v1.0.1 // indirect
-	github.com/casbin/casbin/v2 v2.51.2 // indirect
+	github.com/casbin/casbin/v2 v2.52.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
 	github.com/go-openapi/jsonreference v0.20.0 // indirect
-	github.com/go-openapi/spec v0.20.6 // indirect
-	github.com/go-openapi/swag v0.22.0 // indirect
+	github.com/go-openapi/spec v0.20.7 // indirect
+	github.com/go-openapi/swag v0.22.3 // indirect
 	github.com/go-playground/locales v0.14.0 // indirect
 	github.com/go-playground/universal-translator v0.18.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
@@ -59,7 +57,8 @@ require (
 	github.com/xdg-go/stringprep v1.0.3 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a // indirect
 	golang.org/x/net v0.0.0-20220812174116-3211cb980234 // indirect
-	golang.org/x/sys v0.0.0-20220811171246-fbc7d0a398ab // indirect
+	golang.org/x/oauth2 v0.0.0-20220808172628-8227340efae7
+	golang.org/x/sys v0.0.0-20220817070843-5a390386f1f2 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/tools v0.1.12 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
