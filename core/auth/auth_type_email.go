@@ -54,7 +54,7 @@ type emailAuthImpl struct {
 	authType string
 }
 
-func (a *emailAuthImpl) signUp(authType model.AuthType, appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error) {
+func (a *emailAuthImpl) signUp(authType model.AuthType, appName string, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error) {
 	type signUpEmailParams struct {
 		ConfirmPassword string `json:"confirm_password"`
 	}
@@ -88,7 +88,7 @@ func (a *emailAuthImpl) signUp(authType model.AuthType, appOrg model.Application
 		return "", nil, errors.WrapErrorAction("passwords fields do not match", "", nil, err)
 	}
 
-	emailCreds, err := a.buildCredentials(authType, appOrg.Application.Name, email, password, newCredentialID)
+	emailCreds, err := a.buildCredentials(authType, appName, email, password, newCredentialID)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction("building", "email credentials", nil, err)
 	}
@@ -96,12 +96,12 @@ func (a *emailAuthImpl) signUp(authType model.AuthType, appOrg model.Application
 	return "verification code sent successfully", emailCreds, nil
 }
 
-func (a *emailAuthImpl) signUpAdmin(authType model.AuthType, appOrg model.ApplicationOrganization, identifier string, password string, newCredentialID string) (map[string]interface{}, map[string]interface{}, error) {
+func (a *emailAuthImpl) signUpAdmin(authType model.AuthType, appName string, identifier string, password string, newCredentialID string) (map[string]interface{}, map[string]interface{}, error) {
 	if password == "" {
 		password = utils.GenerateRandomPassword(12)
 	}
 
-	emailCreds, err := a.buildCredentials(authType, appOrg.Application.Name, identifier, password, newCredentialID)
+	emailCreds, err := a.buildCredentials(authType, appName, identifier, password, newCredentialID)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction("building", "email credentials", nil, err)
 	}

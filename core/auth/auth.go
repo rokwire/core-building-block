@@ -204,78 +204,6 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 	return auth, nil
 }
 
-// NewTestAuth creates a new test auth instance
-func NewTestAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage Storage, minTokenExp *int64, maxTokenExp *int64, logger *logs.Logger) (*Auth, error) {
-	if minTokenExp == nil {
-		var minTokenExpVal int64 = 5
-		minTokenExp = &minTokenExpVal
-	}
-
-	if maxTokenExp == nil {
-		var maxTokenExpVal int64 = 60
-		maxTokenExp = &maxTokenExpVal
-	}
-
-	authTypes := map[string]authType{}
-	externalAuthTypes := map[string]externalAuthType{}
-	anonymousAuthTypes := map[string]anonymousAuthType{}
-	serviceAuthTypes := map[string]serviceAuthType{}
-	mfaTypes := map[string]mfaType{}
-
-	auth := &Auth{storage: storage, logger: logger, authTypes: authTypes, externalAuthTypes: externalAuthTypes, anonymousAuthTypes: anonymousAuthTypes,
-		serviceAuthTypes: serviceAuthTypes, mfaTypes: mfaTypes, authPrivKey: authPrivKey, serviceID: serviceID, host: host, minTokenExp: *minTokenExp, maxTokenExp: *maxTokenExp}
-
-	err := auth.storeReg()
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionSave, "reg", nil, err)
-	}
-
-	authService := authservice.AuthService{
-		ServiceID:   serviceID,
-		ServiceHost: host,
-		FirstParty:  true,
-	}
-
-	serviceRegLoader := NewLocalServiceRegLoader(storage)
-
-	// Instantiate a ServiceRegManager to manage the service registration data loaded by serviceRegLoader
-	serviceRegManager, err := authservice.NewServiceRegManager(&authService, serviceRegLoader)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionInitialize, "service reg manager", nil, err)
-	}
-
-	auth.ServiceRegManager = serviceRegManager
-
-	signatureAuth, err := sigauth.NewSignatureAuth(authPrivKey, serviceRegManager, true)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionInitialize, "signature auth", nil, err)
-	}
-
-	auth.SignatureAuth = signatureAuth
-
-	//Initialize auth types
-	initUsernameAuth(auth)
-	initEmailAuth(auth)
-	//TODO: mock Twilio interface
-	// initPhoneAuth(auth, twilioAccountSID, twilioToken, twilioServiceSID)
-	initFirebaseAuth(auth)
-	initAnonymousAuth(auth)
-	initSignatureAuth(auth)
-
-	initOidcAuth(auth)
-	initSamlAuth(auth)
-
-	initStaticTokenServiceAuth(auth)
-	initSignatureServiceAuth(auth)
-
-	initTotpMfa(auth)
-	initEmailMfa(auth)
-	initPhoneMfa(auth)
-	initRecoveryMfa(auth)
-
-	return auth, nil
-}
-
 func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization,
 	creds string, params string, regProfile model.Profile, regPreferences map[string]interface{}, admin bool, l *logs.Log) (*model.AccountAuthType, map[string]interface{}, []model.MFAType, map[string]string, error) {
 	var accountAuthType *model.AccountAuthType
@@ -826,14 +754,14 @@ func (a *Auth) signUpNewAccount(context storage.TransactionContext, authImpl aut
 		var credentialValue map[string]interface{}
 		if creatorPermissions == nil {
 			var message string
-			message, credentialValue, err = authImpl.signUp(authType, appOrg, creds, params, credID, l)
+			message, credentialValue, err = authImpl.signUp(authType, appOrg.Application.Name, creds, params, credID, l)
 			if err != nil {
 				return nil, nil, errors.Wrap("error signing up", err)
 			}
 
 			retParams = map[string]interface{}{"message": message}
 		} else {
-			retParams, credentialValue, err = authImpl.signUpAdmin(authType, appOrg, userIdentifier, creds, credID)
+			retParams, credentialValue, err = authImpl.signUpAdmin(authType, appOrg.Application.Name, userIdentifier, creds, credID)
 			if err != nil {
 				return nil, nil, errors.WrapErrorAction("signing up", "admin user", nil, err)
 			}
@@ -1660,7 +1588,7 @@ func (a *Auth) linkAccountAuthType(account model.Account, authType model.AuthTyp
 	credID := credentialID.String()
 
 	//apply sign up
-	message, credentialValue, err := authImpl.signUp(authType, appOrg, creds, params, credID, l)
+	message, credentialValue, err := authImpl.signUp(authType, appOrg.Application.Name, creds, params, credID, l)
 	if err != nil {
 		return "", nil, errors.Wrap("error signing up", err)
 	}
