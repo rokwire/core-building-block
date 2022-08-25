@@ -52,6 +52,7 @@ type database struct {
 	applicationsOrganizationsGroups *collectionWrapper
 	applicationsOrganizationsRoles  *collectionWrapper
 	applicationConfigs              *collectionWrapper
+	webhookConfigs                  *collectionWrapper
 	permissions                     *collectionWrapper
 
 	listeners []Listener
@@ -188,6 +189,12 @@ func (m *database) start() error {
 		return err
 	}
 
+	webhookConfigs := &collectionWrapper{database: m, coll: db.Collection("webhook_configs")}
+	err = m.applyWebhookConfigsChecks(webhookConfigs)
+	if err != nil {
+		return err
+	}
+
 	//asign the db, db client and the collections
 	m.db = db
 	m.dbClient = client
@@ -207,6 +214,7 @@ func (m *database) start() error {
 	m.applications = applications
 	m.applicationsOrganizations = applicationsOrganizations
 	m.applicationConfigs = applicationConfigs
+	m.webhookConfigs = webhookConfigs
 	m.applicationsOrganizationsGroups = applicationsOrganizationsGroups
 	m.applicationsOrganizationsRoles = applicationsOrganizationsRoles
 	m.permissions = permissions
@@ -523,6 +531,13 @@ func (m *database) applyApplicationConfigsChecks(applicationConfigs *collectionW
 	return nil
 }
 
+func (m *database) applyWebhookConfigsChecks(webhookonfigs *collectionWrapper) error {
+	m.logger.Info("apply webhook configs checks.....")
+
+	m.logger.Info("webhook configs checks passed")
+	return nil
+}
+
 func (m *database) onDataChanged(changeDoc map[string]interface{}) {
 	if changeDoc == nil {
 		return
@@ -583,6 +598,12 @@ func (m *database) onDataChanged(changeDoc map[string]interface{}) {
 
 		for _, listener := range m.listeners {
 			go listener.OnApplicationConfigsUpdated()
+		}
+	case "webhook_configs":
+		m.logger.Info("webhook configs collection changed")
+
+		for _, listener := range m.listeners {
+			go listener.OnWebhookConfigsUpdated()
 		}
 	}
 }

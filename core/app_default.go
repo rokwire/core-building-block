@@ -43,7 +43,7 @@ func (app *application) processGitHubWebhookFiles(files []string, isDelete bool,
 		}
 
 		if isWebhookConfigPath {
-			err = app.github.UpdateCachedWebhookConfigs()
+			err = app.github.UpdateCachedWebhookConfigFromGit()
 			if err != nil {
 				if err != nil {
 					l.LogError("error updating GitHub webhook config file cache", err)
@@ -139,5 +139,5 @@ func (app *application) updateAppConfigFromWebhook(enviromentString string, orgN
 }
 
 func (app *application) updateCachedWebhookConfigs() error {
-	return app.github.UpdateCachedWebhookConfigs()
+	return app.github.UpdateCachedWebhookConfigFromGit()
 }

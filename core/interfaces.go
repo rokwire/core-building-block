@@ -200,6 +200,9 @@ type Storage interface {
 
 	FindApplicationType(id string) (*model.ApplicationType, error)
 
+	UpdateWebhookConfig(webhookConfig model.WebhookConfig) error
+	FindWebhookConfig() (*model.WebhookConfig, error)
+
 	FindAppConfigs(appTypeIdentifier string, appOrgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error)
 	FindAppConfigByVersion(appTypeIdentifier string, appOrgID *string, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error)
 	FindAppConfigByID(ID string) (*model.ApplicationConfig, error)
@@ -219,7 +222,7 @@ type GitHub interface {
 	GetContents(path string) (string, bool, error)
 
 	FindWebhookConfig() (*model.WebhookConfig, error)
-	UpdateCachedWebhookConfigs() error
+	UpdateCachedWebhookConfigFromGit() error
 }
 
 // StorageListener listenes for change data storage events

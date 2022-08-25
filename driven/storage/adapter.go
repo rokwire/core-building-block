@@ -2813,6 +2813,31 @@ func (sa *Adapter) FindApplications() ([]model.Application, error) {
 	return sa.getCachedApplications()
 }
 
+// FindWebhookConfig finds the webhook config file
+func (sa *Adapter) FindWebhookConfig() (*model.WebhookConfig, error) {
+	filter := bson.D{} // Could add "type" filter if we have more webhook config files in the future
+
+	var config *model.WebhookConfig
+	err := sa.db.webhookConfigs.FindOne(filter, &config, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeWebhookConfig, nil, err)
+	}
+
+	return config, nil
+}
+
+// UpdateWebhookConfig updates the webhook config file
+func (sa *Adapter) UpdateWebhookConfig(webhookConfig model.WebhookConfig) error {
+	filter := bson.D{}
+
+	err := sa.db.webhookConfigs.ReplaceOne(filter, webhookConfig, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeWebhookConfig, nil, err)
+	}
+
+	return nil
+}
+
 // loadAppConfigs loads all application configs
 func (sa *Adapter) loadAppConfigs() ([]model.ApplicationConfig, error) {
 	filter := bson.D{}
@@ -3349,6 +3374,7 @@ type Listener interface {
 	OnApplicationsUpdated()
 	OnApplicationsOrganizationsUpdated()
 	OnApplicationConfigsUpdated()
+	OnWebhookConfigsUpdated()
 }
 
 // DefaultListenerImpl default listener implementation
@@ -3377,6 +3403,9 @@ func (d *DefaultListenerImpl) OnApplicationsOrganizationsUpdated() {}
 
 // OnApplicationConfigsUpdated notifies application configs have been updated
 func (d *DefaultListenerImpl) OnApplicationConfigsUpdated() {}
+
+// OnWebhookConfigsUpdated notifies Webhook configs have been updated
+func (d *DefaultListenerImpl) OnWebhookConfigsUpdated() {}
 
 // TransactionContext wraps mongo.SessionContext for use by external packages
 type TransactionContext interface {

@@ -2,7 +2,9 @@ package github
 
 import (
 	"context"
+	"core-building-block/core"
 	"core-building-block/core/model"
+	"core-building-block/driven/storage"
 	"encoding/json"
 	"fmt"
 	"sync"
@@ -17,6 +19,8 @@ import (
 
 // Adapter implements the GitHub interface
 type Adapter struct {
+	storage core.Storage
+
 	githubToken             string
 	githubOrganizationName  string
 	githubRepoName          string
@@ -31,8 +35,7 @@ type Adapter struct {
 
 // Start starts the github adapter
 func (a *Adapter) Start() error {
-	// cache webhook config
-	err := a.cacheWebhookConfigs()
+	err := a.cacheWebhookConfigsFromGit()
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionCache, model.TypeWebhookConfig, nil, err)
 	}
@@ -40,20 +43,36 @@ func (a *Adapter) Start() error {
 	return err
 }
 
-// UpdateCachedWebhookConfigs updates the webhook configs cache
-func (a *Adapter) UpdateCachedWebhookConfigs() error {
-	return a.cacheWebhookConfigs()
+// UpdateCachedWebhookConfigFromGit updates the webhook configs cache
+func (a *Adapter) UpdateCachedWebhookConfigFromGit() error {
+	return a.cacheWebhookConfigsFromGit()
 }
 
-func (a *Adapter) cacheWebhookConfigs() error {
+func (a *Adapter) cacheWebhookConfigsFromGit() error {
 	a.logger.Info("cacheWebhookConfigs..")
 
-	webhookConfigs, err := a.loadWebhookConfigs()
+	webhookConfigs, err := a.loadWebhookConfigsFromGit()
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeWebhookConfig, nil, err)
 	}
 
-	a.setCachedWebhookConfigs(webhookConfigs)
+	if webhookConfigs != nil {
+		a.setCachedWebhookConfigs(webhookConfigs)
+		a.storage.UpdateWebhookConfig(*webhookConfigs)
+	}
+
+	return nil
+}
+
+func (a *Adapter) updateCachedWebhookConfigFromStorage() error {
+	webhookConfig, err := a.storage.FindWebhookConfig()
+	if err != nil {
+		return err
+	}
+
+	if webhookConfig != nil {
+		a.setCachedWebhookConfigs(webhookConfig)
+	}
 
 	return nil
 }
@@ -89,7 +108,7 @@ func (a *Adapter) getCachedWebhookConfig() (*model.WebhookConfig, error) {
 	return a.cachedWebhookConfig, nil
 }
 
-func (a *Adapter) loadWebhookConfigs() (*model.WebhookConfig, error) {
+func (a *Adapter) loadWebhookConfigsFromGit() (*model.WebhookConfig, error) {
 	contentString, _, err := a.GetContents(a.githubWebhookConfigPath)
 	if err != nil {
 		fmt.Printf("fileContent.GetContent returned error: %v", err)
@@ -138,4 +157,15 @@ func NewGitHubAdapter(githubToken string, githubOrgnizationName string, githubRe
 	webhookConfigsLock := &sync.RWMutex{}
 
 	return &Adapter{cachedWebhookConfig: cachedWebhookConfigs, webhookConfigsLock: webhookConfigsLock, githubToken: githubToken, githubOrganizationName: githubOrgnizationName, githubRepoName: githubRepoName, githubWebhookConfigPath: githubWebhookConfigPath, githubAppConfigBranch: githubAppConfigBranch, logger: logger}
+}
+
+// StorageListener represents storage listener implementation for the auth package
+type StorageListener struct {
+	adapter *Adapter
+	storage.DefaultListenerImpl
+}
+
+// OnWebhookConfigsUpdated notifies that webhook config file has been updated
+func (al *StorageListener) OnWebhookConfigsUpdated() {
+	al.adapter.updateCachedWebhookConfigFromStorage()
 }
