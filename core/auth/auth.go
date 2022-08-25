@@ -35,7 +35,6 @@ import (
 	"github.com/rokwire/core-auth-library-go/v2/tokenauth"
 	"golang.org/x/sync/syncmap"
 	"gopkg.in/go-playground/validator.v9"
-	"gopkg.in/gomail.v2"
 
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
@@ -98,9 +97,6 @@ type Auth struct {
 
 	profileBB ProfileBuildingBlock
 
-	emailFrom   string
-	emailDialer *gomail.Dialer
-
 	cachedIdentityProviders *syncmap.Map //cache identityProviders
 	identityProvidersLock   *sync.RWMutex
 
@@ -113,8 +109,8 @@ type Auth struct {
 }
 
 // NewAuth creates a new auth instance
-func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage Storage, emailer Emailer, minTokenExp *int64, maxTokenExp *int64, twilioAccountSID string,
-	twilioToken string, twilioServiceSID string, profileBB *profilebb.Adapter, smtpHost string, smtpPortNum int, smtpUser string, smtpPassword string, smtpFrom string, logger *logs.Logger) (*Auth, error) {
+func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage Storage, emailer Emailer, phoneVerifiers []PhoneVerifier, profileBB *profilebb.Adapter,
+	minTokenExp *int64, maxTokenExp *int64, logger *logs.Logger) (*Auth, error) {
 	if minTokenExp == nil {
 		var minTokenExpVal int64 = 5
 		minTokenExp = &minTokenExpVal
@@ -124,8 +120,6 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 		var maxTokenExpVal int64 = 60
 		maxTokenExp = &maxTokenExpVal
 	}
-	//maybe set up from config collection for diff types of auth
-	emailDialer := gomail.NewDialer(smtpHost, smtpPortNum, smtpUser, smtpPassword)
 
 	authTypes := map[string]authType{}
 	externalAuthTypes := map[string]externalAuthType{}
@@ -144,7 +138,7 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 	auth := &Auth{storage: storage, emailer: emailer, logger: logger, authTypes: authTypes, externalAuthTypes: externalAuthTypes, anonymousAuthTypes: anonymousAuthTypes,
 		serviceAuthTypes: serviceAuthTypes, mfaTypes: mfaTypes, authPrivKey: authPrivKey, ServiceRegManager: nil, serviceID: serviceID, host: host, minTokenExp: *minTokenExp,
 		maxTokenExp: *maxTokenExp, profileBB: profileBB, cachedIdentityProviders: cachedIdentityProviders, identityProvidersLock: identityProvidersLock,
-		timerDone: timerDone, emailDialer: emailDialer, emailFrom: smtpFrom, apiKeys: apiKeys, apiKeysLock: apiKeysLock}
+		timerDone: timerDone, apiKeys: apiKeys, apiKeysLock: apiKeysLock}
 
 	err := auth.storeReg()
 	if err != nil {
@@ -177,7 +171,11 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 	//Initialize auth types
 	initUsernameAuth(auth)
 	initEmailAuth(auth)
-	initPhoneAuth(auth, twilioAccountSID, twilioToken, twilioServiceSID)
+
+	for _, pv := range phoneVerifiers {
+		initPhoneAuth(auth, pv)
+	}
+
 	initFirebaseAuth(auth)
 	initAnonymousAuth(auth)
 	initSignatureAuth(auth)
@@ -204,7 +202,78 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 	}
 
 	return auth, nil
+}
 
+// NewTestAuth creates a new test auth instance
+func NewTestAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage Storage, minTokenExp *int64, maxTokenExp *int64, logger *logs.Logger) (*Auth, error) {
+	if minTokenExp == nil {
+		var minTokenExpVal int64 = 5
+		minTokenExp = &minTokenExpVal
+	}
+
+	if maxTokenExp == nil {
+		var maxTokenExpVal int64 = 60
+		maxTokenExp = &maxTokenExpVal
+	}
+
+	authTypes := map[string]authType{}
+	externalAuthTypes := map[string]externalAuthType{}
+	anonymousAuthTypes := map[string]anonymousAuthType{}
+	serviceAuthTypes := map[string]serviceAuthType{}
+	mfaTypes := map[string]mfaType{}
+
+	auth := &Auth{storage: storage, logger: logger, authTypes: authTypes, externalAuthTypes: externalAuthTypes, anonymousAuthTypes: anonymousAuthTypes,
+		serviceAuthTypes: serviceAuthTypes, mfaTypes: mfaTypes, authPrivKey: authPrivKey, serviceID: serviceID, host: host, minTokenExp: *minTokenExp, maxTokenExp: *maxTokenExp}
+
+	err := auth.storeReg()
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionSave, "reg", nil, err)
+	}
+
+	authService := authservice.AuthService{
+		ServiceID:   serviceID,
+		ServiceHost: host,
+		FirstParty:  true,
+	}
+
+	serviceRegLoader := NewLocalServiceRegLoader(storage)
+
+	// Instantiate a ServiceRegManager to manage the service registration data loaded by serviceRegLoader
+	serviceRegManager, err := authservice.NewServiceRegManager(&authService, serviceRegLoader)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionInitialize, "service reg manager", nil, err)
+	}
+
+	auth.ServiceRegManager = serviceRegManager
+
+	signatureAuth, err := sigauth.NewSignatureAuth(authPrivKey, serviceRegManager, true)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionInitialize, "signature auth", nil, err)
+	}
+
+	auth.SignatureAuth = signatureAuth
+
+	//Initialize auth types
+	initUsernameAuth(auth)
+	initEmailAuth(auth)
+	//TODO: mock Twilio interface
+	// initPhoneAuth(auth, twilioAccountSID, twilioToken, twilioServiceSID)
+	initFirebaseAuth(auth)
+	initAnonymousAuth(auth)
+	initSignatureAuth(auth)
+
+	initOidcAuth(auth)
+	initSamlAuth(auth)
+
+	initStaticTokenServiceAuth(auth)
+	initSignatureServiceAuth(auth)
+
+	initTotpMfa(auth)
+	initEmailMfa(auth)
+	initPhoneMfa(auth)
+	initRecoveryMfa(auth)
+
+	return auth, nil
 }
 
 func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization,

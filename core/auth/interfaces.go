@@ -17,6 +17,7 @@ package auth
 import (
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
+	"net/url"
 	"time"
 
 	"github.com/rokwire/core-auth-library-go/v2/authorization"
@@ -579,4 +580,11 @@ type ProfileBuildingBlock interface {
 // Emailer is used by core to send emails
 type Emailer interface {
 	Send(toEmail string, subject string, body string, attachmentFilename *string) error
+}
+
+// PhoneVerifier is used by core to verify phone numbers
+type PhoneVerifier interface {
+	Identifier() string
+	StartVerification(phone string, data url.Values) error
+	CheckVerification(phone string, data url.Values) error
 }
