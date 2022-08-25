@@ -99,7 +99,7 @@ func (app *application) updateAppConfigFromWebhook(enviromentString string, orgN
 					}
 
 					// create new appConfig from webhook request
-					appConfig, err = app.sysCreateAppConfig(applicationType.ID, orgID, data, versionNumbers)
+					appConfig, err = app.sysCreateAppConfig(applicationType.ID, orgID, data, versionNumbers, true)
 					if err != nil {
 						return nil, err
 					}
@@ -115,7 +115,7 @@ func (app *application) updateAppConfigFromWebhook(enviromentString string, orgN
 
 				// update
 				if appConfig.Version.VersionNumbers == versionNumbers {
-					err = app.sysUpdateAppConfig(appConfig.ID, applicationType.ID, orgID, data, versionNumbers)
+					err = app.sysUpdateAppConfig(appConfig.ID, applicationType.ID, orgID, data, versionNumbers, true)
 					if err != nil {
 						return nil, err
 					}
@@ -125,7 +125,7 @@ func (app *application) updateAppConfigFromWebhook(enviromentString string, orgN
 
 				// return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationConfig, logutils.StringArgs(appTypeIdentifier))
 				// create appConfig with a new version from webhook request
-				appConfig, err = app.sysCreateAppConfig(applicationType.ID, orgID, data, versionNumbers)
+				appConfig, err = app.sysCreateAppConfig(applicationType.ID, orgID, data, versionNumbers, true)
 				if err != nil {
 					return nil, err
 				}

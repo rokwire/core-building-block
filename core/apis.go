@@ -506,12 +506,12 @@ func (s *systemImpl) SysGetAppConfig(id string) (*model.ApplicationConfig, error
 	return s.app.sysGetAppConfig(id)
 }
 
-func (s *systemImpl) SysCreateAppConfig(appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error) {
-	return s.app.sysCreateAppConfig(appTypeID, orgID, data, versionNumbers)
+func (s *systemImpl) SysCreateAppConfig(appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers, vcsManaged bool) (*model.ApplicationConfig, error) {
+	return s.app.sysCreateAppConfig(appTypeID, orgID, data, versionNumbers, vcsManaged)
 }
 
-func (s *systemImpl) SysUpdateAppConfig(id string, appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) error {
-	return s.app.sysUpdateAppConfig(id, appTypeID, orgID, data, versionNumbers)
+func (s *systemImpl) SysUpdateAppConfig(id string, appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers, vcsManaged bool) error {
+	return s.app.sysUpdateAppConfig(id, appTypeID, orgID, data, versionNumbers, vcsManaged)
 }
 
 func (s *systemImpl) SysDeleteAppConfig(id string) error {

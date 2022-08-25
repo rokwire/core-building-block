@@ -2909,11 +2909,11 @@ func (sa *Adapter) InsertAppConfig(item model.ApplicationConfig) (*model.Applica
 }
 
 // UpdateAppConfig updates an appconfig
-func (sa *Adapter) UpdateAppConfig(ID string, appType model.ApplicationType, appOrg *model.ApplicationOrganization, version model.Version, data map[string]interface{}) error {
+func (sa *Adapter) UpdateAppConfig(ID string, appType model.ApplicationType, appOrg *model.ApplicationOrganization, version model.Version, data map[string]interface{}, vcsManaged bool) error {
 	now := time.Now()
 	//TODO: - use pointers and update only what not nil
 	updatAppConfigFilter := bson.D{primitive.E{Key: "_id", Value: ID}}
-	updateItem := bson.D{primitive.E{Key: "date_updated", Value: now}, primitive.E{Key: "app_type_id", Value: appType.ID}, primitive.E{Key: "version", Value: version}}
+	updateItem := bson.D{primitive.E{Key: "date_updated", Value: now}, primitive.E{Key: "app_type_id", Value: appType.ID}, primitive.E{Key: "version", Value: version}, primitive.E{Key: "vcs_managed", Value: vcsManaged}}
 	// if version != "" {
 	// 	updateItem = append(updateItem, primitive.E{Key: "version.date_updated", Value: now}, primitive.E{Key: "version.version_numbers", Value: versionNumbers}, primitive.E{Key: "version.app_type", Value: appType})
 	// }

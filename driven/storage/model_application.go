@@ -55,7 +55,8 @@ type applicationConfig struct {
 	Version   version `bson:"version"`
 	AppOrgID  *string `bson:"app_org_id"`
 
-	Data map[string]interface{} `bson:"data"`
+	Data       map[string]interface{} `bson:"data"`
+	VcsManaged bool                   `bson:"vcs_managed"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`

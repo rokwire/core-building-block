@@ -250,7 +250,7 @@ func (app *application) sysGetAppConfig(id string) (*model.ApplicationConfig, er
 	return appConfig, nil
 }
 
-func (app *application) sysCreateAppConfig(appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error) {
+func (app *application) sysCreateAppConfig(appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers, vcsManaged bool) (*model.ApplicationConfig, error) {
 	//get the app type
 	applicationType, err := app.storage.FindApplicationType(appTypeID)
 	if err != nil {
@@ -297,7 +297,7 @@ func (app *application) sysCreateAppConfig(appTypeID string, orgID *string, data
 		version = &model.Version{VersionNumbers: versionNumbers, DateCreated: now}
 	}
 
-	applicationConfig := model.ApplicationConfig{ID: appConfigID.String(), Version: *version, ApplicationType: *applicationType, AppOrg: appOrg, Data: data, DateCreated: now}
+	applicationConfig := model.ApplicationConfig{ID: appConfigID.String(), Version: *version, ApplicationType: *applicationType, AppOrg: appOrg, Data: data, VcsManaged: vcsManaged, DateCreated: now}
 
 	insertedConfig, err := app.storage.InsertAppConfig(applicationConfig)
 	if err != nil {
@@ -309,7 +309,7 @@ func (app *application) sysCreateAppConfig(appTypeID string, orgID *string, data
 	// return nil, errors.ErrorData(logutils.StatusInvalid, model.TypeApplicationConfigsVersion, logutils.StringArgs(versionNumbers.String()+" for app_type_id: "+appTypeID))
 }
 
-func (app *application) sysUpdateAppConfig(id string, appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) error {
+func (app *application) sysUpdateAppConfig(id string, appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers, vcsManaged bool) error {
 	applicationType, err := app.storage.FindApplicationType(appTypeID)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationType, logutils.StringArgs(appTypeID), err)
@@ -341,7 +341,7 @@ func (app *application) sysUpdateAppConfig(id string, appTypeID string, orgID *s
 		version = &model.Version{VersionNumbers: versionNumbers}
 	}
 
-	err = app.storage.UpdateAppConfig(id, *applicationType, appOrg, *version, data)
+	err = app.storage.UpdateAppConfig(id, *applicationType, appOrg, *version, data, vcsManaged)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeApplicationConfig, nil, err)
 	}
