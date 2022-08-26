@@ -4,6 +4,8 @@ post:
   summary: Login
   description: |
     Login using credentials to retrieve access token, refresh token, and user data
+
+    **Auth:** Requires API key
   requestBody:
     description: |
       User credential details and parameters
@@ -12,89 +14,17 @@ post:
         schema:
           $ref: "../../../schemas/apis/shared/requests/login/Request.yaml"
         examples:
-          email-sign_in:
-            summary: Email - sign in
+          email:
+            summary: Email
             value: |
               {
                 "auth_type": "email",
-                "app_type_identifier": "edu.illinois.rokwire.safercommunity",
-                "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
-                "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
-                "creds": {
-                  "email": "test@example.com", 
-                  "password": "test12345"
-                },
-                "device": {
-                  "type": "mobile",
-                  "device_id": "5555",
-                  "os": "Android"
-                }
-              }
-          email-sign_up:
-            summary: Email - sign up
-            value: |
-              {
-                "auth_type": "email",
-                "app_type_identifier": "edu.illinois.rokwire.safercommunity",
-                "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
-                "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
-                "creds": {
-                  "email": "test@example.com", 
-                  "password": "test12345"
-                },
-                "params":{
-                    "sign_up":true,
-                    "confirm_password": "test12345"
-                },
-                "preferences":{
-                    "key1":"value1",
-                    "key2":"value2"
-                },
-                "profile":{
-                  "address": "address",
-                  "birth_year": 1990,
-                  "country": "county",
-                  "email": "email",
-                  "first_name": "first name",
-                  "last_name": "last name",
-                  "phone": "+000000000000",
-                  "photo_url": "photo url",
-                  "state": "state",
-                  "zip_code": "zip code"
-                },
-                "device": {
-                  "type": "mobile",
-                  "device_id": "5555",
-                  "os": "Android"
-                }
-              }
-          phone:
-            summary: Phone - sign in OR sign up
-            value: |
-              {
-                "auth_type": "twilio_phone",
                 "app_type_identifier": "edu.illinois.rokwire",
                 "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                 "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
                 "creds": {
-                  "phone": "+12223334444", 
-                  "code": "123456"
-                },
-                "preferences":{
-                    "key1":"value1",
-                    "key2":"value2"
-                },
-                "profile":{
-                  "address": "address",
-                  "birth_year": 1990,
-                  "country": "county",
-                  "email": "email",
-                  "first_name": "first name",
-                  "last_name": "last name",
-                  "phone": "+000000000000",
-                  "photo_url": "photo url",
-                  "state": "state",
-                  "zip_code": "zip code"
+                  "email": "test@example.com", 
+                  "password": "test12345"
                 },
                 "device": {
                   "type": "mobile",
@@ -103,7 +33,7 @@ post:
                 }
               }
           illinois_oidc:
-            summary: Illinois OIDC login
+            summary: Illinois OIDC
             value: |
               {
                 "auth_type": "illinois_oidc",
@@ -130,23 +60,6 @@ post:
                   "photo_url": "photo url",
                   "state": "state",
                   "zip_code": "zip code"
-                },
-                "device": {
-                  "type": "mobile",
-                  "device_id": "5555",
-                  "os": "Android"
-                }
-              }
-          anonymous:
-            summary: Anonymous login
-            value: |
-              {
-                "auth_type": "anonymous",
-                "app_type_identifier": "edu.illinois.rokwire",
-                "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
-                "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
-                "creds": {
-                  "anonymous_id": "dbb5ea5d-6c6c-44b8-9952-7ebf0e844beb"
                 },
                 "device": {
                   "type": "mobile",

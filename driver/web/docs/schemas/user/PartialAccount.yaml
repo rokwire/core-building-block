@@ -1,0 +1,56 @@
+required:
+  - id
+  - app_id
+  - org_id
+  - first_name
+  - last_name
+  - permissions
+  - roles
+  - groups
+  - auth_types
+  - date_created
+type: object
+properties:
+  id:
+    type: string
+    readOnly: true
+  app_id:
+    type: string
+  org_id:
+    type: string
+  first_name:
+    type: string
+  last_name:
+    type: string
+  system:
+    type: boolean
+  has_permissions:
+    type: boolean
+  permissions:
+    type: array
+    items:
+      $ref: "../application/Permission.yaml"
+  roles:
+    type: array
+    items:
+      $ref: "../application/AppOrgRole.yaml"
+  groups:
+    type: array
+    items:
+      $ref: "../application/AppOrgGroup.yaml"
+  auth_types:
+    type: array
+    items:
+      $ref: "../user/AccountAuthTypeFields.yaml"
+  system_configs:
+    type: object
+    nullable: true
+  params:
+    type: object
+    nullable: true
+  date_created:
+    readOnly: true
+    type: string
+  date_updated:
+    type: string
+    nullable: true

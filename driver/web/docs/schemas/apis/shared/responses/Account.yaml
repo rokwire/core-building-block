@@ -9,18 +9,25 @@ properties:
   preferences:
     type: object
     nullable: true
+  system_configs:
+    type: object
+    nullable: true
+  has_permissions:
+    type: boolean
+  system:
+    type: boolean
   permissions:
     type: array
     items:
-      $ref: "../../../application/PermissionFields.yaml"
+      $ref: "../../../application/Permission.yaml"
   roles:
     type: array
     items:
-      $ref: "../../../application/AppOrgRoleFields.yaml"
+      $ref: "../../../application/AppOrgRole.yaml"
   groups:
     type: array
     items:
-      $ref: "../../../application/AppOrgGroupFields.yaml"
+      $ref: "../../../application/AppOrgGroup.yaml"
   auth_types:
     type: array
     items:

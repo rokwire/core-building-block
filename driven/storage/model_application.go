@@ -1,3 +1,17 @@
+// Copyright 2022 Board of Trustees of the University of Illinois.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package storage
 
 import (
@@ -52,6 +66,8 @@ type organization struct {
 	Name string `bson:"name"`
 	Type string `bson:"type"`
 
+	System bool `bson:"system"`
+
 	Config model.OrganizationConfig `bson:"config"`
 
 	DateCreated time.Time  `bson:"date_created"`
@@ -77,8 +93,9 @@ type applicationOrganization struct {
 }
 
 type appOrgGroup struct {
-	ID   string `bson:"_id"`
-	Name string `bson:"name"`
+	ID          string `bson:"_id"`
+	Name        string `bson:"name"`
+	Description string `bson:"description"`
 
 	System bool `bson:"system"`
 

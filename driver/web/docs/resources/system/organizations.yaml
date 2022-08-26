@@ -1,12 +1,11 @@
  get:
-  deprecated: true
   tags:
   - System
   summary: Get organizations
   description: |
     Gets organizations
 
-    **Auth:** Requires auth token with `org_admin` permission
+    **Auth:** Requires system access token with `get_organizations`, `update_organizations`, or `all_organizations` permission
   security:
     - bearerAuth: []
   responses:
@@ -17,7 +16,7 @@
             schema:
               type: array
               items:
-                $ref: "../../schemas/apis/system/get-organizations/response/Response.yaml"
+                $ref: "../../schemas/application/Organization.yaml"
       400:
         description: Bad request
       401:
@@ -25,14 +24,13 @@
       500:
         description: Internal error
  post:
-  deprecated: true
   tags:
   - System
   summary: Create organization
   description: |
     Creates organization
 
-    **Auth:** Requires auth token with `org_admin` permission
+    **Auth:** Requires system access token with `update_organizations` or `all_organizations` permission
   security:
     - bearerAuth: []
   requestBody:

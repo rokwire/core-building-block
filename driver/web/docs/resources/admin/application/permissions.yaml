@@ -5,7 +5,12 @@ get:
   description: |
     Get application permissions
 
-    **Auth:** Requires user auth token
+    **Auth:** Requires admin access token with at least one of the following permissions:
+    - `get_permissions`
+    - `update_account-permissions`
+    - `create_accounts`
+    - `update_accounts`
+    - `all_accounts`
   security:
     - bearerAuth: []
   responses:
@@ -16,7 +21,7 @@ get:
           schema:
             type: array
             items:
-              $ref: "../../../schemas/application/PermissionFields.yaml"
+              $ref: "../../../schemas/application/Permission.yaml"
     400:
       description: Bad request
     401:

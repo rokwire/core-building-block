@@ -1,12 +1,26 @@
+// Copyright 2022 Board of Trustees of the University of Illinois.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package web
 
 import (
 	"core-building-block/core"
 	"net/http"
 
-	"github.com/rokwire/core-auth-library-go/authorization"
-	"github.com/rokwire/core-auth-library-go/authservice"
-	"github.com/rokwire/core-auth-library-go/tokenauth"
+	"github.com/rokwire/core-auth-library-go/v2/authorization"
+	"github.com/rokwire/core-auth-library-go/v2/authservice"
+	"github.com/rokwire/core-auth-library-go/v2/tokenauth"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
@@ -15,49 +29,54 @@ import (
 const (
 	typeCheckPermission               logutils.MessageActionType = "checking permission"
 	typeCheckScope                    logutils.MessageActionType = "checking scope"
+	typeCheckSystemAuthRequestToken   logutils.MessageActionType = "checking system auth"
+	typeCheckTPsAuthRequestToken      logutils.MessageActionType = "checking tps auth"
+	typeCheckBBsAuthRequestToken      logutils.MessageActionType = "checking bbs auth"
 	typeCheckAdminAuthRequestToken    logutils.MessageActionType = "checking admin auth"
 	typeCheckServicesAuthRequestToken logutils.MessageActionType = "checking services auth"
 )
 
-//Auth handler
+// Auth handler
 type Auth struct {
-	services   *TokenAuthHandlers
-	admin      *TokenAuthHandlers
-	encAuth    *EncAuth
-	bbsAuth    *BBsAuth
-	systemAuth *SystemAuth
+	services *TokenAuthHandlers
+	admin    *TokenAuthHandlers
+	encAuth  *EncAuth
+	bbs      *TokenAuthHandlers
+	tps      *TokenAuthHandlers
+	system   *TokenAuthHandlers
 
 	logger *logs.Logger
 }
 
-//Authorization is an interface for auth types
+// Authorization is an interface for auth types
 type Authorization interface {
 	check(req *http.Request) (int, *tokenauth.Claims, error)
 	start()
 }
 
-//TokenAuthorization is an interface for auth types
+// TokenAuthorization is an interface for auth types
 type TokenAuthorization interface {
 	Authorization
 	getTokenAuth() *tokenauth.TokenAuth
 }
 
-//Start starts the auth module
+// Start starts the auth module
 func (auth *Auth) Start() error {
 	auth.logger.Info("Auth -> start")
 
 	auth.services.start()
 	auth.admin.start()
 	auth.encAuth.start()
-	auth.bbsAuth.start()
-	auth.systemAuth.start()
+	auth.bbs.start()
+	auth.tps.start()
+	auth.system.start()
 
 	return nil
 }
 
-//NewAuth creates new auth handler
-func NewAuth(coreAPIs *core.APIs, serviceID string, authService *authservice.AuthService, logger *logs.Logger) (*Auth, error) {
-	servicesAuth, err := newServicesAuth(coreAPIs, authService, serviceID, logger)
+// NewAuth creates new auth handler
+func NewAuth(coreAPIs *core.APIs, serviceID string, serviceRegManager *authservice.ServiceRegManager, logger *logs.Logger) (*Auth, error) {
+	servicesAuth, err := newServicesAuth(coreAPIs, serviceRegManager, serviceID, logger)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, "services auth", nil, err)
 	}
@@ -66,7 +85,7 @@ func NewAuth(coreAPIs *core.APIs, serviceID string, authService *authservice.Aut
 		return nil, errors.WrapErrorAction(logutils.ActionStart, "services auth handlers", nil, err)
 	}
 
-	adminAuth, err := newAdminAuth(coreAPIs, authService, logger)
+	adminAuth, err := newAdminAuth(coreAPIs, serviceRegManager, logger)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionStart, "admin auth", nil, err)
 	}
@@ -76,18 +95,40 @@ func NewAuth(coreAPIs *core.APIs, serviceID string, authService *authservice.Aut
 	}
 
 	encAuth := newEncAuth(coreAPIs, logger)
-	bbsAuth := newBBsAuth(coreAPIs, logger)
-	systemAuth, err := newSystemAuth(authService, logger)
+
+	bbsAuth, err := newBBsAuth(coreAPIs, serviceRegManager, logger)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionStart, "bbs auth", nil, err)
+	}
+	bbsHandlers, err := newTokenAuthHandlers(bbsAuth)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionStart, "bbs auth handlers", nil, err)
+	}
+
+	tpsAuth, err := newTPsAuth(coreAPIs, serviceRegManager, logger)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionStart, "tps auth", nil, err)
+	}
+	tpsHandlers, err := newTokenAuthHandlers(tpsAuth)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionStart, "tps auth handlers", nil, err)
+	}
+
+	systemAuth, err := newSystemAuth(coreAPIs, serviceRegManager, logger)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionStart, "auth handler", nil, err)
 	}
+	systemHandlers, err := newTokenAuthHandlers(systemAuth)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionStart, "system auth handlers", nil, err)
+	}
 
-	auth := Auth{services: serviceHandlers, admin: adminHandlers, encAuth: encAuth, bbsAuth: bbsAuth, systemAuth: systemAuth, logger: logger}
+	auth := Auth{services: serviceHandlers, admin: adminHandlers, encAuth: encAuth, bbs: bbsHandlers, tps: tpsHandlers, system: systemHandlers, logger: logger}
 
 	return &auth, nil
 }
 
-//TokenAuthHandlers represents token auth handlers
+// TokenAuthHandlers represents token auth handlers
 type TokenAuthHandlers struct {
 	standard      TokenAuthorization
 	permissions   *PermissionsAuth
@@ -102,7 +143,7 @@ func (auth *TokenAuthHandlers) start() {
 	auth.authenticated.start()
 }
 
-//newTokenAuthHandlers creates new auth handlers for a
+// newTokenAuthHandlers creates new auth handlers for a
 func newTokenAuthHandlers(auth TokenAuthorization) (*TokenAuthHandlers, error) {
 	permissionsAuth := newPermissionsAuth(auth)
 	userAuth := newUserAuth(auth)
@@ -112,7 +153,7 @@ func newTokenAuthHandlers(auth TokenAuthorization) (*TokenAuthHandlers, error) {
 	return &authWrappers, nil
 }
 
-//ServicesAuth entity
+// ServicesAuth entity
 type ServicesAuth struct {
 	coreAPIs  *core.APIs
 	tokenAuth *tokenauth.TokenAuth
@@ -132,6 +173,9 @@ func (auth *ServicesAuth) check(req *http.Request) (int, *tokenauth.Claims, erro
 	if claims.Admin {
 		return http.StatusUnauthorized, nil, errors.ErrorData(logutils.StatusInvalid, "admin claim", nil)
 	}
+	if claims.System {
+		return http.StatusUnauthorized, nil, errors.ErrorData(logutils.StatusInvalid, "system claim", nil)
+	}
 
 	err = auth.tokenAuth.AuthorizeRequestScope(claims, req)
 	if err != nil {
@@ -145,10 +189,11 @@ func (auth *ServicesAuth) getTokenAuth() *tokenauth.TokenAuth {
 	return auth.tokenAuth
 }
 
-func newServicesAuth(coreAPIs *core.APIs, authService *authservice.AuthService, serviceID string, logger *logs.Logger) (*ServicesAuth, error) {
+func newServicesAuth(coreAPIs *core.APIs, serviceRegManager *authservice.ServiceRegManager, serviceID string, logger *logs.Logger) (*ServicesAuth, error) {
 	servicesScopeAuth := authorization.NewCasbinScopeAuthorization("driver/web/authorization_services_policy.csv", serviceID)
+	servicesPermissionAuth := authorization.NewCasbinStringAuthorization("driver/web/authorization_services_policy.csv")
 
-	servicesTokenAuth, err := tokenauth.NewTokenAuth(true, authService, nil, servicesScopeAuth)
+	servicesTokenAuth, err := tokenauth.NewTokenAuth(true, serviceRegManager, servicesPermissionAuth, servicesScopeAuth)
 
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionStart, "token auth for servicesAuth", nil, err)
@@ -158,7 +203,7 @@ func newServicesAuth(coreAPIs *core.APIs, authService *authservice.AuthService, 
 	return &auth, nil
 }
 
-//AdminAuth entity
+// AdminAuth entity
 type AdminAuth struct {
 	coreAPIs  *core.APIs
 	tokenAuth *tokenauth.TokenAuth
@@ -186,9 +231,9 @@ func (auth *AdminAuth) getTokenAuth() *tokenauth.TokenAuth {
 	return auth.tokenAuth
 }
 
-func newAdminAuth(coreAPIs *core.APIs, authService *authservice.AuthService, logger *logs.Logger) (*AdminAuth, error) {
+func newAdminAuth(coreAPIs *core.APIs, serviceRegManager *authservice.ServiceRegManager, logger *logs.Logger) (*AdminAuth, error) {
 	adminPermissionAuth := authorization.NewCasbinStringAuthorization("driver/web/authorization_admin_policy.csv")
-	adminTokenAuth, err := tokenauth.NewTokenAuth(true, authService, adminPermissionAuth, nil)
+	adminTokenAuth, err := tokenauth.NewTokenAuth(true, serviceRegManager, adminPermissionAuth, nil)
 
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionStart, "token auth for adminAuth", nil, err)
@@ -198,7 +243,7 @@ func newAdminAuth(coreAPIs *core.APIs, authService *authservice.AuthService, log
 	return &auth, nil
 }
 
-//EncAuth entity
+// EncAuth entity
 type EncAuth struct {
 	coreAPIs *core.APIs
 
@@ -214,25 +259,97 @@ func newEncAuth(coreAPIs *core.APIs, logger *logs.Logger) *EncAuth {
 	return &auth
 }
 
-//BBsAuth entity
+// BBsAuth entity
 type BBsAuth struct {
-	coreAPIs *core.APIs
-
-	logger *logs.Logger
+	coreAPIs  *core.APIs
+	tokenAuth *tokenauth.TokenAuth
+	logger    *logs.Logger
 }
 
 func (auth *BBsAuth) start() {
 	auth.logger.Info("BBsAuth -> start")
 }
 
-func newBBsAuth(coreAPIs *core.APIs, logger *logs.Logger) *BBsAuth {
-	auth := BBsAuth{coreAPIs: coreAPIs, logger: logger}
-	return &auth
+func (auth *BBsAuth) check(req *http.Request) (int, *tokenauth.Claims, error) {
+	claims, err := auth.tokenAuth.CheckRequestTokens(req)
+	if err != nil {
+		return http.StatusUnauthorized, nil, errors.WrapErrorAction(typeCheckBBsAuthRequestToken, logutils.TypeToken, nil, err)
+	}
+
+	if !claims.Service {
+		return http.StatusUnauthorized, nil, errors.ErrorData(logutils.StatusInvalid, "service claim", nil)
+	}
+
+	if !claims.FirstParty {
+		return http.StatusUnauthorized, nil, errors.ErrorData(logutils.StatusInvalid, "first party claim", nil)
+	}
+
+	return http.StatusOK, claims, nil
 }
 
-//SystemAuth entity
+func (auth *BBsAuth) getTokenAuth() *tokenauth.TokenAuth {
+	return auth.tokenAuth
+}
+
+func newBBsAuth(coreAPIs *core.APIs, serviceRegManager *authservice.ServiceRegManager, logger *logs.Logger) (*BBsAuth, error) {
+	bbsPermissionAuth := authorization.NewCasbinStringAuthorization("driver/web/authorization_bbs_policy.csv")
+	bbsTokenAuth, err := tokenauth.NewTokenAuth(true, serviceRegManager, bbsPermissionAuth, nil)
+
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionStart, "token auth for bbsAuth", nil, err)
+	}
+
+	auth := BBsAuth{coreAPIs: coreAPIs, tokenAuth: bbsTokenAuth, logger: logger}
+	return &auth, nil
+}
+
+// TPsAuth entity
+type TPsAuth struct {
+	coreAPIs  *core.APIs
+	tokenAuth *tokenauth.TokenAuth
+	logger    *logs.Logger
+}
+
+func (auth *TPsAuth) start() {
+	auth.logger.Info("TPsAuth -> start")
+}
+
+func (auth *TPsAuth) check(req *http.Request) (int, *tokenauth.Claims, error) {
+	claims, err := auth.tokenAuth.CheckRequestTokens(req)
+	if err != nil {
+		return http.StatusUnauthorized, nil, errors.WrapErrorAction(typeCheckTPsAuthRequestToken, logutils.TypeToken, nil, err)
+	}
+
+	if !claims.Service {
+		return http.StatusUnauthorized, nil, errors.ErrorData(logutils.StatusInvalid, "service claim", nil)
+	}
+
+	if claims.FirstParty {
+		return http.StatusUnauthorized, nil, errors.ErrorData(logutils.StatusInvalid, "first party claim", nil)
+	}
+
+	return http.StatusOK, claims, nil
+}
+
+func (auth *TPsAuth) getTokenAuth() *tokenauth.TokenAuth {
+	return auth.tokenAuth
+}
+
+func newTPsAuth(coreAPIs *core.APIs, serviceRegManager *authservice.ServiceRegManager, logger *logs.Logger) (*TPsAuth, error) {
+	tpsPermissionAuth := authorization.NewCasbinStringAuthorization("driver/web/authorization_tps_policy.csv")
+	tpsTokenAuth, err := tokenauth.NewTokenAuth(true, serviceRegManager, tpsPermissionAuth, nil)
+
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionStart, "token auth for tpsAuth", nil, err)
+	}
+
+	auth := TPsAuth{coreAPIs: coreAPIs, tokenAuth: tpsTokenAuth, logger: logger}
+	return &auth, nil
+}
+
+// SystemAuth entity
 type SystemAuth struct {
-	//TODO
+	coreAPIs  *core.APIs
 	tokenAuth *tokenauth.TokenAuth
 	logger    *logs.Logger
 }
@@ -242,23 +359,36 @@ func (auth *SystemAuth) start() {
 }
 
 func (auth *SystemAuth) check(req *http.Request) (int, *tokenauth.Claims, error) {
-	return 0, nil, nil
-}
-
-func newSystemAuth(authService *authservice.AuthService, logger *logs.Logger) (*SystemAuth, error) {
-	systemPermissionAuth := authorization.NewCasbinStringAuthorization("driver/web/authorization_system_policy.csv")
-	systemTokenAuth, err := tokenauth.NewTokenAuth(true, authService, systemPermissionAuth, nil)
-
+	claims, err := auth.tokenAuth.CheckRequestTokens(req)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionStart, "token auth for adminAuth", nil, err)
+		return http.StatusUnauthorized, nil, errors.WrapErrorAction(typeCheckSystemAuthRequestToken, logutils.TypeToken, nil, err)
 	}
 
-	auth := SystemAuth{tokenAuth: systemTokenAuth, logger: logger}
+	if !claims.System {
+		return http.StatusUnauthorized, nil, errors.ErrorData(logutils.StatusInvalid, "system claim", nil)
+	}
+
+	return http.StatusOK, claims, nil
+}
+
+func (auth *SystemAuth) getTokenAuth() *tokenauth.TokenAuth {
+	return auth.tokenAuth
+}
+
+func newSystemAuth(coreAPIs *core.APIs, serviceRegManager *authservice.ServiceRegManager, logger *logs.Logger) (*SystemAuth, error) {
+	systemPermissionAuth := authorization.NewCasbinStringAuthorization("driver/web/authorization_system_policy.csv")
+	systemTokenAuth, err := tokenauth.NewTokenAuth(true, serviceRegManager, systemPermissionAuth, nil)
+
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionStart, "token auth for systemAuth", nil, err)
+	}
+
+	auth := SystemAuth{coreAPIs: coreAPIs, tokenAuth: systemTokenAuth, logger: logger}
 	return &auth, nil
 }
 
-//PermissionsAuth entity
-//This enforces that the user has permissions matching the policy
+// PermissionsAuth entity
+// This enforces that the user has permissions matching the policy
 type PermissionsAuth struct {
 	auth TokenAuthorization
 }
@@ -283,7 +413,7 @@ func newPermissionsAuth(auth TokenAuthorization) *PermissionsAuth {
 	return &permissionsAuth
 }
 
-//UserAuth entity
+// UserAuth entity
 // This enforces that the user is not anonymous
 type UserAuth struct {
 	auth Authorization
@@ -308,7 +438,7 @@ func newUserAuth(auth Authorization) *UserAuth {
 	return &userAuth
 }
 
-//AuthenticatedAuth entity
+// AuthenticatedAuth entity
 // This enforces that the token was the result of direct user authentication. It should be used to protect sensitive account settings
 type AuthenticatedAuth struct {
 	userAuth UserAuth

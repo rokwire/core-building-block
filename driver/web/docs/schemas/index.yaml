@@ -15,16 +15,10 @@ ApplicationOrganization:
   $ref: "./application/ApplicationOrganization.yaml"
 Permission:
   $ref: "./application/Permission.yaml"
-PermissionFields:
-  $ref: "./application/PermissionFields.yaml"
 AppOrgRole:
   $ref: "./application/AppOrgRole.yaml"
-AppOrgRoleFields:
-  $ref: "./application/AppOrgRoleFields.yaml"
 AppOrgGroup:
   $ref: "./application/AppOrgGroup.yaml"
-AppOrgGroupFields:
-  $ref: "./application/AppOrgGroupFields.yaml"
 Organization:
   $ref: "./application/Organization.yaml"
 OrganizationFields:
@@ -49,6 +43,12 @@ Credential:
   $ref: "./auth/Credential.yaml"
 CredentialFields:
   $ref: "./auth/CredentialFields.yaml"
+ServiceAccount:
+  $ref: "./auth/ServiceAccount.yaml"
+AppOrgPair:
+  $ref: "./auth/AppOrgPair.yaml"
+ServiceAccountCredential:
+  $ref: "./auth/ServiceAccountCredential.yaml"
 ServiceReg:
   $ref: "./auth/ServiceReg.yaml"
 AuthServiceReg:
@@ -70,6 +70,8 @@ OIDCDiscovery:
 # user
 Account:
   $ref: "./user/Account.yaml"
+PartialAccount:
+  $ref: "./user/PartialAccount.yaml"
 AccountFields:
   $ref: "./user/AccountFields.yaml"
 Profile:
@@ -102,6 +104,10 @@ _shared_req_Refresh:
   $ref: "./apis/shared/requests/refresh/Request.yaml"
 _shared_req_Mfa:
   $ref: "./apis/shared/requests/mfa/Request.yaml"
+_shared_req_CreateAccount:
+  $ref: "./apis/shared/requests/create-account/Request.yaml"
+_shared_req_UpdateAccount:
+  $ref: "./apis/shared/requests/update-account/Request.yaml"
 _shared_req_AccountCheck:
   $ref: "./apis/shared/requests/AccountCheck.yaml"
 _shared_req_CredsEmail:
@@ -134,12 +140,12 @@ _shared_res_LoginUrl:
   $ref: "./apis/shared/responses/login-url/Response.yaml"
 _shared_res_Refresh:
   $ref: "./apis/shared/responses/refresh/Response.yaml"
+_shared_res_Mfa:
+  $ref: "./apis/shared/responses/mfa/Response.yaml"
 _shared_res_Account:
   $ref: "./apis/shared/responses/Account.yaml"
 _shared_res_AccountCheck:
   $ref: "./apis/shared/responses/AccountCheck.yaml"
-_shared_res_Mfa:
-  $ref: "./apis/shared/responses/mfa/Response.yaml"
 _shared_res_RokwireToken:
   $ref: "./apis/shared/responses/RokwireToken.yaml"
 _shared_res_LoginSession:
@@ -178,6 +184,18 @@ _services_req_authorize-service:
 _services_res_authorize-service:
   $ref: "./apis/services/authorize-service/response/Response.yaml"
 
+### service-accounts API
+_services_req_service-accounts_params:
+  $ref: "./apis/shared/requests/service-accounts/params/Request.yaml"
+_services_req_service-accounts_access-token:
+  $ref: "./apis/shared/requests/service-accounts/access-token/Request.yaml"
+_services_req_service-accounts_access-tokens:
+  $ref: "./apis/shared/requests/service-accounts/access-tokens/Request.yaml"
+_services_res_service-accounts_access-tokens:
+  $ref: "./apis/shared/responses/service-accounts/access-tokens/Response.yaml"
+_services_service-accounts_CredsStaticToken:
+  $ref: "./apis/shared/requests/service-accounts/CredsStaticToken.yaml"
+
 ### app-configs API
 _services_req_application_configs:
   $ref: "./apis/services/application/configs/request/Request.yaml"
@@ -187,8 +205,8 @@ _services_req_application_org-configs:
 
 ## ADMIN section
 
-### admin app-roken API
-_admin_req_app-token:
+### admin app-token API
+_admin_res_app-token:
   $ref: "./apis/admin/app-token/response/Response.yaml"
 
 ### admin application_roles API
@@ -201,31 +219,31 @@ _admin_req_create-application_group:
 
 ### admin add-accounts-to-group API
 _admin_req_add-accounts-to-group:
-  $ref: "./apis/admin/application/group/accounts/add/request/Request.yaml"
+  $ref: "./apis/admin/application/groups/accounts/add/request/Request.yaml"
 
 ### admin remove-accounts-from-group API
 _admin_req_remove-account-from-group:
-  $ref: "./apis/admin/application/group/accounts/remove/request/Request.yaml"
+  $ref: "./apis/admin/application/groups/accounts/remove/request/Request.yaml"
   
 ### grant account roles API
 _admin_req_grant-roles-to-account:
-  $ref: "./apis/admin/application/account/roles/grant/request/Request.yaml"
+  $ref: "./apis/admin/application/accounts/roles/grant/request/Request.yaml"
 
 ### revoke account roles API
 _admin_req_revoke-roles-from-account:
-  $ref: "./apis/admin/application/account/roles/revoke/request/Request.yaml"
+  $ref: "./apis/admin/application/accounts/roles/revoke/request/Request.yaml"
 
 ### grant permissions to account API
 _admin_req_grant-permissions:
-  $ref: "./apis/admin/application/account/permissions/grant/request/Request.yaml"
+  $ref: "./apis/admin/application/accounts/permissions/grant/request/Request.yaml"
 
 ### revoke permissions from account API
 _admin_req_revoke-permissions:
-  $ref: "./apis/admin/application/account/permissions/revoke/request/Request.yaml"
+  $ref: "./apis/admin/application/accounts/permissions/revoke/request/Request.yaml"
 
 ### grant permissions to role API
 _admin_req_grant-permissions-to-role:
-  $ref: "./apis/admin/application/role/permissions/grant/request/Request.yaml"
+  $ref: "./apis/admin/application/roles/permissions/grant/request/Request.yaml"
 ## end ADMIN section
 
 ## SYSTEM section
@@ -259,14 +277,6 @@ _system_res_get_Applications:
 ### permissions API
 _system_req_permissions:
   $ref: "./apis/system/permissions/request/Request.yaml"
-  
-### application-roles API
-_system_req_application-roles:
-  $ref: "./apis/system/application-roles/request/Request.yaml"
-
-### account permissions API
-_system_req_account-permissions:
-  $ref: "./apis/system/account/permissions/request/Request.yaml"
 
 ### auth_type API
 _system_req_create_auth_type:
@@ -274,11 +284,14 @@ _system_req_create_auth_type:
 _system_req_update_auth_type:
   $ref: "./apis/system/auth-typesID/request/Request.yaml"
 
-### account roles API
-_system_req_account-roles:
-  $ref: "./apis/system/account/roles/request/Request.yaml"
-
 ### application config API
 _system_req_create_ApplicationConfig_Request:
   $ref: "./apis/system/application-config/request/Request.yaml"
+
+### service accounts API
+_system_req_create_service-account:
+  $ref: "./apis/system/create-service-account/request/Request.yaml"
+_system_req_update_service-account:
+  $ref: "./apis/system/update-service-account/request/Request.yaml"
+
 ## end SYSTEM section

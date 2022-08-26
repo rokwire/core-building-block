@@ -1,4 +1,4 @@
-FROM golang:1.16-buster as builder
+FROM golang:1.18-buster as builder
 
 ENV CGO_ENABLED=0
 
@@ -8,7 +8,7 @@ WORKDIR /core-app
 COPY . .
 RUN make
 
-FROM alpine:3.11.6
+FROM alpine:3.16.2
 
 #we need timezone database
 RUN apk --no-cache add tzdata
@@ -24,10 +24,14 @@ COPY --from=builder /core-app/driver/web/authorization_model.conf /driver/web/au
 
 COPY --from=builder /core-app/driver/web/authorization_services_policy.csv /driver/web/authorization_services_policy.csv
 COPY --from=builder /core-app/driver/web/authorization_admin_policy.csv /driver/web/authorization_admin_policy.csv
+COPY --from=builder /core-app/driver/web/authorization_bbs_policy.csv /driver/web/authorization_bbs_policy.csv
+COPY --from=builder /core-app/driver/web/authorization_tps_policy.csv /driver/web/authorization_tps_policy.csv
 COPY --from=builder /core-app/driver/web/authorization_system_policy.csv /driver/web/authorization_system_policy.csv
 
-COPY --from=builder /core-app/vendor/github.com/rokwire/core-auth-library-go/authorization/authorization_model_scope.conf /core-app/vendor/github.com/rokwire/core-auth-library-go/authorization/authorization_model_scope.conf
-COPY --from=builder /core-app/vendor/github.com/rokwire/core-auth-library-go/authorization/authorization_model_string.conf /core-app/vendor/github.com/rokwire/core-auth-library-go/authorization/authorization_model_string.conf
+COPY --from=builder /core-app/driver/web/scope_authorization_services_policy.csv /driver/web/scope_authorization_services_policy.csv
+
+COPY --from=builder /core-app/vendor/github.com/rokwire/core-auth-library-go/v2/authorization/authorization_model_scope.conf /core-app/vendor/github.com/rokwire/core-auth-library-go/v2/authorization/authorization_model_scope.conf
+COPY --from=builder /core-app/vendor/github.com/rokwire/core-auth-library-go/v2/authorization/authorization_model_string.conf /core-app/vendor/github.com/rokwire/core-auth-library-go/v2/authorization/authorization_model_string.conf
 
 COPY --from=builder /etc/passwd /etc/passwd
 

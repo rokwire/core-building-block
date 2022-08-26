@@ -1,12 +1,24 @@
+// Copyright 2022 Board of Trustees of the University of Illinois.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package auth
 
 import (
-	"core-building-block/core/model"
 	"encoding/json"
 
 	"github.com/google/uuid"
 	"github.com/rokwire/logging-library-go/errors"
-	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
 )
 
@@ -17,7 +29,7 @@ const (
 	typeAnonymousCreds logutils.MessageDataType = "anonymous creds"
 )
 
-//API Key implementation of authType
+// API Key implementation of authType
 type anonymousAuthImpl struct {
 	auth     *Auth
 	authType string
@@ -27,7 +39,7 @@ type anonymousCreds struct {
 	AnonymousID string `json:"anonymous_id"`
 }
 
-func (a *anonymousAuthImpl) checkCredentials(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, l *logs.Log) (string, map[string]interface{}, error) {
+func (a *anonymousAuthImpl) checkCredentials(creds string) (string, map[string]interface{}, error) {
 	var keyCreds anonymousCreds
 	err := json.Unmarshal([]byte(creds), &keyCreds)
 	if err != nil {
@@ -45,7 +57,7 @@ func (a *anonymousAuthImpl) checkCredentials(authType model.AuthType, appType mo
 	return anonymousID, params, nil
 }
 
-//initAnonymousAuth initializes and registers a new API key auth instance
+// initAnonymousAuth initializes and registers a new API key auth instance
 func initAnonymousAuth(auth *Auth) (*anonymousAuthImpl, error) {
 	anonymous := &anonymousAuthImpl{auth: auth, authType: AuthTypeAnonymous}
 

@@ -4,6 +4,16 @@
   summary: Get application roles
   description: |
     Gets application roles
+
+    **Auth:** Requires admin access token with at least one of the following permissions: 
+    - `get_auth-roles`
+    - `update_auth-roles`
+    - `delete_auth-roles`
+    - `all_auth-roles`
+    - `update_account-auth-roles`
+    - `create_accounts`
+    - `update_accounts`
+    - `all_accounts`
   security:
     - bearerAuth: []
   responses:
@@ -14,7 +24,7 @@
             schema:
               type: array
               items:
-                $ref: "../../../schemas/application/AppOrgRoleFields.yaml"
+                $ref: "../../../schemas/application/AppOrgRole.yaml"
       400:
         description: Bad request
       401:
@@ -28,7 +38,8 @@
   description: |
     Creates application role
 
-    **Auth:** Requires auth token with 'all_admin_core'
+    **Auth:** Requires admin access token with `update_auth-roles` or `all_auth-roles` permission
+  security:
     - bearerAuth: []
   requestBody:
     description: Application role
@@ -41,10 +52,9 @@
     200:
       description: Success
       content:
-        text/plain:
+        application/json:
           schema:
-            type: string
-            example: Success
+            $ref: "../../../schemas/application/AppOrgRole.yaml"
     400:
       description: Bad request
     401:

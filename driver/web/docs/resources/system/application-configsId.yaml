@@ -1,10 +1,11 @@
 get:
-  deprecated: true
   tags:
   - System
-  summary: Reads app configs by given id
+  summary: Reads app configs by ID
   description: |
-    **Auth:** Requires user auth token  with 'all_appconfigs' or 'get_appconfig' permission
+    Get app configs for the provided ID
+    
+    **Auth:** Requires system access token with `get_app-configs`, `update_app-configs`, `delete_app-configs`, or `all_app-configs` permission
   security:
     - bearerAuth: []
   parameters:
@@ -30,12 +31,13 @@ get:
     500:
       description: Internal error
 put:
-  deprecated: true
   tags:
   - System
-  summary: Updates app configs
+  summary: Updates app config by ID
   description: |
-    **Auth:** Requires user auth token with 'all_appconfigs' or 'update_appconfig' permission
+    Updates app config with the provided ID
+
+    **Auth:** Requires system access token with `update_app-configs` or `all_app-configs` permission
   security:
     - bearerAuth: []
   parameters:
@@ -73,12 +75,13 @@ put:
     500:
       description: Internal error
 delete:
-  deprecated: true
   tags:
   - System
-  summary: Deletes app configs
+  summary: Deletes app config by ID
   description: |
-     **Auth:** Requires user auth token with 'all_appconfigs' or 'update_appconfig' permission
+    Deletes app config with the provided ID
+
+    **Auth:** Requires system access token with `delete_app-configs` or `all_app-configs` permission
   security:
     - bearerAuth: []
   parameters:

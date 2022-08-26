@@ -4,6 +4,16 @@
   summary: Get application groups
   description: |
     Gets application groups
+        
+    **Auth:** Requires admin access token with at least one of the following permissions:
+    - `get_auth-groups`
+    - `update_auth-groups`
+    - `delete_auth-groups`
+    - `all_auth-groups`
+    - `update_account-auth-groups`
+    - `create_accounts`
+    - `update_accounts`
+    - `all_accounts`
   security:
     - bearerAuth: []
   responses:
@@ -14,7 +24,7 @@
             schema:
               type: array
               items:
-                $ref: "../../../schemas/application/AppOrgGroupFields.yaml"
+                $ref: "../../../schemas/application/AppOrgGroup.yaml"
       400:
         description: Bad request
       401:
@@ -28,7 +38,7 @@
   description: |
    Create application group
 
-    **Auth:** Requires auth token with 'all_admin_core'
+    **Auth:** Requires admin access token with `update_auth-groups` or `all_auth-groups` permission
     - bearerAuth: []
   security:
     - bearerAuth: []
@@ -43,10 +53,9 @@
     200:
       description: Success
       content:
-        text/plain:
+        application/json:
           schema:
-            type: string
-            example: Success
+            $ref: "../../../schemas/application/AppOrgGroup.yaml"
     400:
       description: Bad request
     401:
