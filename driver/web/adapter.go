@@ -279,7 +279,7 @@ func (we Adapter) serveDoc(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func loadYamlDoc(baseServerURL string, productionServerURL string, testServerURL string, developmentServerURL string) ([]byte, error) {
+func loadDocsYAML(baseServerURL string, productionServerURL string, testServerURL string, developmentServerURL string) ([]byte, error) {
 	data, _ := os.ReadFile("./driver/web/docs/gen/def.yaml")
 	// yamlMap := make(map[string]interface{})
 	yamlMap := yaml.MapSlice{}
@@ -287,31 +287,45 @@ func loadYamlDoc(baseServerURL string, productionServerURL string, testServerURL
 	if err != nil {
 		return nil, err
 	}
+
 	for index, item := range yamlMap {
 		if item.Key == "servers" {
-			if serverList, ok := item.Value.([]interface{}); ok {
-				if baseServerURL != "" {
-					serverList = serverList[:1]
-					serverList[0] = yaml.MapSlice{
-						yaml.MapItem{
-							Key:   "url",
-							Value: baseServerURL,
-						},
-						yaml.MapItem{
-							Key:   "description",
-							Value: "User Specified Base Server",
-						},
-					}
-				} else if len(serverList) == 4 {
-					serverList[0] = overrideBaseURL(productionServerURL, serverList, 0)
-					serverList[1] = overrideBaseURL(testServerURL, serverList, 1)
-					serverList[2] = overrideBaseURL(developmentServerURL, serverList, 2)
+			var serverList []interface{}
+			if baseServerURL != "" {
+				serverList = []interface{}{yaml.MapSlice{yaml.MapItem{Key: "url", Value: baseServerURL}}}
+			} else {
+				ok := false
+				serverList, ok = item.Value.([]interface{})
+				if !ok || len(serverList) != 4 {
+					serverList = make([]interface{}, 4)
 				}
-
-				item.Value = serverList
-				yamlMap[index] = item
-				break
+				if productionServerURL != "" {
+					serverList[0] = yaml.MapSlice{
+						yaml.MapItem{Key: "url", Value: productionServerURL},
+						yaml.MapItem{Key: "description", Value: "Production server"},
+					}
+				}
+				if testServerURL != "" {
+					serverList[1] = yaml.MapSlice{
+						yaml.MapItem{Key: "url", Value: testServerURL},
+						yaml.MapItem{Key: "description", Value: "Test server"},
+					}
+				}
+				if developmentServerURL != "" {
+					serverList[2] = yaml.MapSlice{
+						yaml.MapItem{Key: "url", Value: developmentServerURL},
+						yaml.MapItem{Key: "description", Value: "Development server"},
+					}
+				}
+				serverList[3] = yaml.MapSlice{
+					yaml.MapItem{Key: "url", Value: "http://localhost/core"},
+					yaml.MapItem{Key: "description", Value: "Local server"},
+				}
 			}
+
+			item.Value = serverList
+			yamlMap[index] = item
+			break
 		}
 	}
 
@@ -321,24 +335,6 @@ func loadYamlDoc(baseServerURL string, productionServerURL string, testServerURL
 	}
 
 	return yamlDoc, nil
-}
-
-func overrideBaseURL(serverURL string, serverList []interface{}, index int) yaml.MapSlice {
-	if serverURL != "" {
-		if serverInfo, ok := serverList[index].(yaml.MapSlice); ok {
-			if len(serverInfo) == 2 {
-				for idx, serverItem := range serverInfo {
-					if serverItem.Key == "url" {
-						serverItem.Value = serverURL
-						serverInfo[idx] = serverItem
-						return serverInfo
-					}
-				}
-			}
-		}
-	}
-
-	return nil
 }
 
 func (we Adapter) serveDocUI() http.Handler {
@@ -503,7 +499,7 @@ func (we Adapter) validateResponse(requestValidationInput *openapi3filter.Reques
 	return nil
 }
 
-//NewWebAdapter creates new WebAdapter instance
+// NewWebAdapter creates new WebAdapter instance
 func NewWebAdapter(env string, serviceID string, serviceRegManager *authservice.ServiceRegManager, port string, coreAPIs *core.APIs, host string, baseServerURL string, prodServerURL string, testServerURL string, devServerURL string, logger *logs.Logger) Adapter {
 	//openAPI doc
 	loader := &openapi3.Loader{Context: context.Background(), IsExternalRefsAllowed: true}
@@ -512,13 +508,13 @@ func NewWebAdapter(env string, serviceID string, serviceRegManager *authservice.
 	// 	logger.Fatalf("error on openapi3 load from file - %s", err.Error())
 	// }
 
-	yamlDoc, err := loadYamlDoc(baseServerURL, prodServerURL, testServerURL, devServerURL)
+	yamlDoc, err := loadDocsYAML(baseServerURL, prodServerURL, testServerURL, devServerURL)
 	if err != nil {
-
+		logger.Fatalf("error parsing docs yaml - %s", err.Error())
 	}
 	doc, err := loader.LoadFromData(yamlDoc)
 	if err != nil {
-
+		logger.Fatalf("error loading docs yaml - %s", err.Error())
 	}
 	err = doc.Validate(loader.Context)
 	if err != nil {

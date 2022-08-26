@@ -68,10 +68,10 @@ func main() {
 	serviceID := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SERVICE_ID", true, false)
 	host := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_HOST", true, false)
 
-	baseServerURL := envLoader.GetAndLogEnvVar("CORE_BASE_SERVER_URL", false, false)
-	prodServerURL := envLoader.GetAndLogEnvVar("CORE_PRODUCTION_SERVER_URL", false, false)
-	testServerURL := envLoader.GetAndLogEnvVar("CORE_TEST_SERVER_URL", false, false)
-	devServerURL := envLoader.GetAndLogEnvVar("CORE_DEVELOPMENT_SERVER_URL", false, false)
+	baseServerURL := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_BASE_SERVER_URL", false, false)
+	prodServerURL := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_PRODUCTION_SERVER_URL", false, false)
+	testServerURL := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_TEST_SERVER_URL", false, false)
+	devServerURL := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_DEVELOPMENT_SERVER_URL", false, false)
 
 	// mongoDB adapter
 	mongoDBAuth := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_MONGO_AUTH", true, true)
