@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Allow overriding docs base URLs [#513](https://github.com/rokwire/core-building-block/issues/513)
 - Include account ID in request logs [#562](https://github.com/rokwire/core-building-block/issues/562)
 - Add system flag to login response [#552](https://github.com/rokwire/core-building-block/issues/552)
+- Add default assigners permission [#477](https://github.com/rokwire/core-building-block/issues/477)
 
 ### Fixed
 - Service registration error handling change [#468](https://github.com/rokwire/core-building-block/issues/468)
@@ -20,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Allow passing nil context to WithContext storage functions [#494](https://github.com/rokwire/core-building-block/issues/494)
 - Account system configs [#558](https://github.com/rokwire/core-building-block/issues/558)
+
 ### Fixed
 - Authorization policy comments not working [#506](https://github.com/rokwire/core-building-block/issues/506)
 
