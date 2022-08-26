@@ -532,7 +532,7 @@ func (m *database) applyApplicationConfigsChecks(applicationConfigs *collectionW
 	return nil
 }
 
-func (m *database) applyWebhookConfigsChecks(webhookonfigs *collectionWrapper) error {
+func (m *database) applyWebhookConfigsChecks(webhookConfigs *collectionWrapper) error {
 	m.logger.Info("apply webhook configs checks.....")
 
 	m.logger.Info("webhook configs checks passed")

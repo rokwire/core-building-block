@@ -155,18 +155,18 @@ func appConfigFromStorage(item *applicationConfig, appOrg *model.ApplicationOrga
 	return model.ApplicationConfig{ID: item.ID, AppOrg: appOrg, ApplicationType: appType, Data: item.Data, Version: versionFromStorage(&item.Version, appType), DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
-func appConfigsFromStorage(itemList []applicationConfig, appOrg *model.ApplicationOrganization, appType model.ApplicationType) []model.ApplicationConfig {
-	if len(itemList) == 0 {
-		return make([]model.ApplicationConfig, 0)
-	}
+// func appConfigsFromStorage(itemList []applicationConfig, appOrg *model.ApplicationOrganization, appType model.ApplicationType) []model.ApplicationConfig {
+// 	if len(itemList) == 0 {
+// 		return make([]model.ApplicationConfig, 0)
+// 	}
 
-	res := make([]model.ApplicationConfig, len(itemList))
-	for i, appConfig := range itemList {
-		res[i] = appConfigFromStorage(&appConfig, appOrg, appType)
-	}
+// 	res := make([]model.ApplicationConfig, len(itemList))
+// 	for i, appConfig := range itemList {
+// 		res[i] = appConfigFromStorage(&appConfig, appOrg, appType)
+// 	}
 
-	return res
-}
+// 	return res
+// }
 
 func appConfigToStorage(item model.ApplicationConfig) applicationConfig {
 	appConfig := applicationConfig{ID: item.ID, AppTypeID: item.ApplicationType.ID, Version: versionToStorage(item.Version), Data: item.Data, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
@@ -206,17 +206,17 @@ func appOrgGroupToStorage(item model.AppOrgGroup) appOrgGroup {
 		Permissions: item.Permissions, Roles: roles, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
-func appOrgGroupsToStorage(items []model.AppOrgGroup) []appOrgGroup {
-	if len(items) == 0 {
-		return make([]appOrgGroup, 0)
-	}
+// func appOrgGroupsToStorage(items []model.AppOrgGroup) []appOrgGroup {
+// 	if len(items) == 0 {
+// 		return make([]appOrgGroup, 0)
+// 	}
 
-	res := make([]appOrgGroup, len(items))
-	for i, group := range items {
-		res[i] = appOrgGroupToStorage(group)
-	}
-	return res
-}
+// 	res := make([]appOrgGroup, len(items))
+// 	for i, group := range items {
+// 		res[i] = appOrgGroupToStorage(group)
+// 	}
+// 	return res
+// }
 
 // Organization
 func organizationFromStorage(item *organization) model.Organization {

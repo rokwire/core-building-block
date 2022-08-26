@@ -2850,7 +2850,8 @@ func (sa *Adapter) FindWebhookConfig() (*model.WebhookConfig, error) {
 func (sa *Adapter) UpdateWebhookConfig(webhookConfig model.WebhookConfig) error {
 	filter := bson.D{}
 
-	err := sa.db.webhookConfigs.ReplaceOne(filter, webhookConfig, nil)
+	opts := options.Replace().SetUpsert(true)
+	err := sa.db.webhookConfigs.ReplaceOne(filter, webhookConfig, opts)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeWebhookConfig, nil, err)
 	}

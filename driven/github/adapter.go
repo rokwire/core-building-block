@@ -35,6 +35,9 @@ type Adapter struct {
 
 // Start starts the github adapter
 func (a *Adapter) Start() error {
+	storageListener := StorageListener{adapter: a}
+	a.storage.RegisterStorageListener(&storageListener)
+
 	err := a.cacheWebhookConfigsFromGit()
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionCache, model.TypeWebhookConfig, nil, err)
