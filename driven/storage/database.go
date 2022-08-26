@@ -227,6 +227,7 @@ func (m *database) start() error {
 	go m.applications.Watch(nil, m.logger)
 	go m.applicationsOrganizations.Watch(nil, m.logger)
 	go m.applicationConfigs.Watch(nil, m.logger)
+	go m.webhookConfigs.Watch(nil, m.logger)
 
 	m.listeners = []Listener{}
 

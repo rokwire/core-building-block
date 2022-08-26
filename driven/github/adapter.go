@@ -152,11 +152,11 @@ func (a *Adapter) GetContents(path string) (string, bool, error) {
 }
 
 // NewGitHubAdapter creates a new GitHub adapter instance
-func NewGitHubAdapter(githubToken string, githubOrgnizationName string, githubRepoName string, githubWebhookConfigPath string, githubAppConfigBranch string, logger *logs.Logger) *Adapter {
+func NewGitHubAdapter(githubToken string, githubOrgnizationName string, githubRepoName string, githubWebhookConfigPath string, githubAppConfigBranch string, storage core.Storage, logger *logs.Logger) *Adapter {
 	cachedWebhookConfigs := &model.WebhookConfig{}
 	webhookConfigsLock := &sync.RWMutex{}
 
-	return &Adapter{cachedWebhookConfig: cachedWebhookConfigs, webhookConfigsLock: webhookConfigsLock, githubToken: githubToken, githubOrganizationName: githubOrgnizationName, githubRepoName: githubRepoName, githubWebhookConfigPath: githubWebhookConfigPath, githubAppConfigBranch: githubAppConfigBranch, logger: logger}
+	return &Adapter{storage: storage, cachedWebhookConfig: cachedWebhookConfigs, webhookConfigsLock: webhookConfigsLock, githubToken: githubToken, githubOrganizationName: githubOrgnizationName, githubRepoName: githubRepoName, githubWebhookConfigPath: githubWebhookConfigPath, githubAppConfigBranch: githubAppConfigBranch, logger: logger}
 }
 
 // StorageListener represents storage listener implementation for the auth package
