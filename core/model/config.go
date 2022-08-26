@@ -28,7 +28,7 @@ const (
 	TypeOrganizationConfig logutils.MessageDataType = "org config"
 )
 
-//GlobalConfig represents global config for the system
+// GlobalConfig represents global config for the system
 type GlobalConfig struct {
 	Setting string
 }
@@ -37,7 +37,7 @@ func (gc GlobalConfig) String() string {
 	return fmt.Sprintf("[setting:%s]", gc.Setting)
 }
 
-//OrganizationConfig represents configuration for an organization
+// OrganizationConfig represents configuration for an organization
 type OrganizationConfig struct {
 	ID      string `bson:"id"`
 	Setting string `bson:"setting"`

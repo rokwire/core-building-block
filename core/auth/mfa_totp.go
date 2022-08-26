@@ -85,12 +85,12 @@ func (m *totpMfaImpl) enroll(identifier string) (*model.MFAType, error) {
 	return &model.MFAType{ID: id.String(), Type: MfaTypeTotp, Verified: false, Params: params, DateCreated: time.Now().UTC()}, nil
 }
 
-//sendCode not used for TOTP
+// sendCode not used for TOTP
 func (m *totpMfaImpl) sendCode(identifier string) (string, *time.Time, error) {
 	return "", nil, errors.New(logutils.Unimplemented)
 }
 
-//initTotpMfa initializes and registers a new totp mfa instance
+// initTotpMfa initializes and registers a new totp mfa instance
 func initTotpMfa(auth *Auth) (*totpMfaImpl, error) {
 	totp := &totpMfaImpl{auth: auth, mfaType: MfaTypeTotp}
 
