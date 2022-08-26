@@ -260,16 +260,12 @@ func (a *emailAuthImpl) sendPasswordResetEmail(credentialID string, resetCode st
 }
 
 func (a *emailAuthImpl) verifyCredential(credential *model.Credential, verification string, l *logs.Log) (map[string]interface{}, error) {
-	credBytes, err := json.Marshal(credential.Value)
+	//Parse credential value to emailCreds
+	creds, err := mapToEmailCreds(credential.Value)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionMarshal, typeEmailCreds, nil, err)
+		return nil, errors.WrapErrorAction("error on map to email creds", "", nil, err)
 	}
 
-	var creds *emailCreds
-	err = json.Unmarshal(credBytes, &creds)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeEmailCreds, nil, err)
-	}
 	err = a.compareCode(creds.VerificationCode, verification, creds.VerificationExpiry, l)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeAuthCred, &logutils.FieldArgs{"verification_code": verification}, errors.New("invalid verification code"))
@@ -401,16 +397,12 @@ func (a *emailAuthImpl) resetCredential(credential *model.Credential, resetCode 
 		return nil, errors.New("passwords fields do not match")
 	}
 
-	credBytes, err := json.Marshal(credential.Value)
+	//parse credential value to emailCreds
+	creds, err := mapToEmailCreds(credential.Value)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionMarshal, typeEmailCreds, nil, err)
+		return nil, errors.WrapErrorAction("error on map to email creds", "", nil, err)
 	}
 
-	var creds *emailCreds
-	err = json.Unmarshal(credBytes, &creds)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeEmailCreds, nil, err)
-	}
 	//reset password from link
 	if resetCode != nil {
 		if creds.ResetExpiry.Before(time.Now()) {

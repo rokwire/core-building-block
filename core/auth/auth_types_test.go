@@ -75,6 +75,8 @@ func TestEmail_SignUp(t *testing.T) {
 		{name: "missing password", args: args{creds: `{"email": "test@email.com"}`, params: `{"confirm_password": "sample_password"}`}, wantErr: true},
 		{name: "missing confirm password", args: args{creds: `{"email": "test@email.com", "password": "sample_password"}`, params: `{}`}, wantErr: true},
 		{name: "email send fail", args: args{creds: `{"email": "bad_email", "password": "sample_password"}`, params: `{"confirm_password": "sample_password"}`}, wantErr: true},
+		{name: "malformed creds", args: args{creds: `{email: "test@email.com", password: "sample_password"}`}, wantErr: true},
+		{name: "malformed params", args: args{creds: `{"email": "test@email.com", "password": "sample_password"}`, params: `"confirm_password": "sample_password"`}, wantErr: true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -278,12 +280,14 @@ func TestEmail_RestartCredentialVerification(t *testing.T) {
 
 func TestEmail_ResetCredential(t *testing.T) {
 	emailAuth, log := newEmailTestAuth(t)
+	oldPasswordStr := "old_password"
+	oldPassword, _ := bcrypt.GenerateFromPassword([]byte(oldPasswordStr), bcrypt.DefaultCost)
 	resetCodeStr := "sample_reset_code"
 	resetCode, _ := bcrypt.GenerateFromPassword([]byte(resetCodeStr), bcrypt.DefaultCost)
 	incorrectCode := "incorrect_reset_code"
 	credential := model.Credential{Value: map[string]interface{}{
 		"email":             "test@email.com",
-		"password":          "old_password",
+		"password":          string(oldPassword),
 		"reset_code":        string(resetCode),
 		"verification_code": "sample_verification_code",
 	}}
@@ -456,35 +460,33 @@ func TestEmail_IsCredentialVerified(t *testing.T) {
 	}
 }
 
-/*
 // CheckCredentials checks if the account credentials are valid for the account auth type
 func TestEmail_CheckCredentials(t *testing.T) {
 	emailAuth, log := newEmailTestAuth(t)
-	emailAuthType := model.AuthType{Code: "email", Params: map[string]interface{}{"verify_email": true, "verify_expiry": 1}}
+	passwordStr := "sample_password"
+	password, _ := bcrypt.GenerateFromPassword([]byte(passwordStr), bcrypt.DefaultCost)
+	credential := model.Credential{Value: map[string]interface{}{"email": "test@email.com", "password": string(password)}}
+	accountAuthType := model.AccountAuthType{Credential: &credential}
 
 	type args struct {
-		identifier string
-		password   string
-
-		newCreds map[string]interface{}
+		creds string
 	}
 	tests := []struct {
 		name    string
 		args    args
 		wantErr bool
 	}{
-		{name: "success explicit password", args: args{identifier: "test@email.com", password: "sample_password", newCreds: map[string]interface{}{"email": "test@email.com", "password": "sample_password"}}, wantErr: false},
-		{name: "success random password", args: args{identifier: "test@email.com", password: "", newCreds: map[string]interface{}{"email": "test@email.com"}}, wantErr: false},
-		{name: "email send fail", args: args{identifier: "bad_email", password: "sample_password"}, wantErr: true},
+		{name: "success", args: args{creds: `{"password": "sample_password"}`}, wantErr: false},
+		{name: "incorrect password", args: args{creds: `{"password": "incorrect_password"}`}, wantErr: true},
+		{name: "malformed creds", args: args{creds: `{password: sample_password}`}, wantErr: true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			credential, err := emailAuth.checkCredentials(emailAuthType, "Email Test", log)
+			_, err := emailAuth.checkCredentials(accountAuthType, tt.args.creds, log)
 			if err != nil && !tt.wantErr {
-				t.Errorf("emailAuthImpl.verifyCredential error = %v", err)
+				t.Errorf("emailAuthImpl.checkCredentials error = %v", err)
 				return
 			}
 		})
 	}
 }
-*/
