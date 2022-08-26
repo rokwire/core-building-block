@@ -27,6 +27,10 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+const (
+	zeroTimeString string = "0001-01-01T00:00:00Z"
+)
+
 // newEmailTestAuth creates a new email test auth instance
 func newEmailTestAuth(t *testing.T) (authType, *logs.Log) {
 	anyString := mock.AnythingOfType("string")
@@ -95,6 +99,14 @@ func TestEmail_SignUp(t *testing.T) {
 					t.Errorf("emailAuthImpl.signUp password check error: credential.password = %s, plaintext %s", storedPassword, expectedPlaintext)
 					return
 				}
+
+				if credential["reset_code"] != "" {
+					t.Errorf("emailAuthImpl.signUp credential.reset_code = %v", credential["reset_code"])
+					return
+				}
+				if credential["reset_expiry"] != zeroTimeString {
+					t.Errorf("emailAuthImpl.signUp credential.reset_expiry = %v", credential["reset_expiry"])
+				}
 			}
 		})
 	}
@@ -146,15 +158,19 @@ func TestEmail_SignUpAdmin(t *testing.T) {
 					t.Errorf("emailAuthImpl.signUpAdmin password check error: credential.password = %s, plaintext %s", storedPassword, expectedPlaintext)
 					return
 				}
+
+				if credential["reset_code"] != "" {
+					t.Errorf("emailAuthImpl.signUpAdmin credential.reset_code = %v", credential["reset_code"])
+					return
+				}
+				if credential["reset_expiry"] != zeroTimeString {
+					t.Errorf("emailAuthImpl.signUpAdmin credential.reset_expiry = %v", credential["reset_expiry"])
+				}
 			}
 		})
 	}
 }
 
-// Verifies credential (checks the verification code generated on email signup for email auth type)
-// Returns:
-//
-//	authTypeCreds (map[string]interface{}): Updated Credential.Value
 func TestEmail_VerifyCredential(t *testing.T) {
 	emailAuth, log := newEmailTestAuth(t)
 	credential := model.Credential{Value: map[string]interface{}{
@@ -185,13 +201,20 @@ func TestEmail_VerifyCredential(t *testing.T) {
 				return
 			}
 			if (updatedCredentialValue == nil) != (tt.args.newCreds == nil) {
-				t.Errorf("emailAuthImpl.signUp credential value = %v, expected %v", credential, tt.args.newCreds)
+				t.Errorf("emailAuthImpl.verifyCredential credential value = %v, expected %v", credential, tt.args.newCreds)
+			}
+
+			if !tt.wantErr && updatedCredentialValue["verification_code"] != "" {
+				t.Errorf("emailAuthImpl.verifyCredential credential.verification_code = %v", updatedCredentialValue["verification_code"])
+				return
+			}
+			if !tt.wantErr && updatedCredentialValue["verification_expiry"] != zeroTimeString {
+				t.Errorf("emailAuthImpl.verifyCredential credential.verification_expiry = %v", updatedCredentialValue["verification_expiry"])
 			}
 		})
 	}
 }
 
-// Sends the verification code to the identifier
 func TestEmail_SendVerifyCredential(t *testing.T) {
 	emailAuth, log := newEmailTestAuth(t)
 	emailAuthType := model.AuthType{Code: "email", Params: map[string]interface{}{"verify_email": true, "verify_expiry": 1, "verify_wait_time": 60}}
@@ -253,18 +276,26 @@ func TestEmail_RestartCredentialVerification(t *testing.T) {
 	}
 }
 
-/*
 // Updates the value of the credential object with new value
 // Returns:
 //
 //	authTypeCreds (map[string]interface{}): Updated Credential.Value
 func TestEmail_ResetCredential(t *testing.T) {
 	emailAuth, log := newEmailTestAuth(t)
-	emailAuthType := model.AuthType{Code: "email", Params: map[string]interface{}{"verify_email": true, "verify_expiry": 1}}
+	resetCodeStr := "sample_reset_code"
+	resetCode, _ := bcrypt.GenerateFromPassword([]byte(resetCodeStr), bcrypt.DefaultCost)
+	incorrectCode := "incorrect_reset_code"
+	credential := model.Credential{Value: map[string]interface{}{
+		"email":             "test@email.com",
+		"password":          "old_password",
+		"reset_code":        string(resetCode),
+		"verification_code": "sample_verification_code",
+	}}
 
 	type args struct {
-		identifier string
-		password   string
+		params          string
+		resetCode       *string
+		resetExpiration time.Time
 
 		newCreds map[string]interface{}
 	}
@@ -273,21 +304,52 @@ func TestEmail_ResetCredential(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		{name: "success explicit password", args: args{identifier: "test@email.com", password: "sample_password", newCreds: map[string]interface{}{"email": "test@email.com", "password": "sample_password"}}, wantErr: false},
-		{name: "success random password", args: args{identifier: "test@email.com", password: "", newCreds: map[string]interface{}{"email": "test@email.com"}}, wantErr: false},
-		{name: "email send fail", args: args{identifier: "bad_email", password: "sample_password"}, wantErr: true},
+		{name: "success with code", args: args{params: `{"new_password": "sample_password", "confirm_password": "sample_password"}`, resetCode: &resetCodeStr, resetExpiration: time.Now().UTC().Add(time.Minute), newCreds: map[string]interface{}{"email": "test@email.com", "password": "sample_password"}}, wantErr: false},
+		{name: "success without code", args: args{params: `{"new_password": "sample_password", "confirm_password": "sample_password"}`, newCreds: map[string]interface{}{"email": "test@email.com", "password": "sample_password"}}, wantErr: false},
+		{name: "mismatched passwords", args: args{params: `{"new_password": "sample_password", "confirm_password": "different_password"}`}, wantErr: true},
+		{name: "missing password", args: args{params: `{"confirm_password": "sample_password"}`}, wantErr: true},
+		{name: "missing confirm password", args: args{params: `{"new_password": "sample_password"}`}, wantErr: true},
+		{name: "expired reset code", args: args{params: `{"new_password": "sample_password", "confirm_password": "sample_password"}`, resetCode: &resetCodeStr, resetExpiration: time.Now().UTC().Add(-time.Minute)}, wantErr: true},
+		{name: "incorrect reset code", args: args{params: `{"new_password": "sample_password", "confirm_password": "sample_password"}`, resetCode: &incorrectCode, resetExpiration: time.Now().UTC().Add(time.Minute)}, wantErr: true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			credential, err := emailAuth.resetCredential(emailAuthType, "Email Test", log)
+			credential.Value["reset_expiry"] = utils.FormatTime(&tt.args.resetExpiration)
+			updatedCredentialValue, err := emailAuth.resetCredential(&credential, tt.args.resetCode, tt.args.params, log)
 			if err != nil && !tt.wantErr {
-				t.Errorf("emailAuthImpl.verifyCredential error = %v", err)
+				t.Errorf("emailAuthImpl.resetCredential error = %v", err)
 				return
+			}
+			if (updatedCredentialValue == nil) != (tt.args.newCreds == nil) {
+				t.Errorf("emailAuthImpl.resetCredential credential = %v, expected %v", credential, tt.args.newCreds)
+				return
+			}
+			if tt.args.newCreds != nil {
+				if tt.args.newCreds["email"] != updatedCredentialValue["email"] {
+					t.Errorf("emailAuthImpl.resetCredential credential.email = %v, expected %v", updatedCredentialValue["email"], tt.args.newCreds["email"])
+					return
+				}
+
+				storedPassword, _ := updatedCredentialValue["password"].(string)
+				expectedPlaintext, _ := tt.args.newCreds["password"].(string)
+				if bcrypt.CompareHashAndPassword([]byte(storedPassword), []byte(expectedPlaintext)) != nil {
+					t.Errorf("emailAuthImpl.resetCredential password check error: credential.password = %s, plaintext %s", storedPassword, expectedPlaintext)
+					return
+				}
+
+				if tt.args.resetCode != nil && updatedCredentialValue["reset_code"] != "" {
+					t.Errorf("emailAuthImpl.resetCredential credential.reset_code = %v", updatedCredentialValue["reset_code"])
+					return
+				}
+				if updatedCredentialValue["reset_expiry"] != zeroTimeString {
+					t.Errorf("emailAuthImpl.resetCredential credential.reset_expiry = %v", updatedCredentialValue["reset_expiry"])
+				}
 			}
 		})
 	}
 }
 
+/*
 // Apply forgot credential for the auth type (generates a reset password link with code and expiry and sends it to given identifier for email auth type)
 func TestEmail_ForgotCredential(t *testing.T) {
 	emailAuth, log := newEmailTestAuth(t)
