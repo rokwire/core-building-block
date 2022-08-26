@@ -36,7 +36,7 @@ type authType interface {
 
 	//signUpAdmin signs up a new admin user
 	// Returns:
-	//	password (string): newly generated password
+	//	params (map): parameters necessary for new admin to log in (e.g., password)
 	//	credentialValue (map): Credential value
 	signUpAdmin(authType model.AuthType, appName string, identifier string, password string, newCredentialID string) (map[string]interface{}, map[string]interface{}, error)
 

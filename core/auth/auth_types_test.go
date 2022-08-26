@@ -17,16 +17,28 @@ package auth
 import (
 	"core-building-block/core/auth/mocks"
 	"core-building-block/core/model"
+	"core-building-block/utils"
 	"testing"
+	"time"
 
+	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
+	"github.com/stretchr/testify/mock"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // newEmailTestAuth creates a new email test auth instance
 func newEmailTestAuth(t *testing.T) (authType, *logs.Log) {
+	anyString := mock.AnythingOfType("string")
+
 	emailer := mocks.NewEmailer(t)
-	emailer.On("Send").Return(nil)
+	emailer.On("Send", "bad_email", anyString, anyString, mock.AnythingOfType("*string")).Return(errors.New("failed to send")).Maybe()
+	emailer.On("Send", anyString, anyString, anyString, mock.AnythingOfType("*string")).Return(nil).Maybe()
+
 	storage := mocks.NewStorage(t)
+	storage.On("UpdateCredential", nil, mock.AnythingOfType("*model.Credential")).Return(nil).Maybe()
+	storage.On("UpdateCredentialValue", anyString, mock.AnythingOfType("map[string]interface {}")).Return(nil).Maybe()
+
 	logger := logs.NewLogger("auth_type_email", nil)
 
 	authTypes := map[string]authType{}
@@ -38,72 +50,6 @@ func newEmailTestAuth(t *testing.T) (authType, *logs.Log) {
 
 //Email
 
-//1. signUp applies sign up operation
-// Returns:
-//	message (string): Success message if verification is required. If verification is not required, return ""
-//	credentialValue (map): Credential value
-// signUp(authType model.AuthType, appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error)
-
-//2. signUpAdmin signs up a new admin user
-// Returns:
-//	password (string): newly generated password
-//	credentialValue (map): Credential value
-// signUpAdmin(authType model.AuthType, appOrg model.ApplicationOrganization, identifier string, password string, newCredentialID string) (map[string]interface{}, map[string]interface{}, error)
-
-//3. verifies credential (checks the verification code generated on email signup for email auth type)
-// Returns:
-//	authTypeCreds (map[string]interface{}): Updated Credential.Value
-// verifyCredential(credential *model.Credential, verification string, l *logs.Log) (map[string]interface{}, error)
-
-//4. sends the verification code to the identifier
-// sendVerifyCredential(credential *model.Credential, appName string, l *logs.Log) error
-
-//5. restarts the credential verification
-// restartCredentialVerification(credential *model.Credential, appName string, l *logs.Log) error
-
-//6. updates the value of the credential object with new value
-// Returns:
-//	authTypeCreds (map[string]interface{}): Updated Credential.Value
-// resetCredential(credential *model.Credential, resetCode *string, params string, l *logs.Log) (map[string]interface{}, error)
-
-//7. apply forgot credential for the auth type (generates a reset password link with code and expiry and sends it to given identifier for email auth type)
-// forgotCredential(credential *model.Credential, identifier string, appName string, l *logs.Log) (map[string]interface{}, error)
-
-//8. getUserIdentifier parses the credentials and returns the user identifier
-// Returns:
-//	userIdentifier (string): User identifier
-// getUserIdentifier(creds string) (string, error)
-
-//9. isCredentialVerified says if the credential is verified
-// Returns:
-//	verified (bool): is credential verified
-//	expired (bool): is credential verification expired
-// isCredentialVerified(credential *model.Credential, l *logs.Log) (*bool, *bool, error)
-
-//10. checkCredentials checks if the account credentials are valid for the account auth type
-// checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, error)
-
-// func NewAuth(authPrivKey *rsa.PrivateKey, minTokenExp *int64, maxTokenExp *int64, logger *logs.Logger) (*auth.Auth, error) {
-// 	if minTokenExp == nil {
-// 		var minTokenExpVal int64 = 5
-// 		minTokenExp = &minTokenExpVal
-// 	}
-
-// 	if maxTokenExp == nil {
-// 		var maxTokenExpVal int64 = 60
-// 		maxTokenExp = &maxTokenExpVal
-// 	}
-
-// 	authTypes := map[string]authType{}
-
-// 	auth := &auth.Auth{logger: logger, authTypes: authTypes, authPrivKey: authPrivKey, minTokenExp: *minTokenExp, maxTokenExp: *maxTokenExp}
-
-// 	//Initialize auth types
-// 	initEmailAuth(auth)
-
-// 	return auth, nil
-// }
-
 func TestEmail_SignUp(t *testing.T) {
 	emailAuth, log := newEmailTestAuth(t)
 	emailAuthType := model.AuthType{Code: "email", Params: map[string]interface{}{"verify_email": true, "verify_expiry": 1}}
@@ -113,26 +59,363 @@ func TestEmail_SignUp(t *testing.T) {
 		params string
 
 		newCreds map[string]interface{}
-		message  string
 	}
 	tests := []struct {
 		name    string
 		args    args
 		wantErr bool
-		wantMsg bool
 	}{
-		{name: "success", args: args{creds: `{"email": "test@gmail.com"}`}, wantErr: false},
-		{name: "mismatched passwords", args: args{}, wantErr: true},
-		{name: "existing account", args: args{}, wantErr: true},
-		{name: "sent verification email", args: args{}, wantErr: false},
+		{name: "success", args: args{creds: `{"email": "test@email.com", "password": "sample_password"}`, params: `{"confirm_password": "sample_password"}`, newCreds: map[string]interface{}{"email": "test@email.com", "password": "sample_password"}}, wantErr: false},
+		{name: "mismatched passwords", args: args{creds: `{"email": "test@email.com", "password": "sample_password"}`, params: `{"confirm_password": "different_password"}`}, wantErr: true},
+		{name: "missing email", args: args{creds: `{"password": "sample_password"}`, params: `{"confirm_password": "sample_password"}`}, wantErr: true},
+		{name: "missing password", args: args{creds: `{"email": "test@email.com"}`, params: `{"confirm_password": "sample_password"}`}, wantErr: true},
+		{name: "missing confirm password", args: args{creds: `{"email": "test@email.com", "password": "sample_password"}`, params: `{}`}, wantErr: true},
+		{name: "email send fail", args: args{creds: `{"email": "bad_email", "password": "sample_password"}`, params: `{"confirm_password": "sample_password"}`}, wantErr: true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, _, err := emailAuth.signUp(emailAuthType, "Email Test", tt.args.creds, tt.args.params, "email_cred", log)
+			_, credential, err := emailAuth.signUp(emailAuthType, "Email Test", tt.args.creds, tt.args.params, "email_cred", log)
 			if err != nil && !tt.wantErr {
 				t.Errorf("emailAuthImpl.signUp error = %v", err)
+				return
+			}
+			if (credential == nil) != (tt.args.newCreds == nil) {
+				t.Errorf("emailAuthImpl.signUp credential = %v, expected %v", credential, tt.args.newCreds)
+				return
+			}
+			if tt.args.newCreds != nil {
+				if tt.args.newCreds["email"] != credential["email"] {
+					t.Errorf("emailAuthImpl.signUp credential.email = %v, expected %v", credential["email"], tt.args.newCreds["email"])
+					return
+				}
+
+				storedPassword, _ := credential["password"].(string)
+				expectedPlaintext, _ := tt.args.newCreds["password"].(string)
+				if bcrypt.CompareHashAndPassword([]byte(storedPassword), []byte(expectedPlaintext)) != nil {
+					t.Errorf("emailAuthImpl.signUp password check error: credential.password = %s, plaintext %s", storedPassword, expectedPlaintext)
+					return
+				}
+			}
+		})
+	}
+}
+
+func TestEmail_SignUpAdmin(t *testing.T) {
+	emailAuth, _ := newEmailTestAuth(t)
+	emailAuthType := model.AuthType{Code: "email", Params: map[string]interface{}{"verify_email": true, "verify_expiry": 1}}
+
+	type args struct {
+		identifier string
+		password   string
+
+		newCreds map[string]interface{}
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{name: "success explicit password", args: args{identifier: "test@email.com", password: "sample_password", newCreds: map[string]interface{}{"email": "test@email.com", "password": "sample_password"}}, wantErr: false},
+		{name: "success random password", args: args{identifier: "test@email.com", password: "", newCreds: map[string]interface{}{"email": "test@email.com"}}, wantErr: false},
+		{name: "email send fail", args: args{identifier: "bad_email", password: "sample_password"}, wantErr: true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			params, credential, err := emailAuth.signUpAdmin(emailAuthType, "Email Test", tt.args.identifier, tt.args.password, "email_cred")
+			if err != nil && !tt.wantErr {
+				t.Errorf("emailAuthImpl.signUpAdmin error = %v", err)
+				return
+			}
+			if params == nil && !tt.wantErr {
+				t.Errorf("emailAuthImpl.signUpAdmin params = %v", params)
+				return
+			}
+			if (credential == nil) != (tt.args.newCreds == nil) {
+				t.Errorf("emailAuthImpl.signUpAdmin credential = %v, expected %v", credential, tt.args.newCreds)
+				return
+			}
+			if tt.args.newCreds != nil {
+				if tt.args.newCreds["email"] != credential["email"] {
+					t.Errorf("emailAuthImpl.signUpAdmin credential.email = %v, expected %v", credential["email"], tt.args.newCreds["email"])
+					return
+				}
+
+				storedPassword, _ := credential["password"].(string)
+				expectedPlaintext, _ := params["password"].(string)
+				if bcrypt.CompareHashAndPassword([]byte(storedPassword), []byte(expectedPlaintext)) != nil {
+					t.Errorf("emailAuthImpl.signUpAdmin password check error: credential.password = %s, plaintext %s", storedPassword, expectedPlaintext)
+					return
+				}
+			}
+		})
+	}
+}
+
+// Verifies credential (checks the verification code generated on email signup for email auth type)
+// Returns:
+//
+//	authTypeCreds (map[string]interface{}): Updated Credential.Value
+func TestEmail_VerifyCredential(t *testing.T) {
+	emailAuth, log := newEmailTestAuth(t)
+	credential := model.Credential{Value: map[string]interface{}{
+		"verification_code": "sample_verification_code",
+	}}
+
+	type args struct {
+		code       string
+		expiration time.Time
+
+		newCreds map[string]interface{}
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{name: "success", args: args{code: "sample_verification_code", expiration: time.Now().UTC().Add(time.Minute), newCreds: map[string]interface{}{"verification_code": "", "verification_expiry": utils.FormatTime(&time.Time{})}}, wantErr: false},
+		{name: "incorrect verification code", args: args{code: "incorrect_verification_code", expiration: time.Now().UTC().Add(time.Minute)}, wantErr: true},
+		{name: "expired code", args: args{code: "sample_verification_code", expiration: time.Now().UTC().Add(-time.Minute)}, wantErr: true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			credential.Value["verification_expiry"] = utils.FormatTime(&tt.args.expiration)
+			updatedCredentialValue, err := emailAuth.verifyCredential(&credential, tt.args.code, log)
+			if err != nil && !tt.wantErr {
+				t.Errorf("emailAuthImpl.verifyCredential error = %v", err)
+				return
+			}
+			if (updatedCredentialValue == nil) != (tt.args.newCreds == nil) {
+				t.Errorf("emailAuthImpl.signUp credential value = %v, expected %v", credential, tt.args.newCreds)
+			}
+		})
+	}
+}
+
+// Sends the verification code to the identifier
+func TestEmail_SendVerifyCredential(t *testing.T) {
+	emailAuth, log := newEmailTestAuth(t)
+	emailAuthType := model.AuthType{Code: "email", Params: map[string]interface{}{"verify_email": true, "verify_expiry": 1, "verify_wait_time": 60}}
+	credential := model.Credential{ID: "email_cred", AuthType: emailAuthType, Value: map[string]interface{}{}}
+
+	type args struct {
+		email      string
+		expiration time.Time
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{name: "success", args: args{email: "test@email.com", expiration: time.Now().UTC().Add(58 * time.Minute)}, wantErr: false},
+		{name: "resend too soon", args: args{email: "test@email.com", expiration: time.Now().UTC().Add(59*time.Minute + 30*time.Second)}, wantErr: true},
+		{name: "email send fail", args: args{email: "bad_email", expiration: time.Now().UTC().Add(58 * time.Minute)}, wantErr: true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			credential.Value["email"] = tt.args.email
+			credential.Value["verification_expiry"] = utils.FormatTime(&tt.args.expiration)
+			err := emailAuth.sendVerifyCredential(&credential, "Email Test", log)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("emailAuthImpl.sendVerifyCredential error = %v", err)
 				return
 			}
 		})
 	}
 }
+
+func TestEmail_RestartCredentialVerification(t *testing.T) {
+	emailAuth, log := newEmailTestAuth(t)
+	credential := model.Credential{ID: "email_cred", Value: map[string]interface{}{}}
+
+	type args struct {
+		email      string
+		expiration time.Time
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{name: "success future", args: args{email: "test@email.com", expiration: time.Now().UTC().Add(time.Minute)}, wantErr: false},
+		{name: "success past", args: args{email: "test@email.com", expiration: time.Now().UTC().Add(-time.Minute)}, wantErr: false},
+		{name: "email send fail", args: args{email: "bad_email", expiration: time.Now().UTC().Add(58 * time.Minute)}, wantErr: true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			credential.Value["email"] = tt.args.email
+			credential.Value["verification_expiry"] = utils.FormatTime(&tt.args.expiration)
+			err := emailAuth.restartCredentialVerification(&credential, "Email Test", log)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("emailAuthImpl.restartCredentialVerification error = %v", err)
+				return
+			}
+		})
+	}
+}
+
+/*
+// Updates the value of the credential object with new value
+// Returns:
+//
+//	authTypeCreds (map[string]interface{}): Updated Credential.Value
+func TestEmail_ResetCredential(t *testing.T) {
+	emailAuth, log := newEmailTestAuth(t)
+	emailAuthType := model.AuthType{Code: "email", Params: map[string]interface{}{"verify_email": true, "verify_expiry": 1}}
+
+	type args struct {
+		identifier string
+		password   string
+
+		newCreds map[string]interface{}
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{name: "success explicit password", args: args{identifier: "test@email.com", password: "sample_password", newCreds: map[string]interface{}{"email": "test@email.com", "password": "sample_password"}}, wantErr: false},
+		{name: "success random password", args: args{identifier: "test@email.com", password: "", newCreds: map[string]interface{}{"email": "test@email.com"}}, wantErr: false},
+		{name: "email send fail", args: args{identifier: "bad_email", password: "sample_password"}, wantErr: true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			credential, err := emailAuth.resetCredential(emailAuthType, "Email Test", log)
+			if err != nil && !tt.wantErr {
+				t.Errorf("emailAuthImpl.verifyCredential error = %v", err)
+				return
+			}
+		})
+	}
+}
+
+// Apply forgot credential for the auth type (generates a reset password link with code and expiry and sends it to given identifier for email auth type)
+func TestEmail_ForgotCredential(t *testing.T) {
+	emailAuth, log := newEmailTestAuth(t)
+	emailAuthType := model.AuthType{Code: "email", Params: map[string]interface{}{"verify_email": true, "verify_expiry": 1}}
+
+	type args struct {
+		identifier string
+		password   string
+
+		newCreds map[string]interface{}
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{name: "success explicit password", args: args{identifier: "test@email.com", password: "sample_password", newCreds: map[string]interface{}{"email": "test@email.com", "password": "sample_password"}}, wantErr: false},
+		{name: "success random password", args: args{identifier: "test@email.com", password: "", newCreds: map[string]interface{}{"email": "test@email.com"}}, wantErr: false},
+		{name: "email send fail", args: args{identifier: "bad_email", password: "sample_password"}, wantErr: true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			credential, err := emailAuth.forgotCredential(emailAuthType, "Email Test", log)
+			if err != nil && !tt.wantErr {
+				t.Errorf("emailAuthImpl.verifyCredential error = %v", err)
+				return
+			}
+		})
+	}
+}
+
+// GetUserIdentifier parses the credentials and returns the user identifier
+// Returns:
+//
+//	userIdentifier (string): User identifier
+func TestEmail_GetUserIdentifier(t *testing.T) {
+	emailAuth, log := newEmailTestAuth(t)
+	emailAuthType := model.AuthType{Code: "email", Params: map[string]interface{}{"verify_email": true, "verify_expiry": 1}}
+
+	type args struct {
+		identifier string
+		password   string
+
+		newCreds map[string]interface{}
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{name: "success explicit password", args: args{identifier: "test@email.com", password: "sample_password", newCreds: map[string]interface{}{"email": "test@email.com", "password": "sample_password"}}, wantErr: false},
+		{name: "success random password", args: args{identifier: "test@email.com", password: "", newCreds: map[string]interface{}{"email": "test@email.com"}}, wantErr: false},
+		{name: "email send fail", args: args{identifier: "bad_email", password: "sample_password"}, wantErr: true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			credential, err := emailAuth.getUserIdentifier(emailAuthType, "Email Test", log)
+			if err != nil && !tt.wantErr {
+				t.Errorf("emailAuthImpl.verifyCredential error = %v", err)
+				return
+			}
+		})
+	}
+}
+
+// IsCredentialVerified says if the credential is verified
+// Returns:
+//
+//	verified (bool): is credential verified
+//	expired (bool): is credential verification expired
+func TestEmail_IsCredentialVerified(t *testing.T) {
+	emailAuth, log := newEmailTestAuth(t)
+	emailAuthType := model.AuthType{Code: "email", Params: map[string]interface{}{"verify_email": true, "verify_expiry": 1}}
+
+	type args struct {
+		identifier string
+		password   string
+
+		newCreds map[string]interface{}
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{name: "success explicit password", args: args{identifier: "test@email.com", password: "sample_password", newCreds: map[string]interface{}{"email": "test@email.com", "password": "sample_password"}}, wantErr: false},
+		{name: "success random password", args: args{identifier: "test@email.com", password: "", newCreds: map[string]interface{}{"email": "test@email.com"}}, wantErr: false},
+		{name: "email send fail", args: args{identifier: "bad_email", password: "sample_password"}, wantErr: true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			credential, err := emailAuth.isCredentialVerified(emailAuthType, "Email Test", log)
+			if err != nil && !tt.wantErr {
+				t.Errorf("emailAuthImpl.verifyCredential error = %v", err)
+				return
+			}
+		})
+	}
+}
+
+// CheckCredentials checks if the account credentials are valid for the account auth type
+func TestEmail_CheckCredentials(t *testing.T) {
+	emailAuth, log := newEmailTestAuth(t)
+	emailAuthType := model.AuthType{Code: "email", Params: map[string]interface{}{"verify_email": true, "verify_expiry": 1}}
+
+	type args struct {
+		identifier string
+		password   string
+
+		newCreds map[string]interface{}
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{name: "success explicit password", args: args{identifier: "test@email.com", password: "sample_password", newCreds: map[string]interface{}{"email": "test@email.com", "password": "sample_password"}}, wantErr: false},
+		{name: "success random password", args: args{identifier: "test@email.com", password: "", newCreds: map[string]interface{}{"email": "test@email.com"}}, wantErr: false},
+		{name: "email send fail", args: args{identifier: "bad_email", password: "sample_password"}, wantErr: true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			credential, err := emailAuth.checkCredentials(emailAuthType, "Email Test", log)
+			if err != nil && !tt.wantErr {
+				t.Errorf("emailAuthImpl.verifyCredential error = %v", err)
+				return
+			}
+		})
+	}
+}
+*/
