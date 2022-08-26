@@ -73,6 +73,8 @@ const (
 
 	//PermissionAllSystemCore ...
 	PermissionAllSystemCore string = "all_system_core"
+	//PermissionGrantAllPermissions ...
+	PermissionGrantAllPermissions string = "grant_all_permissions"
 )
 
 // Permission represents permission entity
@@ -90,6 +92,9 @@ type Permission struct {
 
 // CheckAssigners checks if the passed permissions satisfy the needed assigners for the permission
 func (p Permission) CheckAssigners(assignerPermissions []string) error {
+	if authutils.ContainsString(assignerPermissions, PermissionGrantAllPermissions) {
+		return nil
+	}
 	if len(p.Assigners) == 0 {
 		return errors.Newf("not defined assigners for %s permission", p.Name)
 	}
@@ -136,6 +141,9 @@ func (c AppOrgRole) GetPermissionNamed(name string) *Permission {
 
 // CheckAssigners checks if the passed permissions satisfy the needed assigners for all role permissions
 func (c AppOrgRole) CheckAssigners(assignerPermissions []string) error {
+	if authutils.ContainsString(assignerPermissions, PermissionGrantAllPermissions) {
+		return nil
+	}
 	if len(c.Permissions) == 0 {
 		return nil //no permission
 	}
@@ -173,6 +181,10 @@ type AppOrgGroup struct {
 
 // CheckAssigners checks if the passed permissions satisfy the needed assigners for the group
 func (cg AppOrgGroup) CheckAssigners(assignerPermissions []string) error {
+	if authutils.ContainsString(assignerPermissions, PermissionGrantAllPermissions) {
+		return nil
+	}
+
 	//check permission
 	if len(cg.Permissions) > 0 {
 		for _, permission := range cg.Permissions {
