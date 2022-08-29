@@ -307,6 +307,29 @@ func (_m *Storage) FindAccountsByAccountID(appID string, orgID string, accountID
 	return r0, r1
 }
 
+// FindAllPermissions provides a mock function with given fields: context
+func (_m *Storage) FindAllPermissions(context storage.TransactionContext) ([]model.Permission, error) {
+	ret := _m.Called(context)
+
+	var r0 []model.Permission
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext) []model.Permission); ok {
+		r0 = rf(context)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]model.Permission)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(storage.TransactionContext) error); ok {
+		r1 = rf(context)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // FindAppConfigByID provides a mock function with given fields: ID
 func (_m *Storage) FindAppConfigByID(ID string) (*model.ApplicationConfig, error) {
 	ret := _m.Called(ID)
@@ -737,6 +760,29 @@ func (_m *Storage) FindOrganizations() ([]model.Organization, error) {
 	var r1 error
 	if rf, ok := ret.Get(1).(func() error); ok {
 		r1 = rf()
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// FindPermissions provides a mock function with given fields: context, ids
+func (_m *Storage) FindPermissions(context storage.TransactionContext, ids []string) ([]model.Permission, error) {
+	ret := _m.Called(context, ids)
+
+	var r0 []model.Permission
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, []string) []model.Permission); ok {
+		r0 = rf(context, ids)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]model.Permission)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(storage.TransactionContext, []string) error); ok {
+		r1 = rf(context, ids)
 	} else {
 		r1 = ret.Error(1)
 	}

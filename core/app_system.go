@@ -213,6 +213,18 @@ func (app *application) sysUpdatePermission(name string, description *string, se
 	return &permission, nil
 }
 
+func (app *application) sysGetAllPermissions() ([]model.Permission, error) {
+	permissions, err := app.storage.FindAllPermissions(nil)
+	if err != nil {
+		return nil, err
+	}
+	if permissions == nil || len(permissions) < 1 {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypePermission, nil, err)
+	}
+
+	return permissions, nil
+}
+
 func (app *application) sysGetAppConfigs(appTypeID string, orgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error) {
 	//get the app type
 	applicationType, err := app.storage.FindApplicationType(appTypeID)

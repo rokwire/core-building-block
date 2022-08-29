@@ -2170,6 +2170,18 @@ func (sa *Adapter) DeleteMFAType(context TransactionContext, accountID string, i
 	return nil
 }
 
+// FindAllPermissions finds all permissions
+func (sa *Adapter) FindAllPermissions(context TransactionContext) ([]model.Permission, error) {
+	permissionsFilter := bson.D{}
+	var permissionsResult []model.Permission
+	err := sa.db.permissions.FindWithContext(context, permissionsFilter, &permissionsResult, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return permissionsResult, nil
+}
+
 // FindPermissions finds a set of permissions
 func (sa *Adapter) FindPermissions(context TransactionContext, ids []string) ([]model.Permission, error) {
 	if len(ids) == 0 {
