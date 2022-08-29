@@ -16,10 +16,9 @@ package auth
 
 import (
 	"core-building-block/core/model"
+	"core-building-block/driven/oauthprovider"
 	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
 	"strings"
 
 	"github.com/rokwire/logging-library-go/errors"
@@ -49,7 +48,7 @@ func (a *oauthAuthImpl) externalLogin(authType model.AuthType, appType model.App
 		return nil, nil, errors.WrapErrorAction(logutils.ActionGet, typeAuthConfig, logutils.StringArgs(a.authType), err)
 	}
 
-	code, err := config.getAuthorizationCode(a.auth, creds, params)
+	code, err := config.GetAuthorizationCode(creds, params)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionGet, "authorization code", logutils.StringArgs(a.authType), err)
 	}
@@ -82,28 +81,29 @@ func (a *oauthAuthImpl) getLoginURL(authType model.AuthType, appType model.Appli
 		return "", nil, errors.WrapErrorAction(logutils.ActionGet, typeAuthConfig, logutils.StringArgs(a.authType), err)
 	}
 
-	return config.buildLoginURLResponse(a.auth)
+	return config.BuildLoginURLResponse()
 }
 
 // --- Helper functions ---
 
-func (a *oauthAuthImpl) loadTokensAndInfo(config oauthConfig, authType model.AuthType, appOrg model.ApplicationOrganization, creds string, params string,
+func (a *oauthAuthImpl) loadTokensAndInfo(config oauthprovider.OAuthConfig, authType model.AuthType, appOrg model.ApplicationOrganization, creds string, params string,
 	refresh bool, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error) {
-	newToken, err := a.loadTokenWithParams(config, creds, params, refresh)
+	newToken := config.EmptyToken()
+	err := a.auth.oauthProvider.LoadToken(config, creds, params, refresh, newToken)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionGet, logutils.TypeToken, nil, err)
 	}
-	if refresh && newToken == nil {
+	if refresh && strings.TrimSpace(newToken.GetAuthorizationHeader()) == "" {
 		l.Warnf("%s refresh tokens not enabled for app_id=%s, org_id=%s", a.authType, appOrg.Organization.ID, appOrg.Application.ID)
 		return nil, nil, nil
 	}
 
-	sub, err := config.checkIDToken(newToken)
+	sub, err := config.CheckIDToken(newToken)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, logutils.TypeToken, nil, err)
 	}
 
-	userInfo, err := a.loadUserInfo(config, newToken)
+	userInfo, err := a.auth.oauthProvider.LoadUserInfo(config, newToken)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionGet, "user info", nil, err)
 	}
@@ -115,7 +115,7 @@ func (a *oauthAuthImpl) loadTokensAndInfo(config oauthConfig, authType model.Aut
 	}
 
 	userClaimsSub, _ := userClaims["sub"].(string)
-	if !config.checkSubject(sub, userClaimsSub) {
+	if !config.CheckSubject(sub, userClaimsSub) {
 		return nil, nil, errors.ErrorData(logutils.StatusInvalid, "subject claim", &logutils.FieldArgs{"id_token": sub, "user_claims": userClaimsSub})
 	}
 
@@ -124,87 +124,7 @@ func (a *oauthAuthImpl) loadTokensAndInfo(config oauthConfig, authType model.Aut
 		return nil, nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeExternalSystemUser, nil, err)
 	}
 
-	return externalUser, newToken.getResponse(), nil
-}
-
-func (a *oauthAuthImpl) loadTokenWithParams(config oauthConfig, creds string, params string, refresh bool) (oauthToken, error) {
-	req, err := config.buildNewTokenRequest(a.auth, creds, params, refresh)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionCreate, "token request", nil, err)
-	}
-	if refresh && req == nil {
-		return nil, nil
-	}
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionSend, logutils.TypeRequest, nil, err)
-	}
-
-	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err)
-	}
-	if resp.StatusCode != 200 {
-		return nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeResponse, &logutils.FieldArgs{"status_code": resp.StatusCode, "error": string(body)})
-	}
-
-	var token oauthToken
-	switch a.authType {
-	case AuthTypeOidc:
-		{
-			var oidc oidcToken
-			token = &oidc
-		}
-	case AuthTypeOAuth2:
-		{
-			var oauth2 oauth2Token
-			token = &oauth2
-		}
-	default:
-		return nil, errors.ErrorData(logutils.StatusInvalid, model.TypeAuthType, logutils.StringArgs(a.authType))
-	}
-	err = json.Unmarshal(body, &token)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, logutils.TypeToken, nil, err)
-	}
-	validate := validator.New()
-	err = validate.Struct(token)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionValidate, logutils.TypeToken, nil, err)
-	}
-
-	return token, nil
-}
-
-func (a *oauthAuthImpl) loadUserInfo(config oauthConfig, token oauthToken) ([]byte, error) {
-	client := &http.Client{}
-	req, err := http.NewRequest(http.MethodGet, config.getUserInfoURL(), nil)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeRequest, nil, err)
-	}
-	req.Header.Set("Authorization", token.getAuthorizationHeader())
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionSend, logutils.TypeRequest, nil, err)
-	}
-
-	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionRead, logutils.TypeResponse, nil, err)
-	}
-	if resp.StatusCode != 200 {
-		return nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeResponse, &logutils.FieldArgs{"status_code": resp.StatusCode, "error": string(body)})
-	}
-	if len(body) == 0 {
-		return nil, errors.ErrorData(logutils.StatusMissing, logutils.TypeResponseBody, nil)
-	}
-
-	return body, nil
+	return externalUser, newToken.GetResponse(), nil
 }
 
 func (a *oauthAuthImpl) getExternalUser(claims map[string]interface{}, authType model.AuthType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.ExternalSystemUser, error) {
@@ -271,7 +191,7 @@ func (a *oauthAuthImpl) getExternalUser(claims map[string]interface{}, authType 
 		MiddleName: middleName, LastName: lastName, Email: email, Roles: roles, Groups: groups, SystemSpecific: systemSpecific}, nil
 }
 
-func (a *oauthAuthImpl) getOAuthConfig(authType model.AuthType, appType model.ApplicationType) (oauthConfig, error) {
+func (a *oauthAuthImpl) getOAuthConfig(authType model.AuthType, appType model.ApplicationType) (oauthprovider.OAuthConfig, error) {
 	errFields := &logutils.FieldArgs{"auth_type_id": authType.ID, "app_type_id": appType}
 
 	identityProviderID, ok := authType.Params["identity_provider"].(string)
@@ -288,7 +208,7 @@ func (a *oauthAuthImpl) getOAuthConfig(authType model.AuthType, appType model.Ap
 		return nil, errors.WrapErrorAction(logutils.ActionMarshal, model.TypeIdentityProviderConfig, errFields, err)
 	}
 
-	var config oauthConfig
+	var config oauthprovider.OAuthConfig
 	switch a.authType {
 	case AuthTypeOidc:
 		{
@@ -328,22 +248,4 @@ func (a *oauthAuthImpl) refreshParamsFromMap(val map[string]interface{}) (*oauth
 	}
 
 	return &oauthRefreshParams{RefreshToken: refreshToken}, nil
-}
-
-type oauthConfig interface {
-	getAuthorizeURL() string
-	getTokenURL() string
-	getUserInfoURL() string
-
-	getAuthorizationCode(auth *Auth, creds string, params string) (string, error)
-	buildNewTokenRequest(auth *Auth, creds string, params string, refresh bool) (*http.Request, error)
-	checkIDToken(token oauthToken) (string, error)
-	checkSubject(tokenSubject string, userSubject string) bool
-	buildLoginURLResponse(auth *Auth) (string, map[string]interface{}, error)
-}
-
-type oauthToken interface {
-	getAuthorizationHeader() string
-	getResponse() map[string]interface{}
-	getIDToken() string
 }

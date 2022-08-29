@@ -18,11 +18,12 @@ import (
 	"core-building-block/core"
 	"core-building-block/core/auth"
 	"core-building-block/driven/emailer"
+	"core-building-block/driven/oauthprovider"
 	"core-building-block/driven/profilebb"
 	"core-building-block/driven/storage"
 	"core-building-block/driver/web"
 	"core-building-block/utils"
-	"io/ioutil"
+	"os"
 	"strconv"
 	"strings"
 
@@ -92,6 +93,8 @@ func main() {
 
 	emailer := emailer.NewEmailerAdapter(smtpHost, smtpPortNum, smtpUser, smtpPassword, smtpFrom)
 
+	oauthProvider := oauthprovider.NewOAuthProviderAdapter()
+
 	var authPrivKeyPem []byte
 	authPrivKeyPemString := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_PRIV_KEY", false, true)
 	if authPrivKeyPemString != "" {
@@ -102,7 +105,7 @@ func main() {
 		authPrivKeyPem = []byte(authPrivKeyPemString)
 	} else {
 		authPrivateKeyPath := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_PRIV_KEY_PATH", true, false)
-		authPrivKeyPem, err = ioutil.ReadFile(authPrivateKeyPath)
+		authPrivKeyPem, err = os.ReadFile(authPrivateKeyPath)
 		if err != nil {
 			logger.Fatalf("Could not find auth priv key file: %v", err)
 		}
@@ -141,7 +144,7 @@ func main() {
 	profileBBApiKey := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_PROFILE_BB_API_KEY", false, true)
 	profileBBAdapter := profilebb.NewProfileBBAdapter(migrate, profileBBHost, profileBBApiKey)
 
-	auth, err := auth.NewAuth(serviceID, host, authPrivKey, storageAdapter, emailer, minTokenExp, maxTokenExp, twilioAccountSID, twilioToken, twilioServiceSID, profileBBAdapter, smtpHost, smtpPortNum, smtpUser, smtpPassword, smtpFrom, logger)
+	auth, err := auth.NewAuth(serviceID, host, authPrivKey, storageAdapter, emailer, oauthProvider, minTokenExp, maxTokenExp, twilioAccountSID, twilioToken, twilioServiceSID, profileBBAdapter, smtpHost, smtpPortNum, smtpUser, smtpPassword, smtpFrom, logger)
 	if err != nil {
 		logger.Fatalf("Error initializing auth: %v", err)
 	}

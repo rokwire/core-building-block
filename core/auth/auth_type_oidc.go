@@ -16,6 +16,7 @@ package auth
 
 import (
 	"context"
+	"core-building-block/driven/oauthprovider"
 	"core-building-block/utils"
 	"encoding/base64"
 	"encoding/json"
@@ -56,7 +57,12 @@ type oidcAuthConfig struct {
 	Populations        map[string]string `json:"populations"`
 }
 
-func (o *oidcAuthConfig) getAuthorizeURL() string {
+func (o *oidcAuthConfig) EmptyToken() oauthprovider.OAuthToken {
+	var token oidcToken
+	return &token
+}
+
+func (o *oidcAuthConfig) GetAuthorizeURL() string {
 	url := o.Host + "/idp/profile/oidc/authorize"
 	if len(o.AuthorizeURL) > 0 {
 		url = o.AuthorizeURL
@@ -65,7 +71,7 @@ func (o *oidcAuthConfig) getAuthorizeURL() string {
 	return url
 }
 
-func (o *oidcAuthConfig) getTokenURL() string {
+func (o *oidcAuthConfig) GetTokenURL() string {
 	tokenURL := o.Host + "/idp/profile/oidc/token"
 	if len(o.TokenURL) > 0 {
 		tokenURL = o.TokenURL
@@ -82,7 +88,7 @@ func (o *oidcAuthConfig) getTokenURL() string {
 	return url
 }
 
-func (o *oidcAuthConfig) getUserInfoURL() string {
+func (o *oidcAuthConfig) GetUserInfoURL() string {
 	url := o.Host + "/idp/profile/oidc/userinfo"
 	if len(o.UserInfoURL) > 0 {
 		url = o.UserInfoURL
@@ -91,8 +97,8 @@ func (o *oidcAuthConfig) getUserInfoURL() string {
 	return url
 }
 
-func (o *oidcAuthConfig) getAuthorizationCode(auth *Auth, creds string, params string) (string, error) {
-	parsedCreds, err := auth.queryValuesFromURL(creds)
+func (o *oidcAuthConfig) GetAuthorizationCode(creds string, params string) (string, error) {
+	parsedCreds, err := utils.QueryValuesFromURL(creds)
 	if err != nil {
 		return "", errors.WrapErrorAction(logutils.ActionParse, "oidc creds", nil, err)
 	}
@@ -100,7 +106,7 @@ func (o *oidcAuthConfig) getAuthorizationCode(auth *Auth, creds string, params s
 	return parsedCreds.Get("code"), nil
 }
 
-func (o *oidcAuthConfig) buildNewTokenRequest(auth *Auth, creds string, params string, refresh bool) (*http.Request, error) {
+func (o *oidcAuthConfig) BuildNewTokenRequest(creds string, params string, refresh bool) (*http.Request, error) {
 	if refresh && !o.UseRefresh {
 		return nil, nil
 	}
@@ -134,13 +140,13 @@ func (o *oidcAuthConfig) buildNewTokenRequest(auth *Auth, creds string, params s
 		}
 	}
 
-	encoded := auth.encodeQueryValues(body)
+	encoded := utils.EncodeQueryValues(body)
 	headers := map[string]string{
 		"Content-Type":   "application/x-www-form-urlencoded",
 		"Content-Length": strconv.Itoa(len(body)),
 	}
 
-	req, err := http.NewRequest(http.MethodPost, o.getTokenURL(), strings.NewReader(encoded))
+	req, err := http.NewRequest(http.MethodPost, o.GetTokenURL(), strings.NewReader(encoded))
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeRequest, nil, err)
 	}
@@ -151,13 +157,13 @@ func (o *oidcAuthConfig) buildNewTokenRequest(auth *Auth, creds string, params s
 	return req, nil
 }
 
-func (o *oidcAuthConfig) checkIDToken(token oauthToken) (string, error) {
+func (o *oidcAuthConfig) CheckIDToken(token oauthprovider.OAuthToken) (string, error) {
 	provider, err := oidc.NewProvider(context.Background(), o.Host)
 	if err != nil {
 		return "", errors.WrapErrorAction(logutils.ActionInitialize, "oidc provider", nil, err)
 	}
 	tokenVerifier := provider.Verifier(&oidc.Config{ClientID: o.ClientID})
-	verifiedToken, err := tokenVerifier.Verify(context.Background(), token.getIDToken())
+	verifiedToken, err := tokenVerifier.Verify(context.Background(), token.GetIDToken())
 	if err != nil {
 		return "", errors.WrapErrorAction(logutils.ActionValidate, "id token", nil, err)
 	}
@@ -175,11 +181,11 @@ func (o *oidcAuthConfig) checkIDToken(token oauthToken) (string, error) {
 	return sub, nil
 }
 
-func (o *oidcAuthConfig) checkSubject(tokenSubject string, userSubject string) bool {
+func (o *oidcAuthConfig) CheckSubject(tokenSubject string, userSubject string) bool {
 	return tokenSubject == userSubject
 }
 
-func (o *oidcAuthConfig) buildLoginURLResponse(auth *Auth) (string, map[string]interface{}, error) {
+func (o *oidcAuthConfig) BuildLoginURLResponse() (string, map[string]interface{}, error) {
 	scopes := o.Scopes
 	if len(scopes) == 0 {
 		scopes = "openid profile email offline_access"
@@ -207,7 +213,7 @@ func (o *oidcAuthConfig) buildLoginURLResponse(auth *Auth) (string, map[string]i
 		responseParams["pkce_verifier"] = codeVerifier
 	}
 
-	return o.getAuthorizeURL() + "?" + auth.encodeQueryValues(query), responseParams, nil
+	return o.GetAuthorizeURL() + "?" + utils.EncodeQueryValues(query), responseParams, nil
 }
 
 // --- Helper functions ---
@@ -236,11 +242,11 @@ type oidcToken struct {
 	ExpiresIn    int    `json:"expires_in"`
 }
 
-func (t *oidcToken) getAuthorizationHeader() string {
+func (t *oidcToken) GetAuthorizationHeader() string {
 	return fmt.Sprintf("%s %s", t.TokenType, t.AccessToken)
 }
 
-func (t *oidcToken) getResponse() map[string]interface{} {
+func (t *oidcToken) GetResponse() map[string]interface{} {
 	tokenParams := map[string]interface{}{
 		"id_token":      t.IDToken,
 		"access_token":  t.AccessToken,
@@ -252,7 +258,7 @@ func (t *oidcToken) getResponse() map[string]interface{} {
 	return params
 }
 
-func (t *oidcToken) getIDToken() string {
+func (t *oidcToken) GetIDToken() string {
 	return t.IDToken
 }
 

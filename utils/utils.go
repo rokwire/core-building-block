@@ -23,10 +23,13 @@ import (
 	"fmt"
 	"math/rand"
 	"net/http"
+	"net/url"
 	"reflect"
+	"strconv"
 	"time"
 
 	"github.com/rokwire/logging-library-go/logs"
+	"github.com/rokwire/logging-library-go/logutils"
 
 	"github.com/rokwire/logging-library-go/errors"
 )
@@ -191,6 +194,38 @@ func StringListDiff(new []string, old []string) ([]string, []string, []string) {
 		}
 	}
 	return added, removed, unchanged
+}
+
+// QueryValuesFromURL returns a map of query values in a URL
+func QueryValuesFromURL(urlStr string) (url.Values, error) {
+	unquotedCreds, err := strconv.Unquote(urlStr)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionParse, "raw url", nil, err)
+	}
+	parsedURL, err := url.Parse(unquotedCreds)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionParse, "unquoted url", nil, err)
+	}
+	unescapedQuery, err := url.QueryUnescape(parsedURL.RawQuery)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionParse, "raw url query", nil, err)
+	}
+	parsedCreds, err := url.ParseQuery(unescapedQuery)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionParse, "unescaped url query", nil, err)
+	}
+
+	return parsedCreds, nil
+}
+
+// EncodeQueryValues encodes a map of query values into "URL encoded" form
+func EncodeQueryValues(values map[string]string) string {
+	data := url.Values{}
+	for k, v := range values {
+		data.Set(k, v)
+	}
+
+	return data.Encode()
 }
 
 // StringOrNil returns a pointer to the input string, but returns nil if input is empty

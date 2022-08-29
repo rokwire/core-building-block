@@ -16,6 +16,7 @@ package auth
 
 import (
 	"core-building-block/core/model"
+	"core-building-block/driven/oauthprovider"
 	"core-building-block/driven/storage"
 	"time"
 
@@ -578,4 +579,10 @@ type ProfileBuildingBlock interface {
 // Emailer is used by core to send emails
 type Emailer interface {
 	Send(toEmail string, subject string, body string, attachmentFilename *string) error
+}
+
+// OAuthProvider is used by auth to authenticate users via an external OAuth provider
+type OAuthProvider interface {
+	LoadToken(config oauthprovider.OAuthConfig, creds string, params string, refresh bool, result oauthprovider.OAuthToken) error
+	LoadUserInfo(config oauthprovider.OAuthConfig, token oauthprovider.OAuthToken) ([]byte, error)
 }

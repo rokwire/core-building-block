@@ -15,6 +15,7 @@
 package auth
 
 import (
+	"core-building-block/driven/oauthprovider"
 	"core-building-block/utils"
 	"encoding/json"
 	"fmt"
@@ -48,7 +49,12 @@ type oauth2AuthConfig struct {
 	ClientSecret string `json:"client_secret" validate:"required"`
 }
 
-func (o *oauth2AuthConfig) getAuthorizeURL() string {
+func (o *oauth2AuthConfig) EmptyToken() oauthprovider.OAuthToken {
+	var token oauth2Token
+	return &token
+}
+
+func (o *oauth2AuthConfig) GetAuthorizeURL() string {
 	url := o.Host + "/login/oauth/authorize"
 	if len(o.AuthorizeURL) > 0 {
 		url = o.AuthorizeURL
@@ -57,7 +63,7 @@ func (o *oauth2AuthConfig) getAuthorizeURL() string {
 	return url
 }
 
-func (o *oauth2AuthConfig) getTokenURL() string {
+func (o *oauth2AuthConfig) GetTokenURL() string {
 	tokenURL := o.Host + "/login/oauth/access_token"
 	if len(o.TokenURL) > 0 {
 		tokenURL = o.TokenURL
@@ -74,7 +80,7 @@ func (o *oauth2AuthConfig) getTokenURL() string {
 	return url
 }
 
-func (o *oauth2AuthConfig) getUserInfoURL() string {
+func (o *oauth2AuthConfig) GetUserInfoURL() string {
 	url := o.Host + "/login/oauth/user"
 	if len(o.UserInfoURL) > 0 {
 		url = o.UserInfoURL
@@ -83,7 +89,7 @@ func (o *oauth2AuthConfig) getUserInfoURL() string {
 	return url
 }
 
-func (o *oauth2AuthConfig) getAuthorizationCode(auth *Auth, creds string, params string) (string, error) {
+func (o *oauth2AuthConfig) GetAuthorizationCode(creds string, params string) (string, error) {
 	var loginParams oauth2LoginParams
 	if o.UseState {
 		err := json.Unmarshal([]byte(params), &loginParams)
@@ -97,7 +103,7 @@ func (o *oauth2AuthConfig) getAuthorizationCode(auth *Auth, creds string, params
 		}
 	}
 
-	parsedCreds, err := auth.queryValuesFromURL(creds)
+	parsedCreds, err := utils.QueryValuesFromURL(creds)
 	if err != nil {
 		return "", errors.WrapErrorAction(logutils.ActionParse, "oauth2 creds", nil, err)
 	}
@@ -109,7 +115,7 @@ func (o *oauth2AuthConfig) getAuthorizationCode(auth *Auth, creds string, params
 	return parsedCreds.Get("code"), nil
 }
 
-func (o *oauth2AuthConfig) buildNewTokenRequest(auth *Auth, creds string, params string, refresh bool) (*http.Request, error) {
+func (o *oauth2AuthConfig) BuildNewTokenRequest(creds string, params string, refresh bool) (*http.Request, error) {
 	if refresh && !o.UseRefresh {
 		return nil, nil
 	}
@@ -128,14 +134,14 @@ func (o *oauth2AuthConfig) buildNewTokenRequest(auth *Auth, creds string, params
 		body["code"] = creds
 	}
 
-	encoded := auth.encodeQueryValues(body)
+	encoded := utils.EncodeQueryValues(body)
 	headers := map[string]string{
 		"Accept":         "application/json",
 		"Content-Type":   "application/x-www-form-urlencoded",
 		"Content-Length": strconv.Itoa(len(body)),
 	}
 
-	req, err := http.NewRequest(http.MethodPost, o.getTokenURL(), strings.NewReader(encoded))
+	req, err := http.NewRequest(http.MethodPost, o.GetTokenURL(), strings.NewReader(encoded))
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeRequest, nil, err)
 	}
@@ -146,15 +152,15 @@ func (o *oauth2AuthConfig) buildNewTokenRequest(auth *Auth, creds string, params
 	return req, nil
 }
 
-func (o *oauth2AuthConfig) checkIDToken(token oauthToken) (string, error) {
+func (o *oauth2AuthConfig) CheckIDToken(token oauthprovider.OAuthToken) (string, error) {
 	return "", nil
 }
 
-func (o *oauth2AuthConfig) checkSubject(tokenSubject string, userSubject string) bool {
+func (o *oauth2AuthConfig) CheckSubject(tokenSubject string, userSubject string) bool {
 	return true
 }
 
-func (o *oauth2AuthConfig) buildLoginURLResponse(auth *Auth) (string, map[string]interface{}, error) {
+func (o *oauth2AuthConfig) BuildLoginURLResponse() (string, map[string]interface{}, error) {
 	query := map[string]string{
 		"client_id":    o.ClientID,
 		"redirect_uri": o.RedirectURI,
@@ -172,7 +178,7 @@ func (o *oauth2AuthConfig) buildLoginURLResponse(auth *Auth) (string, map[string
 		responseParams["state"] = state
 	}
 
-	return o.getAuthorizeURL() + "?" + auth.encodeQueryValues(query), responseParams, nil
+	return o.GetAuthorizeURL() + "?" + utils.EncodeQueryValues(query), responseParams, nil
 }
 
 // --- Helper functions ---
@@ -194,11 +200,11 @@ type oauth2Token struct {
 	Scope        string `json:"scope" validate:"required"`
 }
 
-func (t *oauth2Token) getAuthorizationHeader() string {
+func (t *oauth2Token) GetAuthorizationHeader() string {
 	return fmt.Sprintf("%s %s", t.TokenType, t.AccessToken)
 }
 
-func (t *oauth2Token) getResponse() map[string]interface{} {
+func (t *oauth2Token) GetResponse() map[string]interface{} {
 	tokenParams := map[string]interface{}{
 		"access_token":  t.AccessToken,
 		"refresh_token": t.RefreshToken,
@@ -210,7 +216,7 @@ func (t *oauth2Token) getResponse() map[string]interface{} {
 	return params
 }
 
-func (t *oauth2Token) getIDToken() string {
+func (t *oauth2Token) GetIDToken() string {
 	return ""
 }
 
