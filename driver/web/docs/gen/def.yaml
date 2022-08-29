@@ -2105,7 +2105,7 @@ paths:
       description: |
         Grant account permissions
 
-        **Auth:** Requires admin access token with `update_account-permissions` or `update_account-authorization` permission
+        **Auth:** Requires admin access token with `update_account-permissions`, `update_accounts`, or `all_accounts` permission
       security:
         - bearerAuth: []
       parameters:
@@ -2145,7 +2145,7 @@ paths:
       description: |
         Deletes an existing permissions from account
 
-        **Auth:** Requires admin access token with `update_account-permissions` or `update_account-authorization` permission
+        **Auth:** Requires admin access token with `update_account-permissions`, `update_accounts`, or `all_accounts` permission
       security:
         - bearerAuth: []
       parameters:
@@ -2185,7 +2185,7 @@ paths:
       description: |
         Grant account roles
 
-        **Auth:** Requires admin access token with `update_account-auth-roles` or `update_account-authorization` permission
+        **Auth:** Requires admin access token with `update_account-auth-roles`, `update_accounts`, or `all_accounts` permission
       security:
         - bearerAuth: []
       parameters:
@@ -2225,7 +2225,7 @@ paths:
       description: |
         Deletes an existing roles from account
 
-        **Auth:** Requires admin access token with `update_account-auth-roles` or `update_account-authorization` permission
+        **Auth:** Requires admin access token with `update_account-auth-roles`, `update_accounts`, or `all_accounts` permission
       security:
         - bearerAuth: []
       parameters:
@@ -2428,7 +2428,9 @@ paths:
         - `delete_auth-groups`
         - `all_auth-groups`
         - `update_account-auth-groups`
-        - `update_account-authorization`
+        - `create_accounts`
+        - `update_accounts`
+        - `all_accounts`
       security:
         - bearerAuth: []
       responses:
@@ -2512,7 +2514,7 @@ paths:
       description: |
         Add accounts 
 
-        **Auth:** Requires admin access token with `update_account-auth-groups` or `update_account-authorization` permission
+        **Auth:** Requires admin access token with `update_account-auth-groups`, `update_accounts`, or `all_accounts` permission
       security:
         - bearerAuth: []
       parameters:
@@ -2552,7 +2554,7 @@ paths:
       description: |
         Deletes an existing accounts from group
 
-        **Auth:** Requires admin access token with `update_account-auth-groups` or `update_account-authorization` permission
+        **Auth:** Requires admin access token with `update_account-auth-groups`, `update_accounts`, or `all_accounts` permission
       security:
         - bearerAuth: []
       parameters:
@@ -2595,7 +2597,9 @@ paths:
         **Auth:** Requires admin access token with at least one of the following permissions:
         - `get_permissions`
         - `update_account-permissions`
-        - `update_account-authorization`
+        - `create_accounts`
+        - `update_accounts`
+        - `all_accounts`
       security:
         - bearerAuth: []
       responses:
@@ -2627,7 +2631,9 @@ paths:
         - `delete_auth-roles`
         - `all_auth-roles`
         - `update_account-auth-roles`
-        - `update_account-authorization`
+        - `create_accounts`
+        - `update_accounts`
+        - `all_accounts`
       security:
         - bearerAuth: []
       responses:
@@ -5163,6 +5169,8 @@ components:
           $ref: '#/components/schemas/AccountFields'
         app_org:
           $ref: '#/components/schemas/ApplicationOrganization'
+        system:
+          type: boolean
         username:
           type: string
         permissions:
@@ -5200,7 +5208,6 @@ components:
         - org_id
         - first_name
         - last_name
-        - has_permissions
         - permissions
         - roles
         - groups
@@ -5219,6 +5226,8 @@ components:
           type: string
         last_name:
           type: string
+        system:
+          type: boolean
         username:
           type: string
         has_permissions:
@@ -5246,6 +5255,7 @@ components:
           type: object
           nullable: true
         date_created:
+          readOnly: true
           type: string
         date_updated:
           type: string
@@ -5820,6 +5830,8 @@ components:
           type: object
           nullable: true
         has_permissions:
+          type: boolean
+        system:
           type: boolean
         permissions:
           type: array

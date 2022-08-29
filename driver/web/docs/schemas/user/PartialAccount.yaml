@@ -4,7 +4,6 @@ required:
   - org_id
   - first_name
   - last_name
-  - has_permissions
   - permissions
   - roles
   - groups
@@ -23,6 +22,8 @@ properties:
     type: string
   last_name:
     type: string
+  system:
+    type: boolean
   username:
     type: string
   has_permissions:
@@ -50,6 +51,7 @@ properties:
     type: object
     nullable: true
   date_created:
+    readOnly: true
     type: string
   date_updated:
     type: string

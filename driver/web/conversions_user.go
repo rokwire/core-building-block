@@ -42,8 +42,8 @@ func accountToDef(item model.Account) *Def.SharedResAccount {
 		username = &item.Username
 	}
 
-	return &Def.SharedResAccount{Id: item.ID, HasPermissions: &item.HasPermissions, Permissions: &permissions, Roles: &roles, Groups: &groups,
-		AuthTypes: &authTypes, Username: username, Profile: profile, Preferences: preferences, SystemConfigs: systemConfigs}
+	return &Def.SharedResAccount{Id: item.ID, HasPermissions: &item.HasPermissions, System: &item.AppOrg.Organization.System, Permissions: &permissions,
+		Roles: &roles, Groups: &groups, AuthTypes: &authTypes, Username: username, Profile: profile, Preferences: preferences, SystemConfigs: systemConfigs}
 }
 
 func accountsToDef(items []model.Account) []Def.SharedResAccount {
@@ -87,8 +87,8 @@ func partialAccountToDef(item model.Account, params map[string]interface{}) *Def
 		paramsData = &params
 	}
 	return &Def.PartialAccount{Id: item.ID, AppId: item.AppOrg.Application.ID, OrgId: item.AppOrg.Organization.ID,
-		FirstName: item.Profile.FirstName, LastName: item.Profile.LastName, Username: username, HasPermissions: item.HasPermissions,
-		Permissions: permissions, Roles: roles, Groups: groups, SystemConfigs: systemConfigs, AuthTypes: authTypes,
+		FirstName: item.Profile.FirstName, LastName: item.Profile.LastName, Username: username, HasPermissions: &item.HasPermissions,
+		System: &item.AppOrg.Organization.System, Permissions: permissions, Roles: roles, Groups: groups, SystemConfigs: systemConfigs, AuthTypes: authTypes,
 		DateCreated: dateCreated, DateUpdated: dateUpdated, Params: paramsData}
 }
 
