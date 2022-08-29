@@ -82,9 +82,7 @@ type applicationOrganization struct {
 
 	ServicesIDs []string `bson:"services_ids"`
 
-	IdentityProvidersSettings []model.IdentityProviderSetting `bson:"identity_providers_settings"`
-
-	SupportedAuthTypes []model.AuthTypesSupport `bson:"supported_auth_types"`
+	AuthTypes map[string]model.SupportedAuthType `bson:"auth_types"`
 
 	LoginsSessionsSetting model.LoginsSessionsSetting `bson:"logins_sessions_settings"`
 

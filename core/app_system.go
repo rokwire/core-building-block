@@ -333,37 +333,3 @@ func (app *application) sysDeleteAppConfig(id string) error {
 
 	return nil
 }
-
-func (app *application) sysCreateAuthTypes(code string, description string, isExternal bool,
-	isAnonymous bool, useCredentials bool, ignoreMFA bool, params map[string]interface{}) (*model.AuthType, error) {
-
-	authTypeID, _ := uuid.NewUUID()
-	authType := model.AuthType{ID: authTypeID.String(), Code: code, Description: description,
-		IsExternal: isExternal, IsAnonymous: isAnonymous, UseCredentials: useCredentials,
-		IgnoreMFA: ignoreMFA, Params: params}
-
-	insertedAuthType, err := app.storage.InsertAuthType(nil, authType)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthType, nil, err)
-	}
-	return insertedAuthType, nil
-}
-
-func (app *application) sysGetAuthTypes() ([]model.AuthType, error) {
-	getAuthTypes, err := app.storage.FindAuthTypes()
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeAuthType, nil, err)
-	}
-
-	return getAuthTypes, nil
-}
-
-func (app *application) SysUpdateAuthTypes(ID string, code string, description string, isExternal bool, isAnonymous bool, useCredentials bool, ignoreMFA bool, params map[string]interface{}) error {
-	err := app.storage.UpdateAuthTypes(ID, code, description, isExternal, isAnonymous, useCredentials, ignoreMFA, params)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAuthType, nil, err)
-	}
-
-	return err
-
-}

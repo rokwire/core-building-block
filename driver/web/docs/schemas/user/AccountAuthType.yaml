@@ -2,8 +2,6 @@ type: object
 properties:
   fields:
     $ref: "./AccountAuthTypeFields.yaml"
-  auth_type:
-    $ref: "../auth/AuthType.yaml"
   account:
     $ref: "./Account.yaml"
   credential:

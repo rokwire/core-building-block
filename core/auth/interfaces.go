@@ -31,13 +31,13 @@ type authType interface {
 	// Returns:
 	//	message (string): Success message if verification is required. If verification is not required, return ""
 	//	credentialValue (map): Credential value
-	signUp(authType model.AuthType, appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error)
+	signUp(appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error)
 
 	//signUpAdmin signs up a new admin user
 	// Returns:
 	//	password (string): newly generated password
 	//	credentialValue (map): Credential value
-	signUpAdmin(authType model.AuthType, appOrg model.ApplicationOrganization, identifier string, password string, newCredentialID string) (map[string]interface{}, map[string]interface{}, error)
+	signUpAdmin(appOrg model.ApplicationOrganization, identifier string, password string, newCredentialID string) (map[string]interface{}, map[string]interface{}, error)
 
 	//verifies credential (checks the verification code generated on email signup for email auth type)
 	// Returns:
@@ -77,11 +77,11 @@ type authType interface {
 // these are the different identity providers - illinois_oidc etc
 type externalAuthType interface {
 	//getLoginUrl retrieves and pre-formats a login url and params for the SSO provider
-	getLoginURL(authType model.AuthType, appType model.ApplicationType, redirectURI string, l *logs.Log) (string, map[string]interface{}, error)
+	getLoginURL(appType model.ApplicationType, appOrg model.ApplicationOrganization, redirectURI string, l *logs.Log) (string, map[string]interface{}, error)
 	//externalLogin logins in the external system and provides the authenticated user
-	externalLogin(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error)
+	externalLogin(appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error)
 	//refresh refreshes tokens
-	refresh(params map[string]interface{}, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error)
+	refresh(params map[string]interface{}, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error)
 }
 
 // anonymousAuthType is the interface for authentication for auth types which are anonymous
@@ -383,7 +383,7 @@ type APIs interface {
 	UnlinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, identifier string, l *logs.Log) (*model.Account, error)
 
 	//InitializeSystemAccount initializes the first system account
-	InitializeSystemAccount(context storage.TransactionContext, authType model.AuthType, appOrg model.ApplicationOrganization, allSystemPermission string, email string, password string, l *logs.Log) (string, error)
+	InitializeSystemAccount(context storage.TransactionContext, appOrg model.ApplicationOrganization, allSystemPermission string, email string, password string, l *logs.Log) (string, error)
 
 	//GrantAccountPermissions grants new permissions to an account after validating the assigner has required permissions
 	GrantAccountPermissions(context storage.TransactionContext, account *model.Account, permissionNames []string, assignerPermissions []string) error
@@ -446,9 +446,6 @@ type Storage interface {
 
 	PerformTransaction(func(context storage.TransactionContext) error) error
 
-	//AuthTypes
-	FindAuthType(codeOrID string) (*model.AuthType, error)
-
 	//LoginsSessions
 	InsertLoginSession(context storage.TransactionContext, session model.LoginSession) error
 	FindLoginSessions(context storage.TransactionContext, identifier string) ([]model.LoginSession, error)
@@ -466,7 +463,7 @@ type Storage interface {
 	///
 
 	//Accounts
-	FindAccount(context storage.TransactionContext, appOrgID string, authTypeID string, accountAuthTypeIdentifier string) (*model.Account, error)
+	// FindAccount(context storage.TransactionContext, appOrgID string, authType string, accountAuthTypeIdentifier string) (*model.Account, error)
 	FindAccountByID(context storage.TransactionContext, id string) (*model.Account, error)
 	InsertAccount(context storage.TransactionContext, account model.Account) (*model.Account, error)
 	SaveAccount(context storage.TransactionContext, account *model.Account) error
@@ -474,7 +471,7 @@ type Storage interface {
 
 	//Profiles
 	UpdateProfile(context storage.TransactionContext, profile model.Profile) error
-	FindProfiles(appID string, authTypeID string, accountAuthTypeIdentifier string) ([]model.Profile, error)
+	// FindProfiles(appID string, authType string, accountAuthTypeIdentifier string) ([]model.Profile, error)
 
 	//ServiceAccounts
 	FindServiceAccount(context storage.TransactionContext, accountID string, appID string, orgID string) (*model.ServiceAccount, error)
@@ -525,9 +522,6 @@ type Storage interface {
 	UpdateServiceReg(reg *model.ServiceReg) error
 	SaveServiceReg(reg *model.ServiceReg) error
 	DeleteServiceReg(serviceID string) error
-
-	//IdentityProviders
-	LoadIdentityProviders() ([]model.IdentityProvider, error)
 
 	//ServiceAuthorizations
 	FindServiceAuthorization(userID string, orgID string) (*model.ServiceAuthorization, error)

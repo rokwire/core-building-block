@@ -34,7 +34,6 @@ import (
 	"github.com/rokwire/core-auth-library-go/v2/sigauth"
 	"github.com/rokwire/core-auth-library-go/v2/tokenauth"
 	"golang.org/x/sync/syncmap"
-	"gopkg.in/go-playground/validator.v9"
 	"gopkg.in/gomail.v2"
 
 	"github.com/rokwire/logging-library-go/errors"
@@ -101,9 +100,6 @@ type Auth struct {
 	emailFrom   string
 	emailDialer *gomail.Dialer
 
-	cachedIdentityProviders *syncmap.Map //cache identityProviders
-	identityProvidersLock   *sync.RWMutex
-
 	apiKeys     *syncmap.Map //cache api keys / api_key (string) -> APIKey
 	apiKeysLock *sync.RWMutex
 
@@ -133,9 +129,6 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 	serviceAuthTypes := map[string]serviceAuthType{}
 	mfaTypes := map[string]mfaType{}
 
-	cachedIdentityProviders := &syncmap.Map{}
-	identityProvidersLock := &sync.RWMutex{}
-
 	apiKeys := &syncmap.Map{}
 	apiKeysLock := &sync.RWMutex{}
 
@@ -143,8 +136,7 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 
 	auth := &Auth{storage: storage, emailer: emailer, logger: logger, authTypes: authTypes, externalAuthTypes: externalAuthTypes, anonymousAuthTypes: anonymousAuthTypes,
 		serviceAuthTypes: serviceAuthTypes, mfaTypes: mfaTypes, authPrivKey: authPrivKey, ServiceRegManager: nil, serviceID: serviceID, host: host, minTokenExp: *minTokenExp,
-		maxTokenExp: *maxTokenExp, profileBB: profileBB, cachedIdentityProviders: cachedIdentityProviders, identityProvidersLock: identityProvidersLock,
-		timerDone: timerDone, emailDialer: emailDialer, emailFrom: smtpFrom, apiKeys: apiKeys, apiKeysLock: apiKeysLock}
+		maxTokenExp: *maxTokenExp, profileBB: profileBB, timerDone: timerDone, emailDialer: emailDialer, emailFrom: smtpFrom, apiKeys: apiKeys, apiKeysLock: apiKeysLock}
 
 	err := auth.storeReg()
 	if err != nil {
@@ -193,11 +185,6 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 	initPhoneMfa(auth)
 	initRecoveryMfa(auth)
 
-	err = auth.cacheIdentityProviders()
-	if err != nil {
-		logger.Warnf("NewAuth() failed to cache identity providers: %v", err)
-	}
-
 	err = auth.cacheAPIKeys()
 	if err != nil {
 		logger.Warnf("NewAuth() failed to cache api keys: %v", err)
@@ -207,17 +194,11 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 
 }
 
-func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization,
+func (a *Auth) applyExternalAuthType(authImpl externalAuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization,
 	creds string, params string, regProfile model.Profile, regPreferences map[string]interface{}, admin bool, l *logs.Log) (*model.AccountAuthType, map[string]interface{}, []model.MFAType, map[string]string, error) {
 	var accountAuthType *model.AccountAuthType
 	var mfaTypes []model.MFAType
 	var externalIDs map[string]string
-
-	//external auth type
-	authImpl, err := a.getExternalAuthTypeImpl(authType)
-	if err != nil {
-		return nil, nil, nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeExternalAuthType, nil, err)
-	}
 
 	//1. get the user from the external system
 	//var externalUser *model.ExternalSystemUser
@@ -542,12 +523,7 @@ func (a *Auth) updateProfileIfNeeded(account model.Account, externalUser model.E
 	return nil
 }
 
-func (a *Auth) applyAnonymousAuthType(authType model.AuthType, creds string) (string, map[string]interface{}, error) { //auth type
-	authImpl, err := a.getAnonymousAuthTypeImpl(authType)
-	if err != nil {
-		return "", nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeAnonymousAuthType, nil, err)
-	}
-
+func (a *Auth) applyAnonymousAuthType(authImpl anonymousAuthType, creds string) (string, map[string]interface{}, error) { //auth type
 	//Check the credentials
 	anonymousID, anonymousParams, err := authImpl.checkCredentials(creds)
 	if err != nil {
@@ -557,15 +533,8 @@ func (a *Auth) applyAnonymousAuthType(authType model.AuthType, creds string) (st
 	return anonymousID, anonymousParams, nil
 }
 
-func (a *Auth) applyAuthType(authType model.AuthType, appOrg model.ApplicationOrganization, creds string, params string,
+func (a *Auth) applyAuthType(authImpl authType, appOrg model.ApplicationOrganization, creds string, params string,
 	regProfile model.Profile, regPreferences map[string]interface{}, admin bool, l *logs.Log) (string, *model.AccountAuthType, []model.MFAType, map[string]string, error) {
-
-	//auth type
-	authImpl, err := a.getAuthTypeImpl(authType)
-	if err != nil {
-		return "", nil, nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
-	}
-
 	//check if the user exists check
 	userIdentifier, err := authImpl.getUserIdentifier(creds)
 	if err != nil {
@@ -894,9 +863,9 @@ func (a *Auth) validateAPIKey(apiKey string, appID string) error {
 	return nil
 }
 
-func (a *Auth) canSignIn(account *model.Account, authTypeID string, userIdentifier string) bool {
+func (a *Auth) canSignIn(account *model.Account, authType string, userIdentifier string) bool {
 	if account != nil {
-		aat := account.GetAccountAuthType(authTypeID, userIdentifier)
+		aat := account.GetAccountAuthType(authType, userIdentifier)
 		return aat == nil || !aat.Linked || !aat.Unverified
 	}
 
@@ -933,31 +902,31 @@ func (a *Auth) isSignUp(accountExists bool, params string, l *logs.Log) (bool, e
 	return true, nil
 }
 
-func (a *Auth) getAccount(authenticationType string, userIdentifier string, apiKey string, appTypeIdentifier string, orgID string) (*model.Account, string, error) {
+func (a *Auth) getAccount(authenticationType string, userIdentifier string, apiKey string, appTypeIdentifier string, orgID string) (*model.Account, error) {
 	//validate if the provided auth type is supported by the provided application and organization
-	authType, _, appOrg, err := a.validateAuthType(authenticationType, appTypeIdentifier, orgID)
+	_, appOrg, err := a.validateAuthType(authenticationType, appTypeIdentifier, orgID)
 	if err != nil {
-		return nil, "", errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
 	}
 
 	//do not allow for admins
 	if appOrg.Application.Admin {
-		return nil, "", errors.New("not allowed for admins")
+		return nil, errors.New("not allowed for admins")
 	}
 
 	//TODO: Ideally we would not make many database calls before validating the API key. Currently needed to get app ID
 	err = a.validateAPIKey(apiKey, appOrg.Application.ID)
 	if err != nil {
-		return nil, "", errors.WrapErrorData(logutils.StatusInvalid, model.TypeAPIKey, nil, err)
+		return nil, errors.WrapErrorData(logutils.StatusInvalid, model.TypeAPIKey, nil, err)
 	}
 
 	//check if the account exists check
-	account, err := a.storage.FindAccount(nil, appOrg.ID, authType.ID, userIdentifier)
+	account, err := a.storage.FindAccount(nil, appOrg.ID, authenticationType, userIdentifier)
 	if err != nil {
-		return nil, "", errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
 
-	return account, authType.ID, nil
+	return account, nil
 }
 
 func (a *Auth) findAccountAuthType(account *model.Account, authType *model.AuthType, identifier string) (*model.AccountAuthType, error) {
@@ -2000,39 +1969,33 @@ func (a *Auth) registerMfaType(name string, mfa mfaType) error {
 	return nil
 }
 
-func (a *Auth) validateAuthType(authenticationType string, appTypeIdentifier string, orgID string) (*model.AuthType, *model.ApplicationType, *model.ApplicationOrganization, error) {
-	//get the auth type
-	authType, err := a.storage.FindAuthType(authenticationType)
-	if err != nil || authType == nil {
-		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, logutils.StringArgs(authenticationType), err)
-	}
-
+func (a *Auth) validateAuthType(authenticationType string, appTypeIdentifier string, orgID string) (*model.ApplicationType, *model.ApplicationOrganization, error) {
 	//get the app type
 	applicationType, err := a.storage.FindApplicationType(appTypeIdentifier)
 	if err != nil {
-		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationType, logutils.StringArgs(appTypeIdentifier), err)
+		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationType, logutils.StringArgs(appTypeIdentifier), err)
 
 	}
 	if applicationType == nil {
-		return nil, nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationType, logutils.StringArgs(appTypeIdentifier))
+		return nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationType, logutils.StringArgs(appTypeIdentifier))
 	}
 
 	//get the app org
 	applicationID := applicationType.Application.ID
 	appOrg, err := a.storage.FindApplicationOrganization(applicationID, orgID)
 	if err != nil {
-		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": applicationID, "org_id": orgID}, err)
+		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": applicationID, "org_id": orgID}, err)
 	}
 	if appOrg == nil {
-		return nil, nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": applicationID, "org_id": orgID})
+		return nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": applicationID, "org_id": orgID})
 	}
 
 	//check if the auth type is supported for this application and organization
-	if !appOrg.IsAuthTypeSupported(*applicationType, *authType) {
-		return nil, nil, nil, errors.ErrorAction(logutils.ActionValidate, "not supported auth type for application and organization", &logutils.FieldArgs{"app_type_id": applicationType.ID, "auth_type_id": authType.ID})
+	if !appOrg.IsAuthTypeSupported(authenticationType) {
+		return nil, nil, errors.ErrorData(logutils.StatusInvalid, typeAuthType, &logutils.FieldArgs{"auth_type_id": authenticationType, "app_id": applicationID, "org_id": orgID})
 	}
 
-	return authType, applicationType, appOrg, nil
+	return applicationType, appOrg, nil
 }
 
 func (a *Auth) validateAuthTypeForAppOrg(authenticationType string, appID string, orgID string) (*model.AuthType, *model.ApplicationOrganization, error) {
@@ -2058,35 +2021,33 @@ func (a *Auth) validateAuthTypeForAppOrg(authenticationType string, appID string
 	return nil, nil, errors.ErrorData(logutils.StatusInvalid, typeAuthType, &logutils.FieldArgs{"app_org_id": appOrg.ID, "auth_type": authenticationType})
 }
 
-func (a *Auth) getAuthTypeImpl(authType model.AuthType) (authType, error) {
-	if auth, ok := a.authTypes[authType.Code]; ok {
+func (a *Auth) getAuthTypeImpl(authType string) (authType, error) {
+	if auth, ok := a.authTypes[authType]; ok {
 		return auth, nil
 	}
 
-	return nil, errors.ErrorData(logutils.StatusInvalid, typeAuthType, logutils.StringArgs(authType.Code))
+	return nil, errors.ErrorData(logutils.StatusInvalid, typeAuthType, logutils.StringArgs(authType))
 }
 
-func (a *Auth) getExternalAuthTypeImpl(authType model.AuthType) (externalAuthType, error) {
-	key := authType.Code
-
+func (a *Auth) getExternalAuthTypeImpl(authType string) (externalAuthType, error) {
 	//illinois_oidc, other_oidc
-	if strings.HasSuffix(authType.Code, "_oidc") {
-		key = "oidc"
+	if strings.HasSuffix(authType, "_oidc") {
+		authType = "oidc"
 	}
 
-	if auth, ok := a.externalAuthTypes[key]; ok {
+	if auth, ok := a.externalAuthTypes[authType]; ok {
 		return auth, nil
 	}
 
-	return nil, errors.ErrorData(logutils.StatusInvalid, typeExternalAuthType, logutils.StringArgs(key))
+	return nil, errors.ErrorData(logutils.StatusInvalid, typeExternalAuthType, logutils.StringArgs(authType))
 }
 
-func (a *Auth) getAnonymousAuthTypeImpl(authType model.AuthType) (anonymousAuthType, error) {
-	if auth, ok := a.anonymousAuthTypes[authType.Code]; ok {
+func (a *Auth) getAnonymousAuthTypeImpl(authType string) (anonymousAuthType, error) {
+	if auth, ok := a.anonymousAuthTypes[authType]; ok {
 		return auth, nil
 	}
 
-	return nil, errors.ErrorData(logutils.StatusInvalid, typeAnonymousAuthType, logutils.StringArgs(authType.Code))
+	return nil, errors.ErrorData(logutils.StatusInvalid, typeAnonymousAuthType, logutils.StringArgs(authType))
 }
 
 func (a *Auth) getServiceAuthTypeImpl(serviceAuthType string) (serviceAuthType, error) {
@@ -2317,60 +2278,6 @@ func (a *Auth) storeReg() error {
 	return nil
 }
 
-// cacheIdentityProviders caches the identity providers
-func (a *Auth) cacheIdentityProviders() error {
-	a.logger.Info("cacheIdentityProviders..")
-
-	identityProviders, err := a.storage.LoadIdentityProviders()
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionFind, model.TypeIdentityProvider, nil, err)
-	}
-
-	a.setCachedIdentityProviders(identityProviders)
-
-	return nil
-}
-
-func (a *Auth) setCachedIdentityProviders(identityProviders []model.IdentityProvider) {
-	a.identityProvidersLock.Lock()
-	defer a.identityProvidersLock.Unlock()
-
-	a.cachedIdentityProviders = &syncmap.Map{}
-	validate := validator.New()
-
-	for _, idPr := range identityProviders {
-		err := validate.Struct(idPr)
-		if err == nil {
-			a.cachedIdentityProviders.Store(idPr.ID, idPr)
-		} else {
-			a.logger.Errorf("failed to validate and cache identity provider with id %s: %s", idPr.ID, err.Error())
-		}
-	}
-}
-
-func (a *Auth) getCachedIdentityProviderConfig(id string, appTypeID string) (*model.IdentityProviderConfig, error) {
-	a.identityProvidersLock.RLock()
-	defer a.identityProvidersLock.RUnlock()
-
-	errArgs := &logutils.FieldArgs{"id": id, "app_type_id": appTypeID}
-
-	item, _ := a.cachedIdentityProviders.Load(id)
-	if item != nil {
-		identityProvider, ok := item.(model.IdentityProvider)
-		if !ok {
-			return nil, errors.ErrorAction(logutils.ActionCast, model.TypeIdentityProvider, errArgs)
-		}
-		//find the identity provider config
-		for _, idPrConfig := range identityProvider.Configs {
-			if idPrConfig.AppTypeID == appTypeID {
-				return &idPrConfig, nil
-			}
-		}
-		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeIdentityProviderConfig, errArgs)
-	}
-	return nil, errors.ErrorData(logutils.StatusMissing, model.TypeOrganization, errArgs)
-}
-
 func (a *Auth) cacheAPIKeys() error {
 	apiKeys, err := a.storage.LoadAPIKeys()
 	if err != nil {
@@ -2585,11 +2492,6 @@ func NewLocalServiceRegLoader(storage Storage) *LocalServiceRegLoaderImpl {
 type StorageListener struct {
 	auth *Auth
 	storage.DefaultListenerImpl
-}
-
-// OnIdentityProvidersUpdated notifies that identity providers have been updated
-func (al *StorageListener) OnIdentityProvidersUpdated() {
-	al.auth.cacheIdentityProviders()
 }
 
 // OnAPIKeysUpdated notifies api keys have been updated

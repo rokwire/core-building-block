@@ -4,8 +4,6 @@ properties:
     $ref: "./LoginSessionFields.yaml"
   app_org:
     $ref: "../application/ApplicationOrganization.yaml"
-  auth_type:
-    $ref: "./AuthType.yaml"
   app_type:
     $ref: "../application/ApplicationType.yaml"
   account_auth_type:

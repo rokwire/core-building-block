@@ -61,7 +61,6 @@ type accountGroup struct {
 
 type accountAuthType struct {
 	ID           string                 `bson:"id"`
-	AuthTypeID   string                 `bson:"auth_type_id"`
 	AuthTypeCode string                 `bson:"auth_type_code"`
 	Identifier   string                 `bson:"identifier"`
 	Params       map[string]interface{} `bson:"params"`
@@ -120,7 +119,6 @@ type device struct {
 type credential struct {
 	ID string `bson:"_id"`
 
-	AuthTypeID        string                 `bson:"auth_type_id"`
 	AccountsAuthTypes []string               `bson:"account_auth_types"`
 	Verified          bool                   `bson:"verified"`
 	Value             map[string]interface{} `bson:"value"`

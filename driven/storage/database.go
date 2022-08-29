@@ -36,8 +36,6 @@ type database struct {
 	dbClient *mongo.Client
 
 	apiKeys                         *collectionWrapper
-	authTypes                       *collectionWrapper
-	identityProviders               *collectionWrapper
 	accounts                        *collectionWrapper
 	devices                         *collectionWrapper
 	credentials                     *collectionWrapper
@@ -79,18 +77,6 @@ func (m *database) start() error {
 
 	//apply checks
 	db := client.Database(m.mongoDBName)
-
-	authTypes := &collectionWrapper{database: m, coll: db.Collection("auth_types")}
-	err = m.applyAuthTypesChecks(authTypes)
-	if err != nil {
-		return err
-	}
-
-	identityProviders := &collectionWrapper{database: m, coll: db.Collection("identity_providers")}
-	err = m.applyIdentityProvidersChecks(identityProviders)
-	if err != nil {
-		return err
-	}
 
 	accounts := &collectionWrapper{database: m, coll: db.Collection("accounts")}
 	err = m.applyAccountsChecks(accounts)
@@ -192,8 +178,6 @@ func (m *database) start() error {
 	m.db = db
 	m.dbClient = client
 
-	m.authTypes = authTypes
-	m.identityProviders = identityProviders
 	m.accounts = accounts
 	m.devices = devices
 	m.credentials = credentials
@@ -212,8 +196,6 @@ func (m *database) start() error {
 	m.permissions = permissions
 
 	go m.apiKeys.Watch(nil, m.logger)
-	go m.authTypes.Watch(nil, m.logger)
-	go m.identityProviders.Watch(nil, m.logger)
 	go m.serviceRegs.Watch(nil, m.logger)
 	go m.organizations.Watch(nil, m.logger)
 	go m.applications.Watch(nil, m.logger)
@@ -222,20 +204,6 @@ func (m *database) start() error {
 
 	m.listeners = []Listener{}
 
-	return nil
-}
-
-func (m *database) applyAuthTypesChecks(authenticationTypes *collectionWrapper) error {
-	m.logger.Info("apply auth types checks.....")
-
-	m.logger.Info("auth types check passed")
-	return nil
-}
-
-func (m *database) applyIdentityProvidersChecks(identityProviders *collectionWrapper) error {
-	m.logger.Info("apply identity providers checks.....")
-
-	m.logger.Info("identity providers check passed")
 	return nil
 }
 
@@ -279,12 +247,6 @@ func (m *database) applyDevicesChecks(devices *collectionWrapper) error {
 
 func (m *database) applyCredentialChecks(credentials *collectionWrapper) error {
 	m.logger.Info("apply credentials checks.....")
-
-	// Add user_auth_type_id index
-	err := credentials.AddIndex(bson.D{primitive.E{Key: "user_auth_type_id", Value: 1}}, false)
-	if err != nil {
-		return err
-	}
 
 	m.logger.Info("credentials check passed")
 	return nil
@@ -420,7 +382,7 @@ func (m *database) applyApplicationsChecks(applications *collectionWrapper) erro
 func (m *database) applyApplicationsOrganizationsChecks(applicationsOrganizations *collectionWrapper) error {
 	m.logger.Info("apply applications organizations checks.....")
 
-	//add compound unique index - application + auth type + auth type identifier
+	//add compound unique index - application + organization
 	err := applicationsOrganizations.AddIndex(bson.D{primitive.E{Key: "app_id", Value: 1},
 		primitive.E{Key: "org_id", Value: 1}},
 		true)
@@ -541,18 +503,6 @@ func (m *database) onDataChanged(changeDoc map[string]interface{}) {
 
 		for _, listener := range m.listeners {
 			go listener.OnAPIKeysUpdated()
-		}
-	case "auth_types":
-		m.logger.Info("auth_types collection changed")
-
-		for _, listener := range m.listeners {
-			go listener.OnAuthTypesUpdated()
-		}
-	case "identity_providers":
-		m.logger.Info("identity_providers collection changed")
-
-		for _, listener := range m.listeners {
-			go listener.OnIdentityProvidersUpdated()
 		}
 	case "service_regs":
 		m.logger.Info("service_regs collection changed")

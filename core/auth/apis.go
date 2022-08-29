@@ -78,7 +78,7 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 	//TODO - analyse what should go in one transaction
 
 	//validate if the provided auth type is supported by the provided application and organization
-	authType, appType, appOrg, err := a.validateAuthType(authenticationType, appTypeIdentifier, orgID)
+	appType, appOrg, err := a.validateAuthType(authenticationType, appTypeIdentifier, orgID)
 	if err != nil {
 		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
 	}
@@ -107,26 +107,26 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 	var state string
 
 	//get the auth type implementation for the auth type
-	if authType.IsAnonymous && !admin {
+	if authImpl, err := a.getAnonymousAuthTypeImpl(authenticationType); err == nil && !admin {
 		anonymous = true
 
 		anonymousID := ""
-		anonymousID, responseParams, err = a.applyAnonymousAuthType(*authType, creds)
+		anonymousID, responseParams, err = a.applyAnonymousAuthType(authImpl, creds)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction("apply anonymous auth type", "user", nil, err)
 		}
 		sub = anonymousID
 
-	} else if authType.IsExternal {
-		accountAuthType, responseParams, mfaTypes, externalIDs, err = a.applyExternalAuthType(*authType, *appType, *appOrg, creds, params, profile, preferences, admin, l)
+	} else if authImpl, err := a.getExternalAuthTypeImpl(authenticationType); err == nil {
+		accountAuthType, responseParams, mfaTypes, externalIDs, err = a.applyExternalAuthType(authImpl, *appType, *appOrg, creds, params, profile, preferences, admin, l)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction("apply external auth type", "user", nil, err)
 
 		}
 
 		sub = accountAuthType.Account.ID
-	} else {
-		message, accountAuthType, mfaTypes, externalIDs, err = a.applyAuthType(*authType, *appOrg, creds, params, profile, preferences, admin, l)
+	} else if authImpl, err := a.getAuthTypeImpl(authenticationType); err == nil {
+		message, accountAuthType, mfaTypes, externalIDs, err = a.applyAuthType(authImpl, *appOrg, creds, params, profile, preferences, admin, l)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction("apply auth type", "user", nil, err)
 		}
@@ -138,6 +138,8 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 		sub = accountAuthType.Account.ID
 
 		//the credentials are valid
+	} else {
+		return nil, nil, nil, errors.ErrorData(logutils.StatusInvalid, typeAuthType, logutils.StringArgs(authenticationType))
 	}
 
 	//check if account is enrolled in MFA
@@ -239,13 +241,13 @@ func (a *Auth) CanSignIn(authenticationType string, userIdentifier string, apiKe
 //	Returns:
 //		canLink (bool): valid when error is nil
 func (a *Auth) CanLink(authenticationType string, userIdentifier string, apiKey string, appTypeIdentifier string, orgID string) (bool, error) {
-	account, authTypeID, err := a.getAccount(authenticationType, userIdentifier, apiKey, appTypeIdentifier, orgID)
+	account, err := a.getAccount(authenticationType, userIdentifier, apiKey, appTypeIdentifier, orgID)
 	if err != nil {
 		return false, errors.WrapErrorAction(logutils.ActionGet, model.TypeAccount, nil, err)
 	}
 
 	if account != nil {
-		aat := account.GetAccountAuthType(authTypeID, userIdentifier)
+		aat := account.GetAccountAuthType(authenticationType, userIdentifier)
 		return (aat != nil && aat.Unverified), nil
 	}
 
@@ -1614,10 +1616,10 @@ func (a *Auth) DeleteAccount(id string) error {
 }
 
 // InitializeSystemAccount initializes the first system account
-func (a *Auth) InitializeSystemAccount(context storage.TransactionContext, authType model.AuthType, appOrg model.ApplicationOrganization,
-	allSystemPermission string, email string, password string, l *logs.Log) (string, error) {
+func (a *Auth) InitializeSystemAccount(context storage.TransactionContext, appOrg model.ApplicationOrganization, allSystemPermission string,
+	email string, password string, l *logs.Log) (string, error) {
 	//auth type
-	authImpl, err := a.getAuthTypeImpl(authType)
+	authImpl, err := a.getAuthTypeImpl(AuthTypeEmail)
 	if err != nil {
 		return "", errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
 	}

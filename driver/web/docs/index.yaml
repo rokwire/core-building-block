@@ -185,10 +185,6 @@ paths:
     $ref: "./resources/system/application-configsId.yaml"
   /system/api-keys:
     $ref: "./resources/system/api-keys.yaml"
-  /system/auth-types:
-    $ref: "./resources/system/auth-types.yaml"
-  /system/auth-types/{id}:
-    $ref: "./resources/system/auth-typesID.yaml"
 
   #ui
   /ui/credential/reset:

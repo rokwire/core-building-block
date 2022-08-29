@@ -40,6 +40,12 @@ const (
 	TypeApplicationOrganization logutils.MessageDataType = "application organization"
 	//TypeApplicationType ...
 	TypeApplicationType logutils.MessageDataType = "application type"
+	//TypeAuthTypeConfig ...
+	TypeAuthTypeConfig logutils.MessageDataType = "auth type config"
+	//TypeApplicationTypeAuthConfig ...
+	TypeApplicationTypeAuthConfig logutils.MessageDataType = "application type auth config"
+	//TypeIdentityProviderSettings ...
+	TypeIdentityProviderSettings logutils.MessageDataType = "identity provider settings"
 	//TypeApplicationTypeVersionList ...
 	TypeApplicationTypeVersionList logutils.MessageDataType = "application type supported version list"
 	//TypeApplicationUserRelations ...
@@ -251,9 +257,7 @@ type ApplicationOrganization struct {
 
 	ServicesIDs []string //which services are used for this app/org
 
-	IdentityProvidersSettings []IdentityProviderSetting
-
-	SupportedAuthTypes []AuthTypesSupport //supported auth types for this organization in this application
+	AuthTypes map[string]SupportedAuthType //supported auth types for this organization in this application
 
 	LoginsSessionsSetting LoginsSessionsSetting
 
@@ -261,28 +265,33 @@ type ApplicationOrganization struct {
 	DateUpdated *time.Time
 }
 
-// FindIdentityProviderSetting finds the identity provider setting for the application
-func (ao ApplicationOrganization) FindIdentityProviderSetting(identityProviderID string) *IdentityProviderSetting {
-	for _, idPrSetting := range ao.IdentityProvidersSettings {
-		if idPrSetting.IdentityProviderID == identityProviderID {
-			return &idPrSetting
-		}
+// GetAuthTypeConfig finds the configuration for the given auth type
+func (ao ApplicationOrganization) GetAuthTypeConfig(authType string) map[string]interface{} {
+	supportedType, exists := ao.AuthTypes[authType]
+	if !exists {
+		return nil
 	}
-	return nil
+	return supportedType.Configs
+}
+
+// GetAppTypeConfig finds the app type auth configuration for the given auth type and app type ID
+func (ao ApplicationOrganization) GetAppTypeAuthConfig(authType string, appTypeID string) map[string]interface{} {
+	supportedType, exists := ao.AuthTypes[authType]
+	if !exists {
+		return nil
+	}
+
+	appTypeConfig, exists := supportedType.AppTypeConfigs[appTypeID]
+	if !exists {
+		return nil
+	}
+	return appTypeConfig
 }
 
 // IsAuthTypeSupported checks if an auth type is supported for application type
-func (ao ApplicationOrganization) IsAuthTypeSupported(appType ApplicationType, authType AuthType) bool {
-	for _, sat := range ao.SupportedAuthTypes {
-		if sat.AppTypeID == appType.ID {
-			for _, at := range sat.SupportedAuthTypes {
-				if at.AuthTypeID == authType.ID {
-					return true
-				}
-			}
-		}
-	}
-	return false
+func (ao ApplicationOrganization) IsAuthTypeSupported(authType string) bool {
+	_, supported := ao.AuthTypes[authType]
+	return supported
 }
 
 // IdentityProviderSetting represents identity provider setting for an organization in an application
@@ -296,8 +305,6 @@ func (ao ApplicationOrganization) IsAuthTypeSupported(appType ApplicationType, a
 //	 	for the UIUC application the Illinois group "urn:mace:uiuc.edu:urbana:authman:app-rokwire-service-policy-rokwire groups access" is mapped to an application group called "groups access"
 //	 	for the Safer Illinois application the Illinois group "urn:mace:uiuc.edu:urbana:authman:app-rokwire-service-policy-rokwire health test verify" is mapped to an application group called "tests verifiers"
 type IdentityProviderSetting struct {
-	IdentityProviderID string `bson:"identity_provider_id"`
-
 	UserIdentifierField string            `bson:"user_identifier_field"`
 	ExternalIDFields    map[string]string `bson:"external_id_fields"`
 
@@ -354,14 +361,10 @@ type ApplicationType struct {
 	Application Application
 }
 
-// AuthTypesSupport represents supported auth types for an organization in an application type with configs/params
-type AuthTypesSupport struct {
-	AppTypeID string `bson:"app_type_id"`
-
-	SupportedAuthTypes []struct {
-		AuthTypeID string                 `bson:"auth_type_id"`
-		Params     map[string]interface{} `bson:"params"`
-	} `bson:"supported_auth_types"`
+// SupportedAuthType represents a supported auth type for an application organization with configs
+type SupportedAuthType struct {
+	Configs        map[string]interface{}            `bson:"configs,omitempty"`
+	AppTypeConfigs map[string]map[string]interface{} `bson:"app_type_configs,omitempty"`
 }
 
 // ApplicationConfig represents app configs
