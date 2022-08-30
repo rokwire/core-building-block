@@ -88,7 +88,7 @@ func main() {
 	githubWebhookConfigPath := envLoader.GetAndLogEnvVar("GITHUB_APP_CONFIG_WEBHOOK_CONFIG_PATH", false, false)
 	githubAppConfigBranch := envLoader.GetAndLogEnvVar("GITHUB_APP_CONFIG_BRANCH", false, false)
 
-	githubAdapter := github.NewGitHubAdapter(githubToken, githubOrganizationName, githubRepoName, githubWebhookConfigPath, githubAppConfigBranch, storageAdapter, logger)
+	githubAdapter := github.NewGitHubAdapter(githubToken, githubOrganizationName, githubRepoName, githubWebhookConfigPath, githubAppConfigBranch, logger)
 	err = githubAdapter.Start()
 	if err != nil {
 		logger.Warnf("Cannot start the GitHub adapter: %v", err)

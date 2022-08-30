@@ -20,7 +20,6 @@ import (
 	Def "core-building-block/driver/web/docs/gen"
 	"encoding/json"
 	"net/http"
-	"strings"
 
 	"github.com/google/go-github/v44/github"
 	"github.com/rokwire/core-auth-library-go/v2/tokenauth"
@@ -64,25 +63,7 @@ func (h DefaultApisHandler) handleWebhookConfigChange(l *logs.Log, r *http.Reque
 		return l.HttpResponseErrorData(logutils.MessageDataStatus(logutils.ActionValidate), model.TypeWebhookSecretToken, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData model.WebhookRequest
-	err = json.Unmarshal(data, &requestData)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeApplicationConfigWebhook, nil, err, http.StatusBadRequest, true)
-	}
-	gitRefs := strings.Split(requestData.Ref, "/")
-	if len(gitRefs) == 0 {
-		return l.HttpResponseErrorData(logutils.StatusInvalid, logutils.MessageDataType("github webhook repository branch"), nil, nil, http.StatusBadRequest, false)
-	}
-	branchName := gitRefs[len(gitRefs)-1]
-	if branchName != h.githubAppConfigBranch {
-		return l.HttpResponseErrorData(logutils.StatusInvalid, logutils.MessageDataType("github webhook repository branch"), nil, nil, http.StatusBadRequest, false)
-	}
-
-	commits := requestData.Commits
-	if len(commits) < 1 {
-		return l.HttpResponseErrorData(logutils.StatusInvalid, model.TypeGithubCommit, nil, nil, http.StatusBadRequest, false)
-	}
-	err = h.coreAPIs.Default.ProcessGitHubAppConfigWebhook(commits, l)
+	err = h.coreAPIs.Default.ProcessVCSAppConfigWebhook(data, l)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeApplicationConfigWebhook, nil, err, http.StatusInternalServerError, true)
 	}

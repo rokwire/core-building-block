@@ -19,6 +19,7 @@ import (
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -46,18 +47,19 @@ type APIs struct {
 	systemAPIKey            string
 	systemAccountEmail      string
 	systemAccountPassword   string
-
-	logger *logs.Logger
 }
 
 // Start starts the core part of the application
 func (c *APIs) Start() {
-	c.app.start()
+	err := c.app.start()
+	if err != nil {
+		c.app.logger.Fatalf("error initializing application: %s", err.Error())
+	}
 	c.Auth.Start()
 
-	err := c.storeSystemData()
+	err = c.storeSystemData()
 	if err != nil {
-		c.logger.Fatalf("error initializing system data: %s", err.Error())
+		c.app.logger.Fatalf("error initializing system data: %s", err.Error())
 	}
 }
 
@@ -225,7 +227,7 @@ func (c *APIs) storeSystemData() error {
 			if c.systemAccountEmail == "" || c.systemAccountPassword == "" {
 				return errors.ErrorData(logutils.StatusMissing, "initial system account email or password", nil)
 			}
-			newDocuments["account"], err = c.Auth.InitializeSystemAccount(context, *emailAuthType, systemAppOrg, model.PermissionAllSystemCore, c.systemAccountEmail, c.systemAccountPassword, c.logger.NewRequestLog(nil))
+			newDocuments["account"], err = c.Auth.InitializeSystemAccount(context, *emailAuthType, systemAppOrg, model.PermissionAllSystemCore, c.systemAccountEmail, c.systemAccountPassword, c.app.logger.NewRequestLog(nil))
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionInitialize, "system account", nil, err)
 			}
@@ -245,17 +247,19 @@ func (c *APIs) storeSystemData() error {
 			if doc == "auth_type" {
 				fields["code"] = auth.AuthTypeEmail
 			}
-			c.logger.InfoWithFields(fmt.Sprintf("new system %s created", doc), fields)
+			c.app.logger.InfoWithFields(fmt.Sprintf("new system %s created", doc), fields)
 		}
 	}
 	return err
 }
 
 // NewCoreAPIs creates new CoreAPIs
-func NewCoreAPIs(env string, version string, build string, storage Storage, github GitHub, auth auth.APIs, systemInitSettings map[string]string, logger *logs.Logger) *APIs {
+func NewCoreAPIs(env string, version string, build string, storage Storage, github VCS, auth auth.APIs, systemInitSettings map[string]string, logger *logs.Logger) *APIs {
 	//add application instance
 	listeners := []ApplicationListener{}
-	application := application{env: env, version: version, build: build, storage: storage, github: github, listeners: listeners, auth: auth}
+	cachedWebhookConfigs := &model.WebhookConfig{}
+	webhookConfigsLock := &sync.RWMutex{}
+	application := application{env: env, version: version, build: build, storage: storage, github: github, listeners: listeners, auth: auth, logger: logger, cachedWebhookConfig: cachedWebhookConfigs, webhookConfigsLock: webhookConfigsLock}
 
 	//add coreAPIs instance
 	servicesImpl := &servicesImpl{app: &application, auth: auth}
@@ -269,7 +273,7 @@ func NewCoreAPIs(env string, version string, build string, storage Storage, gith
 	coreAPIs := APIs{Default: defaultImpl, Services: servicesImpl, Administration: administrationImpl, Encryption: encryptionImpl,
 		BBs: bbsImpl, System: systemImpl, Auth: auth, app: &application, systemAppTypeIdentifier: systemInitSettings["app_type_id"],
 		systemAppTypeName: systemInitSettings["app_type_name"], systemAPIKey: systemInitSettings["api_key"],
-		systemAccountEmail: systemInitSettings["email"], systemAccountPassword: systemInitSettings["password"], logger: logger}
+		systemAccountEmail: systemInitSettings["email"], systemAccountPassword: systemInitSettings["password"]}
 
 	return &coreAPIs
 }
@@ -281,12 +285,8 @@ type defaultImpl struct {
 	app *application
 }
 
-func (s *defaultImpl) ProcessGitHubAppConfigWebhook(commits []model.Commit, l *logs.Log) error {
-	return s.app.processGitHubAppConfigWebhook(commits, l)
-}
-
-func (s *defaultImpl) UpdateCachedWebhookConfigs() error {
-	return s.app.updateCachedWebhookConfigs()
+func (s *defaultImpl) ProcessVCSAppConfigWebhook(data []byte, l *logs.Log) error {
+	return s.app.processVCSAppConfigWebhook(data, l)
 }
 
 // servicesImpl

@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package model
+package github
 
-// WebhookRequest is the request from github webhook
-type WebhookRequest struct {
+// webhookRequest is the request from github webhook
+type webhookRequest struct {
 	Ref     string   `json:"ref"`
 	Before  string   `json:"before"`
 	After   string   `json:"after"`
@@ -24,20 +24,34 @@ type WebhookRequest struct {
 	Forced  bool     `json:"forced"`
 	BaseRef string   `json:"base_ref"`
 	Compare string   `json:"compare"`
-	Commits []Commit `json:"commits"`
+	Commits []commit `json:"commits"`
 }
 
-// Commit is the commit information of github push events
-type Commit struct {
+// commit is the commit information of github push events
+type commit struct {
 	ID        string    `json:"id"`
 	TreeID    string    `json:"tree_id"`
 	Distinct  bool      `json:"distinct"`
 	Message   string    `json:"message"`
 	Timestamp string    `json:"timestamp"`
 	URL       string    `json:"url"`
-	Author    Author    `json:"author"`
-	Committer Committer `json:"committer"`
+	Author    author    `json:"author"`
+	Committer committer `json:"committer"`
 	Added     []string  `json:"added"`
 	Removed   []string  `json:"removed"`
 	Modified  []string  `json:"modified"`
+}
+
+// author is the author of the commit
+type author struct {
+	Name     string `json:"name"`
+	Email    string `json:"email"`
+	Username string `json:"username"`
+}
+
+// committer is the commiter of the commit
+type committer struct {
+	Name     string `json:"name"`
+	Email    string `json:"email"`
+	Username string `json:"username"`
 }

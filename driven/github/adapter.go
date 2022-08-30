@@ -2,25 +2,20 @@ package github
 
 import (
 	"context"
-	"core-building-block/core"
 	"core-building-block/core/model"
-	"core-building-block/driven/storage"
 	"encoding/json"
-	"fmt"
-	"sync"
+	"strconv"
+	"strings"
 
 	"github.com/google/go-github/v44/github"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
 	"golang.org/x/oauth2"
-	"gopkg.in/go-playground/validator.v9"
 )
 
 // Adapter implements the GitHub interface
 type Adapter struct {
-	storage core.Storage
-
 	githubToken             string
 	githubOrganizationName  string
 	githubRepoName          string
@@ -28,102 +23,11 @@ type Adapter struct {
 	githubAppConfigBranch   string
 
 	logger *logs.Logger
-
-	cachedWebhookConfig *model.WebhookConfig
-	webhookConfigsLock  *sync.RWMutex
 }
 
 // Start starts the github adapter
 func (a *Adapter) Start() error {
-	storageListener := StorageListener{adapter: a}
-	a.storage.RegisterStorageListener(&storageListener)
-
-	err := a.cacheWebhookConfigsFromGit()
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionCache, model.TypeWebhookConfig, nil, err)
-	}
-
-	return err
-}
-
-// UpdateCachedWebhookConfigFromGit updates the webhook configs cache
-func (a *Adapter) UpdateCachedWebhookConfigFromGit() error {
-	return a.cacheWebhookConfigsFromGit()
-}
-
-func (a *Adapter) cacheWebhookConfigsFromGit() error {
-	a.logger.Info("cacheWebhookConfigs..")
-
-	webhookConfigs, err := a.loadWebhookConfigsFromGit()
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionFind, model.TypeWebhookConfig, nil, err)
-	}
-
-	if webhookConfigs != nil {
-		a.setCachedWebhookConfigs(webhookConfigs)
-		a.storage.UpdateWebhookConfig(*webhookConfigs)
-	}
-
 	return nil
-}
-
-func (a *Adapter) updateCachedWebhookConfigFromStorage() error {
-	webhookConfig, err := a.storage.FindWebhookConfig()
-	if err != nil {
-		return err
-	}
-
-	if webhookConfig != nil {
-		a.setCachedWebhookConfigs(webhookConfig)
-	}
-
-	return nil
-}
-
-// FindWebhookConfig finds webhook configs
-func (a *Adapter) FindWebhookConfig() (*model.WebhookConfig, error) {
-	return a.getCachedWebhookConfig()
-}
-
-func (a *Adapter) setCachedWebhookConfigs(webhookConfigs *model.WebhookConfig) {
-	if webhookConfigs == nil {
-		return
-	}
-
-	a.webhookConfigsLock.Lock()
-	defer a.webhookConfigsLock.Unlock()
-
-	// sa.cachedWebhookConfigs = &syncmap.Map{}
-	validate := validator.New()
-
-	err := validate.Struct(webhookConfigs)
-	if err != nil {
-		a.logger.Errorf("failed to validate and cache webhook config: %s", err.Error())
-	} else {
-		a.cachedWebhookConfig = webhookConfigs
-	}
-}
-
-func (a *Adapter) getCachedWebhookConfig() (*model.WebhookConfig, error) {
-	a.webhookConfigsLock.Lock()
-	defer a.webhookConfigsLock.Unlock()
-
-	return a.cachedWebhookConfig, nil
-}
-
-func (a *Adapter) loadWebhookConfigsFromGit() (*model.WebhookConfig, error) {
-	contentString, _, err := a.GetContents(a.githubWebhookConfigPath)
-	if err != nil {
-		fmt.Printf("fileContent.GetContent returned error: %v", err)
-	}
-
-	var webhookConfig model.WebhookConfig
-	err = json.Unmarshal([]byte(contentString), &webhookConfig)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, model.TypeWebhookConfig, nil, err)
-	}
-
-	return &webhookConfig, nil
 }
 
 // GetContents get file content from GitHub
@@ -154,21 +58,138 @@ func (a *Adapter) GetContents(path string) (string, bool, error) {
 	return contentString, isWebhookConfigPath, nil
 }
 
+// LoadWebhookConfig loads the webhook config from GitHub
+func (a *Adapter) LoadWebhookConfig() (*model.WebhookConfig, error) {
+	contentString, _, err := a.GetContents(a.githubWebhookConfigPath)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionGet, "github content", logutils.StringArgs("webhook config"), err)
+	}
+
+	var webhookConfig model.WebhookConfig
+	err = json.Unmarshal([]byte(contentString), &webhookConfig)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, model.TypeWebhookConfig, nil, err)
+	}
+
+	return &webhookConfig, nil
+}
+
+// ProcessAppConfigWebhook processes an incoming GitHub app config webhook request
+func (a *Adapter) ProcessAppConfigWebhook(data []byte, l *logs.Log) ([]model.WebhookAppConfigCommit, error) {
+	var requestData webhookRequest
+	err := json.Unmarshal(data, &requestData)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, model.TypeApplicationConfigWebhook, nil, err)
+	}
+	gitRefs := strings.Split(requestData.Ref, "/")
+	if len(gitRefs) == 0 {
+		return nil, errors.WrapErrorData(logutils.StatusMissing, logutils.MessageDataType("github webhook repository branch"), nil, nil)
+	}
+	branchName := gitRefs[len(gitRefs)-1]
+	if branchName != a.githubAppConfigBranch {
+		return nil, errors.WrapErrorData(logutils.StatusInvalid, logutils.MessageDataType("github webhook repository branch"), nil, nil)
+	}
+	commits := requestData.Commits
+	if len(commits) < 1 {
+		return nil, errors.WrapErrorData(logutils.StatusInvalid, model.TypeGithubCommit, nil, nil)
+	}
+
+	appConfigCommits := []model.WebhookAppConfigCommit{}
+	for _, commit := range commits {
+		webhookCommit := model.WebhookAppConfigCommit{}
+		webhookCommit.Config, webhookCommit.Added = a.processGitHubWebhookFiles(commit.Added, l)
+		webhookCommit.Config, webhookCommit.Modified = a.processGitHubWebhookFiles(commit.Modified, l)
+		webhookCommit.Config, webhookCommit.Removed = a.processGitHubWebhookFiles(commit.Removed, l)
+		appConfigCommits = append(appConfigCommits, webhookCommit)
+	}
+
+	return appConfigCommits, nil
+}
+
+func (a *Adapter) processGitHubWebhookFiles(files []string, l *logs.Log) (*model.WebhookConfig, []model.WebhookAppConfig) {
+	if len(files) < 1 {
+		return nil, nil
+	}
+
+	var webhookConfig *model.WebhookConfig
+	appConfigs := []model.WebhookAppConfig{}
+	for _, path := range files {
+		contentString, isWebhookConfigPath, err := a.GetContents(path)
+		if err != nil {
+			// fmt.Printf("fileContent.GetContent returned error: %v", err)
+			l.LogError("error getting GitHub contents", err)
+			continue
+		}
+
+		if isWebhookConfigPath {
+
+			var webhookConfigData model.WebhookConfig
+			err = json.Unmarshal([]byte(contentString), &webhookConfigData)
+			if err != nil {
+				l.LogError("error unmarshalling webhook config GitHub contents", err)
+				continue
+			}
+			webhookConfig = &webhookConfigData
+		} else {
+			// update appplication config files in db
+			webhookAppConfig, err := a.parseWebhookAppConfig(path, contentString)
+			if err != nil {
+				l.LogError("error parsing webhook file path "+path, err)
+			}
+			appConfigs = append(appConfigs, *webhookAppConfig)
+		}
+	}
+
+	return webhookConfig, appConfigs
+}
+
+// parseWebhookFilePath parses the committed file path in the webhook request
+func (a *Adapter) parseWebhookAppConfig(path string, contentString string) (*model.WebhookAppConfig, error) {
+	dirs := strings.Split(path, "/")
+
+	webhookAppConfig := model.WebhookAppConfig{}
+	// appType := ""
+	if len(dirs) == 4 || len(dirs) == 5 {
+		// "/env/org_name/applications_name/config.xxx.json"
+		webhookAppConfig.EnvironmentString, webhookAppConfig.OrgName, webhookAppConfig.AppName = dirs[0], dirs[1], dirs[2]
+		if len(dirs) == 5 {
+			// "/env/org_name/applications_name/app_type/config.xxx.json"
+			webhookAppConfig.AppType = dirs[3]
+		}
+
+		fileName := strings.Split(dirs[len(dirs)-1], ".")
+		if len(fileName) == 5 {
+			var versionNumbers model.VersionNumbers
+			tmp, err := strconv.Atoi(fileName[1])
+			if err != nil {
+				return nil, errors.WrapErrorAction(logutils.ActionParse, logutils.TypeInt, logutils.StringArgs("major version"), err)
+			}
+			versionNumbers.Major = tmp
+
+			tmp, err = strconv.Atoi(fileName[2])
+			if err != nil {
+				return nil, errors.WrapErrorAction(logutils.ActionParse, logutils.TypeInt, logutils.StringArgs("minor version"), err)
+			}
+			versionNumbers.Minor = tmp
+
+			tmp, err = strconv.Atoi(fileName[3])
+			if err != nil {
+				return nil, errors.WrapErrorAction(logutils.ActionParse, logutils.TypeInt, logutils.StringArgs("patch version"), err)
+			}
+			versionNumbers.Patch = tmp
+			webhookAppConfig.VersionNumbers = versionNumbers
+		}
+	}
+	var data map[string]interface{}
+	err := json.Unmarshal([]byte(contentString), &data)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, "content map", nil, err)
+	}
+	webhookAppConfig.Data = data
+	return &webhookAppConfig, nil
+}
+
 // NewGitHubAdapter creates a new GitHub adapter instance
-func NewGitHubAdapter(githubToken string, githubOrgnizationName string, githubRepoName string, githubWebhookConfigPath string, githubAppConfigBranch string, storage core.Storage, logger *logs.Logger) *Adapter {
-	cachedWebhookConfigs := &model.WebhookConfig{}
-	webhookConfigsLock := &sync.RWMutex{}
-
-	return &Adapter{storage: storage, cachedWebhookConfig: cachedWebhookConfigs, webhookConfigsLock: webhookConfigsLock, githubToken: githubToken, githubOrganizationName: githubOrgnizationName, githubRepoName: githubRepoName, githubWebhookConfigPath: githubWebhookConfigPath, githubAppConfigBranch: githubAppConfigBranch, logger: logger}
-}
-
-// StorageListener represents storage listener implementation for the auth package
-type StorageListener struct {
-	adapter *Adapter
-	storage.DefaultListenerImpl
-}
-
-// OnWebhookConfigsUpdated notifies that webhook config file has been updated
-func (al *StorageListener) OnWebhookConfigsUpdated() {
-	al.adapter.updateCachedWebhookConfigFromStorage()
+func NewGitHubAdapter(githubToken string, githubOrgnizationName string, githubRepoName string, githubWebhookConfigPath string, githubAppConfigBranch string, logger *logs.Logger) *Adapter {
+	return &Adapter{githubToken: githubToken, githubOrganizationName: githubOrgnizationName, githubRepoName: githubRepoName, githubWebhookConfigPath: githubWebhookConfigPath, githubAppConfigBranch: githubAppConfigBranch, logger: logger}
 }

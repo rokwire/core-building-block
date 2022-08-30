@@ -23,7 +23,7 @@ import (
 
 // Default exposes APIs for the driver adapters
 type Default interface {
-	ProcessGitHubAppConfigWebhook(commits []model.Commit, l *logs.Log) error
+	ProcessVCSAppConfigWebhook(data []byte, l *logs.Log) error
 }
 
 // Services exposes APIs for the driver adapters
@@ -218,18 +218,11 @@ type Storage interface {
 	InsertAPIKey(context storage.TransactionContext, apiKey model.APIKey) (*model.APIKey, error)
 }
 
-// GitHub is used by core to load from and send data to GitHub
-type GitHub interface {
+// VCS is used by core to load from and send data to VCS
+type VCS interface {
 	GetContents(path string) (string, bool, error)
-
-	FindWebhookConfig() (*model.WebhookConfig, error)
-	UpdateCachedWebhookConfigFromGit() error
-}
-
-// StorageListener listenes for change data storage events
-type StorageListener struct {
-	app *application
-	storage.DefaultListenerImpl
+	LoadWebhookConfig() (*model.WebhookConfig, error)
+	ProcessAppConfigWebhook(data []byte, l *logs.Log) ([]model.WebhookAppConfigCommit, error)
 }
 
 // ApplicationListener represents application listener

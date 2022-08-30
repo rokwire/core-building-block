@@ -469,16 +469,21 @@ type WebhookConfig struct {
 	Applications  map[string]map[string]string `json:"applications"`
 }
 
-// Author is the author of the commit
-type Author struct {
-	Name     string `json:"name"`
-	Email    string `json:"email"`
-	Username string `json:"username"`
+// WebhookAppConfigCommit represents an individual commit within the app config webhook data
+type WebhookAppConfigCommit struct {
+	Config   *WebhookConfig
+	Added    []WebhookAppConfig
+	Modified []WebhookAppConfig
+	Removed  []WebhookAppConfig
 }
 
-// Committer is the commiter of the commit
-type Committer struct {
-	Name     string `json:"name"`
-	Email    string `json:"email"`
-	Username string `json:"username"`
+// WebhookAppConfig represents an individual app config change in the app config webhook data
+type WebhookAppConfig struct {
+	EnvironmentString string
+	OrgName           string
+	AppName           string
+	AppType           string
+	VersionNumbers    VersionNumbers
+	APIKey            *string
+	Data              map[string]interface{}
 }

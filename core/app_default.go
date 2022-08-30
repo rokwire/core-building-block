@@ -2,88 +2,58 @@ package core
 
 import (
 	"core-building-block/core/model"
-	"core-building-block/utils"
-	"encoding/json"
-	"fmt"
 
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
 )
 
-func (app *application) processGitHubAppConfigWebhook(commits []model.Commit, l *logs.Log) error {
+func (app *application) processVCSAppConfigWebhook(data []byte, l *logs.Log) error {
+	commits, err := app.github.ProcessAppConfigWebhook(data, l)
+	if err != nil {
+		return errors.Wrap("error processing app config webhook", err)
+	}
 
 	for _, commit := range commits {
-		err := app.processGitHubWebhookFiles(commit.Added, false, l)
-		if err != nil {
-			l.LogError("error processing GitHub webhook added files", err)
-		}
-		err = app.processGitHubWebhookFiles(commit.Modified, false, l)
-		if err != nil {
-			l.LogError("error processing GitHub webhook changed files", err)
-		}
-		err = app.processGitHubWebhookFiles(commit.Removed, true, l)
-		if err != nil {
-			l.LogError("error processing GitHub webhook deleted files", err)
-		}
-	}
-
-	return nil
-}
-
-func (app *application) processGitHubWebhookFiles(files []string, isDelete bool, l *logs.Log) error {
-	if len(files) < 1 {
-		return nil
-	}
-	for _, path := range files {
-		contentString, isWebhookConfigPath, err := app.github.GetContents(path)
-		if err != nil {
-			// fmt.Printf("fileContent.GetContent returned error: %v", err)
-			continue
-		}
-
-		if isWebhookConfigPath {
-			err = app.github.UpdateCachedWebhookConfigFromGit()
+		if commit.Config != nil {
+			err := app.updateCachedWebhookConfig(commit.Config)
 			if err != nil {
-				if err != nil {
-					l.LogError("error updating GitHub webhook config file cache", err)
-				}
+				l.LogError("error updating webhook config file cache", err)
 			}
 		} else {
-			// update appplication config files in db
-			valid, appType, envString, orgName, appName, major, minor, patch := utils.ParseWebhookFilePath(path)
-			if valid == true {
-				versionNumber := model.VersionNumbers{Major: major, Minor: minor, Patch: patch}
-
-				data := make(map[string]interface{})
-				json.Unmarshal([]byte(contentString), &data)
-
-				_, err = app.updateAppConfigFromWebhook(*envString, *orgName, *appName, appType, versionNumber, nil, isDelete, data)
-				if err != nil {
-					l.LogError(fmt.Sprintf("error updating file with path: %s", path), err)
-				}
-			}
+			app.updateWebhookAppConfigs(commit.Added, false, l)
+			app.updateWebhookAppConfigs(commit.Modified, false, l)
+			app.updateWebhookAppConfigs(commit.Removed, true, l)
 		}
 	}
 
 	return nil
 }
 
-func (app *application) updateAppConfigFromWebhook(enviromentString string, orgName string, appName string, appType string, versionNumbers model.VersionNumbers, apiKey *string, isDelete bool, data map[string]interface{}) (*model.ApplicationConfig, error) {
-	webhookConfig, err := app.github.FindWebhookConfig()
+func (app *application) updateWebhookAppConfigs(configs []model.WebhookAppConfig, isDelete bool, l *logs.Log) {
+	for _, config := range configs {
+		_, err := app.updateAppConfigFromWebhook(config, isDelete)
+		if err != nil {
+			l.LogError("error updating webhook app config", err)
+		}
+	}
+}
+
+func (app *application) updateAppConfigFromWebhook(config model.WebhookAppConfig, isDelete bool) (*model.ApplicationConfig, error) {
+	webhookConfig, err := app.FindWebhookConfig()
 	if err != nil || webhookConfig == nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeWebhookConfig, logutils.StringArgs(orgName), err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeWebhookConfig, logutils.StringArgs(config.OrgName), err)
 	}
 
 	var orgID *string
 	orgMap := webhookConfig.Organizations
-	if _, ok := orgMap[orgName]; ok {
-		t := orgMap[orgName]
+	if _, ok := orgMap[config.OrgName]; ok {
+		t := orgMap[config.OrgName]
 		orgID = &t
 	}
 	if webhookConfig.Applications != nil {
-		if appMap, ok := webhookConfig.Applications[appName]; ok {
-			if appTypeIdentifier, ok := appMap[appType]; ok {
+		if appMap, ok := webhookConfig.Applications[config.AppName]; ok {
+			if appTypeIdentifier, ok := appMap[config.AppType]; ok {
 				applicationType, err := app.storage.FindApplicationType(appTypeIdentifier)
 				if err != nil {
 					return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationType, logutils.StringArgs(appTypeIdentifier), err)
@@ -92,14 +62,14 @@ func (app *application) updateAppConfigFromWebhook(enviromentString string, orgN
 					return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationType, logutils.StringArgs(appTypeIdentifier))
 				}
 
-				appConfig, _ := app.serGetAppConfig(appTypeIdentifier, orgID, versionNumbers, apiKey)
+				appConfig, _ := app.serGetAppConfig(appTypeIdentifier, orgID, config.VersionNumbers, config.APIKey)
 				if appConfig == nil {
 					if isDelete {
 						return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationConfig, logutils.StringArgs(appTypeIdentifier))
 					}
 
 					// create new appConfig from webhook request
-					appConfig, err = app.sysCreateAppConfig(applicationType.ID, orgID, data, versionNumbers, true)
+					appConfig, err = app.sysCreateAppConfig(applicationType.ID, orgID, config.Data, config.VersionNumbers, true)
 					if err != nil {
 						return nil, err
 					}
@@ -114,8 +84,8 @@ func (app *application) updateAppConfigFromWebhook(enviromentString string, orgN
 				}
 
 				// update
-				if appConfig.Version.VersionNumbers == versionNumbers {
-					err = app.sysUpdateAppConfig(appConfig.ID, applicationType.ID, orgID, data, versionNumbers, true)
+				if appConfig.Version.VersionNumbers == config.VersionNumbers {
+					err = app.sysUpdateAppConfig(appConfig.ID, applicationType.ID, orgID, config.Data, config.VersionNumbers, true)
 					if err != nil {
 						return nil, err
 					}
@@ -125,7 +95,7 @@ func (app *application) updateAppConfigFromWebhook(enviromentString string, orgN
 
 				// return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationConfig, logutils.StringArgs(appTypeIdentifier))
 				// create appConfig with a new version from webhook request
-				appConfig, err = app.sysCreateAppConfig(applicationType.ID, orgID, data, versionNumbers, true)
+				appConfig, err = app.sysCreateAppConfig(applicationType.ID, orgID, config.Data, config.VersionNumbers, true)
 				if err != nil {
 					return nil, err
 				}
@@ -136,8 +106,4 @@ func (app *application) updateAppConfigFromWebhook(enviromentString string, orgN
 	}
 
 	return nil, nil
-}
-
-func (app *application) updateCachedWebhookConfigs() error {
-	return app.github.UpdateCachedWebhookConfigFromGit()
 }
