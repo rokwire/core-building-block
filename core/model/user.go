@@ -88,15 +88,15 @@ func (a Account) GetAccountAuthTypeByID(ID string) *AccountAuthType {
 }
 
 // GetAccountAuthType finds account auth type
-// func (a Account) GetAccountAuthType(authType string, identifier string) *AccountAuthType {
-// 	for _, aat := range a.AuthTypes {
-// 		if aat.AuthType == authType && aat.Identifier == identifier {
-// 			aat.Account = a
-// 			return &aat
-// 		}
-// 	}
-// 	return nil
-// }
+func (a Account) GetAccountAuthType(authTypeCode string, identifier string) *AccountAuthType {
+	for _, aat := range a.AuthTypes {
+		if aat.AuthTypeCode == authTypeCode && aat.Identifier == identifier {
+			aat.Account = a
+			return &aat
+		}
+	}
+	return nil
+}
 
 // SortAccountAuthTypes sorts account auth types by matching the given uid
 func (a Account) SortAccountAuthTypes(uid string) {
@@ -345,10 +345,10 @@ func AccountGroupsFromAppOrgGroups(items []AppOrgGroup, active bool, adminSet bo
 type AccountAuthType struct {
 	ID string
 
-	Account    Account
-	AuthType   string //one of the supported auth type
-	Identifier string
-	Params     map[string]interface{}
+	Account      Account
+	AuthTypeCode string //one of the supported auth type
+	Identifier   string
+	Params       map[string]interface{}
 
 	Credential *Credential //this can be nil as the external auth types authenticates the users outside the system
 

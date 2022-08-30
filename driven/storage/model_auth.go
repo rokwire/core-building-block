@@ -25,6 +25,7 @@ type loginSession struct {
 	AppID string `bson:"app_id"`
 	OrgID string `bson:"org_id"`
 
+	AuthTypeCode      string `bson:"auth_type_code"`
 	AppTypeID         string `bson:"app_type_id"`
 	AppTypeIdentifier string `bson:"app_type_identifier"`
 

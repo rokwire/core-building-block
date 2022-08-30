@@ -791,13 +791,16 @@ func (h ServicesApisHandler) verifyCredential(l *logs.Log, r *http.Request, clai
 	if id == "" {
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
 	}
-
 	code := r.URL.Query().Get("code")
 	if code == "" {
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("code"), nil, http.StatusBadRequest, false)
 	}
+	authType := r.URL.Query().Get("auth_type")
+	if code == "" {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("auth_type"), nil, http.StatusBadRequest, false)
+	}
 
-	if err := h.coreAPIs.Auth.VerifyCredential(id, code, l); err != nil {
+	if err := h.coreAPIs.Auth.VerifyCredential(authType, id, code, l); err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionValidate, "code", nil, err, http.StatusInternalServerError, false)
 	}
 
@@ -914,7 +917,7 @@ func (h ServicesApisHandler) forgotCredentialComplete(l *logs.Log, r *http.Reque
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, "params", nil, err, http.StatusBadRequest, true)
 	}
 
-	if err := h.coreAPIs.Auth.ResetForgotCredential(requestData.CredentialId, requestData.ResetCode, requestParams, l); err != nil {
+	if err := h.coreAPIs.Auth.ResetForgotCredential(string(requestData.AuthType), requestData.CredentialId, requestData.ResetCode, requestParams, l); err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUpdate, "password", nil, err, http.StatusInternalServerError, false)
 	}
 

@@ -923,9 +923,9 @@ func (sa *Adapter) FindSessionsLazy(appID string, orgID string) ([]model.LoginSe
 }
 
 // FindAccount finds an account for app, org, auth type and account auth type identifier
-func (sa *Adapter) FindAccount(context TransactionContext, appOrgID string, authType string, accountAuthTypeIdentifier string) (*model.Account, error) {
+func (sa *Adapter) FindAccount(context TransactionContext, appOrgID string, authTypeCode string, accountAuthTypeIdentifier string) (*model.Account, error) {
 	filter := bson.D{primitive.E{Key: "app_org_id", Value: appOrgID},
-		primitive.E{Key: "auth_types.auth_type_code", Value: authType},
+		primitive.E{Key: "auth_types.auth_type_code", Value: authTypeCode},
 		primitive.E{Key: "auth_types.identifier", Value: accountAuthTypeIdentifier}}
 	var accounts []account
 	err := sa.db.accounts.FindWithContext(context, filter, &accounts, nil)
@@ -1734,7 +1734,7 @@ func (sa *Adapter) DeleteAccountAuthType(context TransactionContext, item model.
 	filter := bson.M{"_id": item.Account.ID}
 	update := bson.D{
 		primitive.E{Key: "$pull", Value: bson.D{
-			primitive.E{Key: "auth_types", Value: bson.M{"auth_type_code": item.AuthType, "identifier": item.Identifier}},
+			primitive.E{Key: "auth_types", Value: bson.M{"auth_type_code": item.AuthTypeCode, "identifier": item.Identifier}},
 		}},
 	}
 
@@ -2485,9 +2485,9 @@ func (sa *Adapter) UpdateProfile(context TransactionContext, profile model.Profi
 }
 
 // FindProfiles finds profiles by app id, authtype id and account auth type identifier
-func (sa *Adapter) FindProfiles(appID string, authType string, accountAuthTypeIdentifier string) ([]model.Profile, error) {
+func (sa *Adapter) FindProfiles(appID string, authTypeCode string, accountAuthTypeIdentifier string) ([]model.Profile, error) {
 	pipeline := []bson.M{
-		{"$match": bson.M{"auth_types.auth_type_code": authType, "auth_types.identifier": accountAuthTypeIdentifier}},
+		{"$match": bson.M{"auth_types.auth_type_code": authTypeCode, "auth_types.identifier": accountAuthTypeIdentifier}},
 		{"$lookup": bson.M{
 			"from":         "applications_organizations",
 			"localField":   "app_org_id",

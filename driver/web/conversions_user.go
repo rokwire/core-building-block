@@ -94,7 +94,7 @@ func accountAuthTypeToDef(item model.AccountAuthType) Def.AccountAuthTypeFields 
 	params := &Def.AccountAuthTypeFields_Params{}
 	params.AdditionalProperties = item.Params
 
-	return Def.AccountAuthTypeFields{Id: &item.ID, Code: &item.AuthType, Identifier: &item.Identifier, Active: &item.Active, Unverified: &item.Unverified, Params: params}
+	return Def.AccountAuthTypeFields{Id: &item.ID, Code: &item.AuthTypeCode, Identifier: &item.Identifier, Active: &item.Active, Unverified: &item.Unverified, Params: params}
 }
 
 func accountAuthTypesToDef(items []model.AccountAuthType) []Def.AccountAuthTypeFields {

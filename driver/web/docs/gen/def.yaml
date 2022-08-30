@@ -375,6 +375,14 @@ paths:
           explode: false
           schema:
             type: string
+        - name: auth_type
+          in: query
+          description: Authentication type
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
       responses:
         '200':
           description: Successful operation
@@ -5807,12 +5815,17 @@ components:
       required:
         - credential_id
         - reset_code
+        - auth_type
       type: object
       properties:
         credential_id:
           type: string
         reset_code:
           type: string
+        auth_type:
+          type: string
+          enum:
+            - email
         params:
           type: object
           anyOf:

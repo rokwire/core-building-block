@@ -629,52 +629,6 @@ func (_m *Storage) FindApplicationsOrganizationsByOrgID(orgID string) ([]model.A
 	return r0, r1
 }
 
-// FindAuthType provides a mock function with given fields: codeOrID
-func (_m *Storage) FindAuthType(codeOrID string) (*model.AuthType, error) {
-	ret := _m.Called(codeOrID)
-
-	var r0 *model.AuthType
-	if rf, ok := ret.Get(0).(func(string) *model.AuthType); ok {
-		r0 = rf(codeOrID)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*model.AuthType)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(string) error); ok {
-		r1 = rf(codeOrID)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// FindAuthTypes provides a mock function with given fields:
-func (_m *Storage) FindAuthTypes() ([]model.AuthType, error) {
-	ret := _m.Called()
-
-	var r0 []model.AuthType
-	if rf, ok := ret.Get(0).(func() []model.AuthType); ok {
-		r0 = rf()
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]model.AuthType)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func() error); ok {
-		r1 = rf()
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // FindLoginSessionsByParams provides a mock function with given fields: appID, orgID, sessionID, identifier, accountAuthTypeIdentifier, appTypeID, appTypeIdentifier, anonymous, deviceID, ipAddress
 func (_m *Storage) FindLoginSessionsByParams(appID string, orgID string, sessionID *string, identifier *string, accountAuthTypeIdentifier *string, appTypeID *string, appTypeIdentifier *string, anonymous *bool, deviceID *string, ipAddress *string) ([]model.LoginSession, error) {
 	ret := _m.Called(appID, orgID, sessionID, identifier, accountAuthTypeIdentifier, appTypeID, appTypeIdentifier, anonymous, deviceID, ipAddress)
@@ -990,49 +944,17 @@ func (_m *Storage) InsertApplication(context storage.TransactionContext, applica
 }
 
 // InsertApplicationOrganization provides a mock function with given fields: context, applicationOrganization
-func (_m *Storage) InsertApplicationOrganization(context storage.TransactionContext, applicationOrganization model.ApplicationOrganization) (*model.ApplicationOrganization, error) {
+func (_m *Storage) InsertApplicationOrganization(context storage.TransactionContext, applicationOrganization model.ApplicationOrganization) error {
 	ret := _m.Called(context, applicationOrganization)
 
-	var r0 *model.ApplicationOrganization
-	if rf, ok := ret.Get(0).(func(storage.TransactionContext, model.ApplicationOrganization) *model.ApplicationOrganization); ok {
+	var r0 error
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, model.ApplicationOrganization) error); ok {
 		r0 = rf(context, applicationOrganization)
 	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*model.ApplicationOrganization)
-		}
+		r0 = ret.Error(0)
 	}
 
-	var r1 error
-	if rf, ok := ret.Get(1).(func(storage.TransactionContext, model.ApplicationOrganization) error); ok {
-		r1 = rf(context, applicationOrganization)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// InsertAuthType provides a mock function with given fields: context, authType
-func (_m *Storage) InsertAuthType(context storage.TransactionContext, authType model.AuthType) (*model.AuthType, error) {
-	ret := _m.Called(context, authType)
-
-	var r0 *model.AuthType
-	if rf, ok := ret.Get(0).(func(storage.TransactionContext, model.AuthType) *model.AuthType); ok {
-		r0 = rf(context, authType)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*model.AuthType)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(storage.TransactionContext, model.AuthType) error); ok {
-		r1 = rf(context, authType)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
+	return r0
 }
 
 // InsertOrganization provides a mock function with given fields: context, organization
@@ -1203,13 +1125,13 @@ func (_m *Storage) UpdateAppOrgRole(item model.AppOrgRole) error {
 	return r0
 }
 
-// UpdateAuthTypes provides a mock function with given fields: ID, code, description, isExternal, isAnonymous, useCredentials, ignoreMFA, params
-func (_m *Storage) UpdateAuthTypes(ID string, code string, description string, isExternal bool, isAnonymous bool, useCredentials bool, ignoreMFA bool, params map[string]interface{}) error {
-	ret := _m.Called(ID, code, description, isExternal, isAnonymous, useCredentials, ignoreMFA, params)
+// UpdateApplicationOrganization provides a mock function with given fields: context, applicationOrganization
+func (_m *Storage) UpdateApplicationOrganization(context storage.TransactionContext, applicationOrganization model.ApplicationOrganization) error {
+	ret := _m.Called(context, applicationOrganization)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(string, string, string, bool, bool, bool, bool, map[string]interface{}) error); ok {
-		r0 = rf(ID, code, description, isExternal, isAnonymous, useCredentials, ignoreMFA, params)
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, model.ApplicationOrganization) error); ok {
+		r0 = rf(context, applicationOrganization)
 	} else {
 		r0 = ret.Error(0)
 	}

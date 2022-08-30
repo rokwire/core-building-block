@@ -105,6 +105,10 @@ func oidcRefreshParamsFromMap(val map[string]interface{}) (*oidcRefreshParams, e
 	return &oidcRefreshParams{RefreshToken: refreshToken, RedirectURI: redirectURI}, nil
 }
 
+func (a *oidcAuthImpl) code() string {
+	return a.authType
+}
+
 func (a *oidcAuthImpl) externalLogin(appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error) {
 	var loginParams oidcLoginParams
 	err := json.Unmarshal([]byte(params), &loginParams)
@@ -295,6 +299,11 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 		return nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeAuthTypeConfig, &logutils.FieldArgs{"app_org_id": appOrg.ID, "auth_type": a.authType})
 	}
 
+	identityProviderSetting, err := appOrg.GetIdentityProviderSetting(a.authType)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeIdentityProviderSetting, logutils.StringArgs(AuthTypeOidc), err)
+	}
+
 	//identifier
 	identifier, _ := userClaims[identityProviderSetting.UserIdentifierField].(string)
 	//first name
@@ -481,34 +490,6 @@ func (a *oidcAuthImpl) getOidcAuthConfig(appOrg model.ApplicationOrganization, a
 	return &oidcConfig, nil
 }
 
-func (a *oidcAuthImpl) getOidcIdentityProviderConfig(appOrg model.ApplicationOrganization) (*model.IdentityProviderSetting, error) {
-	errFields := &logutils.FieldArgs{"app_org_id": appOrg.ID, "auth_type": a.authType}
-
-	authTypeConfig := appOrg.GetAuthTypeConfig(a.authType)
-	if authTypeConfig == nil {
-		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeAuthTypeConfig, errFields)
-	}
-
-	configBytes, err := json.Marshal(authTypeConfig)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionMarshal, model.TypeAuthTypeConfig, errFields, err)
-	}
-
-	var idpSettings model.IdentityProviderSetting
-	err = json.Unmarshal(configBytes, &idpSettings)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, model.TypeAuthTypeConfig, errFields, err)
-	}
-
-	validate := validator.New()
-	err = validate.Struct(idpSettings)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeIdentityProviderSettings, errFields, err)
-	}
-
-	return &idpSettings, nil
-}
-
 // --- Helper functions ---
 
 // generatePkceChallenge generates and returns a PKCE code challenge and verifier
@@ -531,7 +512,7 @@ func generatePkceChallenge() (string, string, error) {
 func initOidcAuth(auth *Auth) (*oidcAuthImpl, error) {
 	oidc := &oidcAuthImpl{auth: auth, authType: AuthTypeOidc}
 
-	err := auth.registerExternalAuthType(oidc.authType, oidc)
+	err := auth.registerAuthType(oidc.authType, oidc)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionRegister, typeAuthType, nil, err)
 	}

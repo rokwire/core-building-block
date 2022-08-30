@@ -77,8 +77,9 @@ const (
 type LoginSession struct {
 	ID string
 
-	AppOrg  ApplicationOrganization
-	AppType ApplicationType
+	AppOrg       ApplicationOrganization
+	AuthTypeCode string
+	AppType      ApplicationType
 
 	Anonymous bool
 
@@ -217,26 +218,6 @@ type APIKey struct {
 	ID    string `json:"id" bson:"_id"`
 	AppID string `json:"app_id" bson:"app_id" validate:"required"`
 	Key   string `json:"key" bson:"key"`
-}
-
-// AuthType represents authentication type entity
-//
-//	The system supports different authentication types - username, email, phone, identity providers ones etc
-// type AuthType struct {
-// 	ID             string                 `bson:"_id"`
-// 	Code           string                 `bson:"code"` //username or email or phone or illinois_oidc etc
-// 	Description    string                 `bson:"description"`
-// 	IsExternal     bool                   `bson:"is_external"`     //says if the users source is external - identity providers
-// 	IsAnonymous    bool                   `bson:"is_anonymous"`    //says if the auth type results in anonymous users
-// 	UseCredentials bool                   `bson:"use_credentials"` //says if the auth type uses credentials
-// 	IgnoreMFA      bool                   `bson:"ignore_mfa"`      //says if login using this auth type may bypass account MFA
-// 	Params         map[string]interface{} `bson:"params"`
-// }
-
-// IdentityProviderConfig represents identity provider config for an application type
-type IdentityProviderConfig struct {
-	AppTypeID string                 `bson:"app_type_id"`
-	Config    map[string]interface{} `bson:"config"`
 }
 
 // UserAuth represents user auth entity

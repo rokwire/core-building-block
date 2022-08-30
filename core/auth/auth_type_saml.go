@@ -33,15 +33,19 @@ type samlAuthImpl struct {
 	authType string
 }
 
-func (a *samlAuthImpl) externalLogin(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error) {
+func (a *samlAuthImpl) code() string {
+	return a.authType
+}
+
+func (a *samlAuthImpl) externalLogin(appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error) {
 	return nil, nil, nil
 }
 
-func (a *samlAuthImpl) getLoginURL(authType model.AuthType, appType model.ApplicationType, redirectURI string, l *logs.Log) (string, map[string]interface{}, error) {
+func (a *samlAuthImpl) getLoginURL(appType model.ApplicationType, appOrg model.ApplicationOrganization, redirectURI string, l *logs.Log) (string, map[string]interface{}, error) {
 	return "", nil, errors.Newf("get login url operation invalid for auth_type=%s", a.authType)
 }
 
-func (a *samlAuthImpl) refresh(params map[string]interface{}, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error) {
+func (a *samlAuthImpl) refresh(params map[string]interface{}, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error) {
 	return nil, nil, nil
 }
 
@@ -49,7 +53,7 @@ func (a *samlAuthImpl) refresh(params map[string]interface{}, authType model.Aut
 func initSamlAuth(auth *Auth) (*samlAuthImpl, error) {
 	saml := &samlAuthImpl{auth: auth, authType: AuthTypeSaml}
 
-	err := auth.registerExternalAuthType(saml.authType, saml)
+	err := auth.registerAuthType(saml.authType, saml)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionRegister, typeAuthType, nil, err)
 	}

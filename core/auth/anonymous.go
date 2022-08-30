@@ -39,6 +39,10 @@ type anonymousCreds struct {
 	AnonymousID string `json:"anonymous_id"`
 }
 
+func (a *anonymousAuthImpl) code() string {
+	return a.authType
+}
+
 func (a *anonymousAuthImpl) checkCredentials(creds string) (string, map[string]interface{}, error) {
 	var keyCreds anonymousCreds
 	err := json.Unmarshal([]byte(creds), &keyCreds)
@@ -61,7 +65,7 @@ func (a *anonymousAuthImpl) checkCredentials(creds string) (string, map[string]i
 func initAnonymousAuth(auth *Auth) (*anonymousAuthImpl, error) {
 	anonymous := &anonymousAuthImpl{auth: auth, authType: AuthTypeAnonymous}
 
-	err := auth.registerAnonymousAuthType(anonymous.authType, anonymous)
+	err := auth.registerAuthType(anonymous.authType, anonymous)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionRegister, typeAuthType, nil, err)
 	}

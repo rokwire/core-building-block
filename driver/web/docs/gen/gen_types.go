@@ -82,6 +82,11 @@ const (
 	ServicesReqAccountAuthTypeUnlinkAuthTypeUsername ServicesReqAccountAuthTypeUnlinkAuthType = "username"
 )
 
+// Defines values for ServicesReqCredentialForgotCompleteAuthType.
+const (
+	ServicesReqCredentialForgotCompleteAuthTypeEmail ServicesReqCredentialForgotCompleteAuthType = "email"
+)
+
 // Defines values for ServicesReqCredentialForgotInitiateAuthType.
 const (
 	ServicesReqCredentialForgotInitiateAuthTypeEmail ServicesReqCredentialForgotInitiateAuthType = "email"
@@ -668,10 +673,14 @@ type ServicesReqAuthorizeService struct {
 
 // ServicesReqCredentialForgotComplete defines model for _services_req_credential_forgot_complete.
 type ServicesReqCredentialForgotComplete struct {
-	CredentialId string       `json:"credential_id"`
-	Params       *interface{} `json:"params,omitempty"`
-	ResetCode    string       `json:"reset_code"`
+	AuthType     ServicesReqCredentialForgotCompleteAuthType `json:"auth_type"`
+	CredentialId string                                      `json:"credential_id"`
+	Params       *interface{}                                `json:"params,omitempty"`
+	ResetCode    string                                      `json:"reset_code"`
 }
+
+// ServicesReqCredentialForgotCompleteAuthType defines model for ServicesReqCredentialForgotComplete.AuthType.
+type ServicesReqCredentialForgotCompleteAuthType string
 
 // ServicesReqCredentialForgotInitiate defines model for _services_req_credential_forgot_initiate.
 type ServicesReqCredentialForgotInitiate struct {
@@ -1372,6 +1381,9 @@ type GetServicesAuthCredentialVerifyParams struct {
 
 	// Verification code
 	Code string `json:"code"`
+
+	// Authentication type
+	AuthType string `json:"auth_type"`
 }
 
 // PostServicesAuthLoginJSONBody defines parameters for PostServicesAuthLogin.

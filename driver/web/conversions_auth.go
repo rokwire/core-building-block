@@ -36,7 +36,7 @@ func loginSessionToDef(item model.LoginSession) Def.SharedResLoginSession {
 
 	appTypeID := item.AppType.ID
 	appTypeIdentifier := item.AppType.Identifier
-	authTypeCode := item.AccountAuthType.AuthType
+	authTypeCode := item.AccountAuthType.AuthTypeCode
 	deviceID := item.Device.ID
 	refreshTokensCount := len(item.RefreshTokens)
 	stateExpires := utils.FormatTime(item.StateExpires)

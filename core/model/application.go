@@ -15,6 +15,7 @@
 package model
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -23,6 +24,7 @@ import (
 	"github.com/rokwire/core-auth-library-go/v2/authutils"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logutils"
+	"gopkg.in/go-playground/validator.v9"
 )
 
 const (
@@ -44,8 +46,8 @@ const (
 	TypeAuthTypeConfig logutils.MessageDataType = "auth type config"
 	//TypeApplicationTypeAuthConfig ...
 	TypeApplicationTypeAuthConfig logutils.MessageDataType = "application type auth config"
-	//TypeIdentityProviderSettings ...
-	TypeIdentityProviderSettings logutils.MessageDataType = "identity provider settings"
+	//TypeIdentityProviderSetting ...
+	TypeIdentityProviderSetting logutils.MessageDataType = "identity provider setting"
 	//TypeApplicationTypeVersionList ...
 	TypeApplicationTypeVersionList logutils.MessageDataType = "application type supported version list"
 	//TypeApplicationUserRelations ...
@@ -274,7 +276,36 @@ func (ao ApplicationOrganization) GetAuthTypeConfig(authType string) map[string]
 	return supportedType.Configs
 }
 
-// GetAppTypeConfig finds the app type auth configuration for the given auth type and app type ID
+// GetIdentityProviderSetting returns the configuration for the given auth type as an identity provider setting, if possible
+func (ao ApplicationOrganization) GetIdentityProviderSetting(authType string) (*IdentityProviderSetting, error) {
+	errFields := &logutils.FieldArgs{"app_org_id": ao.ID, "auth_type": authType}
+
+	authTypeConfig := ao.GetAuthTypeConfig(authType)
+	if authTypeConfig == nil {
+		return nil, errors.ErrorData(logutils.StatusMissing, TypeAuthTypeConfig, errFields)
+	}
+
+	configBytes, err := json.Marshal(authTypeConfig)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionMarshal, TypeAuthTypeConfig, errFields, err)
+	}
+
+	var idpSettings IdentityProviderSetting
+	err = json.Unmarshal(configBytes, &idpSettings)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, TypeAuthTypeConfig, errFields, err)
+	}
+
+	validate := validator.New()
+	err = validate.Struct(idpSettings)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionValidate, TypeIdentityProviderSetting, errFields, err)
+	}
+
+	return &idpSettings, nil
+}
+
+// GetAppTypeAuthConfig finds the app type auth configuration for the given auth type and app type ID
 func (ao ApplicationOrganization) GetAppTypeAuthConfig(authType string, appTypeID string) map[string]interface{} {
 	supportedType, exists := ao.AuthTypes[authType]
 	if !exists {
