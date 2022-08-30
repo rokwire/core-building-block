@@ -48,8 +48,8 @@ import (
 )
 
 const (
-	//AuthTypeTwilioPhone phone auth type
-	AuthTypeTwilioPhone string = "twilio_phone"
+	//AuthTypePhone phone auth type
+	AuthTypePhone string = "phone"
 
 	servicesPathPart                                  = "https://verify.twilio.com/v2/Services"
 	verificationsPathPart                             = "Verifications"
@@ -326,7 +326,7 @@ func (a *twilioPhoneAuthImpl) forgotCredential(credential *model.Credential, ide
 
 // initPhoneAuth initializes and registers a new phone auth instance
 func initPhoneAuth(auth *Auth, twilioAccountSID string, twilioToken string, twilioServiceSID string) (*twilioPhoneAuthImpl, error) {
-	phone := &twilioPhoneAuthImpl{auth: auth, authType: AuthTypeTwilioPhone, twilioAccountSID: twilioAccountSID, twilioToken: twilioToken, twilioServiceSID: twilioServiceSID}
+	phone := &twilioPhoneAuthImpl{auth: auth, authType: AuthTypePhone, twilioAccountSID: twilioAccountSID, twilioToken: twilioToken, twilioServiceSID: twilioServiceSID}
 
 	err := auth.registerAuthType(phone.authType, phone)
 	if err != nil {

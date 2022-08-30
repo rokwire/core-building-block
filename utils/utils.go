@@ -24,9 +24,12 @@ import (
 	"math/rand"
 	"net/http"
 	"reflect"
+	"regexp"
+	"strings"
 	"time"
 
 	"github.com/rokwire/logging-library-go/logs"
+	"github.com/rokwire/logging-library-go/logutils"
 
 	"github.com/rokwire/logging-library-go/errors"
 )
@@ -191,6 +194,21 @@ func StringListDiff(new []string, old []string) ([]string, []string, []string) {
 		}
 	}
 	return added, removed, unchanged
+}
+
+// GetSuffix returns the suffix of s, which is separated by sep
+func GetSuffix(s string, sep string) (string, error) {
+	re := fmt.Sprintf("[a-z]%s[a-z]", sep)
+	match, err := regexp.Match(re, []byte(s))
+	if err != nil {
+		return "", errors.WrapErrorAction("matching", "regular expression", logutils.StringArgs(re), err)
+	}
+
+	if match {
+		split := strings.Split(s, sep)
+		return split[len(split)-1], nil
+	}
+	return s, nil
 }
 
 // StringOrNil returns a pointer to the input string, but returns nil if input is empty

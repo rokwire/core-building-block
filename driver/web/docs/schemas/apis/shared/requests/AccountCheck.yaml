@@ -11,7 +11,9 @@ properties:
     enum:
       - username
       - email
+      - phone
       - twilio_phone
+      - oidc
       - illinois_oidc
       - anonymous
   app_type_identifier:

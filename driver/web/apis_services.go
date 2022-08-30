@@ -726,6 +726,10 @@ func (h ServicesApisHandler) getAccounts(l *logs.Log, r *http.Request, claims *t
 	var authType *string
 	authTypeParam := r.URL.Query().Get("auth-type")
 	if len(authTypeParam) > 0 {
+		authTypeParam, err := utils.GetSuffix(authTypeParam, "_")
+		if err != nil {
+			return l.HttpResponseErrorAction(logutils.ActionGet, "auth type", nil, err, http.StatusInternalServerError, false)
+		}
 		authType = &authTypeParam
 	}
 	//auth type identifier

@@ -10,7 +10,9 @@ properties:
     type: string
     enum:
       - email
+      - phone
       - twilio_phone
+      - oidc
       - illinois_oidc
       - anonymous
   app_type_identifier:
@@ -22,7 +24,7 @@ properties:
   creds:
     anyOf:
       - $ref: "../CredsEmail.yaml"
-      - $ref: "../CredsTwilioPhone.yaml"
+      - $ref: "../CredsPhone.yaml"
       - $ref: "../CredsOIDC.yaml"
       - $ref: "../CredsAPIKey.yaml"
   params:

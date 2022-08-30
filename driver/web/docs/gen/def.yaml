@@ -103,7 +103,7 @@ paths:
                 summary: Phone - sign in OR sign up
                 value: |
                   {
-                    "auth_type": "twilio_phone",
+                    "auth_type": "phone",
                     "app_type_identifier": "edu.illinois.rokwire",
                     "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                     "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
@@ -133,11 +133,11 @@ paths:
                       "os": "Android"
                     }
                   }
-              illinois_oidc:
-                summary: Illinois OIDC login
+              oidc:
+                summary: OIDC login
                 value: |
                   {
-                    "auth_type": "illinois_oidc",
+                    "auth_type": "oidc",
                     "app_type_identifier": "edu.illinois.rokwire",
                     "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                     "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
@@ -676,7 +676,7 @@ paths:
                 summary: Phone
                 value: |
                   {
-                    "auth_type": "twilio_phone",
+                    "auth_type": "phone",
                     "app_type_identifier": "edu.illinois.rokwire",
                     "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                     "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
@@ -684,11 +684,11 @@ paths:
                       "phone": "+12223334444"
                     }
                   }
-              illinois_oidc:
-                summary: Illinois OIDC
+              oidc:
+                summary: OIDC
                 value: |
                   {
-                    "auth_type": "illinois_oidc",
+                    "auth_type": "oidc",
                     "app_type_identifier": "edu.illinois.rokwire",
                     "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                     "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
@@ -763,15 +763,15 @@ paths:
                 summary: Phone
                 value: |
                   {
-                    "auth_type": "twilio_phone",
+                    "auth_type": "phone",
                     "app_type_identifier": "edu.illinois.rokwire",
                     "identifier": "+12223334444"
                   }
-              illinois_oidc:
-                summary: Illinois OIDC
+              oidc:
+                summary: OIDC
                 value: |
                   {
-                    "auth_type": "illinois_oidc",
+                    "auth_type": "oidc",
                     "app_type_identifier": "edu.illinois.rokwire",
                     "identifier": "123456789"
                   }
@@ -1466,11 +1466,11 @@ paths:
                       "os": "Android"
                     }
                   }
-              illinois_oidc:
-                summary: Illinois OIDC
+              oidc:
+                summary: OIDC
                 value: |
                   {
-                    "auth_type": "illinois_oidc",
+                    "auth_type": "oidc",
                     "app_type_identifier": "edu.illinois.rokwire",
                     "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                     "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
@@ -5187,7 +5187,9 @@ components:
           type: string
           enum:
             - email
+            - phone
             - twilio_phone
+            - oidc
             - illinois_oidc
             - anonymous
         app_type_identifier:
@@ -5199,7 +5201,7 @@ components:
         creds:
           anyOf:
             - $ref: '#/components/schemas/_shared_req_CredsEmail'
-            - $ref: '#/components/schemas/_shared_req_CredsTwilioPhone'
+            - $ref: '#/components/schemas/_shared_req_CredsPhone'
             - $ref: '#/components/schemas/_shared_req_CredsOIDC'
             - $ref: '#/components/schemas/_shared_req_CredsAPIKey'
         params:
@@ -5274,6 +5276,7 @@ components:
         auth_type:
           type: string
           enum:
+            - oidc
             - illinois_oidc
         app_type_identifier:
           type: string
@@ -5319,6 +5322,7 @@ components:
           type: string
           enum:
             - email
+            - oidc
             - illinois_oidc
         identifier:
           type: string
@@ -5346,6 +5350,7 @@ components:
           type: string
           enum:
             - email
+            - oidc
             - illinois_oidc
         identifier:
           type: string
@@ -5375,7 +5380,9 @@ components:
           enum:
             - username
             - email
+            - phone
             - twilio_phone
+            - oidc
             - illinois_oidc
             - anonymous
         app_type_identifier:
@@ -5397,9 +5404,9 @@ components:
           type: string
         password:
           type: string
-    _shared_req_CredsTwilioPhone:
+    _shared_req_CredsPhone:
       type: object
-      description: Auth login creds for auth_type="twilio_phone"
+      description: Auth login creds for auth_type="phone"
       required:
         - phone
       properties:
@@ -5712,7 +5719,9 @@ components:
           type: string
           enum:
             - email
+            - phone
             - twilio_phone
+            - oidc
             - illinois_oidc
             - username
         app_type_identifier:
@@ -5720,7 +5729,7 @@ components:
         creds:
           anyOf:
             - $ref: '#/components/schemas/_shared_req_CredsEmail'
-            - $ref: '#/components/schemas/_shared_req_CredsTwilioPhone'
+            - $ref: '#/components/schemas/_shared_req_CredsPhone'
             - $ref: '#/components/schemas/_shared_req_CredsOIDC'
         params:
           type: object
@@ -5739,7 +5748,9 @@ components:
           type: string
           enum:
             - email
+            - phone
             - twilio_phone
+            - oidc
             - illinois_oidc
             - username
         app_type_identifier:

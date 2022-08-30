@@ -538,9 +538,9 @@ func (a *Auth) applyAuthType(authImpl internalAuthType, appOrg model.Application
 
 	authTypeCode := authImpl.code()
 	if userIdentifier != "" {
-		if authTypeCode == "twilio_phone" && regProfile.Phone == "" {
+		if authTypeCode == AuthTypePhone && regProfile.Phone == "" {
 			regProfile.Phone = userIdentifier
-		} else if authTypeCode == "email" && regProfile.Email == "" {
+		} else if authTypeCode == AuthTypeEmail && regProfile.Email == "" {
 			regProfile.Email = userIdentifier
 		}
 	}
@@ -1277,9 +1277,9 @@ func (a *Auth) getProfileBBData(authTypeCode string, identifier string, l *logs.
 	var err error
 
 	var profileSearch map[string]string
-	if authTypeCode == "twilio_phone" {
+	if authTypeCode == AuthTypePhone {
 		profileSearch = map[string]string{"phone": identifier}
-	} else if authTypeCode == "illinois_oidc" {
+	} else if authTypeCode == AuthTypeOidc {
 		profileSearch = map[string]string{"uin": identifier}
 	}
 
@@ -1661,6 +1661,12 @@ func (a *Auth) unlinkAccountAuthType(accountID string, authTypeCode string, appT
 		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, &logutils.FieldArgs{"id": accountID})
 	}
 
+	//validate if the provided auth type is supported by the provided application and organization
+	_, _, err = a.validateAuthType(authTypeCode, appTypeIdentifier, account.AppOrg.Organization.ID)
+	if err != nil {
+		return nil, err
+	}
+
 	for i, aat := range account.AuthTypes {
 		// unlink auth type with matching code and identifier
 		if aat.AuthTypeCode == authTypeCode && aat.Identifier == identifier {
@@ -1949,11 +1955,6 @@ func (a *Auth) validateAppOrgAuthType(authTypeCode string, appID string, orgID s
 }
 
 func (a *Auth) getAuthTypeImpl(authType string) (authType, error) {
-	//illinois_oidc, other_oidc
-	if strings.HasSuffix(authType, "_oidc") {
-		authType = "oidc"
-	}
-
 	if auth, ok := a.authTypes[authType]; ok {
 		return auth, nil
 	}

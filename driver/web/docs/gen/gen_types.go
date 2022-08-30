@@ -66,6 +66,10 @@ const (
 
 	ServicesReqAccountAuthTypeLinkAuthTypeIllinoisOidc ServicesReqAccountAuthTypeLinkAuthType = "illinois_oidc"
 
+	ServicesReqAccountAuthTypeLinkAuthTypeOidc ServicesReqAccountAuthTypeLinkAuthType = "oidc"
+
+	ServicesReqAccountAuthTypeLinkAuthTypePhone ServicesReqAccountAuthTypeLinkAuthType = "phone"
+
 	ServicesReqAccountAuthTypeLinkAuthTypeTwilioPhone ServicesReqAccountAuthTypeLinkAuthType = "twilio_phone"
 
 	ServicesReqAccountAuthTypeLinkAuthTypeUsername ServicesReqAccountAuthTypeLinkAuthType = "username"
@@ -76,6 +80,10 @@ const (
 	ServicesReqAccountAuthTypeUnlinkAuthTypeEmail ServicesReqAccountAuthTypeUnlinkAuthType = "email"
 
 	ServicesReqAccountAuthTypeUnlinkAuthTypeIllinoisOidc ServicesReqAccountAuthTypeUnlinkAuthType = "illinois_oidc"
+
+	ServicesReqAccountAuthTypeUnlinkAuthTypeOidc ServicesReqAccountAuthTypeUnlinkAuthType = "oidc"
+
+	ServicesReqAccountAuthTypeUnlinkAuthTypePhone ServicesReqAccountAuthTypeUnlinkAuthType = "phone"
 
 	ServicesReqAccountAuthTypeUnlinkAuthTypeTwilioPhone ServicesReqAccountAuthTypeUnlinkAuthType = "twilio_phone"
 
@@ -131,6 +139,10 @@ const (
 
 	SharedReqAccountCheckAuthTypeIllinoisOidc SharedReqAccountCheckAuthType = "illinois_oidc"
 
+	SharedReqAccountCheckAuthTypeOidc SharedReqAccountCheckAuthType = "oidc"
+
+	SharedReqAccountCheckAuthTypePhone SharedReqAccountCheckAuthType = "phone"
+
 	SharedReqAccountCheckAuthTypeTwilioPhone SharedReqAccountCheckAuthType = "twilio_phone"
 
 	SharedReqAccountCheckAuthTypeUsername SharedReqAccountCheckAuthType = "username"
@@ -141,6 +153,8 @@ const (
 	SharedReqCreateAccountAuthTypeEmail SharedReqCreateAccountAuthType = "email"
 
 	SharedReqCreateAccountAuthTypeIllinoisOidc SharedReqCreateAccountAuthType = "illinois_oidc"
+
+	SharedReqCreateAccountAuthTypeOidc SharedReqCreateAccountAuthType = "oidc"
 )
 
 // Defines values for SharedReqLoginAuthType.
@@ -151,12 +165,18 @@ const (
 
 	SharedReqLoginAuthTypeIllinoisOidc SharedReqLoginAuthType = "illinois_oidc"
 
+	SharedReqLoginAuthTypeOidc SharedReqLoginAuthType = "oidc"
+
+	SharedReqLoginAuthTypePhone SharedReqLoginAuthType = "phone"
+
 	SharedReqLoginAuthTypeTwilioPhone SharedReqLoginAuthType = "twilio_phone"
 )
 
 // Defines values for SharedReqLoginUrlAuthType.
 const (
 	SharedReqLoginUrlAuthTypeIllinoisOidc SharedReqLoginUrlAuthType = "illinois_oidc"
+
+	SharedReqLoginUrlAuthTypeOidc SharedReqLoginUrlAuthType = "oidc"
 )
 
 // Defines values for SharedReqLoginDeviceType.
@@ -195,6 +215,8 @@ const (
 	SharedReqUpdateAccountAuthTypeEmail SharedReqUpdateAccountAuthType = "email"
 
 	SharedReqUpdateAccountAuthTypeIllinoisOidc SharedReqUpdateAccountAuthType = "illinois_oidc"
+
+	SharedReqUpdateAccountAuthTypeOidc SharedReqUpdateAccountAuthType = "oidc"
 )
 
 // Defines values for SharedResRokwireTokenTokenType.
@@ -822,8 +844,8 @@ type SharedReqCredsEmail struct {
 //   - full redirect URI received from OIDC provider
 type SharedReqCredsOIDC string
 
-// Auth login creds for auth_type="twilio_phone"
-type SharedReqCredsTwilioPhone struct {
+// Auth login creds for auth_type="phone"
+type SharedReqCredsPhone struct {
 	Code  *string `json:"code,omitempty"`
 	Phone string  `json:"phone"`
 }
