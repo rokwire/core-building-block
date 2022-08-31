@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/rokwire/core-auth-library-go/v2/sigauth"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
@@ -285,8 +286,8 @@ type defaultImpl struct {
 	app *application
 }
 
-func (s *defaultImpl) ProcessVCSAppConfigWebhook(data []byte, l *logs.Log) error {
-	return s.app.processVCSAppConfigWebhook(data, l)
+func (s *defaultImpl) ProcessVCSAppConfigWebhook(r *sigauth.Request, l *logs.Log) error {
+	return s.app.processVCSAppConfigWebhook(r, l)
 }
 
 // servicesImpl

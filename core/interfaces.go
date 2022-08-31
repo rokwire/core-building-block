@@ -18,12 +18,13 @@ import (
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
 
+	"github.com/rokwire/core-auth-library-go/v2/sigauth"
 	"github.com/rokwire/logging-library-go/logs"
 )
 
 // Default exposes APIs for the driver adapters
 type Default interface {
-	ProcessVCSAppConfigWebhook(data []byte, l *logs.Log) error
+	ProcessVCSAppConfigWebhook(r *sigauth.Request, l *logs.Log) error
 }
 
 // Services exposes APIs for the driver adapters
@@ -222,7 +223,7 @@ type Storage interface {
 type VCS interface {
 	GetContents(path string) (string, bool, error)
 	LoadWebhookConfig() (*model.WebhookConfig, error)
-	ProcessAppConfigWebhook(data []byte, l *logs.Log) ([]model.WebhookAppConfigCommit, error)
+	ProcessAppConfigWebhook(r *sigauth.Request, l *logs.Log) ([]model.WebhookAppConfigCommit, error)
 }
 
 // ApplicationListener represents application listener

@@ -82,13 +82,13 @@ func main() {
 
 	// webhook configs
 	githubToken := envLoader.GetAndLogEnvVar("GITHUB_TOKEN", false, false)
-	githubWebhookRequestToken := envLoader.GetAndLogEnvVar("GITHUB_APP_CONFIG_WEBHOOK_REQUEST_TOKEN", false, false)
+	githubWebhookSecret := envLoader.GetAndLogEnvVar("GITHUB_APP_CONFIG_WEBHOOK_SECRET", false, false)
 	githubOrganizationName := envLoader.GetAndLogEnvVar("GITHUB_APP_CONFIG_ORG_NAME", false, false)
 	githubRepoName := envLoader.GetAndLogEnvVar("GITHUB_APP_CONFIG_REPO_NAME", false, false)
 	githubWebhookConfigPath := envLoader.GetAndLogEnvVar("GITHUB_APP_CONFIG_WEBHOOK_CONFIG_PATH", false, false)
 	githubAppConfigBranch := envLoader.GetAndLogEnvVar("GITHUB_APP_CONFIG_BRANCH", false, false)
 
-	githubAdapter := github.NewGitHubAdapter(githubToken, githubOrganizationName, githubRepoName, githubWebhookConfigPath, githubAppConfigBranch, logger)
+	githubAdapter := github.NewGitHubAdapter(githubToken, githubOrganizationName, githubRepoName, githubWebhookConfigPath, githubWebhookSecret, githubAppConfigBranch, logger)
 	err = githubAdapter.Start()
 	if err != nil {
 		logger.Warnf("Cannot start the GitHub adapter: %v", err)
@@ -176,6 +176,6 @@ func main() {
 	coreAPIs.Start()
 
 	//web adapter
-	webAdapter := web.NewWebAdapter(env, serviceID, auth.ServiceRegManager, port, coreAPIs, host, githubWebhookRequestToken, githubAppConfigBranch, logger)
+	webAdapter := web.NewWebAdapter(env, serviceID, auth.ServiceRegManager, port, coreAPIs, host, logger)
 	webAdapter.Start()
 }

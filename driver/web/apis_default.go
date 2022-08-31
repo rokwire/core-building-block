@@ -21,7 +21,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/google/go-github/v44/github"
+	"github.com/rokwire/core-auth-library-go/v2/sigauth"
 	"github.com/rokwire/core-auth-library-go/v2/tokenauth"
 	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
@@ -29,9 +29,7 @@ import (
 
 // DefaultApisHandler handles default APIs implementation - version etc
 type DefaultApisHandler struct {
-	coreAPIs              *core.APIs
-	githubWebhookSecret   string
-	githubAppConfigBranch string
+	coreAPIs *core.APIs
 }
 
 // getVersion gives the service version
@@ -54,16 +52,12 @@ func (h DefaultApisHandler) getOpenIDConfiguration(l *logs.Log, r *http.Request,
 }
 
 func (h DefaultApisHandler) handleWebhookConfigChange(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	if h.githubWebhookSecret == "" {
-		return l.HttpResponseErrorData(logutils.StatusMissing, "config", logutils.StringArgs("github webhook secret"), nil, http.StatusInternalServerError, false)
-	}
-	// verify webhook request signature
-	data, err := github.ValidatePayload(r, []byte(h.githubWebhookSecret))
+	req, err := sigauth.ParseHTTPRequest(r)
 	if err != nil {
-		return l.HttpResponseErrorData(logutils.MessageDataStatus(logutils.ActionValidate), model.TypeWebhookSecretToken, nil, err, http.StatusBadRequest, false)
+		return l.HttpResponseErrorAction(logutils.ActionParse, "sigauth http request", nil, err, http.StatusInternalServerError, false)
 	}
 
-	err = h.coreAPIs.Default.ProcessVCSAppConfigWebhook(data, l)
+	err = h.coreAPIs.Default.ProcessVCSAppConfigWebhook(req, l)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeApplicationConfigWebhook, nil, err, http.StatusInternalServerError, true)
 	}
@@ -72,6 +66,6 @@ func (h DefaultApisHandler) handleWebhookConfigChange(l *logs.Log, r *http.Reque
 }
 
 // NewDefaultApisHandler creates new rest services Handler instance
-func NewDefaultApisHandler(coreAPIs *core.APIs, githubWebhookSecret string, githubAppConfigBranch string) DefaultApisHandler {
-	return DefaultApisHandler{coreAPIs: coreAPIs, githubWebhookSecret: githubWebhookSecret, githubAppConfigBranch: githubAppConfigBranch}
+func NewDefaultApisHandler(coreAPIs *core.APIs) DefaultApisHandler {
+	return DefaultApisHandler{coreAPIs: coreAPIs}
 }

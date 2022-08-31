@@ -1,13 +1,16 @@
 package github
 
 import (
+	"bytes"
 	"context"
 	"core-building-block/core/model"
 	"encoding/json"
+	"mime"
 	"strconv"
 	"strings"
 
 	"github.com/google/go-github/v44/github"
+	"github.com/rokwire/core-auth-library-go/v2/sigauth"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
@@ -20,6 +23,7 @@ type Adapter struct {
 	githubOrganizationName  string
 	githubRepoName          string
 	githubWebhookConfigPath string
+	githubWebhookSecret     string
 	githubAppConfigBranch   string
 
 	logger *logs.Logger
@@ -75,9 +79,13 @@ func (a *Adapter) LoadWebhookConfig() (*model.WebhookConfig, error) {
 }
 
 // ProcessAppConfigWebhook processes an incoming GitHub app config webhook request
-func (a *Adapter) ProcessAppConfigWebhook(data []byte, l *logs.Log) ([]model.WebhookAppConfigCommit, error) {
+func (a *Adapter) ProcessAppConfigWebhook(r *sigauth.Request, l *logs.Log) ([]model.WebhookAppConfigCommit, error) {
+	err := a.validatePayload(r)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeWebhookSecretToken, nil, err)
+	}
 	var requestData webhookRequest
-	err := json.Unmarshal(data, &requestData)
+	err = json.Unmarshal(r.Body, &requestData)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, model.TypeApplicationConfigWebhook, nil, err)
 	}
@@ -97,9 +105,16 @@ func (a *Adapter) ProcessAppConfigWebhook(data []byte, l *logs.Log) ([]model.Web
 	appConfigCommits := []model.WebhookAppConfigCommit{}
 	for _, commit := range commits {
 		webhookCommit := model.WebhookAppConfigCommit{}
-		webhookCommit.Config, webhookCommit.Added = a.processGitHubWebhookFiles(commit.Added, l)
-		webhookCommit.Config, webhookCommit.Modified = a.processGitHubWebhookFiles(commit.Modified, l)
-		webhookCommit.Config, webhookCommit.Removed = a.processGitHubWebhookFiles(commit.Removed, l)
+		var config *model.WebhookConfig
+		config, webhookCommit.Added = a.processGitHubWebhookFiles(commit.Added, l)
+		if config != nil {
+			webhookCommit.Config = config
+		}
+		config, webhookCommit.Modified = a.processGitHubWebhookFiles(commit.Modified, l)
+		if config != nil {
+			webhookCommit.Config = config
+		}
+		_, webhookCommit.Removed = a.processGitHubWebhookFiles(commit.Removed, l)
 		appConfigCommits = append(appConfigCommits, webhookCommit)
 	}
 
@@ -122,7 +137,6 @@ func (a *Adapter) processGitHubWebhookFiles(files []string, l *logs.Log) (*model
 		}
 
 		if isWebhookConfigPath {
-
 			var webhookConfigData model.WebhookConfig
 			err = json.Unmarshal([]byte(contentString), &webhookConfigData)
 			if err != nil {
@@ -189,7 +203,31 @@ func (a *Adapter) parseWebhookAppConfig(path string, contentString string) (*mod
 	return &webhookAppConfig, nil
 }
 
+func (a *Adapter) validatePayload(r *sigauth.Request) (err error) {
+	if a.githubWebhookSecret == "" {
+		return errors.ErrorData(logutils.StatusMissing, "config", logutils.StringArgs("github webhook secret"))
+	}
+
+	signature := r.GetHeader(github.SHA256SignatureHeader)
+	if signature == "" {
+		signature = r.GetHeader(github.SHA1SignatureHeader)
+	}
+
+	contentType, _, err := mime.ParseMediaType(r.GetHeader("Content-Type"))
+	if err != nil {
+		return err
+	}
+
+	body := bytes.NewReader(r.Body)
+
+	_, err = github.ValidatePayloadFromBody(contentType, body, signature, []byte(a.githubWebhookSecret))
+
+	return err
+}
+
 // NewGitHubAdapter creates a new GitHub adapter instance
-func NewGitHubAdapter(githubToken string, githubOrgnizationName string, githubRepoName string, githubWebhookConfigPath string, githubAppConfigBranch string, logger *logs.Logger) *Adapter {
-	return &Adapter{githubToken: githubToken, githubOrganizationName: githubOrgnizationName, githubRepoName: githubRepoName, githubWebhookConfigPath: githubWebhookConfigPath, githubAppConfigBranch: githubAppConfigBranch, logger: logger}
+func NewGitHubAdapter(githubToken string, githubOrganizationName string, githubRepoName string, githubWebhookConfigPath string,
+	githubWebhookSecret string, githubAppConfigBranch string, logger *logs.Logger) *Adapter {
+	return &Adapter{githubToken: githubToken, githubOrganizationName: githubOrganizationName, githubRepoName: githubRepoName,
+		githubWebhookConfigPath: githubWebhookConfigPath, githubWebhookSecret: githubWebhookSecret, githubAppConfigBranch: githubAppConfigBranch, logger: logger}
 }
