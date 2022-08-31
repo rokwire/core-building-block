@@ -78,7 +78,7 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 	//TODO - analyse what should go in one transaction
 
 	//validate if the provided auth type is supported by the provided application and organization
-	appType, appOrg, err := a.validateAuthType(authTypeCode, appTypeIdentifier, orgID)
+	appType, appOrg, authTypeCode, err := a.validateAuthType(authTypeCode, appTypeIdentifier, orgID)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -433,7 +433,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.
 //		Params (map[string]interface{}): Params to be sent in subsequent request (if necessary)
 func (a *Auth) GetLoginURL(authTypeCode string, appTypeIdentifier string, orgID string, redirectURI string, apiKey string, l *logs.Log) (string, map[string]interface{}, error) {
 	//validate if the provided auth type is supported by the provided application and organization
-	appType, appOrg, err := a.validateAuthType(authTypeCode, appTypeIdentifier, orgID)
+	appType, appOrg, authTypeCode, err := a.validateAuthType(authTypeCode, appTypeIdentifier, orgID)
 	if err != nil {
 		return "", nil, err
 	}
@@ -571,20 +571,20 @@ func (a *Auth) LoginMFA(apiKey string, accountID string, sessionID string, ident
 // CreateAdminAccount creates an account for a new admin user
 func (a *Auth) CreateAdminAccount(authTypeCode string, appID string, orgID string, identifier string, profile model.Profile,
 	permissions []string, roleIDs []string, groupIDs []string, creatorPermissions []string, l *logs.Log) (*model.Account, map[string]interface{}, error) {
+	// check if the provided auth type is supported by the provided application and organization
+	appOrg, authTypeCode, err := a.validateAppOrgAuthType(authTypeCode, appID, orgID)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, "application organization auth type", nil, err)
+	}
+
 	//TODO: add admin authentication policies that specify which auth types may be used for each app org
-	if authTypeCode != AuthTypeOidc && authTypeCode != AuthTypeEmail && !strings.HasSuffix(authTypeCode, "_oidc") {
-		return nil, nil, errors.ErrorData(logutils.StatusInvalid, "auth type", nil)
+	if authTypeCode != AuthTypeOidc && authTypeCode != AuthTypeEmail {
+		return nil, nil, errors.ErrorData(logutils.StatusInvalid, typeAuthType, nil)
 	}
 
 	authTypeImpl, err := a.getAuthTypeImpl(authTypeCode)
 	if err != nil {
 		return nil, nil, errors.WrapErrorData(logutils.StatusInvalid, typeAuthType, logutils.StringArgs(authTypeCode), err)
-	}
-
-	// check if the provided auth type is supported by the provided application and organization
-	appOrg, err := a.validateAppOrgAuthType(authTypeCode, appID, orgID)
-	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, "application organization auth type", nil, err)
 	}
 
 	// create account
@@ -642,14 +642,14 @@ func (a *Auth) UpdateAdminAccount(authTypeCode string, appID string, orgID strin
 	//TODO: when elevating existing accounts to application level admin, need to enforce any authentication policies set up for the app org
 	// when demoting from application level admin to standard user, may want to inform user of applicable authentication policy changes
 
-	if authTypeCode != AuthTypeOidc && authTypeCode != AuthTypeEmail && !strings.HasSuffix(authTypeCode, "_oidc") {
-		return nil, nil, errors.ErrorData(logutils.StatusInvalid, "auth type", nil)
-	}
-
 	// check if the provided auth type is supported by the provided application and organization
-	appOrg, err := a.validateAppOrgAuthType(authTypeCode, appID, orgID)
+	appOrg, authTypeCode, err := a.validateAppOrgAuthType(authTypeCode, appID, orgID)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, "application organization auth type", nil, err)
+	}
+
+	if authTypeCode != AuthTypeOidc && authTypeCode != AuthTypeEmail {
+		return nil, nil, errors.ErrorData(logutils.StatusInvalid, typeAuthType, nil)
 	}
 
 	var updatedAccount *model.Account
@@ -819,6 +819,12 @@ func (a *Auth) UpdateAdminAccount(authTypeCode string, appID string, orgID strin
 
 // VerifyCredential verifies credential (checks the verification code in the credentials collection)
 func (a *Auth) VerifyCredential(authTypeCode string, id string, verification string, l *logs.Log) error {
+	//remove any organizational/provider identifier from auth type code
+	updatedCode, err := utils.GetSuffix(authTypeCode, "_")
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionGet, typeAuthType, logutils.StringArgs(authTypeCode), err)
+	}
+
 	credential, err := a.storage.FindCredential(nil, id)
 	if err != nil || credential == nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
@@ -828,13 +834,13 @@ func (a *Auth) VerifyCredential(authTypeCode string, id string, verification str
 		return errors.New("credential has already been verified")
 	}
 
-	authImpl, err := a.getAuthTypeImpl(authTypeCode)
+	authImpl, err := a.getAuthTypeImpl(updatedCode)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
 	}
 	internalAuth, ok := authImpl.(internalAuthType)
 	if !ok {
-		return errors.ErrorData(logutils.StatusInvalid, typeAuthType, logutils.StringArgs(authTypeCode))
+		return errors.ErrorData(logutils.StatusInvalid, typeAuthType, logutils.StringArgs(updatedCode))
 	}
 
 	authTypeCreds, err := internalAuth.verifyCredential(credential, verification, l)
@@ -911,19 +917,25 @@ func (a *Auth) UpdateCredential(accountID string, accountAuthTypeID string, para
 // TODO: Clear login sessions using old creds
 // Handle refresh tokens when applicable
 func (a *Auth) ResetForgotCredential(authTypeCode string, credsID string, resetCode string, params string, l *logs.Log) error {
+	//remove any organizational/provider identifier from auth type code
+	updatedCode, err := utils.GetSuffix(authTypeCode, "_")
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionGet, typeAuthType, logutils.StringArgs(authTypeCode), err)
+	}
+
 	credential, err := a.storage.FindCredential(nil, credsID)
 	if err != nil || credential == nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
 	}
 
 	//Determine the auth type for resetPassword
-	authImpl, err := a.getAuthTypeImpl(authTypeCode)
+	authImpl, err := a.getAuthTypeImpl(updatedCode)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
 	}
 	internalAuth, ok := authImpl.(internalAuthType)
 	if !ok {
-		return errors.ErrorData(logutils.StatusInvalid, typeAuthType, logutils.StringArgs(authTypeCode))
+		return errors.ErrorData(logutils.StatusInvalid, typeAuthType, logutils.StringArgs(updatedCode))
 	}
 
 	authTypeCreds, err := internalAuth.resetCredential(credential, &resetCode, params, l)
@@ -951,7 +963,7 @@ func (a *Auth) ResetForgotCredential(authTypeCode string, credsID string, resetC
 //		error: if any
 func (a *Auth) ForgotCredential(authTypeCode string, appTypeIdentifier string, orgID string, apiKey string, identifier string, l *logs.Log) error {
 	//validate if the provided auth type is supported by the provided application and organization
-	_, appOrg, err := a.validateAuthType(authTypeCode, appTypeIdentifier, orgID)
+	_, appOrg, authTypeCode, err := a.validateAuthType(authTypeCode, appTypeIdentifier, orgID)
 	if err != nil {
 		return err
 	}
@@ -1012,7 +1024,7 @@ func (a *Auth) ForgotCredential(authTypeCode string, appTypeIdentifier string, o
 // SendVerifyCredential sends the verification code to the identifier
 func (a *Auth) SendVerifyCredential(authTypeCode string, appTypeIdentifier string, orgID string, apiKey string, identifier string, l *logs.Log) error {
 	//validate if the provided auth type is supported by the provided application and organization
-	_, appOrg, err := a.validateAuthType(authTypeCode, appTypeIdentifier, orgID)
+	_, appOrg, authTypeCode, err := a.validateAuthType(authTypeCode, appTypeIdentifier, orgID)
 	if err != nil {
 		return err
 	}
@@ -1555,7 +1567,7 @@ func (a *Auth) LinkAccountAuthType(accountID string, authTypeCode string, appTyp
 	}
 
 	//validate if the provided auth type is supported by the provided application and organization
-	appType, appOrg, err := a.validateAuthType(authTypeCode, appTypeIdentifier, account.AppOrg.Organization.ID)
+	appType, appOrg, authTypeCode, err := a.validateAuthType(authTypeCode, appTypeIdentifier, account.AppOrg.Organization.ID)
 	if err != nil {
 		return nil, nil, err
 	}

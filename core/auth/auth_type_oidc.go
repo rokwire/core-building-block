@@ -294,11 +294,6 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 		return nil, nil, errors.Newf("mismatching user info sub %s and id token sub %s", userClaimsSub, sub)
 	}
 
-	authTypeConfig := appOrg.GetAuthTypeConfig(a.authType)
-	if authTypeConfig == nil {
-		return nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeAuthTypeConfig, &logutils.FieldArgs{"app_org_id": appOrg.ID, "auth_type": a.authType})
-	}
-
 	identityProviderSetting, err := appOrg.GetIdentityProviderSetting(a.authType)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeIdentityProviderSetting, logutils.StringArgs(AuthTypeOidc), err)

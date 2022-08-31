@@ -895,7 +895,7 @@ func (a *Auth) isSignUp(accountExists bool, params string, l *logs.Log) (bool, e
 
 func (a *Auth) getAccount(authTypeCode string, userIdentifier string, apiKey string, appTypeIdentifier string, orgID string) (*model.Account, error) {
 	//validate if the provided auth type is supported by the provided application and organization
-	_, appOrg, err := a.validateAuthType(authTypeCode, appTypeIdentifier, orgID)
+	_, appOrg, authTypeCode, err := a.validateAuthType(authTypeCode, appTypeIdentifier, orgID)
 	if err != nil {
 		return nil, err
 	}
@@ -1661,12 +1661,6 @@ func (a *Auth) unlinkAccountAuthType(accountID string, authTypeCode string, appT
 		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, &logutils.FieldArgs{"id": accountID})
 	}
 
-	//validate if the provided auth type is supported by the provided application and organization
-	_, _, err = a.validateAuthType(authTypeCode, appTypeIdentifier, account.AppOrg.Organization.ID)
-	if err != nil {
-		return nil, err
-	}
-
 	for i, aat := range account.AuthTypes {
 		// unlink auth type with matching code and identifier
 		if aat.AuthTypeCode == authTypeCode && aat.Identifier == identifier {
@@ -1918,40 +1912,46 @@ func (a *Auth) registerMfaType(name string, mfa mfaType) error {
 	return nil
 }
 
-func (a *Auth) validateAuthType(authTypeCode string, appTypeIdentifier string, orgID string) (*model.ApplicationType, *model.ApplicationOrganization, error) {
+func (a *Auth) validateAuthType(authTypeCode string, appTypeIdentifier string, orgID string) (*model.ApplicationType, *model.ApplicationOrganization, string, error) {
 	//get the app type
 	applicationType, err := a.storage.FindApplicationType(appTypeIdentifier)
 	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationType, logutils.StringArgs(appTypeIdentifier), err)
+		return nil, nil, authTypeCode, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationType, logutils.StringArgs(appTypeIdentifier), err)
 
 	}
 	if applicationType == nil {
-		return nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationType, logutils.StringArgs(appTypeIdentifier))
+		return nil, nil, authTypeCode, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationType, logutils.StringArgs(appTypeIdentifier))
 	}
 
 	//get the app org
-	appOrg, err := a.validateAppOrgAuthType(authTypeCode, applicationType.Application.ID, orgID)
+	appOrg, authTypeCode, err := a.validateAppOrgAuthType(authTypeCode, applicationType.Application.ID, orgID)
 	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, logutils.StringArgs(authTypeCode), err)
+		return nil, nil, authTypeCode, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
 	}
 
-	return applicationType, appOrg, nil
+	return applicationType, appOrg, authTypeCode, nil
 }
 
-func (a *Auth) validateAppOrgAuthType(authTypeCode string, appID string, orgID string) (*model.ApplicationOrganization, error) {
+func (a *Auth) validateAppOrgAuthType(authTypeCode string, appID string, orgID string) (*model.ApplicationOrganization, string, error) {
+	//remove any organizational/provider identifier from auth type code
+	updatedCode, err := utils.GetSuffix(authTypeCode, "_")
+	if err != nil {
+		return nil, authTypeCode, errors.WrapErrorAction(logutils.ActionGet, typeAuthType, logutils.StringArgs(authTypeCode), err)
+	}
+
 	appOrg, err := a.storage.FindApplicationOrganization(appID, orgID)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": appID, "org_id": orgID}, err)
+		return nil, updatedCode, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": appID, "org_id": orgID}, err)
 	}
 	if appOrg == nil {
-		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": appID, "org_id": orgID})
+		return nil, updatedCode, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": appID, "org_id": orgID})
 	}
 
-	if !appOrg.IsAuthTypeSupported(authTypeCode) {
-		return nil, errors.ErrorData(logutils.StatusInvalid, typeAuthType, &logutils.FieldArgs{"app_id": appID, "org_id": orgID, "auth_type": authTypeCode})
+	if !appOrg.IsAuthTypeSupported(updatedCode) {
+		return nil, updatedCode, errors.ErrorData(logutils.StatusInvalid, typeAuthType, &logutils.FieldArgs{"app_id": appID, "org_id": orgID, "auth_type": authTypeCode})
 	}
 
-	return appOrg, nil
+	return appOrg, updatedCode, nil
 }
 
 func (a *Auth) getAuthTypeImpl(authType string) (authType, error) {

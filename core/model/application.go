@@ -336,20 +336,20 @@ func (ao ApplicationOrganization) IsAuthTypeSupported(authType string) bool {
 //	 	for the UIUC application the Illinois group "urn:mace:uiuc.edu:urbana:authman:app-rokwire-service-policy-rokwire groups access" is mapped to an application group called "groups access"
 //	 	for the Safer Illinois application the Illinois group "urn:mace:uiuc.edu:urbana:authman:app-rokwire-service-policy-rokwire health test verify" is mapped to an application group called "tests verifiers"
 type IdentityProviderSetting struct {
-	UserIdentifierField string            `bson:"user_identifier_field"`
-	ExternalIDFields    map[string]string `bson:"external_id_fields"`
+	UserIdentifierField string            `json:"user_identifier_field" bson:"user_identifier_field"`
+	ExternalIDFields    map[string]string `json:"external_id_fields" bson:"external_id_fields"`
 
-	FirstNameField  string `bson:"first_name_field"`
-	MiddleNameField string `bson:"middle_name_field"`
-	LastNameField   string `bson:"last_name_field"`
-	EmailField      string `bson:"email_field"`
-	RolesField      string `bson:"roles_field"`
-	GroupsField     string `bson:"groups_field"`
+	FirstNameField  string `json:"first_name_field" bson:"first_name_field"`
+	MiddleNameField string `json:"middle_name_field" bson:"middle_name_field"`
+	LastNameField   string `json:"last_name_field" bson:"last_name_field"`
+	EmailField      string `json:"email_field" bson:"email_field"`
+	RolesField      string `json:"roles_field" bson:"roles_field"`
+	GroupsField     string `json:"groups_field" bson:"groups_field"`
 
-	UserSpecificFields []string `bson:"user_specific_fields"`
+	UserSpecificFields []string `json:"user_specific_fields" bson:"user_specific_fields"`
 
-	Roles  map[string]string `bson:"roles"`  //map[identity_provider_role]app_role_id
-	Groups map[string]string `bson:"groups"` //map[identity_provider_group]app_group_id
+	Roles  map[string]string `json:"roles" bson:"roles"`   //map[identity_provider_role]app_role_id
+	Groups map[string]string `json:"groups" bson:"groups"` //map[identity_provider_group]app_group_id
 }
 
 // LoginsSessionsSetting represents logins sessions setting for an organization in an application

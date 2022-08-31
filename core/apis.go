@@ -126,13 +126,18 @@ func (c *APIs) storeSystemData() error {
 
 			systemAppOrg = newSystemAdminAppOrg
 			createAccount = true
-		} else if !systemAdminAppOrgs[0].IsAuthTypeSupported(auth.AuthTypeEmail) {
-			//insert email auth type if does not exist
+		} else {
 			systemAppOrg = systemAdminAppOrgs[0]
-			systemAppOrg.AuthTypes[auth.AuthTypeEmail] = model.SupportedAuthType{}
-			err = c.app.storage.UpdateApplicationOrganization(context, systemAppOrg)
-			if err != nil {
-				return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeApplicationOrganization, nil, err)
+			if !systemAppOrg.IsAuthTypeSupported(auth.AuthTypeEmail) {
+				//insert email auth type if does not exist
+				if systemAppOrg.AuthTypes == nil {
+					systemAppOrg.AuthTypes = make(map[string]model.SupportedAuthType)
+				}
+				systemAppOrg.AuthTypes[auth.AuthTypeEmail] = model.SupportedAuthType{}
+				err = c.app.storage.UpdateApplicationOrganization(context, systemAppOrg)
+				if err != nil {
+					return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeApplicationOrganization, nil, err)
+				}
 			}
 		}
 

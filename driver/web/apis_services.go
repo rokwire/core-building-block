@@ -339,11 +339,20 @@ func (h ServicesApisHandler) unlinkAccountAuthType(l *logs.Log, r *http.Request,
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("account auth type unlink request"), nil, err, http.StatusBadRequest, true)
 	}
 
-	if string(requestData.AuthType) == claims.AuthType && requestData.Identifier == claims.UID {
+	//remove any organizational/provider identifier from auth type code
+	claimsCode, err := utils.GetSuffix(claims.AuthType, "_")
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionGet, "auth type", logutils.StringArgs(claims.AuthType), err, http.StatusInternalServerError, false)
+	}
+	requestCode, err := utils.GetSuffix(string(requestData.AuthType), "_")
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionGet, "auth type", logutils.StringArgs(string(requestData.AuthType)), err, http.StatusInternalServerError, false)
+	}
+	if requestCode == claimsCode && requestData.Identifier == claims.UID {
 		return l.HttpResponseError("May not unlink account auth type currently in use", nil, http.StatusBadRequest, false)
 	}
 
-	account, err := h.coreAPIs.Auth.UnlinkAccountAuthType(claims.Subject, string(requestData.AuthType), requestData.AppTypeIdentifier, requestData.Identifier, l)
+	account, err := h.coreAPIs.Auth.UnlinkAccountAuthType(claims.Subject, requestCode, requestData.AppTypeIdentifier, requestData.Identifier, l)
 	if err != nil {
 		return l.HttpResponseError("Error unlinking account auth type", err, http.StatusInternalServerError, true)
 	}

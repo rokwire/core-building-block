@@ -90,6 +90,14 @@ func partialAccountsToDef(items []model.Account) []Def.PartialAccount {
 }
 
 // AccountAuthType
+func rollbackAuthTypeCodes(item *model.Account, authTypeCode string, incomingCode string) {
+	//TODO: implement
+	// code := authTypeCode
+	// if item.AuthTypeCode == authTypeCode && authTypeCode != incomingCode {
+	// 	code = incomingCode
+	// }
+}
+
 func accountAuthTypeToDef(item model.AccountAuthType) Def.AccountAuthTypeFields {
 	params := &Def.AccountAuthTypeFields_Params{}
 	params.AdditionalProperties = item.Params

@@ -36,6 +36,10 @@ const (
 	typeTime        logutils.MessageDataType = "time.Time"
 	typeEmailCreds  logutils.MessageDataType = "email creds"
 	typeEmailParams logutils.MessageDataType = "email params"
+
+	verifyEmailDefault    bool = true //whether email addresses must be verified
+	verifyWaitTimeDefault int  = 30   //time in seconds to wait before sending another verification email
+	verifyExpiryDefault   int  = 24   //time in hours before verification code expires
 )
 
 // enailCreds represents the creds struct for email auth
@@ -202,9 +206,9 @@ func (a *emailAuthImpl) buildCredentials(appOrg model.ApplicationOrganization, e
 
 func (a *emailAuthImpl) getEmailVerificationParams(appOrg model.ApplicationOrganization) (bool, int, int) {
 	//defaults
-	verifyEmail := true  //whether email addresses must be verified
-	verifyWaitTime := 30 //time in seconds to wait before sending another verification email
-	verifyExpiry := 24   //time in hours before verification code expires
+	verifyEmail := verifyEmailDefault
+	verifyWaitTime := verifyWaitTimeDefault
+	verifyExpiry := verifyExpiryDefault
 
 	config := appOrg.GetAuthTypeConfig(a.authType)
 	if config == nil {
