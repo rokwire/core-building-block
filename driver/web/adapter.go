@@ -284,11 +284,6 @@ func (we Adapter) wrapFunc(handler handlerFunc, authorization Authorization) htt
 			return
 		}
 
-		clientVersion := req.Header.Get("CLIENT_VERSION")
-		if clientVersion != "" {
-			logObj.SetContext("client_version", clientVersion)
-		}
-
 		//2. process it
 		var response logs.HttpResponse
 		if authorization != nil {
