@@ -67,6 +67,8 @@ func (h AdminApisHandler) login(l *logs.Log, r *http.Request, claims *tokenauth.
 		return l.HttpResponseError("Error getting IP", err, http.StatusInternalServerError, true)
 	}
 
+	clientVersion := r.Header.Get("CLIENT_VERSION")
+
 	var requestData Def.SharedReqLogin
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
@@ -102,8 +104,8 @@ func (h AdminApisHandler) login(l *logs.Log, r *http.Request, claims *tokenauth.
 	//device
 	requestDevice := requestData.Device
 
-	message, loginSession, mfaTypes, err := h.coreAPIs.Auth.Login(ip, string(requestDevice.Type), requestDevice.Os, *requestDevice.DeviceId,
-		string(requestData.AuthType), requestCreds, requestData.ApiKey, requestData.AppTypeIdentifier, requestData.OrgId, requestParams, requestProfile, requestPreferences, username, true, l)
+	message, loginSession, mfaTypes, err := h.coreAPIs.Auth.Login(ip, string(requestDevice.Type), requestDevice.Os, *requestDevice.DeviceId, string(requestData.AuthType),
+		requestCreds, requestData.ApiKey, requestData.AppTypeIdentifier, requestData.OrgId, requestParams, &clientVersion, requestProfile, requestPreferences, username, true, l)
 	if err != nil {
 		loggingErr, ok := err.(*errors.Error)
 		if ok && loggingErr.Status() != "" {
@@ -199,13 +201,15 @@ func (h AdminApisHandler) refresh(l *logs.Log, r *http.Request, claims *tokenaut
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
+	clientVersion := r.Header.Get("CLIENT_VERSION")
+
 	var requestData Def.SharedReqRefresh
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth refresh request"), nil, err, http.StatusBadRequest, true)
 	}
 
-	loginSession, err := h.coreAPIs.Auth.Refresh(requestData.RefreshToken, requestData.ApiKey, l)
+	loginSession, err := h.coreAPIs.Auth.Refresh(requestData.RefreshToken, requestData.ApiKey, &clientVersion, l)
 	if err != nil {
 		return l.HttpResponseError("Error refreshing token", err, http.StatusInternalServerError, true)
 	}
@@ -475,6 +479,8 @@ func (h AdminApisHandler) createAdminAccount(l *logs.Log, r *http.Request, claim
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
+	clientVersion := r.Header.Get("CLIENT_VERSION")
+
 	var requestData Def.SharedReqCreateAccount
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
@@ -502,7 +508,7 @@ func (h AdminApisHandler) createAdminAccount(l *logs.Log, r *http.Request, claim
 
 	creatorPermissions := strings.Split(claims.Permissions, ",")
 	account, params, err := h.coreAPIs.Auth.CreateAdminAccount(string(requestData.AuthType), claims.AppID, claims.OrgID,
-		requestData.Identifier, profile, username, permissions, roleIDs, groupIDs, creatorPermissions, l)
+		requestData.Identifier, profile, username, permissions, roleIDs, groupIDs, creatorPermissions, &clientVersion, l)
 	if err != nil || account == nil {
 		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}

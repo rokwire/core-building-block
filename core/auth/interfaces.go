@@ -128,6 +128,7 @@ type APIs interface {
 	//		appTypeIdentifier (string): identifier of the app type/client that the user is logging in from
 	//		orgID (string): ID of the organization that the user is logging in
 	//		params (string): JSON encoded params defined by specified auth type
+	//      clientVersion(*string): Most recent client version
 	//		profile (Profile): Account profile
 	//		preferences (map): Account preferences
 	//		admin (bool): Is this an admin login?
@@ -141,9 +142,9 @@ type APIs interface {
 	//			Params (interface{}): authType-specific set of parameters passed back to client
 	//			State (string): login state used if account is enrolled in MFA
 	//		MFA types ([]model.MFAType): list of MFA types account is enrolled in
-	Login(ipAddress string, deviceType string, deviceOS *string, deviceID string,
-		authenticationType string, creds string, apiKey string, appTypeIdentifier string, orgID string, params string,
-		profile model.Profile, preferences map[string]interface{}, username string, admin bool, l *logs.Log) (*string, *model.LoginSession, []model.MFAType, error)
+	Login(ipAddress string, deviceType string, deviceOS *string, deviceID string, authenticationType string, creds string, apiKey string,
+		appTypeIdentifier string, orgID string, params string, clientVersion *string, profile model.Profile, preferences map[string]interface{},
+		username string, admin bool, l *logs.Log) (*string, *model.LoginSession, []model.MFAType, error)
 
 	//Logout logouts an account from app/org
 	//	Input:
@@ -190,13 +191,14 @@ type APIs interface {
 	//	Input:
 	//		refreshToken (string): Refresh token
 	//		apiKey (string): API key to validate the specified app
+	//      clientVersion(*string): Most recent client version
 	//		l (*logs.Log): Log object pointer for request
 	//	Returns:
 	//		Login session (*LoginSession): Signed ROKWIRE access token to be used to authorize future requests
 	//			Access token (string): Signed ROKWIRE access token to be used to authorize future requests
 	//			Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
 	//			Params (interface{}): authType-specific set of parameters passed back to client
-	Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.LoginSession, error)
+	Refresh(refreshToken string, apiKey string, clientVersion *string, l *logs.Log) (*model.LoginSession, error)
 
 	//GetLoginURL returns a pre-formatted login url for SSO providers
 	//	Input:
@@ -231,8 +233,8 @@ type APIs interface {
 	LoginMFA(apiKey string, accountID string, sessionID string, identifier string, mfaType string, mfaCode string, state string, l *logs.Log) (*string, *model.LoginSession, error)
 
 	//CreateAdminAccount creates an account for a new admin user
-	CreateAdminAccount(authenticationType string, appID string, orgID string, identifier string, profile model.Profile, username string,
-		permissions []string, roleIDs []string, groupIDs []string, creatorPermissions []string, l *logs.Log) (*model.Account, map[string]interface{}, error)
+	CreateAdminAccount(authenticationType string, appID string, orgID string, identifier string, profile model.Profile, username string, permissions []string,
+		roleIDs []string, groupIDs []string, creatorPermissions []string, clientVersion *string, l *logs.Log) (*model.Account, map[string]interface{}, error)
 
 	//UpdateAdminAccount updates an existing user's account with new permissions, roles, and groups
 	UpdateAdminAccount(authenticationType string, appID string, orgID string, identifier string, permissions []string, roleIDs []string,
@@ -383,7 +385,7 @@ type APIs interface {
 	UnlinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, identifier string, l *logs.Log) (*model.Account, error)
 
 	//InitializeSystemAccount initializes the first system account
-	InitializeSystemAccount(context storage.TransactionContext, authType model.AuthType, appOrg model.ApplicationOrganization, allSystemPermission string, email string, password string, l *logs.Log) (string, error)
+	InitializeSystemAccount(context storage.TransactionContext, authType model.AuthType, appOrg model.ApplicationOrganization, allSystemPermission string, email string, password string, clientVersion string, l *logs.Log) (string, error)
 
 	//GrantAccountPermissions grants new permissions to an account after validating the assigner has required permissions
 	GrantAccountPermissions(context storage.TransactionContext, account *model.Account, permissionNames []string, assignerPermissions []string) error
@@ -472,6 +474,7 @@ type Storage interface {
 	InsertAccount(context storage.TransactionContext, account model.Account) (*model.Account, error)
 	SaveAccount(context storage.TransactionContext, account *model.Account) error
 	DeleteAccount(context storage.TransactionContext, id string) error
+	UpdateAccountUsageInfo(context storage.TransactionContext, accountID string, updateLoginTime bool, updateAccessTokenTime bool, clientVersion *string) error
 
 	//Profiles
 	UpdateProfile(context storage.TransactionContext, profile model.Profile) error

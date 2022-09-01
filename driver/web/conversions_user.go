@@ -41,9 +41,13 @@ func accountToDef(item model.Account) *Def.SharedResAccount {
 	if item.Username != "" {
 		username = &item.Username
 	}
+	//account usage information
+	lastLoginDate := utils.FormatTime(item.LastLoginDate)
+	lastAccessTokenDate := utils.FormatTime(item.LastAccessTokenDate)
 
 	return &Def.SharedResAccount{Id: item.ID, HasPermissions: &item.HasPermissions, System: &item.AppOrg.Organization.System, Permissions: &permissions,
-		Roles: &roles, Groups: &groups, AuthTypes: &authTypes, Username: username, Profile: profile, Preferences: preferences, SystemConfigs: systemConfigs}
+		Roles: &roles, Groups: &groups, AuthTypes: &authTypes, Username: username, Profile: profile, Preferences: preferences, SystemConfigs: systemConfigs,
+		LastLoginDate: &lastLoginDate, LastAccessTokenDate: &lastAccessTokenDate, MostRecentClientVersion: item.MostRecentClientVersion}
 }
 
 func accountsToDef(items []model.Account) []Def.SharedResAccount {
