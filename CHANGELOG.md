@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add default assigners permission [#477](https://github.com/rokwire/core-building-block/issues/477)
 
 ### Fixed
+- Auth types/identity provider settings cannot be configured per organization [#581](https://github.com/rokwire/core-building-block/issues/581)
 - Service registration error handling change [#468](https://github.com/rokwire/core-building-block/issues/468)
 - Update account permission duplication [#545](https://github.com/rokwire/core-building-block/issues/545)
 
