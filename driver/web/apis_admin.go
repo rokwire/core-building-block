@@ -380,7 +380,11 @@ func (h AdminApisHandler) getApplicationAccounts(l *logs.Log, r *http.Request, c
 		return l.HttpResponseErrorAction("error finding accounts", model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}
 
-	response := partialAccountsToDef(accounts)
+	finalAccounts := make([]model.Account, len(accounts))
+	for i, a := range accounts {
+		finalAccounts[i] = a.RollbackAuthTypeCodes()
+	}
+	response := partialAccountsToDef(finalAccounts)
 
 	data, err := json.Marshal(response)
 	if err != nil {

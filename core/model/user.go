@@ -309,6 +309,17 @@ func (a Account) CheckForGroupChanges(new []string) bool {
 	return false
 }
 
+// RollbackAuthTypeCodes reverts auth type codes unrecognized by certain clients (needed for backward compatibility)
+func (a Account) RollbackAuthTypeCodes() Account {
+	for i, aat := range a.AuthTypes {
+		appOrgAuthType, exists := a.AppOrg.AuthTypes[aat.AuthTypeCode]
+		if exists && appOrgAuthType.Alias != nil {
+			a.AuthTypes[i].AuthTypeCode = *appOrgAuthType.Alias
+		}
+	}
+	return a
+}
+
 // AccountRole represents a role assigned to an account
 type AccountRole struct {
 	Role     AppOrgRole

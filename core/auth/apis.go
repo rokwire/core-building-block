@@ -153,15 +153,14 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 		return nil, nil, nil, errors.ErrorData(logutils.StatusInvalid, typeAuthType, logutils.StringArgs(authTypeCode))
 	}
 
-	//check if account is enrolled in MFA
+	//check if account is enrolled in MFA and if MFA should be ignored
 	authTypeConfig := appOrg.GetAuthTypeConfig(authTypeCode)
-	if authTypeConfig == nil {
-		return nil, nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeAuthTypeConfig, &logutils.FieldArgs{"app_org_id": appOrg.ID, "auth_type": authTypeCode})
-	}
-	if ignoreMfa, _ := authTypeConfig["ignore_mfa"].(bool); !ignoreMfa && len(mfaTypes) > 0 {
-		state, err = utils.GenerateRandomString(loginStateLength)
-		if err != nil {
-			return nil, nil, nil, errors.WrapErrorAction("generate", "login state", nil, err)
+	if authTypeConfig != nil {
+		if ignoreMfa, _ := authTypeConfig["ignore_mfa"].(bool); !ignoreMfa && len(mfaTypes) > 0 {
+			state, err = utils.GenerateRandomString(loginStateLength)
+			if err != nil {
+				return nil, nil, nil, errors.WrapErrorAction("generate", "login state", nil, err)
+			}
 		}
 	}
 
@@ -176,6 +175,9 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 	loginSession, err := a.applyLogin(anonymous, sub, authTypeImpl.code(), *appOrg, accountAuthType, *appType, externalIDs, ipAddress, deviceType, deviceOS, deviceID, responseParams, state, l)
 	if err != nil {
 		return nil, nil, nil, errors.WrapErrorAction("error apply login auth type", "user", nil, err)
+	}
+	if loginSession.AccountAuthType != nil {
+		loginSession.AccountAuthType.Account = loginSession.AccountAuthType.Account.RollbackAuthTypeCodes()
 	}
 
 	if loginSession.State == "" {
@@ -624,6 +626,7 @@ func (a *Auth) CreateAdminAccount(authTypeCode string, appID string, orgID strin
 			return errors.ErrorData(logutils.StatusInvalid, typeAuthType, logutils.StringArgs(authTypeCode))
 		}
 
+		accountAuthType.Account = accountAuthType.Account.RollbackAuthTypeCodes()
 		newAccount = &accountAuthType.Account
 		return nil
 	}
@@ -814,7 +817,8 @@ func (a *Auth) UpdateAdminAccount(authTypeCode string, appID string, orgID strin
 		return nil, nil, errors.WrapErrorAction(logutils.ActionUpdate, "admin account", nil, err)
 	}
 
-	return updatedAccount, params, nil
+	finalAccount := updatedAccount.RollbackAuthTypeCodes()
+	return &finalAccount, params, nil
 }
 
 // VerifyCredential verifies credential (checks the verification code in the credentials collection)
@@ -1602,7 +1606,8 @@ func (a *Auth) LinkAccountAuthType(accountID string, authTypeCode string, appTyp
 		account.AuthTypes = append(account.AuthTypes, *newAccountAuthType)
 	}
 
-	return &message, account, nil
+	finalAccount := account.RollbackAuthTypeCodes()
+	return &message, &finalAccount, nil
 }
 
 // UnlinkAccountAuthType unlinks credentials from an existing account.

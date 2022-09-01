@@ -1139,7 +1139,7 @@ func (a *Auth) createLoginSession(anonymous bool, sub string, authTypeCode strin
 		stateExpires = &stateExpireTime
 	}
 
-	loginSession := model.LoginSession{ID: id, AppOrg: appOrg, AppType: appType, Anonymous: anonymous, Identifier: sub, ExternalIDs: externalIDs,
+	loginSession := model.LoginSession{ID: id, AppOrg: appOrg, AuthTypeCode: authTypeCode, AppType: appType, Anonymous: anonymous, Identifier: sub, ExternalIDs: externalIDs,
 		AccountAuthType: accountAuthType, Device: device, IPAddress: ipAddress, AccessToken: accessToken, RefreshTokens: []string{refreshToken},
 		Params: params, State: state, StateExpires: stateExpires, DateCreated: now}
 
@@ -1344,7 +1344,7 @@ func (a *Auth) constructAccount(context storage.TransactionContext, authTypeCode
 	appOrg model.ApplicationOrganization, credential *model.Credential, unverified bool, externalIDs map[string]string, profile model.Profile,
 	preferences map[string]interface{}, permissionNames []string, roleIDs []string, groupIDs []string, assignerPermissions []string, l *logs.Log) (*model.AccountAuthType, error) {
 	//create account auth type
-	accountAuthType, credential, err := a.prepareAccountAuthType(authTypeCode, userIdentifier, accountAuthTypeParams, credential, unverified, false)
+	accountAuthType, _, err := a.prepareAccountAuthType(authTypeCode, userIdentifier, accountAuthTypeParams, credential, unverified, false)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeAccountAuthType, nil, err)
 	}

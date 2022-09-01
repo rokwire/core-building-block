@@ -396,6 +396,7 @@ type ApplicationType struct {
 type SupportedAuthType struct {
 	Configs        map[string]interface{}            `bson:"configs,omitempty"`
 	AppTypeConfigs map[string]map[string]interface{} `bson:"app_type_configs,omitempty"`
+	Alias          *string                           `bson:"alias,omitempty"`
 }
 
 // ApplicationConfig represents app configs

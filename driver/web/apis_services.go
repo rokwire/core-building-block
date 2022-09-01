@@ -359,8 +359,9 @@ func (h ServicesApisHandler) unlinkAccountAuthType(l *logs.Log, r *http.Request,
 
 	authTypes := make([]Def.AccountAuthTypeFields, 0)
 	if account != nil {
-		account.SortAccountAuthTypes(claims.UID)
-		authTypes = accountAuthTypesToDef(account.AuthTypes)
+		finalAccount := account.RollbackAuthTypeCodes()
+		finalAccount.SortAccountAuthTypes(claims.UID)
+		authTypes = accountAuthTypesToDef(finalAccount.AuthTypes)
 	}
 
 	responseData := &Def.ServicesResAccountAuthTypeLink{AuthTypes: authTypes}
@@ -782,7 +783,11 @@ func (h ServicesApisHandler) getAccounts(l *logs.Log, r *http.Request, claims *t
 		return l.HttpResponseErrorAction("error finding accounts", model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}
 
-	response := partialAccountsToDef(accounts)
+	finalAccounts := make([]model.Account, len(accounts))
+	for i, a := range accounts {
+		finalAccounts[i] = a.RollbackAuthTypeCodes()
+	}
+	response := partialAccountsToDef(finalAccounts)
 
 	data, err := json.Marshal(response)
 	if err != nil {
