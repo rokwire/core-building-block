@@ -290,7 +290,7 @@ type AuthCreds struct {
 }
 
 // AuthRefresh represents refresh token info used by auth
-// TODO remove
+// TODO: remove
 type AuthRefresh struct {
 	PreviousToken string                 `bson:"previous_token"`
 	CurrentToken  string                 `bson:"current_token" validate:"required"`

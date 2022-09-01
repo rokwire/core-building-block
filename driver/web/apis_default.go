@@ -16,10 +16,12 @@ package web
 
 import (
 	"core-building-block/core"
+	"core-building-block/core/model"
 	Def "core-building-block/driver/web/docs/gen"
 	"encoding/json"
 	"net/http"
 
+	"github.com/rokwire/core-auth-library-go/v2/sigauth"
 	"github.com/rokwire/core-auth-library-go/v2/tokenauth"
 	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
@@ -47,6 +49,20 @@ func (h DefaultApisHandler) getOpenIDConfiguration(l *logs.Log, r *http.Request,
 	}
 
 	return l.HttpResponseSuccessJSON(data)
+}
+
+func (h DefaultApisHandler) handleWebhookConfigChange(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	req, err := sigauth.ParseHTTPRequest(r)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionParse, "sigauth http request", nil, err, http.StatusInternalServerError, false)
+	}
+
+	err = h.coreAPIs.Default.ProcessVCSAppConfigWebhook(req, l)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeApplicationConfigWebhook, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
 }
 
 // NewDefaultApisHandler creates new rest services Handler instance

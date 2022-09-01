@@ -18,8 +18,14 @@ import (
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
 
+	"github.com/rokwire/core-auth-library-go/v2/sigauth"
 	"github.com/rokwire/logging-library-go/logs"
 )
+
+// Default exposes APIs for the driver adapters
+type Default interface {
+	ProcessVCSAppConfigWebhook(r *sigauth.Request, l *logs.Log) error
+}
 
 // Services exposes APIs for the driver adapters
 type Services interface {
@@ -110,8 +116,8 @@ type System interface {
 
 	SysGetAppConfigs(appTypeID string, orgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error)
 	SysGetAppConfig(id string) (*model.ApplicationConfig, error)
-	SysCreateAppConfig(appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error)
-	SysUpdateAppConfig(id string, appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) error
+	SysCreateAppConfig(appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers, vcsManaged bool) (*model.ApplicationConfig, error)
+	SysUpdateAppConfig(id string, appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers, vcsManaged bool) error
 	SysDeleteAppConfig(id string) error
 
 	SysCreateAuthTypes(code string, description string, isExternal bool, isAnonymous bool, useCredentials bool, ignoreMFA bool, params map[string]interface{}) (*model.AuthType, error)
@@ -196,11 +202,14 @@ type Storage interface {
 
 	FindApplicationType(id string) (*model.ApplicationType, error)
 
+	UpdateWebhookConfig(webhookConfig model.WebhookConfig) error
+	FindWebhookConfig() (*model.WebhookConfig, error)
+
 	FindAppConfigs(appTypeIdentifier string, appOrgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error)
 	FindAppConfigByVersion(appTypeIdentifier string, appOrgID *string, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error)
 	FindAppConfigByID(ID string) (*model.ApplicationConfig, error)
 	InsertAppConfig(item model.ApplicationConfig) (*model.ApplicationConfig, error)
-	UpdateAppConfig(ID string, appType model.ApplicationType, appOrg *model.ApplicationOrganization, version model.Version, data map[string]interface{}) error
+	UpdateAppConfig(ID string, appType model.ApplicationType, appOrg *model.ApplicationOrganization, version model.Version, data map[string]interface{}, vcsManaged bool) error
 	DeleteAppConfig(ID string) error
 
 	FindApplicationsOrganizationsByOrgID(orgID string) ([]model.ApplicationOrganization, error)
@@ -210,10 +219,11 @@ type Storage interface {
 	InsertAPIKey(context storage.TransactionContext, apiKey model.APIKey) (*model.APIKey, error)
 }
 
-// StorageListener listenes for change data storage events
-type StorageListener struct {
-	app *application
-	storage.DefaultListenerImpl
+// VCS is used by core to load from and send data to VCS
+type VCS interface {
+	GetContents(path string) (string, bool, error)
+	LoadWebhookConfig() (*model.WebhookConfig, error)
+	ProcessAppConfigWebhook(r *sigauth.Request, l *logs.Log) ([]model.WebhookAppConfigCommit, error)
 }
 
 // ApplicationListener represents application listener

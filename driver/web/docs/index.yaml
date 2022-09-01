@@ -81,7 +81,7 @@ paths:
     $ref: "./resources/services/application/configs.yaml"
   /services/application/organization/configs:
     $ref: "./resources/services/application/organization/configs.yaml"
-
+  
   #admin
   /admin/auth/login:
     $ref: "./resources/admin/auth/login.yaml"
@@ -201,6 +201,8 @@ paths:
     $ref: "./resources/default/version.yaml"
   /.well-known/openid-configuration:
     $ref: "./resources/default/openid-configuration.yaml"
+  /application/configs/github-webhook:
+    $ref: "./resources/default/application-configs-webhook.yaml"
 
 components:
   securitySchemes:

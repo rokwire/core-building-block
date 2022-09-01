@@ -125,10 +125,14 @@ func (app *application) serGetAppConfig(appTypeIdentifier string, orgID *string,
 
 	appID := applicationType.Application.ID
 
-	if orgID == nil || apiKey != nil {
-		err = app.auth.ValidateAPIKey(appID, *apiKey)
-		if err != nil {
-			return nil, errors.WrapErrorData(logutils.StatusInvalid, model.TypeAPIKey, nil, err)
+	if orgID == nil {
+		if apiKey != nil {
+			err = app.auth.ValidateAPIKey(appID, *apiKey)
+			if err != nil {
+				return nil, errors.WrapErrorData(logutils.StatusInvalid, model.TypeAPIKey, nil, err)
+			}
+		} else {
+			return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeOrganizationID, nil, err)
 		}
 	}
 
@@ -141,6 +145,7 @@ func (app *application) serGetAppConfig(appTypeIdentifier string, orgID *string,
 		appOrgID = &appOrg.ID
 	}
 
+	// will return the latest appConfig with verion less than or equal to the versionNumbers provided
 	appConfigs, err := app.storage.FindAppConfigByVersion(applicationType.ID, appOrgID, versionNumbers)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationConfig, nil, err)

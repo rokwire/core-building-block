@@ -75,7 +75,7 @@ func (a *Auth) GetHost() string {
 func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, deviceID string,
 	authenticationType string, creds string, apiKey string, appTypeIdentifier string, orgID string, params string,
 	profile model.Profile, preferences map[string]interface{}, admin bool, l *logs.Log) (*string, *model.LoginSession, []model.MFAType, error) {
-	//TODO - analyse what should go in one transaction
+	//TODO: - analyse what should go in one transaction
 
 	//validate if the provided auth type is supported by the provided application and organization
 	authType, appType, appOrg, err := a.validateAuthType(authenticationType, appTypeIdentifier, orgID)

@@ -813,6 +813,29 @@ func (_m *Storage) FindSystemOrganization() (*model.Organization, error) {
 	return r0, r1
 }
 
+// FindWebhookConfig provides a mock function with given fields:
+func (_m *Storage) FindWebhookConfig() (*model.WebhookConfig, error) {
+	ret := _m.Called()
+
+	var r0 *model.WebhookConfig
+	if rf, ok := ret.Get(0).(func() *model.WebhookConfig); ok {
+		r0 = rf()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.WebhookConfig)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func() error); ok {
+		r1 = rf()
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetGlobalConfig provides a mock function with given fields:
 func (_m *Storage) GetGlobalConfig() (*model.GlobalConfig, error) {
 	ret := _m.Called()
@@ -1161,13 +1184,13 @@ func (_m *Storage) UpdateAccountSystemConfigs(context storage.TransactionContext
 	return r0
 }
 
-// UpdateAppConfig provides a mock function with given fields: ID, appType, appOrg, version, data
-func (_m *Storage) UpdateAppConfig(ID string, appType model.ApplicationType, appOrg *model.ApplicationOrganization, version model.Version, data map[string]interface{}) error {
-	ret := _m.Called(ID, appType, appOrg, version, data)
+// UpdateAppConfig provides a mock function with given fields: ID, appType, appOrg, version, data, vcsManaged
+func (_m *Storage) UpdateAppConfig(ID string, appType model.ApplicationType, appOrg *model.ApplicationOrganization, version model.Version, data map[string]interface{}, vcsManaged bool) error {
+	ret := _m.Called(ID, appType, appOrg, version, data, vcsManaged)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(string, model.ApplicationType, *model.ApplicationOrganization, model.Version, map[string]interface{}) error); ok {
-		r0 = rf(ID, appType, appOrg, version, data)
+	if rf, ok := ret.Get(0).(func(string, model.ApplicationType, *model.ApplicationOrganization, model.Version, map[string]interface{}, bool) error); ok {
+		r0 = rf(ID, appType, appOrg, version, data, vcsManaged)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -1252,6 +1275,20 @@ func (_m *Storage) UpdateProfile(context storage.TransactionContext, profile mod
 	var r0 error
 	if rf, ok := ret.Get(0).(func(storage.TransactionContext, model.Profile) error); ok {
 		r0 = rf(context, profile)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// UpdateWebhookConfig provides a mock function with given fields: webhookConfig
+func (_m *Storage) UpdateWebhookConfig(webhookConfig model.WebhookConfig) error {
+	ret := _m.Called(webhookConfig)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(model.WebhookConfig) error); ok {
+		r0 = rf(webhookConfig)
 	} else {
 		r0 = ret.Error(0)
 	}

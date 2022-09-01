@@ -18,11 +18,12 @@ import (
 	"core-building-block/core"
 	"core-building-block/core/auth"
 	"core-building-block/driven/emailer"
+	"core-building-block/driven/github"
 	"core-building-block/driven/profilebb"
 	"core-building-block/driven/storage"
 	"core-building-block/driver/web"
 	"core-building-block/utils"
-	"io/ioutil"
+	"os"
 	"strconv"
 	"strings"
 
@@ -72,10 +73,25 @@ func main() {
 	mongoDBAuth := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_MONGO_AUTH", true, true)
 	mongoDBName := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_MONGO_DATABASE", true, false)
 	mongoTimeout := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_MONGO_TIMEOUT", false, false)
+
 	storageAdapter := storage.NewStorageAdapter(mongoDBAuth, mongoDBName, mongoTimeout, logger)
 	err = storageAdapter.Start()
 	if err != nil {
 		logger.Fatalf("Cannot start the mongoDB adapter: %v", err)
+	}
+
+	// webhook configs
+	githubToken := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_GITHUB_TOKEN", false, false)
+	githubWebhookSecret := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_GITHUB_APP_CONFIG_WEBHOOK_SECRET", false, false)
+	githubOrganizationName := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_GITHUB_APP_CONFIG_ORG_NAME", false, false)
+	githubRepoName := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_GITHUB_APP_CONFIG_REPO_NAME", false, false)
+	githubWebhookConfigPath := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_GITHUB_APP_CONFIG_WEBHOOK_CONFIG_PATH", false, false)
+	githubAppConfigBranch := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_GITHUB_APP_CONFIG_BRANCH", false, false)
+
+	githubAdapter := github.NewGitHubAdapter(githubToken, githubOrganizationName, githubRepoName, githubWebhookConfigPath, githubWebhookSecret, githubAppConfigBranch, logger)
+	err = githubAdapter.Start()
+	if err != nil {
+		logger.Warnf("Cannot start the GitHub adapter: %v", err)
 	}
 
 	//auth
@@ -102,7 +118,7 @@ func main() {
 		authPrivKeyPem = []byte(authPrivKeyPemString)
 	} else {
 		authPrivateKeyPath := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_PRIV_KEY_PATH", true, false)
-		authPrivKeyPem, err = ioutil.ReadFile(authPrivateKeyPath)
+		authPrivKeyPem, err = os.ReadFile(authPrivateKeyPath)
 		if err != nil {
 			logger.Fatalf("Could not find auth priv key file: %v", err)
 		}
@@ -156,7 +172,7 @@ func main() {
 	}
 
 	//core
-	coreAPIs := core.NewCoreAPIs(env, Version, Build, storageAdapter, auth, systemInitSettings, logger)
+	coreAPIs := core.NewCoreAPIs(env, Version, Build, storageAdapter, githubAdapter, auth, systemInitSettings, logger)
 	coreAPIs.Start()
 
 	//web adapter

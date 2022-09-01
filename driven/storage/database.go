@@ -52,6 +52,7 @@ type database struct {
 	applicationsOrganizationsGroups *collectionWrapper
 	applicationsOrganizationsRoles  *collectionWrapper
 	applicationConfigs              *collectionWrapper
+	webhookConfigs                  *collectionWrapper
 	permissions                     *collectionWrapper
 
 	listeners []Listener
@@ -188,6 +189,12 @@ func (m *database) start() error {
 		return err
 	}
 
+	webhookConfigs := &collectionWrapper{database: m, coll: db.Collection("webhook_configs")}
+	err = m.applyWebhookConfigsChecks(webhookConfigs)
+	if err != nil {
+		return err
+	}
+
 	//asign the db, db client and the collections
 	m.db = db
 	m.dbClient = client
@@ -207,6 +214,7 @@ func (m *database) start() error {
 	m.applications = applications
 	m.applicationsOrganizations = applicationsOrganizations
 	m.applicationConfigs = applicationConfigs
+	m.webhookConfigs = webhookConfigs
 	m.applicationsOrganizationsGroups = applicationsOrganizationsGroups
 	m.applicationsOrganizationsRoles = applicationsOrganizationsRoles
 	m.permissions = permissions
@@ -219,6 +227,7 @@ func (m *database) start() error {
 	go m.applications.Watch(nil, m.logger)
 	go m.applicationsOrganizations.Watch(nil, m.logger)
 	go m.applicationConfigs.Watch(nil, m.logger)
+	go m.webhookConfigs.Watch(nil, m.logger)
 
 	m.listeners = []Listener{}
 
@@ -380,7 +389,7 @@ func (m *database) applyOrganizationsChecks(organizations *collectionWrapper) er
 		return err
 	}
 
-	//TODO
+	//TODO:
 
 	//add applications index
 	err = organizations.AddIndex(bson.D{primitive.E{Key: "applications", Value: 1}}, false)
@@ -511,15 +520,21 @@ func (m *database) applyApplicationConfigsChecks(applicationConfigs *collectionW
 	m.logger.Info("apply applications configs checks.....")
 
 	//disable the problem index for now! Look at https://github.com/rokwire/core-building-block/issues/424
-	/*
-		//add appconfigs index
-		err := applicationConfigs.AddIndex(bson.D{primitive.E{Key: "app_type_id", Value: 1}, primitive.E{Key: "app_org_id", Value: 1}, primitive.E{Key: "version.version_numbers.major", Value: -1}, primitive.E{Key: "version.version_numbers.minor", Value: -1}, primitive.E{Key: "version.version_numbers.patch", Value: -1}}, true)
-		if err != nil {
-			return err
-		}
-	*/
+
+	//add appconfigs index
+	err := applicationConfigs.AddIndex(bson.D{primitive.E{Key: "app_type_id", Value: 1}, primitive.E{Key: "app_org_id", Value: 1}, primitive.E{Key: "version.version_numbers.major", Value: -1}, primitive.E{Key: "version.version_numbers.minor", Value: -1}, primitive.E{Key: "version.version_numbers.patch", Value: -1}}, true)
+	if err != nil {
+		return err
+	}
 
 	m.logger.Info("applications configs checks passed")
+	return nil
+}
+
+func (m *database) applyWebhookConfigsChecks(webhookConfigs *collectionWrapper) error {
+	m.logger.Info("apply webhook configs checks.....")
+
+	m.logger.Info("webhook configs checks passed")
 	return nil
 }
 
@@ -583,6 +598,12 @@ func (m *database) onDataChanged(changeDoc map[string]interface{}) {
 
 		for _, listener := range m.listeners {
 			go listener.OnApplicationConfigsUpdated()
+		}
+	case "webhook_configs":
+		m.logger.Info("webhook configs collection changed")
+
+		for _, listener := range m.listeners {
+			go listener.OnWebhookConfigsUpdated()
 		}
 	}
 }

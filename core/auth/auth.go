@@ -582,7 +582,7 @@ func (a *Auth) applyAuthType(authType model.AuthType, appOrg model.ApplicationOr
 
 	account, err := a.storage.FindAccount(nil, appOrg.ID, authType.ID, userIdentifier)
 	if err != nil {
-		return "", nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err) //TODO add args..
+		return "", nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err) //TODO: add args..
 	}
 
 	canSignIn := a.canSignIn(account, authType.ID, userIdentifier)

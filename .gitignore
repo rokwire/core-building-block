@@ -6,6 +6,7 @@ build/
 *.pem
 env.list
 *.exe
+*.env
 *.DS_Store
 .idea/
 *mockery

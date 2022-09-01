@@ -27,7 +27,7 @@ type EncApisHandler struct {
 	coreAPIs *core.APIs
 }
 
-// getTest TODO get test
+// getTest TODO: get test
 func (h EncApisHandler) getTest(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	res := h.coreAPIs.Encryption.EncGetTest()
 

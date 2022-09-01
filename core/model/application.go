@@ -50,6 +50,26 @@ const (
 	TypeApplicationConfigsVersion logutils.MessageDataType = "app config version number"
 	//TypeVersionNumbers ...
 	TypeVersionNumbers logutils.MessageDataType = "version numbers"
+	//TypeWebhookRequest ...
+	TypeWebhookRequest logutils.MessageDataType = "github webhook request"
+	//TypeWebhookSecretToken ...
+	TypeWebhookSecretToken logutils.MessageDataType = "github Webhook secret"
+	//TypeWebhookConfig ...
+	TypeWebhookConfig logutils.MessageDataType = "github webhook configs"
+	//TypeApplicationConfigWebhook ...
+	TypeApplicationConfigWebhook logutils.MessageDataType = "app config from github webhook"
+	//TypeGithubContent ...
+	TypeGithubContent logutils.MessageDataType = "github content"
+	//TypeGithubCommit ...
+	TypeGithubCommit logutils.MessageDataType = "github commit"
+	//TypeGithubCommitAdded ...
+	TypeGithubCommitAdded logutils.MessageDataType = "github commit added files"
+	//TypeGithubCommitUpdated ...
+	TypeGithubCommitUpdated logutils.MessageDataType = "github commit updated files"
+	//TypeGithubCommitDeleted ...
+	TypeGithubCommitDeleted logutils.MessageDataType = "github commit deleted files"
+	//TypeOrganizationID ...
+	TypeOrganizationID logutils.MessageDataType = "organization id"
 
 	//PermissionAllSystemCore ...
 	PermissionAllSystemCore string = "all_system_core"
@@ -371,6 +391,7 @@ type ApplicationConfig struct {
 	Version         Version
 	AppOrg          *ApplicationOrganization
 	Data            map[string]interface{}
+	VCSManaged      bool
 
 	DateCreated time.Time
 	DateUpdated *time.Time
@@ -440,4 +461,29 @@ func VersionNumbersFromString(version string) *VersionNumbers {
 	}
 
 	return &VersionNumbers{Major: major, Minor: minor, Patch: patch}
+}
+
+// WebhookConfig is the organizaiton and application mapping config
+type WebhookConfig struct {
+	Organizations map[string]string            `json:"organizations"`
+	Applications  map[string]map[string]string `json:"applications"`
+}
+
+// WebhookAppConfigCommit represents an individual commit within the app config webhook data
+type WebhookAppConfigCommit struct {
+	Config   *WebhookConfig
+	Added    []WebhookAppConfig
+	Modified []WebhookAppConfig
+	Removed  []WebhookAppConfig
+}
+
+// WebhookAppConfig represents an individual app config change in the app config webhook data
+type WebhookAppConfig struct {
+	EnvironmentString string
+	OrgName           string
+	AppName           string
+	AppType           string
+	VersionNumbers    VersionNumbers
+	APIKey            *string
+	Data              map[string]interface{}
 }

@@ -41,7 +41,7 @@ type AdminApisHandler struct {
 	coreAPIs *core.APIs
 }
 
-// getTest TODO get test
+// getTest TODO: get test
 func (h AdminApisHandler) getTest(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	res := h.coreAPIs.Administration.AdmGetTest()
 
