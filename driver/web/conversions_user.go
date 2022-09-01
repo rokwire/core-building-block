@@ -18,6 +18,7 @@ import (
 	"core-building-block/core/model"
 	Def "core-building-block/driver/web/docs/gen"
 	"core-building-block/utils"
+	"net/http"
 )
 
 // Account
@@ -103,6 +104,29 @@ func accountAuthTypesToDef(items []model.AccountAuthType) []Def.AccountAuthTypeF
 		result[i] = accountAuthTypeToDef(item)
 	}
 	return result
+}
+
+// checkAccountAuthTypeCodes reverts auth type codes unrecognized by certain client versions (needed for backward compatibility)
+func checkAccountAuthTypeCodes(item *model.Account, r *http.Request) {
+	if item == nil || r == nil || r.Header.Get("CLIENT_VERSION") != "" {
+		return
+	}
+
+	updatedItem := item.RollbackAuthTypeCodes()
+	item = &updatedItem
+}
+
+// checkAccountListAuthTypeCodes reverts auth type codes unrecognized by certain client versions (needed for backward compatibility)
+func checkAccountListAuthTypeCodes(items []model.Account, r *http.Request) []model.Account {
+	if r == nil || r.Header.Get("CLIENT_VERSION") != "" {
+		return items
+	}
+
+	out := make([]model.Account, len(items))
+	for i, item := range items {
+		out[i] = item.RollbackAuthTypeCodes()
+	}
+	return out
 }
 
 // AccountRole

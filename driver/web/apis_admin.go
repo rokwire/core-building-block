@@ -136,7 +136,7 @@ func (h AdminApisHandler) login(l *logs.Log, r *http.Request, claims *tokenauth.
 		return l.HttpResponseSuccessJSON(respData)
 	}
 
-	return authBuildLoginResponse(l, loginSession)
+	return authBuildLoginResponse(loginSession, r, l)
 }
 
 func (h AdminApisHandler) loginMFA(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
@@ -159,7 +159,7 @@ func (h AdminApisHandler) loginMFA(l *logs.Log, r *http.Request, claims *tokenau
 		return l.HttpResponseError("Error logging in", err, http.StatusInternalServerError, true)
 	}
 
-	return authBuildLoginResponse(l, loginSession)
+	return authBuildLoginResponse(loginSession, r, l)
 }
 
 func (h AdminApisHandler) loginURL(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
@@ -380,11 +380,8 @@ func (h AdminApisHandler) getApplicationAccounts(l *logs.Log, r *http.Request, c
 		return l.HttpResponseErrorAction("error finding accounts", model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}
 
-	finalAccounts := make([]model.Account, len(accounts))
-	for i, a := range accounts {
-		finalAccounts[i] = a.RollbackAuthTypeCodes()
-	}
-	response := partialAccountsToDef(finalAccounts)
+	checkedAccounts := checkAccountListAuthTypeCodes(accounts, r)
+	response := partialAccountsToDef(checkedAccounts)
 
 	data, err := json.Marshal(response)
 	if err != nil {
@@ -505,6 +502,7 @@ func (h AdminApisHandler) createAdminAccount(l *logs.Log, r *http.Request, claim
 		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}
 
+	checkAccountAuthTypeCodes(account, r)
 	respData := partialAccountToDef(*account, params)
 
 	data, err = json.Marshal(respData)
@@ -546,6 +544,7 @@ func (h AdminApisHandler) updateAdminAccount(l *logs.Log, r *http.Request, claim
 		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}
 
+	checkAccountAuthTypeCodes(account, r)
 	respData := partialAccountToDef(*account, params)
 
 	data, err = json.Marshal(respData)

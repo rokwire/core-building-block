@@ -25,7 +25,7 @@ import (
 )
 
 // Helper for authLogin and authLoginMFA
-func authBuildLoginResponse(l *logs.Log, loginSession *model.LoginSession) logs.HttpResponse {
+func authBuildLoginResponse(loginSession *model.LoginSession, r *http.Request, l *logs.Log) logs.HttpResponse {
 	//token
 	accessToken := loginSession.AccessToken
 	refreshToken := loginSession.CurrentRefreshToken()
@@ -37,6 +37,7 @@ func authBuildLoginResponse(l *logs.Log, loginSession *model.LoginSession) logs.
 	var accountData *Def.SharedResAccount
 	if !loginSession.Anonymous {
 		account := loginSession.AccountAuthType.Account
+		checkAccountAuthTypeCodes(&account, r)
 		accountData = accountToDef(account)
 	}
 

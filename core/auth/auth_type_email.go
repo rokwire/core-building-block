@@ -231,7 +231,6 @@ func (a *emailAuthImpl) sendVerificationCode(email string, appName string, verif
 	params := url.Values{}
 	params.Add("id", credentialID)
 	params.Add("code", verificationCode)
-	params.Add("auth_type", a.authType)
 	verificationLink := a.auth.host + fmt.Sprintf("/ui/credential/verify?%s", params.Encode())
 	subject := "Verify your email address"
 	if appName != "" {
@@ -245,7 +244,6 @@ func (a *emailAuthImpl) sendPasswordResetEmail(credentialID string, resetCode st
 	params := url.Values{}
 	params.Add("id", credentialID)
 	params.Add("code", resetCode)
-	params.Add("auth_type", a.authType)
 	passwordResetLink := a.auth.host + fmt.Sprintf("/ui/credential/reset?%s", params.Encode())
 	subject := "Reset your password"
 	if appName != "" {

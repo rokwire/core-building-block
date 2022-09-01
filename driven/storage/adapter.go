@@ -64,6 +64,13 @@ func (sa *Adapter) Start() error {
 		return errors.WrapErrorAction(logutils.ActionInitialize, "storage adapter", nil, err)
 	}
 
+	//used for very specific (likely one-time) operations
+	//update or comment out this call after a set of updates is no longer necessary
+	err = sa.applyDataChanges()
+	if err != nil {
+		sa.logger.Warnf("error applying data changes: %v", err)
+	}
+
 	//register storage listener
 	sl := storageListener{adapter: sa}
 	sa.RegisterStorageListener(&sl)
@@ -3113,6 +3120,123 @@ func (sa *Adapter) abortTransaction(sessionContext mongo.SessionContext) {
 	if err != nil {
 		sa.logger.Errorf("error aborting a transaction - %s", err)
 	}
+}
+
+// applyDataChanges should be used to make any necessary updates to existing data when the building block is deployed
+func (sa *Adapter) applyDataChanges() error {
+	transaction := func(context TransactionContext) error {
+		now := time.Now().UTC()
+
+		//1. update auth type codes (illinois_oidc)
+		aatFilter := bson.D{primitive.E{Key: "auth_types.auth_type_code", Value: "illinois_oidc"}}
+		aatUpdate := bson.D{
+			primitive.E{Key: "$set", Value: bson.D{
+				primitive.E{Key: "auth_types.$[at].auth_type_code", Value: "oidc"},
+				primitive.E{Key: "date_updated", Value: &now},
+			}},
+		}
+
+		opts := options.UpdateOptions{}
+		arrayFilters := []interface{}{bson.M{"at.auth_type_code": "illinois_oidc"}}
+		opts.SetArrayFilters(options.ArrayFilters{Filters: arrayFilters})
+		res, err := sa.db.accounts.UpdateManyWithContext(context, aatFilter, aatUpdate, &opts)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountAuthType, &logutils.FieldArgs{"auth_type_code": "illinois_oidc"}, err)
+		}
+		if res.ModifiedCount != res.MatchedCount {
+			return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccountAuthType, &logutils.FieldArgs{"auth_type_code": "illinois_oidc", "modified": res.ModifiedCount, "expected": res.MatchedCount})
+		}
+
+		lsFilter := bson.D{primitive.E{Key: "auth_type_code", Value: "illinois_oidc"}}
+		lsUpdate := bson.D{
+			primitive.E{Key: "$set", Value: bson.D{
+				primitive.E{Key: "auth_type_code", Value: "oidc"},
+				primitive.E{Key: "date_updated", Value: &now},
+			}},
+		}
+		res, err = sa.db.loginsSessions.UpdateManyWithContext(context, lsFilter, lsUpdate, nil)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeLoginSession, &logutils.FieldArgs{"auth_type_code": "illinois_oidc"}, err)
+		}
+		if res.ModifiedCount != res.MatchedCount {
+			return errors.ErrorAction(logutils.ActionUpdate, model.TypeLoginSession, &logutils.FieldArgs{"auth_type_code": "illinois_oidc", "modified": res.ModifiedCount, "expected": res.MatchedCount})
+		}
+
+		//2. update auth type codes (twilio_phone)
+		aatFilter = bson.D{primitive.E{Key: "auth_types.auth_type_code", Value: "twilio_phone"}}
+		aatUpdate = bson.D{
+			primitive.E{Key: "$set", Value: bson.D{
+				primitive.E{Key: "auth_types.$[at].auth_type_code", Value: "phone"},
+				primitive.E{Key: "date_updated", Value: &now},
+			}},
+		}
+
+		opts = options.UpdateOptions{}
+		arrayFilters = []interface{}{bson.M{"at.auth_type_code": "twilio_phone"}}
+		opts.SetArrayFilters(options.ArrayFilters{Filters: arrayFilters})
+		res, err = sa.db.accounts.UpdateManyWithContext(context, aatFilter, aatUpdate, &opts)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountAuthType, &logutils.FieldArgs{"auth_type_code": "twilio_phone"}, err)
+		}
+		if res.ModifiedCount != res.MatchedCount {
+			return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccountAuthType, &logutils.FieldArgs{"auth_type_code": "twilio_phone", "modified": res.ModifiedCount, "expected": res.MatchedCount})
+		}
+
+		lsFilter = bson.D{primitive.E{Key: "auth_type_code", Value: "twilio_phone"}}
+		lsUpdate = bson.D{
+			primitive.E{Key: "$set", Value: bson.D{
+				primitive.E{Key: "auth_type_code", Value: "phone"},
+				primitive.E{Key: "date_updated", Value: &now},
+			}},
+		}
+		res, err = sa.db.loginsSessions.UpdateManyWithContext(context, lsFilter, lsUpdate, nil)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeLoginSession, &logutils.FieldArgs{"auth_type_code": "twilio_phone"}, err)
+		}
+		if res.ModifiedCount != res.MatchedCount {
+			return errors.ErrorAction(logutils.ActionUpdate, model.TypeLoginSession, &logutils.FieldArgs{"auth_type_code": "twilio_phone", "modified": res.ModifiedCount, "expected": res.MatchedCount})
+		}
+
+		//3. remove auth type ids
+		aatFilter = bson.D{primitive.E{Key: "auth_types.auth_type_id", Value: bson.M{"$exists": true}}}
+		aatUpdate = bson.D{
+			primitive.E{Key: "$unset", Value: bson.D{
+				primitive.E{Key: "auth_types.$[].auth_type_id", Value: ""},
+			}},
+			primitive.E{Key: "$set", Value: bson.D{
+				primitive.E{Key: "date_updated", Value: &now},
+			}},
+		}
+		res, err = sa.db.accounts.UpdateManyWithContext(context, aatFilter, aatUpdate, nil)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountAuthType, logutils.StringArgs("auth_type_id"), err)
+		}
+		if res.ModifiedCount != res.MatchedCount {
+			return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccountAuthType, &logutils.FieldArgs{"auth_type_id": "", "modified": res.ModifiedCount, "expected": res.MatchedCount})
+		}
+
+		credFilter := bson.D{primitive.E{Key: "auth_type_id", Value: bson.M{"$exists": true}}}
+		credUpdate := bson.D{
+			primitive.E{Key: "$unset", Value: bson.D{
+				primitive.E{Key: "auth_type_id", Value: ""},
+			}},
+			primitive.E{Key: "$set", Value: bson.D{
+				primitive.E{Key: "auth_type_code", Value: "email"},
+				primitive.E{Key: "date_updated", Value: &now},
+			}},
+		}
+		res, err = sa.db.credentials.UpdateManyWithContext(context, credFilter, credUpdate, nil)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, &logutils.FieldArgs{"auth_type_code": "email"}, err)
+		}
+		if res.ModifiedCount != res.MatchedCount {
+			return errors.ErrorAction(logutils.ActionUpdate, model.TypeCredential, &logutils.FieldArgs{"auth_type_code": "email", "modified": res.ModifiedCount, "expected": res.MatchedCount})
+		}
+
+		return nil
+	}
+
+	return sa.PerformTransaction(transaction)
 }
 
 // NewStorageAdapter creates a new storage adapter instance

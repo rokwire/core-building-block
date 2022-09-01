@@ -248,7 +248,7 @@ type APIs interface {
 		groupIDs []string, updaterPermissions []string, l *logs.Log) (*model.Account, map[string]interface{}, error)
 
 	//VerifyCredential verifies credential (checks the verification code in the credentials collection)
-	VerifyCredential(authTypeCode string, id string, verification string, l *logs.Log) error
+	VerifyCredential(id string, verification string, l *logs.Log) error
 
 	//SendVerifyCredential sends verification code to identifier
 	SendVerifyCredential(authTypeCode string, appTypeIdentifier string, orgID string, apiKey string, identifier string, l *logs.Log) error
@@ -280,7 +280,7 @@ type APIs interface {
 	//		params: specific params for the different auth types
 	//	Returns:
 	//		error: if any
-	ResetForgotCredential(authTypeCode string, credsID string, resetCode string, params string, l *logs.Log) error
+	ResetForgotCredential(credsID string, resetCode string, params string, l *logs.Log) error
 
 	//VerifyMFA verifies a code sent by a user as a final MFA enrollment step.
 	//The MFA type must be one of the supported for the application.

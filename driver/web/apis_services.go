@@ -116,7 +116,7 @@ func (h ServicesApisHandler) login(l *logs.Log, r *http.Request, claims *tokenau
 		return l.HttpResponseSuccessJSON(respData)
 	}
 
-	return authBuildLoginResponse(l, loginSession)
+	return authBuildLoginResponse(loginSession, r, l)
 }
 
 func (h ServicesApisHandler) loginMFA(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
@@ -139,7 +139,7 @@ func (h ServicesApisHandler) loginMFA(l *logs.Log, r *http.Request, claims *toke
 		return l.HttpResponseError("Error logging in", err, http.StatusInternalServerError, true)
 	}
 
-	return authBuildLoginResponse(l, loginSession)
+	return authBuildLoginResponse(loginSession, r, l)
 }
 
 func (h ServicesApisHandler) refresh(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
@@ -314,6 +314,7 @@ func (h ServicesApisHandler) linkAccountAuthType(l *logs.Log, r *http.Request, c
 
 	authTypes := make([]Def.AccountAuthTypeFields, 0)
 	if account != nil {
+		checkAccountAuthTypeCodes(account, r)
 		account.SortAccountAuthTypes(claims.UID)
 		authTypes = accountAuthTypesToDef(account.AuthTypes)
 	}
@@ -359,9 +360,9 @@ func (h ServicesApisHandler) unlinkAccountAuthType(l *logs.Log, r *http.Request,
 
 	authTypes := make([]Def.AccountAuthTypeFields, 0)
 	if account != nil {
-		finalAccount := account.RollbackAuthTypeCodes()
-		finalAccount.SortAccountAuthTypes(claims.UID)
-		authTypes = accountAuthTypesToDef(finalAccount.AuthTypes)
+		checkAccountAuthTypeCodes(account, r)
+		account.SortAccountAuthTypes(claims.UID)
+		authTypes = accountAuthTypesToDef(account.AuthTypes)
 	}
 
 	responseData := &Def.ServicesResAccountAuthTypeLink{AuthTypes: authTypes}
@@ -489,6 +490,7 @@ func (h ServicesApisHandler) createAdminAccount(l *logs.Log, r *http.Request, cl
 		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}
 
+	checkAccountAuthTypeCodes(account, r)
 	respData := partialAccountToDef(*account, params)
 
 	data, err = json.Marshal(respData)
@@ -530,6 +532,7 @@ func (h ServicesApisHandler) updateAdminAccount(l *logs.Log, r *http.Request, cl
 		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}
 
+	checkAccountAuthTypeCodes(account, r)
 	respData := partialAccountToDef(*account, params)
 
 	data, err = json.Marshal(respData)
@@ -783,11 +786,8 @@ func (h ServicesApisHandler) getAccounts(l *logs.Log, r *http.Request, claims *t
 		return l.HttpResponseErrorAction("error finding accounts", model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}
 
-	finalAccounts := make([]model.Account, len(accounts))
-	for i, a := range accounts {
-		finalAccounts[i] = a.RollbackAuthTypeCodes()
-	}
-	response := partialAccountsToDef(finalAccounts)
+	checkedAccounts := checkAccountListAuthTypeCodes(accounts, r)
+	response := partialAccountsToDef(checkedAccounts)
 
 	data, err := json.Marshal(response)
 	if err != nil {
@@ -813,12 +813,8 @@ func (h ServicesApisHandler) verifyCredential(l *logs.Log, r *http.Request, clai
 	if code == "" {
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("code"), nil, http.StatusBadRequest, false)
 	}
-	authType := r.URL.Query().Get("auth_type")
-	if code == "" {
-		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("auth_type"), nil, http.StatusBadRequest, false)
-	}
 
-	if err := h.coreAPIs.Auth.VerifyCredential(authType, id, code, l); err != nil {
+	if err := h.coreAPIs.Auth.VerifyCredential(id, code, l); err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionValidate, "code", nil, err, http.StatusInternalServerError, false)
 	}
 
@@ -935,7 +931,7 @@ func (h ServicesApisHandler) forgotCredentialComplete(l *logs.Log, r *http.Reque
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, "params", nil, err, http.StatusBadRequest, true)
 	}
 
-	if err := h.coreAPIs.Auth.ResetForgotCredential(string(requestData.AuthType), requestData.CredentialId, requestData.ResetCode, requestParams, l); err != nil {
+	if err := h.coreAPIs.Auth.ResetForgotCredential(requestData.CredentialId, requestData.ResetCode, requestParams, l); err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUpdate, "password", nil, err, http.StatusInternalServerError, false)
 	}
 

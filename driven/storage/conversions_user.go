@@ -283,7 +283,7 @@ func credentialFromStorage(item credential) model.Credential {
 	for i, id := range item.AccountsAuthTypes {
 		accountAuthTypes[i] = model.AccountAuthType{ID: id}
 	}
-	return model.Credential{ID: item.ID, AccountsAuthTypes: accountAuthTypes, Verified: item.Verified,
+	return model.Credential{ID: item.ID, AuthTypeCode: item.AuthTypeCode, AccountsAuthTypes: accountAuthTypes, Verified: item.Verified,
 		Value: item.Value, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
@@ -296,7 +296,7 @@ func credentialToStorage(item *model.Credential) *credential {
 	for i, aat := range item.AccountsAuthTypes {
 		accountAuthTypes[i] = aat.ID
 	}
-	return &credential{ID: item.ID, AccountsAuthTypes: accountAuthTypes, Verified: item.Verified,
+	return &credential{ID: item.ID, AuthTypeCode: item.AuthTypeCode, AccountsAuthTypes: accountAuthTypes, Verified: item.Verified,
 		Value: item.Value, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 

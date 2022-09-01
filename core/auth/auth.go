@@ -677,9 +677,10 @@ func (a *Auth) signUpNewAccount(context storage.TransactionContext, authImpl int
 	var credential *model.Credential
 	var profile model.Profile
 	var preferences map[string]interface{}
+	authTypeCode := authImpl.code()
 
 	//check if needs to use shared profile
-	useSharedProfile, sharedProfile, sharedCredential, err := a.applySharedProfile(appOrg.Application, authImpl.code(), userIdentifier, l)
+	useSharedProfile, sharedProfile, sharedCredential, err := a.applySharedProfile(appOrg.Application, authTypeCode, userIdentifier, l)
 	if err != nil {
 		return nil, nil, errors.Wrap("error applying shared profile", err)
 	}
@@ -705,7 +706,7 @@ func (a *Auth) signUpNewAccount(context storage.TransactionContext, authImpl int
 		profile = regProfile
 		preferences = regPreferences
 
-		preparedProfile, preparedPreferences, err := a.prepareRegistrationData(authImpl.code(), userIdentifier, profile, preferences, l)
+		preparedProfile, preparedPreferences, err := a.prepareRegistrationData(authTypeCode, userIdentifier, profile, preferences, l)
 		if err != nil {
 			return nil, nil, errors.WrapErrorAction("error preparing registration data", model.TypeUserAuth, nil, err)
 		}
@@ -734,7 +735,7 @@ func (a *Auth) signUpNewAccount(context storage.TransactionContext, authImpl int
 		//credential
 		if credentialValue != nil {
 			now := time.Now()
-			credential = &model.Credential{ID: credID, AccountsAuthTypes: nil, Value: credentialValue, Verified: false, DateCreated: now, DateUpdated: &now}
+			credential = &model.Credential{ID: credID, AuthTypeCode: authTypeCode, AccountsAuthTypes: nil, Value: credentialValue, Verified: false, DateCreated: now, DateUpdated: &now}
 		}
 	}
 
@@ -1489,13 +1490,14 @@ func (a *Auth) checkRevokedGroups(context storage.TransactionContext, appOrg mod
 
 func (a *Auth) linkAccountAuthType(authImpl internalAuthType, account model.Account, appOrg model.ApplicationOrganization,
 	creds string, params string, l *logs.Log) (string, *model.AccountAuthType, error) {
+	authTypeCode := authImpl.code()
 	userIdentifier, err := authImpl.getUserIdentifier(creds)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionGet, "user identifier", nil, err)
 	}
 
 	//2. check if the user exists
-	newCredsAccount, err := a.storage.FindAccount(nil, appOrg.ID, authImpl.code(), userIdentifier)
+	newCredsAccount, err := a.storage.FindAccount(nil, appOrg.ID, authTypeCode, userIdentifier)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
@@ -1520,7 +1522,7 @@ func (a *Auth) linkAccountAuthType(authImpl internalAuthType, account model.Acco
 			return "", nil, nil
 		}
 
-		err = a.handleAccountAuthTypeConflict(*newCredsAccount, authImpl.code(), userIdentifier, false)
+		err = a.handleAccountAuthTypeConflict(*newCredsAccount, authTypeCode, userIdentifier, false)
 		if err != nil {
 			return "", nil, err
 		}
@@ -1539,10 +1541,10 @@ func (a *Auth) linkAccountAuthType(authImpl internalAuthType, account model.Acco
 	var credential *model.Credential
 	if credentialValue != nil {
 		now := time.Now()
-		credential = &model.Credential{ID: credID, AccountsAuthTypes: nil, Value: credentialValue, Verified: false, DateCreated: now, DateUpdated: &now}
+		credential = &model.Credential{ID: credID, AuthTypeCode: authTypeCode, AccountsAuthTypes: nil, Value: credentialValue, Verified: false, DateCreated: now, DateUpdated: &now}
 	}
 
-	accountAuthType, credential, err := a.prepareAccountAuthType(authImpl.code(), userIdentifier, nil, credential, true, true)
+	accountAuthType, credential, err := a.prepareAccountAuthType(authTypeCode, userIdentifier, nil, credential, true, true)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeAccountAuthType, nil, err)
 	}

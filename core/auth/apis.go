@@ -176,9 +176,6 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 	if err != nil {
 		return nil, nil, nil, errors.WrapErrorAction("error apply login auth type", "user", nil, err)
 	}
-	if loginSession.AccountAuthType != nil {
-		loginSession.AccountAuthType.Account = loginSession.AccountAuthType.Account.RollbackAuthTypeCodes()
-	}
 
 	if loginSession.State == "" {
 		return nil, loginSession, nil, nil
@@ -626,7 +623,6 @@ func (a *Auth) CreateAdminAccount(authTypeCode string, appID string, orgID strin
 			return errors.ErrorData(logutils.StatusInvalid, typeAuthType, logutils.StringArgs(authTypeCode))
 		}
 
-		accountAuthType.Account = accountAuthType.Account.RollbackAuthTypeCodes()
 		newAccount = &accountAuthType.Account
 		return nil
 	}
@@ -817,18 +813,11 @@ func (a *Auth) UpdateAdminAccount(authTypeCode string, appID string, orgID strin
 		return nil, nil, errors.WrapErrorAction(logutils.ActionUpdate, "admin account", nil, err)
 	}
 
-	finalAccount := updatedAccount.RollbackAuthTypeCodes()
-	return &finalAccount, params, nil
+	return updatedAccount, params, nil
 }
 
 // VerifyCredential verifies credential (checks the verification code in the credentials collection)
-func (a *Auth) VerifyCredential(authTypeCode string, id string, verification string, l *logs.Log) error {
-	//remove any organizational/provider identifier from auth type code
-	updatedCode, err := utils.GetSuffix(authTypeCode, "_")
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionGet, typeAuthType, logutils.StringArgs(authTypeCode), err)
-	}
-
+func (a *Auth) VerifyCredential(id string, verification string, l *logs.Log) error {
 	credential, err := a.storage.FindCredential(nil, id)
 	if err != nil || credential == nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
@@ -838,13 +827,13 @@ func (a *Auth) VerifyCredential(authTypeCode string, id string, verification str
 		return errors.New("credential has already been verified")
 	}
 
-	authImpl, err := a.getAuthTypeImpl(updatedCode)
+	authImpl, err := a.getAuthTypeImpl(credential.AuthTypeCode)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
 	}
 	internalAuth, ok := authImpl.(internalAuthType)
 	if !ok {
-		return errors.ErrorData(logutils.StatusInvalid, typeAuthType, logutils.StringArgs(updatedCode))
+		return errors.ErrorData(logutils.StatusInvalid, typeAuthType, logutils.StringArgs(credential.AuthTypeCode))
 	}
 
 	authTypeCreds, err := internalAuth.verifyCredential(credential, verification, l)
@@ -920,26 +909,20 @@ func (a *Auth) UpdateCredential(accountID string, accountAuthTypeID string, para
 //
 // TODO: Clear login sessions using old creds
 // Handle refresh tokens when applicable
-func (a *Auth) ResetForgotCredential(authTypeCode string, credsID string, resetCode string, params string, l *logs.Log) error {
-	//remove any organizational/provider identifier from auth type code
-	updatedCode, err := utils.GetSuffix(authTypeCode, "_")
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionGet, typeAuthType, logutils.StringArgs(authTypeCode), err)
-	}
-
+func (a *Auth) ResetForgotCredential(credsID string, resetCode string, params string, l *logs.Log) error {
 	credential, err := a.storage.FindCredential(nil, credsID)
 	if err != nil || credential == nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
 	}
 
 	//Determine the auth type for resetPassword
-	authImpl, err := a.getAuthTypeImpl(updatedCode)
+	authImpl, err := a.getAuthTypeImpl(credential.AuthTypeCode)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
 	}
 	internalAuth, ok := authImpl.(internalAuthType)
 	if !ok {
-		return errors.ErrorData(logutils.StatusInvalid, typeAuthType, logutils.StringArgs(updatedCode))
+		return errors.ErrorData(logutils.StatusInvalid, typeAuthType, logutils.StringArgs(credential.AuthTypeCode))
 	}
 
 	authTypeCreds, err := internalAuth.resetCredential(credential, &resetCode, params, l)
@@ -1606,8 +1589,7 @@ func (a *Auth) LinkAccountAuthType(accountID string, authTypeCode string, appTyp
 		account.AuthTypes = append(account.AuthTypes, *newAccountAuthType)
 	}
 
-	finalAccount := account.RollbackAuthTypeCodes()
-	return &message, &finalAccount, nil
+	return &message, account, nil
 }
 
 // UnlinkAccountAuthType unlinks credentials from an existing account.

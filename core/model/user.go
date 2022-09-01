@@ -389,6 +389,7 @@ func (aat *AccountAuthType) SetUnverified(value bool) {
 type Credential struct {
 	ID string
 
+	AuthTypeCode      string
 	AccountsAuthTypes []AccountAuthType //one credential can be used for more than one account auth type
 	Verified          bool
 	Value             map[string]interface{} //credential value

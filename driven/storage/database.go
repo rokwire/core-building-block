@@ -16,12 +16,9 @@ package storage
 
 import (
 	"context"
-	"core-building-block/core/model"
 	"time"
 
-	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
-	"github.com/rokwire/logging-library-go/logutils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -206,13 +203,6 @@ func (m *database) start() error {
 	go m.applicationConfigs.Watch(nil, m.logger)
 
 	m.listeners = []Listener{}
-
-	//used for very specific (likely one-time) operations
-	//update or comment out this call after a set of updates is no longer necessary
-	// err = m.applyDataChanges()
-	// if err != nil {
-	// 	m.logger.Warnf("error applying data changes: %v", err)
-	// }
 
 	return nil
 }
@@ -551,116 +541,4 @@ func (m *database) onDataChanged(changeDoc map[string]interface{}) {
 			go listener.OnApplicationConfigsUpdated()
 		}
 	}
-}
-
-// applyDataChanges should be used to make any necessary updates to existing data when the building block is deployed
-func (m *database) applyDataChanges() error {
-	now := time.Now().UTC()
-
-	//1. update auth type codes (illinois_oidc)
-	aatFilter := bson.D{primitive.E{Key: "auth_types.auth_type_code", Value: "illinois_oidc"}}
-	aatUpdate := bson.D{
-		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "auth_types.$[at].auth_type_code", Value: "oidc"},
-			primitive.E{Key: "date_updated", Value: &now},
-		}},
-	}
-
-	opts := options.UpdateOptions{}
-	arrayFilters := []interface{}{bson.M{"at.auth_type_code": "illinois_oidc"}}
-	opts.SetArrayFilters(options.ArrayFilters{Filters: arrayFilters})
-	res, err := m.accounts.UpdateMany(aatFilter, aatUpdate, &opts)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountAuthType, &logutils.FieldArgs{"auth_type_code": "illinois_oidc"}, err)
-	}
-	if res.ModifiedCount != res.MatchedCount {
-		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccountAuthType, &logutils.FieldArgs{"auth_type_code": "illinois_oidc", "modified": res.ModifiedCount, "expected": res.MatchedCount})
-	}
-
-	lsFilter := bson.D{primitive.E{Key: "auth_type_code", Value: "illinois_oidc"}}
-	lsUpdate := bson.D{
-		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "auth_type_code", Value: "oidc"},
-			primitive.E{Key: "date_updated", Value: &now},
-		}},
-	}
-	res, err = m.loginsSessions.UpdateMany(lsFilter, lsUpdate, nil)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeLoginSession, &logutils.FieldArgs{"auth_type_code": "illinois_oidc"}, err)
-	}
-	if res.ModifiedCount != res.MatchedCount {
-		return errors.ErrorAction(logutils.ActionUpdate, model.TypeLoginSession, &logutils.FieldArgs{"auth_type_code": "illinois_oidc", "modified": res.ModifiedCount, "expected": res.MatchedCount})
-	}
-
-	//2. update auth type codes (twilio_phone)
-	aatFilter = bson.D{primitive.E{Key: "auth_types.auth_type_code", Value: "twilio_phone"}}
-	aatUpdate = bson.D{
-		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "auth_types.$[at].auth_type_code", Value: "phone"},
-			primitive.E{Key: "date_updated", Value: &now},
-		}},
-	}
-
-	opts = options.UpdateOptions{}
-	arrayFilters = []interface{}{bson.M{"at.auth_type_code": "twilio_phone"}}
-	opts.SetArrayFilters(options.ArrayFilters{Filters: arrayFilters})
-	res, err = m.accounts.UpdateMany(aatFilter, aatUpdate, &opts)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountAuthType, &logutils.FieldArgs{"auth_type_code": "twilio_phone"}, err)
-	}
-	if res.ModifiedCount != res.MatchedCount {
-		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccountAuthType, &logutils.FieldArgs{"auth_type_code": "twilio_phone", "modified": res.ModifiedCount, "expected": res.MatchedCount})
-	}
-
-	lsFilter = bson.D{primitive.E{Key: "auth_type_code", Value: "twilio_phone"}}
-	lsUpdate = bson.D{
-		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "auth_type_code", Value: "phone"},
-			primitive.E{Key: "date_updated", Value: &now},
-		}},
-	}
-	res, err = m.loginsSessions.UpdateMany(lsFilter, lsUpdate, nil)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeLoginSession, &logutils.FieldArgs{"auth_type_code": "twilio_phone"}, err)
-	}
-	if res.ModifiedCount != res.MatchedCount {
-		return errors.ErrorAction(logutils.ActionUpdate, model.TypeLoginSession, &logutils.FieldArgs{"auth_type_code": "twilio_phone", "modified": res.ModifiedCount, "expected": res.MatchedCount})
-	}
-
-	//3. remove auth type ids
-	aatFilter = bson.D{primitive.E{Key: "auth_types.auth_type_id", Value: bson.M{"$exists": true}}}
-	aatUpdate = bson.D{
-		primitive.E{Key: "$unset", Value: bson.D{
-			primitive.E{Key: "auth_types.$[].auth_type_id", Value: ""},
-		}},
-		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "date_updated", Value: &now},
-		}},
-	}
-	res, err = m.accounts.UpdateMany(aatFilter, aatUpdate, nil)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountAuthType, logutils.StringArgs("auth_type_id"), err)
-	}
-	if res.ModifiedCount != res.MatchedCount {
-		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccountAuthType, &logutils.FieldArgs{"auth_type_id": "", "modified": res.ModifiedCount, "expected": res.MatchedCount})
-	}
-
-	credFilter := bson.D{primitive.E{Key: "auth_type_id", Value: bson.M{"$exists": true}}}
-	credUpdate := bson.D{
-		primitive.E{Key: "$unset", Value: bson.D{
-			primitive.E{Key: "auth_type_id", Value: ""},
-		}},
-		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "date_updated", Value: &now},
-		}},
-	}
-	res, err = m.credentials.UpdateMany(credFilter, credUpdate, nil)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, logutils.StringArgs("auth_type_id"), err)
-	}
-	if res.ModifiedCount != res.MatchedCount {
-		return errors.ErrorAction(logutils.ActionUpdate, model.TypeCredential, &logutils.FieldArgs{"auth_type_id": "", "modified": res.ModifiedCount, "expected": res.MatchedCount})
-	}
-
-	return nil
 }
