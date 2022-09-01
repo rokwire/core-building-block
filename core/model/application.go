@@ -259,8 +259,7 @@ type ApplicationOrganization struct {
 
 	ServicesIDs []string //which services are used for this app/org
 
-	AuthTypes map[string]SupportedAuthType //supported auth types for this organization in this application
-
+	AuthTypes             map[string]SupportedAuthType //supported auth types for this organization in this application
 	LoginsSessionsSetting LoginsSessionsSetting
 
 	DateCreated time.Time

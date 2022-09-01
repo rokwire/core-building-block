@@ -56,7 +56,6 @@ func (a *Auth) GetHost() string {
 //		authTypeCode (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
 //		creds (string): Credentials/JSON encoded credential structure defined for the specified auth type
 //		apiKey (string): API key to validate the specified app
-//		authTypeCode (string): identifier of the app type/client that the user is logging in from
 //		orgID (string): ID of the organization that the user is logging in
 //		params (string): JSON encoded params defined by specified auth type
 //		profile (Profile): Account profile
@@ -72,9 +71,9 @@ func (a *Auth) GetHost() string {
 //			Params (interface{}): authType-specific set of parameters passed back to client
 //			State (string): login state used if account is enrolled in MFA
 //		MFA types ([]model.MFAType): list of MFA types account is enrolled in
-func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, deviceID string,
-	authTypeCode string, creds string, apiKey string, appTypeIdentifier string, orgID string, params string,
-	profile model.Profile, preferences map[string]interface{}, admin bool, l *logs.Log) (*string, *model.LoginSession, []model.MFAType, error) {
+func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, deviceID string, authTypeCode string, creds string, apiKey string,
+	appTypeIdentifier string, orgID string, params string, clientVersion *string, profile model.Profile, preferences map[string]interface{},
+	admin bool, l *logs.Log) (*string, *model.LoginSession, []model.MFAType, error) {
 	//TODO - analyse what should go in one transaction
 
 	//validate if the provided auth type is supported by the provided application and organization
@@ -128,7 +127,7 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 		}
 	case externalAuthType:
 		{
-			accountAuthType, responseParams, mfaTypes, externalIDs, err = a.applyExternalAuthType(t, *appType, *appOrg, creds, params, profile, preferences, admin, l)
+			accountAuthType, responseParams, mfaTypes, externalIDs, err = a.applyExternalAuthType(t, *appType, *appOrg, creds, params, clientVersion, profile, preferences, admin, l)
 			if err != nil {
 				return nil, nil, nil, errors.WrapErrorAction("apply external auth type", "user", nil, err)
 
@@ -138,7 +137,7 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 		}
 	case internalAuthType:
 		{
-			message, accountAuthType, mfaTypes, externalIDs, err = a.applyAuthType(t, *appOrg, creds, params, profile, preferences, admin, l)
+			message, accountAuthType, mfaTypes, externalIDs, err = a.applyAuthType(t, *appOrg, creds, params, clientVersion, profile, preferences, admin, l)
 			if err != nil {
 				return nil, nil, nil, errors.WrapErrorAction("apply auth type", "user", nil, err)
 			}
@@ -172,7 +171,7 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 	}
 
 	//now we are ready to apply login for the user or anonymous
-	loginSession, err := a.applyLogin(anonymous, sub, authTypeImpl.code(), *appOrg, accountAuthType, *appType, externalIDs, ipAddress, deviceType, deviceOS, deviceID, responseParams, state, l)
+	loginSession, err := a.applyLogin(anonymous, sub, authTypeImpl.code(), *appOrg, accountAuthType, *appType, externalIDs, ipAddress, deviceType, deviceOS, deviceID, clientVersion, responseParams, state, l)
 	if err != nil {
 		return nil, nil, nil, errors.WrapErrorAction("error apply login auth type", "user", nil, err)
 	}
@@ -279,7 +278,7 @@ func (a *Auth) CanLink(authTypeCode string, userIdentifier string, apiKey string
 //			Access token (string): Signed ROKWIRE access token to be used to authorize future requests
 //			Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
 //			Params (interface{}): authType-specific set of parameters passed back to client
-func (a *Auth) Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.LoginSession, error) {
+func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string, l *logs.Log) (*model.LoginSession, error) {
 	var loginSession *model.LoginSession
 
 	//find the login session for the refresh token
@@ -412,6 +411,12 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, l *logs.Log) (*model.
 	if err != nil {
 		l.Infof("error updating login session on refresh - %s", refreshToken)
 		return nil, errors.WrapErrorAction("error updating login session on refresh", "", nil, err)
+	}
+
+	// update account usage information
+	err = a.storage.UpdateAccountUsageInfo(nil, loginSession.AccountAuthType.Account.ID, false, true, clientVersion)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountUsageInfo, nil, err)
 	}
 
 	//return the updated session
@@ -568,8 +573,8 @@ func (a *Auth) LoginMFA(apiKey string, accountID string, sessionID string, ident
 }
 
 // CreateAdminAccount creates an account for a new admin user
-func (a *Auth) CreateAdminAccount(authTypeCode string, appID string, orgID string, identifier string, profile model.Profile,
-	permissions []string, roleIDs []string, groupIDs []string, creatorPermissions []string, l *logs.Log) (*model.Account, map[string]interface{}, error) {
+func (a *Auth) CreateAdminAccount(authTypeCode string, appID string, orgID string, identifier string, profile model.Profile, permissions []string,
+	roleIDs []string, groupIDs []string, creatorPermissions []string, clientVersion *string, l *logs.Log) (*model.Account, map[string]interface{}, error) {
 	// check if the provided auth type is supported by the provided application and organization
 	appOrg, authTypeCode, err := a.validateAppOrgAuthType(authTypeCode, appID, orgID)
 	if err != nil {
@@ -606,7 +611,7 @@ func (a *Auth) CreateAdminAccount(authTypeCode string, appID string, orgID strin
 		case externalAuthType:
 			{
 				externalUser := model.ExternalSystemUser{Identifier: identifier}
-				accountAuthType, err = a.applySignUpAdminExternal(context, t, *appOrg, externalUser, profile, permissions, roleIDs, groupIDs, creatorPermissions, l)
+				accountAuthType, err = a.applySignUpAdminExternal(context, t, *appOrg, externalUser, profile, permissions, roleIDs, groupIDs, creatorPermissions, clientVersion, l)
 				if err != nil {
 					return errors.WrapErrorAction("signing up", "admin user", &logutils.FieldArgs{"auth_type": authTypeCode, "identifier": identifier}, err)
 				}
@@ -614,7 +619,7 @@ func (a *Auth) CreateAdminAccount(authTypeCode string, appID string, orgID strin
 		case internalAuthType:
 			{
 				profile.Email = identifier
-				params, accountAuthType, err = a.applySignUpAdmin(context, t, account, *appOrg, identifier, "", profile, permissions, roleIDs, groupIDs, creatorPermissions, l)
+				params, accountAuthType, err = a.applySignUpAdmin(context, t, account, *appOrg, identifier, "", profile, permissions, roleIDs, groupIDs, creatorPermissions, clientVersion, l)
 				if err != nil {
 					return errors.WrapErrorAction("signing up", "admin user", &logutils.FieldArgs{"auth_type": authTypeCode, "identifier": identifier}, err)
 				}
@@ -1632,7 +1637,7 @@ func (a *Auth) DeleteAccount(id string) error {
 
 // InitializeSystemAccount initializes the first system account
 func (a *Auth) InitializeSystemAccount(context storage.TransactionContext, appOrg model.ApplicationOrganization, allSystemPermission string,
-	email string, password string, l *logs.Log) (string, error) {
+	email string, password string, clientVersion string, l *logs.Log) (string, error) {
 	//auth type
 	authImpl, err := a.getAuthTypeImpl(AuthTypeEmail)
 	if err != nil {
@@ -1647,7 +1652,7 @@ func (a *Auth) InitializeSystemAccount(context storage.TransactionContext, appOr
 	profile := model.Profile{ID: uuid.NewString(), Email: email, DateCreated: now}
 	permissions := []string{allSystemPermission}
 
-	_, accountAuthType, err := a.applySignUpAdmin(context, internalAuth, nil, appOrg, email, password, profile, permissions, nil, nil, permissions, l)
+	_, accountAuthType, err := a.applySignUpAdmin(context, internalAuth, nil, appOrg, email, password, profile, permissions, nil, nil, permissions, &clientVersion, l)
 	if err != nil {
 		return "", errors.WrapErrorAction("signing up", "initial system user", &logutils.FieldArgs{"email": email}, err)
 	}

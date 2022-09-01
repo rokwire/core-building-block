@@ -32,5 +32,10 @@ properties:
     type: array
     items:
       $ref: "../../../user/AccountAuthTypeFields.yaml"
-
+  last_login_date:
+    type: string
+  last_access_token_date:
+    type: string
+  most_recent_client_version:
+    type: string
 
