@@ -53,7 +53,7 @@ func (a *Auth) GetHost() string {
 //		deviceType (string): "mobile" or "web" or "desktop" etc
 //		deviceOS (*string): Device OS
 //		deviceID (string): Device ID
-//		authTypeCode (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
+//		authTypeCode (string): Name of the authentication method for provided creds (eg. "email", "username", "oidc")
 //		creds (string): Credentials/JSON encoded credential structure defined for the specified auth type
 //		apiKey (string): API key to validate the specified app
 //		orgID (string): ID of the organization that the user is logging in
@@ -206,7 +206,7 @@ func (a *Auth) Logout(appID string, orgID string, currentAccountID string, sessi
 // The authentication method must be one of the supported for the application.
 //
 //	Input:
-//		authTypeCode (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
+//		authTypeCode (string): Name of the authentication method for provided creds (eg. "email", "username", "oidc")
 //		userIdentifier (string): User identifier for the specified auth type
 //		apiKey (string): API key to validate the specified app
 //		appTypeIdentifier (string): identifier of the app type/client that the user is logging in from
@@ -226,7 +226,7 @@ func (a *Auth) AccountExists(authTypeCode string, userIdentifier string, apiKey 
 // The authentication method must be one of the supported for the application.
 //
 //	Input:
-//		authTypeCode (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
+//		authTypeCode (string): Name of the authentication method for provided creds (eg. "email", "username", "oidc")
 //		userIdentifier (string): User identifier for the specified auth type
 //		apiKey (string): API key to validate the specified app
 //		appTypeIdentifier (string): identifier of the app type/client being used
@@ -246,7 +246,7 @@ func (a *Auth) CanSignIn(authTypeCode string, userIdentifier string, apiKey stri
 // The authentication method must be one of the supported for the application.
 //
 //	Input:
-//		authTypeCode (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
+//		authTypeCode (string): Name of the authentication method for provided creds (eg. "email", "username", "oidc")
 //		userIdentifier (string): User identifier for the specified auth type
 //		apiKey (string): API key to validate the specified app
 //		appTypeIdentifier (string): identifier of the app type/client being used
@@ -426,7 +426,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 // GetLoginURL returns a pre-formatted login url for SSO providers
 //
 //	Input:
-//		authTypeCode (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
+//		authTypeCode (string): Name of the authentication method for provided creds (eg. "email", "username", "oidc")
 //		appTypeIdentifier (string): Identifier of the app type/client that the user is logging in from
 //		orgID (string): ID of the organization that the user is logging in
 //		redirectURI (string): Registered redirect URI where client will receive response
@@ -946,7 +946,7 @@ func (a *Auth) ResetForgotCredential(credsID string, resetCode string, params st
 // ForgotCredential initiate forgot credential process (generates a reset link and sends to the given identifier for email auth type)
 //
 //	Input:
-//		authTypeCode (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
+//		authTypeCode (string): Name of the authentication method for provided creds (eg. "email", "username", "oidc")
 //		identifier: identifier of the account auth type
 //		appTypeIdentifier (string): Identifier of the app type/client that the user is logging in from
 //		orgID (string): ID of the organization that the user is logging in
@@ -1538,7 +1538,7 @@ func (a *Auth) GetAdminToken(claims tokenauth.Claims, appID string, l *logs.Log)
 //
 //	Input:
 //		accountID (string): ID of the account to link the creds to
-//		authTypeCode (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
+//		authTypeCode (string): Name of the authentication method for provided creds (eg. "email", "username", "oidc")
 //		appTypeIdentifier (string): identifier of the app type/client that the user is logging in from
 //		creds (string): Credentials/JSON encoded credential structure defined for the specified auth type
 //		params (string): JSON encoded params defined by specified auth type

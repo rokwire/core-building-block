@@ -82,7 +82,7 @@ type internalAuthType interface {
 }
 
 // externalAuthType is the interface for authentication for auth types which are external for the system(the users comes from external system).
-// these are the different identity providers - illinois_oidc etc
+// these are the different identity providers - oidc etc
 type externalAuthType interface {
 	authType
 	//getLoginUrl retrieves and pre-formats a login url and params for the SSO provider
@@ -132,7 +132,7 @@ type APIs interface {
 	//		deviceType (string): "mobile" or "web" or "desktop" etc
 	//		deviceOS (*string): Device OS
 	//		deviceID (string): Device ID
-	//		authTypeCode (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
+	//		authTypeCode (string): Name of the authentication method for provided creds (eg. "email", "username", "oidc")
 	//		creds (string): Credentials/JSON encoded credential structure defined for the specified auth type
 	//		apiKey (string): API key to validate the specified app
 	//		orgID (string): ID of the organization that the user is logging in
@@ -162,7 +162,7 @@ type APIs interface {
 	//AccountExists checks if a user is already registered
 	//The authentication method must be one of the supported for the application.
 	//	Input:
-	//		authTypeCode (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
+	//		authTypeCode (string): Name of the authentication method for provided creds (eg. "email", "username", "oidc")
 	//		userIdentifier (string): User identifier for the specified auth type
 	//		apiKey (string): API key to validate the specified app
 	//		appTypeIdentifier (string): identifier of the app type/client that the user is logging in from
@@ -174,7 +174,7 @@ type APIs interface {
 	//CanSignIn checks if a user can sign in
 	//The authentication method must be one of the supported for the application.
 	//	Input:
-	//		authTypeCode (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
+	//		authTypeCode (string): Name of the authentication method for provided creds (eg. "email", "username", "oidc")
 	//		userIdentifier (string): User identifier for the specified auth type
 	//		apiKey (string): API key to validate the specified app
 	//		appTypeIdentifier (string): identifier of the app type/client being used
@@ -186,7 +186,7 @@ type APIs interface {
 	//CanLink checks if a user can link a new auth type
 	//The authentication method must be one of the supported for the application.
 	//	Input:
-	//		authTypeCode (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
+	//		authTypeCode (string): Name of the authentication method for provided creds (eg. "email", "username", "oidc")
 	//		userIdentifier (string): User identifier for the specified auth type
 	//		apiKey (string): API key to validate the specified app
 	//		appTypeIdentifier (string): identifier of the app type/client being used
@@ -210,7 +210,7 @@ type APIs interface {
 
 	//GetLoginURL returns a pre-formatted login url for SSO providers
 	//	Input:
-	//		authTypeCode (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
+	//		authTypeCode (string): Name of the authentication method for provided creds (eg. "email", "username", "oidc")
 	//		appTypeIdentifier (string): Identifier of the app type/client that the user is logging in from
 	//		orgID (string): ID of the organization that the user is logging in
 	//		redirectURI (string): Registered redirect URI where client will receive response
@@ -265,7 +265,7 @@ type APIs interface {
 
 	//ForgotCredential initiate forgot credential process (generates a reset link and sends to the given identifier for email auth type)
 	//	Input:
-	//		authTypeCode (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
+	//		authTypeCode (string): Name of the authentication method for provided creds (eg. "email", "username", "oidc")
 	//		identifier: identifier of the account auth type
 	//		appTypeIdentifier (string): Identifier of the app type/client that the user is logging in from
 	//		orgID (string): ID of the organization that the user is logging in
@@ -370,7 +370,7 @@ type APIs interface {
 	//The authentication method must be one of the supported for the application.
 	//	Input:
 	//		accountID (string): ID of the account to link the creds to
-	//		authTypeCode (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
+	//		authTypeCode (string): Name of the authentication method for provided creds (eg. "email", "username", "oidc")
 	//		appTypeIdentifier (string): identifier of the app type/client that the user is logging in from
 	//		creds (string): Credentials/JSON encoded credential structure defined for the specified auth type
 	//		params (string): JSON encoded params defined by specified auth type
