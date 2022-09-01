@@ -1249,7 +1249,40 @@ func (sa *Adapter) SaveAccount(context TransactionContext, account *model.Accoun
 	filter := bson.M{"_id": account.ID}
 	err := sa.db.accounts.ReplaceOneWithContext(context, filter, storageAccount, nil)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionSave, model.TypeAccount, &logutils.FieldArgs{"_id": account.ID}, nil)
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountUsageInfo, nil, err)
+	}
+
+	return nil
+}
+
+// UpdateAccountUsageInfo updates the usage information in accounts
+func (sa *Adapter) UpdateAccountUsageInfo(context TransactionContext, accountID string, updateLoginTime bool, updateAccessTokenTime bool, clientVersion *string) error {
+	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
+	now := time.Now().UTC()
+	update := bson.M{}
+	if updateLoginTime {
+		update["last_login_date"] = now
+	}
+	if updateAccessTokenTime {
+		update["last_access_token_date"] = now
+	}
+	if clientVersion != nil && *clientVersion != "" {
+		update["most_recent_client_version"] = *clientVersion
+	}
+	usageInfoUpdate := bson.M{"$set": update}
+
+	var res *mongo.UpdateResult
+	var err error
+	if context != nil {
+		res, err = sa.db.accounts.UpdateOneWithContext(context, filter, usageInfoUpdate, nil)
+	} else {
+		res, err = sa.db.accounts.UpdateOne(filter, usageInfoUpdate, nil)
+	}
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountUsageInfo, nil, err)
+	}
+	if res.ModifiedCount != 1 {
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccountUsageInfo, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
 	}
 
 	return nil
