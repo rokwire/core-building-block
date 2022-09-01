@@ -35,6 +35,8 @@ const (
 	TypeAccountPermissions logutils.MessageDataType = "account permissions"
 	//TypeAccountRoles account roles
 	TypeAccountRoles logutils.MessageDataType = "account roles"
+	//TypeAccountUsageInfo account usage information
+	TypeAccountUsageInfo logutils.MessageDataType = "account usage information"
 	//TypeMFAType mfa type
 	TypeMFAType logutils.MessageDataType = "mfa type"
 	//TypeAccountGroups account groups
@@ -74,6 +76,10 @@ type Account struct {
 
 	DateCreated time.Time
 	DateUpdated *time.Time
+
+	LastLoginDate           *time.Time
+	LastAccessTokenDate     *time.Time
+	MostRecentClientVersion *string
 }
 
 // GetAccountAuthTypeByID finds account auth type by id
