@@ -97,7 +97,7 @@ func (m *emailMfaImpl) sendCode(identifier string) (string, *time.Time, error) {
 	return code, &expires, errors.New(logutils.Unimplemented)
 }
 
-//initEmailMfa initializes and registers a new email mfa instance
+// initEmailMfa initializes and registers a new email mfa instance
 func initEmailMfa(auth *Auth) (*emailMfaImpl, error) {
 	email := &emailMfaImpl{auth: auth, mfaType: MfaTypeEmail}
 

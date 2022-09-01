@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Rokwire Core Building Block API
   description: Core Building Block API Documentation
-  version: 1.24.1
+  version: 1.24.2
 servers:
   - url: 'https://api.rokwire.illinois.edu/core'
     description: Production server
@@ -1316,6 +1316,31 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+  /services/account/system-configs:
+    get:
+      tags:
+        - Services
+      summary: Get system configs
+      description: |
+        Returns account system configs
+
+        **Auth:** Requires user auth token
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                nullable: true
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   /services/test:
     get:
       tags:
@@ -1878,7 +1903,7 @@ paths:
       description: |
         Create a new admin account
 
-        **Auth:** Requires auth token with `create_accounts` or `all_accounts` permission
+        **Auth:** Requires admin access token with `create_accounts` or `all_accounts` permission
       security:
         - bearerAuth: []
       requestBody:
@@ -1909,7 +1934,7 @@ paths:
       description: |
         Update an existing admin account
 
-        **Auth:** Requires auth token with `update_accounts` or `all_accounts` permission
+        **Auth:** Requires admin access token with `update_accounts` or `all_accounts` permission
       security:
         - bearerAuth: []
       requestBody:
@@ -2016,7 +2041,7 @@ paths:
       description: |
         Grant account permissions
 
-        **Auth:** Requires admin access token with `update_account-permissions` or `update_account-authorization` permission
+        **Auth:** Requires admin access token with `update_account-permissions`, `update_accounts`, or `all_accounts` permission
       security:
         - bearerAuth: []
       parameters:
@@ -2056,7 +2081,7 @@ paths:
       description: |
         Deletes an existing permissions from account
 
-        **Auth:** Requires admin access token with `update_account-permissions` or `update_account-authorization` permission
+        **Auth:** Requires admin access token with `update_account-permissions`, `update_accounts`, or `all_accounts` permission
       security:
         - bearerAuth: []
       parameters:
@@ -2096,7 +2121,7 @@ paths:
       description: |
         Grant account roles
 
-        **Auth:** Requires admin access token with `update_account-auth-roles` or `update_account-authorization` permission
+        **Auth:** Requires admin access token with `update_account-auth-roles`, `update_accounts`, or `all_accounts` permission
       security:
         - bearerAuth: []
       parameters:
@@ -2136,7 +2161,7 @@ paths:
       description: |
         Deletes an existing roles from account
 
-        **Auth:** Requires admin access token with `update_account-auth-roles` or `update_account-authorization` permission
+        **Auth:** Requires admin access token with `update_account-auth-roles`, `update_accounts`, or `all_accounts` permission
       security:
         - bearerAuth: []
       parameters:
@@ -2154,6 +2179,80 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/_admin_req_revoke-roles-from-account'
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  '/admin/application/accounts/{id}/system-configs':
+    get:
+      tags:
+        - Admin
+      summary: Get system configs
+      description: |
+        Returns account system configs
+
+        **Auth:** Requires admin access token with `get_account-system-configs` or `all_account-system-configs` permission
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: The account ID
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                nullable: true
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+    put:
+      tags:
+        - Admin
+      summary: Update account system configs
+      description: |
+        Updates account system configs
+
+        **Auth:** Requires admin access token with `update_account-system-configs` or `all_account-system-configs` permission
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: The account ID
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+      requestBody:
+        description: Account system configs (will be merged with existing configs)
+        content:
+          application/json:
+            schema:
+              type: object
+        required: true
       responses:
         '200':
           description: Success
@@ -2265,7 +2364,9 @@ paths:
         - `delete_auth-groups`
         - `all_auth-groups`
         - `update_account-auth-groups`
-        - `update_account-authorization`
+        - `create_accounts`
+        - `update_accounts`
+        - `all_accounts`
       security:
         - bearerAuth: []
       responses:
@@ -2349,7 +2450,7 @@ paths:
       description: |
         Add accounts 
 
-        **Auth:** Requires admin access token with `update_account-auth-groups` or `update_account-authorization` permission
+        **Auth:** Requires admin access token with `update_account-auth-groups`, `update_accounts`, or `all_accounts` permission
       security:
         - bearerAuth: []
       parameters:
@@ -2389,7 +2490,7 @@ paths:
       description: |
         Deletes an existing accounts from group
 
-        **Auth:** Requires admin access token with `update_account-auth-groups` or `update_account-authorization` permission
+        **Auth:** Requires admin access token with `update_account-auth-groups`, `update_accounts`, or `all_accounts` permission
       security:
         - bearerAuth: []
       parameters:
@@ -2432,7 +2533,9 @@ paths:
         **Auth:** Requires admin access token with at least one of the following permissions:
         - `get_permissions`
         - `update_account-permissions`
-        - `update_account-authorization`
+        - `create_accounts`
+        - `update_accounts`
+        - `all_accounts`
       security:
         - bearerAuth: []
       responses:
@@ -2464,7 +2567,9 @@ paths:
         - `delete_auth-roles`
         - `all_auth-roles`
         - `update_account-auth-roles`
-        - `update_account-authorization`
+        - `create_accounts`
+        - `update_accounts`
+        - `all_accounts`
       security:
         - bearerAuth: []
       responses:
@@ -3645,7 +3750,7 @@ paths:
                         "name": "initial_signature",
                         "type": "signature",
                         "params": {
-                          "pub_key": "public_key_pem"
+                          "key_pem": "public_key_pem"
                         }
                       }
                     ]
@@ -3753,7 +3858,7 @@ paths:
                     "name": "signature_cred",
                     "type": "signature",
                     "params": {
-                      "pub_key": "public_key_pem"
+                      "key_pem": "public_key_pem"
                     }
                   }
         required: true
@@ -5000,6 +5105,8 @@ components:
           $ref: '#/components/schemas/AccountFields'
         app_org:
           $ref: '#/components/schemas/ApplicationOrganization'
+        system:
+          type: boolean
         permissions:
           type: array
           items:
@@ -5018,6 +5125,10 @@ components:
             $ref: '#/components/schemas/AccountAuthType'
         preferences:
           type: object
+          nullable: true
+        system_configs:
+          type: object
+          nullable: true
         profile:
           $ref: '#/components/schemas/Profile'
         devices:
@@ -5031,7 +5142,6 @@ components:
         - org_id
         - first_name
         - last_name
-        - has_permissions
         - permissions
         - roles
         - groups
@@ -5050,6 +5160,8 @@ components:
           type: string
         last_name:
           type: string
+        system:
+          type: boolean
         has_permissions:
           type: boolean
         permissions:
@@ -5068,10 +5180,14 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AccountAuthTypeFields'
+        system_configs:
+          type: object
+          nullable: true
         params:
           type: object
           nullable: true
         date_created:
+          readOnly: true
           type: string
         date_updated:
           type: string
@@ -5629,7 +5745,12 @@ components:
         preferences:
           type: object
           nullable: true
+        system_configs:
+          type: object
+          nullable: true
         has_permissions:
+          type: boolean
+        system:
           type: boolean
         permissions:
           type: array
