@@ -318,12 +318,9 @@ func (a *Auth) applySignUpExternal(context storage.TransactionContext, authType 
 
 	//4. check username
 	if username != "" {
-		accounts, err := a.storage.FindAccountsByUsername(nil, &appOrg, username)
+		err = a.checkUsername(nil, &appOrg, username)
 		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
-		}
-		if len(accounts) > 0 {
-			return nil, errors.ErrorData(logutils.StatusInvalid, model.TypeAccountUsername, logutils.StringArgs(username+" taken"))
+			return nil, err
 		}
 	}
 
@@ -349,12 +346,9 @@ func (a *Auth) applySignUpAdminExternal(context storage.TransactionContext, auth
 
 	//2. check username
 	if username != "" {
-		accounts, err := a.storage.FindAccountsByUsername(nil, &appOrg, username)
+		err = a.checkUsername(nil, &appOrg, username)
 		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
-		}
-		if len(accounts) > 0 {
-			return nil, errors.ErrorData(logutils.StatusInvalid, model.TypeAccountUsername, logutils.StringArgs(username+" taken"))
+			return nil, err
 		}
 	}
 
@@ -716,12 +710,9 @@ func (a *Auth) applySignUp(authImpl authType, account *model.Account, authType m
 	}
 
 	if username != "" {
-		accounts, err := a.storage.FindAccountsByUsername(nil, &appOrg, username)
+		err := a.checkUsername(nil, &appOrg, username)
 		if err != nil {
-			return "", nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
-		}
-		if len(accounts) > 0 {
-			return "", nil, errors.ErrorData(logutils.StatusInvalid, model.TypeAccountUsername, logutils.StringArgs(username+" taken"))
+			return "", nil, err
 		}
 	}
 
@@ -738,12 +729,9 @@ func (a *Auth) applySignUpAdmin(context storage.TransactionContext, authImpl aut
 	regProfile model.Profile, username string, permissions []string, roles []string, groups []string, creatorPermissions []string, clientVersion *string, l *logs.Log) (map[string]interface{}, *model.AccountAuthType, error) {
 
 	if username != "" {
-		accounts, err := a.storage.FindAccountsByUsername(nil, &appOrg, username)
+		err := a.checkUsername(nil, &appOrg, username)
 		if err != nil {
-			return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
-		}
-		if len(accounts) > 0 {
-			return nil, nil, errors.ErrorData(logutils.StatusInvalid, model.TypeAccountUsername, logutils.StringArgs(username+" taken"))
+			return nil, nil, err
 		}
 	}
 
@@ -1531,6 +1519,18 @@ func (a *Auth) storeNewAccountInfo(context storage.TransactionContext, account m
 		if err != nil {
 			return errors.Wrapf("error updating profile on register", err)
 		}
+	}
+
+	return nil
+}
+
+func (a *Auth) checkUsername(context storage.TransactionContext, appOrg *model.ApplicationOrganization, username string) error {
+	accounts, err := a.storage.FindAccountsByUsername(context, appOrg, username)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+	if len(accounts) > 0 {
+		return errors.ErrorData(logutils.StatusInvalid, model.TypeAccountUsername, logutils.StringArgs(username+" taken")).SetStatus(utils.ErrorStatusUsernameTaken)
 	}
 
 	return nil

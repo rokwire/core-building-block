@@ -5415,6 +5415,7 @@ components:
           nullable: true
         username:
           type: string
+          nullable: true
     _shared_req_Login_Mfa:
       required:
         - api_key
@@ -5538,6 +5539,7 @@ components:
           $ref: '#/components/schemas/_shared_req_ProfileNullable'
         username:
           type: string
+          nullable: true
     _shared_req_UpdateAccount:
       required:
         - auth_type

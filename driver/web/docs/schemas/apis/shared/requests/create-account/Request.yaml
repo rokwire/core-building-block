@@ -26,3 +26,4 @@ properties:
     $ref:  "../ProfileNullable.yaml"
   username:
     type: string
+    nullable: true

@@ -833,7 +833,7 @@ type SharedReqCreateAccount struct {
 	Permissions *[]string                      `json:"permissions,omitempty"`
 	Profile     *SharedReqProfileNullable      `json:"profile"`
 	RoleIds     *[]string                      `json:"role_ids,omitempty"`
-	Username    *string                        `json:"username,omitempty"`
+	Username    *string                        `json:"username"`
 }
 
 // SharedReqCreateAccountAuthType defines model for SharedReqCreateAccount.AuthType.
@@ -873,7 +873,7 @@ type SharedReqLogin struct {
 	Params      *interface{}              `json:"params,omitempty"`
 	Preferences *map[string]interface{}   `json:"preferences"`
 	Profile     *SharedReqProfileNullable `json:"profile"`
-	Username    *string                   `json:"username,omitempty"`
+	Username    *string                   `json:"username"`
 }
 
 // SharedReqLoginAuthType defines model for SharedReqLogin.AuthType.

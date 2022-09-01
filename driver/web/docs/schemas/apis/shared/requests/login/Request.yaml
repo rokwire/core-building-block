@@ -40,3 +40,4 @@ properties:
     nullable: true
   username:
     type: string
+    nullable: true
