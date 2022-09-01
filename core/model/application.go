@@ -391,7 +391,7 @@ type ApplicationConfig struct {
 	Version         Version
 	AppOrg          *ApplicationOrganization
 	Data            map[string]interface{}
-	VcsManaged      bool
+	VCSManaged      bool
 
 	DateCreated time.Time
 	DateUpdated *time.Time

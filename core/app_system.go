@@ -297,7 +297,7 @@ func (app *application) sysCreateAppConfig(appTypeID string, orgID *string, data
 		version = &model.Version{VersionNumbers: versionNumbers, DateCreated: now}
 	}
 
-	applicationConfig := model.ApplicationConfig{ID: appConfigID.String(), Version: *version, ApplicationType: *applicationType, AppOrg: appOrg, Data: data, VcsManaged: vcsManaged, DateCreated: now}
+	applicationConfig := model.ApplicationConfig{ID: appConfigID.String(), Version: *version, ApplicationType: *applicationType, AppOrg: appOrg, Data: data, VCSManaged: vcsManaged, DateCreated: now}
 
 	insertedConfig, err := app.storage.InsertAppConfig(applicationConfig)
 	if err != nil {
@@ -318,9 +318,9 @@ func (app *application) sysUpdateAppConfig(id string, appTypeID string, orgID *s
 	if applicationType == nil {
 		return errors.ErrorData(logutils.StatusMissing, model.TypeApplicationType, logutils.StringArgs(appTypeID))
 	}
-	if len(applicationType.Versions) == 0 {
-		return errors.ErrorData(logutils.StatusMissing, model.TypeApplicationTypeVersionList, logutils.StringArgs(appTypeID))
-	}
+	// if len(applicationType.Versions) == 0 {
+	// 	return errors.ErrorData(logutils.StatusMissing, model.TypeApplicationTypeVersionList, logutils.StringArgs(appTypeID))
+	// }
 
 	var appOrg *model.ApplicationOrganization
 	if orgID != nil {

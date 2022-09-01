@@ -255,12 +255,12 @@ func (c *APIs) storeSystemData() error {
 }
 
 // NewCoreAPIs creates new CoreAPIs
-func NewCoreAPIs(env string, version string, build string, storage Storage, github VCS, auth auth.APIs, systemInitSettings map[string]string, logger *logs.Logger) *APIs {
+func NewCoreAPIs(env string, version string, build string, storage Storage, vcs VCS, auth auth.APIs, systemInitSettings map[string]string, logger *logs.Logger) *APIs {
 	//add application instance
 	listeners := []ApplicationListener{}
 	cachedWebhookConfigs := &model.WebhookConfig{}
 	webhookConfigsLock := &sync.RWMutex{}
-	application := application{env: env, version: version, build: build, storage: storage, github: github, listeners: listeners, auth: auth, logger: logger, cachedWebhookConfig: cachedWebhookConfigs, webhookConfigsLock: webhookConfigsLock}
+	application := application{env: env, version: version, build: build, storage: storage, vcs: vcs, listeners: listeners, auth: auth, logger: logger, cachedWebhookConfig: cachedWebhookConfigs, webhookConfigsLock: webhookConfigsLock}
 
 	//add coreAPIs instance
 	servicesImpl := &servicesImpl{app: &application, auth: auth}

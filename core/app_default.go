@@ -10,7 +10,7 @@ import (
 )
 
 func (app *application) processVCSAppConfigWebhook(r *sigauth.Request, l *logs.Log) error {
-	commits, err := app.github.ProcessAppConfigWebhook(r, l)
+	commits, err := app.vcs.ProcessAppConfigWebhook(r, l)
 	if err != nil {
 		return errors.Wrap("error processing app config webhook", err)
 	}

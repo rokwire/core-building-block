@@ -34,7 +34,7 @@ type application struct {
 	build   string
 
 	storage Storage
-	github  VCS
+	vcs     VCS
 
 	listeners []ApplicationListener
 
@@ -54,7 +54,7 @@ func (a *application) start() error {
 
 	err := a.cacheWebhookConfigsFromVCS()
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionCache, model.TypeWebhookConfig, nil, err)
+		a.logger.Warnf("error loading webhook configs: %v", err)
 	}
 
 	return err
@@ -99,7 +99,7 @@ func (a *application) updateCachedWebhookConfig(config *model.WebhookConfig) err
 func (a *application) cacheWebhookConfigsFromVCS() error {
 	a.logger.Info("cacheWebhookConfigs..")
 
-	webhookConfig, err := a.github.LoadWebhookConfig()
+	webhookConfig, err := a.vcs.LoadWebhookConfig()
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeWebhookConfig, nil, err)
 	}

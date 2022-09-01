@@ -81,12 +81,12 @@ func main() {
 	}
 
 	// webhook configs
-	githubToken := envLoader.GetAndLogEnvVar("GITHUB_TOKEN", false, false)
-	githubWebhookSecret := envLoader.GetAndLogEnvVar("GITHUB_APP_CONFIG_WEBHOOK_SECRET", false, false)
-	githubOrganizationName := envLoader.GetAndLogEnvVar("GITHUB_APP_CONFIG_ORG_NAME", false, false)
-	githubRepoName := envLoader.GetAndLogEnvVar("GITHUB_APP_CONFIG_REPO_NAME", false, false)
-	githubWebhookConfigPath := envLoader.GetAndLogEnvVar("GITHUB_APP_CONFIG_WEBHOOK_CONFIG_PATH", false, false)
-	githubAppConfigBranch := envLoader.GetAndLogEnvVar("GITHUB_APP_CONFIG_BRANCH", false, false)
+	githubToken := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_GITHUB_TOKEN", false, false)
+	githubWebhookSecret := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_GITHUB_APP_CONFIG_WEBHOOK_SECRET", false, false)
+	githubOrganizationName := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_GITHUB_APP_CONFIG_ORG_NAME", false, false)
+	githubRepoName := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_GITHUB_APP_CONFIG_REPO_NAME", false, false)
+	githubWebhookConfigPath := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_GITHUB_APP_CONFIG_WEBHOOK_CONFIG_PATH", false, false)
+	githubAppConfigBranch := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_GITHUB_APP_CONFIG_BRANCH", false, false)
 
 	githubAdapter := github.NewGitHubAdapter(githubToken, githubOrganizationName, githubRepoName, githubWebhookConfigPath, githubWebhookSecret, githubAppConfigBranch, logger)
 	err = githubAdapter.Start()
