@@ -57,7 +57,7 @@ func (a *application) start() error {
 		a.logger.Warnf("error loading webhook configs: %v", err)
 	}
 
-	return err
+	return nil
 }
 
 // addListener adds application listener

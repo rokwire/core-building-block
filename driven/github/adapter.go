@@ -34,8 +34,28 @@ func (a *Adapter) Start() error {
 	return nil
 }
 
+func (a *Adapter) checkConfigs() error {
+	if a.githubToken == "" {
+		return errors.ErrorData(logutils.StatusMissing, "config", logutils.StringArgs("github token"))
+	}
+	if a.githubOrganizationName == "" {
+		return errors.ErrorData(logutils.StatusMissing, "config", logutils.StringArgs("github org name"))
+	}
+	if a.githubRepoName == "" {
+		return errors.ErrorData(logutils.StatusMissing, "config", logutils.StringArgs("github repo name"))
+	}
+	if a.githubAppConfigBranch == "" {
+		return errors.ErrorData(logutils.StatusMissing, "config", logutils.StringArgs("github branch"))
+	}
+	return nil
+}
+
 // GetContents get file content from GitHub
 func (a *Adapter) GetContents(path string) (string, bool, error) {
+	err := a.checkConfigs()
+	if err != nil {
+		return "", false, err
+	}
 	isWebhookConfigPath := false
 	if path == a.githubWebhookConfigPath {
 		isWebhookConfigPath = true
