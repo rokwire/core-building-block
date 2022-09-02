@@ -746,6 +746,21 @@ func (h SystemApisHandler) updatePermission(l *logs.Log, r *http.Request, claims
 	return l.HttpResponseSuccess()
 }
 
+// getAllPermissions returns all permissions
+func (h SystemApisHandler) getAllPermissions(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	permissions, err := h.coreAPIs.System.SysGetAllPermissions()
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionFind, model.TypePermission, nil, err, http.StatusInternalServerError, true)
+	}
+
+	data, err := json.Marshal(permissions)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypePermission, nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessJSON(data)
+}
+
 func (h SystemApisHandler) getApplicationConfigs(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	appTypeIdentifier := r.URL.Query().Get("app_type_id")
 	if appTypeIdentifier == "" {

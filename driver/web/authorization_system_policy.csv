@@ -18,6 +18,7 @@ p, get_applications, /core/system/applications/*, (GET),
 p, update_applications, /core/system/applications, (GET)|(POST), Create applications
 
 p, all_permissions, /core/system/permissions, (GET)|(POST)|(DELETE)|(PUT), All permission actions
+p, get_permissions, /core/system/permissions, (GET), Get permission actions
 p, update_permissions, /core/system/permissions, (POST)|(PUT), Update and create permissions
 
 p, all_app-configs, /core/system/application/configs, (GET)|(POST)|(PUT)|(DELETE), All app config actions

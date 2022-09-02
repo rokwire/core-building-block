@@ -107,6 +107,7 @@ type System interface {
 
 	SysCreatePermission(name string, description *string, serviceID *string, assigners *[]string) (*model.Permission, error)
 	SysUpdatePermission(name string, description *string, serviceID *string, assigners *[]string) (*model.Permission, error)
+	SysGetAllPermissions() ([]model.Permission, error)
 
 	SysGetAppConfigs(appTypeID string, orgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error)
 	SysGetAppConfig(id string) (*model.ApplicationConfig, error)
@@ -157,6 +158,7 @@ type Storage interface {
 	GetGlobalConfig() (*model.GlobalConfig, error)
 	DeleteGlobalConfig(context storage.TransactionContext) error
 
+	FindAllPermissions(context storage.TransactionContext) ([]model.Permission, error)
 	FindPermissionsByName(context storage.TransactionContext, names []string) ([]model.Permission, error)
 	FindPermissionsByServiceIDs(serviceIDs []string) ([]model.Permission, error)
 	InsertPermission(context storage.TransactionContext, item model.Permission) error
