@@ -5793,6 +5793,12 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AccountAuthTypeFields'
+        last_login_date:
+          type: string
+        last_access_token_date:
+          type: string
+        most_recent_client_version:
+          type: string
     _shared_res_AccountCheck:
       type: boolean
     _shared_res_RokwireToken:
