@@ -116,7 +116,6 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 			return nil, nil, nil, errors.WrapErrorAction("apply anonymous auth type", "user", nil, err)
 		}
 		sub = anonymousID
-
 	} else if authType.IsExternal {
 		accountAuthType, responseParams, mfaTypes, externalIDs, err = a.applyExternalAuthType(*authType, *appType, *appOrg, creds, params, clientVersion, profile, preferences, admin, l)
 		if err != nil {
@@ -338,7 +337,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 			return nil, errors.WrapErrorAction("error getting external auth type on refresh", "", nil, err)
 		}
 
-		externalUser, refreshedData, err := extAuthType.refresh(loginSession.Params, loginSession.AuthType, loginSession.AppType, loginSession.AppOrg, l)
+		externalUser, newParams, err := extAuthType.refresh(loginSession.Params, loginSession.AuthType, loginSession.AppType, loginSession.AppOrg, l)
 		if err != nil {
 			l.Infof("error refreshing external auth type on refresh - %s", refreshToken)
 			return nil, errors.WrapErrorAction("error refreshing external auth type on refresh", "", nil, err)
@@ -364,8 +363,8 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 				loginSession.ExternalIDs[k] = v
 			}
 		}
-		if refreshedData != nil {
-			loginSession.Params = refreshedData //assign the refreshed data
+		if newParams != nil {
+			loginSession.Params = newParams //assign the refreshed data
 		}
 	}
 

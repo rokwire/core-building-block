@@ -30,6 +30,7 @@ import (
 const (
 	typeAuthConfig    logutils.MessageDataType = "auth config"
 	typeRefreshParams logutils.MessageDataType = "refresh params"
+	methodPost        string                   = "POST"
 )
 
 // OAuth implementation of authType
@@ -53,12 +54,7 @@ func (a *oauthAuthImpl) externalLogin(authType model.AuthType, appType model.App
 		return nil, nil, errors.WrapErrorAction(logutils.ActionGet, "authorization code", logutils.StringArgs(a.authType), err)
 	}
 
-	externalUser, parameters, err := a.loadTokensAndInfo(config, authType, appOrg, code, params, false, l)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return externalUser, parameters, nil
+	return a.loadTokensAndInfo(config, authType, appOrg, code, params, false, l)
 }
 
 func (a *oauthAuthImpl) refresh(params map[string]interface{}, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error) {
@@ -72,7 +68,12 @@ func (a *oauthAuthImpl) refresh(params map[string]interface{}, authType model.Au
 		return nil, nil, errors.WrapErrorAction(logutils.ActionParse, typeAuthRefreshParams, logutils.StringArgs(a.authType), err)
 	}
 
-	return a.loadTokensAndInfo(config, authType, appOrg, refreshParams.RefreshToken, "", true, l)
+	paramsString, err := json.Marshal(params)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionMarshal, typeAuthRefreshParams, nil, err)
+	}
+
+	return a.loadTokensAndInfo(config, authType, appOrg, refreshParams.RefreshToken, string(paramsString), true, l)
 }
 
 func (a *oauthAuthImpl) getLoginURL(authType model.AuthType, appType model.ApplicationType, l *logs.Log) (string, map[string]interface{}, error) {
@@ -88,8 +89,7 @@ func (a *oauthAuthImpl) getLoginURL(authType model.AuthType, appType model.Appli
 
 func (a *oauthAuthImpl) loadTokensAndInfo(config oauthprovider.OAuthConfig, authType model.AuthType, appOrg model.ApplicationOrganization, creds string, params string,
 	refresh bool, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error) {
-	newToken := config.EmptyToken()
-	err := a.auth.oauthProvider.LoadToken(config, creds, params, refresh, newToken)
+	newToken, responseParams, err := a.auth.oauthProvider.LoadToken(config, creds, params, refresh)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionGet, logutils.TypeToken, nil, err)
 	}
@@ -124,7 +124,7 @@ func (a *oauthAuthImpl) loadTokensAndInfo(config oauthprovider.OAuthConfig, auth
 		return nil, nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeExternalSystemUser, nil, err)
 	}
 
-	return externalUser, newToken.GetResponse(), nil
+	return externalUser, responseParams, nil
 }
 
 func (a *oauthAuthImpl) getExternalUser(claims map[string]interface{}, authType model.AuthType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.ExternalSystemUser, error) {

@@ -21,16 +21,14 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"strconv"
 	"strings"
-
-	"gopkg.in/go-playground/validator.v9"
 
 	"github.com/coreos/go-oidc"
 	"github.com/rokwire/core-auth-library-go/v2/authutils"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logutils"
+	"gopkg.in/go-playground/validator.v9"
 )
 
 const (
@@ -42,7 +40,7 @@ const (
 
 type oidcAuthConfig struct {
 	Host               string            `json:"host" validate:"required"`
-	RedirectURI        string            `json:"redirect_uri" validate:"required"`
+	RedirectURI        string            `json:"redirect_uri"`
 	AuthorizeURL       string            `json:"authorize_url"`
 	TokenURL           string            `json:"token_url"`
 	UserInfoURL        string            `json:"userinfo_url"`
@@ -55,11 +53,6 @@ type oidcAuthConfig struct {
 	Claims             map[string]string `json:"claims" validate:"required"`
 	RequiredPopulation string            `json:"required_population"`
 	Populations        map[string]string `json:"populations"`
-}
-
-func (o *oidcAuthConfig) EmptyToken() oauthprovider.OAuthToken {
-	var token oidcToken
-	return &token
 }
 
 func (o *oidcAuthConfig) GetAuthorizeURL() string {
@@ -106,14 +99,25 @@ func (o *oidcAuthConfig) GetAuthorizationCode(creds string, params string) (stri
 	return parsedCreds.Get("code"), nil
 }
 
-func (o *oidcAuthConfig) BuildNewTokenRequest(creds string, params string, refresh bool) (*http.Request, error) {
+func (o *oidcAuthConfig) BuildNewTokenRequest(creds string, params string, refresh bool) (*oauthprovider.OAuthRequest, map[string]interface{}, error) {
 	if refresh && !o.UseRefresh {
-		return nil, nil
+		return nil, nil, nil
+	}
+
+	var loginParams oidcLoginParams
+	err := json.Unmarshal([]byte(params), &loginParams)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeOidcLoginParams, nil, err)
+	}
+
+	redirectURI := o.RedirectURI
+	if redirectURI == "" {
+		redirectURI = loginParams.RedirectURI
 	}
 
 	body := map[string]string{
 		"client_id":    o.ClientID,
-		"redirect_uri": o.RedirectURI,
+		"redirect_uri": redirectURI,
 	}
 	if o.ClientSecret != "" {
 		body["client_secret"] = o.ClientSecret
@@ -125,16 +129,6 @@ func (o *oidcAuthConfig) BuildNewTokenRequest(creds string, params string, refre
 		body["code"] = creds
 		body["grant_type"] = "authorization_code"
 
-		var loginParams oidcLoginParams
-		err := json.Unmarshal([]byte(params), &loginParams)
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeOidcLoginParams, nil, err)
-		}
-		validate := validator.New()
-		err = validate.Struct(loginParams)
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionValidate, typeOidcLoginParams, nil, err)
-		}
 		if len(loginParams.CodeVerifier) > 0 {
 			body["code_verifier"] = loginParams.CodeVerifier
 		}
@@ -146,15 +140,28 @@ func (o *oidcAuthConfig) BuildNewTokenRequest(creds string, params string, refre
 		"Content-Length": strconv.Itoa(len(body)),
 	}
 
-	req, err := http.NewRequest(http.MethodPost, o.GetTokenURL(), strings.NewReader(encoded))
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeRequest, nil, err)
-	}
-	for k, v := range headers {
-		req.Header.Set(k, v)
+	responseParams := map[string]interface{}{}
+	if o.RedirectURI == "" {
+		responseParams["redirect_uri"] = redirectURI
 	}
 
-	return req, nil
+	return &oauthprovider.OAuthRequest{Method: methodPost, URL: o.GetTokenURL(), Body: encoded, Headers: headers}, responseParams, nil
+}
+
+func (o *oidcAuthConfig) ParseTokenResponse(response []byte, params map[string]interface{}) (oauthprovider.OAuthToken, map[string]interface{}, error) {
+	var token oidcToken
+	err := json.Unmarshal(response, &token)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionUnmarshal, logutils.TypeToken, nil, err)
+	}
+	validate := validator.New()
+	err = validate.Struct(token)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, logutils.TypeToken, nil, err)
+	}
+
+	params["oidc_token"] = token.GetResponseParams()
+	return &token, params, nil
 }
 
 func (o *oidcAuthConfig) CheckIDToken(token oauthprovider.OAuthToken) (string, error) {
@@ -246,16 +253,13 @@ func (t *oidcToken) GetAuthorizationHeader() string {
 	return fmt.Sprintf("%s %s", t.TokenType, t.AccessToken)
 }
 
-func (t *oidcToken) GetResponse() map[string]interface{} {
-	tokenParams := map[string]interface{}{
+func (t *oidcToken) GetResponseParams() map[string]interface{} {
+	return map[string]interface{}{
 		"id_token":      t.IDToken,
 		"access_token":  t.AccessToken,
 		"refresh_token": t.RefreshToken,
 		"token_type":    t.TokenType,
 	}
-
-	params := map[string]interface{}{"oidc_token": tokenParams}
-	return params
 }
 
 func (t *oidcToken) GetIDToken() string {
@@ -264,6 +268,7 @@ func (t *oidcToken) GetIDToken() string {
 
 type oidcLoginParams struct {
 	CodeVerifier string `json:"pkce_verifier"`
+	RedirectURI  string `json:"redirect_uri"`
 }
 
 // initOidcAuth initializes and registers a new OAuth auth instance for OIDC

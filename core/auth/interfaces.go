@@ -586,6 +586,6 @@ type Emailer interface {
 
 // OAuthProvider is used by auth to authenticate users via an external OAuth provider
 type OAuthProvider interface {
-	LoadToken(config oauthprovider.OAuthConfig, creds string, params string, refresh bool, result oauthprovider.OAuthToken) error
+	LoadToken(config oauthprovider.OAuthConfig, creds string, params string, refresh bool) (oauthprovider.OAuthToken, map[string]interface{}, error)
 	LoadUserInfo(config oauthprovider.OAuthConfig, token oauthprovider.OAuthToken) ([]byte, error)
 }

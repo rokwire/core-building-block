@@ -15,50 +15,50 @@
 package oauthprovider
 
 import (
-	"encoding/json"
 	"net/http"
+	"strings"
 
 	"github.com/rokwire/core-auth-library-go/v2/authutils"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logutils"
-	"gopkg.in/go-playground/validator.v9"
 )
 
 // Adapter implements the OAuthProvider interface
 type Adapter struct{}
 
 // LoadToken loads an access token from an external OAuth provider
-func (a *Adapter) LoadToken(config OAuthConfig, creds string, params string, refresh bool, result OAuthToken) error {
-	req, err := config.BuildNewTokenRequest(creds, params, refresh)
+func (a *Adapter) LoadToken(config OAuthConfig, creds string, params string, refresh bool) (OAuthToken, map[string]interface{}, error) {
+	request, responseParams, err := config.BuildNewTokenRequest(creds, params, refresh)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionCreate, "token request", nil, err)
+		return nil, nil, errors.WrapErrorAction(logutils.ActionCreate, "token request", nil, err)
 	}
-	if refresh && req == nil {
-		return nil
+	if refresh && request == nil {
+		return nil, nil, nil
+	}
+	if responseParams == nil {
+		responseParams = map[string]interface{}{}
+	}
+
+	req, err := http.NewRequest(request.Method, request.URL, strings.NewReader(request.Body))
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeRequest, nil, err)
+	}
+	for k, v := range request.Headers {
+		req.Header.Set(k, v)
 	}
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionSend, logutils.TypeRequest, nil, err)
+		return nil, nil, errors.WrapErrorAction(logutils.ActionSend, logutils.TypeRequest, nil, err)
 	}
 
 	body, err := authutils.ReadResponseBody(resp)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionRead, logutils.TypeResponse, nil, err)
+		return nil, nil, errors.WrapErrorAction(logutils.ActionRead, logutils.TypeResponse, nil, err)
 	}
 
-	err = json.Unmarshal(body, result)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUnmarshal, logutils.TypeToken, nil, err)
-	}
-	validate := validator.New()
-	err = validate.Struct(result)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionValidate, logutils.TypeToken, nil, err)
-	}
-
-	return nil
+	return config.ParseTokenResponse(body, responseParams)
 }
 
 // LoadUserInfo loads user information from an external OAuth provider
@@ -90,21 +90,32 @@ func NewOAuthProviderAdapter() *Adapter {
 
 // OAuthConfig represents a configuration for communication with an external OAuth provider
 type OAuthConfig interface {
-	EmptyToken() OAuthToken
 	GetAuthorizeURL() string
 	GetTokenURL() string
 	GetUserInfoURL() string
 
 	GetAuthorizationCode(creds string, params string) (string, error)
-	BuildNewTokenRequest(creds string, params string, refresh bool) (*http.Request, error)
+	BuildNewTokenRequest(creds string, params string, refresh bool) (*OAuthRequest, map[string]interface{}, error)
+	ParseTokenResponse(response []byte, params map[string]interface{}) (OAuthToken, map[string]interface{}, error)
+	BuildLoginURLResponse() (string, map[string]interface{}, error)
+
+	// GetResponseParams(params string) (map[string]string, error)
+
 	CheckIDToken(token OAuthToken) (string, error)
 	CheckSubject(tokenSubject string, userSubject string) bool
-	BuildLoginURLResponse() (string, map[string]interface{}, error)
 }
 
 // OAuthToken represents an access token entity received from an external OAuth provider
 type OAuthToken interface {
 	GetAuthorizationHeader() string
-	GetResponse() map[string]interface{}
+	GetResponseParams() map[string]interface{}
 	GetIDToken() string
+}
+
+// OAuthRequest represents a request to be sent by an OAuth provider
+type OAuthRequest struct {
+	Method  string
+	URL     string
+	Body    string
+	Headers map[string]string
 }

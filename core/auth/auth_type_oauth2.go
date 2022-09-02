@@ -19,7 +19,6 @@ import (
 	"core-building-block/utils"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"strconv"
 	"strings"
 
@@ -47,11 +46,6 @@ type oauth2AuthConfig struct {
 	UseRefresh   bool   `json:"use_refresh"`
 	ClientID     string `json:"client_id" validate:"required"`
 	ClientSecret string `json:"client_secret" validate:"required"`
-}
-
-func (o *oauth2AuthConfig) EmptyToken() oauthprovider.OAuthToken {
-	var token oauth2Token
-	return &token
 }
 
 func (o *oauth2AuthConfig) GetAuthorizeURL() string {
@@ -115,9 +109,9 @@ func (o *oauth2AuthConfig) GetAuthorizationCode(creds string, params string) (st
 	return parsedCreds.Get("code"), nil
 }
 
-func (o *oauth2AuthConfig) BuildNewTokenRequest(creds string, params string, refresh bool) (*http.Request, error) {
+func (o *oauth2AuthConfig) BuildNewTokenRequest(creds string, params string, refresh bool) (*oauthprovider.OAuthRequest, map[string]interface{}, error) {
 	if refresh && !o.UseRefresh {
-		return nil, nil
+		return nil, nil, nil
 	}
 
 	body := map[string]string{
@@ -141,15 +135,23 @@ func (o *oauth2AuthConfig) BuildNewTokenRequest(creds string, params string, ref
 		"Content-Length": strconv.Itoa(len(body)),
 	}
 
-	req, err := http.NewRequest(http.MethodPost, o.GetTokenURL(), strings.NewReader(encoded))
+	return &oauthprovider.OAuthRequest{Method: methodPost, URL: o.GetTokenURL(), Body: encoded, Headers: headers}, map[string]interface{}{}, nil
+}
+
+func (o *oauth2AuthConfig) ParseTokenResponse(response []byte, params map[string]interface{}) (oauthprovider.OAuthToken, map[string]interface{}, error) {
+	var token oauth2Token
+	err := json.Unmarshal(response, &token)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeRequest, nil, err)
+		return nil, nil, errors.WrapErrorAction(logutils.ActionUnmarshal, logutils.TypeToken, nil, err)
 	}
-	for k, v := range headers {
-		req.Header.Set(k, v)
+	validate := validator.New()
+	err = validate.Struct(token)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, logutils.TypeToken, nil, err)
 	}
 
-	return req, nil
+	params["oauth2_token"] = token.GetResponseParams()
+	return &token, params, nil
 }
 
 func (o *oauth2AuthConfig) CheckIDToken(token oauthprovider.OAuthToken) (string, error) {
@@ -204,16 +206,13 @@ func (t *oauth2Token) GetAuthorizationHeader() string {
 	return fmt.Sprintf("%s %s", t.TokenType, t.AccessToken)
 }
 
-func (t *oauth2Token) GetResponse() map[string]interface{} {
-	tokenParams := map[string]interface{}{
+func (t *oauth2Token) GetResponseParams() map[string]interface{} {
+	return map[string]interface{}{
 		"access_token":  t.AccessToken,
 		"refresh_token": t.RefreshToken,
 		"token_type":    t.TokenType,
 		"scope":         t.Scope,
 	}
-
-	params := map[string]interface{}{"oauth2_token": tokenParams}
-	return params
 }
 
 func (t *oauth2Token) GetIDToken() string {
