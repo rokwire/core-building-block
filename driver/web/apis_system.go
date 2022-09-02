@@ -98,6 +98,62 @@ func (h SystemApisHandler) updateGlobalConfig(l *logs.Log, r *http.Request, clai
 	return l.HttpResponseSuccess()
 }
 
+// createApplicationOrganization creates applicationOrganization
+func (h SystemApisHandler) createApplicationOrganization(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorData(logutils.StatusInvalid, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+	var requestData Def.SystemReqUpdateAppOrg
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeApplicationOrganization, nil, err, http.StatusBadRequest, true)
+	}
+
+	appOrg, err := appOrgFromDef(&requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionCast, model.TypeApplicationOrganization, nil, err, http.StatusBadRequest, true)
+	}
+
+	_, err = h.coreAPIs.System.SysCreateApplicationOrganization(*requestData.AppId, *requestData.OrgId, *appOrg)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeApplicationOrganization, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
+// updateApplicationOrganization updates applicationOrganization
+func (h SystemApisHandler) updateApplicationOrganization(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	params := mux.Vars(r)
+	ID := params["id"]
+	if len(ID) <= 0 {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
+	}
+
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorData(logutils.StatusInvalid, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+	var requestData Def.SystemReqUpdateAppOrg
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeApplicationOrganization, nil, err, http.StatusBadRequest, true)
+	}
+
+	updateAppOrg, err := appOrgFromDef(&requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionCast, model.TypeApplicationOrganization, nil, err, http.StatusBadRequest, true)
+	}
+
+	err = h.coreAPIs.System.SysUpdateApplicationOrganization(ID, *requestData.AppId, *requestData.OrgId, *updateAppOrg)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeApplicationOrganization, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
 // createOrganization creates organization
 func (h SystemApisHandler) createOrganization(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 

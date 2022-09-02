@@ -1,0 +1,6 @@
+type: object
+properties:
+  active:
+    type: boolean
+  inactivity_period:
+    type: integer

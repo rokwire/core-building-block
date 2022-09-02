@@ -214,6 +214,9 @@ func (we Adapter) Start() {
 	systemSubrouter.HandleFunc("/applications/{id}", we.wrapFunc(we.systemApisHandler.getApplication, we.auth.system.permissions)).Methods("GET")
 	systemSubrouter.HandleFunc("/applications", we.wrapFunc(we.systemApisHandler.getApplications, we.auth.system.permissions)).Methods("GET")
 
+	systemSubrouter.HandleFunc("/app-orgs", we.wrapFunc(we.systemApisHandler.createApplicationOrganization, we.auth.system.permissions)).Methods("POST")
+	systemSubrouter.HandleFunc("/app-orgs/{id}", we.wrapFunc(we.systemApisHandler.updateApplicationOrganization, we.auth.system.permissions)).Methods("PUT")
+
 	systemSubrouter.HandleFunc("/permissions", we.wrapFunc(we.systemApisHandler.createPermission, we.auth.system.permissions)).Methods("POST")
 	systemSubrouter.HandleFunc("/permissions", we.wrapFunc(we.systemApisHandler.updatePermission, we.auth.system.permissions)).Methods("PUT")
 

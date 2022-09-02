@@ -4497,6 +4497,103 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+  '/system/app-orgs/{id}':
+    put:
+      tags:
+        - System
+      summary: Update app-org by ID
+      description: |
+        Updates app-org by ID
+
+        **Auth:** Requires system access token with `update_app_orgs` or `all_app_orgs` permission
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: ID of the app-org that needs to be updated
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+      requestBody:
+        description: update one app-org
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_system_req_update_app_org'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /system/app-orgs:
+    post:
+      tags:
+        - System
+      summary: Create app-org
+      description: |
+        Create app-org
+
+        **Auth:** Requires system access token with `update_app_orgs` or `all_app_orgs` permission
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: New app-org
+        content:
+          application/json:
+            schema:
+              required:
+                - app_id
+                - org_id
+              type: object
+              properties:
+                app_id:
+                  readOnly: true
+                  type: string
+                org_id:
+                  readOnly: true
+                  type: string
+                services_ids:
+                  type: array
+                  items:
+                    type: string
+                identity_providers_settings:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/_system_req_app_org_identity_providers_setting'
+                supported_auth_types:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/_system_req_app_org_supported_auth_types'
+                logins_sessions_settings:
+                  $ref: '#/components/schemas/_system_req_app_org_logins_sessions_settings'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   /ui/credential/reset:
     get:
       tags:
@@ -6509,3 +6606,117 @@ components:
           type: array
           items:
             type: string
+    _system_req_update_app_org:
+      required:
+        - id
+        - app_id
+        - org_id
+      type: object
+      properties:
+        id:
+          readOnly: true
+          type: string
+        app_id:
+          readOnly: true
+          type: string
+        org_id:
+          readOnly: true
+          type: string
+        services_ids:
+          type: array
+          items:
+            type: string
+        identity_providers_settings:
+          type: array
+          items:
+            $ref: '#/components/schemas/_system_req_app_org_identity_providers_setting'
+        supported_auth_types:
+          type: array
+          items:
+            $ref: '#/components/schemas/_system_req_app_org_supported_auth_types'
+        logins_sessions_settings:
+          $ref: '#/components/schemas/_system_req_app_org_logins_sessions_settings'
+    _system_req_app_org_identity_providers_setting:
+      type: object
+      properties:
+        identity_provider_id:
+          type: string
+        user_identifier_field:
+          type: string
+        external_id_fields:
+          type: object
+          additionalProperties:
+            type: string
+        first_name_field:
+          type: string
+        middle_name_field:
+          type: string
+        last_name_field:
+          type: string
+        email_field:
+          type: string
+        roles_field:
+          type: string
+        groups_field:
+          type: string
+        user_specific_fields:
+          type: array
+          items:
+            type: string
+        roles:
+          type: object
+          additionalProperties:
+            type: string
+        groups:
+          type: object
+          additionalProperties:
+            type: string
+    _system_req_app_org_supported_auth_types:
+      type: object
+      properties:
+        app_type_id:
+          type: string
+        supported_auth_types:
+          type: array
+          items:
+            $ref: '#/components/schemas/_system_req_app_org_supported_auth_type'
+    _system_req_app_org_supported_auth_type:
+      type: object
+      properties:
+        auth_type_id:
+          type: string
+        params:
+          type: object
+          additionalProperties: true
+    _system_req_app_org_logins_sessions_settings:
+      type: object
+      properties:
+        max_concurrent_sessions:
+          type: integer
+        inactivity_expire_policy:
+          type: object
+          properties:
+            active:
+              type: boolean
+            inactivity_period:
+              type: integer
+        time_since_login_expire_policy:
+          type: object
+          properties:
+            active:
+              type: boolean
+            time_since_login_period:
+              type: integer
+        yearly_expire_policy:
+          type: object
+          properties:
+            active:
+              type: boolean
+            day:
+              type: integer
+            month:
+              type: integer
+            hour:
+              type: integer
+            min:
+              type: integer

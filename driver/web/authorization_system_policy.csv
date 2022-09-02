@@ -17,6 +17,12 @@ p, get_applications, /core/system/applications, (GET), Get applications
 p, get_applications, /core/system/applications/*, (GET),
 p, update_applications, /core/system/applications, (GET)|(POST), Create applications
 
+p, update_app_orgs, /core/system/app-orgs, (GET)|(POST), Update and create applicaiton organizations
+p, update_app_orgs, /core/system/app-orgs/*, (GET)|(PUT)
+p, all_app_orgs, /core/system/app-orgs, (GET)|(POST)|(DELETE)|(PUT), All application organizations
+p, all_app_orgs, /core/system/app-orgs/*, (GET)|(POST)|(DELETE)|(PUT), All application organizations
+
+
 p, all_permissions, /core/system/permissions, (GET)|(POST)|(DELETE)|(PUT), All permission actions
 p, update_permissions, /core/system/permissions, (POST)|(PUT), Update and create permissions
 

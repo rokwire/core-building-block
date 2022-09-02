@@ -473,6 +473,14 @@ func (s *systemImpl) SysUpdateGlobalConfig(setting string) error {
 	return s.app.sysUpdateGlobalConfig(setting)
 }
 
+func (s *systemImpl) SysCreateApplicationOrganization(appID string, orgID string, appOrg model.ApplicationOrganization) (*model.ApplicationOrganization, error) {
+	return s.app.sysCreateApplicationOrganization(appOrg, appID, orgID)
+}
+
+func (s *systemImpl) SysUpdateApplicationOrganization(ID string, appID string, orgID string, appOrg model.ApplicationOrganization) error {
+	return s.app.sysUpdateApplicationOrganization(ID, appID, orgID, appOrg)
+}
+
 func (s *systemImpl) SysCreateOrganization(name string, requestType string, organizationDomains []string) (*model.Organization, error) {
 	return s.app.sysCreateOrganization(name, requestType, organizationDomains)
 }

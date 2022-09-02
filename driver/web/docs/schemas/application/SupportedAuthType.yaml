@@ -1,0 +1,7 @@
+type: object
+properties:
+  auth_type_id:
+    type: string
+  params:
+    type: object
+    additionalProperties: true

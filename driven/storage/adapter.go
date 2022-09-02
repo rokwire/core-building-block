@@ -3043,6 +3043,36 @@ func (sa *Adapter) InsertApplicationOrganization(context TransactionContext, app
 	return &applicationOrganization, nil
 }
 
+// UpdateApplicationOrganization updates an application organization
+func (sa *Adapter) UpdateApplicationOrganization(context TransactionContext, ID string, appID string, orgID string, applicationOrganization model.ApplicationOrganization) error {
+	appOrg := applicationOrganizationToStorage(applicationOrganization)
+	now := time.Now()
+
+	filter := bson.M{"_id": ID, "app_id": appID, "org_id": orgID}
+	update := bson.D{primitive.E{Key: "date_updated", Value: now},
+		primitive.E{Key: "identity_providers_settings", Value: appOrg.IdentityProvidersSettings},
+		primitive.E{Key: "supported_auth_types", Value: appOrg.SupportedAuthTypes},
+		primitive.E{Key: "logins_sessions_settings", Value: appOrg.LoginsSessionsSetting},
+		primitive.E{Key: "services_ids", Value: appOrg.ServicesIDs}}
+
+	updateAppOrg := bson.D{
+		primitive.E{Key: "$set", Value: update},
+	}
+
+	res, err := sa.db.applicationsOrganizations.UpdateOneWithContext(context, filter, updateAppOrg, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeApplicationOrganization, nil, err)
+	}
+	if res.ModifiedCount != 1 {
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeApplicationOrganization, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
+	}
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeApplicationOrganization, nil, err)
+	}
+
+	return nil
+}
+
 // FindDevice finds a device by device id and account id
 func (sa *Adapter) FindDevice(context TransactionContext, deviceID string, accountID string) (*model.Device, error) {
 	filter := bson.D{primitive.E{Key: "device_id", Value: deviceID},

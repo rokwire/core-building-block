@@ -62,7 +62,7 @@ func applicationTypeToDef(item *model.ApplicationType) *Def.ApplicationType {
 
 func applicationToDef(item model.Application) Def.ApplicationFields {
 
-	return Def.ApplicationFields{Id: item.ID, Name: item.Name, MultiTenant: &item.MultiTenant,
+	return Def.ApplicationFields{Id: &item.ID, Name: item.Name, MultiTenant: &item.MultiTenant,
 		SharedIdentities: &item.SharedIdentities}
 }
 
@@ -101,6 +101,134 @@ func applicationPermissionsToDef(items []model.Permission) []Def.Permission {
 	return result
 }
 
+// AppOrg
+func appOrgFromDef(item *Def.SystemReqUpdateAppOrg) (*model.ApplicationOrganization, error) {
+	if item == nil {
+		return nil, nil
+	}
+	var id string
+	if item.Id != nil {
+		id = *item.Id
+	}
+	var serviceIds []string
+	if item.ServicesIds != nil {
+		serviceIds = *item.ServicesIds
+	}
+
+	identityProviderSettings, _ := identityProviderSettingsFromDef(*item.IdentityProvidersSettings)
+	supportedAuthTypes, _ := supportedAuthTypesFromDef(*item.SupportedAuthTypes)
+	loginsSessionsSetting := loginSessionsSettingsFromDef(item.LoginsSessionsSettings)
+
+	return &model.ApplicationOrganization{ID: id, ServicesIDs: serviceIds, IdentityProvidersSettings: identityProviderSettings, SupportedAuthTypes: supportedAuthTypes, LoginsSessionsSetting: *loginsSessionsSetting}, nil
+}
+
+func loginSessionsSettingsFromDef(item *Def.SystemReqAppOrgLoginsSessionsSettings) *model.LoginsSessionsSetting {
+	if item == nil {
+		return nil
+	}
+
+	var maxConcurrentSessions int
+	if item.MaxConcurrentSessions != nil {
+		maxConcurrentSessions = *item.MaxConcurrentSessions
+	}
+	inactivityExpirePolicy := model.InactivityExpirePolicy{}
+	if item.InactivityExpirePolicy != nil {
+		inactivityExpirePolicy = model.InactivityExpirePolicy{Active: *item.InactivityExpirePolicy.Active, InactivityPeriod: *item.InactivityExpirePolicy.InactivityPeriod}
+	}
+	tslExpirePolicy := model.TSLExpirePolicy{}
+	if item.TimeSinceLoginExpirePolicy != nil {
+		tslExpirePolicy = model.TSLExpirePolicy{Active: *item.TimeSinceLoginExpirePolicy.Active, TimeSinceLoginPeriod: *item.TimeSinceLoginExpirePolicy.TimeSinceLoginPeriod}
+	}
+	yearlyExpirePolicy := model.YearlyExpirePolicy{}
+	if item.YearlyExpirePolicy != nil {
+		var active bool
+		var day int
+		var month int
+		var hour int
+		var min int
+
+		if item.YearlyExpirePolicy.Active != nil {
+			active = *item.YearlyExpirePolicy.Active
+		}
+		if item.YearlyExpirePolicy.Day != nil {
+			day = *item.YearlyExpirePolicy.Day
+		}
+		if item.YearlyExpirePolicy.Month != nil {
+			month = *item.YearlyExpirePolicy.Month
+		}
+		if item.YearlyExpirePolicy.Hour != nil {
+			hour = *item.YearlyExpirePolicy.Hour
+		}
+		if item.YearlyExpirePolicy.Min != nil {
+			min = *item.YearlyExpirePolicy.Min
+		}
+		yearlyExpirePolicy = model.YearlyExpirePolicy{Active: active, Day: day, Month: month, Hour: hour, Min: min}
+	}
+
+	return &model.LoginsSessionsSetting{MaxConcurrentSessions: maxConcurrentSessions, InactivityExpirePolicy: inactivityExpirePolicy, TSLExpirePolicy: tslExpirePolicy, YearlyExpirePolicy: yearlyExpirePolicy}
+}
+
+func supportedAuthTypesFromDef(items []Def.SystemReqAppOrgSupportedAuthTypes) ([]model.AuthTypesSupport, error) {
+	out := make([]model.AuthTypesSupport, len(items))
+	for i, item := range items {
+		defItem := supportedAuthTypeFromDef(&item)
+		if defItem != nil {
+			out[i] = *defItem
+		} else {
+			out[i] = model.AuthTypesSupport{}
+		}
+	}
+
+	return out, nil
+}
+
+func supportedAuthTypeFromDef(item *Def.SystemReqAppOrgSupportedAuthTypes) *model.AuthTypesSupport {
+	if item == nil || item.AppTypeId == nil {
+		return nil
+	}
+
+	supportedAuthTypes := []struct {
+		AuthTypeID string                 `bson:"auth_type_id"`
+		Params     map[string]interface{} `bson:"params"`
+	}{}
+
+	authTypeSupport := model.AuthTypesSupport{AppTypeID: *item.AppTypeId, SupportedAuthTypes: supportedAuthTypes}
+	if item.SupportedAuthTypes != nil {
+		for _, authType := range *item.SupportedAuthTypes {
+			if authType.AuthTypeId != nil && authType.Params != nil {
+				supportedAuthTypes = append(supportedAuthTypes, struct {
+					AuthTypeID string                 `bson:"auth_type_id"`
+					Params     map[string]interface{} `bson:"params"`
+				}{*authType.AuthTypeId, authType.Params.AdditionalProperties})
+			}
+		}
+	}
+
+	return &authTypeSupport
+}
+
+func identityProviderSettingsFromDef(items []Def.SystemReqAppOrgIdentityProvidersSetting) ([]model.IdentityProviderSetting, error) {
+	out := make([]model.IdentityProviderSetting, len(items))
+	for i, item := range items {
+		defItem := identityProviderSettingFromDef(&item)
+		if defItem != nil {
+			out[i] = *defItem
+		} else {
+			out[i] = model.IdentityProviderSetting{}
+		}
+	}
+
+	return out, nil
+}
+
+func identityProviderSettingFromDef(item *Def.SystemReqAppOrgIdentityProvidersSetting) *model.IdentityProviderSetting {
+	if item == nil {
+		return nil
+	}
+
+	return &model.IdentityProviderSetting{IdentityProviderID: *item.IdentityProviderId, UserIdentifierField: *item.UserIdentifierField, ExternalIDFields: item.ExternalIdFields.AdditionalProperties, FirstNameField: *item.FirstNameField, MiddleNameField: *item.MiddleNameField, LastNameField: *item.LastNameField, EmailField: *item.EmailField, RolesField: *item.RolesField, GroupsField: *item.GroupsField, UserSpecificFields: *item.UserSpecificFields, Roles: item.Roles.AdditionalProperties, Groups: item.Groups.AdditionalProperties}
+}
+
 // AppOrgRole
 func appOrgRoleToDef(item model.AppOrgRole) Def.AppOrgRole {
 	permissions := applicationPermissionsToDef(item.Permissions)
@@ -113,7 +241,7 @@ func appOrgRoleToDef(item model.AppOrgRole) Def.AppOrgRole {
 		dateUpdated = &formatted
 	}
 
-	return Def.AppOrgRole{Id: item.ID, Name: item.Name, Description: &item.Description, System: &item.System, DateCreated: &dateCreated, DateUpdated: dateUpdated, Permissions: &permissions}
+	return Def.AppOrgRole{Id: &item.ID, Name: item.Name, Description: &item.Description, System: &item.System, DateCreated: &dateCreated, DateUpdated: dateUpdated, Permissions: &permissions}
 }
 
 func appOrgRolesToDef(items []model.AppOrgRole) []Def.AppOrgRole {
@@ -137,7 +265,7 @@ func appOrgGroupToDef(item model.AppOrgGroup) Def.AppOrgGroup {
 		dateUpdated = &formatted
 	}
 
-	return Def.AppOrgGroup{Id: item.ID, Name: item.Name, Description: &item.Description, System: &item.System, DateCreated: &dateCreated, DateUpdated: dateUpdated, Permissions: &permissions, Roles: &roles}
+	return Def.AppOrgGroup{Id: &item.ID, Name: item.Name, Description: &item.Description, System: &item.System, DateCreated: &dateCreated, DateUpdated: dateUpdated, Permissions: &permissions, Roles: &roles}
 }
 
 func appOrgGroupsToDef(items []model.AppOrgGroup) []Def.AppOrgGroup {
@@ -154,7 +282,7 @@ func organizationToDef(item *model.Organization) *Def.Organization {
 		return nil
 	}
 
-	fields := Def.OrganizationFields{Id: item.ID, Name: item.Name, Type: Def.OrganizationFieldsType(item.Type)}
+	fields := Def.OrganizationFields{Id: &item.ID, Name: item.Name, Type: Def.OrganizationFieldsType(item.Type)}
 	config := item.Config
 
 	return &Def.Organization{Config: organizationConfigToDef(&config), Fields: &fields}

@@ -1,0 +1,12 @@
+type: object
+properties:
+  active:
+    type: boolean
+  day:
+    type: integer
+  month:
+    type: integer
+  hour:
+    type: integer
+  min:
+    type: integer

@@ -1,0 +1,6 @@
+type: object
+properties:
+  active:
+    type: boolean
+  time_since_login_period:
+    type: integer
