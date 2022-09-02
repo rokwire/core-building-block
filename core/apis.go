@@ -307,7 +307,7 @@ func (s *servicesImpl) SerUpdateProfile(accountID string, profile model.Profile)
 }
 
 func (s *servicesImpl) SerUpdateAccountUsername(accountID string, appID string, orgID string, username string) error {
-	return s.app.serUpdateAccountUsername(accountID, appID, orgID, username)
+	return s.app.sharedUpdateAccountUsername(accountID, appID, orgID, username)
 }
 
 func (s *servicesImpl) SerGetAccounts(limit int, offset int, appID string, orgID string, accountID *string, firstName *string, lastName *string, authType *string,
@@ -397,7 +397,7 @@ func (s *administrationImpl) AdmGetAccount(accountID string) (*model.Account, er
 }
 
 func (s *administrationImpl) AdmUpdateAccountUsername(accountID string, appID string, orgID string, username string) error {
-	return s.app.admUpdateAccountUsername(accountID, appID, orgID, username)
+	return s.app.sharedUpdateAccountUsername(accountID, appID, orgID, username)
 }
 
 func (s *administrationImpl) AdmGetAccountSystemConfigs(appID string, orgID string, accountID string, l *logs.Log) (map[string]interface{}, error) {
