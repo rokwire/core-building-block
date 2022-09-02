@@ -650,21 +650,15 @@ func (h SystemApisHandler) createApplication(l *logs.Log, r *http.Request, claim
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.SystemReqCreateApplication
+	var requestData Def.SystemReqApplications
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeApplication, nil, err, http.StatusBadRequest, true)
 	}
 
-	name := requestData.Name
-	multiTenant := requestData.MultiTenant
-	admin := requestData.Admin
-	sharedIdentities := requestData.SharedIdentities
-	applicationTypes := requestData.ApplicationTypes
-
 	appTypes := make([]model.ApplicationType, 0)
-	if applicationTypes != nil {
-		for _, at := range *applicationTypes {
+	if requestData.ApplicationTypes != nil {
+		for _, at := range *requestData.ApplicationTypes {
 			versions := make([]model.Version, 0)
 			if at.Versions != nil {
 				for _, v := range *at.Versions {
@@ -678,9 +672,51 @@ func (h SystemApisHandler) createApplication(l *logs.Log, r *http.Request, claim
 		}
 	}
 
-	_, err = h.coreAPIs.System.SysCreateApplication(name, multiTenant, admin, sharedIdentities, appTypes)
+	_, err = h.coreAPIs.System.SysCreateApplication(requestData.Name, requestData.MultiTenant, requestData.Admin, requestData.SharedIdentities, appTypes)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypeApplication, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
+func (h SystemApisHandler) updateApplication(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	params := mux.Vars(r)
+	ID := params["id"]
+	if len(ID) <= 0 {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
+	}
+
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.SystemReqApplications
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeApplication, nil, err, http.StatusBadRequest, true)
+	}
+
+	appTypes := make([]model.ApplicationType, 0)
+	if requestData.ApplicationTypes != nil {
+		for _, at := range *requestData.ApplicationTypes {
+			versions := make([]model.Version, 0)
+			if at.Versions != nil {
+				for _, v := range *at.Versions {
+					versionNumbers := model.VersionNumbersFromString(v)
+					if versionNumbers != nil {
+						versions = append(versions, model.Version{VersionNumbers: *versionNumbers})
+					}
+				}
+			}
+			appTypes = append(appTypes, model.ApplicationType{Identifier: at.Identifier, Name: *at.Name, Versions: versions})
+		}
+	}
+
+	err = h.coreAPIs.System.SysUpdateApplication(requestData.Name, requestData.MultiTenant, requestData.Admin, requestData.SharedIdentities, appTypes)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeApplication, nil, err, http.StatusInternalServerError, true)
 	}
 
 	return l.HttpResponseSuccess()

@@ -1080,19 +1080,8 @@ type SharedResRokwireToken struct {
 // The type of the provided tokens to be specified when they are sent in the "Authorization" header
 type SharedResRokwireTokenTokenType string
 
-// SystemReqCreateOrganization defines model for _system_req_create-Organization.
-type SystemReqCreateOrganization struct {
-	Config *OrganizationConfigFields       `json:"config,omitempty"`
-	Id     *string                         `json:"id,omitempty"`
-	Name   string                          `json:"name"`
-	Type   SystemReqCreateOrganizationType `json:"type"`
-}
-
-// SystemReqCreateOrganizationType defines model for SystemReqCreateOrganization.Type.
-type SystemReqCreateOrganizationType string
-
-// SystemReqCreateApplication defines model for _system_req_create_Application.
-type SystemReqCreateApplication struct {
+// SystemReqApplications defines model for _system_req_applications.
+type SystemReqApplications struct {
 	Admin            bool `json:"admin"`
 	ApplicationTypes *[]struct {
 		Identifier string    `json:"identifier"`
@@ -1103,6 +1092,17 @@ type SystemReqCreateApplication struct {
 	Name             string `json:"name"`
 	SharedIdentities bool   `json:"shared_identities"`
 }
+
+// SystemReqCreateOrganization defines model for _system_req_create-Organization.
+type SystemReqCreateOrganization struct {
+	Config *OrganizationConfigFields       `json:"config,omitempty"`
+	Id     *string                         `json:"id,omitempty"`
+	Name   string                          `json:"name"`
+	Type   SystemReqCreateOrganizationType `json:"type"`
+}
+
+// SystemReqCreateOrganizationType defines model for SystemReqCreateOrganization.Type.
+type SystemReqCreateOrganizationType string
 
 // SystemReqCreateApplicationConfigRequest defines model for _system_req_create_ApplicationConfig_Request.
 type SystemReqCreateApplicationConfigRequest struct {
@@ -1513,7 +1513,10 @@ type PostSystemApplicationConfigsJSONBody SystemReqCreateApplicationConfigReques
 type PutSystemApplicationConfigsIdJSONBody SystemReqCreateApplicationConfigRequest
 
 // PostSystemApplicationsJSONBody defines parameters for PostSystemApplications.
-type PostSystemApplicationsJSONBody SystemReqCreateApplication
+type PostSystemApplicationsJSONBody SystemReqApplications
+
+// PutSystemApplicationsIdJSONBody defines parameters for PutSystemApplicationsId.
+type PutSystemApplicationsIdJSONBody SystemReqApplications
 
 // PostSystemAuthTypesJSONBody defines parameters for PostSystemAuthTypes.
 type PostSystemAuthTypesJSONBody SystemReqCreateAuthType
@@ -1823,6 +1826,9 @@ type PutSystemApplicationConfigsIdJSONRequestBody PutSystemApplicationConfigsIdJ
 
 // PostSystemApplicationsJSONRequestBody defines body for PostSystemApplications for application/json ContentType.
 type PostSystemApplicationsJSONRequestBody PostSystemApplicationsJSONBody
+
+// PutSystemApplicationsIdJSONRequestBody defines body for PutSystemApplicationsId for application/json ContentType.
+type PutSystemApplicationsIdJSONRequestBody PutSystemApplicationsIdJSONBody
 
 // PostSystemAuthTypesJSONRequestBody defines body for PostSystemAuthTypes for application/json ContentType.
 type PostSystemAuthTypesJSONRequestBody PostSystemAuthTypesJSONBody

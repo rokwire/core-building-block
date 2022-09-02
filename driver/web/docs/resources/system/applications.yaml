@@ -38,7 +38,7 @@
     content:
       application/json:
         schema:
-         $ref: "../../schemas/apis/system/create-application/request/Request.yaml"
+         $ref: "../../schemas/apis/system/applications/request/Request.yaml"
     required: true
   responses:
     200:

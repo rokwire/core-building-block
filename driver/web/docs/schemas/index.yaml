@@ -265,14 +265,8 @@ _system_res_get_Organizations:
   $ref: "./apis/system/get-organizations/response/Response.yaml"
 
  ### application API
-_system_req_create_Application:
-  $ref: "./apis/system/create-application/request/Request.yaml"
-_system_req_get_Application:
-  $ref: "./apis/system/get-application/request/Request.yaml"
-_system_res_get_Application:
-  $ref: "./apis/system/get-application/response/Response.yaml"
-_system_res_get_Applications:
-  $ref: "./apis/system/get-applications/response/Response.yaml"
+_system_req_applications:
+  $ref: "./apis/system/applications/request/Request.yaml"
  
 ### permissions API
 _system_req_permissions:

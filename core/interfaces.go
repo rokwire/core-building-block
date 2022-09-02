@@ -102,6 +102,7 @@ type System interface {
 	SysUpdateOrganization(ID string, name string, requestType string, organizationDomains []string) error
 
 	SysCreateApplication(name string, multiTenant bool, admin bool, sharedIdentities bool, appTypes []model.ApplicationType) (*model.Application, error)
+	SysUpdateApplication(name string, multiTenant bool, admin bool, sharedIdentities bool, appTypes []model.ApplicationType) error
 	SysGetApplication(ID string) (*model.Application, error)
 	SysGetApplications() ([]model.Application, error)
 

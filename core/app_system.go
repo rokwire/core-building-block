@@ -153,6 +153,11 @@ func (app *application) sysCreateApplication(name string, multiTenant bool, admi
 	return insertedApplication, nil
 }
 
+func (app *application) sysUpdateApplication(name string, multiTenant bool, admin bool, sharedIdentities bool, appTypes []model.ApplicationType) error {
+	//TODO: implement
+	return errors.New(logutils.Unimplemented)
+}
+
 func (app *application) sysGetApplications() ([]model.Application, error) {
 	getApplications, err := app.storage.FindApplications()
 	if err != nil {
