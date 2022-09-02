@@ -1138,7 +1138,6 @@ func (sa *Adapter) FindAccounts(limit int, offset int, appID string, orgID strin
 		filter = append(filter, primitive.E{Key: "groups.group._id", Value: bson.M{"$in": groupIDs}})
 		overrideHasPermissions = true
 	}
-
 	if !overrideHasPermissions && hasPermissions != nil {
 		if *hasPermissions {
 			filter = append(filter, primitive.E{Key: "$or", Value: bson.A{
