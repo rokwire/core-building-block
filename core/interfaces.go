@@ -135,11 +135,11 @@ type Storage interface {
 	UpdateAccountPreferences(accountID string, preferences map[string]interface{}) error
 	UpdateAccountSystemConfigs(context storage.TransactionContext, accountID string, configs map[string]interface{}) error
 	InsertAccountPermissions(context storage.TransactionContext, accountID string, permissions []model.Permission) error
-	DeleteAccountPermissions(context storage.TransactionContext, accountID string, hasPermissions bool, permissions []model.Permission) error
+	DeleteAccountPermissions(context storage.TransactionContext, accountID string, permissionNames []string) error
 	InsertAccountRoles(context storage.TransactionContext, accountID string, appOrgID string, roles []model.AccountRole) error
-	DeleteAccountRoles(context storage.TransactionContext, accountID string, hasPermissions bool, roleIDs []string) error
+	DeleteAccountRoles(context storage.TransactionContext, accountID string, roleIDs []string) error
 	InsertAccountsGroup(group model.AccountGroup, accounts []model.Account) error
-	RemoveAccountsGroup(groupID string, accounts []model.Account, hasPermissions []bool) error
+	RemoveAccountsGroup(groupID string, accountIDs []string) error
 	CountAccountsByRoleID(roleID string) (*int64, error)
 	CountAccountsByGroupID(groupID string) (*int64, error)
 

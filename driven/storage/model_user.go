@@ -25,10 +25,9 @@ type account struct {
 
 	AppOrgID string `bson:"app_org_id,omitempty"`
 
-	HasPermissions bool               `bson:"has_permissions"`
-	Permissions    []model.Permission `bson:"permissions,omitempty"`
-	Roles          []accountRole      `bson:"roles,omitempty"`
-	Groups         []accountGroup     `bson:"groups,omitempty"`
+	Permissions []model.Permission `bson:"permissions,omitempty"`
+	Roles       []accountRole      `bson:"roles,omitempty"`
+	Groups      []accountGroup     `bson:"groups,omitempty"`
 
 	AuthTypes []accountAuthType `bson:"auth_types,omitempty"`
 

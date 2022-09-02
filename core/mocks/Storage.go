@@ -98,13 +98,13 @@ func (_m *Storage) CreateGlobalConfig(context storage.TransactionContext, global
 	return r0
 }
 
-// DeleteAccountPermissions provides a mock function with given fields: context, accountID, hasPermissions, permissions
-func (_m *Storage) DeleteAccountPermissions(context storage.TransactionContext, accountID string, hasPermissions bool, permissions []model.Permission) error {
-	ret := _m.Called(context, accountID, hasPermissions, permissions)
+// DeleteAccountPermissions provides a mock function with given fields: context, accountID, permissionNames
+func (_m *Storage) DeleteAccountPermissions(context storage.TransactionContext, accountID string, permissionNames []string) error {
+	ret := _m.Called(context, accountID, permissionNames)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, bool, []model.Permission) error); ok {
-		r0 = rf(context, accountID, hasPermissions, permissions)
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, []string) error); ok {
+		r0 = rf(context, accountID, permissionNames)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -112,13 +112,13 @@ func (_m *Storage) DeleteAccountPermissions(context storage.TransactionContext, 
 	return r0
 }
 
-// DeleteAccountRoles provides a mock function with given fields: context, accountID, hasPermissions, roleIDs
-func (_m *Storage) DeleteAccountRoles(context storage.TransactionContext, accountID string, hasPermissions bool, roleIDs []string) error {
-	ret := _m.Called(context, accountID, hasPermissions, roleIDs)
+// DeleteAccountRoles provides a mock function with given fields: context, accountID, roleIDs
+func (_m *Storage) DeleteAccountRoles(context storage.TransactionContext, accountID string, roleIDs []string) error {
+	ret := _m.Called(context, accountID, roleIDs)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, bool, []string) error); ok {
-		r0 = rf(context, accountID, hasPermissions, roleIDs)
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, []string) error); ok {
+		r0 = rf(context, accountID, roleIDs)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -1105,13 +1105,13 @@ func (_m *Storage) RegisterStorageListener(storageListener storage.Listener) {
 	_m.Called(storageListener)
 }
 
-// RemoveAccountsGroup provides a mock function with given fields: groupID, accounts, hasPermissions
-func (_m *Storage) RemoveAccountsGroup(groupID string, accounts []model.Account, hasPermissions []bool) error {
-	ret := _m.Called(groupID, accounts, hasPermissions)
+// RemoveAccountsGroup provides a mock function with given fields: groupID, accountIDs
+func (_m *Storage) RemoveAccountsGroup(groupID string, accountIDs []string) error {
+	ret := _m.Called(groupID, accountIDs)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(string, []model.Account, []bool) error); ok {
-		r0 = rf(groupID, accounts, hasPermissions)
+	if rf, ok := ret.Get(0).(func(string, []string) error); ok {
+		r0 = rf(groupID, accountIDs)
 	} else {
 		r0 = ret.Error(0)
 	}

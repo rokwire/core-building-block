@@ -5162,8 +5162,6 @@ components:
           type: string
         system:
           type: boolean
-        has_permissions:
-          type: boolean
         permissions:
           type: array
           items:
@@ -5195,13 +5193,10 @@ components:
     AccountFields:
       required:
         - id
-        - has_permissions
       type: object
       properties:
         id:
           type: string
-        has_permissions:
-          type: boolean
     Profile:
       type: object
       properties:
@@ -5748,8 +5743,6 @@ components:
         system_configs:
           type: object
           nullable: true
-        has_permissions:
-          type: boolean
         system:
           type: boolean
         permissions:

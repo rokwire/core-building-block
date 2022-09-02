@@ -1449,11 +1449,9 @@ func (a *Auth) constructAccount(context storage.TransactionContext, authType mod
 		}
 	}
 
-	hasPermissions := len(permissions) > 0 || len(roles) > 0 || len(groups) > 0
-	now := time.Now()
-	account := model.Account{ID: accountID.String(), AppOrg: appOrg, HasPermissions: hasPermissions, Permissions: permissions,
+	account := model.Account{ID: accountID.String(), AppOrg: appOrg, Permissions: permissions,
 		Roles: model.AccountRolesFromAppOrgRoles(roles, true, adminSet), Groups: model.AccountGroupsFromAppOrgGroups(groups, true, adminSet),
-		AuthTypes: authTypes, ExternalIDs: externalIDs, Preferences: preferences, Profile: profile, DateCreated: now, MostRecentClientVersion: clientVersion}
+		AuthTypes: authTypes, ExternalIDs: externalIDs, Preferences: preferences, Profile: profile, DateCreated: time.Now(), MostRecentClientVersion: clientVersion}
 
 	accountAuthType.Account = account
 	return accountAuthType, nil

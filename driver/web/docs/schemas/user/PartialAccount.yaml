@@ -24,8 +24,6 @@ properties:
     type: string
   system:
     type: boolean
-  has_permissions:
-    type: boolean
   permissions:
     type: array
     items:

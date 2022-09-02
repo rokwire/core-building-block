@@ -1140,7 +1140,17 @@ func (sa *Adapter) FindAccounts(limit int, offset int, appID string, orgID strin
 	}
 
 	if !overrideHasPermissions && hasPermissions != nil {
-		filter = append(filter, primitive.E{Key: "has_permissions", Value: *hasPermissions})
+		if *hasPermissions {
+			filter = append(filter, primitive.E{Key: "$or", Value: bson.A{
+				bson.M{"permissions.0": bson.M{"$exists": true}},
+				bson.M{"roles.0": bson.M{"$exists": true}},
+				bson.M{"groups.0": bson.M{"$exists": true}},
+			}})
+		} else {
+			filter = append(filter, primitive.E{Key: "permissions.0", Value: bson.M{"$exists": false}})
+			filter = append(filter, primitive.E{Key: "roles.0", Value: bson.M{"$exists": false}})
+			filter = append(filter, primitive.E{Key: "groups.0", Value: bson.M{"$exists": false}})
+		}
 	}
 
 	var list []account
@@ -1537,7 +1547,6 @@ func (sa *Adapter) InsertAccountPermissions(context TransactionContext, accountI
 			primitive.E{Key: "permissions", Value: bson.M{"$each": permissions}},
 		}},
 		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "has_permissions", Value: true},
 			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
 		}},
 	}
@@ -1554,11 +1563,10 @@ func (sa *Adapter) InsertAccountPermissions(context TransactionContext, accountI
 }
 
 // UpdateAccountPermissions updates account permissions
-func (sa *Adapter) UpdateAccountPermissions(context TransactionContext, accountID string, hasPermissions bool, permissions []model.Permission) error {
+func (sa *Adapter) UpdateAccountPermissions(context TransactionContext, accountID string, permissions []model.Permission) error {
 	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
 	update := bson.D{
 		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "has_permissions", Value: hasPermissions},
 			primitive.E{Key: "permissions", Value: permissions},
 			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
 		}},
@@ -1576,21 +1584,16 @@ func (sa *Adapter) UpdateAccountPermissions(context TransactionContext, accountI
 }
 
 // DeleteAccountPermissions deletes permissions from an account
-func (sa *Adapter) DeleteAccountPermissions(context TransactionContext, accountID string, hasPermissions bool, permissions []model.Permission) error {
+func (sa *Adapter) DeleteAccountPermissions(context TransactionContext, accountID string, permissionNames []string) error {
 	//filter
 	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
 
 	//update
-	permissionsIDs := make([]string, len(permissions))
-	for i, permission := range permissions {
-		permissionsIDs[i] = permission.ID
-	}
 	update := bson.D{
 		primitive.E{Key: "$pull", Value: bson.D{
-			primitive.E{Key: "permissions", Value: bson.M{"_id": bson.M{"$in": permissionsIDs}}},
+			primitive.E{Key: "permissions", Value: bson.M{"name": bson.M{"$in": permissionNames}}},
 		}},
 		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "has_permissions", Value: hasPermissions},
 			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
 		}},
 	}
@@ -1616,7 +1619,6 @@ func (sa *Adapter) InsertAccountRoles(context TransactionContext, accountID stri
 			primitive.E{Key: "roles", Value: bson.M{"$each": stgRoles}},
 		}},
 		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "has_permissions", Value: true},
 			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
 		}},
 	}
@@ -1643,7 +1645,6 @@ func (sa *Adapter) InsertAccountGroups(context TransactionContext, accountID str
 			primitive.E{Key: "groups", Value: bson.M{"$each": stgGroups}},
 		}},
 		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "has_permissions", Value: true},
 			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
 		}},
 	}
@@ -1675,7 +1676,6 @@ func (sa *Adapter) InsertAccountsGroup(group model.AccountGroup, accounts []mode
 			primitive.E{Key: "groups", Value: storageGroup},
 		}},
 		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "has_permissions", Value: true},
 			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
 		}},
 	}
@@ -1689,65 +1689,40 @@ func (sa *Adapter) InsertAccountsGroup(group model.AccountGroup, accounts []mode
 }
 
 // RemoveAccountsGroup removes accounts from a group
-func (sa *Adapter) RemoveAccountsGroup(groupID string, accounts []model.Account, hasPermissions []bool) error {
-	//split accounts list by admin status
-	standardAccountIDs := make([]string, 0)
-	hasPermissionsAccountIDs := make([]string, 0)
-	for i, cur := range accounts {
-		if hasPermissions[i] {
-			hasPermissionsAccountIDs = append(hasPermissionsAccountIDs, cur.ID)
-		} else {
-			standardAccountIDs = append(standardAccountIDs, cur.ID)
-		}
-	}
-
-	err := sa.removeAccountsFromGroup(groupID, standardAccountIDs, false)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccountGroups, &logutils.FieldArgs{"group_id": groupID, "has_permissions": false}, err)
-	}
-
-	err = sa.removeAccountsFromGroup(groupID, hasPermissionsAccountIDs, true)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccountGroups, &logutils.FieldArgs{"group_id": groupID, "has_permissions": true}, err)
-	}
-
-	return nil
-}
-
-// RemoveAccountsGroup removes accounts from a group
-func (sa *Adapter) removeAccountsFromGroup(groupID string, accountIDs []string, hasPermissions bool) error {
+func (sa *Adapter) RemoveAccountsGroup(groupID string, accountIDs []string) error {
 	if len(accountIDs) == 0 {
 		return nil
 	}
 
 	filter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": accountIDs}}}
-	//update
 	update := bson.D{
 		primitive.E{Key: "$pull", Value: bson.D{
 			primitive.E{Key: "groups", Value: bson.M{"group._id": groupID}},
 		}},
 		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "has_permissions", Value: hasPermissions},
 			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
 		}},
 	}
 
 	res, err := sa.db.accounts.UpdateMany(filter, update, nil)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, nil, err)
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"group_id": groupID}, err)
 	}
+	if res.ModifiedCount != res.MatchedCount {
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"group_id": groupID, "modified": res.ModifiedCount, "expected": res.MatchedCount})
+	}
+
 	sa.logger.Infof("modified %d accounts with removed group", res.ModifiedCount)
 	return nil
 }
 
 // UpdateAccountRoles updates the account roles
-func (sa *Adapter) UpdateAccountRoles(context TransactionContext, accountID string, hasPermissions bool, roles []model.AccountRole) error {
+func (sa *Adapter) UpdateAccountRoles(context TransactionContext, accountID string, roles []model.AccountRole) error {
 	stgRoles := accountRolesToStorage(roles)
 
 	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
 	update := bson.D{
 		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "has_permissions", Value: hasPermissions},
 			primitive.E{Key: "roles", Value: stgRoles},
 			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
 		}},
@@ -1765,7 +1740,7 @@ func (sa *Adapter) UpdateAccountRoles(context TransactionContext, accountID stri
 }
 
 // DeleteAccountRoles deletes account roles
-func (sa *Adapter) DeleteAccountRoles(context TransactionContext, accountID string, hasPermissions bool, roleIDs []string) error {
+func (sa *Adapter) DeleteAccountRoles(context TransactionContext, accountID string, roleIDs []string) error {
 	//filter
 	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
 
@@ -1775,7 +1750,6 @@ func (sa *Adapter) DeleteAccountRoles(context TransactionContext, accountID stri
 			primitive.E{Key: "roles", Value: bson.M{"role._id": bson.M{"$in": roleIDs}}},
 		}},
 		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "has_permissions", Value: hasPermissions},
 			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
 		}},
 	}
@@ -1791,13 +1765,12 @@ func (sa *Adapter) DeleteAccountRoles(context TransactionContext, accountID stri
 }
 
 // UpdateAccountGroups updates the account groups
-func (sa *Adapter) UpdateAccountGroups(context TransactionContext, accountID string, hasPermissions bool, groups []model.AccountGroup) error {
+func (sa *Adapter) UpdateAccountGroups(context TransactionContext, accountID string, groups []model.AccountGroup) error {
 	stgGroups := accountGroupsToStorage(groups)
 
 	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
 	update := bson.D{
 		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "has_permissions", Value: hasPermissions},
 			primitive.E{Key: "groups", Value: stgGroups},
 			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
 		}},
