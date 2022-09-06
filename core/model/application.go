@@ -354,6 +354,16 @@ type ApplicationType struct {
 	Application Application
 }
 
+// FindVersion finds a version by string
+func (at ApplicationType) FindVersion(version string) *Version {
+	for _, v := range at.Versions {
+		if v.VersionNumbers.String() == version {
+			return &v
+		}
+	}
+	return nil
+}
+
 // AuthTypesSupport represents supported auth types for an organization in an application type with configs/params
 type AuthTypesSupport struct {
 	AppTypeID string `bson:"app_type_id"`

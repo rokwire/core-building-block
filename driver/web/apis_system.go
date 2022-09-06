@@ -714,7 +714,7 @@ func (h SystemApisHandler) updateApplication(l *logs.Log, r *http.Request, claim
 		}
 	}
 
-	err = h.coreAPIs.System.SysUpdateApplication(requestData.Name, requestData.MultiTenant, requestData.Admin, requestData.SharedIdentities, appTypes)
+	err = h.coreAPIs.System.SysUpdateApplication(ID, requestData.Name, requestData.MultiTenant, requestData.Admin, requestData.SharedIdentities, appTypes)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeApplication, nil, err, http.StatusInternalServerError, true)
 	}

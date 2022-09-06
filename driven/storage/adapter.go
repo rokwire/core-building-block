@@ -340,7 +340,7 @@ func (sa *Adapter) getCachedApplication(appID string) (*model.Application, error
 	sa.applicationsLock.RLock()
 	defer sa.applicationsLock.RUnlock()
 
-	errArgs := &logutils.FieldArgs{"app_id": appID}
+	errArgs := &logutils.FieldArgs{"id": appID}
 
 	item, _ := sa.cachedApplications.Load(appID)
 	if item != nil {
@@ -2854,6 +2854,19 @@ func (sa *Adapter) InsertApplication(context TransactionContext, application mod
 	}
 
 	return &application, nil
+}
+
+// SaveApplication saves an application
+func (sa *Adapter) SaveApplication(context TransactionContext, application model.Application) error {
+	filter := bson.D{primitive.E{Key: "_id", Value: application.ID}}
+	app := applicationToStorage(&application)
+
+	err := sa.db.applications.ReplaceOneWithContext(context, filter, app, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionSave, model.TypeApplication, &logutils.FieldArgs{"id": app.ID}, err)
+	}
+
+	return nil
 }
 
 // FindApplication finds application

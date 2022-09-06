@@ -1119,6 +1119,20 @@ func (_m *Storage) RemoveAccountsGroup(groupID string, accounts []model.Account,
 	return r0
 }
 
+// SaveApplication provides a mock function with given fields: context, application
+func (_m *Storage) SaveApplication(context storage.TransactionContext, application model.Application) error {
+	ret := _m.Called(context, application)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, model.Application) error); ok {
+		r0 = rf(context, application)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // SaveDevice provides a mock function with given fields: context, device
 func (_m *Storage) SaveDevice(context storage.TransactionContext, device *model.Device) error {
 	ret := _m.Called(context, device)

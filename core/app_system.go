@@ -153,9 +153,63 @@ func (app *application) sysCreateApplication(name string, multiTenant bool, admi
 	return insertedApplication, nil
 }
 
-func (app *application) sysUpdateApplication(name string, multiTenant bool, admin bool, sharedIdentities bool, appTypes []model.ApplicationType) error {
-	//TODO: implement
-	return errors.New(logutils.Unimplemented)
+func (app *application) sysUpdateApplication(ID string, name string, multiTenant bool, admin bool, sharedIdentities bool, appTypes []model.ApplicationType) error {
+	//1. find application
+	application, err := app.storage.FindApplication(ID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
+	}
+	if application == nil {
+		return errors.ErrorData(logutils.StatusMissing, model.TypeApplication, nil)
+	}
+
+	//2. update app type list
+	updated := false
+	now := time.Now().UTC()
+	for i, at := range appTypes {
+		existingAppType := application.FindApplicationType(at.Identifier)
+		if existingAppType != nil {
+			//unchanged app type identifier, so update
+			appTypes[i].ID = existingAppType.ID
+			for vidx, version := range at.Versions {
+				existingVersion := existingAppType.FindVersion(version.VersionNumbers.String())
+				appTypes[i].Versions[vidx].ApplicationType = model.ApplicationType{ID: existingAppType.ID}
+				if existingVersion != nil {
+					//unchanged version string, so match ID and creation date
+					appTypes[i].Versions[vidx].ID = existingVersion.ID
+					appTypes[i].Versions[vidx].DateCreated = existingVersion.DateCreated
+				} else {
+					//new version string, so set new ID and creation date
+					appTypes[i].Versions[vidx].ID = uuid.NewString()
+					appTypes[i].Versions[vidx].DateCreated = now
+					updated = true
+				}
+			}
+			updated = updated || (at.Name != existingAppType.Name) || (len(at.Versions) != len(existingAppType.Versions))
+		} else {
+			//added app type identifier, so set new ID and creation date
+			appTypes[i].ID = uuid.NewString()
+			for vidx := range at.Versions {
+				appTypes[i].Versions[vidx].ID = uuid.NewString()
+				appTypes[i].Versions[vidx].ApplicationType = model.ApplicationType{ID: appTypes[i].ID}
+				appTypes[i].Versions[vidx].DateCreated = now
+			}
+			updated = true
+		}
+	}
+
+	//3. update if app types or other application params were updated
+	updated = updated || (name != application.Name) || (multiTenant != application.MultiTenant) || (admin != application.Admin) || (sharedIdentities != application.SharedIdentities)
+	if updated {
+		updatedApp := model.Application{ID: application.ID, Name: name, MultiTenant: multiTenant, Admin: admin, SharedIdentities: sharedIdentities,
+			Types: appTypes, DateCreated: application.DateCreated, DateUpdated: &now}
+		err = app.storage.SaveApplication(nil, updatedApp)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeApplication, nil, err)
+		}
+	}
+
+	return nil
 }
 
 func (app *application) sysGetApplications() ([]model.Application, error) {
