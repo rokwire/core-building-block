@@ -141,9 +141,15 @@ func (app *application) sysCreateApplication(name string, multiTenant bool, admi
 	now := time.Now()
 
 	// application
-
-	applicationID, _ := uuid.NewUUID()
-	application := model.Application{ID: applicationID.String(), Name: name, MultiTenant: multiTenant, Admin: admin, SharedIdentities: sharedIdentities,
+	for i, at := range appTypes {
+		appTypes[i].ID = uuid.NewString()
+		for vidx := range at.Versions {
+			appTypes[i].Versions[vidx].ID = uuid.NewString()
+			appTypes[i].Versions[vidx].ApplicationType = model.ApplicationType{ID: appTypes[i].ID}
+			appTypes[i].Versions[vidx].DateCreated = now
+		}
+	}
+	application := model.Application{ID: uuid.NewString(), Name: name, MultiTenant: multiTenant, Admin: admin, SharedIdentities: sharedIdentities,
 		Types: appTypes, DateCreated: now}
 
 	insertedApplication, err := app.storage.InsertApplication(nil, application)
