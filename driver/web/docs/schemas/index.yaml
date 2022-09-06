@@ -5,12 +5,8 @@ GlobalConfig:
 # application
 Application:
   $ref: "./application/Application.yaml"
-ApplicationFields:
-  $ref: "./application/ApplicationFields.yaml"
 ApplicationType:
   $ref: "./application/ApplicationType.yaml"
-ApplicationTypeFields:
-  $ref: "./application/ApplicationTypeFields.yaml"
 ApplicationOrganization:
   $ref: "./application/ApplicationOrganization.yaml"
 Permission:
@@ -263,10 +259,6 @@ _system_res_get_Organization:
   $ref: "./apis/system/get-organization/response/Response.yaml"
 _system_res_get_Organizations:
   $ref: "./apis/system/get-organizations/response/Response.yaml"
-
- ### application API
-_system_req_applications:
-  $ref: "./apis/system/applications/request/Request.yaml"
  
 ### permissions API
 _system_req_permissions:

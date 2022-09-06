@@ -143,6 +143,7 @@ func (app *application) sysCreateApplication(name string, multiTenant bool, admi
 	// application
 	for i, at := range appTypes {
 		appTypes[i].ID = uuid.NewString()
+		appTypes[i].DateCreated = now
 		for vidx := range at.Versions {
 			appTypes[i].Versions[vidx].ID = uuid.NewString()
 			appTypes[i].Versions[vidx].ApplicationType = model.ApplicationType{ID: appTypes[i].ID}
@@ -154,7 +155,7 @@ func (app *application) sysCreateApplication(name string, multiTenant bool, admi
 
 	insertedApplication, err := app.storage.InsertApplication(nil, application)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeApplication, nil, err)
 	}
 	return insertedApplication, nil
 }
@@ -175,31 +176,23 @@ func (app *application) sysUpdateApplication(ID string, name string, multiTenant
 	for i, at := range appTypes {
 		existingAppType := application.FindApplicationType(at.Identifier)
 		if existingAppType != nil {
-			//unchanged app type identifier, so update
+			//unchanged app type identifier, so set existing ID
 			appTypes[i].ID = existingAppType.ID
-			for vidx, version := range at.Versions {
-				existingVersion := existingAppType.FindVersion(version.VersionNumbers.String())
-				appTypes[i].Versions[vidx].ApplicationType = model.ApplicationType{ID: existingAppType.ID}
-				if existingVersion != nil {
-					//unchanged version string, so match ID and creation date
-					appTypes[i].Versions[vidx].ID = existingVersion.ID
-					appTypes[i].Versions[vidx].DateCreated = existingVersion.DateCreated
-				} else {
-					//new version string, so set new ID and creation date
-					appTypes[i].Versions[vidx].ID = uuid.NewString()
-					appTypes[i].Versions[vidx].DateCreated = now
-					updated = true
-				}
+			appTypes[i].Versions = existingAppType.Versions
+			appTypes[i].DateCreated = existingAppType.DateCreated
+			if at.Name != existingAppType.Name {
+				appTypes[i].DateUpdated = &now
+				updated = true
 			}
-			updated = updated || (at.Name != existingAppType.Name) || (len(at.Versions) != len(existingAppType.Versions))
 		} else {
-			//added app type identifier, so set new ID and creation date
+			//added app type identifier, so set new ID
 			appTypes[i].ID = uuid.NewString()
 			for vidx := range at.Versions {
 				appTypes[i].Versions[vidx].ID = uuid.NewString()
 				appTypes[i].Versions[vidx].ApplicationType = model.ApplicationType{ID: appTypes[i].ID}
 				appTypes[i].Versions[vidx].DateCreated = now
 			}
+			appTypes[i].DateCreated = now
 			updated = true
 		}
 	}
@@ -211,7 +204,7 @@ func (app *application) sysUpdateApplication(ID string, name string, multiTenant
 			Types: appTypes, DateCreated: application.DateCreated, DateUpdated: &now}
 		err = app.storage.SaveApplication(nil, updatedApp)
 		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeApplication, nil, err)
+			return errors.WrapErrorAction(logutils.ActionSave, model.TypeApplication, nil, err)
 		}
 	}
 

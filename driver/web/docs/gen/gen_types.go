@@ -307,9 +307,13 @@ type AppOrgRole struct {
 
 // Application defines model for Application.
 type Application struct {
-	Fields        *ApplicationFields         `json:"fields,omitempty"`
-	Organizations *[]ApplicationOrganization `json:"organizations,omitempty"`
-	Types         *[]ApplicationType         `json:"types,omitempty"`
+	Admin            bool                       `json:"admin"`
+	Id               string                     `json:"id"`
+	MultiTenant      bool                       `json:"multi_tenant"`
+	Name             string                     `json:"name"`
+	Organizations    *[]ApplicationOrganization `json:"organizations,omitempty"`
+	SharedIdentities bool                       `json:"shared_identities"`
+	Types            *[]ApplicationType         `json:"types,omitempty"`
 }
 
 // ApplicationConfig defines model for ApplicationConfig.
@@ -323,15 +327,6 @@ type ApplicationConfig struct {
 	Version string `json:"version"`
 }
 
-// ApplicationFields defines model for ApplicationFields.
-type ApplicationFields struct {
-	Admin            *bool  `json:"admin,omitempty"`
-	Id               string `json:"id"`
-	MultiTenant      *bool  `json:"multi_tenant,omitempty"`
-	Name             string `json:"name"`
-	SharedIdentities *bool  `json:"shared_identities,omitempty"`
-}
-
 // ApplicationOrganization defines model for ApplicationOrganization.
 type ApplicationOrganization struct {
 	TODO         *string       `json:"TODO,omitempty"`
@@ -342,12 +337,6 @@ type ApplicationOrganization struct {
 
 // ApplicationType defines model for ApplicationType.
 type ApplicationType struct {
-	Application *Application           `json:"application,omitempty"`
-	Fields      *ApplicationTypeFields `json:"fields,omitempty"`
-}
-
-// ApplicationTypeFields defines model for ApplicationTypeFields.
-type ApplicationTypeFields struct {
 	Id         string    `json:"id"`
 	Identifier string    `json:"identifier"`
 	Name       *string   `json:"name,omitempty"`
@@ -1080,15 +1069,6 @@ type SharedResRokwireToken struct {
 // The type of the provided tokens to be specified when they are sent in the "Authorization" header
 type SharedResRokwireTokenTokenType string
 
-// SystemReqApplications defines model for _system_req_applications.
-type SystemReqApplications struct {
-	Admin            bool                     `json:"admin"`
-	ApplicationTypes *[]ApplicationTypeFields `json:"application_types,omitempty"`
-	MultiTenant      bool                     `json:"multi_tenant"`
-	Name             string                   `json:"name"`
-	SharedIdentities bool                     `json:"shared_identities"`
-}
-
 // SystemReqCreateOrganization defines model for _system_req_create-Organization.
 type SystemReqCreateOrganization struct {
 	Config *OrganizationConfigFields       `json:"config,omitempty"`
@@ -1509,10 +1489,10 @@ type PostSystemApplicationConfigsJSONBody SystemReqCreateApplicationConfigReques
 type PutSystemApplicationConfigsIdJSONBody SystemReqCreateApplicationConfigRequest
 
 // PostSystemApplicationsJSONBody defines parameters for PostSystemApplications.
-type PostSystemApplicationsJSONBody SystemReqApplications
+type PostSystemApplicationsJSONBody Application
 
 // PutSystemApplicationsIdJSONBody defines parameters for PutSystemApplicationsId.
-type PutSystemApplicationsIdJSONBody SystemReqApplications
+type PutSystemApplicationsIdJSONBody Application
 
 // PostSystemAuthTypesJSONBody defines parameters for PostSystemAuthTypes.
 type PostSystemAuthTypesJSONBody SystemReqCreateAuthType

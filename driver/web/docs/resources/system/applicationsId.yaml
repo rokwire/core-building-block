@@ -56,7 +56,7 @@ put:
     content:
       application/json:
         schema:
-         $ref: "../../schemas/apis/system/applications/request/Request.yaml"
+         $ref: "../../schemas/application/Application.yaml"
     required: true
   responses:
     200:

@@ -650,15 +650,15 @@ func (h SystemApisHandler) createApplication(l *logs.Log, r *http.Request, claim
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.SystemReqApplications
+	var requestData Def.Application
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeApplication, nil, err, http.StatusBadRequest, true)
 	}
 
 	appTypes := make([]model.ApplicationType, 0)
-	if requestData.ApplicationTypes != nil {
-		appTypes = applicationTypeListFromDef(*requestData.ApplicationTypes)
+	if requestData.Types != nil {
+		appTypes = applicationTypeListFromDef(*requestData.Types)
 	}
 
 	_, err = h.coreAPIs.System.SysCreateApplication(requestData.Name, requestData.MultiTenant, requestData.Admin, requestData.SharedIdentities, appTypes)
@@ -681,15 +681,15 @@ func (h SystemApisHandler) updateApplication(l *logs.Log, r *http.Request, claim
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.SystemReqApplications
+	var requestData Def.Application
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeApplication, nil, err, http.StatusBadRequest, true)
 	}
 
 	appTypes := make([]model.ApplicationType, 0)
-	if requestData.ApplicationTypes != nil {
-		appTypes = applicationTypeListFromDef(*requestData.ApplicationTypes)
+	if requestData.Types != nil {
+		appTypes = applicationTypeListFromDef(*requestData.Types)
 	}
 
 	err = h.coreAPIs.System.SysUpdateApplication(ID, requestData.Name, requestData.MultiTenant, requestData.Admin, requestData.SharedIdentities, appTypes)

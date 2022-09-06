@@ -352,6 +352,9 @@ type ApplicationType struct {
 	Versions   []Version //1.1.0, 1.2.0 etc
 
 	Application Application
+
+	DateCreated time.Time
+	DateUpdated *time.Time
 }
 
 // FindVersion finds a version by string

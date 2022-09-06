@@ -2702,7 +2702,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/ApplicationFields'
+                  $ref: '#/components/schemas/Application'
         '400':
           description: Bad request
         '401':
@@ -3970,7 +3970,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_system_req_applications'
+              $ref: '#/components/schemas/Application'
         required: true
       responses:
         '200':
@@ -4029,7 +4029,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_system_req_applications'
+              $ref: '#/components/schemas/Application'
         required: true
       responses:
         '200':
@@ -4641,22 +4641,12 @@ components:
         setting:
           type: string
     Application:
-      type: object
-      properties:
-        fields:
-          $ref: '#/components/schemas/ApplicationFields'
-        types:
-          type: array
-          items:
-            $ref: '#/components/schemas/ApplicationType'
-        organizations:
-          type: array
-          items:
-            $ref: '#/components/schemas/ApplicationOrganization'
-    ApplicationFields:
       required:
         - id
         - name
+        - multi_tenant
+        - admin
+        - shared_identities
       type: object
       properties:
         id:
@@ -4670,14 +4660,15 @@ components:
           type: boolean
         shared_identities:
           type: boolean
+        types:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApplicationType'
+        organizations:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApplicationOrganization'
     ApplicationType:
-      type: object
-      properties:
-        fields:
-          $ref: '#/components/schemas/ApplicationTypeFields'
-        application:
-          $ref: '#/components/schemas/Application'
-    ApplicationTypeFields:
       required:
         - id
         - identifier
@@ -6357,26 +6348,6 @@ components:
             - huge
         config:
           $ref: '#/components/schemas/OrganizationConfigFields'
-    _system_req_applications:
-      required:
-        - name
-        - multi_tenant
-        - admin
-        - shared_identities
-      type: object
-      properties:
-        name:
-          type: string
-        multi_tenant:
-          type: boolean
-        admin:
-          type: boolean
-        shared_identities:
-          type: boolean
-        application_types:
-          type: array
-          items:
-            $ref: '#/components/schemas/ApplicationTypeFields'
     _system_req_permissions:
       required:
         - name
