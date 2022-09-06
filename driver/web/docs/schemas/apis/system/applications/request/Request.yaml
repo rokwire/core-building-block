@@ -16,5 +16,5 @@ properties:
   application_types:
     type: array
     items:
-      $ref: "./ApplicationType.yaml"
+      $ref: "../../../../application/ApplicationTypeFields.yaml"
     

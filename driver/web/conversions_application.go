@@ -74,6 +74,36 @@ func applicationsToDef(item []model.Application) []Def.ApplicationFields {
 	return result
 }
 
+func applicationTypeListFromDef(items []Def.ApplicationTypeFields) []model.ApplicationType {
+	result := make([]model.ApplicationType, len(items))
+	for i, item := range items {
+		result[i] = *applicationTypeFromDef(&item)
+	}
+	return result
+}
+
+func applicationTypeFromDef(item *Def.ApplicationTypeFields) *model.ApplicationType {
+	if item == nil {
+		return nil
+	}
+
+	name := ""
+	if item.Name != nil {
+		name = *item.Name
+	}
+	versions := make([]model.Version, 0)
+	if item.Versions != nil {
+		for _, v := range *item.Versions {
+			versionNumbers := model.VersionNumbersFromString(v)
+			if versionNumbers != nil {
+				versions = append(versions, model.Version{VersionNumbers: *versionNumbers, ApplicationType: model.ApplicationType{ID: item.Id}})
+			}
+		}
+	}
+
+	return &model.ApplicationType{ID: item.Id, Identifier: item.Identifier, Name: name, Versions: versions}
+}
+
 // ApplicationPermission
 func applicationPermissionToDef(item model.Permission) Def.Permission {
 	assigners := item.Assigners

@@ -1082,15 +1082,11 @@ type SharedResRokwireTokenTokenType string
 
 // SystemReqApplications defines model for _system_req_applications.
 type SystemReqApplications struct {
-	Admin            bool `json:"admin"`
-	ApplicationTypes *[]struct {
-		Identifier string    `json:"identifier"`
-		Name       *string   `json:"name,omitempty"`
-		Versions   *[]string `json:"versions,omitempty"`
-	} `json:"application_types,omitempty"`
-	MultiTenant      bool   `json:"multi_tenant"`
-	Name             string `json:"name"`
-	SharedIdentities bool   `json:"shared_identities"`
+	Admin            bool                     `json:"admin"`
+	ApplicationTypes *[]ApplicationTypeFields `json:"application_types,omitempty"`
+	MultiTenant      bool                     `json:"multi_tenant"`
+	Name             string                   `json:"name"`
+	SharedIdentities bool                     `json:"shared_identities"`
 }
 
 // SystemReqCreateOrganization defines model for _system_req_create-Organization.

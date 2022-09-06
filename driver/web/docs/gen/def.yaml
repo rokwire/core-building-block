@@ -4684,6 +4684,7 @@ components:
       type: object
       properties:
         id:
+          readOnly: true
           type: string
         identifier:
           type: string
@@ -6375,18 +6376,7 @@ components:
         application_types:
           type: array
           items:
-            required:
-              - identifier
-            type: object
-            properties:
-              identifier:
-                type: string
-              name:
-                type: string
-              versions:
-                type: array
-                items:
-                  type: string
+            $ref: '#/components/schemas/ApplicationTypeFields'
     _system_req_permissions:
       required:
         - name

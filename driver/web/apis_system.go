@@ -658,18 +658,7 @@ func (h SystemApisHandler) createApplication(l *logs.Log, r *http.Request, claim
 
 	appTypes := make([]model.ApplicationType, 0)
 	if requestData.ApplicationTypes != nil {
-		for _, at := range *requestData.ApplicationTypes {
-			versions := make([]model.Version, 0)
-			if at.Versions != nil {
-				for _, v := range *at.Versions {
-					versionNumbers := model.VersionNumbersFromString(v)
-					if versionNumbers != nil {
-						versions = append(versions, model.Version{VersionNumbers: *versionNumbers})
-					}
-				}
-			}
-			appTypes = append(appTypes, model.ApplicationType{Identifier: at.Identifier, Name: *at.Name, Versions: versions})
-		}
+		appTypes = applicationTypeListFromDef(*requestData.ApplicationTypes)
 	}
 
 	_, err = h.coreAPIs.System.SysCreateApplication(requestData.Name, requestData.MultiTenant, requestData.Admin, requestData.SharedIdentities, appTypes)
@@ -700,18 +689,7 @@ func (h SystemApisHandler) updateApplication(l *logs.Log, r *http.Request, claim
 
 	appTypes := make([]model.ApplicationType, 0)
 	if requestData.ApplicationTypes != nil {
-		for _, at := range *requestData.ApplicationTypes {
-			versions := make([]model.Version, 0)
-			if at.Versions != nil {
-				for _, v := range *at.Versions {
-					versionNumbers := model.VersionNumbersFromString(v)
-					if versionNumbers != nil {
-						versions = append(versions, model.Version{VersionNumbers: *versionNumbers})
-					}
-				}
-			}
-			appTypes = append(appTypes, model.ApplicationType{Identifier: at.Identifier, Name: *at.Name, Versions: versions})
-		}
+		appTypes = applicationTypeListFromDef(*requestData.ApplicationTypes)
 	}
 
 	err = h.coreAPIs.System.SysUpdateApplication(ID, requestData.Name, requestData.MultiTenant, requestData.Admin, requestData.SharedIdentities, appTypes)
@@ -727,11 +705,7 @@ func (h SystemApisHandler) getApplications(l *logs.Log, r *http.Request, claims 
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeApplication, nil, err, http.StatusInternalServerError, true)
 	}
-	var response []Def.ApplicationFields
-	for _, application := range applications {
-		r := applicationToDef(application)
-		response = append(response, r)
-	}
+	response := applicationsToDef(applications)
 
 	data, err := json.Marshal(response)
 	if err != nil {
