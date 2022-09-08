@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/coreos/go-oidc v2.2.1+incompatible
-	github.com/getkin/kin-openapi v0.98.0
+	github.com/getkin/kin-openapi v0.100.0
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
@@ -14,9 +14,9 @@ require (
 	github.com/rokwire/logging-library-go v1.0.3
 	github.com/stretchr/testify v1.8.0
 	github.com/swaggo/http-swagger v1.3.3
-	go.mongodb.org/mongo-driver v1.10.1
-	golang.org/x/crypto v0.0.0-20220824171710-5757bc0c5503
-	golang.org/x/sync v0.0.0-20220819030929-7fc1605a5dde
+	go.mongodb.org/mongo-driver v1.10.2
+	golang.org/x/crypto v0.0.0-20220829220503-c86fa9a7ed90
+	golang.org/x/sync v0.0.0-20220907140024-f12130a52804
 	gopkg.in/go-playground/validator.v9 v9.31.0
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	gotest.tools v2.2.0+incompatible
@@ -25,9 +25,9 @@ require (
 require (
 	github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible // indirect
 	github.com/KyleBanks/depth v1.2.1 // indirect
-	github.com/aws/aws-sdk-go v1.44.86 // indirect
+	github.com/aws/aws-sdk-go v1.44.93 // indirect
 	github.com/boombuler/barcode v1.0.1 // indirect
-	github.com/casbin/casbin/v2 v2.52.2 // indirect
+	github.com/casbin/casbin/v2 v2.54.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
 	github.com/go-openapi/jsonreference v0.20.0 // indirect
@@ -55,9 +55,9 @@ require (
 	github.com/xdg-go/scram v1.1.1 // indirect
 	github.com/xdg-go/stringprep v1.0.3 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a // indirect
-	golang.org/x/net v0.0.0-20220826154423-83b083e8dc8b // indirect
+	golang.org/x/net v0.0.0-20220907135653-1e95f45603a7 // indirect
 	golang.org/x/oauth2 v0.0.0-20220822191816-0ebed06d0094 // indirect
-	golang.org/x/sys v0.0.0-20220825204002-c680a09ffe64 // indirect
+	golang.org/x/sys v0.0.0-20220908164124-27713097b956 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/tools v0.1.12 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
