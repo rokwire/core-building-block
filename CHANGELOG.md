@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Set up system app org token endpoint [#493](https://github.com/rokwire/core-building-block/issues/493)
 - Track usage info in accounts [#445](https://github.com/rokwire/core-building-block/issues/445)
 - Use signature Key ID to check specific key for service account auth [#481](https://github.com/rokwire/core-building-block/issues/481)
 - Allow overriding docs base URLs [#513](https://github.com/rokwire/core-building-block/issues/513)
@@ -20,7 +21,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.24.2] - 2022-08-08
 ### Added
-- Set up system app org token endpoint [#493](https://github.com/rokwire/core-building-block/issues/493)
 - Allow passing nil context to WithContext storage functions [#494](https://github.com/rokwire/core-building-block/issues/494)
 - Account system configs [#558](https://github.com/rokwire/core-building-block/issues/558)
 
