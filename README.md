@@ -178,3 +178,12 @@ $ git pull  # Pull in pre-commit configuration & baseline
 $ pip install pre-commit 
 $ pre-commit install
 ```
+
+## Staying up to date
+Follow the steps below to stay up to date with the associated version of this service. Note that the steps for each version are cumulative, so if you are attempting update applications that were using a version of this service which is now multiple versions out of date, be sure to make the changes described for each version between the version your application was using and the latest.
+
+### [Unrealeased]
+#### Breaking changes
+
+##### model
+* Any `Permission` may now be added to or removed from an `Account`, `AppOrgRole`, or `AppOrgGroup` if at least one of its assigner permissions is satisfied by the assigning user. Any application that computes whether a given user will be allowed to modify permissions in an `Account`, `AppOrgRole` or `AppOrgGroup` before sending the request to do so will need to be updated for accuracy.

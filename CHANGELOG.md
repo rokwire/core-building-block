@@ -20,6 +20,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update account permission duplication [#545](https://github.com/rokwire/core-building-block/issues/545)
 - Deleting application roles and groups uses bad accounts query [#536](https://github.com/rokwire/core-building-block/issues/536)
 
+### Changed
+- BREAKING: Permission assigners should be OR instead of AND [#482](https://github.com/rokwire/core-building-block/issues/482)]
+
 ## [1.24.2] - 2022-08-08
 ### Added
 - Allow passing nil context to WithContext storage functions [#494](https://github.com/rokwire/core-building-block/issues/494)
