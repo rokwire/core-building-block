@@ -224,11 +224,7 @@ func (h SystemApisHandler) getServiceRegistrations(l *logs.Log, r *http.Request,
 	}
 	serviceIDs := strings.Split(serviceIDsParam, ",")
 
-	serviceRegs, err := h.coreAPIs.Auth.GetServiceRegistrations(serviceIDs)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeServiceReg, nil, err, http.StatusInternalServerError, true)
-	}
-
+	serviceRegs := h.coreAPIs.Auth.GetServiceRegistrations(serviceIDs)
 	serviceRegResp := serviceRegListToDef(serviceRegs)
 
 	data, err := json.Marshal(serviceRegResp)

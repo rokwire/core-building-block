@@ -190,50 +190,46 @@ func (sa *Adapter) getCachedServiceReg(serviceID string) (*model.ServiceReg, err
 	return nil, nil
 }
 
-func (sa *Adapter) getCachedServiceRegs(serviceIDs []string) ([]model.ServiceReg, error) {
+func (sa *Adapter) getCachedServiceRegs(serviceIDs []string) []model.ServiceReg {
 	sa.serviceRegsLock.RLock()
 	defer sa.serviceRegsLock.RUnlock()
 
-	var serviceRegList []model.ServiceReg
-	var err error
+	serviceRegList := make([]model.ServiceReg, 0)
 	if !utils.Contains(serviceIDs, "all") {
-		serviceRegList = make([]model.ServiceReg, len(serviceIDs))
-		for i, serviceID := range serviceIDs {
+		for _, serviceID := range serviceIDs {
 			item, _ := sa.cachedServiceRegs.Load(serviceID)
-			serviceReg, err := sa.processCachedServiceReg(serviceID, item)
-			if err != nil {
-				return nil, err
+			serviceReg := sa.processCachedServiceReg(serviceID, item)
+			if serviceReg != nil {
+				serviceRegList = append(serviceRegList, *serviceReg)
 			}
-			serviceRegList[i] = *serviceReg
 		}
 	} else {
-		serviceRegList = make([]model.ServiceReg, 0)
 		sa.cachedServiceRegs.Range(func(key, item interface{}) bool {
-			serviceReg, err := sa.processCachedServiceReg(key, item)
-			if err != nil {
-				return false
+			serviceReg := sa.processCachedServiceReg(key, item)
+			if serviceReg != nil {
+				serviceRegList = append(serviceRegList, *serviceReg)
 			}
-			serviceRegList = append(serviceRegList, *serviceReg)
-
 			return true
 		})
 	}
 
-	return serviceRegList, err
+	return serviceRegList
 }
 
-func (sa *Adapter) processCachedServiceReg(key, item interface{}) (*model.ServiceReg, error) {
+func (sa *Adapter) processCachedServiceReg(key, item interface{}) *model.ServiceReg {
 	errArgs := &logutils.FieldArgs{"registration.service_id": key}
 	if item == nil {
-		return nil, errors.ErrorData(logutils.StatusInvalid, model.TypeServiceReg, errArgs)
+		sa.logger.Warn(errors.ErrorData(logutils.StatusInvalid, model.TypeServiceReg, errArgs).Error())
+		return nil
 	}
 
 	serviceReg, ok := item.(model.ServiceReg)
 	if !ok {
-		return nil, errors.ErrorAction(logutils.ActionCast, model.TypeServiceReg, errArgs)
+		sa.logger.Warn(errors.ErrorAction(logutils.ActionCast, model.TypeServiceReg, errArgs).Error())
+		return nil
 	}
 
-	return &serviceReg, nil
+	return &serviceReg
 }
 
 // cacheOrganizations caches the organizations from the DB
@@ -1253,7 +1249,40 @@ func (sa *Adapter) SaveAccount(context TransactionContext, account *model.Accoun
 	filter := bson.M{"_id": account.ID}
 	err := sa.db.accounts.ReplaceOneWithContext(context, filter, storageAccount, nil)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionSave, model.TypeAccount, &logutils.FieldArgs{"_id": account.ID}, nil)
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountUsageInfo, nil, err)
+	}
+
+	return nil
+}
+
+// UpdateAccountUsageInfo updates the usage information in accounts
+func (sa *Adapter) UpdateAccountUsageInfo(context TransactionContext, accountID string, updateLoginTime bool, updateAccessTokenTime bool, clientVersion *string) error {
+	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
+	now := time.Now().UTC()
+	update := bson.M{}
+	if updateLoginTime {
+		update["last_login_date"] = now
+	}
+	if updateAccessTokenTime {
+		update["last_access_token_date"] = now
+	}
+	if clientVersion != nil && *clientVersion != "" {
+		update["most_recent_client_version"] = *clientVersion
+	}
+	usageInfoUpdate := bson.M{"$set": update}
+
+	var res *mongo.UpdateResult
+	var err error
+	if context != nil {
+		res, err = sa.db.accounts.UpdateOneWithContext(context, filter, usageInfoUpdate, nil)
+	} else {
+		res, err = sa.db.accounts.UpdateOne(filter, usageInfoUpdate, nil)
+	}
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountUsageInfo, nil, err)
+	}
+	if res.ModifiedCount != 1 {
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccountUsageInfo, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
 	}
 
 	return nil
@@ -2222,12 +2251,36 @@ func (sa *Adapter) FindPermissionsByName(context TransactionContext, names []str
 	return permissionsResult, nil
 }
 
-// InsertPermission inserts a new  permission
-func (sa *Adapter) InsertPermission(context TransactionContext, permission model.Permission) error {
-	_, err := sa.db.permissions.InsertOneWithContext(context, permission)
+// InsertPermission inserts a new permission
+func (sa *Adapter) InsertPermission(context TransactionContext, item model.Permission) error {
+	_, err := sa.db.permissions.InsertOneWithContext(context, item)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionInsert, model.TypePermission, &logutils.FieldArgs{"_id": permission.ID, "name": permission.Name}, err)
+		return errors.WrapErrorAction(logutils.ActionInsert, model.TypePermission, &logutils.FieldArgs{"_id": item.ID, "name": item.Name}, err)
 	}
+
+	return nil
+}
+
+// InsertPermissions inserts permissions
+func (sa *Adapter) InsertPermissions(context TransactionContext, items []model.Permission) error {
+	if len(items) == 0 {
+		return nil
+	}
+
+	stgPermissions := make([]interface{}, len(items))
+	for i, p := range items {
+		stgPermissions[i] = p
+	}
+
+	res, err := sa.db.permissions.InsertManyWithContext(context, stgPermissions, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionInsert, model.TypePermission, nil, err)
+	}
+
+	if len(res.InsertedIDs) != len(items) {
+		return errors.ErrorAction(logutils.ActionInsert, model.TypePermission, &logutils.FieldArgs{"inserted": len(res.InsertedIDs), "expected": len(items)})
+	}
+
 	return nil
 }
 
@@ -3129,7 +3182,7 @@ func (sa *Adapter) loadServiceRegs() ([]model.ServiceReg, error) {
 }
 
 // FindServiceRegs fetches the requested service registration records
-func (sa *Adapter) FindServiceRegs(serviceIDs []string) ([]model.ServiceReg, error) {
+func (sa *Adapter) FindServiceRegs(serviceIDs []string) []model.ServiceReg {
 	return sa.getCachedServiceRegs(serviceIDs)
 }
 

@@ -70,7 +70,7 @@ func (c *APIs) GetVersion() string {
 }
 
 func (c *APIs) storeSystemData() error {
-	documentIDs := make(map[string]string)
+	newDocuments := make(map[string]string)
 
 	transaction := func(context storage.TransactionContext) error {
 		createAccount := false
@@ -81,8 +81,8 @@ func (c *APIs) storeSystemData() error {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthType, nil, err)
 		}
 		if emailAuthType == nil {
-			documentIDs["auth_type"] = uuid.NewString()
-			emailAuthType = &model.AuthType{ID: documentIDs["auth_type"], Code: auth.AuthTypeEmail, Description: "Authentication type relying on email and password",
+			newDocuments["auth_type"] = uuid.NewString()
+			emailAuthType = &model.AuthType{ID: newDocuments["auth_type"], Code: auth.AuthTypeEmail, Description: "Authentication type relying on email and password",
 				IsExternal: false, IsAnonymous: false, UseCredentials: true, IgnoreMFA: false}
 			_, err = c.app.storage.InsertAuthType(context, *emailAuthType)
 			if err != nil {
@@ -96,9 +96,9 @@ func (c *APIs) storeSystemData() error {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
 		}
 		if systemOrg == nil {
-			documentIDs["organization"] = uuid.NewString()
+			newDocuments["organization"] = uuid.NewString()
 			systemOrgConfig := model.OrganizationConfig{ID: uuid.NewString(), DateCreated: time.Now().UTC()}
-			newSystemOrg := model.Organization{ID: documentIDs["organization"], Name: "System", Type: "small", System: true, Config: systemOrgConfig, DateCreated: time.Now().UTC()}
+			newSystemOrg := model.Organization{ID: newDocuments["organization"], Name: "System", Type: "small", System: true, Config: systemOrgConfig, DateCreated: time.Now().UTC()}
 			_, err = c.app.storage.InsertOrganization(context, newSystemOrg)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionInsert, model.TypeOrganization, nil, err)
@@ -118,9 +118,9 @@ func (c *APIs) storeSystemData() error {
 			if c.systemAppTypeIdentifier == "" || c.systemAppTypeName == "" {
 				return errors.ErrorData(logutils.StatusMissing, "initial system app type identifier or name", nil)
 			}
-			documentIDs["application"] = uuid.NewString()
+			newDocuments["application"] = uuid.NewString()
 			newAndroidAppType := model.ApplicationType{ID: uuid.NewString(), Identifier: c.systemAppTypeIdentifier, Name: c.systemAppTypeName, Versions: nil}
-			newSystemAdminApp := model.Application{ID: documentIDs["application"], Name: "System Admin application", MultiTenant: false, Admin: true,
+			newSystemAdminApp := model.Application{ID: newDocuments["application"], Name: "System Admin application", MultiTenant: false, Admin: true,
 				SharedIdentities: false, Types: []model.ApplicationType{newAndroidAppType}, DateCreated: time.Now().UTC()}
 			_, err = c.app.storage.InsertApplication(context, newSystemAdminApp)
 			if err != nil {
@@ -141,8 +141,8 @@ func (c *APIs) storeSystemData() error {
 				supportedAuthTypes[i] = model.AuthTypesSupport{AppTypeID: appType.ID, SupportedAuthTypes: emailSupport}
 			}
 
-			documentIDs["application_organization"] = uuid.NewString()
-			newSystemAdminAppOrg := model.ApplicationOrganization{ID: documentIDs["application_organization"], Application: *systemAdminApp, Organization: *systemOrg,
+			newDocuments["application_organization"] = uuid.NewString()
+			newSystemAdminAppOrg := model.ApplicationOrganization{ID: newDocuments["application_organization"], Application: *systemAdminApp, Organization: *systemOrg,
 				SupportedAuthTypes: supportedAuthTypes, DateCreated: time.Now().UTC()}
 			_, err = c.app.storage.InsertApplicationOrganization(context, newSystemAdminAppOrg)
 			if err != nil {
@@ -165,31 +165,57 @@ func (c *APIs) storeSystemData() error {
 			if c.systemAPIKey == "" {
 				return errors.ErrorData(logutils.StatusMissing, "initial system api key", nil)
 			}
-			documentIDs["api_key"] = uuid.NewString()
-			newAPIKey := model.APIKey{ID: documentIDs["api_key"], AppID: systemAppOrg.Application.ID, Key: c.systemAPIKey}
+			newDocuments["api_key"] = uuid.NewString()
+			newAPIKey := model.APIKey{ID: newDocuments["api_key"], AppID: systemAppOrg.Application.ID, Key: c.systemAPIKey}
 			_, err := c.app.storage.InsertAPIKey(context, newAPIKey)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAPIKey, nil, err)
 			}
 		}
 
-		//5. insert all_system_core permission if does not exist
-		systemPermissions := []string{model.PermissionAllSystemCore}
-		allSystemPermissions, err := c.app.storage.FindPermissionsByName(context, systemPermissions)
+		//5. insert all_system_core permission and grant_all_permissions permission if they do not exist
+		requiredPermissions := map[string]string{
+			model.PermissionAllSystemCore:       "Gives access to all admin and system APIs",
+			model.PermissionGrantAllPermissions: "Gives the ability to grant any permission",
+		}
+		existingPermissions, err := c.app.storage.FindPermissionsByName(context, []string{model.PermissionAllSystemCore, model.PermissionGrantAllPermissions})
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypePermission, &logutils.FieldArgs{"name": model.PermissionAllSystemCore}, err)
 		}
 
-		if len(allSystemPermissions) == 0 {
-			documentIDs["permission"] = uuid.NewString()
-			allSystemCore := model.Permission{ID: documentIDs["permission"], Name: model.PermissionAllSystemCore, ServiceID: "core",
-				Assigners: systemPermissions, DateCreated: time.Now().UTC()}
-			err = c.app.storage.InsertPermission(context, allSystemCore)
-			if err != nil {
-				return errors.WrapErrorAction(logutils.ActionInsert, model.TypePermission, nil, err)
+		if len(existingPermissions) < len(requiredPermissions) {
+			insert := []model.Permission{}
+			for name, desc := range requiredPermissions {
+				found := false
+				for _, existing := range existingPermissions {
+					if existing.Name == name {
+						found = true
+						continue
+					}
+				}
+				if !found {
+					newPermission := model.Permission{ID: uuid.NewString(), Name: name, Description: desc, ServiceID: "core",
+						Assigners: []string{model.PermissionAllSystemCore}, DateCreated: time.Now().UTC()}
+					insert = append(insert, newPermission)
+				}
 			}
 
-			allSystemPermissions = append(allSystemPermissions, allSystemCore)
+			if len(insert) > 0 {
+				names := ""
+				for _, p := range insert {
+					if len(names) > 0 {
+						names += ","
+					}
+					names += p.Name
+				}
+
+				err = c.app.storage.InsertPermissions(context, insert)
+				if err != nil {
+					return errors.WrapErrorAction(logutils.ActionCreate, model.TypePermission, logutils.StringArgs(names), err)
+				}
+
+				newDocuments["permissions"] = names
+			}
 		}
 
 		//6. insert system account if needed
@@ -197,7 +223,7 @@ func (c *APIs) storeSystemData() error {
 			if c.systemAccountEmail == "" || c.systemAccountPassword == "" {
 				return errors.ErrorData(logutils.StatusMissing, "initial system account email or password", nil)
 			}
-			documentIDs["account"], err = c.Auth.InitializeSystemAccount(context, *emailAuthType, systemAppOrg, model.PermissionAllSystemCore, c.systemAccountEmail, c.systemAccountPassword, c.logger.NewRequestLog(nil))
+			newDocuments["account"], err = c.Auth.InitializeSystemAccount(context, *emailAuthType, systemAppOrg, model.PermissionAllSystemCore, c.systemAccountEmail, c.systemAccountPassword, "", c.logger.NewRequestLog(nil))
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionInitialize, "system account", nil, err)
 			}
@@ -208,12 +234,14 @@ func (c *APIs) storeSystemData() error {
 
 	err := c.app.storage.PerformTransaction(transaction)
 	if err == nil {
-		for doc, id := range documentIDs {
-			fields := logutils.Fields{"id": id}
+		for doc, data := range newDocuments {
+			key := "id"
+			if doc == "permissions" {
+				key = "names"
+			}
+			fields := logutils.Fields{key: data}
 			if doc == "auth_type" {
 				fields["code"] = auth.AuthTypeEmail
-			} else if doc == "permission" {
-				fields["name"] = model.PermissionAllSystemCore
 			}
 			c.logger.InfoWithFields(fmt.Sprintf("new system %s created", doc), fields)
 		}

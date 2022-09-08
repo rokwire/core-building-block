@@ -241,6 +241,7 @@ type Account struct {
 	Preferences   *map[string]interface{}  `json:"preferences"`
 	Profile       *Profile                 `json:"profile,omitempty"`
 	Roles         *[]AppOrgRole            `json:"roles,omitempty"`
+	System        *bool                    `json:"system,omitempty"`
 	SystemConfigs *map[string]interface{}  `json:"system_configs"`
 }
 
@@ -508,13 +509,14 @@ type PartialAccount struct {
 	DateUpdated    *string                 `json:"date_updated"`
 	FirstName      string                  `json:"first_name"`
 	Groups         []AppOrgGroup           `json:"groups"`
-	HasPermissions bool                    `json:"has_permissions"`
+	HasPermissions *bool                   `json:"has_permissions,omitempty"`
 	Id             string                  `json:"id"`
 	LastName       string                  `json:"last_name"`
 	OrgId          string                  `json:"org_id"`
 	Params         *map[string]interface{} `json:"params"`
 	Permissions    []Permission            `json:"permissions"`
 	Roles          []AppOrgRole            `json:"roles"`
+	System         *bool                   `json:"system,omitempty"`
 	SystemConfigs  *map[string]interface{} `json:"system_configs"`
 }
 
@@ -985,15 +987,19 @@ type SharedReqUpdateAccountAuthType string
 
 // SharedResAccount defines model for _shared_res_Account.
 type SharedResAccount struct {
-	AuthTypes      *[]AccountAuthTypeFields `json:"auth_types,omitempty"`
-	Groups         *[]AppOrgGroup           `json:"groups,omitempty"`
-	HasPermissions *bool                    `json:"has_permissions,omitempty"`
-	Id             string                   `json:"id"`
-	Permissions    *[]Permission            `json:"permissions,omitempty"`
-	Preferences    *map[string]interface{}  `json:"preferences"`
-	Profile        *ProfileFields           `json:"profile,omitempty"`
-	Roles          *[]AppOrgRole            `json:"roles,omitempty"`
-	SystemConfigs  *map[string]interface{}  `json:"system_configs"`
+	AuthTypes               *[]AccountAuthTypeFields `json:"auth_types,omitempty"`
+	Groups                  *[]AppOrgGroup           `json:"groups,omitempty"`
+	HasPermissions          *bool                    `json:"has_permissions,omitempty"`
+	Id                      string                   `json:"id"`
+	LastAccessTokenDate     *string                  `json:"last_access_token_date,omitempty"`
+	LastLoginDate           *string                  `json:"last_login_date,omitempty"`
+	MostRecentClientVersion *string                  `json:"most_recent_client_version,omitempty"`
+	Permissions             *[]Permission            `json:"permissions,omitempty"`
+	Preferences             *map[string]interface{}  `json:"preferences"`
+	Profile                 *ProfileFields           `json:"profile,omitempty"`
+	Roles                   *[]AppOrgRole            `json:"roles,omitempty"`
+	System                  *bool                    `json:"system,omitempty"`
+	SystemConfigs           *map[string]interface{}  `json:"system_configs"`
 }
 
 // SharedResAccountCheck defines model for _shared_res_AccountCheck.
