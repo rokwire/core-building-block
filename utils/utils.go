@@ -137,6 +137,7 @@ func GetIP(l *logs.Log, r *http.Request) string {
 	if IPAddress == "" {
 		IPAddress = r.RemoteAddr
 	}
+	l.AddContext("ip_address", IPAddress)
 	return IPAddress
 }
 

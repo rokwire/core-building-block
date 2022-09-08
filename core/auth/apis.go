@@ -276,6 +276,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 		l.Infof("there is no a session for refresh token - %s", refreshToken)
 		return nil, nil
 	}
+	l.SetContext("account_id", loginSession.Identifier)
 
 	//check if the session is expired
 	if loginSession.IsExpired() {
@@ -993,6 +994,8 @@ func (a *Auth) ForgotCredential(authenticationType string, appTypeIdentifier str
 	if credential == nil {
 		return errors.New("Invalid account auth type for reset link")
 	}
+	a.setLogContext(account, l)
+
 	//do not allow to reset credential for unverified credentials
 	err = a.checkCredentialVerified(authImpl, accountAuthType, l)
 	if err != nil {
@@ -1039,6 +1042,7 @@ func (a *Auth) SendVerifyCredential(authenticationType string, appTypeIdentifier
 	if accountAuthType == nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountAuthType, nil, err)
 	}
+	a.setLogContext(account, l)
 	credential := accountAuthType.Credential
 	if credential == nil {
 		return errors.New("Invalid account auth type for reset link")
