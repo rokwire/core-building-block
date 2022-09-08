@@ -34,9 +34,10 @@ type account struct {
 
 	MFATypes []mfaType `bson:"mfa_types,omitempty"`
 
-	ExternalIDs map[string]string      `bson:"external_ids"`
-	Preferences map[string]interface{} `bson:"preferences"`
-	Profile     profile                `bson:"profile"`
+	ExternalIDs   map[string]string      `bson:"external_ids"`
+	Preferences   map[string]interface{} `bson:"preferences"`
+	SystemConfigs map[string]interface{} `bson:"system_configs"`
+	Profile       profile                `bson:"profile"`
 
 	Devices []userDevice `bson:"devices,omitempty"`
 
@@ -44,6 +45,10 @@ type account struct {
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
+
+	LastLoginDate           *time.Time `bson:"last_login_date"`
+	LastAccessTokenDate     *time.Time `bson:"last_access_token_date"`
+	MostRecentClientVersion *string    `bson:"most_recent_client_version"`
 }
 
 type accountRole struct {

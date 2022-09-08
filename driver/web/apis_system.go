@@ -30,12 +30,36 @@ import (
 	"github.com/rokwire/logging-library-go/logutils"
 )
 
-//SystemApisHandler handles system APIs implementation
+// SystemApisHandler handles system APIs implementation
 type SystemApisHandler struct {
 	coreAPIs *core.APIs
 }
 
-//createGlobalConfig creates a global config
+func (h SystemApisHandler) getAppOrgToken(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	appID := r.URL.Query().Get("app_id")
+	if appID == "" {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("app_id"), nil, http.StatusBadRequest, false)
+	}
+	orgID := r.URL.Query().Get("org_id")
+	if orgID == "" {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("org_id"), nil, http.StatusBadRequest, false)
+	}
+
+	token, err := h.coreAPIs.Auth.GetAdminToken(*claims, appID, orgID, l)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionGet, "app org token", nil, err, http.StatusInternalServerError, true)
+	}
+
+	response := Def.AdminToken{Token: token}
+	responseJSON, err := json.Marshal(response)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, "app org token", nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessJSON(responseJSON)
+}
+
+// createGlobalConfig creates a global config
 func (h SystemApisHandler) createGlobalConfig(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -56,7 +80,7 @@ func (h SystemApisHandler) createGlobalConfig(l *logs.Log, r *http.Request, clai
 	return l.HttpResponseSuccess()
 }
 
-//getGlobalConfig gets config
+// getGlobalConfig gets config
 func (h SystemApisHandler) getGlobalConfig(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	config, err := h.coreAPIs.System.SysGetGlobalConfig()
 	if err != nil {
@@ -75,7 +99,7 @@ func (h SystemApisHandler) getGlobalConfig(l *logs.Log, r *http.Request, claims 
 	return l.HttpResponseSuccessJSON(data)
 }
 
-//updateGlobalConfig updates global config
+// updateGlobalConfig updates global config
 func (h SystemApisHandler) updateGlobalConfig(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -98,7 +122,7 @@ func (h SystemApisHandler) updateGlobalConfig(l *logs.Log, r *http.Request, clai
 	return l.HttpResponseSuccess()
 }
 
-//createOrganization creates organization
+// createOrganization creates organization
 func (h SystemApisHandler) createOrganization(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 
 	data, err := ioutil.ReadAll(r.Body)
@@ -124,7 +148,7 @@ func (h SystemApisHandler) createOrganization(l *logs.Log, r *http.Request, clai
 	return l.HttpResponseSuccess()
 }
 
-//updateOrganization updates organization
+// updateOrganization updates organization
 func (h SystemApisHandler) updateOrganization(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	params := mux.Vars(r)
 	ID := params["id"]
@@ -154,7 +178,7 @@ func (h SystemApisHandler) updateOrganization(l *logs.Log, r *http.Request, clai
 	return l.HttpResponseSuccess()
 }
 
-//getOrganization gets organization
+// getOrganization gets organization
 func (h SystemApisHandler) getOrganization(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	params := mux.Vars(r)
 	ID := params["id"]
@@ -177,7 +201,7 @@ func (h SystemApisHandler) getOrganization(l *logs.Log, r *http.Request, claims 
 	return l.HttpResponseSuccessJSON(data)
 }
 
-//getOrganizations gets organizations
+// getOrganizations gets organizations
 func (h SystemApisHandler) getOrganizations(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	organizations, err := h.coreAPIs.System.SysGetOrganizations()
 	if err != nil {
@@ -200,11 +224,7 @@ func (h SystemApisHandler) getServiceRegistrations(l *logs.Log, r *http.Request,
 	}
 	serviceIDs := strings.Split(serviceIDsParam, ",")
 
-	serviceRegs, err := h.coreAPIs.Auth.GetServiceRegistrations(serviceIDs)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeServiceReg, nil, err, http.StatusInternalServerError, true)
-	}
-
+	serviceRegs := h.coreAPIs.Auth.GetServiceRegistrations(serviceIDs)
 	serviceRegResp := serviceRegListToDef(serviceRegs)
 
 	data, err := json.Marshal(serviceRegResp)
@@ -647,7 +667,7 @@ func (h SystemApisHandler) getApplication(l *logs.Log, r *http.Request, claims *
 	return l.HttpResponseSuccessJSON(data)
 }
 
-//createApplication creates an application
+// createApplication creates an application
 func (h SystemApisHandler) createApplication(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -708,7 +728,7 @@ func (h SystemApisHandler) getApplications(l *logs.Log, r *http.Request, claims 
 	return l.HttpResponseSuccessJSON(data)
 }
 
-//createPermission creates an permission
+// createPermission creates an permission
 func (h SystemApisHandler) createPermission(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -729,7 +749,7 @@ func (h SystemApisHandler) createPermission(l *logs.Log, r *http.Request, claims
 	return l.HttpResponseSuccess()
 }
 
-//updatePermission updates an permission
+// updatePermission updates an permission
 func (h SystemApisHandler) updatePermission(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -886,7 +906,7 @@ func (h SystemApisHandler) deleteApplicationConfig(l *logs.Log, r *http.Request,
 	return l.HttpResponseSuccess()
 }
 
-//createAuthTypes creates auth-type
+// createAuthTypes creates auth-type
 func (h SystemApisHandler) createAuthTypes(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 
 	data, err := ioutil.ReadAll(r.Body)
@@ -916,7 +936,7 @@ func (h SystemApisHandler) createAuthTypes(l *logs.Log, r *http.Request, claims 
 	return l.HttpResponseSuccess()
 }
 
-//getAuthTypes gets auth-types
+// getAuthTypes gets auth-types
 func (h SystemApisHandler) getAuthTypes(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	authTypes, err := h.coreAPIs.System.SysGetAuthTypes()
 	if err != nil {
@@ -932,7 +952,7 @@ func (h SystemApisHandler) getAuthTypes(l *logs.Log, r *http.Request, claims *to
 	return l.HttpResponseSuccessJSON(data)
 }
 
-//updateAuthTypes updates auth type
+// updateAuthTypes updates auth type
 func (h SystemApisHandler) updateAuthTypes(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	rParams := mux.Vars(r)
 	ID := rParams["id"]
@@ -966,7 +986,7 @@ func (h SystemApisHandler) updateAuthTypes(l *logs.Log, r *http.Request, claims 
 	return l.HttpResponseSuccess()
 }
 
-//NewSystemApisHandler creates new system Handler instance
+// NewSystemApisHandler creates new system Handler instance
 func NewSystemApisHandler(coreAPIs *core.APIs) SystemApisHandler {
 	return SystemApisHandler{coreAPIs: coreAPIs}
 }

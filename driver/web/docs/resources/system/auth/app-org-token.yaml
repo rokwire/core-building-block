@@ -1,17 +1,25 @@
 get:
   tags:
-  - Admin
-  summary: App token
+  - System
+  summary: App org token
   description: |
-    Retrieve an admin token for the specified application
+    Retrieve a system token for the specified application and organization
 
-    **Auth:** Requires admin access token
+    **Auth:** Requires system access token
   security:
     - bearerAuth: []
   parameters:
     - name: app_id
       in: query
       description: The application ID of the token to return
+      required: true
+      style: form
+      explode: false
+      schema:
+        type: string
+    - name: org_id
+      in: query
+      description: The organization ID of the token to return
       required: true
       style: form
       explode: false

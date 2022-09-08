@@ -232,15 +232,17 @@ type APIKey struct {
 
 // Account defines model for Account.
 type Account struct {
-	AppOrg      *ApplicationOrganization `json:"app_org,omitempty"`
-	AuthTypes   *[]AccountAuthType       `json:"auth_types,omitempty"`
-	Devices     *[]Device                `json:"devices,omitempty"`
-	Fields      *AccountFields           `json:"fields,omitempty"`
-	Groups      *[]AppOrgGroup           `json:"groups,omitempty"`
-	Permissions *[]Permission            `json:"permissions,omitempty"`
-	Preferences *map[string]interface{}  `json:"preferences,omitempty"`
-	Profile     *Profile                 `json:"profile,omitempty"`
-	Roles       *[]AppOrgRole            `json:"roles,omitempty"`
+	AppOrg        *ApplicationOrganization `json:"app_org,omitempty"`
+	AuthTypes     *[]AccountAuthType       `json:"auth_types,omitempty"`
+	Devices       *[]Device                `json:"devices,omitempty"`
+	Fields        *AccountFields           `json:"fields,omitempty"`
+	Groups        *[]AppOrgGroup           `json:"groups,omitempty"`
+	Permissions   *[]Permission            `json:"permissions,omitempty"`
+	Preferences   *map[string]interface{}  `json:"preferences"`
+	Profile       *Profile                 `json:"profile,omitempty"`
+	Roles         *[]AppOrgRole            `json:"roles,omitempty"`
+	System        *bool                    `json:"system,omitempty"`
+	SystemConfigs *map[string]interface{}  `json:"system_configs"`
 }
 
 // AccountAuthType defines model for AccountAuthType.
@@ -270,6 +272,11 @@ type AccountAuthTypeFields_Params struct {
 type AccountFields struct {
 	HasPermissions bool   `json:"has_permissions"`
 	Id             string `json:"id"`
+}
+
+// AdminToken defines model for AdminToken.
+type AdminToken struct {
+	Token string `json:"token"`
 }
 
 // AppOrgGroup defines model for AppOrgGroup.
@@ -502,13 +509,15 @@ type PartialAccount struct {
 	DateUpdated    *string                 `json:"date_updated"`
 	FirstName      string                  `json:"first_name"`
 	Groups         []AppOrgGroup           `json:"groups"`
-	HasPermissions bool                    `json:"has_permissions"`
+	HasPermissions *bool                   `json:"has_permissions,omitempty"`
 	Id             string                  `json:"id"`
 	LastName       string                  `json:"last_name"`
 	OrgId          string                  `json:"org_id"`
 	Params         *map[string]interface{} `json:"params"`
 	Permissions    []Permission            `json:"permissions"`
 	Roles          []AppOrgRole            `json:"roles"`
+	System         *bool                   `json:"system,omitempty"`
+	SystemConfigs  *map[string]interface{} `json:"system_configs"`
 }
 
 // Permission defines model for Permission.
@@ -642,11 +651,6 @@ type AdminReqRevokePermissions struct {
 // AdminReqRevokeRolesFromAccount defines model for _admin_req_revoke-roles-from-account.
 type AdminReqRevokeRolesFromAccount struct {
 	RoleIds []string `json:"role_ids"`
-}
-
-// AdminResAppToken defines model for _admin_res_app-token.
-type AdminResAppToken struct {
-	Token string `json:"token"`
 }
 
 // ServicesReqAccountAuthTypeLink defines model for _services_req_account_auth-type-link.
@@ -983,14 +987,19 @@ type SharedReqUpdateAccountAuthType string
 
 // SharedResAccount defines model for _shared_res_Account.
 type SharedResAccount struct {
-	AuthTypes      *[]AccountAuthTypeFields `json:"auth_types,omitempty"`
-	Groups         *[]AppOrgGroup           `json:"groups,omitempty"`
-	HasPermissions *bool                    `json:"has_permissions,omitempty"`
-	Id             string                   `json:"id"`
-	Permissions    *[]Permission            `json:"permissions,omitempty"`
-	Preferences    *map[string]interface{}  `json:"preferences"`
-	Profile        *ProfileFields           `json:"profile,omitempty"`
-	Roles          *[]AppOrgRole            `json:"roles,omitempty"`
+	AuthTypes               *[]AccountAuthTypeFields `json:"auth_types,omitempty"`
+	Groups                  *[]AppOrgGroup           `json:"groups,omitempty"`
+	HasPermissions          *bool                    `json:"has_permissions,omitempty"`
+	Id                      string                   `json:"id"`
+	LastAccessTokenDate     *string                  `json:"last_access_token_date,omitempty"`
+	LastLoginDate           *string                  `json:"last_login_date,omitempty"`
+	MostRecentClientVersion *string                  `json:"most_recent_client_version,omitempty"`
+	Permissions             *[]Permission            `json:"permissions,omitempty"`
+	Preferences             *map[string]interface{}  `json:"preferences"`
+	Profile                 *ProfileFields           `json:"profile,omitempty"`
+	Roles                   *[]AppOrgRole            `json:"roles,omitempty"`
+	System                  *bool                    `json:"system,omitempty"`
+	SystemConfigs           *map[string]interface{}  `json:"system_configs"`
 }
 
 // SharedResAccountCheck defines model for _shared_res_AccountCheck.
@@ -1243,6 +1252,9 @@ type DeleteAdminApplicationAccountsIdRolesJSONBody AdminReqRevokeRolesFromAccoun
 
 // PutAdminApplicationAccountsIdRolesJSONBody defines parameters for PutAdminApplicationAccountsIdRoles.
 type PutAdminApplicationAccountsIdRolesJSONBody AdminReqGrantRolesToAccount
+
+// PutAdminApplicationAccountsIdSystemConfigsJSONBody defines parameters for PutAdminApplicationAccountsIdSystemConfigs.
+type PutAdminApplicationAccountsIdSystemConfigsJSONBody map[string]interface{}
 
 // PostAdminApplicationGroupsJSONBody defines parameters for PostAdminApplicationGroups.
 type PostAdminApplicationGroupsJSONBody AdminReqCreateApplicationGroup
@@ -1509,6 +1521,16 @@ type PostSystemAuthTypesJSONBody SystemReqCreateAuthType
 // PutSystemAuthTypesIdJSONBody defines parameters for PutSystemAuthTypesId.
 type PutSystemAuthTypesIdJSONBody SystemReqUpdateAuthType
 
+// GetSystemAuthAppOrgTokenParams defines parameters for GetSystemAuthAppOrgToken.
+type GetSystemAuthAppOrgTokenParams struct {
+
+	// The application ID of the token to return
+	AppId string `json:"app_id"`
+
+	// The organization ID of the token to return
+	OrgId string `json:"org_id"`
+}
+
 // PostSystemGlobalConfigJSONBody defines parameters for PostSystemGlobalConfig.
 type PostSystemGlobalConfigJSONBody GlobalConfig
 
@@ -1682,6 +1704,9 @@ type DeleteAdminApplicationAccountsIdRolesJSONRequestBody DeleteAdminApplication
 
 // PutAdminApplicationAccountsIdRolesJSONRequestBody defines body for PutAdminApplicationAccountsIdRoles for application/json ContentType.
 type PutAdminApplicationAccountsIdRolesJSONRequestBody PutAdminApplicationAccountsIdRolesJSONBody
+
+// PutAdminApplicationAccountsIdSystemConfigsJSONRequestBody defines body for PutAdminApplicationAccountsIdSystemConfigs for application/json ContentType.
+type PutAdminApplicationAccountsIdSystemConfigsJSONRequestBody PutAdminApplicationAccountsIdSystemConfigsJSONBody
 
 // PostAdminApplicationGroupsJSONRequestBody defines body for PostAdminApplicationGroups for application/json ContentType.
 type PostAdminApplicationGroupsJSONRequestBody PostAdminApplicationGroupsJSONBody
