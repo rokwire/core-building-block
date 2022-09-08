@@ -302,7 +302,7 @@ func (collWrapper *collectionWrapper) Watch(pipeline interface{}, l *logs.Logger
 	}
 }
 
-//Helper function for Watch
+// Helper function for Watch
 func (collWrapper *collectionWrapper) watch(pipeline interface{}, resumeToken bson.Raw, l *logs.Logger) (bson.Raw, error) {
 	if pipeline == nil {
 		pipeline = []bson.M{}

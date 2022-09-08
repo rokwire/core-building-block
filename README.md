@@ -34,7 +34,7 @@ ROKWIRE_CORE_LOG_LEVEL | < string > | no | Logging level to be printed to the co
 ROKWIRE_CORE_ENVIRONMENT | < string > | yes | Environment in which this application is being run.
 ROKWIRE_CORE_PORT | < int > | no | Port to be used by this application. Defaults to 80.
 ROKWIRE_CORE_SERVICE_ID | < string > | yes | Service ID to be used by the Core BB eg. "core".
-ROKWIRE_CORE_HOST | < string > | yes | Url where this application is being hosted.
+ROKWIRE_CORE_HOST | < string > | yes | URL where this application is being hosted.
 ROKWIRE_CORE_MONGO_AUTH | <mongodb://USER:PASSWORD@HOST:PORT/DATABASE NAME> | yes | MongoDB authentication string. The user must have read/write privileges.
 ROKWIRE_CORE_MONGO_DATABASE | < string > | yes | MongoDB database name.
 ROKWIRE_CORE_MONGO_TIMEOUT | < int > | no | Timeout for connection attempts to MongoDB in milliseconds. Defaults to 500.
@@ -51,13 +51,17 @@ ROKWIRE_CORE_AUTH_PRIV_KEY_PATH | < string > | yes | Path to file containing PEM
 ROKWIRE_CORE_MIN_TOKEN_EXP | < int > | no | Minimum duration of access tokens to be allowed in minutes. Defaults to 5.
 ROKWIRE_CORE_MAX_TOKEN_EXP | < int > | no | Maximum duration of access tokens to be allowed in minutes. Defaults to 60.
 ROKWIRE_CORE_MIGRATE_PROFILES | < bool > | no | Boolean value indicating whether profiles should be migrated from the Profile Building Block. Defaults to false.
-ROKWIRE_CORE_PROFILE_BB_HOST | < string > | no | Profile Building Block host url
+ROKWIRE_CORE_PROFILE_BB_HOST | < string > | no | Profile Building Block host URL
 ROKWIRE_CORE_PROFILE_BB_API_KEY | < string > | no | Internal API key for accessing the Profile Building Block
 ROKWIRE_CORE_SYSTEM_APP_TYPE_IDENTIFIER | < string > | yes | Identifier for system admin application type. This should be the application or bundle identifier for Android/iOS respectively. Only required for first run.
 ROKWIRE_CORE_SYSTEM_APP_TYPE_NAME | < string > | yes | Name for system admin application type. Only required for first run.
 ROKWIRE_CORE_SYSTEM_API_KEY | < string > | yes | API key for system admin application. Only required for first run.
 ROKWIRE_CORE_SYSTEM_ACCOUNT_EMAIL | < string > | yes | Email address for initial system admin account. Only required for first run.
 ROKWIRE_CORE_SYSTEM_ACCOUNT_PASSWORD | < string > | yes | Password for initial system admin account. Only required for first run.
+ROKWIRE_CORE_BASE_SERVER_URL | < string > | false | URL of base server which overrides all of the servers listed in the docs.
+ROKWIRE_CORE_PRODUCTION_SERVER_URL | < string > | false | URL of base server which overrides the production server listed in the docs.
+ROKWIRE_CORE_TEST_SERVER_URL | < string > | false | URL of base server which overrides the test server listed in the docs.
+ROKWIRE_CORE_DEVELOPMENT_SERVER_URL | < string > | false | URL of base server which overrides the development server listed in the docs.
 
 ### Run Application
 

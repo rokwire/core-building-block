@@ -38,7 +38,7 @@ const (
 	typeEmailParams logutils.MessageDataType = "email params"
 )
 
-//enailCreds represents the creds struct for email auth
+// enailCreds represents the creds struct for email auth
 type emailCreds struct {
 	Email              string    `json:"email" bson:"email" validate:"required"`
 	Password           string    `json:"password" bson:"password"`
@@ -211,7 +211,7 @@ func (a *emailAuthImpl) getVerifyEmail(authType model.AuthType) bool {
 	return verifyEmail
 }
 
-//Time in seconds to wait before sending another verification email
+// Time in seconds to wait before sending another verification email
 func (a *emailAuthImpl) getVerifyWaitTime(authType model.AuthType) int {
 	//Default is 30 seconds
 	verifyWaitTime := 30
@@ -222,7 +222,7 @@ func (a *emailAuthImpl) getVerifyWaitTime(authType model.AuthType) int {
 	return verifyWaitTime
 }
 
-//Time in hours before verification code expires
+// Time in hours before verification code expires
 func (a *emailAuthImpl) getVerifyExpiry(authType model.AuthType) int {
 	//Default is 24 hours
 	verifyExpiry := 24
@@ -504,7 +504,7 @@ func mapToEmailCreds(credsMap map[string]interface{}) (*emailCreds, error) {
 	return &creds, nil
 }
 
-//initEmailAuth initializes and registers a new email auth instance
+// initEmailAuth initializes and registers a new email auth instance
 func initEmailAuth(auth *Auth) (*emailAuthImpl, error) {
 	email := &emailAuthImpl{auth: auth, authType: AuthTypeEmail}
 

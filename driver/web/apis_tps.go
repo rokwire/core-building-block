@@ -31,7 +31,7 @@ import (
 	"github.com/rokwire/logging-library-go/logutils"
 )
 
-//TPSApisHandler handles the APIs implementation used by third-party services
+// TPSApisHandler handles the APIs implementation used by third-party services
 type TPSApisHandler struct {
 	coreAPIs *core.APIs
 }
@@ -43,11 +43,7 @@ func (h TPSApisHandler) getServiceRegistrations(l *logs.Log, r *http.Request, cl
 	}
 	serviceIDs := strings.Split(serviceIDsParam, ",")
 
-	serviceRegs, err := h.coreAPIs.Auth.GetServiceRegistrations(serviceIDs)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeServiceReg, nil, err, http.StatusInternalServerError, true)
-	}
-
+	serviceRegs := h.coreAPIs.Auth.GetServiceRegistrations(serviceIDs)
 	serviceRegResp := authServiceRegListToDef(serviceRegs)
 
 	data, err := json.Marshal(serviceRegResp)
@@ -171,7 +167,7 @@ func (h TPSApisHandler) getServiceAccessTokens(l *logs.Log, r *http.Request, cla
 	return l.HttpResponseSuccessJSON(respData)
 }
 
-//NewTPSApisHandler creates new tps Handler instance
+// NewTPSApisHandler creates new tps Handler instance
 func NewTPSApisHandler(coreAPIs *core.APIs) TPSApisHandler {
 	return TPSApisHandler{coreAPIs: coreAPIs}
 }
