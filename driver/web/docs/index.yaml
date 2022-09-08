@@ -159,6 +159,8 @@ paths:
     $ref: "./resources/tps/access-tokens.yaml"
 
   #system
+  /system/auth/app-org-token:
+    $ref: "./resources/system/auth/app-org-token.yaml"
   /system/global-config:
     $ref: "./resources/system/global-config.yaml"
   /system/organizations/{id}:
