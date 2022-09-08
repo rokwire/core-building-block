@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Service registration error handling change [#468](https://github.com/rokwire/core-building-block/issues/468)
 - Update account permission duplication [#545](https://github.com/rokwire/core-building-block/issues/545)
+- Deleting application roles and groups uses bad accounts query [#536](https://github.com/rokwire/core-building-block/issues/536)
 
 ## [1.24.2] - 2022-08-08
 ### Added
@@ -25,7 +26,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Account system configs [#558](https://github.com/rokwire/core-building-block/issues/558)
 
 ### Fixed
-- Deleting application roles and groups uses bad accounts query [#536](https://github.com/rokwire/core-building-block/issues/536)
 - Authorization policy comments not working [#506](https://github.com/rokwire/core-building-block/issues/506)
 
 ## [1.24.1] - 2022-07-07
