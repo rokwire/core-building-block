@@ -20,7 +20,7 @@ import (
 	"core-building-block/utils"
 )
 
-//Account
+// Account
 func accountToDef(item model.Account) *Def.SharedResAccount {
 	//profile
 	profile := profileToDef(&item.Profile)
@@ -36,8 +36,18 @@ func accountToDef(item model.Account) *Def.SharedResAccount {
 	groups := accountGroupsToDef(item.GetActiveGroups())
 	//account auth types
 	authTypes := accountAuthTypesToDef(item.AuthTypes)
-	return &Def.SharedResAccount{Id: item.ID, Anonymous: &item.Anonymous, HasPermissions: &item.HasPermissions, Permissions: &permissions, Roles: &roles, Groups: &groups,
-		AuthTypes: &authTypes, Profile: profile, Preferences: preferences, SystemConfigs: systemConfigs}
+	//username
+	var username *string
+	if item.Username != "" {
+		username = &item.Username
+	}
+	//account usage information
+	lastLoginDate := utils.FormatTime(item.LastLoginDate)
+	lastAccessTokenDate := utils.FormatTime(item.LastAccessTokenDate)
+
+	return &Def.SharedResAccount{Id: item.ID, Anonymous: &item.Anonymous, HasPermissions: &item.HasPermissions, System: &item.AppOrg.Organization.System, Permissions: &permissions,
+		Roles: &roles, Groups: &groups, AuthTypes: &authTypes, Username: username, Profile: profile, Preferences: preferences, SystemConfigs: systemConfigs,
+		LastLoginDate: &lastLoginDate, LastAccessTokenDate: &lastAccessTokenDate, MostRecentClientVersion: item.MostRecentClientVersion}
 }
 
 func accountsToDef(items []model.Account) []Def.SharedResAccount {
@@ -69,6 +79,11 @@ func partialAccountToDef(item model.Account, params map[string]interface{}) *Def
 		formatted := utils.FormatTime(item.DateUpdated)
 		dateUpdated = &formatted
 	}
+	//username
+	var username *string
+	if item.Username != "" {
+		username = &item.Username
+	}
 
 	//params
 	var paramsData *map[string]interface{}
@@ -76,8 +91,8 @@ func partialAccountToDef(item model.Account, params map[string]interface{}) *Def
 		paramsData = &params
 	}
 	return &Def.PartialAccount{Id: item.ID, Anonymous: item.Anonymous, AppId: item.AppOrg.Application.ID, OrgId: item.AppOrg.Organization.ID,
-		FirstName: item.Profile.FirstName, LastName: item.Profile.LastName, HasPermissions: item.HasPermissions,
-		Permissions: permissions, Roles: roles, Groups: groups, SystemConfigs: systemConfigs, AuthTypes: authTypes,
+		FirstName: item.Profile.FirstName, LastName: item.Profile.LastName, Username: username, HasPermissions: &item.HasPermissions,
+		System: &item.AppOrg.Organization.System, Permissions: permissions, Roles: roles, Groups: groups, SystemConfigs: systemConfigs, AuthTypes: authTypes,
 		DateCreated: dateCreated, DateUpdated: dateUpdated, Params: paramsData}
 }
 
@@ -89,7 +104,7 @@ func partialAccountsToDef(items []model.Account) []Def.PartialAccount {
 	return result
 }
 
-//AccountAuthType
+// AccountAuthType
 func accountAuthTypeToDef(item model.AccountAuthType) Def.AccountAuthTypeFields {
 	params := &Def.AccountAuthTypeFields_Params{}
 	params.AdditionalProperties = item.Params
@@ -105,7 +120,7 @@ func accountAuthTypesToDef(items []model.AccountAuthType) []Def.AccountAuthTypeF
 	return result
 }
 
-//AccountRole
+// AccountRole
 func accountRoleToDef(item model.AccountRole) Def.AppOrgRole {
 	permissions := applicationPermissionsToDef(item.Role.Permissions)
 
@@ -128,7 +143,7 @@ func accountRolesToDef(items []model.AccountRole) []Def.AppOrgRole {
 	return result
 }
 
-//AccountGroup
+// AccountGroup
 func accountGroupToDef(item model.AccountGroup) Def.AppOrgGroup {
 	permissions := applicationPermissionsToDef(item.Group.Permissions)
 	roles := appOrgRolesToDef(item.Group.Roles)
@@ -152,7 +167,7 @@ func accountGroupsToDef(items []model.AccountGroup) []Def.AppOrgGroup {
 	return result
 }
 
-//Profile
+// Profile
 func profileFromDef(item *Def.SharedReqProfile) model.Profile {
 	if item == nil {
 		return model.Profile{}
@@ -297,7 +312,7 @@ func profileFromDefNullable(item *Def.SharedReqProfileNullable) model.Profile {
 		State: state, Country: country}
 }
 
-//Device
+// Device
 func deviceFromDef(item *Def.DeviceFields) *model.Device {
 	if item == nil {
 		return nil

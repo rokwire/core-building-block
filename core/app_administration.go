@@ -297,7 +297,11 @@ func (app *application) admDeleteAppOrgGroup(ID string, appID string, orgID stri
 		return errors.WrapErrorAction("error checking the accounts count by group id", "", nil, err)
 	}
 	if *numberOfAccounts > 0 {
-		return errors.Newf("the %s is already used by account and cannot be deleted", group.Name)
+		accountString := "accounts"
+		if *numberOfAccounts == 1 {
+			accountString = "account"
+		}
+		return errors.Newf("%s is used by %d %s and cannot be deleted", group.Name, *numberOfAccounts, accountString)
 	}
 
 	//7. delete the group
@@ -511,7 +515,11 @@ func (app *application) admDeleteAppOrgRole(ID string, appID string, orgID strin
 		return errors.WrapErrorAction("error checking the accounts count by role id", "", nil, err)
 	}
 	if *numberOfAccounts > 0 {
-		return errors.Newf("%s is already used by account and cannot be deleted", role.Name)
+		accountString := "accounts"
+		if *numberOfAccounts == 1 {
+			accountString = "account"
+		}
+		return errors.Newf("%s is used by %d %s and cannot be deleted", role.Name, *numberOfAccounts, accountString)
 	}
 
 	//6. check if the role has groups relations
@@ -520,7 +528,11 @@ func (app *application) admDeleteAppOrgRole(ID string, appID string, orgID strin
 		return errors.WrapErrorAction("error checking the groups count by role id", "", nil, err)
 	}
 	if *numberOfGroups > 0 {
-		return errors.Newf("%s is already used by groups and cannot be deleted", role.Name)
+		groupString := "groups"
+		if *numberOfGroups == 1 {
+			groupString = "group"
+		}
+		return errors.Newf("%s is used by %d %s and cannot be deleted", role.Name, *numberOfGroups, groupString)
 	}
 
 	//7. delete the role
@@ -560,7 +572,7 @@ func (app *application) admGetAccounts(limit int, offset int, appID string, orgI
 }
 
 func (app *application) admGetAccount(accountID string) (*model.Account, error) {
-	return app.getAccount(accountID)
+	return app.sharedGetAccount(accountID)
 }
 
 func (app *application) admGetAccountSystemConfigs(appID string, orgID string, accountID string, l *logs.Log) (map[string]interface{}, error) {

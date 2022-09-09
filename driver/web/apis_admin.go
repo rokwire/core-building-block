@@ -36,19 +36,19 @@ const (
 	actionGrant logutils.MessageActionType = "granting"
 )
 
-//AdminApisHandler handles the admin rest APIs implementation
+// AdminApisHandler handles the admin rest APIs implementation
 type AdminApisHandler struct {
 	coreAPIs *core.APIs
 }
 
-//getTest TODO get test
+// getTest TODO get test
 func (h AdminApisHandler) getTest(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	res := h.coreAPIs.Administration.AdmGetTest()
 
 	return l.HttpResponseSuccessMessage(res)
 }
 
-//getTestModel gives a test model instance
+// getTestModel gives a test model instance
 func (h AdminApisHandler) getTestModel(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	res := h.coreAPIs.Administration.AdmGetTestModel()
 
@@ -66,6 +66,8 @@ func (h AdminApisHandler) login(l *logs.Log, r *http.Request, claims *tokenauth.
 	if err != nil {
 		return l.HttpResponseError("Error getting IP", err, http.StatusInternalServerError, true)
 	}
+
+	clientVersion := r.Header.Get("CLIENT_VERSION")
 
 	var requestData Def.SharedReqLogin
 	err = json.Unmarshal(data, &requestData)
@@ -94,11 +96,16 @@ func (h AdminApisHandler) login(l *logs.Log, r *http.Request, claims *tokenauth.
 	//profile ////
 	requestProfile := profileFromDefNullable(requestData.Profile)
 
+	username := ""
+	if requestData.Username != nil {
+		username = *requestData.Username
+	}
+
 	//device
 	requestDevice := requestData.Device
 
-	message, loginSession, mfaTypes, err := h.coreAPIs.Auth.Login(ip, string(requestDevice.Type), requestDevice.Os, *requestDevice.DeviceId,
-		string(requestData.AuthType), requestCreds, requestData.ApiKey, requestData.AppTypeIdentifier, requestData.OrgId, requestParams, requestProfile, requestPreferences, true, l)
+	message, loginSession, mfaTypes, err := h.coreAPIs.Auth.Login(ip, string(requestDevice.Type), requestDevice.Os, *requestDevice.DeviceId, string(requestData.AuthType),
+		requestCreds, requestData.ApiKey, requestData.AppTypeIdentifier, requestData.OrgId, requestParams, &clientVersion, requestProfile, requestPreferences, username, true, l)
 	if err != nil {
 		loggingErr, ok := err.(*errors.Error)
 		if ok && loggingErr.Status() != "" {
@@ -151,6 +158,7 @@ func (h AdminApisHandler) loginMFA(l *logs.Log, r *http.Request, claims *tokenau
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("login mfa request"), nil, err, http.StatusBadRequest, true)
 	}
 
+	l.AddContext("account_id", mfaData.AccountId)
 	message, loginSession, err := h.coreAPIs.Auth.LoginMFA(mfaData.ApiKey, mfaData.AccountId, mfaData.SessionId, mfaData.Identifier, string(mfaData.Type), mfaData.Code, mfaData.State, l)
 	if message != nil {
 		return l.HttpResponseError(*message, err, http.StatusUnauthorized, false)
@@ -194,13 +202,15 @@ func (h AdminApisHandler) refresh(l *logs.Log, r *http.Request, claims *tokenaut
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
+	clientVersion := r.Header.Get("CLIENT_VERSION")
+
 	var requestData Def.SharedReqRefresh
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth refresh request"), nil, err, http.StatusBadRequest, true)
 	}
 
-	loginSession, err := h.coreAPIs.Auth.Refresh(requestData.RefreshToken, requestData.ApiKey, l)
+	loginSession, err := h.coreAPIs.Auth.Refresh(requestData.RefreshToken, requestData.ApiKey, &clientVersion, l)
 	if err != nil {
 		return l.HttpResponseError("Error refreshing token", err, http.StatusInternalServerError, true)
 	}
@@ -480,6 +490,8 @@ func (h AdminApisHandler) createAdminAccount(l *logs.Log, r *http.Request, claim
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
+	clientVersion := r.Header.Get("CLIENT_VERSION")
+
 	var requestData Def.SharedReqCreateAccount
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
@@ -499,10 +511,15 @@ func (h AdminApisHandler) createAdminAccount(l *logs.Log, r *http.Request, claim
 		groupIDs = *requestData.GroupIds
 	}
 	profile := profileFromDefNullable(requestData.Profile)
-	creatorPermissions := strings.Split(claims.Permissions, ",")
 
+	username := ""
+	if requestData.Username != nil {
+		username = *requestData.Username
+	}
+
+	creatorPermissions := strings.Split(claims.Permissions, ",")
 	account, params, err := h.coreAPIs.Auth.CreateAdminAccount(string(requestData.AuthType), claims.AppID, claims.OrgID,
-		requestData.Identifier, profile, permissions, roleIDs, groupIDs, creatorPermissions, l)
+		requestData.Identifier, profile, username, permissions, roleIDs, groupIDs, creatorPermissions, &clientVersion, l)
 	if err != nil || account == nil {
 		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}
@@ -657,18 +674,38 @@ func (h AdminApisHandler) verifyMFA(l *logs.Log, r *http.Request, claims *tokena
 	return l.HttpResponseSuccessJSON(response)
 }
 
+func (h AdminApisHandler) updateAccountUsername(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var username Def.Username
+	err = json.Unmarshal(data, &username)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeAccountUsername, nil, err, http.StatusBadRequest, true)
+	}
+
+	err = h.coreAPIs.Administration.AdmUpdateAccountUsername(claims.Subject, claims.AppID, claims.OrgID, username.Username)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeAccountUsername, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
 func (h AdminApisHandler) getAppToken(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	appID := r.URL.Query().Get("app_id")
 	if appID == "" {
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("app_id"), nil, http.StatusBadRequest, false)
 	}
 
-	token, err := h.coreAPIs.Auth.GetAdminToken(*claims, appID, l)
+	token, err := h.coreAPIs.Auth.GetAdminToken(*claims, appID, claims.OrgID, l)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, "app token", nil, err, http.StatusInternalServerError, true)
 	}
 
-	response := Def.AdminResAppToken{Token: token}
+	response := Def.AdminToken{Token: token}
 	responseJSON, err := json.Marshal(response)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, "app token", nil, err, http.StatusInternalServerError, false)
@@ -677,7 +714,7 @@ func (h AdminApisHandler) getAppToken(l *logs.Log, r *http.Request, claims *toke
 	return l.HttpResponseSuccessJSON(responseJSON)
 }
 
-//createApplicationGroup creates an application group
+// createApplicationGroup creates an application group
 func (h AdminApisHandler) createApplicationGroup(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -730,7 +767,7 @@ func (h AdminApisHandler) deleteApplicationGroup(l *logs.Log, r *http.Request, c
 	return l.HttpResponseSuccess()
 }
 
-//addAccountsToGroup adds a group the given account
+// addAccountsToGroup adds a group the given account
 func (h AdminApisHandler) addAccountsToGroup(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	params := mux.Vars(r)
 	groupID := params["id"]
@@ -758,7 +795,7 @@ func (h AdminApisHandler) addAccountsToGroup(l *logs.Log, r *http.Request, claim
 	return l.HttpResponseSuccess()
 }
 
-//removeAccountsFromGroup removes accounts from a given group
+// removeAccountsFromGroup removes accounts from a given group
 func (h AdminApisHandler) removeAccountsFromGroup(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	params := mux.Vars(r)
 	groupID := params["id"]
@@ -786,7 +823,7 @@ func (h AdminApisHandler) removeAccountsFromGroup(l *logs.Log, r *http.Request, 
 	return l.HttpResponseSuccess()
 }
 
-//createApplicationRole creates an application role
+// createApplicationRole creates an application role
 func (h AdminApisHandler) createApplicationRole(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -872,7 +909,7 @@ func (h AdminApisHandler) getApplicationAccountDevices(l *logs.Log, r *http.Requ
 	return l.HttpResponseSuccessJSON(data)
 }
 
-//grantAccountPermissions grants an account the given permissions
+// grantAccountPermissions grants an account the given permissions
 func (h AdminApisHandler) grantAccountPermissions(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	params := mux.Vars(r)
 	accountID := params["id"]
@@ -900,7 +937,7 @@ func (h AdminApisHandler) grantAccountPermissions(l *logs.Log, r *http.Request, 
 	return l.HttpResponseSuccess()
 }
 
-//revokeAccountPermissions removes permissions from an account
+// revokeAccountPermissions removes permissions from an account
 func (h AdminApisHandler) revokeAccountPermissions(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	params := mux.Vars(r)
 	accountID := params["id"]
@@ -927,7 +964,7 @@ func (h AdminApisHandler) revokeAccountPermissions(l *logs.Log, r *http.Request,
 	return l.HttpResponseSuccess()
 }
 
-//grantAccountRoles grants an account the given roles
+// grantAccountRoles grants an account the given roles
 func (h AdminApisHandler) grantAccountRoles(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	params := mux.Vars(r)
 	accountID := params["id"]
@@ -955,7 +992,7 @@ func (h AdminApisHandler) grantAccountRoles(l *logs.Log, r *http.Request, claims
 	return l.HttpResponseSuccess()
 }
 
-//revokeAccountRoles removes role from a given account
+// revokeAccountRoles removes role from a given account
 func (h AdminApisHandler) revokeAccountRoles(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	params := mux.Vars(r)
 	accountID := params["id"]
@@ -983,7 +1020,7 @@ func (h AdminApisHandler) revokeAccountRoles(l *logs.Log, r *http.Request, claim
 	return l.HttpResponseSuccess()
 }
 
-//getAccountSystemConfigs returns the system configs for a specific account
+// getAccountSystemConfigs returns the system configs for a specific account
 func (h AdminApisHandler) getAccountSystemConfigs(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	params := mux.Vars(r)
 	accountID := params["id"]
@@ -1051,7 +1088,7 @@ func (h AdminApisHandler) updateAccountSystemConfigs(l *logs.Log, r *http.Reques
 	return l.HttpResponseSuccess()
 }
 
-//grantPermissionsToRole grants a role the given permission
+// grantPermissionsToRole grants a role the given permission
 func (h AdminApisHandler) grantPermissionsToRole(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	params := mux.Vars(r)
 	roleID := params["id"]
@@ -1079,7 +1116,7 @@ func (h AdminApisHandler) grantPermissionsToRole(l *logs.Log, r *http.Request, c
 	return l.HttpResponseSuccess()
 }
 
-//NewAdminApisHandler creates new admin rest Handler instance
+// NewAdminApisHandler creates new admin rest Handler instance
 func NewAdminApisHandler(coreAPIs *core.APIs) AdminApisHandler {
 	return AdminApisHandler{coreAPIs: coreAPIs}
 }

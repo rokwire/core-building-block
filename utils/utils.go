@@ -46,6 +46,8 @@ const (
 	ErrorStatusSharedCredentialUnverified string = "shared-credential-unverified"
 	//ErrorStatusNotAllowed ...
 	ErrorStatusNotAllowed string = "not-allowed"
+	//ErrorStatusUsernameTaken ...
+	ErrorStatusUsernameTaken string = "username-taken"
 
 	//Character sets for password generation
 	upper   string = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -110,12 +112,12 @@ func ConvertToJSON(data interface{}) ([]byte, error) {
 	return dataJSON, nil
 }
 
-//DeepEqual checks whether a and b are ``deeply equal,''
+// DeepEqual checks whether a and b are “deeply equal,”
 func DeepEqual(a, b interface{}) bool {
 	return reflect.DeepEqual(a, b)
 }
 
-//SetStringIfEmpty returns b if a is empty, a if not
+// SetStringIfEmpty returns b if a is empty, a if not
 func SetStringIfEmpty(a, b string) string {
 	if a == "" {
 		return b
@@ -123,12 +125,12 @@ func SetStringIfEmpty(a, b string) string {
 	return a
 }
 
-//GetType returns a string representing the type of data
+// GetType returns a string representing the type of data
 func GetType(data interface{}) string {
 	return reflect.TypeOf(data).String()
 }
 
-//GetIP extracts the IP address from the http request
+// GetIP extracts the IP address from the http request
 func GetIP(l *logs.Log, r *http.Request) string {
 	IPAddress := r.Header.Get("X-Real-Ip")
 	if IPAddress == "" {
@@ -137,16 +139,17 @@ func GetIP(l *logs.Log, r *http.Request) string {
 	if IPAddress == "" {
 		IPAddress = r.RemoteAddr
 	}
+	l.AddContext("ip_address", IPAddress)
 	return IPAddress
 }
 
-//SHA256Hash computes the SHA256 hash of a byte slice
+// SHA256Hash computes the SHA256 hash of a byte slice
 func SHA256Hash(data []byte) []byte {
 	hash := sha256.Sum256(data)
 	return hash[:]
 }
 
-//GetLogValue prepares a sensitive data to be logged.
+// GetLogValue prepares a sensitive data to be logged.
 func GetLogValue(value string, n int) string {
 	if len(value) <= n {
 		return "***"
@@ -155,7 +158,7 @@ func GetLogValue(value string, n int) string {
 	return fmt.Sprintf("***%s", lastN)
 }
 
-//FormatTime formats the time value which this pointer points. Gives empty string if the pointer is nil
+// FormatTime formats the time value which this pointer points. Gives empty string if the pointer is nil
 func FormatTime(v *time.Time) string {
 	if v == nil {
 		return ""
@@ -163,7 +166,7 @@ func FormatTime(v *time.Time) string {
 	return v.Format("2006-01-02T15:04:05.000Z")
 }
 
-//Contains checks if list contains value
+// Contains checks if list contains value
 func Contains(list []string, value string) bool {
 	for _, v := range list {
 		if v == value {
@@ -173,7 +176,7 @@ func Contains(list []string, value string) bool {
 	return false
 }
 
-//StringListDiff returns a list of added, removed, unchanged values between a new and old string list
+// StringListDiff returns a list of added, removed, unchanged values between a new and old string list
 func StringListDiff(new []string, old []string) ([]string, []string, []string) {
 	added := []string{}
 	removed := []string{}
@@ -193,7 +196,7 @@ func StringListDiff(new []string, old []string) ([]string, []string, []string) {
 	return added, removed, unchanged
 }
 
-//StringOrNil returns a pointer to the input string, but returns nil if input is empty
+// StringOrNil returns a pointer to the input string, but returns nil if input is empty
 func StringOrNil(v string) *string {
 	if v == "" {
 		return nil
@@ -201,7 +204,7 @@ func StringOrNil(v string) *string {
 	return &v
 }
 
-//GetPrintableString returns the string content of a pointer, and defaultVal if pointer is nil
+// GetPrintableString returns the string content of a pointer, and defaultVal if pointer is nil
 func GetPrintableString(v *string, defaultVal string) string {
 	if v != nil {
 		return *v

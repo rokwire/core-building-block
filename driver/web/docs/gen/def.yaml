@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Rokwire Core Building Block API
   description: Core Building Block API Documentation
-  version: 1.24.1
+  version: 1.24.2
 servers:
   - url: 'https://api.rokwire.illinois.edu/core'
     description: Production server
@@ -1341,6 +1341,38 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+  /services/account/username:
+    put:
+      tags:
+        - Services
+      summary: Update account username
+      description: |
+        Update the username associated with the user's account
+
+        **Auth:** Requires user access token
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: Username
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Username'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   /services/test:
     get:
       tags:
@@ -1664,7 +1696,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_admin_res_app-token'
+                $ref: '#/components/schemas/AdminToken'
         '400':
           description: Bad request
         '401':
@@ -1775,6 +1807,38 @@ paths:
       responses:
         '200':
           description: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /admin/account/username:
+    put:
+      tags:
+        - Admin
+      summary: Update account username
+      description: |
+        Update the username associated with the user's account
+
+        **Auth:** Requires user access token
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: Username
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Username'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
         '400':
           description: Bad request
         '401':
@@ -2041,7 +2105,7 @@ paths:
       description: |
         Grant account permissions
 
-        **Auth:** Requires admin access token with `update_account-permissions` or `update_account-authorization` permission
+        **Auth:** Requires admin access token with `update_account-permissions`, `update_accounts`, or `all_accounts` permission
       security:
         - bearerAuth: []
       parameters:
@@ -2081,7 +2145,7 @@ paths:
       description: |
         Deletes an existing permissions from account
 
-        **Auth:** Requires admin access token with `update_account-permissions` or `update_account-authorization` permission
+        **Auth:** Requires admin access token with `update_account-permissions`, `update_accounts`, or `all_accounts` permission
       security:
         - bearerAuth: []
       parameters:
@@ -2121,7 +2185,7 @@ paths:
       description: |
         Grant account roles
 
-        **Auth:** Requires admin access token with `update_account-auth-roles` or `update_account-authorization` permission
+        **Auth:** Requires admin access token with `update_account-auth-roles`, `update_accounts`, or `all_accounts` permission
       security:
         - bearerAuth: []
       parameters:
@@ -2161,7 +2225,7 @@ paths:
       description: |
         Deletes an existing roles from account
 
-        **Auth:** Requires admin access token with `update_account-auth-roles` or `update_account-authorization` permission
+        **Auth:** Requires admin access token with `update_account-auth-roles`, `update_accounts`, or `all_accounts` permission
       security:
         - bearerAuth: []
       parameters:
@@ -2372,7 +2436,9 @@ paths:
         - `delete_auth-groups`
         - `all_auth-groups`
         - `update_account-auth-groups`
-        - `update_account-authorization`
+        - `create_accounts`
+        - `update_accounts`
+        - `all_accounts`
       security:
         - bearerAuth: []
       responses:
@@ -2456,7 +2522,7 @@ paths:
       description: |
         Add accounts 
 
-        **Auth:** Requires admin access token with `update_account-auth-groups` or `update_account-authorization` permission
+        **Auth:** Requires admin access token with `update_account-auth-groups`, `update_accounts`, or `all_accounts` permission
       security:
         - bearerAuth: []
       parameters:
@@ -2496,7 +2562,7 @@ paths:
       description: |
         Deletes an existing accounts from group
 
-        **Auth:** Requires admin access token with `update_account-auth-groups` or `update_account-authorization` permission
+        **Auth:** Requires admin access token with `update_account-auth-groups`, `update_accounts`, or `all_accounts` permission
       security:
         - bearerAuth: []
       parameters:
@@ -2539,7 +2605,9 @@ paths:
         **Auth:** Requires admin access token with at least one of the following permissions:
         - `get_permissions`
         - `update_account-permissions`
-        - `update_account-authorization`
+        - `create_accounts`
+        - `update_accounts`
+        - `all_accounts`
       security:
         - bearerAuth: []
       responses:
@@ -2571,7 +2639,9 @@ paths:
         - `delete_auth-roles`
         - `all_auth-roles`
         - `update_account-auth-roles`
-        - `update_account-authorization`
+        - `create_accounts`
+        - `update_accounts`
+        - `all_accounts`
       security:
         - bearerAuth: []
       responses:
@@ -3119,6 +3189,47 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/_services_res_service-accounts_access-tokens'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /system/auth/app-org-token:
+    get:
+      tags:
+        - System
+      summary: App org token
+      description: |
+        Retrieve a system token for the specified application and organization
+
+        **Auth:** Requires system access token
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: app_id
+          in: query
+          description: The application ID of the token to return
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+        - name: org_id
+          in: query
+          description: The organization ID of the token to return
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminToken'
         '400':
           description: Bad request
         '401':
@@ -3752,7 +3863,7 @@ paths:
                         "name": "initial_signature",
                         "type": "signature",
                         "params": {
-                          "pub_key": "public_key_pem"
+                          "key_pem": "public_key_pem"
                         }
                       }
                     ]
@@ -3860,7 +3971,7 @@ paths:
                     "name": "signature_cred",
                     "type": "signature",
                     "params": {
-                      "pub_key": "public_key_pem"
+                      "key_pem": "public_key_pem"
                     }
                   }
         required: true
@@ -5031,6 +5142,13 @@ components:
         explanation:
           description: Explanation displayed to users for why this scope is requested/required
           type: string
+    AdminToken:
+      required:
+        - token
+      type: object
+      properties:
+        token:
+          type: string
     APIKey:
       required:
         - app_id
@@ -5107,6 +5225,10 @@ components:
           $ref: '#/components/schemas/AccountFields'
         app_org:
           $ref: '#/components/schemas/ApplicationOrganization'
+        system:
+          type: boolean
+        username:
+          type: string
         permissions:
           type: array
           items:
@@ -5144,7 +5266,6 @@ components:
         - org_id
         - first_name
         - last_name
-        - has_permissions
         - permissions
         - roles
         - groups
@@ -5163,6 +5284,10 @@ components:
         first_name:
           type: string
         last_name:
+          type: string
+        system:
+          type: boolean
+        username:
           type: string
         has_permissions:
           type: boolean
@@ -5191,6 +5316,7 @@ components:
         anonymous:
           type: boolean
         date_created:
+          readOnly: true
           type: string
         date_updated:
           type: string
@@ -5246,6 +5372,13 @@ components:
         country:
           type: string
           nullable: true
+    Username:
+      required:
+        - username
+      type: object
+      properties:
+        username:
+          type: string
     AccountAuthType:
       type: object
       properties:
@@ -5340,6 +5473,9 @@ components:
           $ref: '#/components/schemas/_shared_req_ProfileNullable'
         preferences:
           type: object
+          nullable: true
+        username:
+          type: string
           nullable: true
     _shared_req_Login_Mfa:
       required:
@@ -5462,6 +5598,9 @@ components:
             type: string
         profile:
           $ref: '#/components/schemas/_shared_req_ProfileNullable'
+        username:
+          type: string
+          nullable: true
     _shared_req_UpdateAccount:
       required:
         - auth_type
@@ -5743,6 +5882,8 @@ components:
       properties:
         id:
           type: string
+        username:
+          type: string
         profile:
           $ref: '#/components/schemas/ProfileFields'
         preferences:
@@ -5752,6 +5893,8 @@ components:
           type: object
           nullable: true
         has_permissions:
+          type: boolean
+        system:
           type: boolean
         permissions:
           type: array
@@ -5771,6 +5914,12 @@ components:
             $ref: '#/components/schemas/AccountAuthTypeFields'
         anonymous:
           type: boolean
+        last_login_date:
+          type: string
+        last_access_token_date:
+          type: string
+        most_recent_client_version:
+          type: string
     _shared_res_AccountCheck:
       type: boolean
     _shared_res_RokwireToken:
@@ -6073,13 +6222,6 @@ components:
         version:
           type: string
           description: conforms major.minor.patch format
-    _admin_res_app-token:
-      required:
-        - token
-      type: object
-      properties:
-        token:
-          type: string
     _admin_req_create-application_role:
       required:
         - name
