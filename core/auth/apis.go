@@ -45,7 +45,7 @@ func (a *Auth) GetHost() string {
 	return a.host
 }
 
-// Login logs a user in a specific application using the specified credentials and authentication method.
+// Login logs a user into a specific application using the specified credentials and authentication method.
 // The authentication method must be one of the supported for the application.
 //
 //	Input:
@@ -168,7 +168,7 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 	return nil, &model.LoginSession{ID: loginSession.ID, Identifier: loginSession.Identifier, Params: responseParams, State: loginSession.State}, mfaTypes, nil
 }
 
-// Logout logouts an account from app/org
+// Logout logs out an account from app/org
 //
 //	Input:
 //		allSessions (bool): If to remove the current session only or all sessions for the app/org for the account
@@ -276,6 +276,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 		l.Infof("there is no a session for refresh token - %s", refreshToken)
 		return nil, nil
 	}
+	l.SetContext("account_id", loginSession.Identifier)
 
 	//check if the session is expired
 	if loginSession.IsExpired() {
@@ -993,6 +994,8 @@ func (a *Auth) ForgotCredential(authenticationType string, appTypeIdentifier str
 	if credential == nil {
 		return errors.New("Invalid account auth type for reset link")
 	}
+	a.setLogContext(account, l)
+
 	//do not allow to reset credential for unverified credentials
 	err = a.checkCredentialVerified(authImpl, accountAuthType, l)
 	if err != nil {
@@ -1039,6 +1042,7 @@ func (a *Auth) SendVerifyCredential(authenticationType string, appTypeIdentifier
 	if accountAuthType == nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountAuthType, nil, err)
 	}
+	a.setLogContext(account, l)
 	credential := accountAuthType.Credential
 	if credential == nil {
 		return errors.New("Invalid account auth type for reset link")
@@ -1513,18 +1517,18 @@ func (a *Auth) AuthorizeService(claims tokenauth.Claims, serviceID string, appro
 	return token, authorization.Scopes, nil, nil
 }
 
-// GetAdminToken returns an admin token for the specified application
-func (a *Auth) GetAdminToken(claims tokenauth.Claims, appID string, l *logs.Log) (string, error) {
+// GetAdminToken returns an admin token for the specified application and organization
+func (a *Auth) GetAdminToken(claims tokenauth.Claims, appID string, orgID string, l *logs.Log) (string, error) {
 	//verify that the provided appID is valid for the organization
-	appOrg, err := a.storage.FindApplicationOrganization(appID, claims.OrgID)
+	appOrg, err := a.storage.FindApplicationOrganization(appID, orgID)
 	if err != nil {
-		return "", errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"org_id": claims.OrgID, "app_id": appID}, err)
+		return "", errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"org_id": orgID, "app_id": appID}, err)
 	}
 	if appOrg == nil {
-		return "", errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"org_id": claims.OrgID, "app_id": appID})
+		return "", errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"org_id": orgID, "app_id": appID})
 	}
 
-	adminClaims := a.getStandardClaims(claims.Subject, claims.UID, claims.Name, claims.Email, claims.Phone, claims.Audience, claims.OrgID, appID, claims.AuthType,
+	adminClaims := a.getStandardClaims(claims.Subject, claims.UID, claims.Name, claims.Email, claims.Phone, claims.Audience, orgID, appID, claims.AuthType,
 		claims.ExternalIDs, &claims.ExpiresAt, false, false, true, claims.System, claims.Service, claims.FirstParty, claims.SessionID)
 	return a.buildAccessToken(adminClaims, claims.Permissions, claims.Scope)
 }

@@ -405,8 +405,8 @@ type APIs interface {
 	//DeleteAccount deletes an account for the given id
 	DeleteAccount(id string) error
 
-	//GetAdminToken returns an admin token for the specified application
-	GetAdminToken(claims tokenauth.Claims, appID string, l *logs.Log) (string, error)
+	//GetAdminToken returns an admin token for the specified application and organization
+	GetAdminToken(claims tokenauth.Claims, appID string, orgID string, l *logs.Log) (string, error)
 
 	//GetAuthKeySet generates a JSON Web Key Set for auth service registration
 	GetAuthKeySet() (*model.JSONWebKeySet, error)

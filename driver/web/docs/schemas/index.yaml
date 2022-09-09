@@ -58,6 +58,8 @@ PubKey:
 ServiceScope:
   $ref: "./auth/ServiceScope.yaml"
 
+AdminToken:
+  $ref: "./auth/AdminToken.yaml"
 APIKey:
   $ref: "./auth/APIKey.yaml"
 JWK:
@@ -206,10 +208,6 @@ _services_req_application_org-configs:
 ## end SERVICES section
 
 ## ADMIN section
-
-### admin app-token API
-_admin_res_app-token:
-  $ref: "./apis/admin/app-token/response/Response.yaml"
 
 ### admin application_roles API
 _admin_req_create-application_role:
