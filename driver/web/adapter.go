@@ -341,65 +341,6 @@ func loadDocsYAML(baseServerURL string, productionServerURL string, testServerUR
 
 	return yamlDoc, nil
 }
-}
-
-func loadDocsYAML(baseServerURL string, productionServerURL string, testServerURL string, developmentServerURL string) ([]byte, error) {
-	data, _ := os.ReadFile("./driver/web/docs/gen/def.yaml")
-	// yamlMap := make(map[string]interface{})
-	yamlMap := yaml.MapSlice{}
-	err := yaml.Unmarshal(data, &yamlMap)
-	if err != nil {
-		return nil, err
-	}
-
-	for index, item := range yamlMap {
-		if item.Key == "servers" {
-			var serverList []interface{}
-			if baseServerURL != "" {
-				serverList = []interface{}{yaml.MapSlice{yaml.MapItem{Key: "url", Value: baseServerURL}}}
-			} else {
-				ok := false
-				serverList, ok = item.Value.([]interface{})
-				if !ok || len(serverList) != 4 {
-					serverList = make([]interface{}, 4)
-				}
-				if productionServerURL != "" {
-					serverList[0] = yaml.MapSlice{
-						yaml.MapItem{Key: "url", Value: productionServerURL},
-						yaml.MapItem{Key: "description", Value: "Production server"},
-					}
-				}
-				if testServerURL != "" {
-					serverList[1] = yaml.MapSlice{
-						yaml.MapItem{Key: "url", Value: testServerURL},
-						yaml.MapItem{Key: "description", Value: "Test server"},
-					}
-				}
-				if developmentServerURL != "" {
-					serverList[2] = yaml.MapSlice{
-						yaml.MapItem{Key: "url", Value: developmentServerURL},
-						yaml.MapItem{Key: "description", Value: "Development server"},
-					}
-				}
-				serverList[3] = yaml.MapSlice{
-					yaml.MapItem{Key: "url", Value: "http://localhost/core"},
-					yaml.MapItem{Key: "description", Value: "Local server"},
-				}
-			}
-
-			item.Value = serverList
-			yamlMap[index] = item
-			break
-		}
-	}
-
-	yamlDoc, err := yaml.Marshal(&yamlMap)
-	if err != nil {
-		return nil, err
-	}
-
-	return yamlDoc, nil
-}
 
 func (we Adapter) serveDocUI() http.Handler {
 	url := fmt.Sprintf("%s/doc", we.host)

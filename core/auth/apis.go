@@ -811,7 +811,7 @@ func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID
 	return updatedAccount, params, nil
 }
 
-//CreateAnonymousAccount creates a new anonymous account
+// CreateAnonymousAccount creates a new anonymous account
 func (a *Auth) CreateAnonymousAccount(context storage.TransactionContext, appID string, orgID string, anonymousID string, preferences map[string]interface{},
 	systemConfigs map[string]interface{}, skipExistsCheck bool, l *logs.Log) (*model.Account, error) {
 	// check if the provided auth type is supported by the provided application and organization
