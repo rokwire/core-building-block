@@ -77,6 +77,8 @@ type Account struct {
 
 	Devices []Device
 
+	Anonymous bool
+
 	DateCreated time.Time
 	DateUpdated *time.Time
 

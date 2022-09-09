@@ -1063,11 +1063,11 @@ paths:
     delete:
       tags:
         - Services
-      summary: Delete user account
+      summary: Delete account
       description: |
-        Deletes a user account
+        Deletes account
 
-        **Auth:** Requires user auth token
+        **Auth:** Requires auth token
       security:
         - bearerAuth: []
       responses:
@@ -1087,11 +1087,11 @@ paths:
     get:
       tags:
         - Services
-      summary: Get user account
+      summary: Get account
       description: |
-        Get the user account
+        Gets account
 
-        **Auth:** Requires user auth token
+        **Auth:** Requires auth token
       security:
         - bearerAuth: []
       responses:
@@ -1214,7 +1214,7 @@ paths:
       description: |
         Updates account preferences
 
-        **Auth:** Requires user auth token
+        **Auth:** Requires auth token
       security:
         - bearerAuth: []
       requestBody:
@@ -1243,9 +1243,9 @@ paths:
         - Services
       summary: Get preferences
       description: |
-        Returns a user preferences
+        Returns account preferences
 
-        **Auth:** Requires user auth token
+        **Auth:** Requires auth token
       security:
         - bearerAuth: []
       responses:
@@ -1324,7 +1324,7 @@ paths:
       description: |
         Returns account system configs
 
-        **Auth:** Requires user auth token
+        **Auth:** Requires auth token
       security:
         - bearerAuth: []
       responses:
@@ -2310,6 +2310,14 @@ paths:
           explode: false
           schema:
             type: string
+        - name: create-anonymous
+          in: query
+          description: Create anonymous account if account with ID cannot be found. Default is `false`
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: boolean
       requestBody:
         description: Account system configs (will be merged with existing configs)
         content:
@@ -5249,6 +5257,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Device'
+        anonymous:
+          type: boolean
     PartialAccount:
       required:
         - id
@@ -5259,6 +5269,7 @@ components:
         - permissions
         - roles
         - groups
+        - anonymous
         - auth_types
         - date_created
       type: object
@@ -5302,6 +5313,8 @@ components:
         params:
           type: object
           nullable: true
+        anonymous:
+          type: boolean
         date_created:
           readOnly: true
           type: string
@@ -5899,6 +5912,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AccountAuthTypeFields'
+        anonymous:
+          type: boolean
         last_login_date:
           type: string
         last_access_token_date:

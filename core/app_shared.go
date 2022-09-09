@@ -28,6 +28,9 @@ func (app *application) sharedGetAccount(accountID string) (*model.Account, erro
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
+	if account == nil {
+		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeAccount, nil, err)
+	}
 	return account, nil
 }
 

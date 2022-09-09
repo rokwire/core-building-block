@@ -240,6 +240,10 @@ type APIs interface {
 	UpdateAdminAccount(authenticationType string, appID string, orgID string, identifier string, permissions []string, roleIDs []string,
 		groupIDs []string, updaterPermissions []string, l *logs.Log) (*model.Account, map[string]interface{}, error)
 
+	//CreateAnonymousAccount creates a new anonymous account
+	CreateAnonymousAccount(context storage.TransactionContext, appID string, orgID string, anonymousID string, preferences map[string]interface{},
+		systemConfigs map[string]interface{}, skipExistsCheck bool, l *logs.Log) (*model.Account, error)
+
 	//VerifyCredential verifies credential (checks the verification code in the credentials collection)
 	VerifyCredential(id string, verification string, l *logs.Log) error
 
