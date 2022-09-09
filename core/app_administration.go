@@ -569,7 +569,7 @@ func (app *application) admGetAccounts(limit int, offset int, appID string, orgI
 }
 
 func (app *application) admGetAccount(accountID string) (*model.Account, error) {
-	return app.getAccount(accountID)
+	return app.sharedGetAccount(accountID)
 }
 
 func (app *application) admGetAccountSystemConfigs(appID string, orgID string, accountID string, l *logs.Log) (map[string]interface{}, error) {

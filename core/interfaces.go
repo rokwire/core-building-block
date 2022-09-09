@@ -30,6 +30,7 @@ type Services interface {
 	SerGetAccountSystemConfigs(accountID string) (map[string]interface{}, error)
 	SerUpdateAccountPreferences(id string, preferences map[string]interface{}) error
 	SerUpdateProfile(accountID string, profile model.Profile) error
+	SerUpdateAccountUsername(accountID string, appID string, orgID string, username string) error
 
 	SerGetAccounts(limit int, offset int, appID string, orgID string, accountID *string, firstName *string, lastName *string, authType *string,
 		authTypeIdentifier *string, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error)
@@ -63,6 +64,8 @@ type Administration interface {
 	AdmGetAccounts(limit int, offset int, appID string, orgID string, accountID *string, firstName *string, lastName *string, authType *string,
 		authTypeIdentifier *string, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error)
 	AdmGetAccount(accountID string) (*model.Account, error)
+
+	AdmUpdateAccountUsername(accountID string, appID string, orgID string, username string) error
 
 	AdmGetAccountSystemConfigs(appID string, orgID string, accountID string, l *logs.Log) (map[string]interface{}, error)
 	AdmUpdateAccountSystemConfigs(appID string, orgID string, accountID string, configs map[string]interface{}, l *logs.Log) error
@@ -131,11 +134,13 @@ type Storage interface {
 	FindAccounts(limit int, offset int, appID string, orgID string, accountID *string, firstName *string, lastName *string, authType *string,
 		authTypeIdentifier *string, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error)
 	FindAccountsByAccountID(appID string, orgID string, accountIDs []string) ([]model.Account, error)
+	FindAccountsByUsername(context storage.TransactionContext, appOrg *model.ApplicationOrganization, username string) ([]model.Account, error)
 
 	UpdateAccountPreferences(accountID string, preferences map[string]interface{}) error
 	UpdateAccountSystemConfigs(context storage.TransactionContext, accountID string, configs map[string]interface{}) error
 	InsertAccountPermissions(context storage.TransactionContext, accountID string, permissions []model.Permission) error
 	DeleteAccountPermissions(context storage.TransactionContext, accountID string, hasPermissions bool, permissions []model.Permission) error
+	UpdateAccountUsername(context storage.TransactionContext, accountID, username string) error
 	InsertAccountRoles(context storage.TransactionContext, accountID string, appOrgID string, roles []model.AccountRole) error
 	DeleteAccountRoles(context storage.TransactionContext, accountID string, hasPermissions bool, roleIDs []string) error
 	InsertAccountsGroup(group model.AccountGroup, accounts []model.Account) error

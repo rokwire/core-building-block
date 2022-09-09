@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Usernames [#574](https://github.com/rokwire/core-building-block/issues/574)
 - Add release instructions to CONVENTIONS.md [#519](https://github.com/rokwire/core-building-block/issues/519)
 - Set up system app org token endpoint [#493](https://github.com/rokwire/core-building-block/issues/493)
 - Track usage info in accounts [#445](https://github.com/rokwire/core-building-block/issues/445)

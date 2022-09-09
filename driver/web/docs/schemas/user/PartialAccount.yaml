@@ -24,6 +24,8 @@ properties:
     type: string
   system:
     type: boolean
+  username:
+    type: string
   has_permissions:
     type: boolean
   permissions:

@@ -6,6 +6,8 @@ properties:
     $ref: "../application/ApplicationOrganization.yaml"
   system:
     type: boolean
+  username:
+    type: string
   permissions:
     type: array
     items:

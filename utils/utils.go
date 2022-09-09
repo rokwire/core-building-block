@@ -46,6 +46,8 @@ const (
 	ErrorStatusSharedCredentialUnverified string = "shared-credential-unverified"
 	//ErrorStatusNotAllowed ...
 	ErrorStatusNotAllowed string = "not-allowed"
+	//ErrorStatusUsernameTaken ...
+	ErrorStatusUsernameTaken string = "username-taken"
 
 	//Character sets for password generation
 	upper   string = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"

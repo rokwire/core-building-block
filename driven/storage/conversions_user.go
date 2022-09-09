@@ -27,7 +27,7 @@ func accountFromStorage(item account, appOrg model.ApplicationOrganization) mode
 	profile := profileFromStorage(item.Profile)
 	devices := accountDevicesFromStorage(item)
 	return model.Account{ID: item.ID, AppOrg: appOrg, HasPermissions: item.HasPermissions, Permissions: item.Permissions,
-		Roles: roles, Groups: groups, AuthTypes: authTypes, MFATypes: mfaTypes, ExternalIDs: item.ExternalIDs,
+		Roles: roles, Groups: groups, AuthTypes: authTypes, MFATypes: mfaTypes, Username: item.Username, ExternalIDs: item.ExternalIDs,
 		Preferences: item.Preferences, Profile: profile, SystemConfigs: item.SystemConfigs, Devices: devices, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated,
 		LastLoginDate: item.LastLoginDate, LastAccessTokenDate: item.LastAccessTokenDate, MostRecentClientVersion: item.MostRecentClientVersion}
 }
@@ -61,7 +61,7 @@ func accountToStorage(item *model.Account) *account {
 	mostRecentClientVersion := item.MostRecentClientVersion
 
 	return &account{ID: id, AppOrgID: appOrgID, HasPermissions: item.HasPermissions, Permissions: permissions, Roles: roles, Groups: groups, AuthTypes: authTypes,
-		MFATypes: mfaTypes, ExternalIDs: item.ExternalIDs, Preferences: item.Preferences, Profile: profile, SystemConfigs: item.SystemConfigs, Devices: devices,
+		MFATypes: mfaTypes, Username: item.Username, ExternalIDs: item.ExternalIDs, Preferences: item.Preferences, Profile: profile, SystemConfigs: item.SystemConfigs, Devices: devices,
 		DateCreated: dateCreated, DateUpdated: dateUpdated, LastLoginDate: lastLoginDate, LastAccessTokenDate: lastAccessTokenDate, MostRecentClientVersion: mostRecentClientVersion}
 }
 
