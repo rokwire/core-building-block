@@ -37,6 +37,10 @@ func (a *firebaseAuthImpl) signUp(authType model.AuthType, appOrg model.Applicat
 	return "", nil, nil
 }
 
+func (a *firebaseAuthImpl) signUpAdmin(authType model.AuthType, appOrg model.ApplicationOrganization, identifier string, password string, newCredentialID string) (map[string]interface{}, map[string]interface{}, error) {
+	return nil, nil, nil
+}
+
 func (a *firebaseAuthImpl) getUserIdentifier(creds string) (string, error) {
 	return "", nil
 }
@@ -69,7 +73,7 @@ func (a *firebaseAuthImpl) forgotCredential(credential *model.Credential, identi
 	return nil, nil
 }
 
-//initFirebaseAuth initializes and registers a new Firebase auth instance
+// initFirebaseAuth initializes and registers a new Firebase auth instance
 func initFirebaseAuth(auth *Auth) (*firebaseAuthImpl, error) {
 	firebase := &firebaseAuthImpl{auth: auth, authType: AuthTypeFirebase}
 

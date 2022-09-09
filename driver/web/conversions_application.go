@@ -17,6 +17,7 @@ package web
 import (
 	"core-building-block/core/model"
 	Def "core-building-block/driver/web/docs/gen"
+	"core-building-block/utils"
 )
 
 //Application
@@ -73,50 +74,81 @@ func applicationsToDef(item []model.Application) []Def.ApplicationFields {
 	return result
 }
 
-//ApplicationPermission
-func applicationPermissionToDef(item model.Permission) Def.PermissionFields {
+// ApplicationPermission
+func applicationPermissionToDef(item model.Permission) Def.Permission {
 	assigners := item.Assigners
 	if assigners == nil {
 		assigners = make([]string, 0)
 	}
-	return Def.PermissionFields{Id: item.ID, Name: item.Name, ServiceId: &item.ServiceID, Assigners: &assigners}
+	assigners = append(assigners, model.PermissionGrantAllPermissions)
+
+	//dates
+	var dateUpdated *string
+	dateCreated := utils.FormatTime(&item.DateCreated)
+	if item.DateUpdated != nil {
+		formatted := utils.FormatTime(item.DateUpdated)
+		dateUpdated = &formatted
+	}
+
+	return Def.Permission{Id: item.ID, Name: item.Name, Description: &item.Description, ServiceId: &item.ServiceID, Assigners: &assigners, DateCreated: &dateCreated, DateUpdated: dateUpdated}
 }
 
-func applicationPermissionsToDef(items []model.Permission) []Def.PermissionFields {
-	result := make([]Def.PermissionFields, len(items))
+func applicationPermissionsToDef(items []model.Permission) []Def.Permission {
+	result := make([]Def.Permission, len(items))
 	for i, item := range items {
 		result[i] = applicationPermissionToDef(item)
 	}
 	return result
 }
 
-//AppOrgRole
-func appOrgRoleToDef(item model.AppOrgRole) Def.AppOrgRoleFields {
-	return Def.AppOrgRoleFields{Id: item.ID, Name: item.Name, System: &item.System}
+// AppOrgRole
+func appOrgRoleToDef(item model.AppOrgRole) Def.AppOrgRole {
+	permissions := applicationPermissionsToDef(item.Permissions)
+
+	//dates
+	var dateUpdated *string
+	dateCreated := utils.FormatTime(&item.DateCreated)
+	if item.DateUpdated != nil {
+		formatted := utils.FormatTime(item.DateUpdated)
+		dateUpdated = &formatted
+	}
+
+	return Def.AppOrgRole{Id: item.ID, Name: item.Name, Description: &item.Description, System: &item.System, DateCreated: &dateCreated, DateUpdated: dateUpdated, Permissions: &permissions}
 }
 
-func appOrgRolesToDef(items []model.AppOrgRole) []Def.AppOrgRoleFields {
-	result := make([]Def.AppOrgRoleFields, len(items))
+func appOrgRolesToDef(items []model.AppOrgRole) []Def.AppOrgRole {
+	result := make([]Def.AppOrgRole, len(items))
 	for i, item := range items {
 		result[i] = appOrgRoleToDef(item)
 	}
 	return result
 }
 
-//AppOrgGroup
-func appOrgGroupToDef(item model.AppOrgGroup) Def.AppOrgGroupFields {
-	return Def.AppOrgGroupFields{Id: item.ID, Name: item.Name, System: &item.System}
+// AppOrgGroup
+func appOrgGroupToDef(item model.AppOrgGroup) Def.AppOrgGroup {
+	permissions := applicationPermissionsToDef(item.Permissions)
+	roles := appOrgRolesToDef(item.Roles)
+
+	//dates
+	var dateUpdated *string
+	dateCreated := utils.FormatTime(&item.DateCreated)
+	if item.DateUpdated != nil {
+		formatted := utils.FormatTime(item.DateUpdated)
+		dateUpdated = &formatted
+	}
+
+	return Def.AppOrgGroup{Id: item.ID, Name: item.Name, Description: &item.Description, System: &item.System, DateCreated: &dateCreated, DateUpdated: dateUpdated, Permissions: &permissions, Roles: &roles}
 }
 
-func appOrgGroupsToDef(items []model.AppOrgGroup) []Def.AppOrgGroupFields {
-	result := make([]Def.AppOrgGroupFields, len(items))
+func appOrgGroupsToDef(items []model.AppOrgGroup) []Def.AppOrgGroup {
+	result := make([]Def.AppOrgGroup, len(items))
 	for i, item := range items {
 		result[i] = appOrgGroupToDef(item)
 	}
 	return result
 }
 
-//Organization
+// Organization
 func organizationToDef(item *model.Organization) *Def.Organization {
 	if item == nil {
 		return nil
@@ -153,7 +185,7 @@ func organizationConfigToDef(item *model.OrganizationConfig) *Def.OrganizationCo
 	return &Def.OrganizationConfigFields{Id: id, Domains: domains}
 }
 
-//App Config
+// App Config
 func appConfigToDef(item model.ApplicationConfig) Def.ApplicationConfig {
 	defConfig := Def.ApplicationConfig{Id: item.ID, AppTypeId: item.ApplicationType.ID, Version: item.Version.VersionNumbers.String(), Data: item.Data}
 	if item.AppOrg != nil {

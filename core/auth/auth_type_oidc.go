@@ -30,7 +30,7 @@ import (
 	"gopkg.in/go-playground/validator.v9"
 
 	"github.com/coreos/go-oidc"
-	"github.com/rokwire/core-auth-library-go/authutils"
+	"github.com/rokwire/core-auth-library-go/v2/authutils"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
@@ -135,7 +135,7 @@ func (a *oidcAuthImpl) externalLogin(authType model.AuthType, appType model.Appl
 	return externalUser, parameters, nil
 }
 
-//refresh must be implemented for OIDC auth
+// refresh must be implemented for OIDC auth
 func (a *oidcAuthImpl) refresh(params map[string]interface{}, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error) {
 	refreshParams, err := oidcRefreshParamsFromMap(params)
 	if err != nil {
@@ -300,6 +300,9 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 
 	identityProviderID, _ := authType.Params["identity_provider"].(string)
 	identityProviderSetting := appOrg.FindIdentityProviderSetting(identityProviderID)
+	if identityProviderSetting == nil {
+		return nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeIdentityProviderConfig, &logutils.FieldArgs{"app_org": appOrg.ID, "identity_provider_id": identityProviderID})
+	}
 
 	//identifier
 	identifier, _ := userClaims[identityProviderSetting.UserIdentifierField].(string)
@@ -337,13 +340,12 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 	//external ids
 	externalIDs := make(map[string]string)
 	for k, v := range identityProviderSetting.ExternalIDFields {
-		key := fmt.Sprintf("%s.%s", authType.Code, k)
 		externalID, ok := userClaims[v].(string)
 		if !ok {
-			a.auth.logger.ErrorWithFields("failed to parse external id", logutils.Fields{key: userClaims[v]})
+			a.auth.logger.ErrorWithFields("failed to parse external id", logutils.Fields{k: userClaims[v]})
 			continue
 		}
-		externalIDs[key] = externalID
+		externalIDs[k] = externalID
 	}
 
 	externalUser := model.ExternalSystemUser{Identifier: identifier, ExternalIDs: externalIDs, FirstName: firstName,
@@ -495,7 +497,7 @@ func (a *oidcAuthImpl) getOidcAuthConfig(authType model.AuthType, appType model.
 
 // --- Helper functions ---
 
-//generatePkceChallenge generates and returns a PKCE code challenge and verifier
+// generatePkceChallenge generates and returns a PKCE code challenge and verifier
 func generatePkceChallenge() (string, string, error) {
 	codeVerifier, err := utils.GenerateRandomString(50)
 	if err != nil {
@@ -511,7 +513,7 @@ func generatePkceChallenge() (string, string, error) {
 	return codeChallenge, codeVerifier, nil
 }
 
-//initOidcAuth initializes and registers a new OIDC auth instance
+// initOidcAuth initializes and registers a new OIDC auth instance
 func initOidcAuth(auth *Auth) (*oidcAuthImpl, error) {
 	oidc := &oidcAuthImpl{auth: auth, authType: AuthTypeOidc}
 

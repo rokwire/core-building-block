@@ -17,14 +17,17 @@ package web
 import (
 	"core-building-block/core/model"
 	Def "core-building-block/driver/web/docs/gen"
+	"core-building-block/utils"
 )
 
-//Account
+// Account
 func accountToDef(item model.Account) *Def.SharedResAccount {
 	//profile
 	profile := profileToDef(&item.Profile)
 	//preferences
 	preferences := &item.Preferences
+	//systemConfigs
+	systemConfigs := &item.SystemConfigs
 	//permissions
 	permissions := applicationPermissionsToDef(item.Permissions)
 	//roles
@@ -33,11 +36,14 @@ func accountToDef(item model.Account) *Def.SharedResAccount {
 	groups := accountGroupsToDef(item.GetActiveGroups())
 	//account auth types
 	authTypes := accountAuthTypesToDef(item.AuthTypes)
-	return &Def.SharedResAccount{Id: item.ID, Permissions: &permissions, Roles: &roles, Groups: &groups,
-		AuthTypes: &authTypes, Profile: profile, Preferences: preferences}
+	//account usage information
+	lastLoginDate := utils.FormatTime(item.LastLoginDate)
+	lastAccessTokenDate := utils.FormatTime(item.LastAccessTokenDate)
+	return &Def.SharedResAccount{Id: item.ID, HasPermissions: &item.HasPermissions, System: &item.AppOrg.Organization.System, Permissions: &permissions,
+		Roles: &roles, Groups: &groups, AuthTypes: &authTypes, Profile: profile, Preferences: preferences, SystemConfigs: systemConfigs, LastLoginDate: &lastLoginDate, LastAccessTokenDate: &lastAccessTokenDate, MostRecentClientVersion: item.MostRecentClientVersion}
 }
 
-func аccountsToDef(items []model.Account) []Def.SharedResAccount {
+func accountsToDef(items []model.Account) []Def.SharedResAccount {
 	result := make([]Def.SharedResAccount, len(items))
 	for i, item := range items {
 		result[i] = *accountToDef(item)
@@ -45,7 +51,48 @@ func аccountsToDef(items []model.Account) []Def.SharedResAccount {
 	return result
 }
 
-//AccountAuthType
+func partialAccountToDef(item model.Account, params map[string]interface{}) *Def.PartialAccount {
+	//permissions
+	permissions := applicationPermissionsToDef(item.Permissions)
+	//roles
+	roles := accountRolesToDef(item.GetActiveRoles())
+	//groups
+	groups := accountGroupsToDef(item.GetActiveGroups())
+	//systemConfigs
+	systemConfigs := &item.SystemConfigs
+	//account auth types
+	authTypes := accountAuthTypesToDef(item.AuthTypes)
+	for i := 0; i < len(authTypes); i++ {
+		authTypes[i].Params = nil
+	}
+	//dates
+	var dateUpdated *string
+	dateCreated := utils.FormatTime(&item.DateCreated)
+	if item.DateUpdated != nil {
+		formatted := utils.FormatTime(item.DateUpdated)
+		dateUpdated = &formatted
+	}
+
+	//params
+	var paramsData *map[string]interface{}
+	if params != nil {
+		paramsData = &params
+	}
+	return &Def.PartialAccount{Id: item.ID, AppId: item.AppOrg.Application.ID, OrgId: item.AppOrg.Organization.ID,
+		FirstName: item.Profile.FirstName, LastName: item.Profile.LastName, HasPermissions: &item.HasPermissions,
+		System: &item.AppOrg.Organization.System, Permissions: permissions, Roles: roles, Groups: groups, SystemConfigs: systemConfigs, AuthTypes: authTypes,
+		DateCreated: dateCreated, DateUpdated: dateUpdated, Params: paramsData}
+}
+
+func partialAccountsToDef(items []model.Account) []Def.PartialAccount {
+	result := make([]Def.PartialAccount, len(items))
+	for i, item := range items {
+		result[i] = *partialAccountToDef(item, nil)
+	}
+	return result
+}
+
+// AccountAuthType
 func accountAuthTypeToDef(item model.AccountAuthType) Def.AccountAuthTypeFields {
 	params := &Def.AccountAuthTypeFields_Params{}
 	params.AdditionalProperties = item.Params
@@ -61,33 +108,54 @@ func accountAuthTypesToDef(items []model.AccountAuthType) []Def.AccountAuthTypeF
 	return result
 }
 
-//AccountRole
-func accountRoleToDef(item model.AccountRole) Def.AppOrgRoleFields {
-	return Def.AppOrgRoleFields{Id: item.Role.ID, Name: item.Role.Name}
+// AccountRole
+func accountRoleToDef(item model.AccountRole) Def.AppOrgRole {
+	permissions := applicationPermissionsToDef(item.Role.Permissions)
+
+	//dates
+	var dateUpdated *string
+	dateCreated := utils.FormatTime(&item.Role.DateCreated)
+	if item.Role.DateUpdated != nil {
+		formatted := utils.FormatTime(item.Role.DateUpdated)
+		dateUpdated = &formatted
+	}
+
+	return Def.AppOrgRole{Id: item.Role.ID, Name: item.Role.Name, Description: &item.Role.Description, System: &item.Role.System, DateCreated: &dateCreated, DateUpdated: dateUpdated, Permissions: &permissions}
 }
 
-func accountRolesToDef(items []model.AccountRole) []Def.AppOrgRoleFields {
-	result := make([]Def.AppOrgRoleFields, len(items))
+func accountRolesToDef(items []model.AccountRole) []Def.AppOrgRole {
+	result := make([]Def.AppOrgRole, len(items))
 	for i, item := range items {
 		result[i] = accountRoleToDef(item)
 	}
 	return result
 }
 
-//AccountGroup
-func accountGroupToDef(item model.AccountGroup) Def.AppOrgGroupFields {
-	return Def.AppOrgGroupFields{Id: item.Group.ID, Name: item.Group.Name}
+// AccountGroup
+func accountGroupToDef(item model.AccountGroup) Def.AppOrgGroup {
+	permissions := applicationPermissionsToDef(item.Group.Permissions)
+	roles := appOrgRolesToDef(item.Group.Roles)
+
+	//dates
+	var dateUpdated *string
+	dateCreated := utils.FormatTime(&item.Group.DateCreated)
+	if item.Group.DateUpdated != nil {
+		formatted := utils.FormatTime(item.Group.DateUpdated)
+		dateUpdated = &formatted
+	}
+
+	return Def.AppOrgGroup{Id: item.Group.ID, Name: item.Group.Name, Description: &item.Group.Description, System: &item.Group.System, DateCreated: &dateCreated, DateUpdated: dateUpdated, Permissions: &permissions, Roles: &roles}
 }
 
-func accountGroupsToDef(items []model.AccountGroup) []Def.AppOrgGroupFields {
-	result := make([]Def.AppOrgGroupFields, len(items))
+func accountGroupsToDef(items []model.AccountGroup) []Def.AppOrgGroup {
+	result := make([]Def.AppOrgGroup, len(items))
 	for i, item := range items {
 		result[i] = accountGroupToDef(item)
 	}
 	return result
 }
 
-//Profile
+// Profile
 func profileFromDef(item *Def.SharedReqProfile) model.Profile {
 	if item == nil {
 		return model.Profile{}
@@ -232,7 +300,7 @@ func profileFromDefNullable(item *Def.SharedReqProfileNullable) model.Profile {
 		State: state, Country: country}
 }
 
-//Device
+// Device
 func deviceFromDef(item *Def.DeviceFields) *model.Device {
 	if item == nil {
 		return nil

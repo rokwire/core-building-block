@@ -38,7 +38,7 @@ const (
 	typeEmailParams logutils.MessageDataType = "email params"
 )
 
-//enailCreds represents the creds struct for email auth
+// enailCreds represents the creds struct for email auth
 type emailCreds struct {
 	Email              string    `json:"email" bson:"email" validate:"required"`
 	Password           string    `json:"password" bson:"password"`
@@ -88,41 +88,26 @@ func (a *emailAuthImpl) signUp(authType model.AuthType, appOrg model.Application
 		return "", nil, errors.WrapErrorAction("passwords fields do not match", "", nil, err)
 	}
 
-	//password hash
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	emailCreds, err := a.buildCredentials(authType, appOrg.Application.Name, email, password, newCredentialID)
 	if err != nil {
-		return "", nil, errors.WrapErrorAction(logutils.ActionCompute, model.TypeAuthCred, nil, errors.New("failed to generate hash from password"))
+		return "", nil, errors.WrapErrorAction("building", "email credentials", nil, err)
 	}
 
-	//verification code
-	code, err := utils.GenerateRandomString(64)
+	return "verification code sent successfully", emailCreds, nil
+}
+
+func (a *emailAuthImpl) signUpAdmin(authType model.AuthType, appOrg model.ApplicationOrganization, identifier string, password string, newCredentialID string) (map[string]interface{}, map[string]interface{}, error) {
+	if password == "" {
+		password = utils.GenerateRandomPassword(12)
+	}
+
+	emailCreds, err := a.buildCredentials(authType, appOrg.Application.Name, identifier, password, newCredentialID)
 	if err != nil {
-		return "", nil, errors.WrapErrorAction(logutils.ActionCompute, model.TypeAuthCred, nil, errors.New("failed to generate random string for verify code"))
+		return nil, nil, errors.WrapErrorAction("building", "email credentials", nil, err)
 	}
 
-	verifyEmail := a.getVerifyEmail(authType)
-	verifyExpiryTime := a.getVerifyExpiry(authType)
-
-	var emailCredValue emailCreds
-	if verifyEmail {
-		emailCredValue = emailCreds{Email: email, Password: string(hashedPassword), VerificationCode: code, VerificationExpiry: time.Now().Add(time.Hour * time.Duration(verifyExpiryTime))}
-	} else {
-		emailCredValue = emailCreds{Email: email, Password: string(hashedPassword)}
-	}
-
-	emailCredValueMap, err := emailCredsToMap(&emailCredValue)
-	if err != nil {
-		return "", nil, errors.WrapErrorAction("failed email params to map", "", nil, err)
-	}
-
-	if verifyEmail {
-		//send verification code
-		if err = a.sendVerificationCode(email, appOrg.Application.Name, code, newCredentialID); err != nil {
-			return "", nil, errors.WrapErrorAction(logutils.ActionSend, "verification email", nil, err)
-		}
-	}
-
-	return "verification code sent successfully", emailCredValueMap, nil
+	params := map[string]interface{}{"password": password}
+	return params, emailCreds, nil
 }
 
 func (a *emailAuthImpl) isCredentialVerified(credential *model.Credential, l *logs.Log) (*bool, *bool, error) {
@@ -179,6 +164,44 @@ func (a *emailAuthImpl) checkCredentials(accountAuthType model.AccountAuthType, 
 	return "", nil
 }
 
+func (a *emailAuthImpl) buildCredentials(authType model.AuthType, appName string, email string, password string, credID string) (map[string]interface{}, error) {
+	//password hash
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionCompute, model.TypeAuthCred, nil, errors.New("failed to generate hash from password"))
+	}
+
+	//verification code
+	code, err := utils.GenerateRandomString(64)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionCompute, model.TypeAuthCred, nil, errors.New("failed to generate random string for verify code"))
+	}
+
+	verifyEmail := a.getVerifyEmail(authType)
+	verifyExpiryTime := a.getVerifyExpiry(authType)
+
+	var emailCredValue emailCreds
+	if verifyEmail {
+		emailCredValue = emailCreds{Email: email, Password: string(hashedPassword), VerificationCode: code, VerificationExpiry: time.Now().Add(time.Hour * time.Duration(verifyExpiryTime))}
+	} else {
+		emailCredValue = emailCreds{Email: email, Password: string(hashedPassword)}
+	}
+
+	emailCredValueMap, err := emailCredsToMap(&emailCredValue)
+	if err != nil {
+		return nil, errors.WrapErrorAction("failed email params to map", "", nil, err)
+	}
+
+	if verifyEmail {
+		//send verification code
+		if err = a.sendVerificationCode(email, appName, code, credID); err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionSend, "verification email", nil, err)
+		}
+	}
+
+	return emailCredValueMap, nil
+}
+
 func (a *emailAuthImpl) getVerifyEmail(authType model.AuthType) bool {
 	verifyEmail := true
 	verifyEmailParam, ok := authType.Params["verify_email"].(bool)
@@ -188,7 +211,7 @@ func (a *emailAuthImpl) getVerifyEmail(authType model.AuthType) bool {
 	return verifyEmail
 }
 
-//Time in seconds to wait before sending another verification email
+// Time in seconds to wait before sending another verification email
 func (a *emailAuthImpl) getVerifyWaitTime(authType model.AuthType) int {
 	//Default is 30 seconds
 	verifyWaitTime := 30
@@ -199,7 +222,7 @@ func (a *emailAuthImpl) getVerifyWaitTime(authType model.AuthType) int {
 	return verifyWaitTime
 }
 
-//Time in hours before verification code expires
+// Time in hours before verification code expires
 func (a *emailAuthImpl) getVerifyExpiry(authType model.AuthType) int {
 	//Default is 24 hours
 	verifyExpiry := 24
@@ -481,7 +504,7 @@ func mapToEmailCreds(credsMap map[string]interface{}) (*emailCreds, error) {
 	return &creds, nil
 }
 
-//initEmailAuth initializes and registers a new email auth instance
+// initEmailAuth initializes and registers a new email auth instance
 func initEmailAuth(auth *Auth) (*emailAuthImpl, error) {
 	email := &emailAuthImpl{auth: auth, authType: AuthTypeEmail}
 

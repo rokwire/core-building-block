@@ -11,7 +11,9 @@
     - `delete_auth-groups`
     - `all_auth-groups`
     - `update_account-auth-groups`
-    - `update_account-authorization`
+    - `create_accounts`
+    - `update_accounts`
+    - `all_accounts`
   security:
     - bearerAuth: []
   responses:
@@ -22,7 +24,7 @@
             schema:
               type: array
               items:
-                $ref: "../../../schemas/application/AppOrgGroupFields.yaml"
+                $ref: "../../../schemas/application/AppOrgGroup.yaml"
       400:
         description: Bad request
       401:
@@ -51,10 +53,9 @@
     200:
       description: Success
       content:
-        text/plain:
+        application/json:
           schema:
-            type: string
-            example: Success
+            $ref: "../../../schemas/application/AppOrgGroup.yaml"
     400:
       description: Bad request
     401:

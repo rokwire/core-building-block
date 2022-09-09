@@ -8,14 +8,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - Add release instructions to CONVENTIONS.md [#519](https://github.com/rokwire/core-building-block/issues/519)
+- Set up system app org token endpoint [#493](https://github.com/rokwire/core-building-block/issues/493)
+- Track usage info in accounts [#445](https://github.com/rokwire/core-building-block/issues/445)
+- Use signature Key ID to check specific key for service account auth [#481](https://github.com/rokwire/core-building-block/issues/481)
+- Allow overriding docs base URLs [#513](https://github.com/rokwire/core-building-block/issues/513)
+- Include account ID in request logs [#562](https://github.com/rokwire/core-building-block/issues/562)
+- Add system flag to login response [#552](https://github.com/rokwire/core-building-block/issues/552)
+- Add default assigners permission [#477](https://github.com/rokwire/core-building-block/issues/477)
+
+### Fixed
+- Service registration error handling change [#468](https://github.com/rokwire/core-building-block/issues/468)
+- Update account permission duplication [#545](https://github.com/rokwire/core-building-block/issues/545)
+- Deleting application roles and groups uses bad accounts query [#536](https://github.com/rokwire/core-building-block/issues/536)
+
+### Changed
+- BREAKING: Permission assigners should be OR instead of AND [#482](https://github.com/rokwire/core-building-block/issues/482)]
+
+## [1.24.2] - 2022-08-08
+### Added
+- Allow passing nil context to WithContext storage functions [#494](https://github.com/rokwire/core-building-block/issues/494)
+- Account system configs [#558](https://github.com/rokwire/core-building-block/issues/558)
+
+### Fixed
+- Authorization policy comments not working [#506](https://github.com/rokwire/core-building-block/issues/506)
+
+## [1.24.1] - 2022-07-07
+### Changed
+- Expose full roles/groups in accounts [#528](https://github.com/rokwire/core-building-block/issues/528)
+
+## [1.24.0] - 2022-07-07
+### Added
+- Admin update account authorizations API [#484](https://github.com/rokwire/core-building-block/issues/484)
+- Set up admin create account endpoint [#365](https://github.com/rokwire/core-building-block/issues/365)
 - Prepare the project to become open source [#129](https://github.com/rokwire/core-building-block/issues/129)
 - Retrieve all service account tokens at once [#459](https://github.com/rokwire/core-building-block/issues/459)
 
 ### Fixed
+- Fix admin authorization endpoints [#515](https://github.com/rokwire/core-building-block/issues/515)
 - Clean up authorization policies [#499](https://github.com/rokwire/core-building-block/issues/499)
 - Prevent admins from using service account management endpoints [#500](https://github.com/rokwire/core-building-block/issues/500)
 
 ### Changed
+- Get all admin level accounts [#486](https://github.com/rokwire/core-building-block/issues/486)
 - Update SECURITY.md [#504](https://github.com/rokwire/core-building-block/issues/504)
 
 ## [1.23.0] - 2022-04-26
@@ -288,7 +322,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Users authentication polish [#155](https://github.com/rokwire/core-building-block/issues/155)
 - Optimise the Mongo DB collections indexes usage [#146](https://github.com/rokwire/core-building-block/issues/146)
 
-[Unreleased]: https://github.com/rokwire/core-building-block/compare/v1.23.0...HEAD
+[Unreleased]: https://github.com/rokwire/core-building-block/compare/v1.24.1...HEAD
+[1.24.1]: https://github.com/rokwire/core-building-block/compare/v1.24.0...v1.24.1
+[1.24.0]: https://github.com/rokwire/core-building-block/compare/v1.23.0...v1.24.0
 [1.23.0]: https://github.com/rokwire/core-building-block/compare/v1.22.0...v1.23.0
 [1.22.0]: https://github.com/rokwire/core-building-block/compare/v1.21.1...v1.22.0
 [1.21.1]: https://github.com/rokwire/core-building-block/compare/v1.21.0...v1.21.1
