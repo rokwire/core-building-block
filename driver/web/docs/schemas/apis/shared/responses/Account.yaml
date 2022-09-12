@@ -14,8 +14,6 @@ properties:
   system_configs:
     type: object
     nullable: true
-  has_permissions:
-    type: boolean
   system:
     type: boolean
   permissions:

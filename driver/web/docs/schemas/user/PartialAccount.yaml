@@ -27,8 +27,6 @@ properties:
     type: boolean
   username:
     type: string
-  has_permissions:
-    type: boolean
   permissions:
     type: array
     items:

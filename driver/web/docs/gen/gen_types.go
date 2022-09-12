@@ -272,8 +272,7 @@ type AccountAuthTypeFields_Params struct {
 
 // AccountFields defines model for AccountFields.
 type AccountFields struct {
-	HasPermissions bool   `json:"has_permissions"`
-	Id             string `json:"id"`
+	Id string `json:"id"`
 }
 
 // AdminToken defines model for AdminToken.
@@ -505,23 +504,22 @@ type OrganizationFieldsType string
 
 // PartialAccount defines model for PartialAccount.
 type PartialAccount struct {
-	Anonymous      bool                    `json:"anonymous"`
-	AppId          string                  `json:"app_id"`
-	AuthTypes      []AccountAuthTypeFields `json:"auth_types"`
-	DateCreated    string                  `json:"date_created"`
-	DateUpdated    *string                 `json:"date_updated"`
-	FirstName      string                  `json:"first_name"`
-	Groups         []AppOrgGroup           `json:"groups"`
-	HasPermissions *bool                   `json:"has_permissions,omitempty"`
-	Id             string                  `json:"id"`
-	LastName       string                  `json:"last_name"`
-	OrgId          string                  `json:"org_id"`
-	Params         *map[string]interface{} `json:"params"`
-	Permissions    []Permission            `json:"permissions"`
-	Roles          []AppOrgRole            `json:"roles"`
-	System         *bool                   `json:"system,omitempty"`
-	SystemConfigs  *map[string]interface{} `json:"system_configs"`
-	Username       *string                 `json:"username,omitempty"`
+	Anonymous     bool                    `json:"anonymous"`
+	AppId         string                  `json:"app_id"`
+	AuthTypes     []AccountAuthTypeFields `json:"auth_types"`
+	DateCreated   string                  `json:"date_created"`
+	DateUpdated   *string                 `json:"date_updated"`
+	FirstName     string                  `json:"first_name"`
+	Groups        []AppOrgGroup           `json:"groups"`
+	Id            string                  `json:"id"`
+	LastName      string                  `json:"last_name"`
+	OrgId         string                  `json:"org_id"`
+	Params        *map[string]interface{} `json:"params"`
+	Permissions   []Permission            `json:"permissions"`
+	Roles         []AppOrgRole            `json:"roles"`
+	System        *bool                   `json:"system,omitempty"`
+	SystemConfigs *map[string]interface{} `json:"system_configs"`
+	Username      *string                 `json:"username,omitempty"`
 }
 
 // Permission defines model for Permission.
@@ -1001,7 +999,6 @@ type SharedResAccount struct {
 	Anonymous               *bool                    `json:"anonymous,omitempty"`
 	AuthTypes               *[]AccountAuthTypeFields `json:"auth_types,omitempty"`
 	Groups                  *[]AppOrgGroup           `json:"groups,omitempty"`
-	HasPermissions          *bool                    `json:"has_permissions,omitempty"`
 	Id                      string                   `json:"id"`
 	LastAccessTokenDate     *string                  `json:"last_access_token_date,omitempty"`
 	LastLoginDate           *string                  `json:"last_login_date,omitempty"`

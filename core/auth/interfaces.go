@@ -564,18 +564,18 @@ type Storage interface {
 	FindPermissions(context storage.TransactionContext, ids []string) ([]model.Permission, error)
 	FindPermissionsByName(context storage.TransactionContext, names []string) ([]model.Permission, error)
 	InsertAccountPermissions(context storage.TransactionContext, accountID string, permissions []model.Permission) error
-	UpdateAccountPermissions(context storage.TransactionContext, accountID string, hasPermissions bool, permissions []model.Permission) error
+	UpdateAccountPermissions(context storage.TransactionContext, accountID string, permissions []model.Permission) error
 
 	//ApplicationRoles
 	FindAppOrgRolesByIDs(context storage.TransactionContext, ids []string, appOrgID string) ([]model.AppOrgRole, error)
 	//AccountRoles
-	UpdateAccountRoles(context storage.TransactionContext, accountID string, hasPermissions bool, roles []model.AccountRole) error
+	UpdateAccountRoles(context storage.TransactionContext, accountID string, roles []model.AccountRole) error
 	InsertAccountRoles(context storage.TransactionContext, accountID string, appOrgID string, roles []model.AccountRole) error
 
 	//ApplicationGroups
 	FindAppOrgGroupsByIDs(context storage.TransactionContext, ids []string, appOrgID string) ([]model.AppOrgGroup, error)
 	//AccountGroups
-	UpdateAccountGroups(context storage.TransactionContext, accountID string, hasPermissions bool, groups []model.AccountGroup) error
+	UpdateAccountGroups(context storage.TransactionContext, accountID string, groups []model.AccountGroup) error
 	InsertAccountGroups(context storage.TransactionContext, accountID string, appOrgID string, groups []model.AccountGroup) error
 }
 

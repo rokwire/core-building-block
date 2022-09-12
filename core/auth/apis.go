@@ -696,14 +696,12 @@ func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID
 				newPermissions = append(newPermissions, unchangedPermissions...)
 			}
 
-			hasPermissions := len(newPermissions) > 0 || len(updatedAccount.Roles) > 0 || len(updatedAccount.Groups) > 0
-			err = a.storage.UpdateAccountPermissions(context, account.ID, hasPermissions, newPermissions)
+			err = a.storage.UpdateAccountPermissions(context, account.ID, newPermissions)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionUpdate, "admin account permissions", nil, err)
 			}
 
 			updatedAccount.Permissions = newPermissions
-			updatedAccount.HasPermissions = hasPermissions
 			updated = true
 		}
 
@@ -736,14 +734,12 @@ func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID
 			}
 
 			newAccountRoles := model.AccountRolesFromAppOrgRoles(newRoles, true, true)
-			hasPermissions := len(updatedAccount.Permissions) > 0 || len(newAccountRoles) > 0 || len(updatedAccount.Groups) > 0
-			err = a.storage.UpdateAccountRoles(context, account.ID, hasPermissions, newAccountRoles)
+			err = a.storage.UpdateAccountRoles(context, account.ID, newAccountRoles)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionUpdate, "admin account roles", nil, err)
 			}
 
 			updatedAccount.Roles = newAccountRoles
-			updatedAccount.HasPermissions = hasPermissions
 			updated = true
 		}
 
@@ -776,14 +772,12 @@ func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID
 			}
 
 			newAccountGroups := model.AccountGroupsFromAppOrgGroups(newGroups, true, true)
-			hasPermissions := len(updatedAccount.Permissions) > 0 || len(updatedAccount.Roles) > 0 || len(newAccountGroups) > 0
-			err = a.storage.UpdateAccountGroups(context, account.ID, hasPermissions, newAccountGroups)
+			err = a.storage.UpdateAccountGroups(context, account.ID, newAccountGroups)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionUpdate, "admin account groups", nil, err)
 			}
 
 			updatedAccount.Groups = newAccountGroups
-			updatedAccount.HasPermissions = hasPermissions
 			updated = true
 		}
 

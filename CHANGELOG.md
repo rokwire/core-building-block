@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add default assigners permission [#477](https://github.com/rokwire/core-building-block/issues/477)
 
 ### Fixed
+- Fix has_permissions for existing accounts [#531](https://github.com/rokwire/core-building-block/issues/531)
 - Service registration error handling change [#468](https://github.com/rokwire/core-building-block/issues/468)
 - Update account permission duplication [#545](https://github.com/rokwire/core-building-block/issues/545)
 - Deleting application roles and groups uses bad accounts query [#536](https://github.com/rokwire/core-building-block/issues/536)
