@@ -1063,11 +1063,11 @@ paths:
     delete:
       tags:
         - Services
-      summary: Delete user account
+      summary: Delete account
       description: |
-        Deletes a user account
+        Deletes account
 
-        **Auth:** Requires user auth token
+        **Auth:** Requires auth token
       security:
         - bearerAuth: []
       responses:
@@ -1087,11 +1087,11 @@ paths:
     get:
       tags:
         - Services
-      summary: Get user account
+      summary: Get account
       description: |
-        Get the user account
+        Gets account
 
-        **Auth:** Requires user auth token
+        **Auth:** Requires auth token
       security:
         - bearerAuth: []
       responses:
@@ -1214,7 +1214,7 @@ paths:
       description: |
         Updates account preferences
 
-        **Auth:** Requires user auth token
+        **Auth:** Requires auth token
       security:
         - bearerAuth: []
       requestBody:
@@ -1243,9 +1243,9 @@ paths:
         - Services
       summary: Get preferences
       description: |
-        Returns a user preferences
+        Returns account preferences
 
-        **Auth:** Requires user auth token
+        **Auth:** Requires auth token
       security:
         - bearerAuth: []
       responses:
@@ -1324,7 +1324,7 @@ paths:
       description: |
         Returns account system configs
 
-        **Auth:** Requires user auth token
+        **Auth:** Requires auth token
       security:
         - bearerAuth: []
       responses:
@@ -1335,6 +1335,38 @@ paths:
               schema:
                 type: object
                 nullable: true
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /services/account/username:
+    put:
+      tags:
+        - Services
+      summary: Update account username
+      description: |
+        Update the username associated with the user's account
+
+        **Auth:** Requires user access token
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: Username
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Username'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
         '400':
           description: Bad request
         '401':
@@ -1664,7 +1696,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_admin_res_app-token'
+                $ref: '#/components/schemas/AdminToken'
         '400':
           description: Bad request
         '401':
@@ -1775,6 +1807,38 @@ paths:
       responses:
         '200':
           description: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /admin/account/username:
+    put:
+      tags:
+        - Admin
+      summary: Update account username
+      description: |
+        Update the username associated with the user's account
+
+        **Auth:** Requires user access token
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: Username
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Username'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
         '400':
           description: Bad request
         '401':
@@ -2246,6 +2310,14 @@ paths:
           explode: false
           schema:
             type: string
+        - name: create-anonymous
+          in: query
+          description: Create anonymous account if account with ID cannot be found. Default is `false`
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: boolean
       requestBody:
         description: Account system configs (will be merged with existing configs)
         content:
@@ -3117,6 +3189,47 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/_services_res_service-accounts_access-tokens'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /system/auth/app-org-token:
+    get:
+      tags:
+        - System
+      summary: App org token
+      description: |
+        Retrieve a system token for the specified application and organization
+
+        **Auth:** Requires system access token
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: app_id
+          in: query
+          description: The application ID of the token to return
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+        - name: org_id
+          in: query
+          description: The organization ID of the token to return
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminToken'
         '400':
           description: Bad request
         '401':
@@ -5029,6 +5142,13 @@ components:
         explanation:
           description: Explanation displayed to users for why this scope is requested/required
           type: string
+    AdminToken:
+      required:
+        - token
+      type: object
+      properties:
+        token:
+          type: string
     APIKey:
       required:
         - app_id
@@ -5107,6 +5227,8 @@ components:
           $ref: '#/components/schemas/ApplicationOrganization'
         system:
           type: boolean
+        username:
+          type: string
         permissions:
           type: array
           items:
@@ -5135,6 +5257,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Device'
+        anonymous:
+          type: boolean
     PartialAccount:
       required:
         - id
@@ -5145,6 +5269,7 @@ components:
         - permissions
         - roles
         - groups
+        - anonymous
         - auth_types
         - date_created
       type: object
@@ -5162,6 +5287,8 @@ components:
           type: string
         system:
           type: boolean
+        username:
+          type: string
         permissions:
           type: array
           items:
@@ -5184,6 +5311,8 @@ components:
         params:
           type: object
           nullable: true
+        anonymous:
+          type: boolean
         date_created:
           readOnly: true
           type: string
@@ -5238,6 +5367,13 @@ components:
         country:
           type: string
           nullable: true
+    Username:
+      required:
+        - username
+      type: object
+      properties:
+        username:
+          type: string
     AccountAuthType:
       type: object
       properties:
@@ -5332,6 +5468,9 @@ components:
           $ref: '#/components/schemas/_shared_req_ProfileNullable'
         preferences:
           type: object
+          nullable: true
+        username:
+          type: string
           nullable: true
     _shared_req_Login_Mfa:
       required:
@@ -5454,6 +5593,9 @@ components:
             type: string
         profile:
           $ref: '#/components/schemas/_shared_req_ProfileNullable'
+        username:
+          type: string
+          nullable: true
     _shared_req_UpdateAccount:
       required:
         - auth_type
@@ -5735,6 +5877,8 @@ components:
       properties:
         id:
           type: string
+        username:
+          type: string
         profile:
           $ref: '#/components/schemas/ProfileFields'
         preferences:
@@ -5761,6 +5905,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AccountAuthTypeFields'
+        anonymous:
+          type: boolean
         last_login_date:
           type: string
         last_access_token_date:
@@ -6069,13 +6215,6 @@ components:
         version:
           type: string
           description: conforms major.minor.patch format
-    _admin_res_app-token:
-      required:
-        - token
-      type: object
-      properties:
-        token:
-          type: string
     _admin_req_create-application_role:
       required:
         - name

@@ -297,7 +297,11 @@ func (app *application) admDeleteAppOrgGroup(ID string, appID string, orgID stri
 		return errors.WrapErrorAction("error checking the accounts count by group id", "", nil, err)
 	}
 	if *numberOfAccounts > 0 {
-		return errors.Newf("the %s is already used by account and cannot be deleted", group.Name)
+		accountString := "accounts"
+		if *numberOfAccounts == 1 {
+			accountString = "account"
+		}
+		return errors.Newf("%s is used by %d %s and cannot be deleted", group.Name, *numberOfAccounts, accountString)
 	}
 
 	//7. delete the group
@@ -347,6 +351,9 @@ func (app *application) admAddAccountsToGroup(appID string, orgID string, groupI
 	//ensure that the accounts do not have the group before adding
 	updateAccounts := make([]model.Account, 0)
 	for _, account := range accounts {
+		if account.Anonymous {
+			return errors.Newf("cannot grant permissions to anonymous accounts: ID=%s", account.ID)
+		}
 		if account.GetGroup(groupID) == nil {
 			updateAccounts = append(updateAccounts, account)
 		}
@@ -506,7 +513,11 @@ func (app *application) admDeleteAppOrgRole(ID string, appID string, orgID strin
 		return errors.WrapErrorAction("error checking the accounts count by role id", "", nil, err)
 	}
 	if *numberOfAccounts > 0 {
-		return errors.Newf("%s is already used by account and cannot be deleted", role.Name)
+		accountString := "accounts"
+		if *numberOfAccounts == 1 {
+			accountString = "account"
+		}
+		return errors.Newf("%s is used by %d %s and cannot be deleted", role.Name, *numberOfAccounts, accountString)
 	}
 
 	//6. check if the role has groups relations
@@ -515,7 +526,11 @@ func (app *application) admDeleteAppOrgRole(ID string, appID string, orgID strin
 		return errors.WrapErrorAction("error checking the groups count by role id", "", nil, err)
 	}
 	if *numberOfGroups > 0 {
-		return errors.Newf("%s is already used by groups and cannot be deleted", role.Name)
+		groupString := "groups"
+		if *numberOfGroups == 1 {
+			groupString = "group"
+		}
+		return errors.Newf("%s is used by %d %s and cannot be deleted", role.Name, *numberOfGroups, groupString)
 	}
 
 	//7. delete the role
@@ -545,9 +560,9 @@ func (app *application) admGetApplicationPermissions(appID string, orgID string,
 }
 
 func (app *application) admGetAccounts(limit int, offset int, appID string, orgID string, accountID *string, firstName *string, lastName *string, authType *string,
-	authTypeIdentifier *string, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error) {
+	authTypeIdentifier *string, anonymous *bool, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error) {
 	//find the accounts
-	accounts, err := app.storage.FindAccounts(limit, offset, appID, orgID, accountID, firstName, lastName, authType, authTypeIdentifier, hasPermissions, permissions, roleIDs, groupIDs)
+	accounts, err := app.storage.FindAccounts(limit, offset, appID, orgID, accountID, firstName, lastName, authType, authTypeIdentifier, anonymous, hasPermissions, permissions, roleIDs, groupIDs)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
@@ -555,7 +570,7 @@ func (app *application) admGetAccounts(limit int, offset int, appID string, orgI
 }
 
 func (app *application) admGetAccount(accountID string) (*model.Account, error) {
-	return app.getAccount(accountID)
+	return app.sharedGetAccount(accountID)
 }
 
 func (app *application) admGetAccountSystemConfigs(appID string, orgID string, accountID string, l *logs.Log) (map[string]interface{}, error) {
@@ -575,12 +590,12 @@ func (app *application) admGetAccountSystemConfigs(appID string, orgID string, a
 	return account.SystemConfigs, nil
 }
 
-func (app *application) admUpdateAccountSystemConfigs(appID string, orgID string, accountID string, configs map[string]interface{}, l *logs.Log) error {
-	//TODO: If account does not exist, create anonymous account
+func (app *application) admUpdateAccountSystemConfigs(appID string, orgID string, accountID string, configs map[string]interface{}, createAnonymous bool, l *logs.Log) (bool, error) {
 	if len(configs) == 0 {
-		return errors.New("no new configs")
+		return false, errors.New("no new configs")
 	}
 
+	created := false
 	transaction := func(context storage.TransactionContext) error {
 		//1. verify that the account is for the current app/org
 		account, err := app.storage.FindAccountByID(context, accountID)
@@ -588,7 +603,16 @@ func (app *application) admUpdateAccountSystemConfigs(appID string, orgID string
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountSystemConfigs, &logutils.FieldArgs{"account_id": accountID}, err)
 		}
 		if account == nil {
-			return errors.WrapErrorData(logutils.StatusMissing, model.TypeAccountSystemConfigs, &logutils.FieldArgs{"account_id": accountID}, err)
+			if !createAnonymous {
+				return errors.WrapErrorData(logutils.StatusMissing, model.TypeAccountSystemConfigs, &logutils.FieldArgs{"account_id": accountID}, err)
+			}
+
+			created = true
+			_, err = app.auth.CreateAnonymousAccount(context, appID, orgID, accountID, nil, configs, true, l)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionCreate, model.TypeAccount, nil, err)
+			}
+			return nil
 		}
 		if account.AppOrg.Application.ID != appID || account.AppOrg.Organization.ID != orgID {
 			l.Warnf("someone is trying to update system configs for %s for different app/org", accountID)
@@ -617,7 +641,8 @@ func (app *application) admUpdateAccountSystemConfigs(appID string, orgID string
 		return nil
 	}
 
-	return app.storage.PerformTransaction(transaction)
+	err := app.storage.PerformTransaction(transaction)
+	return created, err
 }
 
 func (app *application) admGetApplicationLoginSessions(appID string, orgID string, identifier *string, accountAuthTypeIdentifier *string,
@@ -695,6 +720,9 @@ func (app *application) admGrantAccountPermissions(appID string, orgID string, a
 		}
 		if account == nil {
 			return errors.WrapErrorData(logutils.StatusMissing, model.TypeAccount, &logutils.FieldArgs{"account_id": accountID}, err)
+		}
+		if account.Anonymous {
+			return errors.Newf("cannot grant permissions to anonymous accounts: ID=%s", accountID)
 		}
 		if (account.AppOrg.Application.ID != appID) || (account.AppOrg.Organization.ID != orgID) {
 			l.Warnf("someone is trying to grant permissions to %s for different app/org", accountID)
@@ -808,6 +836,9 @@ func (app *application) admGrantAccountRoles(appID string, orgID string, account
 		}
 		if account == nil {
 			return errors.WrapErrorData(logutils.StatusMissing, model.TypeAccount, &logutils.FieldArgs{"account_id": accountID}, err)
+		}
+		if account.Anonymous {
+			return errors.Newf("cannot grant roles to anonymous accounts: ID=%s", accountID)
 		}
 		if (account.AppOrg.Application.ID != appID) || (account.AppOrg.Organization.ID != orgID) {
 			l.Warnf("someone is trying to grant roles to %s for different app/org", accountID)

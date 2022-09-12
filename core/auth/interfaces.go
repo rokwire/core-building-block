@@ -142,9 +142,9 @@ type APIs interface {
 	//			Params (interface{}): authType-specific set of parameters passed back to client
 	//			State (string): login state used if account is enrolled in MFA
 	//		MFA types ([]model.MFAType): list of MFA types account is enrolled in
-	Login(ipAddress string, deviceType string, deviceOS *string, deviceID string,
-		authenticationType string, creds string, apiKey string, appTypeIdentifier string, orgID string, params string, clientVersion *string,
-		profile model.Profile, preferences map[string]interface{}, admin bool, l *logs.Log) (*string, *model.LoginSession, []model.MFAType, error)
+	Login(ipAddress string, deviceType string, deviceOS *string, deviceID string, authenticationType string, creds string, apiKey string,
+		appTypeIdentifier string, orgID string, params string, clientVersion *string, profile model.Profile, preferences map[string]interface{},
+		username string, admin bool, l *logs.Log) (*string, *model.LoginSession, []model.MFAType, error)
 
 	//Logout logouts an account from app/org
 	//	Input:
@@ -233,12 +233,16 @@ type APIs interface {
 	LoginMFA(apiKey string, accountID string, sessionID string, identifier string, mfaType string, mfaCode string, state string, l *logs.Log) (*string, *model.LoginSession, error)
 
 	//CreateAdminAccount creates an account for a new admin user
-	CreateAdminAccount(authenticationType string, appID string, orgID string, identifier string, profile model.Profile,
-		permissions []string, roleIDs []string, groupIDs []string, creatorPermissions []string, clientVersion *string, l *logs.Log) (*model.Account, map[string]interface{}, error)
+	CreateAdminAccount(authenticationType string, appID string, orgID string, identifier string, profile model.Profile, username string, permissions []string,
+		roleIDs []string, groupIDs []string, creatorPermissions []string, clientVersion *string, l *logs.Log) (*model.Account, map[string]interface{}, error)
 
 	//UpdateAdminAccount updates an existing user's account with new permissions, roles, and groups
 	UpdateAdminAccount(authenticationType string, appID string, orgID string, identifier string, permissions []string, roleIDs []string,
 		groupIDs []string, updaterPermissions []string, l *logs.Log) (*model.Account, map[string]interface{}, error)
+
+	//CreateAnonymousAccount creates a new anonymous account
+	CreateAnonymousAccount(context storage.TransactionContext, appID string, orgID string, anonymousID string, preferences map[string]interface{},
+		systemConfigs map[string]interface{}, skipExistsCheck bool, l *logs.Log) (*model.Account, error)
 
 	//VerifyCredential verifies credential (checks the verification code in the credentials collection)
 	VerifyCredential(id string, verification string, l *logs.Log) error
@@ -405,8 +409,8 @@ type APIs interface {
 	//DeleteAccount deletes an account for the given id
 	DeleteAccount(id string) error
 
-	//GetAdminToken returns an admin token for the specified application
-	GetAdminToken(claims tokenauth.Claims, appID string, l *logs.Log) (string, error)
+	//GetAdminToken returns an admin token for the specified application and organization
+	GetAdminToken(claims tokenauth.Claims, appID string, orgID string, l *logs.Log) (string, error)
 
 	//GetAuthKeySet generates a JSON Web Key Set for auth service registration
 	GetAuthKeySet() (*model.JSONWebKeySet, error)
@@ -470,6 +474,7 @@ type Storage interface {
 	//Accounts
 	FindAccount(context storage.TransactionContext, appOrgID string, authTypeID string, accountAuthTypeIdentifier string) (*model.Account, error)
 	FindAccountByID(context storage.TransactionContext, id string) (*model.Account, error)
+	FindAccountsByUsername(context storage.TransactionContext, appOrg *model.ApplicationOrganization, username string) ([]model.Account, error)
 	InsertAccount(context storage.TransactionContext, account model.Account) (*model.Account, error)
 	SaveAccount(context storage.TransactionContext, account *model.Account) error
 	DeleteAccount(context storage.TransactionContext, id string) error

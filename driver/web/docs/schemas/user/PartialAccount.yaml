@@ -7,6 +7,7 @@ required:
   - permissions
   - roles
   - groups
+  - anonymous
   - auth_types
   - date_created
 type: object
@@ -24,6 +25,8 @@ properties:
     type: string
   system:
     type: boolean
+  username:
+    type: string
   permissions:
     type: array
     items:
@@ -46,6 +49,8 @@ properties:
   params:
     type: object
     nullable: true
+  anonymous:
+    type: boolean
   date_created:
     readOnly: true
     type: string

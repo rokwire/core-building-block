@@ -46,6 +46,8 @@ const (
 	ErrorStatusSharedCredentialUnverified string = "shared-credential-unverified"
 	//ErrorStatusNotAllowed ...
 	ErrorStatusNotAllowed string = "not-allowed"
+	//ErrorStatusUsernameTaken ...
+	ErrorStatusUsernameTaken string = "username-taken"
 
 	//Character sets for password generation
 	upper   string = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -137,6 +139,7 @@ func GetIP(l *logs.Log, r *http.Request) string {
 	if IPAddress == "" {
 		IPAddress = r.RemoteAddr
 	}
+	l.AddContext("ip_address", IPAddress)
 	return IPAddress
 }
 

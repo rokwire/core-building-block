@@ -45,7 +45,7 @@ func (a *Auth) GetHost() string {
 	return a.host
 }
 
-// Login logs a user in a specific application using the specified credentials and authentication method.
+// Login logs a user into a specific application using the specified credentials and authentication method.
 // The authentication method must be one of the supported for the application.
 //
 //	Input:
@@ -72,9 +72,9 @@ func (a *Auth) GetHost() string {
 //			Params (interface{}): authType-specific set of parameters passed back to client
 //			State (string): login state used if account is enrolled in MFA
 //		MFA types ([]model.MFAType): list of MFA types account is enrolled in
-func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, deviceID string,
-	authenticationType string, creds string, apiKey string, appTypeIdentifier string, orgID string, params string, clientVersion *string,
-	profile model.Profile, preferences map[string]interface{}, admin bool, l *logs.Log) (*string, *model.LoginSession, []model.MFAType, error) {
+func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, deviceID string, authenticationType string, creds string, apiKey string,
+	appTypeIdentifier string, orgID string, params string, clientVersion *string, profile model.Profile, preferences map[string]interface{},
+	username string, admin bool, l *logs.Log) (*string, *model.LoginSession, []model.MFAType, error) {
 	//TODO - analyse what should go in one transaction
 
 	//validate if the provided auth type is supported by the provided application and organization
@@ -111,14 +111,18 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 		anonymous = true
 
 		anonymousID := ""
-		anonymousID, responseParams, err = a.applyAnonymousAuthType(*authType, creds)
+		var account *model.Account
+		anonymousID, account, responseParams, err = a.applyAnonymousAuthType(*authType, creds)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction("apply anonymous auth type", "user", nil, err)
 		}
 		sub = anonymousID
 
+		if account != nil {
+			accountAuthType = &model.AccountAuthType{Account: *account}
+		}
 	} else if authType.IsExternal {
-		accountAuthType, responseParams, mfaTypes, externalIDs, err = a.applyExternalAuthType(*authType, *appType, *appOrg, creds, params, clientVersion, profile, preferences, admin, l)
+		accountAuthType, responseParams, mfaTypes, externalIDs, err = a.applyExternalAuthType(*authType, *appType, *appOrg, creds, params, clientVersion, profile, preferences, username, admin, l)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction("apply external auth type", "user", nil, err)
 
@@ -126,7 +130,7 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 
 		sub = accountAuthType.Account.ID
 	} else {
-		message, accountAuthType, mfaTypes, externalIDs, err = a.applyAuthType(*authType, *appOrg, creds, params, clientVersion, profile, preferences, admin, l)
+		message, accountAuthType, mfaTypes, externalIDs, err = a.applyAuthType(*authType, *appOrg, creds, params, clientVersion, profile, preferences, username, admin, l)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction("apply auth type", "user", nil, err)
 		}
@@ -168,7 +172,7 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 	return nil, &model.LoginSession{ID: loginSession.ID, Identifier: loginSession.Identifier, Params: responseParams, State: loginSession.State}, mfaTypes, nil
 }
 
-// Logout logouts an account from app/org
+// Logout logs out an account from app/org
 //
 //	Input:
 //		allSessions (bool): If to remove the current session only or all sessions for the app/org for the account
@@ -276,6 +280,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 		l.Infof("there is no a session for refresh token - %s", refreshToken)
 		return nil, nil
 	}
+	l.SetContext("account_id", loginSession.Identifier)
 
 	//check if the session is expired
 	if loginSession.IsExpired() {
@@ -565,7 +570,7 @@ func (a *Auth) LoginMFA(apiKey string, accountID string, sessionID string, ident
 }
 
 // CreateAdminAccount creates an account for a new admin user
-func (a *Auth) CreateAdminAccount(authenticationType string, appID string, orgID string, identifier string, profile model.Profile,
+func (a *Auth) CreateAdminAccount(authenticationType string, appID string, orgID string, identifier string, profile model.Profile, username string,
 	permissions []string, roleIDs []string, groupIDs []string, creatorPermissions []string, clientVersion *string, l *logs.Log) (*model.Account, map[string]interface{}, error) {
 	//TODO: add admin authentication policies that specify which auth types may be used for each app org
 	if authenticationType != AuthTypeOidc && authenticationType != AuthTypeEmail && !strings.HasSuffix(authenticationType, "_oidc") {
@@ -596,7 +601,7 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appID string, orgID
 		profile.DateCreated = time.Now().UTC()
 		if authType.IsExternal {
 			externalUser := model.ExternalSystemUser{Identifier: identifier}
-			accountAuthType, err = a.applySignUpAdminExternal(context, *authType, *appOrg, externalUser, profile, permissions, roleIDs, groupIDs, creatorPermissions, clientVersion, l)
+			accountAuthType, err = a.applySignUpAdminExternal(context, *authType, *appOrg, externalUser, profile, username, permissions, roleIDs, groupIDs, creatorPermissions, clientVersion, l)
 			if err != nil {
 				return errors.WrapErrorAction("signing up", "admin user", &logutils.FieldArgs{"auth_type": authType.Code, "identifier": identifier}, err)
 			}
@@ -607,7 +612,7 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appID string, orgID
 			}
 
 			profile.Email = identifier
-			params, accountAuthType, err = a.applySignUpAdmin(context, authImpl, account, *authType, *appOrg, identifier, "", profile, permissions, roleIDs, groupIDs, creatorPermissions, clientVersion, l)
+			params, accountAuthType, err = a.applySignUpAdmin(context, authImpl, account, *authType, *appOrg, identifier, "", profile, username, permissions, roleIDs, groupIDs, creatorPermissions, clientVersion, l)
 			if err != nil {
 				return errors.WrapErrorAction("signing up", "admin user", &logutils.FieldArgs{"auth_type": authType.Code, "identifier": identifier}, err)
 			}
@@ -800,6 +805,49 @@ func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID
 	return updatedAccount, params, nil
 }
 
+// CreateAnonymousAccount creates a new anonymous account
+func (a *Auth) CreateAnonymousAccount(context storage.TransactionContext, appID string, orgID string, anonymousID string, preferences map[string]interface{},
+	systemConfigs map[string]interface{}, skipExistsCheck bool, l *logs.Log) (*model.Account, error) {
+	// check if the provided auth type is supported by the provided application and organization
+	authType, appOrg, err := a.validateAuthTypeForAppOrg(AuthTypeAnonymous, appID, orgID)
+	if err != nil || appOrg == nil {
+		return nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
+	}
+
+	// create account
+	var newAccount *model.Account
+	transaction := func(context storage.TransactionContext) error {
+		//1. check if the user exists
+		if context == nil || !skipExistsCheck {
+			account, err := a.storage.FindAccountByID(context, anonymousID)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+			}
+			if account != nil {
+				return errors.ErrorData(logutils.StatusFound, model.TypeAccount, &logutils.FieldArgs{"app_org_id": appOrg.ID, "auth_type": authType.Code, "account_id": anonymousID})
+			}
+		}
+
+		newAccount, err = a.applyCreateAnonymousAccount(context, *appOrg, anonymousID, preferences, systemConfigs, l)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionCreate, "anonymous account", &logutils.FieldArgs{"account_id": anonymousID}, err)
+		}
+
+		return nil
+	}
+
+	if context == nil {
+		err = a.storage.PerformTransaction(transaction)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionCreate, "anonymous account", nil, err)
+		}
+	} else {
+		transaction(context)
+	}
+
+	return newAccount, nil
+}
+
 // VerifyCredential verifies credential (checks the verification code in the credentials collection)
 func (a *Auth) VerifyCredential(id string, verification string, l *logs.Log) error {
 	credential, err := a.storage.FindCredential(nil, id)
@@ -987,6 +1035,8 @@ func (a *Auth) ForgotCredential(authenticationType string, appTypeIdentifier str
 	if credential == nil {
 		return errors.New("Invalid account auth type for reset link")
 	}
+	a.setLogContext(account, l)
+
 	//do not allow to reset credential for unverified credentials
 	err = a.checkCredentialVerified(authImpl, accountAuthType, l)
 	if err != nil {
@@ -1033,6 +1083,7 @@ func (a *Auth) SendVerifyCredential(authenticationType string, appTypeIdentifier
 	if accountAuthType == nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountAuthType, nil, err)
 	}
+	a.setLogContext(account, l)
 	credential := accountAuthType.Credential
 	if credential == nil {
 		return errors.New("Invalid account auth type for reset link")
@@ -1507,18 +1558,18 @@ func (a *Auth) AuthorizeService(claims tokenauth.Claims, serviceID string, appro
 	return token, authorization.Scopes, nil, nil
 }
 
-// GetAdminToken returns an admin token for the specified application
-func (a *Auth) GetAdminToken(claims tokenauth.Claims, appID string, l *logs.Log) (string, error) {
+// GetAdminToken returns an admin token for the specified application and organization
+func (a *Auth) GetAdminToken(claims tokenauth.Claims, appID string, orgID string, l *logs.Log) (string, error) {
 	//verify that the provided appID is valid for the organization
-	appOrg, err := a.storage.FindApplicationOrganization(appID, claims.OrgID)
+	appOrg, err := a.storage.FindApplicationOrganization(appID, orgID)
 	if err != nil {
-		return "", errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"org_id": claims.OrgID, "app_id": appID}, err)
+		return "", errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"org_id": orgID, "app_id": appID}, err)
 	}
 	if appOrg == nil {
-		return "", errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"org_id": claims.OrgID, "app_id": appID})
+		return "", errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"org_id": orgID, "app_id": appID})
 	}
 
-	adminClaims := a.getStandardClaims(claims.Subject, claims.UID, claims.Name, claims.Email, claims.Phone, claims.Audience, claims.OrgID, appID, claims.AuthType,
+	adminClaims := a.getStandardClaims(claims.Subject, claims.UID, claims.Name, claims.Email, claims.Phone, claims.Audience, orgID, appID, claims.AuthType,
 		claims.ExternalIDs, &claims.ExpiresAt, false, false, true, claims.System, claims.Service, claims.FirstParty, claims.SessionID)
 	return a.buildAccessToken(adminClaims, claims.Permissions, claims.Scope)
 }
@@ -1626,7 +1677,7 @@ func (a *Auth) InitializeSystemAccount(context storage.TransactionContext, authT
 	profile := model.Profile{ID: uuid.NewString(), Email: email, DateCreated: now}
 	permissions := []string{allSystemPermission}
 
-	_, accountAuthType, err := a.applySignUpAdmin(context, authImpl, nil, authType, appOrg, email, password, profile, permissions, nil, nil, permissions, &clientVersion, l)
+	_, accountAuthType, err := a.applySignUpAdmin(context, authImpl, nil, authType, appOrg, email, password, profile, "", permissions, nil, nil, permissions, &clientVersion, l)
 	if err != nil {
 		return "", errors.WrapErrorAction("signing up", "initial system user", &logutils.FieldArgs{"email": email}, err)
 	}

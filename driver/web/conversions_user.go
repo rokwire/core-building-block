@@ -36,11 +36,18 @@ func accountToDef(item model.Account) *Def.SharedResAccount {
 	groups := accountGroupsToDef(item.GetActiveGroups())
 	//account auth types
 	authTypes := accountAuthTypesToDef(item.AuthTypes)
+	//username
+	var username *string
+	if item.Username != "" {
+		username = &item.Username
+	}
 	//account usage information
 	lastLoginDate := utils.FormatTime(item.LastLoginDate)
 	lastAccessTokenDate := utils.FormatTime(item.LastAccessTokenDate)
-	return &Def.SharedResAccount{Id: item.ID, System: &item.AppOrg.Organization.System, Permissions: &permissions, Roles: &roles, Groups: &groups, AuthTypes: &authTypes, Profile: profile,
-		Preferences: preferences, SystemConfigs: systemConfigs, LastLoginDate: &lastLoginDate, LastAccessTokenDate: &lastAccessTokenDate, MostRecentClientVersion: item.MostRecentClientVersion}
+
+	return &Def.SharedResAccount{Id: item.ID, Anonymous: &item.Anonymous, System: &item.AppOrg.Organization.System, Permissions: &permissions, Roles: &roles, Groups: &groups, AuthTypes: &authTypes, Username: username, Profile: profile,
+		Preferences: preferences, SystemConfigs: systemConfigs,
+		LastLoginDate: &lastLoginDate, LastAccessTokenDate: &lastAccessTokenDate, MostRecentClientVersion: item.MostRecentClientVersion}
 }
 
 func accountsToDef(items []model.Account) []Def.SharedResAccount {
@@ -72,14 +79,19 @@ func partialAccountToDef(item model.Account, params map[string]interface{}) *Def
 		formatted := utils.FormatTime(item.DateUpdated)
 		dateUpdated = &formatted
 	}
+	//username
+	var username *string
+	if item.Username != "" {
+		username = &item.Username
+	}
 
 	//params
 	var paramsData *map[string]interface{}
 	if params != nil {
 		paramsData = &params
 	}
-	return &Def.PartialAccount{Id: item.ID, AppId: item.AppOrg.Application.ID, OrgId: item.AppOrg.Organization.ID, FirstName: item.Profile.FirstName,
-		LastName: item.Profile.LastName, System: &item.AppOrg.Organization.System, Permissions: permissions, Roles: roles, Groups: groups,
+	return &Def.PartialAccount{Id: item.ID, Anonymous: item.Anonymous, AppId: item.AppOrg.Application.ID, OrgId: item.AppOrg.Organization.ID, FirstName: item.Profile.FirstName,
+		LastName: item.Profile.LastName, Username: username, System: &item.AppOrg.Organization.System, Permissions: permissions, Roles: roles, Groups: groups,
 		SystemConfigs: systemConfigs, AuthTypes: authTypes, DateCreated: dateCreated, DateUpdated: dateUpdated, Params: paramsData}
 }
 

@@ -33,6 +33,7 @@ type account struct {
 
 	MFATypes []mfaType `bson:"mfa_types,omitempty"`
 
+	Username      string                 `bson:"username"`
 	ExternalIDs   map[string]string      `bson:"external_ids"`
 	Preferences   map[string]interface{} `bson:"preferences"`
 	SystemConfigs map[string]interface{} `bson:"system_configs"`
@@ -40,7 +41,7 @@ type account struct {
 
 	Devices []userDevice `bson:"devices,omitempty"`
 
-	// Anonymous bool         `bson:"anonymous"`
+	Anonymous bool `bson:"anonymous"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`

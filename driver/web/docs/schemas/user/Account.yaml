@@ -6,6 +6,8 @@ properties:
     $ref: "../application/ApplicationOrganization.yaml"
   system:
     type: boolean
+  username:
+    type: string
   permissions:
     type: array
     items:
@@ -34,3 +36,5 @@ properties:
     type: array
     items:
       $ref: "./Device.yaml"
+  anonymous:
+    type: boolean
