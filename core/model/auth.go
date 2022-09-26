@@ -43,6 +43,8 @@ const (
 	TypeIdentityProvider logutils.MessageDataType = "identity provider"
 	//TypeIdentityProviderConfig identity provider config type
 	TypeIdentityProviderConfig logutils.MessageDataType = "identity provider config"
+	//TypeIdentityProviderSetting identity provider setting type
+	TypeIdentityProviderSetting logutils.MessageDataType = "identity provider setting"
 	//TypeUserAuth user auth type
 	TypeUserAuth logutils.MessageDataType = "user auth"
 	//TypeAuthCred auth cred type

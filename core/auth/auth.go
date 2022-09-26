@@ -300,13 +300,22 @@ func (a *Auth) applySignUpExternal(context storage.TransactionContext, authType 
 	}
 
 	//2. apply profile data from the external user if not provided
-	_, err = a.applyProfileDataFromExternalUser(profile, externalUser, nil, l)
+	_, err = a.applyProfileDataFromExternalUser(profile, externalUser, nil, false, l)
 	if err != nil {
 		return nil, errors.WrapErrorAction("error applying profile data from external user on registration", model.TypeProfile, nil, err)
 	}
 
 	//3. roles and groups mapping
-	externalRoles, externalGroups, err := a.getExternalUserAuthorization(externalUser, appOrg, authType)
+	identityProviderID, ok := authType.Params["identity_provider"].(string)
+	if !ok {
+		return nil, errors.ErrorData(logutils.StatusMissing, "identity provider id", nil)
+	}
+	identityProviderSetting := appOrg.FindIdentityProviderSetting(identityProviderID)
+	if identityProviderSetting == nil {
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeIdentityProviderSetting, nil)
+	}
+
+	externalRoles, externalGroups, err := a.getExternalUserAuthorization(externalUser, identityProviderSetting)
 	if err != nil {
 		l.WarnAction(logutils.ActionGet, "external authorization", err)
 	}
@@ -397,7 +406,7 @@ func (a *Auth) prepareExternalUserData(authType model.AuthType, appOrg model.App
 }
 
 func (a *Auth) applyProfileDataFromExternalUser(profile *model.Profile, newExternalUser model.ExternalSystemUser,
-	currentExternalUser *model.ExternalSystemUser, l *logs.Log) (bool, error) {
+	currentExternalUser *model.ExternalSystemUser, alwaysSync bool, l *logs.Log) (bool, error) {
 	l.Info("applyProfileDataFromExternalUser")
 
 	if profile == nil {
@@ -407,17 +416,17 @@ func (a *Auth) applyProfileDataFromExternalUser(profile *model.Profile, newExter
 
 	changed := false
 	//first name
-	if len(newExternalUser.FirstName) > 0 && (len(profile.FirstName) == 0 || (currentExternalUser != nil && currentExternalUser.FirstName != newExternalUser.FirstName)) {
+	if len(newExternalUser.FirstName) > 0 && (alwaysSync || len(profile.FirstName) == 0 || (currentExternalUser != nil && currentExternalUser.FirstName != newExternalUser.FirstName)) {
 		profile.FirstName = newExternalUser.FirstName
 		changed = true
 	}
 	//last name
-	if len(newExternalUser.LastName) > 0 && (len(profile.LastName) == 0 || (currentExternalUser != nil && currentExternalUser.LastName != newExternalUser.LastName)) {
+	if len(newExternalUser.LastName) > 0 && (alwaysSync || len(profile.LastName) == 0 || (currentExternalUser != nil && currentExternalUser.LastName != newExternalUser.LastName)) {
 		profile.LastName = newExternalUser.LastName
 		changed = true
 	}
 	//email
-	if len(newExternalUser.Email) > 0 && (len(profile.Email) == 0 || (currentExternalUser != nil && currentExternalUser.Email != newExternalUser.Email)) {
+	if len(newExternalUser.Email) > 0 && (alwaysSync || len(profile.Email) == 0 || (currentExternalUser != nil && currentExternalUser.Email != newExternalUser.Email)) {
 		profile.Email = newExternalUser.Email
 		changed = true
 	}
@@ -450,6 +459,15 @@ func (a *Auth) updateExternalUserIfNeeded(accountAuthType model.AccountAuthType,
 	err = json.Unmarshal(currentDataJSON, &currentData)
 	if err != nil {
 		return nil, errors.ErrorAction(logutils.ActionUnmarshal, "external user", nil)
+	}
+
+	identityProviderID, ok := authType.Params["identity_provider"].(string)
+	if !ok {
+		return nil, errors.ErrorData(logutils.StatusMissing, "identity provider id", nil)
+	}
+	identityProviderSetting := appOrg.FindIdentityProviderSetting(identityProviderID)
+	if identityProviderSetting == nil {
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeIdentityProviderSetting, nil)
 	}
 
 	//check if external system user needs to be updated
@@ -493,13 +511,13 @@ func (a *Auth) updateExternalUserIfNeeded(accountAuthType model.AccountAuthType,
 			}
 
 			// 4. update profile
-			_, err = a.applyProfileDataFromExternalUser(&account.Profile, externalUser, currentData, l)
+			_, err = a.applyProfileDataFromExternalUser(&account.Profile, externalUser, currentData, identityProviderSetting.AlwaysSyncProfile, l)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeProfile, nil, err)
 			}
 
 			// 5. update roles and groups mapping
-			roles, groups, err := a.getExternalUserAuthorization(externalUser, appOrg, authType)
+			roles, groups, err := a.getExternalUserAuthorization(externalUser, identityProviderSetting)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionGet, "external authorization", nil, err)
 			}
@@ -2225,14 +2243,9 @@ func (a *Auth) getExp(exp *int64) int64 {
 	return *exp
 }
 
-func (a *Auth) getExternalUserAuthorization(externalUser model.ExternalSystemUser, appOrg model.ApplicationOrganization, authType model.AuthType) ([]string, []string, error) {
-	identityProviderID, ok := authType.Params["identity_provider"].(string)
-	if !ok {
-		return nil, nil, errors.ErrorData(logutils.StatusMissing, "identitiy provider id", nil)
-	}
-	identityProviderSetting := appOrg.FindIdentityProviderSetting(identityProviderID)
+func (a *Auth) getExternalUserAuthorization(externalUser model.ExternalSystemUser, identityProviderSetting *model.IdentityProviderSetting) ([]string, []string, error) {
 	if identityProviderSetting == nil {
-		return nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeIdentityProvider, nil)
+		return nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeIdentityProviderSetting, nil)
 	}
 
 	//roles
