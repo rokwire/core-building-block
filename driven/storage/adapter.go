@@ -1290,7 +1290,7 @@ func (sa *Adapter) SaveAccount(context TransactionContext, account *model.Accoun
 	filter := bson.M{"_id": account.ID}
 	err := sa.db.accounts.ReplaceOneWithContext(context, filter, storageAccount, nil)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountUsageInfo, nil, err)
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, nil, err)
 	}
 
 	return nil

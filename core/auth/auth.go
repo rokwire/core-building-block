@@ -407,11 +407,8 @@ func (a *Auth) prepareExternalUserData(authType model.AuthType, appOrg model.App
 
 func (a *Auth) applyProfileDataFromExternalUser(profile *model.Profile, newExternalUser model.ExternalSystemUser,
 	currentExternalUser *model.ExternalSystemUser, alwaysSync bool, l *logs.Log) (bool, error) {
-	l.Info("applyProfileDataFromExternalUser")
-
 	if profile == nil {
-		l.Error("for some reasons the profile is nil")
-		return false, errors.New("for some reasons the profile is nil")
+		return false, errors.ErrorData(logutils.StatusMissing, model.TypeProfile, nil)
 	}
 
 	changed := false
@@ -460,82 +457,83 @@ func (a *Auth) updateExternalUserIfNeeded(accountAuthType model.AccountAuthType,
 
 	//check if external system user needs to be updated
 	var newAccount *model.Account
-	if !currentData.Equals(externalUser) {
-		//there is changes so we need to update it
-		//TODO: Can we do this all in a single storage operation?
-		accountAuthType.Params["user"] = externalUser
-		now := time.Now()
-		accountAuthType.DateUpdated = &now
+	//there is changes so we need to update it
+	//TODO: Can we do this all in a single storage operation?
+	accountAuthType.Params["user"] = externalUser
+	now := time.Now()
+	accountAuthType.DateUpdated = &now
 
-		transaction := func(context storage.TransactionContext) error {
-			//1. first find the account record
-			account, err := a.storage.FindAccountByAuthTypeID(context, accountAuthType.ID)
-			if err != nil {
-				return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
-			}
-			if account == nil {
-				return errors.ErrorAction(logutils.ActionFind, "for some reason account is nil for account auth type", &logutils.FieldArgs{"account auth type id": accountAuthType.ID})
-			}
+	transaction := func(context storage.TransactionContext) error {
+		//1. first find the account record
+		account, err := a.storage.FindAccountByAuthTypeID(context, accountAuthType.ID)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+		}
+		if account == nil {
+			return errors.ErrorData(logutils.StatusMissing, model.TypeAccount, &logutils.FieldArgs{"account_auth_type_id": accountAuthType.ID})
+		}
 
-			//2. update the account auth type in the account record
-			newAccountAuthTypes := make([]model.AccountAuthType, len(account.AuthTypes))
-			for j, aAuthType := range account.AuthTypes {
-				if aAuthType.ID == accountAuthType.ID {
-					newAccountAuthTypes[j] = accountAuthType
-				} else {
-					newAccountAuthTypes[j] = aAuthType
-				}
+		updated := false
+		//2. update the account auth type in the account record
+		newAccountAuthTypes := make([]model.AccountAuthType, len(account.AuthTypes))
+		for j, aAuthType := range account.AuthTypes {
+			if aAuthType.ID == accountAuthType.ID {
+				updated = !aAuthType.Equals(accountAuthType)
+				newAccountAuthTypes[j] = accountAuthType
+			} else {
+				newAccountAuthTypes[j] = aAuthType
 			}
-			account.AuthTypes = newAccountAuthTypes
+		}
+		account.AuthTypes = newAccountAuthTypes
 
-			// 3. update external ids
-			for k, v := range externalUser.ExternalIDs {
-				if account.ExternalIDs == nil {
-					account.ExternalIDs = make(map[string]string)
-				}
-				if account.ExternalIDs[k] != v {
-					account.ExternalIDs[k] = v
-				}
+		// 3. update external ids
+		for k, v := range externalUser.ExternalIDs {
+			if account.ExternalIDs == nil {
+				account.ExternalIDs = make(map[string]string)
 			}
+			if account.ExternalIDs[k] != v {
+				updated = true
+				account.ExternalIDs[k] = v
+			}
+		}
 
-			// 4. update profile
-			_, err = a.applyProfileDataFromExternalUser(&account.Profile, externalUser, currentData, identityProviderSetting.AlwaysSyncProfile, l)
-			if err != nil {
-				return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeProfile, nil, err)
-			}
+		// 4. update profile
+		profileUpdated, err := a.applyProfileDataFromExternalUser(&account.Profile, externalUser, currentData, identityProviderSetting.AlwaysSyncProfile, l)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeProfile, nil, err)
+		}
 
-			// 5. update roles and groups mapping
-			roles, groups, err := a.getExternalUserAuthorization(externalUser, identityProviderSetting)
-			if err != nil {
-				return errors.WrapErrorAction(logutils.ActionGet, "external authorization", nil, err)
-			}
-			_, err = a.updateExternalAccountRoles(account, roles)
-			if err != nil {
-				return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountRoles, nil, err)
-			}
+		// 5. update roles and groups mapping
+		roles, groups, err := a.getExternalUserAuthorization(externalUser, identityProviderSetting)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionGet, "external authorization", nil, err)
+		}
+		rolesUpdated, err := a.updateExternalAccountRoles(account, roles)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountRoles, nil, err)
+		}
+		groupsUpdated, err := a.updateExternalAccountGroups(account, groups)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountGroups, nil, err)
+		}
 
-			_, err = a.updateExternalAccountGroups(account, groups)
-			if err != nil {
-				return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountGroups, nil, err)
-			}
-
+		// 6. update account if needed
+		if updated || profileUpdated || rolesUpdated || groupsUpdated {
 			err = a.storage.SaveAccount(context, account)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionSave, model.TypeAccount, nil, err)
 			}
-
-			newAccount = account
-			return nil
 		}
 
-		err = a.storage.PerformTransaction(transaction)
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeUserAuth, nil, err)
-		}
-		return newAccount, nil
+		newAccount = account
+		return nil
 	}
 
-	return nil, nil
+	err = a.storage.PerformTransaction(transaction)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeUserAuth, nil, err)
+	}
+	return newAccount, nil
 }
 
 func (a *Auth) applyAnonymousAuthType(authType model.AuthType, creds string) (string, *model.Account, map[string]interface{}, error) { //auth type

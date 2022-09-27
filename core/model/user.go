@@ -387,6 +387,41 @@ func (aat *AccountAuthType) SetUnverified(value bool) {
 	}
 }
 
+// Equals checks if two account auth types are equal
+func (aat *AccountAuthType) Equals(other AccountAuthType) bool {
+	if aat.Identifier != other.Identifier {
+		return false
+	}
+	if aat.Account.ID != other.Account.ID {
+		return false
+	}
+	if aat.AuthType.Code != other.AuthType.Code {
+		return false
+	}
+	if aat.Active != other.Active {
+		return false
+	}
+	if aat.Unverified != other.Unverified {
+		return false
+	}
+	if aat.Linked != other.Linked {
+		return false
+	}
+	if !utils.DeepEqual(aat.Params, other.Params) {
+		return false
+	}
+
+	thisCred := aat.Credential
+	otherCred := other.Credential
+	if (thisCred != nil) != (otherCred != nil) {
+		return false
+	} else if thisCred != nil && otherCred != nil && (thisCred.ID != otherCred.ID) {
+		return false
+	}
+
+	return true
+}
+
 // Credential represents a credential for account auth type/s
 type Credential struct {
 	ID string
