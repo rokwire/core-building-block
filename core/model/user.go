@@ -39,6 +39,8 @@ const (
 	TypeAccountRoles logutils.MessageDataType = "account roles"
 	//TypeAccountUsageInfo account usage information
 	TypeAccountUsageInfo logutils.MessageDataType = "account usage information"
+	//TypeExternalSystemUser external system user
+	TypeExternalSystemUser logutils.MessageDataType = "external system user"
 	//TypeMFAType mfa type
 	TypeMFAType logutils.MessageDataType = "mfa type"
 	//TypeAccountGroups account groups

@@ -269,9 +269,9 @@ func (a *Auth) applySignInExternal(account *model.Account, authType model.AuthTy
 	}
 
 	//check if need to update the account data
-	newAccount, err := a.updateDataIfNeeded(*accountAuthType, externalUser, authType, appOrg, l)
+	newAccount, err := a.updateExternalUserIfNeeded(*accountAuthType, externalUser, authType, appOrg, l)
 	if err != nil {
-		return nil, errors.WrapErrorAction("update account if needed", "", nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeExternalSystemUser, nil, err)
 	}
 
 	if newAccount != nil {
@@ -381,7 +381,7 @@ func (a *Auth) prepareExternalUserData(authType model.AuthType, appOrg model.App
 		l.Infof("%s uses a shared profile", externalUser.Identifier)
 
 		//merge client profile and shared profile
-		profile = a.mergeClientAndSharedProfile(regProfile, *sharedProfile)
+		profile = a.mergeProfiles(regProfile, sharedProfile, true)
 		preferences = regPreferences
 	} else {
 		l.Infof("%s does not use a shared profile", externalUser.Identifier)
@@ -431,18 +431,6 @@ func (a *Auth) applyProfileDataFromExternalUser(profile *model.Profile, newExter
 		changed = true
 	}
 	return changed, nil
-}
-
-func (a *Auth) updateDataIfNeeded(accountAuthType model.AccountAuthType, externalUser model.ExternalSystemUser,
-	authType model.AuthType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.Account, error) {
-	l.Info("updateDataIfNeeded")
-
-	account, err := a.updateExternalUserIfNeeded(accountAuthType, externalUser, authType, appOrg, l)
-	if err != nil {
-		return nil, errors.WrapErrorAction("error on updating external user if needed", "", nil, err)
-	}
-
-	return account, nil
 }
 
 func (a *Auth) updateExternalUserIfNeeded(accountAuthType model.AccountAuthType, externalUser model.ExternalSystemUser,
@@ -770,7 +758,7 @@ func (a *Auth) signUpNewAccount(context storage.TransactionContext, authImpl aut
 		}
 
 		//merge client profile and shared profile
-		profile = a.mergeClientAndSharedProfile(regProfile, *sharedProfile)
+		profile = a.mergeProfiles(regProfile, sharedProfile, true)
 		preferences = regPreferences
 
 		credential = sharedCredential
@@ -821,26 +809,6 @@ func (a *Auth) signUpNewAccount(context storage.TransactionContext, authImpl aut
 	}
 
 	return retParams, accountAuthType, nil
-}
-
-func (a *Auth) mergeClientAndSharedProfile(clientData model.Profile, sharedProfile model.Profile) model.Profile {
-	clientData.ID = sharedProfile.ID
-
-	clientData.PhotoURL = utils.SetStringIfEmpty(clientData.PhotoURL, sharedProfile.PhotoURL)
-	clientData.FirstName = utils.SetStringIfEmpty(clientData.FirstName, sharedProfile.FirstName)
-	clientData.LastName = utils.SetStringIfEmpty(clientData.LastName, sharedProfile.LastName)
-	clientData.Email = utils.SetStringIfEmpty(clientData.Email, sharedProfile.Email)
-	clientData.Phone = utils.SetStringIfEmpty(clientData.Phone, sharedProfile.Phone)
-	clientData.Address = utils.SetStringIfEmpty(clientData.Address, sharedProfile.Address)
-	clientData.ZipCode = utils.SetStringIfEmpty(clientData.ZipCode, sharedProfile.ZipCode)
-	clientData.State = utils.SetStringIfEmpty(clientData.State, sharedProfile.State)
-	clientData.Country = utils.SetStringIfEmpty(clientData.Country, sharedProfile.Country)
-
-	if clientData.BirthYear == 0 {
-		clientData.BirthYear = sharedProfile.BirthYear
-	}
-
-	return clientData
 }
 
 func (a *Auth) applySharedProfile(app model.Application, authTypeID string, userIdentifier string, l *logs.Log) (bool, *model.Profile, *model.Credential, error) {
@@ -1290,12 +1258,12 @@ func (a *Auth) prepareRegistrationData(authType model.AuthType, identifier strin
 	readyProfile := profile
 	//if there is profile bb data
 	if gotProfile != nil {
-		readyProfile = a.prepareProfile(profile, *gotProfile)
+		readyProfile = a.mergeProfiles(profile, gotProfile, false)
 	}
 	readyPreferences := preferences
 	//if there is preferences bb data
 	if gotPreferences != nil {
-		readyPreferences = a.preparePreferences(preferences, gotPreferences)
+		readyPreferences = a.mergePreferences(preferences, gotPreferences)
 	}
 
 	//generate profile ID
@@ -1340,25 +1308,32 @@ func (a *Auth) prepareAccountAuthType(authType model.AuthType, identifier string
 	return accountAuthType, credential, nil
 }
 
-func (a *Auth) prepareProfile(clientData model.Profile, profileBBData model.Profile) model.Profile {
-	clientData.PhotoURL = utils.SetStringIfEmpty(clientData.PhotoURL, profileBBData.PhotoURL)
-	clientData.FirstName = utils.SetStringIfEmpty(clientData.FirstName, profileBBData.FirstName)
-	clientData.LastName = utils.SetStringIfEmpty(clientData.LastName, profileBBData.LastName)
-	clientData.Email = utils.SetStringIfEmpty(clientData.Email, profileBBData.Email)
-	clientData.Phone = utils.SetStringIfEmpty(clientData.Phone, profileBBData.Phone)
-	clientData.Address = utils.SetStringIfEmpty(clientData.Address, profileBBData.Address)
-	clientData.ZipCode = utils.SetStringIfEmpty(clientData.ZipCode, profileBBData.ZipCode)
-	clientData.State = utils.SetStringIfEmpty(clientData.State, profileBBData.State)
-	clientData.Country = utils.SetStringIfEmpty(clientData.Country, profileBBData.Country)
-
-	if clientData.BirthYear == 0 {
-		clientData.BirthYear = profileBBData.BirthYear
+func (a *Auth) mergeProfiles(dst model.Profile, src *model.Profile, shared bool) model.Profile {
+	if src == nil {
+		return dst
 	}
 
-	return clientData
+	dst.PhotoURL = utils.SetStringIfEmpty(dst.PhotoURL, src.PhotoURL)
+	dst.FirstName = utils.SetStringIfEmpty(dst.FirstName, src.FirstName)
+	dst.LastName = utils.SetStringIfEmpty(dst.LastName, src.LastName)
+	dst.Email = utils.SetStringIfEmpty(dst.Email, src.Email)
+	dst.Phone = utils.SetStringIfEmpty(dst.Phone, src.Phone)
+	dst.Address = utils.SetStringIfEmpty(dst.Address, src.Address)
+	dst.ZipCode = utils.SetStringIfEmpty(dst.ZipCode, src.ZipCode)
+	dst.State = utils.SetStringIfEmpty(dst.State, src.State)
+	dst.Country = utils.SetStringIfEmpty(dst.Country, src.Country)
+
+	if dst.BirthYear == 0 {
+		dst.BirthYear = src.BirthYear
+	}
+	if shared {
+		dst.ID = src.ID
+	}
+
+	return dst
 }
 
-func (a *Auth) preparePreferences(clientData map[string]interface{}, profileBBData map[string]interface{}) map[string]interface{} {
+func (a *Auth) mergePreferences(clientData map[string]interface{}, profileBBData map[string]interface{}) map[string]interface{} {
 	mergedData := profileBBData
 	for k, v := range clientData {
 		if profileBBData[k] == nil {
@@ -1441,7 +1416,7 @@ func (a *Auth) constructAccount(context storage.TransactionContext, authType mod
 	appOrg model.ApplicationOrganization, credential *model.Credential, unverified bool, externalIDs map[string]string, profile model.Profile, preferences map[string]interface{},
 	username string, permissionNames []string, roleIDs []string, groupIDs []string, assignerPermissions []string, clientVersion *string, l *logs.Log) (*model.AccountAuthType, error) {
 	//create account auth type
-	accountAuthType, credential, err := a.prepareAccountAuthType(authType, userIdentifier, accountAuthTypeParams, credential, unverified, false)
+	accountAuthType, _, err := a.prepareAccountAuthType(authType, userIdentifier, accountAuthTypeParams, credential, unverified, false)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeAccountAuthType, nil, err)
 	}
