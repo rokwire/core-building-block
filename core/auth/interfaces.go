@@ -531,7 +531,7 @@ type Storage interface {
 	FindServiceReg(serviceID string) (*model.ServiceReg, error)
 	InsertServiceReg(reg *model.ServiceReg) error
 	UpdateServiceReg(reg *model.ServiceReg) error
-	SaveServiceReg(reg *model.ServiceReg) error
+	SaveServiceReg(reg *model.ServiceReg, immediateCache bool) error
 	DeleteServiceReg(serviceID string) error
 
 	//IdentityProviders
