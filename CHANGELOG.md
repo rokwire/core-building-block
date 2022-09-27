@@ -9,15 +9,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Update app/org endpoint [#543](https://github.com/rokwire/core-building-block/issues/543)
 - Create app/org endpoint [#544](https://github.com/rokwire/core-building-block/issues/544)
+- Anonymous accounts [#559](https://github.com/rokwire/core-building-block/issues/559)
+- Usernames [#574](https://github.com/rokwire/core-building-block/issues/574)
+- Add release instructions to CONVENTIONS.md [#519](https://github.com/rokwire/core-building-block/issues/519)
+- Set up system app org token endpoint [#493](https://github.com/rokwire/core-building-block/issues/493)
 - Track usage info in accounts [#445](https://github.com/rokwire/core-building-block/issues/445)
 - Use signature Key ID to check specific key for service account auth [#481](https://github.com/rokwire/core-building-block/issues/481)
+- Allow overriding docs base URLs [#513](https://github.com/rokwire/core-building-block/issues/513)
 - Include account ID in request logs [#562](https://github.com/rokwire/core-building-block/issues/562)
 - Add system flag to login response [#552](https://github.com/rokwire/core-building-block/issues/552)
 - Add default assigners permission [#477](https://github.com/rokwire/core-building-block/issues/477)
 
 ### Fixed
+- Fix has_permissions for existing accounts [#531](https://github.com/rokwire/core-building-block/issues/531)
 - Service registration error handling change [#468](https://github.com/rokwire/core-building-block/issues/468)
 - Update account permission duplication [#545](https://github.com/rokwire/core-building-block/issues/545)
+- Deleting application roles and groups uses bad accounts query [#536](https://github.com/rokwire/core-building-block/issues/536)
+
+### Changed
+- BREAKING: Permission assigners should be OR instead of AND [#482](https://github.com/rokwire/core-building-block/issues/482)]
 
 ## [1.24.2] - 2022-08-08
 ### Added

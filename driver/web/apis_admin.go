@@ -96,11 +96,16 @@ func (h AdminApisHandler) login(l *logs.Log, r *http.Request, claims *tokenauth.
 	//profile ////
 	requestProfile := profileFromDefNullable(requestData.Profile)
 
+	username := ""
+	if requestData.Username != nil {
+		username = *requestData.Username
+	}
+
 	//device
 	requestDevice := requestData.Device
 
-	message, loginSession, mfaTypes, err := h.coreAPIs.Auth.Login(ip, string(requestDevice.Type), requestDevice.Os, *requestDevice.DeviceId,
-		string(requestData.AuthType), requestCreds, requestData.ApiKey, requestData.AppTypeIdentifier, requestData.OrgId, requestParams, &clientVersion, requestProfile, requestPreferences, true, l)
+	message, loginSession, mfaTypes, err := h.coreAPIs.Auth.Login(ip, string(requestDevice.Type), requestDevice.Os, *requestDevice.DeviceId, string(requestData.AuthType),
+		requestCreds, requestData.ApiKey, requestData.AppTypeIdentifier, requestData.OrgId, requestParams, &clientVersion, requestProfile, requestPreferences, username, true, l)
 	if err != nil {
 		loggingErr, ok := err.(*errors.Error)
 		if ok && loggingErr.Status() != "" {
@@ -153,6 +158,7 @@ func (h AdminApisHandler) loginMFA(l *logs.Log, r *http.Request, claims *tokenau
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("login mfa request"), nil, err, http.StatusBadRequest, true)
 	}
 
+	l.AddContext("account_id", mfaData.AccountId)
 	message, loginSession, err := h.coreAPIs.Auth.LoginMFA(mfaData.ApiKey, mfaData.AccountId, mfaData.SessionId, mfaData.Identifier, string(mfaData.Type), mfaData.Code, mfaData.State, l)
 	if message != nil {
 		return l.HttpResponseError(*message, err, http.StatusUnauthorized, false)
@@ -356,6 +362,16 @@ func (h AdminApisHandler) getApplicationAccounts(l *logs.Log, r *http.Request, c
 		}
 		hasPermissions = &hasPermissionsVal
 	}
+	//anonymous
+	var anonymous *bool
+	anonymousArg := r.URL.Query().Get("anonymous")
+	if anonymousArg != "" {
+		anonymousVal, err := strconv.ParseBool(anonymousArg)
+		if err != nil {
+			return l.HttpResponseErrorAction(logutils.ActionParse, logutils.TypeArg, logutils.StringArgs("anonymous"), err, http.StatusBadRequest, false)
+		}
+		anonymous = &anonymousVal
+	}
 	//permissions
 	var permissions []string
 	permissionsArg := r.URL.Query().Get("permissions")
@@ -375,7 +391,7 @@ func (h AdminApisHandler) getApplicationAccounts(l *logs.Log, r *http.Request, c
 		groupIDs = strings.Split(groupsArg, ",")
 	}
 
-	accounts, err := h.coreAPIs.Administration.AdmGetAccounts(limit, offset, claims.AppID, claims.OrgID, accountID, firstName, lastName, authType, authTypeIdentifier, hasPermissions, permissions, roleIDs, groupIDs)
+	accounts, err := h.coreAPIs.Administration.AdmGetAccounts(limit, offset, claims.AppID, claims.OrgID, accountID, firstName, lastName, authType, authTypeIdentifier, anonymous, hasPermissions, permissions, roleIDs, groupIDs)
 	if err != nil {
 		return l.HttpResponseErrorAction("error finding accounts", model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}
@@ -495,10 +511,15 @@ func (h AdminApisHandler) createAdminAccount(l *logs.Log, r *http.Request, claim
 		groupIDs = *requestData.GroupIds
 	}
 	profile := profileFromDefNullable(requestData.Profile)
-	creatorPermissions := strings.Split(claims.Permissions, ",")
 
+	username := ""
+	if requestData.Username != nil {
+		username = *requestData.Username
+	}
+
+	creatorPermissions := strings.Split(claims.Permissions, ",")
 	account, params, err := h.coreAPIs.Auth.CreateAdminAccount(string(requestData.AuthType), claims.AppID, claims.OrgID,
-		requestData.Identifier, profile, permissions, roleIDs, groupIDs, creatorPermissions, &clientVersion, l)
+		requestData.Identifier, profile, username, permissions, roleIDs, groupIDs, creatorPermissions, &clientVersion, l)
 	if err != nil || account == nil {
 		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}
@@ -653,18 +674,38 @@ func (h AdminApisHandler) verifyMFA(l *logs.Log, r *http.Request, claims *tokena
 	return l.HttpResponseSuccessJSON(response)
 }
 
+func (h AdminApisHandler) updateAccountUsername(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var username Def.Username
+	err = json.Unmarshal(data, &username)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeAccountUsername, nil, err, http.StatusBadRequest, true)
+	}
+
+	err = h.coreAPIs.Administration.AdmUpdateAccountUsername(claims.Subject, claims.AppID, claims.OrgID, username.Username)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeAccountUsername, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
 func (h AdminApisHandler) getAppToken(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	appID := r.URL.Query().Get("app_id")
 	if appID == "" {
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("app_id"), nil, http.StatusBadRequest, false)
 	}
 
-	token, err := h.coreAPIs.Auth.GetAdminToken(*claims, appID, l)
+	token, err := h.coreAPIs.Auth.GetAdminToken(*claims, appID, claims.OrgID, l)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, "app token", nil, err, http.StatusInternalServerError, true)
 	}
 
-	response := Def.AdminResAppToken{Token: token}
+	response := Def.AdminToken{Token: token}
 	responseJSON, err := json.Marshal(response)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, "app token", nil, err, http.StatusInternalServerError, false)
@@ -1014,6 +1055,12 @@ func (h AdminApisHandler) updateAccountSystemConfigs(l *logs.Log, r *http.Reques
 		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
 	}
 
+	var createAnonymous bool
+	createAnonymousArg := r.URL.Query().Get("create-anonymous")
+	if createAnonymousArg != "" {
+		createAnonymous, _ = strconv.ParseBool(createAnonymousArg)
+	}
+
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
@@ -1025,13 +1072,17 @@ func (h AdminApisHandler) updateAccountSystemConfigs(l *logs.Log, r *http.Reques
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, "system configs update request", nil, err, http.StatusBadRequest, true)
 	}
 
-	err = h.coreAPIs.Administration.AdmUpdateAccountSystemConfigs(claims.AppID, claims.OrgID, accountID, configs, l)
+	created, err := h.coreAPIs.Administration.AdmUpdateAccountSystemConfigs(claims.AppID, claims.OrgID, accountID, configs, createAnonymous, l)
 	if err != nil {
 		loggingErr, ok := err.(*errors.Error)
 		if ok && loggingErr.Status() == utils.ErrorStatusNotAllowed {
 			return l.HttpResponseError(http.StatusText(http.StatusForbidden), nil, http.StatusForbidden, false)
 		}
 		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeAccountSystemConfigs, nil, err, http.StatusInternalServerError, true)
+	}
+
+	if created {
+		return l.HttpResponseSuccessMessage("Created new anonymous account with ID " + accountID)
 	}
 
 	return l.HttpResponseSuccess()

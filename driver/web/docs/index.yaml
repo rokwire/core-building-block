@@ -75,6 +75,8 @@ paths:
     $ref: "./resources/services/account/profile.yaml"
   /services/account/system-configs:
     $ref: "./resources/services/account/system-configs.yaml"
+  /services/account/username:
+    $ref: "./resources/services/account/username.yaml"
   /services/test:
     $ref: "./resources/services/test.yaml"
   /services/application/configs:
@@ -99,6 +101,8 @@ paths:
     $ref: "./resources/admin/account.yaml"
   /admin/account/mfa:
     $ref: "./resources/admin/account/mfa.yaml"
+  /admin/account/username:
+    $ref: "./resources/admin/account/username.yaml"
   /admin/application/accounts:
     $ref: "./resources/admin/application/accounts.yaml"
   /admin/application/accounts/{id}/devices:
@@ -159,6 +163,8 @@ paths:
     $ref: "./resources/tps/access-tokens.yaml"
 
   #system
+  /system/auth/app-org-token:
+    $ref: "./resources/system/auth/app-org-token.yaml"
   /system/global-config:
     $ref: "./resources/system/global-config.yaml"
   /system/organizations/{id}:

@@ -35,6 +35,30 @@ type SystemApisHandler struct {
 	coreAPIs *core.APIs
 }
 
+func (h SystemApisHandler) getAppOrgToken(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	appID := r.URL.Query().Get("app_id")
+	if appID == "" {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("app_id"), nil, http.StatusBadRequest, false)
+	}
+	orgID := r.URL.Query().Get("org_id")
+	if orgID == "" {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("org_id"), nil, http.StatusBadRequest, false)
+	}
+
+	token, err := h.coreAPIs.Auth.GetAdminToken(*claims, appID, orgID, l)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionGet, "app org token", nil, err, http.StatusInternalServerError, true)
+	}
+
+	response := Def.AdminToken{Token: token}
+	responseJSON, err := json.Marshal(response)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, "app org token", nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessJSON(responseJSON)
+}
+
 // createGlobalConfig creates a global config
 func (h SystemApisHandler) createGlobalConfig(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)

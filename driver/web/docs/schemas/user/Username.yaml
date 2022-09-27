@@ -1,6 +1,6 @@
 required:
-  - id
+  - username
 type: object
 properties:
-  id:
+  username:
     type: string
