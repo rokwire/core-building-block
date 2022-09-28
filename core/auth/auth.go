@@ -414,18 +414,18 @@ func (a *Auth) applyProfileDataFromExternalUser(profile *model.Profile, newExter
 	changed := false
 	//first name
 	if len(newExternalUser.FirstName) > 0 && (alwaysSync || len(profile.FirstName) == 0 || (currentExternalUser != nil && currentExternalUser.FirstName != newExternalUser.FirstName)) {
+		changed = changed || (profile.FirstName != newExternalUser.FirstName)
 		profile.FirstName = newExternalUser.FirstName
-		changed = true
 	}
 	//last name
 	if len(newExternalUser.LastName) > 0 && (alwaysSync || len(profile.LastName) == 0 || (currentExternalUser != nil && currentExternalUser.LastName != newExternalUser.LastName)) {
+		changed = changed || (profile.LastName != newExternalUser.LastName)
 		profile.LastName = newExternalUser.LastName
-		changed = true
 	}
 	//email
 	if len(newExternalUser.Email) > 0 && (alwaysSync || len(profile.Email) == 0 || (currentExternalUser != nil && currentExternalUser.Email != newExternalUser.Email)) {
+		changed = changed || (profile.Email != newExternalUser.Email)
 		profile.Email = newExternalUser.Email
-		changed = true
 	}
 	return changed, nil
 }
@@ -459,6 +459,7 @@ func (a *Auth) updateExternalUserIfNeeded(accountAuthType model.AccountAuthType,
 	var newAccount *model.Account
 	//there is changes so we need to update it
 	//TODO: Can we do this all in a single storage operation?
+	updated := !currentData.Equals(externalUser)
 	accountAuthType.Params["user"] = externalUser
 	now := time.Now()
 	accountAuthType.DateUpdated = &now
@@ -473,12 +474,10 @@ func (a *Auth) updateExternalUserIfNeeded(accountAuthType model.AccountAuthType,
 			return errors.ErrorData(logutils.StatusMissing, model.TypeAccount, &logutils.FieldArgs{"account_auth_type_id": accountAuthType.ID})
 		}
 
-		updated := false
 		//2. update the account auth type in the account record
 		newAccountAuthTypes := make([]model.AccountAuthType, len(account.AuthTypes))
 		for j, aAuthType := range account.AuthTypes {
 			if aAuthType.ID == accountAuthType.ID {
-				updated = !aAuthType.Equals(accountAuthType)
 				newAccountAuthTypes[j] = accountAuthType
 			} else {
 				newAccountAuthTypes[j] = aAuthType
