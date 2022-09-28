@@ -1312,13 +1312,7 @@ func (sa *Adapter) UpdateAccountUsageInfo(context TransactionContext, accountID 
 	}
 	usageInfoUpdate := bson.M{"$set": update}
 
-	var res *mongo.UpdateResult
-	var err error
-	if context != nil {
-		res, err = sa.db.accounts.UpdateOneWithContext(context, filter, usageInfoUpdate, nil)
-	} else {
-		res, err = sa.db.accounts.UpdateOne(filter, usageInfoUpdate, nil)
-	}
+	res, err := sa.db.accounts.UpdateOneWithContext(context, filter, usageInfoUpdate, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountUsageInfo, nil, err)
 	}
@@ -3322,7 +3316,7 @@ func (sa *Adapter) SaveDevice(context TransactionContext, device *model.Device) 
 	opts := options.Replace().SetUpsert(true)
 	err := sa.db.devices.ReplaceOneWithContext(context, filter, storageDevice, opts)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionSave, "device", &logutils.FieldArgs{"device_id": device.ID}, nil)
+		return errors.WrapErrorAction(logutils.ActionSave, model.TypeDevice, &logutils.FieldArgs{"device_id": device.ID}, nil)
 	}
 
 	return nil
