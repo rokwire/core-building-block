@@ -5322,6 +5322,9 @@ components:
         date_updated:
           type: string
           nullable: true
+        external_ids:
+          type: object
+          nullable: true
     AccountFields:
       required:
         - id

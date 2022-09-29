@@ -463,6 +463,7 @@ type PartialAccount struct {
 	AuthTypes     []AccountAuthTypeFields `json:"auth_types"`
 	DateCreated   *string                 `json:"date_created,omitempty"`
 	DateUpdated   *string                 `json:"date_updated"`
+	ExternalIds   *map[string]interface{} `json:"external_ids"`
 	FirstName     string                  `json:"first_name"`
 	Groups        []AppOrgGroup           `json:"groups"`
 	Id            *string                 `json:"id,omitempty"`
