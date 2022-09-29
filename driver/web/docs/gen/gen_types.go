@@ -192,6 +192,7 @@ type Account struct {
 	AppOrg        *ApplicationOrganization `json:"app_org,omitempty"`
 	AuthTypes     *[]AccountAuthType       `json:"auth_types,omitempty"`
 	Devices       *[]Device                `json:"devices,omitempty"`
+	ExternalIds   *map[string]interface{}  `json:"external_ids"`
 	Fields        *AccountFields           `json:"fields,omitempty"`
 	Groups        *[]AppOrgGroup           `json:"groups,omitempty"`
 	Permissions   *[]Permission            `json:"permissions,omitempty"`
@@ -948,6 +949,7 @@ type SharedReqUpdateAccountAuthType string
 type SharedResAccount struct {
 	Anonymous               *bool                    `json:"anonymous,omitempty"`
 	AuthTypes               *[]AccountAuthTypeFields `json:"auth_types,omitempty"`
+	ExternalIds             *map[string]interface{}  `json:"external_ids"`
 	Groups                  *[]AppOrgGroup           `json:"groups,omitempty"`
 	Id                      string                   `json:"id"`
 	LastAccessTokenDate     *string                  `json:"last_access_token_date,omitempty"`

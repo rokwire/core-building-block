@@ -36,6 +36,11 @@ func accountToDef(item model.Account) *Def.SharedResAccount {
 	groups := accountGroupsToDef(item.GetActiveGroups())
 	//account auth types
 	authTypes := accountAuthTypesToDef(item.AuthTypes)
+	//external ids
+	externalIds := map[string]interface{}{}
+	for k, v := range item.ExternalIDs {
+		externalIds[k] = v
+	}
 	//username
 	var username *string
 	if item.Username != "" {
@@ -47,7 +52,7 @@ func accountToDef(item model.Account) *Def.SharedResAccount {
 
 	return &Def.SharedResAccount{Id: item.ID, Anonymous: &item.Anonymous, System: &item.AppOrg.Organization.System, Permissions: &permissions, Roles: &roles, Groups: &groups, AuthTypes: &authTypes, Username: username, Profile: profile,
 		Preferences: preferences, SystemConfigs: systemConfigs,
-		LastLoginDate: &lastLoginDate, LastAccessTokenDate: &lastAccessTokenDate, MostRecentClientVersion: item.MostRecentClientVersion}
+		LastLoginDate: &lastLoginDate, LastAccessTokenDate: &lastAccessTokenDate, MostRecentClientVersion: item.MostRecentClientVersion, ExternalIds: &externalIds}
 }
 
 func accountsToDef(items []model.Account) []Def.SharedResAccount {

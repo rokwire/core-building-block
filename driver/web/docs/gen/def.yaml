@@ -5248,6 +5248,9 @@ components:
         preferences:
           type: object
           nullable: true
+        external_ids:
+          type: object
+          nullable: true
         system_configs:
           type: object
           nullable: true
@@ -5913,6 +5916,9 @@ components:
           type: string
         most_recent_client_version:
           type: string
+        external_ids:
+          type: object
+          nullable: true
     _shared_res_AccountCheck:
       type: boolean
     _shared_res_RokwireToken:
