@@ -90,9 +90,9 @@ func partialAccountToDef(item model.Account, params map[string]interface{}) *Def
 	if params != nil {
 		paramsData = &params
 	}
-	return &Def.PartialAccount{Id: item.ID, Anonymous: item.Anonymous, AppId: item.AppOrg.Application.ID, OrgId: item.AppOrg.Organization.ID, FirstName: item.Profile.FirstName,
+	return &Def.PartialAccount{Id: &item.ID, Anonymous: item.Anonymous, AppId: item.AppOrg.Application.ID, OrgId: item.AppOrg.Organization.ID, FirstName: item.Profile.FirstName,
 		LastName: item.Profile.LastName, Username: username, System: &item.AppOrg.Organization.System, Permissions: permissions, Roles: roles, Groups: groups,
-		SystemConfigs: systemConfigs, AuthTypes: authTypes, DateCreated: dateCreated, DateUpdated: dateUpdated, Params: paramsData}
+		SystemConfigs: systemConfigs, AuthTypes: authTypes, DateCreated: &dateCreated, DateUpdated: dateUpdated, Params: paramsData}
 }
 
 func partialAccountsToDef(items []model.Account) []Def.PartialAccount {
@@ -131,7 +131,7 @@ func accountRoleToDef(item model.AccountRole) Def.AppOrgRole {
 		dateUpdated = &formatted
 	}
 
-	return Def.AppOrgRole{Id: item.Role.ID, Name: item.Role.Name, Description: &item.Role.Description, System: &item.Role.System, DateCreated: &dateCreated, DateUpdated: dateUpdated, Permissions: &permissions}
+	return Def.AppOrgRole{Id: &item.Role.ID, Name: item.Role.Name, Description: &item.Role.Description, System: &item.Role.System, DateCreated: &dateCreated, DateUpdated: dateUpdated, Permissions: &permissions}
 }
 
 func accountRolesToDef(items []model.AccountRole) []Def.AppOrgRole {
@@ -155,7 +155,7 @@ func accountGroupToDef(item model.AccountGroup) Def.AppOrgGroup {
 		dateUpdated = &formatted
 	}
 
-	return Def.AppOrgGroup{Id: item.Group.ID, Name: item.Group.Name, Description: &item.Group.Description, System: &item.Group.System, DateCreated: &dateCreated, DateUpdated: dateUpdated, Permissions: &permissions, Roles: &roles}
+	return Def.AppOrgGroup{Id: &item.Group.ID, Name: item.Group.Name, Description: &item.Group.Description, System: &item.Group.System, DateCreated: &dateCreated, DateUpdated: dateUpdated, Permissions: &permissions, Roles: &roles}
 }
 
 func accountGroupsToDef(items []model.AccountGroup) []Def.AppOrgGroup {
