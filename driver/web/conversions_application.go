@@ -102,9 +102,9 @@ func applicationPermissionsToDef(items []model.Permission) []Def.Permission {
 }
 
 // AppOrg
-func appOrgFromDef(item *Def.SystemReqUpdateAppOrg) (*model.ApplicationOrganization, error) {
+func appOrgFromDef(item *Def.AppOrg) *model.ApplicationOrganization {
 	if item == nil {
-		return nil, nil
+		return nil
 	}
 	var id string
 	if item.Id != nil {
@@ -115,14 +115,43 @@ func appOrgFromDef(item *Def.SystemReqUpdateAppOrg) (*model.ApplicationOrganizat
 		serviceIds = *item.ServicesIds
 	}
 
-	identityProviderSettings, _ := identityProviderSettingsFromDef(*item.IdentityProvidersSettings)
-	supportedAuthTypes, _ := supportedAuthTypesFromDef(*item.SupportedAuthTypes)
-	loginsSessionsSetting := loginSessionsSettingsFromDef(item.LoginsSessionsSettings)
+	identityProviderSettings := identityProviderSettingsFromDef(item.IdentityProviderSettings)
+	supportedAuthTypes := supportedAuthTypesFromDef(item.SupportedAuthTypes)
+	loginsSessionsSetting := loginSessionSettingsFromDef(item.LoginSessionSettings)
 
-	return &model.ApplicationOrganization{ID: id, ServicesIDs: serviceIds, IdentityProvidersSettings: identityProviderSettings, SupportedAuthTypes: supportedAuthTypes, LoginsSessionsSetting: *loginsSessionsSetting}, nil
+	return &model.ApplicationOrganization{ID: id, ServicesIDs: serviceIds, IdentityProvidersSettings: identityProviderSettings, SupportedAuthTypes: supportedAuthTypes, LoginsSessionsSetting: *loginsSessionsSetting}
 }
 
-func loginSessionsSettingsFromDef(item *Def.SystemReqAppOrgLoginsSessionsSettings) *model.LoginsSessionsSetting {
+func appOrgToDef(item *model.ApplicationOrganization) *Def.AppOrg {
+	if item == nil {
+		return nil
+	}
+
+	identityProviderSettings := identityProviderSettingsToDef(item.IdentityProvidersSettings)
+	supportedAuthTypes := supportedAuthTypesToDef(item.SupportedAuthTypes)
+	loginsSessionsSetting := loginSessionSettingsToDef(item.LoginsSessionsSetting)
+	return &Def.AppOrg{Id: &item.ID, AppId: item.Application.ID, OrgId: item.Organization.ID, ServicesIds: &item.ServicesIDs,
+		IdentityProviderSettings: &identityProviderSettings, SupportedAuthTypes: &supportedAuthTypes, LoginSessionSettings: &loginsSessionsSetting}
+}
+
+func appOrgsToDef(items []model.ApplicationOrganization) []Def.AppOrg {
+	if items == nil {
+		return nil
+	}
+	out := make([]Def.AppOrg, len(items))
+	for i, item := range items {
+		defItem := appOrgToDef(&item)
+		if defItem != nil {
+			out[i] = *defItem
+		} else {
+			out[i] = Def.AppOrg{}
+		}
+	}
+
+	return out
+}
+
+func loginSessionSettingsFromDef(item *Def.LoginSessionSettings) *model.LoginsSessionsSetting {
 	if item == nil {
 		return nil
 	}
@@ -133,44 +162,38 @@ func loginSessionsSettingsFromDef(item *Def.SystemReqAppOrgLoginsSessionsSetting
 	}
 	inactivityExpirePolicy := model.InactivityExpirePolicy{}
 	if item.InactivityExpirePolicy != nil {
-		inactivityExpirePolicy = model.InactivityExpirePolicy{Active: *item.InactivityExpirePolicy.Active, InactivityPeriod: *item.InactivityExpirePolicy.InactivityPeriod}
+		inactivityExpirePolicy = model.InactivityExpirePolicy{Active: item.InactivityExpirePolicy.Active, InactivityPeriod: item.InactivityExpirePolicy.InactivityPeriod}
 	}
 	tslExpirePolicy := model.TSLExpirePolicy{}
 	if item.TimeSinceLoginExpirePolicy != nil {
-		tslExpirePolicy = model.TSLExpirePolicy{Active: *item.TimeSinceLoginExpirePolicy.Active, TimeSinceLoginPeriod: *item.TimeSinceLoginExpirePolicy.TimeSinceLoginPeriod}
+		tslExpirePolicy = model.TSLExpirePolicy{Active: item.TimeSinceLoginExpirePolicy.Active, TimeSinceLoginPeriod: item.TimeSinceLoginExpirePolicy.TimeSinceLoginPeriod}
 	}
 	yearlyExpirePolicy := model.YearlyExpirePolicy{}
 	if item.YearlyExpirePolicy != nil {
-		var active bool
-		var day int
-		var month int
-		var hour int
-		var min int
-
-		if item.YearlyExpirePolicy.Active != nil {
-			active = *item.YearlyExpirePolicy.Active
-		}
-		if item.YearlyExpirePolicy.Day != nil {
-			day = *item.YearlyExpirePolicy.Day
-		}
-		if item.YearlyExpirePolicy.Month != nil {
-			month = *item.YearlyExpirePolicy.Month
-		}
-		if item.YearlyExpirePolicy.Hour != nil {
-			hour = *item.YearlyExpirePolicy.Hour
-		}
-		if item.YearlyExpirePolicy.Min != nil {
-			min = *item.YearlyExpirePolicy.Min
-		}
-		yearlyExpirePolicy = model.YearlyExpirePolicy{Active: active, Day: day, Month: month, Hour: hour, Min: min}
+		yearlyExpirePolicy = model.YearlyExpirePolicy{Active: item.YearlyExpirePolicy.Active, Day: item.YearlyExpirePolicy.Day, Month: item.YearlyExpirePolicy.Month,
+			Hour: item.YearlyExpirePolicy.Hour, Min: item.YearlyExpirePolicy.Min}
 	}
 
-	return &model.LoginsSessionsSetting{MaxConcurrentSessions: maxConcurrentSessions, InactivityExpirePolicy: inactivityExpirePolicy, TSLExpirePolicy: tslExpirePolicy, YearlyExpirePolicy: yearlyExpirePolicy}
+	return &model.LoginsSessionsSetting{MaxConcurrentSessions: maxConcurrentSessions, InactivityExpirePolicy: inactivityExpirePolicy,
+		TSLExpirePolicy: tslExpirePolicy, YearlyExpirePolicy: yearlyExpirePolicy}
 }
 
-func supportedAuthTypesFromDef(items []Def.SystemReqAppOrgSupportedAuthTypes) ([]model.AuthTypesSupport, error) {
-	out := make([]model.AuthTypesSupport, len(items))
-	for i, item := range items {
+func loginSessionSettingsToDef(item model.LoginsSessionsSetting) Def.LoginSessionSettings {
+	inactivityExpirePolicy := Def.InactiveExpirePolicy{Active: item.InactivityExpirePolicy.Active, InactivityPeriod: item.InactivityExpirePolicy.InactivityPeriod}
+	tslExpirePolicy := Def.TSLExpirePolicy{Active: item.TSLExpirePolicy.Active, TimeSinceLoginPeriod: item.TSLExpirePolicy.TimeSinceLoginPeriod}
+	yearlyExpirePolicy := Def.YearlyExpirePolicy{Active: item.YearlyExpirePolicy.Active, Day: item.YearlyExpirePolicy.Day, Month: item.YearlyExpirePolicy.Month,
+		Hour: item.YearlyExpirePolicy.Hour, Min: item.YearlyExpirePolicy.Min}
+
+	return Def.LoginSessionSettings{MaxConcurrentSessions: &item.MaxConcurrentSessions, InactivityExpirePolicy: &inactivityExpirePolicy,
+		TimeSinceLoginExpirePolicy: &tslExpirePolicy, YearlyExpirePolicy: &yearlyExpirePolicy}
+}
+
+func supportedAuthTypesFromDef(items *[]Def.SupportedAuthTypes) []model.AuthTypesSupport {
+	if items == nil {
+		return nil
+	}
+	out := make([]model.AuthTypesSupport, len(*items))
+	for i, item := range *items {
 		defItem := supportedAuthTypeFromDef(&item)
 		if defItem != nil {
 			out[i] = *defItem
@@ -179,37 +202,61 @@ func supportedAuthTypesFromDef(items []Def.SystemReqAppOrgSupportedAuthTypes) ([
 		}
 	}
 
-	return out, nil
+	return out
 }
 
-func supportedAuthTypeFromDef(item *Def.SystemReqAppOrgSupportedAuthTypes) *model.AuthTypesSupport {
+func supportedAuthTypeFromDef(item *Def.SupportedAuthTypes) *model.AuthTypesSupport {
 	if item == nil || item.AppTypeId == nil {
 		return nil
 	}
 
-	supportedAuthTypes := []struct {
-		AuthTypeID string                 `bson:"auth_type_id"`
-		Params     map[string]interface{} `bson:"params"`
-	}{}
-
-	authTypeSupport := model.AuthTypesSupport{AppTypeID: *item.AppTypeId, SupportedAuthTypes: supportedAuthTypes}
+	supportedAuthTypes := []model.SupportedAuthType{}
 	if item.SupportedAuthTypes != nil {
 		for _, authType := range *item.SupportedAuthTypes {
 			if authType.AuthTypeId != nil && authType.Params != nil {
-				supportedAuthTypes = append(supportedAuthTypes, struct {
-					AuthTypeID string                 `bson:"auth_type_id"`
-					Params     map[string]interface{} `bson:"params"`
-				}{*authType.AuthTypeId, authType.Params.AdditionalProperties})
+				supportedAuthTypes = append(supportedAuthTypes, model.SupportedAuthType{AuthTypeID: *authType.AuthTypeId, Params: authType.Params.AdditionalProperties})
 			}
 		}
 	}
 
-	return &authTypeSupport
+	return &model.AuthTypesSupport{AppTypeID: *item.AppTypeId, SupportedAuthTypes: supportedAuthTypes}
 }
 
-func identityProviderSettingsFromDef(items []Def.SystemReqAppOrgIdentityProvidersSetting) ([]model.IdentityProviderSetting, error) {
-	out := make([]model.IdentityProviderSetting, len(items))
+func supportedAuthTypesToDef(items []model.AuthTypesSupport) []Def.SupportedAuthTypes {
+	if items == nil {
+		return nil
+	}
+	out := make([]Def.SupportedAuthTypes, len(items))
 	for i, item := range items {
+		defItem := supportedAuthTypeToDef(&item)
+		if defItem != nil {
+			out[i] = *defItem
+		} else {
+			out[i] = Def.SupportedAuthTypes{}
+		}
+	}
+
+	return out
+}
+
+func supportedAuthTypeToDef(item *model.AuthTypesSupport) *Def.SupportedAuthTypes {
+	if item == nil {
+		return nil
+	}
+	supportedAuthTypes := []Def.SupportedAuthType{}
+	for _, authType := range item.SupportedAuthTypes {
+		params := Def.SupportedAuthType_Params{AdditionalProperties: authType.Params}
+		supportedAuthTypes = append(supportedAuthTypes, Def.SupportedAuthType{AuthTypeId: &authType.AuthTypeID, Params: &params})
+	}
+	return &Def.SupportedAuthTypes{AppTypeId: &item.AppTypeID, SupportedAuthTypes: &supportedAuthTypes}
+}
+
+func identityProviderSettingsFromDef(items *[]Def.IdentityProviderSettings) []model.IdentityProviderSetting {
+	if items == nil {
+		return nil
+	}
+	out := make([]model.IdentityProviderSetting, len(*items))
+	for i, item := range *items {
 		defItem := identityProviderSettingFromDef(&item)
 		if defItem != nil {
 			out[i] = *defItem
@@ -218,15 +265,44 @@ func identityProviderSettingsFromDef(items []Def.SystemReqAppOrgIdentityProvider
 		}
 	}
 
-	return out, nil
+	return out
 }
 
-func identityProviderSettingFromDef(item *Def.SystemReqAppOrgIdentityProvidersSetting) *model.IdentityProviderSetting {
+func identityProviderSettingFromDef(item *Def.IdentityProviderSettings) *model.IdentityProviderSetting {
 	if item == nil {
 		return nil
 	}
 
 	return &model.IdentityProviderSetting{IdentityProviderID: *item.IdentityProviderId, UserIdentifierField: *item.UserIdentifierField, ExternalIDFields: item.ExternalIdFields.AdditionalProperties, FirstNameField: *item.FirstNameField, MiddleNameField: *item.MiddleNameField, LastNameField: *item.LastNameField, EmailField: *item.EmailField, RolesField: *item.RolesField, GroupsField: *item.GroupsField, UserSpecificFields: *item.UserSpecificFields, Roles: item.Roles.AdditionalProperties, Groups: item.Groups.AdditionalProperties}
+}
+
+func identityProviderSettingsToDef(items []model.IdentityProviderSetting) []Def.IdentityProviderSettings {
+	out := make([]Def.IdentityProviderSettings, len(items))
+	for i, item := range items {
+		defItem := identityProviderSettingToDef(&item)
+		if defItem != nil {
+			out[i] = *defItem
+		} else {
+			out[i] = Def.IdentityProviderSettings{}
+		}
+	}
+
+	return out
+}
+
+func identityProviderSettingToDef(item *model.IdentityProviderSetting) *Def.IdentityProviderSettings {
+	if item == nil {
+		return nil
+	}
+
+	externalIDs := Def.IdentityProviderSettings_ExternalIdFields{AdditionalProperties: item.ExternalIDFields}
+	roles := Def.IdentityProviderSettings_Roles{AdditionalProperties: item.Roles}
+	groups := Def.IdentityProviderSettings_Groups{AdditionalProperties: item.Groups}
+
+	return &Def.IdentityProviderSettings{IdentityProviderId: &item.IdentityProviderID, UserIdentifierField: &item.UserIdentifierField,
+		ExternalIdFields: &externalIDs, FirstNameField: &item.FirstNameField, MiddleNameField: &item.MiddleNameField,
+		LastNameField: &item.LastNameField, EmailField: &item.EmailField, RolesField: &item.RolesField, GroupsField: &item.GroupsField,
+		UserSpecificFields: &item.UserSpecificFields, Roles: &roles, Groups: &groups}
 }
 
 // AppOrgRole

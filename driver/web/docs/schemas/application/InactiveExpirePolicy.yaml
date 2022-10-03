@@ -1,4 +1,7 @@
 type: object
+required:
+ - active
+ - inactivity_period
 properties:
   active:
     type: boolean

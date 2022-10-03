@@ -3,27 +3,29 @@ required:
   - app_id
   - org_id
 type: object
+nullable: true
 properties:
   id:
     readOnly: true
     type: string
   app_id:
-    readOnly: true
     type: string
   org_id:
-    readOnly: true
     type: string
   services_ids:
     type: array
+    nullable: true
     items:
       type: string
-  identity_providers_settings:
+  identity_provider_settings:
     type: array
+    nullable: true
     items:
-      $ref: "../../../../application/IdentityProvidersSetting.yaml"
+      $ref: "./IdentityProviderSettings.yaml"
   supported_auth_types:
     type: array
+    nullable: true
     items:
-      $ref: "../../../../application/SupportedAuthTypes.yaml"
-  logins_sessions_settings:
-    $ref: "../../../../application/LoginsSessionsSettings.yaml"
+      $ref: "./SupportedAuthTypes.yaml"
+  login_session_settings:
+    $ref: "./LoginSessionSettings.yaml"

@@ -13,6 +13,8 @@ ApplicationTypeFields:
   $ref: "./application/ApplicationTypeFields.yaml"
 ApplicationOrganization:
   $ref: "./application/ApplicationOrganization.yaml"
+AppOrg:
+  $ref: "./application/AppOrg.yaml"
 Permission:
   $ref: "./application/Permission.yaml"
 AppOrgRole:
@@ -29,6 +31,20 @@ OrganizationConfigFields:
   $ref: "./application/OrganizationConfigFields.yaml"
 ApplicationConfig:
   $ref: "./application/ApplicationConfig.yaml"
+IdentityProviderSettings:
+  $ref: "./application/IdentityProviderSettings.yaml"
+SupportedAuthTypes:
+  $ref: "./application/SupportedAuthTypes.yaml"
+SupportedAuthType:
+  $ref: "./application/SupportedAuthType.yaml"
+LoginSessionSettings:
+  $ref: "./application/LoginSessionSettings.yaml"
+YearlyExpirePolicy:
+  $ref: "./application/YearlyExpirePolicy.yaml"
+InactiveExpirePolicy:
+  $ref: "./application/InactiveExpirePolicy.yaml"
+TSLExpirePolicy:
+  $ref: "./application/TSLExpirePolicy.yaml"
 
 # auth
 LoginSession:
@@ -294,15 +310,4 @@ _system_req_create_service-account:
 _system_req_update_service-account:
   $ref: "./apis/system/update-service-account/request/Request.yaml"
 
-### app-org API
-_system_req_update_app_org:
-  $ref: "./apis/system/update-app-org/request/Request.yaml"
-_system_req_app_org_identity_providers_setting:
-  $ref: "./application/IdentityProvidersSetting.yaml"
-_system_req_app_org_supported_auth_types:
-  $ref: "./application/SupportedAuthTypes.yaml"
-_system_req_app_org_supported_auth_type:
-  $ref: "./application/SupportedAuthType.yaml"
-_system_req_app_org_logins_sessions_settings:
-  $ref: "./application/LoginsSessionsSettings.yaml"
 ## end SYSTEM section

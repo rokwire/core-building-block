@@ -236,6 +236,17 @@ type AdminToken struct {
 	Token string `json:"token"`
 }
 
+// AppOrg defines model for AppOrg.
+type AppOrg struct {
+	AppId                    string                      `json:"app_id"`
+	Id                       *string                     `json:"id,omitempty"`
+	IdentityProviderSettings *[]IdentityProviderSettings `json:"identity_provider_settings"`
+	LoginSessionSettings     *LoginSessionSettings       `json:"login_session_settings,omitempty"`
+	OrgId                    string                      `json:"org_id"`
+	ServicesIds              *[]string                   `json:"services_ids"`
+	SupportedAuthTypes       *[]SupportedAuthTypes       `json:"supported_auth_types"`
+}
+
 // AppOrgGroup defines model for AppOrgGroup.
 type AppOrgGroup struct {
 	Application *Application  `json:"application,omitempty"`
@@ -389,6 +400,43 @@ type GlobalConfig struct {
 	Setting string `json:"setting"`
 }
 
+// IdentityProviderSettings defines model for IdentityProviderSettings.
+type IdentityProviderSettings struct {
+	EmailField          *string                                    `json:"email_field,omitempty"`
+	ExternalIdFields    *IdentityProviderSettings_ExternalIdFields `json:"external_id_fields,omitempty"`
+	FirstNameField      *string                                    `json:"first_name_field,omitempty"`
+	Groups              *IdentityProviderSettings_Groups           `json:"groups,omitempty"`
+	GroupsField         *string                                    `json:"groups_field,omitempty"`
+	IdentityProviderId  *string                                    `json:"identity_provider_id,omitempty"`
+	LastNameField       *string                                    `json:"last_name_field,omitempty"`
+	MiddleNameField     *string                                    `json:"middle_name_field,omitempty"`
+	Roles               *IdentityProviderSettings_Roles            `json:"roles,omitempty"`
+	RolesField          *string                                    `json:"roles_field,omitempty"`
+	UserIdentifierField *string                                    `json:"user_identifier_field,omitempty"`
+	UserSpecificFields  *[]string                                  `json:"user_specific_fields,omitempty"`
+}
+
+// IdentityProviderSettings_ExternalIdFields defines model for IdentityProviderSettings.ExternalIdFields.
+type IdentityProviderSettings_ExternalIdFields struct {
+	AdditionalProperties map[string]string `json:"-"`
+}
+
+// IdentityProviderSettings_Groups defines model for IdentityProviderSettings.Groups.
+type IdentityProviderSettings_Groups struct {
+	AdditionalProperties map[string]string `json:"-"`
+}
+
+// IdentityProviderSettings_Roles defines model for IdentityProviderSettings.Roles.
+type IdentityProviderSettings_Roles struct {
+	AdditionalProperties map[string]string `json:"-"`
+}
+
+// InactiveExpirePolicy defines model for InactiveExpirePolicy.
+type InactiveExpirePolicy struct {
+	Active           bool `json:"active"`
+	InactivityPeriod int  `json:"inactivity_period"`
+}
+
 // JSON Web Key (JWK)
 type JWK struct {
 	// The "alg" (algorithm) parameter identifies the algorithm intended for use with the key
@@ -422,6 +470,14 @@ type JWKUse string
 // JSON Web Key Set (JWKS)
 type JWKS struct {
 	Keys []JWK `json:"keys"`
+}
+
+// LoginSessionSettings defines model for LoginSessionSettings.
+type LoginSessionSettings struct {
+	InactivityExpirePolicy     *InactiveExpirePolicy `json:"inactivity_expire_policy,omitempty"`
+	MaxConcurrentSessions      *int                  `json:"max_concurrent_sessions,omitempty"`
+	TimeSinceLoginExpirePolicy *TSLExpirePolicy      `json:"time_since_login_expire_policy,omitempty"`
+	YearlyExpirePolicy         *YearlyExpirePolicy   `json:"yearly_expire_policy,omitempty"`
 }
 
 // OpenID Connect Discovery Metadata
@@ -558,9 +614,41 @@ type ServiceScope struct {
 	Scope       string  `json:"scope"`
 }
 
+// SupportedAuthType defines model for SupportedAuthType.
+type SupportedAuthType struct {
+	AuthTypeId *string                   `json:"auth_type_id,omitempty"`
+	Params     *SupportedAuthType_Params `json:"params,omitempty"`
+}
+
+// SupportedAuthType_Params defines model for SupportedAuthType.Params.
+type SupportedAuthType_Params struct {
+	AdditionalProperties map[string]interface{} `json:"-"`
+}
+
+// SupportedAuthTypes defines model for SupportedAuthTypes.
+type SupportedAuthTypes struct {
+	AppTypeId          *string              `json:"app_type_id,omitempty"`
+	SupportedAuthTypes *[]SupportedAuthType `json:"supported_auth_types,omitempty"`
+}
+
+// TSLExpirePolicy defines model for TSLExpirePolicy.
+type TSLExpirePolicy struct {
+	Active               bool `json:"active"`
+	TimeSinceLoginPeriod int  `json:"time_since_login_period"`
+}
+
 // Username defines model for Username.
 type Username struct {
 	Username string `json:"username"`
+}
+
+// YearlyExpirePolicy defines model for YearlyExpirePolicy.
+type YearlyExpirePolicy struct {
+	Active bool `json:"active"`
+	Day    int  `json:"day"`
+	Hour   int  `json:"hour"`
+	Min    int  `json:"min"`
+	Month  int  `json:"month"`
 }
 
 // AdminReqAddAccountsToGroup defines model for _admin_req_add-accounts-to-group.
@@ -1039,74 +1127,6 @@ type SharedResRokwireToken struct {
 // The type of the provided tokens to be specified when they are sent in the "Authorization" header
 type SharedResRokwireTokenTokenType string
 
-// SystemReqAppOrgIdentityProvidersSetting defines model for _system_req_app_org_identity_providers_setting.
-type SystemReqAppOrgIdentityProvidersSetting struct {
-	EmailField          *string                                                   `json:"email_field,omitempty"`
-	ExternalIdFields    *SystemReqAppOrgIdentityProvidersSetting_ExternalIdFields `json:"external_id_fields,omitempty"`
-	FirstNameField      *string                                                   `json:"first_name_field,omitempty"`
-	Groups              *SystemReqAppOrgIdentityProvidersSetting_Groups           `json:"groups,omitempty"`
-	GroupsField         *string                                                   `json:"groups_field,omitempty"`
-	IdentityProviderId  *string                                                   `json:"identity_provider_id,omitempty"`
-	LastNameField       *string                                                   `json:"last_name_field,omitempty"`
-	MiddleNameField     *string                                                   `json:"middle_name_field,omitempty"`
-	Roles               *SystemReqAppOrgIdentityProvidersSetting_Roles            `json:"roles,omitempty"`
-	RolesField          *string                                                   `json:"roles_field,omitempty"`
-	UserIdentifierField *string                                                   `json:"user_identifier_field,omitempty"`
-	UserSpecificFields  *[]string                                                 `json:"user_specific_fields,omitempty"`
-}
-
-// SystemReqAppOrgIdentityProvidersSetting_ExternalIdFields defines model for SystemReqAppOrgIdentityProvidersSetting.ExternalIdFields.
-type SystemReqAppOrgIdentityProvidersSetting_ExternalIdFields struct {
-	AdditionalProperties map[string]string `json:"-"`
-}
-
-// SystemReqAppOrgIdentityProvidersSetting_Groups defines model for SystemReqAppOrgIdentityProvidersSetting.Groups.
-type SystemReqAppOrgIdentityProvidersSetting_Groups struct {
-	AdditionalProperties map[string]string `json:"-"`
-}
-
-// SystemReqAppOrgIdentityProvidersSetting_Roles defines model for SystemReqAppOrgIdentityProvidersSetting.Roles.
-type SystemReqAppOrgIdentityProvidersSetting_Roles struct {
-	AdditionalProperties map[string]string `json:"-"`
-}
-
-// SystemReqAppOrgLoginsSessionsSettings defines model for _system_req_app_org_logins_sessions_settings.
-type SystemReqAppOrgLoginsSessionsSettings struct {
-	InactivityExpirePolicy *struct {
-		Active           *bool `json:"active,omitempty"`
-		InactivityPeriod *int  `json:"inactivity_period,omitempty"`
-	} `json:"inactivity_expire_policy,omitempty"`
-	MaxConcurrentSessions      *int `json:"max_concurrent_sessions,omitempty"`
-	TimeSinceLoginExpirePolicy *struct {
-		Active               *bool `json:"active,omitempty"`
-		TimeSinceLoginPeriod *int  `json:"time_since_login_period,omitempty"`
-	} `json:"time_since_login_expire_policy,omitempty"`
-	YearlyExpirePolicy *struct {
-		Active *bool `json:"active,omitempty"`
-		Day    *int  `json:"day,omitempty"`
-		Hour   *int  `json:"hour,omitempty"`
-		Min    *int  `json:"min,omitempty"`
-		Month  *int  `json:"month,omitempty"`
-	} `json:"yearly_expire_policy,omitempty"`
-}
-
-// SystemReqAppOrgSupportedAuthType defines model for _system_req_app_org_supported_auth_type.
-type SystemReqAppOrgSupportedAuthType struct {
-	AuthTypeId *string                                  `json:"auth_type_id,omitempty"`
-	Params     *SystemReqAppOrgSupportedAuthType_Params `json:"params,omitempty"`
-}
-
-// SystemReqAppOrgSupportedAuthType_Params defines model for SystemReqAppOrgSupportedAuthType.Params.
-type SystemReqAppOrgSupportedAuthType_Params struct {
-	AdditionalProperties map[string]interface{} `json:"-"`
-}
-
-// SystemReqAppOrgSupportedAuthTypes defines model for _system_req_app_org_supported_auth_types.
-type SystemReqAppOrgSupportedAuthTypes struct {
-	AppTypeId          *string                             `json:"app_type_id,omitempty"`
-	SupportedAuthTypes *[]SystemReqAppOrgSupportedAuthType `json:"supported_auth_types,omitempty"`
-}
-
 // SystemReqCreateOrganization defines model for _system_req_create-Organization.
 type SystemReqCreateOrganization struct {
 	Config *OrganizationConfigFields       `json:"config,omitempty"`
@@ -1187,17 +1207,6 @@ type SystemReqUpdateOrganization struct {
 
 // SystemReqUpdateOrganizationType defines model for SystemReqUpdateOrganization.Type.
 type SystemReqUpdateOrganizationType string
-
-// SystemReqUpdateAppOrg defines model for _system_req_update_app_org.
-type SystemReqUpdateAppOrg struct {
-	AppId                     string                                     `json:"app_id"`
-	Id                        string                                     `json:"id"`
-	IdentityProvidersSettings *[]SystemReqAppOrgIdentityProvidersSetting `json:"identity_providers_settings,omitempty"`
-	LoginsSessionsSettings    *SystemReqAppOrgLoginsSessionsSettings     `json:"logins_sessions_settings,omitempty"`
-	OrgId                     string                                     `json:"org_id"`
-	ServicesIds               *[]string                                  `json:"services_ids,omitempty"`
-	SupportedAuthTypes        *[]SystemReqAppOrgSupportedAuthTypes       `json:"supported_auth_types,omitempty"`
-}
 
 // SystemReqUpdateAuthType defines model for _system_req_update_auth_type.
 type SystemReqUpdateAuthType struct {
@@ -1535,18 +1544,20 @@ type PostSystemApiKeysJSONBody = APIKey
 // PutSystemApiKeysJSONBody defines parameters for PutSystemApiKeys.
 type PutSystemApiKeysJSONBody = APIKey
 
-// PostSystemAppOrgsJSONBody defines parameters for PostSystemAppOrgs.
-type PostSystemAppOrgsJSONBody struct {
-	AppId                     string                                     `json:"app_id"`
-	IdentityProvidersSettings *[]SystemReqAppOrgIdentityProvidersSetting `json:"identity_providers_settings,omitempty"`
-	LoginsSessionsSettings    *SystemReqAppOrgLoginsSessionsSettings     `json:"logins_sessions_settings,omitempty"`
-	OrgId                     string                                     `json:"org_id"`
-	ServicesIds               *[]string                                  `json:"services_ids,omitempty"`
-	SupportedAuthTypes        *[]SystemReqAppOrgSupportedAuthTypes       `json:"supported_auth_types,omitempty"`
+// GetSystemAppOrgsParams defines parameters for GetSystemAppOrgs.
+type GetSystemAppOrgsParams struct {
+	// Application ID to search for
+	AppId *string `form:"app_id,omitempty" json:"app_id,omitempty"`
+
+	// Organization ID to search for
+	OrgId *string `form:"org_id,omitempty" json:"org_id,omitempty"`
 }
 
+// PostSystemAppOrgsJSONBody defines parameters for PostSystemAppOrgs.
+type PostSystemAppOrgsJSONBody = AppOrg
+
 // PutSystemAppOrgsIdJSONBody defines parameters for PutSystemAppOrgsId.
-type PutSystemAppOrgsIdJSONBody SystemReqUpdateAppOrg
+type PutSystemAppOrgsIdJSONBody = AppOrg
 
 // GetSystemApplicationConfigsParams defines parameters for GetSystemApplicationConfigs.
 type GetSystemApplicationConfigsParams struct {
@@ -1868,10 +1879,10 @@ type PostSystemApiKeysJSONRequestBody = PostSystemApiKeysJSONBody
 type PutSystemApiKeysJSONRequestBody = PutSystemApiKeysJSONBody
 
 // PostSystemAppOrgsJSONRequestBody defines body for PostSystemAppOrgs for application/json ContentType.
-type PostSystemAppOrgsJSONRequestBody PostSystemAppOrgsJSONBody
+type PostSystemAppOrgsJSONRequestBody = PostSystemAppOrgsJSONBody
 
 // PutSystemAppOrgsIdJSONRequestBody defines body for PutSystemAppOrgsId for application/json ContentType.
-type PutSystemAppOrgsIdJSONRequestBody PutSystemAppOrgsIdJSONBody
+type PutSystemAppOrgsIdJSONRequestBody = PutSystemAppOrgsIdJSONBody
 
 // PostSystemApplicationConfigsJSONRequestBody defines body for PostSystemApplicationConfigs for application/json ContentType.
 type PostSystemApplicationConfigsJSONRequestBody = PostSystemApplicationConfigsJSONBody
@@ -2036,25 +2047,25 @@ func (a AuthTypeFields_Params) MarshalJSON() ([]byte, error) {
 	return json.Marshal(object)
 }
 
-// Getter for additional properties for SystemReqAppOrgIdentityProvidersSetting_ExternalIdFields. Returns the specified
+// Getter for additional properties for IdentityProviderSettings_ExternalIdFields. Returns the specified
 // element and whether it was found
-func (a SystemReqAppOrgIdentityProvidersSetting_ExternalIdFields) Get(fieldName string) (value string, found bool) {
+func (a IdentityProviderSettings_ExternalIdFields) Get(fieldName string) (value string, found bool) {
 	if a.AdditionalProperties != nil {
 		value, found = a.AdditionalProperties[fieldName]
 	}
 	return
 }
 
-// Setter for additional properties for SystemReqAppOrgIdentityProvidersSetting_ExternalIdFields
-func (a *SystemReqAppOrgIdentityProvidersSetting_ExternalIdFields) Set(fieldName string, value string) {
+// Setter for additional properties for IdentityProviderSettings_ExternalIdFields
+func (a *IdentityProviderSettings_ExternalIdFields) Set(fieldName string, value string) {
 	if a.AdditionalProperties == nil {
 		a.AdditionalProperties = make(map[string]string)
 	}
 	a.AdditionalProperties[fieldName] = value
 }
 
-// Override default JSON handling for SystemReqAppOrgIdentityProvidersSetting_ExternalIdFields to handle AdditionalProperties
-func (a *SystemReqAppOrgIdentityProvidersSetting_ExternalIdFields) UnmarshalJSON(b []byte) error {
+// Override default JSON handling for IdentityProviderSettings_ExternalIdFields to handle AdditionalProperties
+func (a *IdentityProviderSettings_ExternalIdFields) UnmarshalJSON(b []byte) error {
 	object := make(map[string]json.RawMessage)
 	err := json.Unmarshal(b, &object)
 	if err != nil {
@@ -2067,7 +2078,7 @@ func (a *SystemReqAppOrgIdentityProvidersSetting_ExternalIdFields) UnmarshalJSON
 			var fieldVal string
 			err := json.Unmarshal(fieldBuf, &fieldVal)
 			if err != nil {
-				return errors.Wrap(err, fmt.Sprintf("error unmarshaling field %s", fieldName))
+				return fmt.Errorf("error unmarshaling field %s: %w", fieldName, err)
 			}
 			a.AdditionalProperties[fieldName] = fieldVal
 		}
@@ -2075,39 +2086,39 @@ func (a *SystemReqAppOrgIdentityProvidersSetting_ExternalIdFields) UnmarshalJSON
 	return nil
 }
 
-// Override default JSON handling for SystemReqAppOrgIdentityProvidersSetting_ExternalIdFields to handle AdditionalProperties
-func (a SystemReqAppOrgIdentityProvidersSetting_ExternalIdFields) MarshalJSON() ([]byte, error) {
+// Override default JSON handling for IdentityProviderSettings_ExternalIdFields to handle AdditionalProperties
+func (a IdentityProviderSettings_ExternalIdFields) MarshalJSON() ([]byte, error) {
 	var err error
 	object := make(map[string]json.RawMessage)
 
 	for fieldName, field := range a.AdditionalProperties {
 		object[fieldName], err = json.Marshal(field)
 		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("error marshaling '%s'", fieldName))
+			return nil, fmt.Errorf("error marshaling '%s': %w", fieldName, err)
 		}
 	}
 	return json.Marshal(object)
 }
 
-// Getter for additional properties for SystemReqAppOrgIdentityProvidersSetting_Groups. Returns the specified
+// Getter for additional properties for IdentityProviderSettings_Groups. Returns the specified
 // element and whether it was found
-func (a SystemReqAppOrgIdentityProvidersSetting_Groups) Get(fieldName string) (value string, found bool) {
+func (a IdentityProviderSettings_Groups) Get(fieldName string) (value string, found bool) {
 	if a.AdditionalProperties != nil {
 		value, found = a.AdditionalProperties[fieldName]
 	}
 	return
 }
 
-// Setter for additional properties for SystemReqAppOrgIdentityProvidersSetting_Groups
-func (a *SystemReqAppOrgIdentityProvidersSetting_Groups) Set(fieldName string, value string) {
+// Setter for additional properties for IdentityProviderSettings_Groups
+func (a *IdentityProviderSettings_Groups) Set(fieldName string, value string) {
 	if a.AdditionalProperties == nil {
 		a.AdditionalProperties = make(map[string]string)
 	}
 	a.AdditionalProperties[fieldName] = value
 }
 
-// Override default JSON handling for SystemReqAppOrgIdentityProvidersSetting_Groups to handle AdditionalProperties
-func (a *SystemReqAppOrgIdentityProvidersSetting_Groups) UnmarshalJSON(b []byte) error {
+// Override default JSON handling for IdentityProviderSettings_Groups to handle AdditionalProperties
+func (a *IdentityProviderSettings_Groups) UnmarshalJSON(b []byte) error {
 	object := make(map[string]json.RawMessage)
 	err := json.Unmarshal(b, &object)
 	if err != nil {
@@ -2120,7 +2131,7 @@ func (a *SystemReqAppOrgIdentityProvidersSetting_Groups) UnmarshalJSON(b []byte)
 			var fieldVal string
 			err := json.Unmarshal(fieldBuf, &fieldVal)
 			if err != nil {
-				return errors.Wrap(err, fmt.Sprintf("error unmarshaling field %s", fieldName))
+				return fmt.Errorf("error unmarshaling field %s: %w", fieldName, err)
 			}
 			a.AdditionalProperties[fieldName] = fieldVal
 		}
@@ -2128,39 +2139,39 @@ func (a *SystemReqAppOrgIdentityProvidersSetting_Groups) UnmarshalJSON(b []byte)
 	return nil
 }
 
-// Override default JSON handling for SystemReqAppOrgIdentityProvidersSetting_Groups to handle AdditionalProperties
-func (a SystemReqAppOrgIdentityProvidersSetting_Groups) MarshalJSON() ([]byte, error) {
+// Override default JSON handling for IdentityProviderSettings_Groups to handle AdditionalProperties
+func (a IdentityProviderSettings_Groups) MarshalJSON() ([]byte, error) {
 	var err error
 	object := make(map[string]json.RawMessage)
 
 	for fieldName, field := range a.AdditionalProperties {
 		object[fieldName], err = json.Marshal(field)
 		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("error marshaling '%s'", fieldName))
+			return nil, fmt.Errorf("error marshaling '%s': %w", fieldName, err)
 		}
 	}
 	return json.Marshal(object)
 }
 
-// Getter for additional properties for SystemReqAppOrgIdentityProvidersSetting_Roles. Returns the specified
+// Getter for additional properties for IdentityProviderSettings_Roles. Returns the specified
 // element and whether it was found
-func (a SystemReqAppOrgIdentityProvidersSetting_Roles) Get(fieldName string) (value string, found bool) {
+func (a IdentityProviderSettings_Roles) Get(fieldName string) (value string, found bool) {
 	if a.AdditionalProperties != nil {
 		value, found = a.AdditionalProperties[fieldName]
 	}
 	return
 }
 
-// Setter for additional properties for SystemReqAppOrgIdentityProvidersSetting_Roles
-func (a *SystemReqAppOrgIdentityProvidersSetting_Roles) Set(fieldName string, value string) {
+// Setter for additional properties for IdentityProviderSettings_Roles
+func (a *IdentityProviderSettings_Roles) Set(fieldName string, value string) {
 	if a.AdditionalProperties == nil {
 		a.AdditionalProperties = make(map[string]string)
 	}
 	a.AdditionalProperties[fieldName] = value
 }
 
-// Override default JSON handling for SystemReqAppOrgIdentityProvidersSetting_Roles to handle AdditionalProperties
-func (a *SystemReqAppOrgIdentityProvidersSetting_Roles) UnmarshalJSON(b []byte) error {
+// Override default JSON handling for IdentityProviderSettings_Roles to handle AdditionalProperties
+func (a *IdentityProviderSettings_Roles) UnmarshalJSON(b []byte) error {
 	object := make(map[string]json.RawMessage)
 	err := json.Unmarshal(b, &object)
 	if err != nil {
@@ -2173,7 +2184,7 @@ func (a *SystemReqAppOrgIdentityProvidersSetting_Roles) UnmarshalJSON(b []byte) 
 			var fieldVal string
 			err := json.Unmarshal(fieldBuf, &fieldVal)
 			if err != nil {
-				return errors.Wrap(err, fmt.Sprintf("error unmarshaling field %s", fieldName))
+				return fmt.Errorf("error unmarshaling field %s: %w", fieldName, err)
 			}
 			a.AdditionalProperties[fieldName] = fieldVal
 		}
@@ -2181,39 +2192,39 @@ func (a *SystemReqAppOrgIdentityProvidersSetting_Roles) UnmarshalJSON(b []byte) 
 	return nil
 }
 
-// Override default JSON handling for SystemReqAppOrgIdentityProvidersSetting_Roles to handle AdditionalProperties
-func (a SystemReqAppOrgIdentityProvidersSetting_Roles) MarshalJSON() ([]byte, error) {
+// Override default JSON handling for IdentityProviderSettings_Roles to handle AdditionalProperties
+func (a IdentityProviderSettings_Roles) MarshalJSON() ([]byte, error) {
 	var err error
 	object := make(map[string]json.RawMessage)
 
 	for fieldName, field := range a.AdditionalProperties {
 		object[fieldName], err = json.Marshal(field)
 		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("error marshaling '%s'", fieldName))
+			return nil, fmt.Errorf("error marshaling '%s': %w", fieldName, err)
 		}
 	}
 	return json.Marshal(object)
 }
 
-// Getter for additional properties for SystemReqAppOrgSupportedAuthType_Params. Returns the specified
+// Getter for additional properties for SupportedAuthType_Params. Returns the specified
 // element and whether it was found
-func (a SystemReqAppOrgSupportedAuthType_Params) Get(fieldName string) (value interface{}, found bool) {
+func (a SupportedAuthType_Params) Get(fieldName string) (value interface{}, found bool) {
 	if a.AdditionalProperties != nil {
 		value, found = a.AdditionalProperties[fieldName]
 	}
 	return
 }
 
-// Setter for additional properties for SystemReqAppOrgSupportedAuthType_Params
-func (a *SystemReqAppOrgSupportedAuthType_Params) Set(fieldName string, value interface{}) {
+// Setter for additional properties for SupportedAuthType_Params
+func (a *SupportedAuthType_Params) Set(fieldName string, value interface{}) {
 	if a.AdditionalProperties == nil {
 		a.AdditionalProperties = make(map[string]interface{})
 	}
 	a.AdditionalProperties[fieldName] = value
 }
 
-// Override default JSON handling for SystemReqAppOrgSupportedAuthType_Params to handle AdditionalProperties
-func (a *SystemReqAppOrgSupportedAuthType_Params) UnmarshalJSON(b []byte) error {
+// Override default JSON handling for SupportedAuthType_Params to handle AdditionalProperties
+func (a *SupportedAuthType_Params) UnmarshalJSON(b []byte) error {
 	object := make(map[string]json.RawMessage)
 	err := json.Unmarshal(b, &object)
 	if err != nil {
@@ -2226,7 +2237,7 @@ func (a *SystemReqAppOrgSupportedAuthType_Params) UnmarshalJSON(b []byte) error 
 			var fieldVal interface{}
 			err := json.Unmarshal(fieldBuf, &fieldVal)
 			if err != nil {
-				return errors.Wrap(err, fmt.Sprintf("error unmarshaling field %s", fieldName))
+				return fmt.Errorf("error unmarshaling field %s: %w", fieldName, err)
 			}
 			a.AdditionalProperties[fieldName] = fieldVal
 		}
@@ -2234,15 +2245,15 @@ func (a *SystemReqAppOrgSupportedAuthType_Params) UnmarshalJSON(b []byte) error 
 	return nil
 }
 
-// Override default JSON handling for SystemReqAppOrgSupportedAuthType_Params to handle AdditionalProperties
-func (a SystemReqAppOrgSupportedAuthType_Params) MarshalJSON() ([]byte, error) {
+// Override default JSON handling for SupportedAuthType_Params to handle AdditionalProperties
+func (a SupportedAuthType_Params) MarshalJSON() ([]byte, error) {
 	var err error
 	object := make(map[string]json.RawMessage)
 
 	for fieldName, field := range a.AdditionalProperties {
 		object[fieldName], err = json.Marshal(field)
 		if err != nil {
-			return nil, errors.Wrap(err, fmt.Sprintf("error marshaling '%s'", fieldName))
+			return nil, fmt.Errorf("error marshaling '%s': %w", fieldName, err)
 		}
 	}
 	return json.Marshal(object)

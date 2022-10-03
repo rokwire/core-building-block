@@ -78,6 +78,14 @@ func (app *application) sysUpdateGlobalConfig(setting string) error {
 	return app.storage.PerformTransaction(transaction)
 }
 
+func (app *application) sysGetApplicationOrganizations(appID *string, orgID *string) ([]model.ApplicationOrganization, error) {
+	return app.storage.FindApplicationOrganizations(appID, orgID)
+}
+
+func (app *application) sysGetApplicationOrganization(ID string) (*model.ApplicationOrganization, error) {
+	return app.storage.FindApplicationOrganizationByID(ID)
+}
+
 func (app *application) sysCreateApplicationOrganization(appOrg model.ApplicationOrganization, appID string, orgID string) (*model.ApplicationOrganization, error) {
 	application, err := app.storage.FindApplication(appID)
 	if err != nil || application == nil {
@@ -103,20 +111,8 @@ func (app *application) sysCreateApplicationOrganization(appOrg model.Applicatio
 	return insertedAppOrg, nil
 }
 
-func (app *application) sysUpdateApplicationOrganization(ID string, appID string, orgID string, appOrg model.ApplicationOrganization) error {
-	application, err := app.storage.FindApplication(appID)
-	if err != nil || application == nil {
-		return errors.WrapErrorData(logutils.StatusInvalid, model.TypeApplication, nil, err)
-	}
-	appOrg.Application = *application
-
-	organizaiton, err := app.storage.FindOrganization(orgID)
-	if err != nil || organizaiton == nil {
-		return errors.WrapErrorData(logutils.StatusInvalid, model.TypeOrganization, nil, err)
-	}
-	appOrg.Organization = *organizaiton
-
-	err = app.storage.UpdateApplicationOrganization(nil, ID, appID, orgID, appOrg)
+func (app *application) sysUpdateApplicationOrganization(appOrg model.ApplicationOrganization) error {
+	err := app.storage.UpdateApplicationOrganization(nil, appOrg)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeApplicationOrganization, nil, err)
 	}

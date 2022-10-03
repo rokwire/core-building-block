@@ -1,4 +1,7 @@
 type: object
+required:
+ - active
+ - time_since_login_period
 properties:
   active:
     type: boolean
