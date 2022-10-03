@@ -32,3 +32,5 @@ properties:
     type: object
     additionalProperties:
       type: string
+  always_sync_profile:
+    type: boolean

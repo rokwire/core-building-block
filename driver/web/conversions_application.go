@@ -273,7 +273,11 @@ func identityProviderSettingFromDef(item *Def.IdentityProviderSettings) *model.I
 		return nil
 	}
 
-	return &model.IdentityProviderSetting{IdentityProviderID: *item.IdentityProviderId, UserIdentifierField: *item.UserIdentifierField, ExternalIDFields: item.ExternalIdFields.AdditionalProperties, FirstNameField: *item.FirstNameField, MiddleNameField: *item.MiddleNameField, LastNameField: *item.LastNameField, EmailField: *item.EmailField, RolesField: *item.RolesField, GroupsField: *item.GroupsField, UserSpecificFields: *item.UserSpecificFields, Roles: item.Roles.AdditionalProperties, Groups: item.Groups.AdditionalProperties}
+	return &model.IdentityProviderSetting{IdentityProviderID: *item.IdentityProviderId, UserIdentifierField: *item.UserIdentifierField,
+		ExternalIDFields: item.ExternalIdFields.AdditionalProperties, FirstNameField: *item.FirstNameField, MiddleNameField: *item.MiddleNameField,
+		LastNameField: *item.LastNameField, EmailField: *item.EmailField, RolesField: *item.RolesField, GroupsField: *item.GroupsField,
+		UserSpecificFields: *item.UserSpecificFields, Roles: item.Roles.AdditionalProperties, Groups: item.Groups.AdditionalProperties,
+		AlwaysSyncProfile: *item.AlwaysSyncProfile}
 }
 
 func identityProviderSettingsToDef(items []model.IdentityProviderSetting) []Def.IdentityProviderSettings {
@@ -302,7 +306,7 @@ func identityProviderSettingToDef(item *model.IdentityProviderSetting) *Def.Iden
 	return &Def.IdentityProviderSettings{IdentityProviderId: &item.IdentityProviderID, UserIdentifierField: &item.UserIdentifierField,
 		ExternalIdFields: &externalIDs, FirstNameField: &item.FirstNameField, MiddleNameField: &item.MiddleNameField,
 		LastNameField: &item.LastNameField, EmailField: &item.EmailField, RolesField: &item.RolesField, GroupsField: &item.GroupsField,
-		UserSpecificFields: &item.UserSpecificFields, Roles: &roles, Groups: &groups}
+		UserSpecificFields: &item.UserSpecificFields, Roles: &roles, Groups: &groups, AlwaysSyncProfile: &item.AlwaysSyncProfile}
 }
 
 // AppOrgRole

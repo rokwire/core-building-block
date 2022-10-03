@@ -5128,6 +5128,8 @@ components:
           type: object
           additionalProperties:
             type: string
+        always_sync_profile:
+          type: boolean
     SupportedAuthTypes:
       type: object
       properties:
