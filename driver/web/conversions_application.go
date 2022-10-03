@@ -89,8 +89,9 @@ func applicationPermissionToDef(item model.Permission) Def.Permission {
 		formatted := utils.FormatTime(item.DateUpdated)
 		dateUpdated = &formatted
 	}
-
-	return Def.Permission{Id: item.ID, Name: item.Name, Description: &item.Description, ServiceId: &item.ServiceID, Assigners: &assigners, DateCreated: &dateCreated, DateUpdated: dateUpdated}
+	description := item.Description
+	serviceID := item.ServiceID
+	return Def.Permission{Id: item.ID, Name: item.Name, Description: &description, ServiceId: &serviceID, Assigners: &assigners, DateCreated: &dateCreated, DateUpdated: dateUpdated}
 }
 
 func applicationPermissionsToDef(items []model.Permission) []Def.Permission {
@@ -130,7 +131,9 @@ func appOrgToDef(item *model.ApplicationOrganization) *Def.AppOrg {
 	identityProviderSettings := identityProviderSettingsToDef(item.IdentityProvidersSettings)
 	supportedAuthTypes := supportedAuthTypesToDef(item.SupportedAuthTypes)
 	loginsSessionsSetting := loginSessionSettingsToDef(item.LoginsSessionsSetting)
-	return &Def.AppOrg{Id: &item.ID, AppId: item.Application.ID, OrgId: item.Organization.ID, ServicesIds: &item.ServicesIDs,
+	id := item.ID
+	serviceIDs := item.ServicesIDs
+	return &Def.AppOrg{Id: &id, AppId: item.Application.ID, OrgId: item.Organization.ID, ServicesIds: &serviceIDs,
 		IdentityProviderSettings: &identityProviderSettings, SupportedAuthTypes: &supportedAuthTypes, LoginSessionSettings: &loginsSessionsSetting}
 }
 
@@ -184,7 +187,8 @@ func loginSessionSettingsToDef(item model.LoginsSessionsSetting) Def.LoginSessio
 	yearlyExpirePolicy := Def.YearlyExpirePolicy{Active: item.YearlyExpirePolicy.Active, Day: item.YearlyExpirePolicy.Day, Month: item.YearlyExpirePolicy.Month,
 		Hour: item.YearlyExpirePolicy.Hour, Min: item.YearlyExpirePolicy.Min}
 
-	return Def.LoginSessionSettings{MaxConcurrentSessions: &item.MaxConcurrentSessions, InactivityExpirePolicy: &inactivityExpirePolicy,
+	maxConcurrentSessions := item.MaxConcurrentSessions
+	return Def.LoginSessionSettings{MaxConcurrentSessions: &maxConcurrentSessions, InactivityExpirePolicy: &inactivityExpirePolicy,
 		TimeSinceLoginExpirePolicy: &tslExpirePolicy, YearlyExpirePolicy: &yearlyExpirePolicy}
 }
 
@@ -248,7 +252,8 @@ func supportedAuthTypeToDef(item *model.AuthTypesSupport) *Def.SupportedAuthType
 		params := Def.SupportedAuthType_Params{AdditionalProperties: authType.Params}
 		supportedAuthTypes = append(supportedAuthTypes, Def.SupportedAuthType{AuthTypeId: &authType.AuthTypeID, Params: &params})
 	}
-	return &Def.SupportedAuthTypes{AppTypeId: &item.AppTypeID, SupportedAuthTypes: &supportedAuthTypes}
+	appTypeID := item.AppTypeID
+	return &Def.SupportedAuthTypes{AppTypeId: &appTypeID, SupportedAuthTypes: &supportedAuthTypes}
 }
 
 func identityProviderSettingsFromDef(items *[]Def.IdentityProviderSettings) []model.IdentityProviderSetting {
@@ -339,10 +344,17 @@ func identityProviderSettingToDef(item *model.IdentityProviderSetting) *Def.Iden
 	roles := Def.IdentityProviderSettings_Roles{AdditionalProperties: item.Roles}
 	groups := Def.IdentityProviderSettings_Groups{AdditionalProperties: item.Groups}
 
+	firstNameField := item.FirstNameField
+	middleNameField := item.MiddleNameField
+	lastNameField := item.LastNameField
+	emailField := item.EmailField
+	rolesField := item.RolesField
+	groupsField := item.GroupsField
+	userSpecificFields := item.UserSpecificFields
 	return &Def.IdentityProviderSettings{IdentityProviderId: item.IdentityProviderID, UserIdentifierField: item.UserIdentifierField,
-		ExternalIdFields: &externalIDs, FirstNameField: &item.FirstNameField, MiddleNameField: &item.MiddleNameField,
-		LastNameField: &item.LastNameField, EmailField: &item.EmailField, RolesField: &item.RolesField, GroupsField: &item.GroupsField,
-		UserSpecificFields: &item.UserSpecificFields, Roles: &roles, Groups: &groups}
+		ExternalIdFields: &externalIDs, FirstNameField: &firstNameField, MiddleNameField: &middleNameField,
+		LastNameField: &lastNameField, EmailField: &emailField, RolesField: &rolesField, GroupsField: &groupsField,
+		UserSpecificFields: &userSpecificFields, Roles: &roles, Groups: &groups}
 }
 
 // AppOrgRole
@@ -356,8 +368,10 @@ func appOrgRoleToDef(item model.AppOrgRole) Def.AppOrgRole {
 		formatted := utils.FormatTime(item.DateUpdated)
 		dateUpdated = &formatted
 	}
-
-	return Def.AppOrgRole{Id: &item.ID, Name: item.Name, Description: &item.Description, System: &item.System, DateCreated: &dateCreated, DateUpdated: dateUpdated, Permissions: &permissions}
+	id := item.ID
+	description := item.Description
+	system := item.System
+	return Def.AppOrgRole{Id: &id, Name: item.Name, Description: &description, System: &system, DateCreated: &dateCreated, DateUpdated: dateUpdated, Permissions: &permissions}
 }
 
 func appOrgRolesToDef(items []model.AppOrgRole) []Def.AppOrgRole {
@@ -397,8 +411,8 @@ func organizationToDef(item *model.Organization) *Def.Organization {
 	if item == nil {
 		return nil
 	}
-
-	fields := Def.OrganizationFields{Id: &item.ID, Name: item.Name, Type: Def.OrganizationFieldsType(item.Type)}
+	id := item.ID
+	fields := Def.OrganizationFields{Id: &id, Name: item.Name, Type: Def.OrganizationFieldsType(item.Type)}
 	config := item.Config
 
 	return &Def.Organization{Config: organizationConfigToDef(&config), Fields: &fields}
@@ -419,11 +433,13 @@ func organizationConfigToDef(item *model.OrganizationConfig) *Def.OrganizationCo
 
 	var id *string
 	if len(item.ID) > 0 {
-		id = &item.ID
+		idString := item.ID
+		id = &idString
 	}
 	var domains *[]string
 	if len(item.Domains) > 0 {
-		domains = &item.Domains
+		domainList := item.Domains
+		domains = &domainList
 	}
 
 	return &Def.OrganizationConfigFields{Id: id, Domains: domains}
@@ -433,7 +449,8 @@ func organizationConfigToDef(item *model.OrganizationConfig) *Def.OrganizationCo
 func appConfigToDef(item model.ApplicationConfig) Def.ApplicationConfig {
 	defConfig := Def.ApplicationConfig{Id: item.ID, AppTypeId: item.ApplicationType.ID, Version: item.Version.VersionNumbers.String(), Data: item.Data}
 	if item.AppOrg != nil {
-		defConfig.OrgId = &item.AppOrg.Organization.ID
+		orgID := item.AppOrg.Organization.ID
+		defConfig.OrgId = &orgID
 	}
 
 	return defConfig
