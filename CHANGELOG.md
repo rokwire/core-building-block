@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Expose account external IDs [#582](https://github.com/rokwire/core-building-block/issues/582)
 - Anonymous accounts [#559](https://github.com/rokwire/core-building-block/issues/559)
 - Usernames [#574](https://github.com/rokwire/core-building-block/issues/574)
 - Add release instructions to CONVENTIONS.md [#519](https://github.com/rokwire/core-building-block/issues/519)
@@ -25,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Deleting application roles and groups uses bad accounts query [#536](https://github.com/rokwire/core-building-block/issues/536)
 
 ### Changed
+- Update oapi-codegen usage [#597](https://github.com/rokwire/core-building-block/issues/597)
 - BREAKING: Permission assigners should be OR instead of AND [#482](https://github.com/rokwire/core-building-block/issues/482)]
 - Update profile when external user info changes [#589](https://github.com/rokwire/core-building-block/issues/589)
 
