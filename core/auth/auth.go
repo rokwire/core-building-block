@@ -427,6 +427,10 @@ func (a *Auth) applyProfileDataFromExternalUser(profile *model.Profile, newExter
 		changed = changed || (profile.Email != newExternalUser.Email)
 		profile.Email = newExternalUser.Email
 	}
+	if changed {
+		now := time.Now()
+		profile.DateUpdated = &now
+	}
 	return changed, nil
 }
 
