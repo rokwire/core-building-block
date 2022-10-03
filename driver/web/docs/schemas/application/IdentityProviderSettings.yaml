@@ -1,3 +1,6 @@
+required:
+  - identity_provider_id
+  - user_identifier_field
 type: object
 properties:
   identity_provider_id:
