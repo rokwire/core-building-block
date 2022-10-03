@@ -40,4 +40,7 @@ properties:
     type: string
   most_recent_client_version:
     type: string
+  external_ids:
+    type: object
+    nullable: true
 
