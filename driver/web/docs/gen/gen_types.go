@@ -408,12 +408,12 @@ type IdentityProviderSettings struct {
 	FirstNameField      *string                                    `json:"first_name_field,omitempty"`
 	Groups              *IdentityProviderSettings_Groups           `json:"groups,omitempty"`
 	GroupsField         *string                                    `json:"groups_field,omitempty"`
-	IdentityProviderId  *string                                    `json:"identity_provider_id,omitempty"`
+	IdentityProviderId  string                                     `json:"identity_provider_id"`
 	LastNameField       *string                                    `json:"last_name_field,omitempty"`
 	MiddleNameField     *string                                    `json:"middle_name_field,omitempty"`
 	Roles               *IdentityProviderSettings_Roles            `json:"roles,omitempty"`
 	RolesField          *string                                    `json:"roles_field,omitempty"`
-	UserIdentifierField *string                                    `json:"user_identifier_field,omitempty"`
+	UserIdentifierField string                                     `json:"user_identifier_field"`
 	UserSpecificFields  *[]string                                  `json:"user_specific_fields,omitempty"`
 }
 
