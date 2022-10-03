@@ -250,7 +250,8 @@ func supportedAuthTypeToDef(item *model.AuthTypesSupport) *Def.SupportedAuthType
 	supportedAuthTypes := []Def.SupportedAuthType{}
 	for _, authType := range item.SupportedAuthTypes {
 		params := Def.SupportedAuthType_Params{AdditionalProperties: authType.Params}
-		supportedAuthTypes = append(supportedAuthTypes, Def.SupportedAuthType{AuthTypeId: &authType.AuthTypeID, Params: &params})
+		authTypeID := authType.AuthTypeID
+		supportedAuthTypes = append(supportedAuthTypes, Def.SupportedAuthType{AuthTypeId: &authTypeID, Params: &params})
 	}
 	appTypeID := item.AppTypeID
 	return &Def.SupportedAuthTypes{AppTypeId: &appTypeID, SupportedAuthTypes: &supportedAuthTypes}
