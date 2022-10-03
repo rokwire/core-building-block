@@ -99,6 +99,11 @@ type System interface {
 	SysGetGlobalConfig() (*model.GlobalConfig, error)
 	SysUpdateGlobalConfig(setting string) error
 
+	SysGetApplicationOrganization(ID string) (*model.ApplicationOrganization, error)
+	SysGetApplicationOrganizations(appID *string, orgID *string) ([]model.ApplicationOrganization, error)
+	SysCreateApplicationOrganization(appID string, orgID string, appOrg model.ApplicationOrganization) (*model.ApplicationOrganization, error)
+	SysUpdateApplicationOrganization(updateAppOrg model.ApplicationOrganization) error
+
 	SysCreateOrganization(name string, requestType string, organizationDomains []string) (*model.Organization, error)
 	SysGetOrganizations() ([]model.Organization, error)
 	SysGetOrganization(ID string) (*model.Organization, error)
@@ -209,8 +214,11 @@ type Storage interface {
 	DeleteAppConfig(ID string) error
 
 	FindApplicationsOrganizationsByOrgID(orgID string) ([]model.ApplicationOrganization, error)
+	FindApplicationOrganizations(appID *string, orgID *string) ([]model.ApplicationOrganization, error)
 	FindApplicationOrganization(appID string, orgID string) (*model.ApplicationOrganization, error)
+	FindApplicationOrganizationByID(ID string) (*model.ApplicationOrganization, error)
 	InsertApplicationOrganization(context storage.TransactionContext, applicationOrganization model.ApplicationOrganization) (*model.ApplicationOrganization, error)
+	UpdateApplicationOrganization(context storage.TransactionContext, applicationOrganization model.ApplicationOrganization) error
 
 	InsertAPIKey(context storage.TransactionContext, apiKey model.APIKey) (*model.APIKey, error)
 }

@@ -237,6 +237,17 @@ type AdminToken struct {
 	Token string `json:"token"`
 }
 
+// AppOrg defines model for AppOrg.
+type AppOrg struct {
+	AppId                    string                      `json:"app_id"`
+	Id                       *string                     `json:"id,omitempty"`
+	IdentityProviderSettings *[]IdentityProviderSettings `json:"identity_provider_settings"`
+	LoginSessionSettings     *LoginSessionSettings       `json:"login_session_settings,omitempty"`
+	OrgId                    string                      `json:"org_id"`
+	ServicesIds              *[]string                   `json:"services_ids"`
+	SupportedAuthTypes       *[]SupportedAuthTypes       `json:"supported_auth_types"`
+}
+
 // AppOrgGroup defines model for AppOrgGroup.
 type AppOrgGroup struct {
 	Application *Application  `json:"application,omitempty"`
@@ -390,6 +401,43 @@ type GlobalConfig struct {
 	Setting string `json:"setting"`
 }
 
+// IdentityProviderSettings defines model for IdentityProviderSettings.
+type IdentityProviderSettings struct {
+	EmailField          *string                                    `json:"email_field,omitempty"`
+	ExternalIdFields    *IdentityProviderSettings_ExternalIdFields `json:"external_id_fields,omitempty"`
+	FirstNameField      *string                                    `json:"first_name_field,omitempty"`
+	Groups              *IdentityProviderSettings_Groups           `json:"groups,omitempty"`
+	GroupsField         *string                                    `json:"groups_field,omitempty"`
+	IdentityProviderId  *string                                    `json:"identity_provider_id,omitempty"`
+	LastNameField       *string                                    `json:"last_name_field,omitempty"`
+	MiddleNameField     *string                                    `json:"middle_name_field,omitempty"`
+	Roles               *IdentityProviderSettings_Roles            `json:"roles,omitempty"`
+	RolesField          *string                                    `json:"roles_field,omitempty"`
+	UserIdentifierField *string                                    `json:"user_identifier_field,omitempty"`
+	UserSpecificFields  *[]string                                  `json:"user_specific_fields,omitempty"`
+}
+
+// IdentityProviderSettings_ExternalIdFields defines model for IdentityProviderSettings.ExternalIdFields.
+type IdentityProviderSettings_ExternalIdFields struct {
+	AdditionalProperties map[string]string `json:"-"`
+}
+
+// IdentityProviderSettings_Groups defines model for IdentityProviderSettings.Groups.
+type IdentityProviderSettings_Groups struct {
+	AdditionalProperties map[string]string `json:"-"`
+}
+
+// IdentityProviderSettings_Roles defines model for IdentityProviderSettings.Roles.
+type IdentityProviderSettings_Roles struct {
+	AdditionalProperties map[string]string `json:"-"`
+}
+
+// InactiveExpirePolicy defines model for InactiveExpirePolicy.
+type InactiveExpirePolicy struct {
+	Active           bool `json:"active"`
+	InactivityPeriod int  `json:"inactivity_period"`
+}
+
 // JSON Web Key (JWK)
 type JWK struct {
 	// The "alg" (algorithm) parameter identifies the algorithm intended for use with the key
@@ -423,6 +471,14 @@ type JWKUse string
 // JSON Web Key Set (JWKS)
 type JWKS struct {
 	Keys []JWK `json:"keys"`
+}
+
+// LoginSessionSettings defines model for LoginSessionSettings.
+type LoginSessionSettings struct {
+	InactivityExpirePolicy     *InactiveExpirePolicy `json:"inactivity_expire_policy,omitempty"`
+	MaxConcurrentSessions      *int                  `json:"max_concurrent_sessions,omitempty"`
+	TimeSinceLoginExpirePolicy *TSLExpirePolicy      `json:"time_since_login_expire_policy,omitempty"`
+	YearlyExpirePolicy         *YearlyExpirePolicy   `json:"yearly_expire_policy,omitempty"`
 }
 
 // OpenID Connect Discovery Metadata
@@ -560,9 +616,41 @@ type ServiceScope struct {
 	Scope       string  `json:"scope"`
 }
 
+// SupportedAuthType defines model for SupportedAuthType.
+type SupportedAuthType struct {
+	AuthTypeId *string                   `json:"auth_type_id,omitempty"`
+	Params     *SupportedAuthType_Params `json:"params,omitempty"`
+}
+
+// SupportedAuthType_Params defines model for SupportedAuthType.Params.
+type SupportedAuthType_Params struct {
+	AdditionalProperties map[string]interface{} `json:"-"`
+}
+
+// SupportedAuthTypes defines model for SupportedAuthTypes.
+type SupportedAuthTypes struct {
+	AppTypeId          *string              `json:"app_type_id,omitempty"`
+	SupportedAuthTypes *[]SupportedAuthType `json:"supported_auth_types,omitempty"`
+}
+
+// TSLExpirePolicy defines model for TSLExpirePolicy.
+type TSLExpirePolicy struct {
+	Active               bool `json:"active"`
+	TimeSinceLoginPeriod int  `json:"time_since_login_period"`
+}
+
 // Username defines model for Username.
 type Username struct {
 	Username string `json:"username"`
+}
+
+// YearlyExpirePolicy defines model for YearlyExpirePolicy.
+type YearlyExpirePolicy struct {
+	Active bool `json:"active"`
+	Day    int  `json:"day"`
+	Hour   int  `json:"hour"`
+	Min    int  `json:"min"`
+	Month  int  `json:"month"`
 }
 
 // AdminReqAddAccountsToGroup defines model for _admin_req_add-accounts-to-group.
@@ -1459,6 +1547,21 @@ type PostSystemApiKeysJSONBody = APIKey
 // PutSystemApiKeysJSONBody defines parameters for PutSystemApiKeys.
 type PutSystemApiKeysJSONBody = APIKey
 
+// GetSystemAppOrgsParams defines parameters for GetSystemAppOrgs.
+type GetSystemAppOrgsParams struct {
+	// Application ID to search for
+	AppId *string `form:"app_id,omitempty" json:"app_id,omitempty"`
+
+	// Organization ID to search for
+	OrgId *string `form:"org_id,omitempty" json:"org_id,omitempty"`
+}
+
+// PostSystemAppOrgsJSONBody defines parameters for PostSystemAppOrgs.
+type PostSystemAppOrgsJSONBody = AppOrg
+
+// PutSystemAppOrgsIdJSONBody defines parameters for PutSystemAppOrgsId.
+type PutSystemAppOrgsIdJSONBody = AppOrg
+
 // GetSystemApplicationConfigsParams defines parameters for GetSystemApplicationConfigs.
 type GetSystemApplicationConfigsParams struct {
 	AppTypeId string  `form:"app_type_id" json:"app_type_id"`
@@ -1778,6 +1881,12 @@ type PostSystemApiKeysJSONRequestBody = PostSystemApiKeysJSONBody
 // PutSystemApiKeysJSONRequestBody defines body for PutSystemApiKeys for application/json ContentType.
 type PutSystemApiKeysJSONRequestBody = PutSystemApiKeysJSONBody
 
+// PostSystemAppOrgsJSONRequestBody defines body for PostSystemAppOrgs for application/json ContentType.
+type PostSystemAppOrgsJSONRequestBody = PostSystemAppOrgsJSONBody
+
+// PutSystemAppOrgsIdJSONRequestBody defines body for PutSystemAppOrgsId for application/json ContentType.
+type PutSystemAppOrgsIdJSONRequestBody = PutSystemAppOrgsIdJSONBody
+
 // PostSystemApplicationConfigsJSONRequestBody defines body for PostSystemApplicationConfigs for application/json ContentType.
 type PostSystemApplicationConfigsJSONRequestBody = PostSystemApplicationConfigsJSONBody
 
@@ -1929,6 +2038,218 @@ func (a *AuthTypeFields_Params) UnmarshalJSON(b []byte) error {
 
 // Override default JSON handling for AuthTypeFields_Params to handle AdditionalProperties
 func (a AuthTypeFields_Params) MarshalJSON() ([]byte, error) {
+	var err error
+	object := make(map[string]json.RawMessage)
+
+	for fieldName, field := range a.AdditionalProperties {
+		object[fieldName], err = json.Marshal(field)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling '%s': %w", fieldName, err)
+		}
+	}
+	return json.Marshal(object)
+}
+
+// Getter for additional properties for IdentityProviderSettings_ExternalIdFields. Returns the specified
+// element and whether it was found
+func (a IdentityProviderSettings_ExternalIdFields) Get(fieldName string) (value string, found bool) {
+	if a.AdditionalProperties != nil {
+		value, found = a.AdditionalProperties[fieldName]
+	}
+	return
+}
+
+// Setter for additional properties for IdentityProviderSettings_ExternalIdFields
+func (a *IdentityProviderSettings_ExternalIdFields) Set(fieldName string, value string) {
+	if a.AdditionalProperties == nil {
+		a.AdditionalProperties = make(map[string]string)
+	}
+	a.AdditionalProperties[fieldName] = value
+}
+
+// Override default JSON handling for IdentityProviderSettings_ExternalIdFields to handle AdditionalProperties
+func (a *IdentityProviderSettings_ExternalIdFields) UnmarshalJSON(b []byte) error {
+	object := make(map[string]json.RawMessage)
+	err := json.Unmarshal(b, &object)
+	if err != nil {
+		return err
+	}
+
+	if len(object) != 0 {
+		a.AdditionalProperties = make(map[string]string)
+		for fieldName, fieldBuf := range object {
+			var fieldVal string
+			err := json.Unmarshal(fieldBuf, &fieldVal)
+			if err != nil {
+				return fmt.Errorf("error unmarshaling field %s: %w", fieldName, err)
+			}
+			a.AdditionalProperties[fieldName] = fieldVal
+		}
+	}
+	return nil
+}
+
+// Override default JSON handling for IdentityProviderSettings_ExternalIdFields to handle AdditionalProperties
+func (a IdentityProviderSettings_ExternalIdFields) MarshalJSON() ([]byte, error) {
+	var err error
+	object := make(map[string]json.RawMessage)
+
+	for fieldName, field := range a.AdditionalProperties {
+		object[fieldName], err = json.Marshal(field)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling '%s': %w", fieldName, err)
+		}
+	}
+	return json.Marshal(object)
+}
+
+// Getter for additional properties for IdentityProviderSettings_Groups. Returns the specified
+// element and whether it was found
+func (a IdentityProviderSettings_Groups) Get(fieldName string) (value string, found bool) {
+	if a.AdditionalProperties != nil {
+		value, found = a.AdditionalProperties[fieldName]
+	}
+	return
+}
+
+// Setter for additional properties for IdentityProviderSettings_Groups
+func (a *IdentityProviderSettings_Groups) Set(fieldName string, value string) {
+	if a.AdditionalProperties == nil {
+		a.AdditionalProperties = make(map[string]string)
+	}
+	a.AdditionalProperties[fieldName] = value
+}
+
+// Override default JSON handling for IdentityProviderSettings_Groups to handle AdditionalProperties
+func (a *IdentityProviderSettings_Groups) UnmarshalJSON(b []byte) error {
+	object := make(map[string]json.RawMessage)
+	err := json.Unmarshal(b, &object)
+	if err != nil {
+		return err
+	}
+
+	if len(object) != 0 {
+		a.AdditionalProperties = make(map[string]string)
+		for fieldName, fieldBuf := range object {
+			var fieldVal string
+			err := json.Unmarshal(fieldBuf, &fieldVal)
+			if err != nil {
+				return fmt.Errorf("error unmarshaling field %s: %w", fieldName, err)
+			}
+			a.AdditionalProperties[fieldName] = fieldVal
+		}
+	}
+	return nil
+}
+
+// Override default JSON handling for IdentityProviderSettings_Groups to handle AdditionalProperties
+func (a IdentityProviderSettings_Groups) MarshalJSON() ([]byte, error) {
+	var err error
+	object := make(map[string]json.RawMessage)
+
+	for fieldName, field := range a.AdditionalProperties {
+		object[fieldName], err = json.Marshal(field)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling '%s': %w", fieldName, err)
+		}
+	}
+	return json.Marshal(object)
+}
+
+// Getter for additional properties for IdentityProviderSettings_Roles. Returns the specified
+// element and whether it was found
+func (a IdentityProviderSettings_Roles) Get(fieldName string) (value string, found bool) {
+	if a.AdditionalProperties != nil {
+		value, found = a.AdditionalProperties[fieldName]
+	}
+	return
+}
+
+// Setter for additional properties for IdentityProviderSettings_Roles
+func (a *IdentityProviderSettings_Roles) Set(fieldName string, value string) {
+	if a.AdditionalProperties == nil {
+		a.AdditionalProperties = make(map[string]string)
+	}
+	a.AdditionalProperties[fieldName] = value
+}
+
+// Override default JSON handling for IdentityProviderSettings_Roles to handle AdditionalProperties
+func (a *IdentityProviderSettings_Roles) UnmarshalJSON(b []byte) error {
+	object := make(map[string]json.RawMessage)
+	err := json.Unmarshal(b, &object)
+	if err != nil {
+		return err
+	}
+
+	if len(object) != 0 {
+		a.AdditionalProperties = make(map[string]string)
+		for fieldName, fieldBuf := range object {
+			var fieldVal string
+			err := json.Unmarshal(fieldBuf, &fieldVal)
+			if err != nil {
+				return fmt.Errorf("error unmarshaling field %s: %w", fieldName, err)
+			}
+			a.AdditionalProperties[fieldName] = fieldVal
+		}
+	}
+	return nil
+}
+
+// Override default JSON handling for IdentityProviderSettings_Roles to handle AdditionalProperties
+func (a IdentityProviderSettings_Roles) MarshalJSON() ([]byte, error) {
+	var err error
+	object := make(map[string]json.RawMessage)
+
+	for fieldName, field := range a.AdditionalProperties {
+		object[fieldName], err = json.Marshal(field)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling '%s': %w", fieldName, err)
+		}
+	}
+	return json.Marshal(object)
+}
+
+// Getter for additional properties for SupportedAuthType_Params. Returns the specified
+// element and whether it was found
+func (a SupportedAuthType_Params) Get(fieldName string) (value interface{}, found bool) {
+	if a.AdditionalProperties != nil {
+		value, found = a.AdditionalProperties[fieldName]
+	}
+	return
+}
+
+// Setter for additional properties for SupportedAuthType_Params
+func (a *SupportedAuthType_Params) Set(fieldName string, value interface{}) {
+	if a.AdditionalProperties == nil {
+		a.AdditionalProperties = make(map[string]interface{})
+	}
+	a.AdditionalProperties[fieldName] = value
+}
+
+// Override default JSON handling for SupportedAuthType_Params to handle AdditionalProperties
+func (a *SupportedAuthType_Params) UnmarshalJSON(b []byte) error {
+	object := make(map[string]json.RawMessage)
+	err := json.Unmarshal(b, &object)
+	if err != nil {
+		return err
+	}
+
+	if len(object) != 0 {
+		a.AdditionalProperties = make(map[string]interface{})
+		for fieldName, fieldBuf := range object {
+			var fieldVal interface{}
+			err := json.Unmarshal(fieldBuf, &fieldVal)
+			if err != nil {
+				return fmt.Errorf("error unmarshaling field %s: %w", fieldName, err)
+			}
+			a.AdditionalProperties[fieldName] = fieldVal
+		}
+	}
+	return nil
+}
+
+// Override default JSON handling for SupportedAuthType_Params to handle AdditionalProperties
+func (a SupportedAuthType_Params) MarshalJSON() ([]byte, error) {
 	var err error
 	object := make(map[string]json.RawMessage)
 

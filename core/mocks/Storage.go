@@ -583,6 +583,52 @@ func (_m *Storage) FindApplicationOrganization(appID string, orgID string) (*mod
 	return r0, r1
 }
 
+// FindApplicationOrganizationByID provides a mock function with given fields: ID
+func (_m *Storage) FindApplicationOrganizationByID(ID string) (*model.ApplicationOrganization, error) {
+	ret := _m.Called(ID)
+
+	var r0 *model.ApplicationOrganization
+	if rf, ok := ret.Get(0).(func(string) *model.ApplicationOrganization); ok {
+		r0 = rf(ID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.ApplicationOrganization)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(ID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// FindApplicationOrganizations provides a mock function with given fields: appID, orgID
+func (_m *Storage) FindApplicationOrganizations(appID *string, orgID *string) ([]model.ApplicationOrganization, error) {
+	ret := _m.Called(appID, orgID)
+
+	var r0 []model.ApplicationOrganization
+	if rf, ok := ret.Get(0).(func(*string, *string) []model.ApplicationOrganization); ok {
+		r0 = rf(appID, orgID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]model.ApplicationOrganization)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(*string, *string) error); ok {
+		r1 = rf(appID, orgID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // FindApplicationType provides a mock function with given fields: id
 func (_m *Storage) FindApplicationType(id string) (*model.ApplicationType, error) {
 	ret := _m.Called(id)
@@ -1233,6 +1279,20 @@ func (_m *Storage) UpdateAppOrgRole(item model.AppOrgRole) error {
 	var r0 error
 	if rf, ok := ret.Get(0).(func(model.AppOrgRole) error); ok {
 		r0 = rf(item)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// UpdateApplicationOrganization provides a mock function with given fields: context, applicationOrganization
+func (_m *Storage) UpdateApplicationOrganization(context storage.TransactionContext, applicationOrganization model.ApplicationOrganization) error {
+	ret := _m.Called(context, applicationOrganization)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, model.ApplicationOrganization) error); ok {
+		r0 = rf(context, applicationOrganization)
 	} else {
 		r0 = ret.Error(0)
 	}
