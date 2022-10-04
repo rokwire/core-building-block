@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Update app/org endpoint [#543](https://github.com/rokwire/core-building-block/issues/543)
+- Create app/org endpoint [#544](https://github.com/rokwire/core-building-block/issues/544)
 - Expose account external IDs [#582](https://github.com/rokwire/core-building-block/issues/582)
 - Anonymous accounts [#559](https://github.com/rokwire/core-building-block/issues/559)
 - Usernames [#574](https://github.com/rokwire/core-building-block/issues/574)

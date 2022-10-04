@@ -3090,6 +3090,41 @@ func (sa *Adapter) FindApplicationsOrganizationsByOrgID(orgID string) ([]model.A
 	return result, nil
 }
 
+// FindApplicationsOrganizations finds applications organizations by appID or orgID
+func (sa *Adapter) FindApplicationOrganizations(appID *string, orgID *string) ([]model.ApplicationOrganization, error) {
+	cachedAppOrgs, err := sa.getCachedApplicationOrganizations()
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeApplicationOrganization, nil, err)
+	}
+
+	result := make([]model.ApplicationOrganization, 0)
+	for _, appOrg := range cachedAppOrgs {
+		if orgID == nil || appOrg.Organization.ID == *orgID {
+			if appID == nil || appOrg.Application.ID == *appID {
+				result = append(result, appOrg)
+			}
+		}
+	}
+
+	return result, nil
+}
+
+// FindApplicationOrganizationByID finds applications organizations by ID
+func (sa *Adapter) FindApplicationOrganizationByID(ID string) (*model.ApplicationOrganization, error) {
+	cachedAppOrgs, err := sa.getCachedApplicationOrganizations()
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeApplicationOrganization, nil, err)
+	}
+
+	for _, appOrg := range cachedAppOrgs {
+		if appOrg.ID == ID {
+			return &appOrg, nil
+		}
+	}
+
+	return nil, nil
+}
+
 // InsertApplicationOrganization inserts an application organization
 func (sa *Adapter) InsertApplicationOrganization(context TransactionContext, applicationOrganization model.ApplicationOrganization) (*model.ApplicationOrganization, error) {
 	appOrg := applicationOrganizationToStorage(applicationOrganization)
@@ -3100,6 +3135,36 @@ func (sa *Adapter) InsertApplicationOrganization(context TransactionContext, app
 	}
 
 	return &applicationOrganization, nil
+}
+
+// UpdateApplicationOrganization updates an application organization
+func (sa *Adapter) UpdateApplicationOrganization(context TransactionContext, applicationOrganization model.ApplicationOrganization) error {
+	appOrg := applicationOrganizationToStorage(applicationOrganization)
+	now := time.Now()
+
+	filter := bson.M{"_id": applicationOrganization.ID}
+	update := bson.D{primitive.E{Key: "date_updated", Value: now},
+		primitive.E{Key: "identity_providers_settings", Value: appOrg.IdentityProvidersSettings},
+		primitive.E{Key: "supported_auth_types", Value: appOrg.SupportedAuthTypes},
+		primitive.E{Key: "logins_sessions_settings", Value: appOrg.LoginsSessionsSetting},
+		primitive.E{Key: "services_ids", Value: appOrg.ServicesIDs}}
+
+	updateAppOrg := bson.D{
+		primitive.E{Key: "$set", Value: update},
+	}
+
+	res, err := sa.db.applicationsOrganizations.UpdateOneWithContext(context, filter, updateAppOrg, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeApplicationOrganization, nil, err)
+	}
+	if res.ModifiedCount != 1 {
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeApplicationOrganization, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
+	}
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeApplicationOrganization, nil, err)
+	}
+
+	return nil
 }
 
 // FindDevice finds a device by device id and account id

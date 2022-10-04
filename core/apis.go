@@ -130,15 +130,9 @@ func (c *APIs) storeSystemData() error {
 			systemAdminApp := &newSystemAdminApp
 
 			//insert system admin apporg
-			emailSupport := []struct {
-				AuthTypeID string                 `bson:"auth_type_id"`
-				Params     map[string]interface{} `bson:"params"`
-			}{
-				{emailAuthType.ID, nil},
-			}
 			supportedAuthTypes := make([]model.AuthTypesSupport, len(systemAdminApp.Types))
 			for i, appType := range systemAdminApp.Types {
-				supportedAuthTypes[i] = model.AuthTypesSupport{AppTypeID: appType.ID, SupportedAuthTypes: emailSupport}
+				supportedAuthTypes[i] = model.AuthTypesSupport{AppTypeID: appType.ID, SupportedAuthTypes: []model.SupportedAuthType{{AuthTypeID: emailAuthType.ID, Params: nil}}}
 			}
 
 			newDocuments["application_organization"] = uuid.NewString()
@@ -479,6 +473,22 @@ func (s *systemImpl) SysGetGlobalConfig() (*model.GlobalConfig, error) {
 
 func (s *systemImpl) SysUpdateGlobalConfig(setting string) error {
 	return s.app.sysUpdateGlobalConfig(setting)
+}
+
+func (s *systemImpl) SysGetApplicationOrganizations(appID *string, orgID *string) ([]model.ApplicationOrganization, error) {
+	return s.app.sysGetApplicationOrganizations(appID, orgID)
+}
+
+func (s *systemImpl) SysGetApplicationOrganization(ID string) (*model.ApplicationOrganization, error) {
+	return s.app.sysGetApplicationOrganization(ID)
+}
+
+func (s *systemImpl) SysCreateApplicationOrganization(appID string, orgID string, appOrg model.ApplicationOrganization) (*model.ApplicationOrganization, error) {
+	return s.app.sysCreateApplicationOrganization(appOrg, appID, orgID)
+}
+
+func (s *systemImpl) SysUpdateApplicationOrganization(appOrg model.ApplicationOrganization) error {
+	return s.app.sysUpdateApplicationOrganization(appOrg)
 }
 
 func (s *systemImpl) SysCreateOrganization(name string, requestType string, organizationDomains []string) (*model.Organization, error) {

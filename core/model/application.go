@@ -352,12 +352,14 @@ type ApplicationType struct {
 
 // AuthTypesSupport represents supported auth types for an organization in an application type with configs/params
 type AuthTypesSupport struct {
-	AppTypeID string `bson:"app_type_id"`
+	AppTypeID          string              `bson:"app_type_id"`
+	SupportedAuthTypes []SupportedAuthType `bson:"supported_auth_types"`
+}
 
-	SupportedAuthTypes []struct {
-		AuthTypeID string                 `bson:"auth_type_id"`
-		Params     map[string]interface{} `bson:"params"`
-	} `bson:"supported_auth_types"`
+// AuthTypesSupport represents a supported auth type
+type SupportedAuthType struct {
+	AuthTypeID string                 `bson:"auth_type_id"`
+	Params     map[string]interface{} `bson:"params"`
 }
 
 // ApplicationConfig represents app configs

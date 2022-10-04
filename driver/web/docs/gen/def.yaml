@@ -4610,6 +4610,153 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+  '/system/app-orgs/{id}':
+    get:
+      tags:
+        - System
+      summary: Get app-org
+      description: |
+        Get app-org by ID
+
+        **Auth:** Requires system access token with `get_app_orgs` or `all_app_orgs` permission
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: ID of the app-org to retrieve
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppOrg'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+    put:
+      tags:
+        - System
+      summary: Update app-org by ID
+      description: |
+        Updates app-org by ID
+
+        **Auth:** Requires system access token with `update_app_orgs` or `all_app_orgs` permission
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: ID of the app-org that needs to be updated
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+      requestBody:
+        description: update one app-org
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppOrg'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /system/app-orgs:
+    get:
+      tags:
+        - System
+      summary: Get app-orgs
+      description: |
+        Get all app-orgs matching query
+
+        **Auth:** Requires system access token with `get_app_orgs` or `all_app_orgs` permission
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: app_id
+          in: query
+          description: Application ID to search for
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
+        - name: org_id
+          in: query
+          description: Organization ID to search for
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AppOrg'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+    post:
+      tags:
+        - System
+      summary: Create app-org
+      description: |
+        Create app-org
+
+        **Auth:** Requires system access token with `update_app_orgs` or `all_app_orgs` permission
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: New app-org
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppOrg'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   /ui/credential/reset:
     get:
       tags:
@@ -4775,6 +4922,38 @@ components:
           $ref: '#/components/schemas/Organization'
         TODO:
           type: string
+    AppOrg:
+      required:
+        - id
+        - app_id
+        - org_id
+      type: object
+      nullable: true
+      properties:
+        id:
+          readOnly: true
+          type: string
+        app_id:
+          type: string
+        org_id:
+          type: string
+        services_ids:
+          type: array
+          nullable: true
+          items:
+            type: string
+        identity_provider_settings:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/IdentityProviderSettings'
+        supported_auth_types:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/SupportedAuthTypes'
+        login_session_settings:
+          $ref: '#/components/schemas/LoginSessionSettings'
     Permission:
       required:
         - id
@@ -4914,6 +5093,111 @@ components:
           description: conforms major.minor.patch format
         data:
           type: object
+    IdentityProviderSettings:
+      required:
+        - identity_provider_id
+        - user_identifier_field
+      type: object
+      properties:
+        identity_provider_id:
+          type: string
+        user_identifier_field:
+          type: string
+        external_id_fields:
+          type: object
+          additionalProperties:
+            type: string
+        first_name_field:
+          type: string
+        middle_name_field:
+          type: string
+        last_name_field:
+          type: string
+        email_field:
+          type: string
+        roles_field:
+          type: string
+        groups_field:
+          type: string
+        user_specific_fields:
+          type: array
+          items:
+            type: string
+        roles:
+          type: object
+          additionalProperties:
+            type: string
+        groups:
+          type: object
+          additionalProperties:
+            type: string
+    SupportedAuthTypes:
+      type: object
+      properties:
+        app_type_id:
+          type: string
+        supported_auth_types:
+          type: array
+          items:
+            $ref: '#/components/schemas/SupportedAuthType'
+    SupportedAuthType:
+      type: object
+      properties:
+        auth_type_id:
+          type: string
+        params:
+          type: object
+          additionalProperties: true
+    LoginSessionSettings:
+      type: object
+      properties:
+        max_concurrent_sessions:
+          type: integer
+        inactivity_expire_policy:
+          $ref: '#/components/schemas/InactiveExpirePolicy'
+        time_since_login_expire_policy:
+          $ref: '#/components/schemas/TSLExpirePolicy'
+        yearly_expire_policy:
+          $ref: '#/components/schemas/YearlyExpirePolicy'
+    YearlyExpirePolicy:
+      type: object
+      required:
+        - active
+        - day
+        - month
+        - hour
+        - min
+      properties:
+        active:
+          type: boolean
+        day:
+          type: integer
+        month:
+          type: integer
+        hour:
+          type: integer
+        min:
+          type: integer
+    InactiveExpirePolicy:
+      type: object
+      required:
+        - active
+        - inactivity_period
+      properties:
+        active:
+          type: boolean
+        inactivity_period:
+          type: integer
+    TSLExpirePolicy:
+      type: object
+      required:
+        - active
+        - time_since_login_period
+      properties:
+        active:
+          type: boolean
+        time_since_login_period:
+          type: integer
     LoginSession:
       type: object
       properties:

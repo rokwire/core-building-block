@@ -1,0 +1,37 @@
+required:
+  - identity_provider_id
+  - user_identifier_field
+type: object
+properties:
+  identity_provider_id:
+    type: string
+  user_identifier_field:
+    type: string
+  external_id_fields: # map
+    type: object
+    additionalProperties:
+      type: string
+  first_name_field:
+    type: string
+  middle_name_field:
+    type: string
+  last_name_field:
+    type: string
+  email_field:
+    type: string
+  roles_field:
+    type: string
+  groups_field:
+    type: string
+  user_specific_fields:
+    type: array
+    items:
+      type: string
+  roles:
+    type: object
+    additionalProperties:
+      type: string
+  groups:
+    type: object
+    additionalProperties:
+      type: string
