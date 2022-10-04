@@ -1128,11 +1128,12 @@ func (a *Auth) applyLogin(anonymous bool, sub string, authType model.AuthType, a
 				}
 			}
 		}
-		///
 		// update account usage information
-		err = a.storage.UpdateAccountUsageInfo(context, accountAuthType.Account.ID, true, true, clientVersion)
-		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountUsageInfo, nil, err)
+		if accountAuthType != nil {
+			err = a.storage.UpdateAccountUsageInfo(context, accountAuthType.Account.ID, true, true, clientVersion)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountUsageInfo, nil, err)
+			}
 		}
 		return nil
 	}
