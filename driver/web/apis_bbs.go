@@ -31,12 +31,12 @@ import (
 	"github.com/rokwire/logging-library-go/logutils"
 )
 
-//BBsApisHandler handles the APIs implementation used by the platform building blocks
+// BBsApisHandler handles the APIs implementation used by the platform building blocks
 type BBsApisHandler struct {
 	coreAPIs *core.APIs
 }
 
-//getTest TODO get test
+// getTest TODO get test
 func (h BBsApisHandler) getTest(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	res := h.coreAPIs.BBs.BBsGetTest()
 
@@ -50,11 +50,7 @@ func (h BBsApisHandler) getServiceRegistrations(l *logs.Log, r *http.Request, cl
 	}
 	serviceIDs := strings.Split(serviceIDsParam, ",")
 
-	serviceRegs, err := h.coreAPIs.Auth.GetServiceRegistrations(serviceIDs)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeServiceReg, nil, err, http.StatusInternalServerError, true)
-	}
-
+	serviceRegs := h.coreAPIs.Auth.GetServiceRegistrations(serviceIDs)
 	serviceRegResp := authServiceRegListToDef(serviceRegs)
 
 	data, err := json.Marshal(serviceRegResp)
@@ -162,7 +158,7 @@ func (h BBsApisHandler) getServiceAccessTokens(l *logs.Log, r *http.Request, cla
 	return l.HttpResponseSuccessJSON(respData)
 }
 
-//NewBBsApisHandler creates new bbs Handler instance
+// NewBBsApisHandler creates new bbs Handler instance
 func NewBBsApisHandler(coreAPIs *core.APIs) BBsApisHandler {
 	return BBsApisHandler{coreAPIs: coreAPIs}
 }

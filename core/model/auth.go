@@ -43,6 +43,8 @@ const (
 	TypeIdentityProvider logutils.MessageDataType = "identity provider"
 	//TypeIdentityProviderConfig identity provider config type
 	TypeIdentityProviderConfig logutils.MessageDataType = "identity provider config"
+	//TypeIdentityProviderSetting identity provider setting type
+	TypeIdentityProviderSetting logutils.MessageDataType = "identity provider setting"
 	//TypeUserAuth user auth type
 	TypeUserAuth logutils.MessageDataType = "user auth"
 	//TypeAuthCred auth cred type
@@ -79,7 +81,7 @@ const (
 	TypeIP logutils.MessageDataType = "ip"
 )
 
-//LoginSession represents login session entity
+// LoginSession represents login session entity
 type LoginSession struct {
 	ID string
 
@@ -91,7 +93,7 @@ type LoginSession struct {
 
 	Identifier      string //it is the account id(anonymous id for anonymous logins)
 	ExternalIDs     map[string]string
-	AccountAuthType *AccountAuthType //it is nil for anonymous logins
+	AccountAuthType *AccountAuthType //it may be nil for anonymous logins
 
 	Device *Device
 
@@ -110,7 +112,7 @@ type LoginSession struct {
 	DateCreated time.Time
 }
 
-//IsExpired says if the sessions is expired
+// IsExpired says if the sessions is expired
 func (ls LoginSession) IsExpired() bool {
 	loginsSessionsSetting := ls.AppOrg.LoginsSessionsSetting
 
@@ -192,7 +194,7 @@ func (ls LoginSession) isYearlyExpired(policy YearlyExpirePolicy) bool {
 	return createdDate.Before(expiresDate) && expiresDate.Before(now)
 }
 
-//CurrentRefreshToken returns the current refresh token (last element of RefreshTokens)
+// CurrentRefreshToken returns the current refresh token (last element of RefreshTokens)
 func (ls LoginSession) CurrentRefreshToken() string {
 	numTokens := len(ls.RefreshTokens)
 	if numTokens <= 0 {
@@ -201,7 +203,7 @@ func (ls LoginSession) CurrentRefreshToken() string {
 	return ls.RefreshTokens[numTokens-1]
 }
 
-//LogInfo gives the information appropriate to be logged for the session
+// LogInfo gives the information appropriate to be logged for the session
 func (ls LoginSession) LogInfo() string {
 	identifier := utils.GetLogValue(ls.Identifier, 3)
 	accessToken := utils.GetLogValue(ls.AccessToken, 10)
@@ -219,14 +221,15 @@ func (ls LoginSession) LogInfo() string {
 		ls.StateExpires, ls.MfaAttempts, ls.DateRefreshed, ls.DateUpdated, ls.DateCreated)
 }
 
-//APIKey represents an API key entity
+// APIKey represents an API key entity
 type APIKey struct {
 	ID    string `json:"id" bson:"_id"`
 	AppID string `json:"app_id" bson:"app_id" validate:"required"`
 	Key   string `json:"key" bson:"key"`
 }
 
-//AuthType represents authentication type entity
+// AuthType represents authentication type entity
+//
 //	The system supports different authentication types - username, email, phone, identity providers ones etc
 type AuthType struct {
 	ID             string                 `bson:"_id"`
@@ -239,7 +242,8 @@ type AuthType struct {
 	Params         map[string]interface{} `bson:"params"`
 }
 
-//IdentityProvider represents identity provider entity
+// IdentityProvider represents identity provider entity
+//
 //	The system can integrate different identity providers - facebook, google, illinois etc
 type IdentityProvider struct {
 	ID   string `bson:"_id"`
@@ -249,13 +253,13 @@ type IdentityProvider struct {
 	Configs []IdentityProviderConfig `bson:"configs"`
 }
 
-//IdentityProviderConfig represents identity provider config for an application type
+// IdentityProviderConfig represents identity provider config for an application type
 type IdentityProviderConfig struct {
 	AppTypeID string                 `bson:"app_type_id"`
 	Config    map[string]interface{} `bson:"config"`
 }
 
-//UserAuth represents user auth entity
+// UserAuth represents user auth entity
 type UserAuth struct {
 	UserID         string
 	AccountID      string
@@ -274,7 +278,7 @@ type UserAuth struct {
 	Anonymous      bool
 }
 
-//AuthCreds represents represents a set of credentials used by auth
+// AuthCreds represents represents a set of credentials used by auth
 type AuthCreds struct {
 	ID        string                 `bson:"_id"`
 	OrgID     string                 `bson:"org_id"`
@@ -287,8 +291,8 @@ type AuthCreds struct {
 	DateUpdated *time.Time `bson:"date_updated"`
 }
 
-//AuthRefresh represents refresh token info used by auth
-//TODO remove
+// AuthRefresh represents refresh token info used by auth
+// TODO remove
 type AuthRefresh struct {
 	PreviousToken string                 `bson:"previous_token"`
 	CurrentToken  string                 `bson:"current_token" validate:"required"`
@@ -302,7 +306,7 @@ type AuthRefresh struct {
 	DateUpdated *time.Time `bson:"date_updated"`
 }
 
-//ServiceReg represents a service registration entity
+// ServiceReg represents a service registration entity
 type ServiceReg struct {
 	Registration authservice.ServiceReg `json:"registration" bson:"registration"`
 	Name         string                 `json:"name" bson:"name"`
@@ -314,14 +318,14 @@ type ServiceReg struct {
 	FirstParty   bool                   `json:"first_party" bson:"first_party"`
 }
 
-//ServiceScope represents a scope entity
+// ServiceScope represents a scope entity
 type ServiceScope struct {
 	Scope       *authorization.Scope `json:"scope" bson:"scope"`
 	Required    bool                 `json:"required" bson:"required"`
 	Explanation string               `json:"explanation,omitempty" bson:"explanation,omitempty"`
 }
 
-//ServiceAccount represents a service account entity
+// ServiceAccount represents a service account entity
 type ServiceAccount struct {
 	AccountID string
 	Name      string
@@ -338,7 +342,7 @@ type ServiceAccount struct {
 	DateUpdated *time.Time
 }
 
-//GetPermissionNames returns all names of permissions granted to this account
+// GetPermissionNames returns all names of permissions granted to this account
 func (s ServiceAccount) GetPermissionNames() []string {
 	permissions := make([]string, len(s.Permissions))
 	for i, permission := range s.Permissions {
@@ -347,13 +351,13 @@ func (s ServiceAccount) GetPermissionNames() []string {
 	return permissions
 }
 
-//AppOrgPair represents an appID, orgID pair entity
+// AppOrgPair represents an appID, orgID pair entity
 type AppOrgPair struct {
 	AppID string
 	OrgID string
 }
 
-//ServiceAccountCredential represents a service account credential entity
+// ServiceAccountCredential represents a service account credential entity
 type ServiceAccountCredential struct {
 	ID   string `bson:"id"`
 	Name string `bson:"name"`
@@ -375,19 +379,19 @@ type ServiceAccountTokenRequest struct {
 	Creds *interface{} `json:"creds,omitempty"`
 }
 
-//ServiceAuthorization represents service authorization entity
+// ServiceAuthorization represents service authorization entity
 type ServiceAuthorization struct {
 	UserID    string                `json:"user_id" bson:"user_id"`
 	ServiceID string                `json:"service_id" bson:"service_id"`
 	Scopes    []authorization.Scope `json:"scopes" bson:"scopes"`
 }
 
-//JSONWebKeySet represents a JSON Web Key Set (JWKS) entity
+// JSONWebKeySet represents a JSON Web Key Set (JWKS) entity
 type JSONWebKeySet struct {
 	Keys []JSONWebKey `json:"keys" bson:"keys"`
 }
 
-//JSONWebKey represents a JSON Web Key Set (JWKS) entity
+// JSONWebKey represents a JSON Web Key Set (JWKS) entity
 type JSONWebKey struct {
 	Kty string `json:"kty" bson:"kty"`
 	Use string `json:"use" bson:"use"`
@@ -397,7 +401,7 @@ type JSONWebKey struct {
 	E   string `json:"e" bson:"e"`
 }
 
-//JSONWebKeyFromPubKey generates a JSON Web Key from a PubKey
+// JSONWebKeyFromPubKey generates a JSON Web Key from a PubKey
 func JSONWebKeyFromPubKey(key *authservice.PubKey) (*JSONWebKey, error) {
 	if key == nil {
 		return nil, errors.ErrorData(logutils.StatusInvalid, TypePubKey, logutils.StringArgs("nil"))

@@ -24,7 +24,7 @@ import (
 	"github.com/rokwire/logging-library-go/logutils"
 )
 
-//Helper for authLogin and authLoginMFA
+// Helper for authLogin and authLoginMFA
 func authBuildLoginResponse(l *logs.Log, loginSession *model.LoginSession) logs.HttpResponse {
 	//token
 	accessToken := loginSession.AccessToken
@@ -35,7 +35,7 @@ func authBuildLoginResponse(l *logs.Log, loginSession *model.LoginSession) logs.
 
 	//account
 	var accountData *Def.SharedResAccount
-	if !loginSession.Anonymous {
+	if loginSession.AccountAuthType != nil {
 		account := loginSession.AccountAuthType.Account
 		accountData = accountToDef(account)
 	}

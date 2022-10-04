@@ -21,18 +21,19 @@ import (
 	"github.com/rokwire/logging-library-go/logs"
 )
 
-//Services exposes APIs for the driver adapters
+// Services exposes APIs for the driver adapters
 type Services interface {
 	SerDeleteAccount(id string) error
 	SerGetAccount(accountID string) (*model.Account, error)
 	SerGetProfile(accountID string) (*model.Profile, error)
 	SerGetPreferences(accountID string) (map[string]interface{}, error)
 	SerGetAccountSystemConfigs(accountID string) (map[string]interface{}, error)
-	SerUpdateAccountPreferences(id string, preferences map[string]interface{}) error
+	SerUpdateAccountPreferences(id string, appID string, orgID string, anonymous bool, preferences map[string]interface{}, l *logs.Log) (bool, error)
 	SerUpdateProfile(accountID string, profile model.Profile) error
+	SerUpdateAccountUsername(accountID string, appID string, orgID string, username string) error
 
 	SerGetAccounts(limit int, offset int, appID string, orgID string, accountID *string, firstName *string, lastName *string, authType *string,
-		authTypeIdentifier *string, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error)
+		authTypeIdentifier *string, anonymous *bool, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error)
 
 	SerGetAuthTest(l *logs.Log) string
 	SerGetCommonTest(l *logs.Log) string
@@ -40,7 +41,7 @@ type Services interface {
 	SerGetAppConfig(appTypeIdentifier string, orgID *string, versionNumbers model.VersionNumbers, apiKey *string) (*model.ApplicationConfig, error)
 }
 
-//Administration exposes administration APIs for the driver adapters
+// Administration exposes administration APIs for the driver adapters
 type Administration interface {
 	AdmGetTest() string
 	AdmGetTestModel() string
@@ -61,11 +62,13 @@ type Administration interface {
 	AdmGetApplicationPermissions(appID string, orgID string, l *logs.Log) ([]model.Permission, error)
 
 	AdmGetAccounts(limit int, offset int, appID string, orgID string, accountID *string, firstName *string, lastName *string, authType *string,
-		authTypeIdentifier *string, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error)
+		authTypeIdentifier *string, anonymous *bool, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error)
 	AdmGetAccount(accountID string) (*model.Account, error)
 
+	AdmUpdateAccountUsername(accountID string, appID string, orgID string, username string) error
+
 	AdmGetAccountSystemConfigs(appID string, orgID string, accountID string, l *logs.Log) (map[string]interface{}, error)
-	AdmUpdateAccountSystemConfigs(appID string, orgID string, accountID string, configs map[string]interface{}, l *logs.Log) error
+	AdmUpdateAccountSystemConfigs(appID string, orgID string, accountID string, configs map[string]interface{}, createAnonymous bool, l *logs.Log) (bool, error)
 
 	AdmGrantAccountPermissions(appID string, orgID string, accountID string, permissionNames []string, assignerPermissions []string, l *logs.Log) error
 	AdmRevokeAccountPermissions(appID string, orgID string, accountID string, permissions []string, assignerPermissions []string, l *logs.Log) error
@@ -80,21 +83,26 @@ type Administration interface {
 	AdmGetApplicationAccountDevices(appID string, orgID string, accountID string, l *logs.Log) ([]model.Device, error)
 }
 
-//Encryption exposes APIs for the Encryption building block
+// Encryption exposes APIs for the Encryption building block
 type Encryption interface {
 	EncGetTest() string
 }
 
-//BBs exposes users related APIs used by the platform building blocks
+// BBs exposes users related APIs used by the platform building blocks
 type BBs interface {
 	BBsGetTest() string
 }
 
-//System exposes system APIs for the driver adapters
+// System exposes system APIs for the driver adapters
 type System interface {
 	SysCreateGlobalConfig(setting string) (*model.GlobalConfig, error)
 	SysGetGlobalConfig() (*model.GlobalConfig, error)
 	SysUpdateGlobalConfig(setting string) error
+
+	SysGetApplicationOrganization(ID string) (*model.ApplicationOrganization, error)
+	SysGetApplicationOrganizations(appID *string, orgID *string) ([]model.ApplicationOrganization, error)
+	SysCreateApplicationOrganization(appID string, orgID string, appOrg model.ApplicationOrganization) (*model.ApplicationOrganization, error)
+	SysUpdateApplicationOrganization(updateAppOrg model.ApplicationOrganization) error
 
 	SysCreateOrganization(name string, requestType string, organizationDomains []string) (*model.Organization, error)
 	SysGetOrganizations() ([]model.Organization, error)
@@ -119,7 +127,7 @@ type System interface {
 	SysUpdateAuthTypes(ID string, code string, description string, isExternal bool, isAnonymous bool, useCredentials bool, ignoreMFA bool, params map[string]interface{}) error
 }
 
-//Storage is used by core to storage data - DB storage adapter, file storage adapter etc
+// Storage is used by core to storage data - DB storage adapter, file storage adapter etc
 type Storage interface {
 	RegisterStorageListener(storageListener storage.Listener)
 
@@ -129,17 +137,19 @@ type Storage interface {
 
 	FindAccountByID(context storage.TransactionContext, id string) (*model.Account, error)
 	FindAccounts(limit int, offset int, appID string, orgID string, accountID *string, firstName *string, lastName *string, authType *string,
-		authTypeIdentifier *string, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error)
+		authTypeIdentifier *string, anonymous *bool, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error)
 	FindAccountsByAccountID(appID string, orgID string, accountIDs []string) ([]model.Account, error)
+	FindAccountsByUsername(context storage.TransactionContext, appOrg *model.ApplicationOrganization, username string) ([]model.Account, error)
 
-	UpdateAccountPreferences(accountID string, preferences map[string]interface{}) error
+	UpdateAccountPreferences(context storage.TransactionContext, accountID string, preferences map[string]interface{}) error
 	UpdateAccountSystemConfigs(context storage.TransactionContext, accountID string, configs map[string]interface{}) error
 	InsertAccountPermissions(context storage.TransactionContext, accountID string, permissions []model.Permission) error
-	DeleteAccountPermissions(context storage.TransactionContext, accountID string, hasPermissions bool, permissions []model.Permission) error
+	DeleteAccountPermissions(context storage.TransactionContext, accountID string, permissionNames []string) error
+	UpdateAccountUsername(context storage.TransactionContext, accountID, username string) error
 	InsertAccountRoles(context storage.TransactionContext, accountID string, appOrgID string, roles []model.AccountRole) error
-	DeleteAccountRoles(context storage.TransactionContext, accountID string, hasPermissions bool, roleIDs []string) error
+	DeleteAccountRoles(context storage.TransactionContext, accountID string, roleIDs []string) error
 	InsertAccountsGroup(group model.AccountGroup, accounts []model.Account) error
-	RemoveAccountsGroup(groupID string, accounts []model.Account, hasPermissions []bool) error
+	RemoveAccountsGroup(groupID string, accountIDs []string) error
 	CountAccountsByRoleID(roleID string) (*int64, error)
 	CountAccountsByGroupID(groupID string) (*int64, error)
 
@@ -160,6 +170,7 @@ type Storage interface {
 	FindPermissionsByName(context storage.TransactionContext, names []string) ([]model.Permission, error)
 	FindPermissionsByServiceIDs(serviceIDs []string) ([]model.Permission, error)
 	InsertPermission(context storage.TransactionContext, item model.Permission) error
+	InsertPermissions(context storage.TransactionContext, items []model.Permission) error
 	UpdatePermission(item model.Permission) error
 	DeletePermission(id string) error
 
@@ -203,18 +214,21 @@ type Storage interface {
 	DeleteAppConfig(ID string) error
 
 	FindApplicationsOrganizationsByOrgID(orgID string) ([]model.ApplicationOrganization, error)
+	FindApplicationOrganizations(appID *string, orgID *string) ([]model.ApplicationOrganization, error)
 	FindApplicationOrganization(appID string, orgID string) (*model.ApplicationOrganization, error)
+	FindApplicationOrganizationByID(ID string) (*model.ApplicationOrganization, error)
 	InsertApplicationOrganization(context storage.TransactionContext, applicationOrganization model.ApplicationOrganization) (*model.ApplicationOrganization, error)
+	UpdateApplicationOrganization(context storage.TransactionContext, applicationOrganization model.ApplicationOrganization) error
 
 	InsertAPIKey(context storage.TransactionContext, apiKey model.APIKey) (*model.APIKey, error)
 }
 
-//StorageListener listenes for change data storage events
+// StorageListener listenes for change data storage events
 type StorageListener struct {
 	app *application
 	storage.DefaultListenerImpl
 }
 
-//ApplicationListener represents application listener
+// ApplicationListener represents application listener
 type ApplicationListener interface {
 }

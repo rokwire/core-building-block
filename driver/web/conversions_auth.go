@@ -25,7 +25,7 @@ import (
 	"github.com/rokwire/logging-library-go/logutils"
 )
 
-//LoginSession
+// LoginSession
 func loginSessionToDef(item model.LoginSession) Def.SharedResLoginSession {
 	var accountAuthTypeID *string
 	var accountAuthTypeIdentifier *string
@@ -388,7 +388,7 @@ func jsonWebKeySetDef(items *model.JSONWebKeySet) *Def.JWKS {
 	return &Def.JWKS{Keys: out}
 }
 
-//AuthType
+// AuthType
 func authTypeToDef(item *model.AuthType) *Def.AuthTypeFields {
 	if item == nil {
 		return nil

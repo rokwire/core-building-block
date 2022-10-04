@@ -18,7 +18,7 @@ import (
 	"core-building-block/core/model"
 )
 
-//Application
+// Application
 func applicationFromStorage(item *application) model.Application {
 	if item == nil {
 		return model.Application{}
@@ -42,7 +42,7 @@ func applicationsFromStorage(itemsList []application) []model.Application {
 	return items
 }
 
-//ApplicationType
+// ApplicationType
 func applicationTypeFromStorage(item *applicationType) model.ApplicationType {
 	if item == nil {
 		return model.ApplicationType{}
@@ -67,7 +67,7 @@ func applicationTypesFromStorage(itemsList []applicationType) []model.Applicatio
 	return items
 }
 
-//AppOrgRole
+// AppOrgRole
 func appOrgRoleFromStorage(item *appOrgRole, appOrg model.ApplicationOrganization) model.AppOrgRole {
 	if item == nil {
 		return model.AppOrgRole{}
@@ -177,7 +177,7 @@ func appConfigToStorage(item model.ApplicationConfig) applicationConfig {
 	return appConfig
 }
 
-//AppOrgGroup
+// AppOrgGroup
 func appOrgGroupFromStorage(item *appOrgGroup, appOrg model.ApplicationOrganization) model.AppOrgGroup {
 	if item == nil {
 		return model.AppOrgGroup{}
@@ -218,7 +218,7 @@ func appOrgGroupsToStorage(items []model.AppOrgGroup) []appOrgGroup {
 	return res
 }
 
-//Organization
+// Organization
 func organizationFromStorage(item *organization) model.Organization {
 	if item == nil {
 		return model.Organization{}
@@ -249,11 +249,12 @@ func organizationToStorage(item *model.Organization) *organization {
 		Config: item.Config, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
-//ApplicationOrganization
+// ApplicationOrganization
 func applicationOrganizationToStorage(item model.ApplicationOrganization) applicationOrganization {
 	return applicationOrganization{ID: item.ID, AppID: item.Application.ID, OrgID: item.Organization.ID,
 		ServicesIDs: item.ServicesIDs, IdentityProvidersSettings: item.IdentityProvidersSettings,
-		SupportedAuthTypes: item.SupportedAuthTypes, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+		SupportedAuthTypes: item.SupportedAuthTypes, LoginsSessionsSetting: item.LoginsSessionsSetting,
+		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
 func applicationOrganizationFromStorage(item applicationOrganization, application model.Application, organization model.Organization) model.ApplicationOrganization {

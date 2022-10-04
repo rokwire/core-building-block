@@ -21,7 +21,7 @@ import (
 	"github.com/rokwire/logging-library-go/logutils"
 )
 
-//LoginSession
+// LoginSession
 func loginSessionFromStorage(item loginSession, authType model.AuthType, account *model.Account,
 	appOrg model.ApplicationOrganization) model.LoginSession {
 	id := item.ID
@@ -83,7 +83,7 @@ func loginSessionToStorage(item model.LoginSession) *loginSession {
 	externalIDs := item.ExternalIDs
 	var accountAuthTypeID *string
 	var accountAuthTypeIdentifier *string
-	if item.AccountAuthType != nil {
+	if item.AccountAuthType != nil && len(item.AccountAuthType.ID) != 0 {
 		accountAuthTypeID = &item.AccountAuthType.ID
 		accountAuthTypeIdentifier = &item.AccountAuthType.Identifier
 	}
@@ -119,7 +119,7 @@ func loginSessionToStorage(item model.LoginSession) *loginSession {
 		DateRefreshed: dateRefreshed, DateUpdated: dateUpdated, DateCreated: dateCreated}
 }
 
-//ServiceAccount
+// ServiceAccount
 func serviceAccountFromStorage(item serviceAccount, sa *Adapter) (*model.ServiceAccount, error) {
 	var err error
 	var application *model.Application
