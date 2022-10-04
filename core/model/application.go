@@ -358,7 +358,7 @@ type AuthTypesSupport struct {
 	SupportedAuthTypes []SupportedAuthType `bson:"supported_auth_types"`
 }
 
-// AuthTypesSupport represents a supported auth type
+// SupportedAuthType represents a supported auth type
 type SupportedAuthType struct {
 	AuthTypeID string                 `bson:"auth_type_id"`
 	Params     map[string]interface{} `bson:"params"`

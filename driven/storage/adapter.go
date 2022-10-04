@@ -3084,7 +3084,7 @@ func (sa *Adapter) FindApplicationsOrganizationsByOrgID(orgID string) ([]model.A
 	return result, nil
 }
 
-// FindApplicationsOrganizations finds applications organizations by appID or orgID
+// FindApplicationOrganizations finds applications organizations by appID or orgID
 func (sa *Adapter) FindApplicationOrganizations(appID *string, orgID *string) ([]model.ApplicationOrganization, error) {
 	cachedAppOrgs, err := sa.getCachedApplicationOrganizations()
 	if err != nil {
