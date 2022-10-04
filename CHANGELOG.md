@@ -34,6 +34,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - BREAKING: Permission assigners should be OR instead of AND [#482](https://github.com/rokwire/core-building-block/issues/482)]
 - Update profile when external user info changes [#589](https://github.com/rokwire/core-building-block/issues/589)
 
+### Security
+- Fix code scanning alert - Log entries created from user input [#601](https://github.com/rokwire/core-building-block/issues/601)
+
 ## [1.24.2] - 2022-08-08
 ### Added
 - Allow passing nil context to WithContext storage functions [#494](https://github.com/rokwire/core-building-block/issues/494)

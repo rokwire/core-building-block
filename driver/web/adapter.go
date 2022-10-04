@@ -274,7 +274,6 @@ func (we Adapter) Start() {
 }
 
 func (we Adapter) serveResetCredential(w http.ResponseWriter, r *http.Request) {
-	fmt.Println(r.URL.Path)
 	w.Header().Add("access-control-allow-origin", "*")
 	http.ServeFile(w, r, "./driver/web/ui/reset-credential.html")
 }
