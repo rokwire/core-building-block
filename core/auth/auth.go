@@ -260,7 +260,6 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 func (a *Auth) applySignInExternal(account *model.Account, authType model.AuthType, appOrg model.ApplicationOrganization,
 	externalUser model.ExternalSystemUser, l *logs.Log) (*model.AccountAuthType, error) {
 	var accountAuthType *model.AccountAuthType
-	var externalIDChanges map[string]string
 	var err error
 
 	//find account auth type
@@ -270,19 +269,13 @@ func (a *Auth) applySignInExternal(account *model.Account, authType model.AuthTy
 	}
 
 	//check if need to update the account data
-	externalIDChanges, err = a.updateDataIfNeeded(*accountAuthType, externalUser, authType, appOrg, l)
+	newAccount, err := a.updateExternalUserIfNeeded(*accountAuthType, externalUser, authType, appOrg, l)
 	if err != nil {
-		return nil, errors.WrapErrorAction("update account if needed", "", nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeExternalSystemUser, nil, err)
 	}
 
-	//apply external id changes to account
-	if account != nil {
-		for k, v := range externalIDChanges {
-			if account.ExternalIDs == nil {
-				account.ExternalIDs = make(map[string]string)
-			}
-			account.ExternalIDs[k] = v
-		}
+	if newAccount != nil {
+		accountAuthType.Account = *newAccount
 	}
 
 	if accountAuthType.Unverified {
@@ -307,13 +300,22 @@ func (a *Auth) applySignUpExternal(context storage.TransactionContext, authType 
 	}
 
 	//2. apply profile data from the external user if not provided
-	_, err = a.applyProfileDataFromExternalUser(profile, externalUser, l)
+	_, err = a.applyProfileDataFromExternalUser(profile, externalUser, nil, false, l)
 	if err != nil {
 		return nil, errors.WrapErrorAction("error applying profile data from external user on registration", model.TypeProfile, nil, err)
 	}
 
 	//3. roles and groups mapping
-	externalRoles, externalGroups, err := a.getExternalUserAuthorization(externalUser, appOrg, authType)
+	identityProviderID, ok := authType.Params["identity_provider"].(string)
+	if !ok {
+		return nil, errors.ErrorData(logutils.StatusMissing, "identity provider id", nil)
+	}
+	identityProviderSetting := appOrg.FindIdentityProviderSetting(identityProviderID)
+	if identityProviderSetting == nil {
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeIdentityProviderSetting, nil)
+	}
+
+	externalRoles, externalGroups, err := a.getExternalUserAuthorization(externalUser, identityProviderSetting)
 	if err != nil {
 		l.WarnAction(logutils.ActionGet, "external authorization", err)
 	}
@@ -379,7 +381,7 @@ func (a *Auth) prepareExternalUserData(authType model.AuthType, appOrg model.App
 		l.Infof("%s uses a shared profile", externalUser.Identifier)
 
 		//merge client profile and shared profile
-		profile = a.mergeClientAndSharedProfile(regProfile, *sharedProfile)
+		profile = a.mergeProfiles(regProfile, sharedProfile, true)
 		preferences = regPreferences
 	} else {
 		l.Infof("%s does not use a shared profile", externalUser.Identifier)
@@ -403,53 +405,37 @@ func (a *Auth) prepareExternalUserData(authType model.AuthType, appOrg model.App
 	return externalUser.Identifier, params, useSharedProfile, &profile, preferences, nil
 }
 
-func (a *Auth) applyProfileDataFromExternalUser(profile *model.Profile, externalUser model.ExternalSystemUser, l *logs.Log) (*bool, error) {
-	l.Info("applyProfileDataFromExternalUser")
-
+func (a *Auth) applyProfileDataFromExternalUser(profile *model.Profile, newExternalUser model.ExternalSystemUser,
+	currentExternalUser *model.ExternalSystemUser, alwaysSync bool, l *logs.Log) (bool, error) {
 	if profile == nil {
-		l.Error("for some reasons the profile is nil")
-		return nil, errors.New("for some reasons the profile is nil")
+		return false, errors.ErrorData(logutils.StatusMissing, model.TypeProfile, nil)
 	}
 
 	changed := false
 	//first name
-	if len(profile.FirstName) == 0 && len(externalUser.FirstName) > 0 {
-		profile.FirstName = externalUser.FirstName
-		changed = true
+	if len(newExternalUser.FirstName) > 0 && (alwaysSync || len(profile.FirstName) == 0 || (currentExternalUser != nil && currentExternalUser.FirstName != newExternalUser.FirstName)) {
+		changed = changed || (profile.FirstName != newExternalUser.FirstName)
+		profile.FirstName = newExternalUser.FirstName
 	}
 	//last name
-	if len(profile.LastName) == 0 && len(externalUser.LastName) > 0 {
-		profile.LastName = externalUser.LastName
-		changed = true
+	if len(newExternalUser.LastName) > 0 && (alwaysSync || len(profile.LastName) == 0 || (currentExternalUser != nil && currentExternalUser.LastName != newExternalUser.LastName)) {
+		changed = changed || (profile.LastName != newExternalUser.LastName)
+		profile.LastName = newExternalUser.LastName
 	}
 	//email
-	if len(profile.Email) == 0 && len(externalUser.Email) > 0 {
-		profile.Email = externalUser.Email
-		changed = true
+	if len(newExternalUser.Email) > 0 && (alwaysSync || len(profile.Email) == 0 || (currentExternalUser != nil && currentExternalUser.Email != newExternalUser.Email)) {
+		changed = changed || (profile.Email != newExternalUser.Email)
+		profile.Email = newExternalUser.Email
 	}
-	return &changed, nil
-}
-
-func (a *Auth) updateDataIfNeeded(accountAuthType model.AccountAuthType, externalUser model.ExternalSystemUser,
-	authType model.AuthType, appOrg model.ApplicationOrganization, l *logs.Log) (map[string]string, error) {
-	l.Info("updateDataIfNeeded")
-
-	//1. check if need to update the external user data
-	externalIDs, err := a.updateExternalUserIfNeeded(accountAuthType, externalUser, authType, appOrg, l)
-	if err != nil {
-		return nil, errors.WrapErrorAction("error on updating external user if needed", "", nil, err)
+	if changed {
+		now := time.Now()
+		profile.DateUpdated = &now
 	}
-
-	//2. check if need to update the profile data
-	err = a.updateProfileIfNeeded(accountAuthType.Account, externalUser, l)
-	if err != nil {
-		return nil, errors.WrapErrorAction("error on updating profile if needed", "", nil, err)
-	}
-	return externalIDs, nil
+	return changed, nil
 }
 
 func (a *Auth) updateExternalUserIfNeeded(accountAuthType model.AccountAuthType, externalUser model.ExternalSystemUser,
-	authType model.AuthType, appOrg model.ApplicationOrganization, l *logs.Log) (map[string]string, error) {
+	authType model.AuthType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.Account, error) {
 	l.Info("updateExternalUserIfNeeded")
 
 	//get the current external user
@@ -464,99 +450,93 @@ func (a *Auth) updateExternalUserIfNeeded(accountAuthType model.AccountAuthType,
 		return nil, errors.ErrorAction(logutils.ActionUnmarshal, "external user", nil)
 	}
 
-	newData := externalUser
+	identityProviderID, ok := authType.Params["identity_provider"].(string)
+	if !ok {
+		return nil, errors.ErrorData(logutils.StatusMissing, "identity provider id", nil)
+	}
+	identityProviderSetting := appOrg.FindIdentityProviderSetting(identityProviderID)
+	if identityProviderSetting == nil {
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeIdentityProviderSetting, nil)
+	}
 
 	//check if external system user needs to be updated
-	externalIDChanges := make(map[string]string)
-	if !currentData.Equals(newData) {
-		//there is changes so we need to update it
-		//TODO: Can we do this all in a single storage operation?
-		accountAuthType.Params["user"] = newData
-		now := time.Now()
-		accountAuthType.DateUpdated = &now
+	var newAccount *model.Account
+	//there is changes so we need to update it
+	//TODO: Can we do this all in a single storage operation?
+	updated := !currentData.Equals(externalUser)
+	accountAuthType.Params["user"] = externalUser
+	now := time.Now()
+	accountAuthType.DateUpdated = &now
 
-		transaction := func(context storage.TransactionContext) error {
-			//1. first find the account record
-			account, err := a.storage.FindAccountByAuthTypeID(context, accountAuthType.ID)
-			if err != nil {
-				return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
-			}
-			if account == nil {
-				return errors.ErrorAction(logutils.ActionFind, "for some reason account is nil for account auth type", &logutils.FieldArgs{"account auth type id": accountAuthType.ID})
-			}
+	transaction := func(context storage.TransactionContext) error {
+		//1. first find the account record
+		account, err := a.storage.FindAccountByAuthTypeID(context, accountAuthType.ID)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+		}
+		if account == nil {
+			return errors.ErrorData(logutils.StatusMissing, model.TypeAccount, &logutils.FieldArgs{"account_auth_type_id": accountAuthType.ID})
+		}
 
-			//2. update the account auth type in the account record
-			newAccountAuthTypes := make([]model.AccountAuthType, len(account.AuthTypes))
-			for j, aAuthType := range account.AuthTypes {
-				if aAuthType.ID == accountAuthType.ID {
-					newAccountAuthTypes[j] = accountAuthType
-				} else {
-					newAccountAuthTypes[j] = aAuthType
-				}
+		//2. update the account auth type in the account record
+		newAccountAuthTypes := make([]model.AccountAuthType, len(account.AuthTypes))
+		for j, aAuthType := range account.AuthTypes {
+			if aAuthType.ID == accountAuthType.ID {
+				newAccountAuthTypes[j] = accountAuthType
+			} else {
+				newAccountAuthTypes[j] = aAuthType
 			}
-			account.AuthTypes = newAccountAuthTypes
+		}
+		account.AuthTypes = newAccountAuthTypes
 
-			//3. update external ids
-			for k, v := range externalUser.ExternalIDs {
-				if account.ExternalIDs == nil {
-					account.ExternalIDs = make(map[string]string)
-				}
-				if account.ExternalIDs[k] != v {
-					account.ExternalIDs[k] = v
-					externalIDChanges[k] = v
-				}
+		// 3. update external ids
+		for k, v := range externalUser.ExternalIDs {
+			if account.ExternalIDs == nil {
+				account.ExternalIDs = make(map[string]string)
 			}
+			if account.ExternalIDs[k] != v {
+				updated = true
+				account.ExternalIDs[k] = v
+			}
+		}
 
-			//4. update roles and groups mapping
-			roles, groups, err := a.getExternalUserAuthorization(externalUser, appOrg, authType)
-			if err != nil {
-				return errors.WrapErrorAction(logutils.ActionGet, "external authorization", nil, err)
-			}
-			_, err = a.updateExternalAccountRoles(account, roles)
-			if err != nil {
-				return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountRoles, nil, err)
-			}
+		// 4. update profile
+		profileUpdated, err := a.applyProfileDataFromExternalUser(&account.Profile, externalUser, currentData, identityProviderSetting.AlwaysSyncProfile, l)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeProfile, nil, err)
+		}
 
-			_, err = a.updateExternalAccountGroups(account, groups)
-			if err != nil {
-				return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountGroups, nil, err)
-			}
+		// 5. update roles and groups mapping
+		roles, groups, err := a.getExternalUserAuthorization(externalUser, identityProviderSetting)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionGet, "external authorization", nil, err)
+		}
+		rolesUpdated, err := a.updateExternalAccountRoles(account, roles)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountRoles, nil, err)
+		}
+		groupsUpdated, err := a.updateExternalAccountGroups(account, groups)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountGroups, nil, err)
+		}
 
+		// 6. update account if needed
+		if updated || profileUpdated || rolesUpdated || groupsUpdated {
 			err = a.storage.SaveAccount(context, account)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionSave, model.TypeAccount, nil, err)
 			}
-
-			return nil
 		}
 
-		err = a.storage.PerformTransaction(transaction)
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeUserAuth, nil, err)
-		}
-		return externalIDChanges, nil
+		newAccount = account
+		return nil
 	}
 
-	return nil, nil
-}
-
-func (a *Auth) updateProfileIfNeeded(account model.Account, externalUser model.ExternalSystemUser, l *logs.Log) error {
-	l.Info("updateProfileIfNeeded")
-
-	profile := account.Profile
-	changed, err := a.applyProfileDataFromExternalUser(&profile, externalUser, l)
+	err = a.storage.PerformTransaction(transaction)
 	if err != nil {
-		return errors.WrapErrorAction("error applying profile data from external user", model.TypeProfile, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeUserAuth, nil, err)
 	}
-
-	if *changed {
-		l.Info("the profile will be updated")
-		err := a.storage.UpdateProfile(nil, profile)
-		if err != nil {
-			return errors.WrapErrorData("error updating profile from external user data", model.TypeProfile, nil, err)
-		}
-	}
-	return nil
+	return newAccount, nil
 }
 
 func (a *Auth) applyAnonymousAuthType(authType model.AuthType, creds string) (string, *model.Account, map[string]interface{}, error) { //auth type
@@ -779,7 +759,7 @@ func (a *Auth) signUpNewAccount(context storage.TransactionContext, authImpl aut
 		}
 
 		//merge client profile and shared profile
-		profile = a.mergeClientAndSharedProfile(regProfile, *sharedProfile)
+		profile = a.mergeProfiles(regProfile, sharedProfile, true)
 		preferences = regPreferences
 
 		credential = sharedCredential
@@ -830,26 +810,6 @@ func (a *Auth) signUpNewAccount(context storage.TransactionContext, authImpl aut
 	}
 
 	return retParams, accountAuthType, nil
-}
-
-func (a *Auth) mergeClientAndSharedProfile(clientData model.Profile, sharedProfile model.Profile) model.Profile {
-	clientData.ID = sharedProfile.ID
-
-	clientData.PhotoURL = utils.SetStringIfEmpty(clientData.PhotoURL, sharedProfile.PhotoURL)
-	clientData.FirstName = utils.SetStringIfEmpty(clientData.FirstName, sharedProfile.FirstName)
-	clientData.LastName = utils.SetStringIfEmpty(clientData.LastName, sharedProfile.LastName)
-	clientData.Email = utils.SetStringIfEmpty(clientData.Email, sharedProfile.Email)
-	clientData.Phone = utils.SetStringIfEmpty(clientData.Phone, sharedProfile.Phone)
-	clientData.Address = utils.SetStringIfEmpty(clientData.Address, sharedProfile.Address)
-	clientData.ZipCode = utils.SetStringIfEmpty(clientData.ZipCode, sharedProfile.ZipCode)
-	clientData.State = utils.SetStringIfEmpty(clientData.State, sharedProfile.State)
-	clientData.Country = utils.SetStringIfEmpty(clientData.Country, sharedProfile.Country)
-
-	if clientData.BirthYear == 0 {
-		clientData.BirthYear = sharedProfile.BirthYear
-	}
-
-	return clientData
 }
 
 func (a *Auth) applySharedProfile(app model.Application, authTypeID string, userIdentifier string, l *logs.Log) (bool, *model.Profile, *model.Credential, error) {
@@ -1299,12 +1259,12 @@ func (a *Auth) prepareRegistrationData(authType model.AuthType, identifier strin
 	readyProfile := profile
 	//if there is profile bb data
 	if gotProfile != nil {
-		readyProfile = a.prepareProfile(profile, *gotProfile)
+		readyProfile = a.mergeProfiles(profile, gotProfile, false)
 	}
 	readyPreferences := preferences
 	//if there is preferences bb data
 	if gotPreferences != nil {
-		readyPreferences = a.preparePreferences(preferences, gotPreferences)
+		readyPreferences = a.mergePreferences(preferences, gotPreferences)
 	}
 
 	//generate profile ID
@@ -1349,25 +1309,32 @@ func (a *Auth) prepareAccountAuthType(authType model.AuthType, identifier string
 	return accountAuthType, credential, nil
 }
 
-func (a *Auth) prepareProfile(clientData model.Profile, profileBBData model.Profile) model.Profile {
-	clientData.PhotoURL = utils.SetStringIfEmpty(clientData.PhotoURL, profileBBData.PhotoURL)
-	clientData.FirstName = utils.SetStringIfEmpty(clientData.FirstName, profileBBData.FirstName)
-	clientData.LastName = utils.SetStringIfEmpty(clientData.LastName, profileBBData.LastName)
-	clientData.Email = utils.SetStringIfEmpty(clientData.Email, profileBBData.Email)
-	clientData.Phone = utils.SetStringIfEmpty(clientData.Phone, profileBBData.Phone)
-	clientData.Address = utils.SetStringIfEmpty(clientData.Address, profileBBData.Address)
-	clientData.ZipCode = utils.SetStringIfEmpty(clientData.ZipCode, profileBBData.ZipCode)
-	clientData.State = utils.SetStringIfEmpty(clientData.State, profileBBData.State)
-	clientData.Country = utils.SetStringIfEmpty(clientData.Country, profileBBData.Country)
-
-	if clientData.BirthYear == 0 {
-		clientData.BirthYear = profileBBData.BirthYear
+func (a *Auth) mergeProfiles(dst model.Profile, src *model.Profile, shared bool) model.Profile {
+	if src == nil {
+		return dst
 	}
 
-	return clientData
+	dst.PhotoURL = utils.SetStringIfEmpty(dst.PhotoURL, src.PhotoURL)
+	dst.FirstName = utils.SetStringIfEmpty(dst.FirstName, src.FirstName)
+	dst.LastName = utils.SetStringIfEmpty(dst.LastName, src.LastName)
+	dst.Email = utils.SetStringIfEmpty(dst.Email, src.Email)
+	dst.Phone = utils.SetStringIfEmpty(dst.Phone, src.Phone)
+	dst.Address = utils.SetStringIfEmpty(dst.Address, src.Address)
+	dst.ZipCode = utils.SetStringIfEmpty(dst.ZipCode, src.ZipCode)
+	dst.State = utils.SetStringIfEmpty(dst.State, src.State)
+	dst.Country = utils.SetStringIfEmpty(dst.Country, src.Country)
+
+	if dst.BirthYear == 0 {
+		dst.BirthYear = src.BirthYear
+	}
+	if shared {
+		dst.ID = src.ID
+	}
+
+	return dst
 }
 
-func (a *Auth) preparePreferences(clientData map[string]interface{}, profileBBData map[string]interface{}) map[string]interface{} {
+func (a *Auth) mergePreferences(clientData map[string]interface{}, profileBBData map[string]interface{}) map[string]interface{} {
 	mergedData := profileBBData
 	for k, v := range clientData {
 		if profileBBData[k] == nil {
@@ -1450,7 +1417,7 @@ func (a *Auth) constructAccount(context storage.TransactionContext, authType mod
 	appOrg model.ApplicationOrganization, credential *model.Credential, unverified bool, externalIDs map[string]string, profile model.Profile, preferences map[string]interface{},
 	username string, permissionNames []string, roleIDs []string, groupIDs []string, assignerPermissions []string, clientVersion *string, l *logs.Log) (*model.AccountAuthType, error) {
 	//create account auth type
-	accountAuthType, credential, err := a.prepareAccountAuthType(authType, userIdentifier, accountAuthTypeParams, credential, unverified, false)
+	accountAuthType, _, err := a.prepareAccountAuthType(authType, userIdentifier, accountAuthTypeParams, credential, unverified, false)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeAccountAuthType, nil, err)
 	}
@@ -2252,14 +2219,9 @@ func (a *Auth) getExp(exp *int64) int64 {
 	return *exp
 }
 
-func (a *Auth) getExternalUserAuthorization(externalUser model.ExternalSystemUser, appOrg model.ApplicationOrganization, authType model.AuthType) ([]string, []string, error) {
-	identityProviderID, ok := authType.Params["identity_provider"].(string)
-	if !ok {
-		return nil, nil, errors.ErrorData(logutils.StatusMissing, "identitiy provider id", nil)
-	}
-	identityProviderSetting := appOrg.FindIdentityProviderSetting(identityProviderID)
+func (a *Auth) getExternalUserAuthorization(externalUser model.ExternalSystemUser, identityProviderSetting *model.IdentityProviderSetting) ([]string, []string, error) {
 	if identityProviderSetting == nil {
-		return nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeIdentityProvider, nil)
+		return nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeIdentityProviderSetting, nil)
 	}
 
 	//roles

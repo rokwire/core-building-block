@@ -335,7 +335,6 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 	permissions := []string{}
 
 	// - generate new params and update the account if needed(if external auth type)
-	var externalIDChanges map[string]string
 	if loginSession.AuthType.IsExternal {
 		extAuthType, err := a.getExternalAuthTypeImpl(loginSession.AuthType)
 		if err != nil {
@@ -350,27 +349,15 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 		}
 
 		//check if need to update the account data
-		authType, err := a.storage.FindAuthType(loginSession.AuthType.ID)
-		if err != nil || authType == nil {
-			l.Infof("error getting auth type - %s", refreshToken)
-			if err == nil {
-				err = errors.ErrorData(logutils.StatusMissing, model.TypeAuthType, &logutils.FieldArgs{"id": loginSession.AuthType.ID})
-			}
-			return nil, errors.WrapErrorAction("error getting auth type", "", nil, err)
-		}
-		externalIDChanges, err = a.updateDataIfNeeded(*loginSession.AccountAuthType, *externalUser, *authType, loginSession.AppOrg, l)
+		newAccount, err := a.updateExternalUserIfNeeded(*loginSession.AccountAuthType, *externalUser, loginSession.AuthType, loginSession.AppOrg, l)
 		if err != nil {
-			return nil, errors.WrapErrorAction("update account if needed on refresh", "", nil, err)
+			return nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeExternalSystemUser, logutils.StringArgs("refresh"), err)
 		}
 
 		loginSession.Params = refreshedData //assign the refreshed data
-	}
-
-	for k, v := range externalIDChanges {
-		if loginSession.ExternalIDs == nil {
-			loginSession.ExternalIDs = make(map[string]string)
+		if newAccount != nil {
+			loginSession.ExternalIDs = newAccount.ExternalIDs
 		}
-		loginSession.ExternalIDs[k] = v
 	}
 
 	if !anonymous {

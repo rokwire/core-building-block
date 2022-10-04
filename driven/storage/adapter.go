@@ -832,7 +832,7 @@ func (sa *Adapter) FindLoginSessionsByParams(appID string, orgID string, session
 	loginSessions := make([]model.LoginSession, len(result))
 	for i, ls := range result {
 		//we could allow calling buildLoginSession function as we have limitted the items to max 20
-		loginSession, err := sa.buildLoginSession(&ls)
+		loginSession, err := sa.buildLoginSession(nil, &ls)
 		if err != nil {
 			return nil, errors.WrapErrorAction("build", model.TypeLoginSession, nil, err)
 		}
@@ -856,7 +856,7 @@ func (sa *Adapter) FindLoginSession(refreshToken string) (*model.LoginSession, e
 	}
 	loginSession := loginsSessions[0]
 
-	return sa.buildLoginSession(&loginSession)
+	return sa.buildLoginSession(nil, &loginSession)
 }
 
 // FindAndUpdateLoginSession finds and updates a login session
@@ -880,15 +880,15 @@ func (sa *Adapter) FindAndUpdateLoginSession(context TransactionContext, id stri
 		return nil, errors.WrapErrorAction("finding and updating", model.TypeLoginSession, &logutils.FieldArgs{"_id": id}, err)
 	}
 
-	return sa.buildLoginSession(&loginSession)
+	return sa.buildLoginSession(context, &loginSession)
 }
 
-func (sa *Adapter) buildLoginSession(ls *loginSession) (*model.LoginSession, error) {
+func (sa *Adapter) buildLoginSession(context TransactionContext, ls *loginSession) (*model.LoginSession, error) {
 	//account - from storage
 	var account *model.Account
 	var err error
 	if ls.AccountAuthTypeID != nil {
-		account, err = sa.FindAccountByID(nil, ls.Identifier)
+		account, err = sa.FindAccountByID(context, ls.Identifier)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"_id": ls.Identifier}, err)
 		}
@@ -1290,7 +1290,7 @@ func (sa *Adapter) SaveAccount(context TransactionContext, account *model.Accoun
 	filter := bson.M{"_id": account.ID}
 	err := sa.db.accounts.ReplaceOneWithContext(context, filter, storageAccount, nil)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountUsageInfo, nil, err)
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, nil, err)
 	}
 
 	return nil
@@ -1312,13 +1312,7 @@ func (sa *Adapter) UpdateAccountUsageInfo(context TransactionContext, accountID 
 	}
 	usageInfoUpdate := bson.M{"$set": update}
 
-	var res *mongo.UpdateResult
-	var err error
-	if context != nil {
-		res, err = sa.db.accounts.UpdateOneWithContext(context, filter, usageInfoUpdate, nil)
-	} else {
-		res, err = sa.db.accounts.UpdateOne(filter, usageInfoUpdate, nil)
-	}
+	res, err := sa.db.accounts.UpdateOneWithContext(context, filter, usageInfoUpdate, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountUsageInfo, nil, err)
 	}
@@ -3090,7 +3084,7 @@ func (sa *Adapter) FindApplicationsOrganizationsByOrgID(orgID string) ([]model.A
 	return result, nil
 }
 
-// FindApplicationsOrganizations finds applications organizations by appID or orgID
+// FindApplicationOrganizations finds applications organizations by appID or orgID
 func (sa *Adapter) FindApplicationOrganizations(appID *string, orgID *string) ([]model.ApplicationOrganization, error) {
 	cachedAppOrgs, err := sa.getCachedApplicationOrganizations()
 	if err != nil {
@@ -3387,7 +3381,7 @@ func (sa *Adapter) SaveDevice(context TransactionContext, device *model.Device) 
 	opts := options.Replace().SetUpsert(true)
 	err := sa.db.devices.ReplaceOneWithContext(context, filter, storageDevice, opts)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionSave, "device", &logutils.FieldArgs{"device_id": device.ID}, nil)
+		return errors.WrapErrorAction(logutils.ActionSave, model.TypeDevice, &logutils.FieldArgs{"device_id": device.ID}, nil)
 	}
 
 	return nil

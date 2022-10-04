@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Update oapi-codegen usage [#597](https://github.com/rokwire/core-building-block/issues/597)
 - BREAKING: Permission assigners should be OR instead of AND [#482](https://github.com/rokwire/core-building-block/issues/482)]
+- Update profile when external user info changes [#589](https://github.com/rokwire/core-building-block/issues/589)
 
 ## [1.24.2] - 2022-08-08
 ### Added

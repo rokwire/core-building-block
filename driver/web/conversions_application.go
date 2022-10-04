@@ -315,11 +315,15 @@ func identityProviderSettingFromDef(item *Def.IdentityProviderSettings) *model.I
 	if item.Groups != nil {
 		groups = item.Groups.AdditionalProperties
 	}
+	var alwaysSyncProfile bool
+	if item.AlwaysSyncProfile != nil {
+		alwaysSyncProfile = *item.AlwaysSyncProfile
+	}
 
 	return &model.IdentityProviderSetting{IdentityProviderID: item.IdentityProviderId, UserIdentifierField: item.UserIdentifierField,
 		ExternalIDFields: item.ExternalIdFields.AdditionalProperties, FirstNameField: firstNameField, MiddleNameField: middleNameField,
 		LastNameField: lastNameField, EmailField: emailField, RolesField: rolesField, GroupsField: groupsField,
-		UserSpecificFields: userSpecificFields, Roles: roles, Groups: groups}
+		UserSpecificFields: userSpecificFields, Roles: roles, Groups: groups, AlwaysSyncProfile: alwaysSyncProfile}
 }
 
 func identityProviderSettingsToDef(items []model.IdentityProviderSetting) []Def.IdentityProviderSettings {
@@ -352,10 +356,11 @@ func identityProviderSettingToDef(item *model.IdentityProviderSetting) *Def.Iden
 	rolesField := item.RolesField
 	groupsField := item.GroupsField
 	userSpecificFields := item.UserSpecificFields
+	alwaysSyncProfile := item.AlwaysSyncProfile
 	return &Def.IdentityProviderSettings{IdentityProviderId: item.IdentityProviderID, UserIdentifierField: item.UserIdentifierField,
 		ExternalIdFields: &externalIDs, FirstNameField: &firstNameField, MiddleNameField: &middleNameField,
 		LastNameField: &lastNameField, EmailField: &emailField, RolesField: &rolesField, GroupsField: &groupsField,
-		UserSpecificFields: &userSpecificFields, Roles: &roles, Groups: &groups}
+		UserSpecificFields: &userSpecificFields, Roles: &roles, Groups: &groups, AlwaysSyncProfile: &alwaysSyncProfile}
 }
 
 // AppOrgRole

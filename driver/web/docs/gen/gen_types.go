@@ -403,6 +403,7 @@ type GlobalConfig struct {
 
 // IdentityProviderSettings defines model for IdentityProviderSettings.
 type IdentityProviderSettings struct {
+	AlwaysSyncProfile   *bool                                      `json:"always_sync_profile,omitempty"`
 	EmailField          *string                                    `json:"email_field,omitempty"`
 	ExternalIdFields    *IdentityProviderSettings_ExternalIdFields `json:"external_id_fields,omitempty"`
 	FirstNameField      *string                                    `json:"first_name_field,omitempty"`

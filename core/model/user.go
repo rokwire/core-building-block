@@ -39,6 +39,8 @@ const (
 	TypeAccountRoles logutils.MessageDataType = "account roles"
 	//TypeAccountUsageInfo account usage information
 	TypeAccountUsageInfo logutils.MessageDataType = "account usage information"
+	//TypeExternalSystemUser external system user
+	TypeExternalSystemUser logutils.MessageDataType = "external system user"
 	//TypeMFAType mfa type
 	TypeMFAType logutils.MessageDataType = "mfa type"
 	//TypeAccountGroups account groups
@@ -383,6 +385,41 @@ func (aat *AccountAuthType) SetUnverified(value bool) {
 			aat.Account.AuthTypes[i].Unverified = false
 		}
 	}
+}
+
+// Equals checks if two account auth types are equal
+func (aat *AccountAuthType) Equals(other AccountAuthType) bool {
+	if aat.Identifier != other.Identifier {
+		return false
+	}
+	if aat.Account.ID != other.Account.ID {
+		return false
+	}
+	if aat.AuthType.Code != other.AuthType.Code {
+		return false
+	}
+	if aat.Active != other.Active {
+		return false
+	}
+	if aat.Unverified != other.Unverified {
+		return false
+	}
+	if aat.Linked != other.Linked {
+		return false
+	}
+	if !utils.DeepEqual(aat.Params, other.Params) {
+		return false
+	}
+
+	thisCred := aat.Credential
+	otherCred := other.Credential
+	if (thisCred != nil) != (otherCred != nil) {
+		return false
+	} else if thisCred != nil && otherCred != nil && (thisCred.ID != otherCred.ID) {
+		return false
+	}
+
+	return true
 }
 
 // Credential represents a credential for account auth type/s
