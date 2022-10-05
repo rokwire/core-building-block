@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Services crashes on anonymous login [#603](https://github.com/rokwire/core-building-block/issues/603)
 
+### Security
+- Fix code scanning alert - Log entries created from user input [#601](https://github.com/rokwire/core-building-block/issues/601)
+
 ## [1.25.0] - 2022-10-04
 ### Added
 - Update app/org endpoint [#543](https://github.com/rokwire/core-building-block/issues/543)
