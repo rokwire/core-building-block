@@ -334,6 +334,7 @@ type ServiceAccount struct {
 	Organization *Organization
 
 	Permissions []Permission
+	Scopes      []authorization.Scope
 	FirstParty  bool
 
 	Credentials []ServiceAccountCredential
