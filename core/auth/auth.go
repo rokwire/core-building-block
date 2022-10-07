@@ -1897,7 +1897,7 @@ func (a *Auth) deleteAccount(context storage.TransactionContext, account model.A
 	return nil
 }
 
-func (a *Auth) constructServiceAccount(accountID string, name string, appID string, orgID string, permissions []string, firstParty bool, assignerPermissions []string) (*model.ServiceAccount, error) {
+func (a *Auth) constructServiceAccount(accountID string, name string, appID string, orgID string, permissions []string, scopes []authorization.Scope, firstParty bool, assignerPermissions []string) (*model.ServiceAccount, error) {
 	permissionList, err := a.storage.FindPermissionsByName(nil, permissions)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypePermission, nil, err)
@@ -1925,7 +1925,7 @@ func (a *Auth) constructServiceAccount(accountID string, name string, appID stri
 	}
 
 	return &model.ServiceAccount{AccountID: accountID, Name: name, Application: application, Organization: organization,
-		Permissions: permissionList, FirstParty: firstParty}, nil
+		Permissions: permissionList, Scopes: scopes, FirstParty: firstParty}, nil
 }
 
 func (a *Auth) checkServiceAccountCreds(r *sigauth.Request, accountID *string, firstParty bool, single bool, l *logs.Log) ([]model.ServiceAccount, string, error) {
@@ -1973,8 +1973,14 @@ func (a *Auth) buildAccessTokenForServiceAccount(account model.ServiceAccount, a
 		orgID = account.Organization.ID
 	}
 
-	claims := a.getStandardClaims(account.AccountID, "", account.Name, "", "", rokwireTokenAud, orgID, appID, authType, nil, nil, false, true, false, false, true, account.FirstParty, "")
-	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), "")
+	aud := rokwireTokenAud
+	services, scope := a.tokenDataForScopes(account.Scopes)
+	if len(services) > 0 {
+		aud = strings.Join(services, ",")
+	}
+
+	claims := a.getStandardClaims(account.AccountID, "", account.Name, "", "", aud, orgID, appID, authType, nil, nil, false, true, false, false, true, account.FirstParty, "")
+	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), scope)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
 	}
@@ -2161,20 +2167,26 @@ func (a *Auth) buildRefreshToken() (string, error) {
 
 // getScopedAccessToken returns a scoped access token with the requested scopes
 func (a *Auth) getScopedAccessToken(claims tokenauth.Claims, serviceID string, scopes []authorization.Scope) (string, error) {
-	scopeStrings := []string{}
-	services := []string{serviceID}
-	for _, scope := range scopes {
-		scopeStrings = append(scopeStrings, scope.String())
+	aud, scope := a.tokenDataForScopes(scopes)
+	if !authutils.ContainsString(aud, serviceID) {
+		aud = append(aud, serviceID)
+	}
+
+	scopedClaims := a.getStandardClaims(claims.Subject, "", "", "", "", strings.Join(aud, ","), claims.OrgID, claims.AppID, claims.AuthType, claims.ExternalIDs, &claims.ExpiresAt, claims.Anonymous, claims.Authenticated, false, false, claims.Service, false, claims.SessionID)
+	return a.buildAccessToken(scopedClaims, "", scope)
+}
+
+func (a *Auth) tokenDataForScopes(scopes []authorization.Scope) ([]string, string) {
+	scopeStrings := make([]string, len(scopes))
+	services := []string{}
+	for i, scope := range scopes {
+		scopeStrings[i] = scope.String()
 		if !authutils.ContainsString(services, scope.ServiceID) {
 			services = append(services, scope.ServiceID)
 		}
 	}
 
-	aud := strings.Join(services, ",")
-	scope := strings.Join(scopeStrings, " ")
-
-	scopedClaims := a.getStandardClaims(claims.Subject, "", "", "", "", aud, claims.OrgID, claims.AppID, claims.AuthType, claims.ExternalIDs, &claims.ExpiresAt, claims.Anonymous, claims.Authenticated, false, false, claims.Service, false, claims.SessionID)
-	return a.buildAccessToken(scopedClaims, "", scope)
+	return services, strings.Join(scopeStrings, " ")
 }
 
 func (a *Auth) getStandardClaims(sub string, uid string, name string, email string, phone string, aud string, orgID string, appID string,

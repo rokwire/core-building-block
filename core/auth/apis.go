@@ -1334,13 +1334,31 @@ func (a *Auth) GetServiceAccounts(params map[string]interface{}) ([]model.Servic
 }
 
 // RegisterServiceAccount registers a service account
-func (a *Auth) RegisterServiceAccount(accountID *string, fromAppID *string, fromOrgID *string, name *string, appID string,
-	orgID string, permissions *[]string, firstParty *bool, creds []model.ServiceAccountCredential, assignerPermissions []string, l *logs.Log) (*model.ServiceAccount, error) {
+func (a *Auth) RegisterServiceAccount(accountID *string, fromAppID *string, fromOrgID *string, name *string, appID string, orgID string, permissions *[]string,
+	scopes *[]string, firstParty *bool, creds []model.ServiceAccountCredential, assignerPermissions []string, l *logs.Log) (*model.ServiceAccount, error) {
 	var newAccount *model.ServiceAccount
 	var err error
 	var newName string
 	var permissionList []string
+	var scopeList []authorization.Scope
 	var displayParamsList []map[string]interface{}
+
+	if name != nil {
+		newName = *name
+	}
+	if permissions != nil {
+		permissionList = *permissions
+	}
+	if scopes != nil {
+		scopeList = make([]authorization.Scope, len(*scopes))
+		for i, scope := range *scopes {
+			s, err := authorization.ScopeFromString(scope)
+			if err != nil {
+				return nil, errors.WrapErrorAction(logutils.ActionParse, "scope string", nil, err)
+			}
+			scopeList[i] = *s
+		}
+	}
 
 	if accountID != nil && fromAppID != nil && fromOrgID != nil {
 		var fromAccount *model.ServiceAccount
@@ -1349,16 +1367,17 @@ func (a *Auth) RegisterServiceAccount(accountID *string, fromAppID *string, from
 			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, nil, err)
 		}
 
-		newName = fromAccount.Name
-		if name != nil {
-			newName = *name
+		if newName == "" {
+			newName = fromAccount.Name
 		}
-		permissionList = fromAccount.GetPermissionNames()
-		if permissions != nil {
-			permissionList = *permissions
+		if permissionList == nil {
+			permissionList = fromAccount.GetPermissionNames()
+		}
+		if scopeList == nil {
+			scopeList = fromAccount.Scopes
 		}
 
-		newAccount, err = a.constructServiceAccount(fromAccount.AccountID, newName, appID, orgID, permissionList, fromAccount.FirstParty, assignerPermissions)
+		newAccount, err = a.constructServiceAccount(fromAccount.AccountID, newName, appID, orgID, permissionList, scopeList, fromAccount.FirstParty, assignerPermissions)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeServiceAccount, nil, err)
 		}
@@ -1368,15 +1387,7 @@ func (a *Auth) RegisterServiceAccount(accountID *string, fromAppID *string, from
 			return nil, errors.ErrorData(logutils.StatusMissing, logutils.TypeArg, logutils.StringArgs("first party"))
 		}
 
-		id, _ := uuid.NewUUID()
-		if name != nil {
-			newName = *name
-		}
-		if permissions != nil {
-			permissionList = *permissions
-		}
-
-		newAccount, err = a.constructServiceAccount(id.String(), newName, appID, orgID, permissionList, *firstParty, assignerPermissions)
+		newAccount, err = a.constructServiceAccount(uuid.NewString(), newName, appID, orgID, permissionList, scopeList, *firstParty, assignerPermissions)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeServiceAccount, nil, err)
 		}
@@ -1436,15 +1447,87 @@ func (a *Auth) GetServiceAccountInstance(accountID string, appID string, orgID s
 }
 
 // UpdateServiceAccountInstance updates a service account instance
-func (a *Auth) UpdateServiceAccountInstance(id string, appID string, orgID string, name string, permissions []string, assignerPermissions []string) (*model.ServiceAccount, error) {
-	updatedAccount, err := a.constructServiceAccount(id, name, appID, orgID, permissions, false, assignerPermissions)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeServiceAccount, nil, err)
+func (a *Auth) UpdateServiceAccountInstance(id string, appID string, orgID string, name *string, permissions *[]string, scopes *[]string, assignerPermissions []string) (*model.ServiceAccount, error) {
+	var updatedAccount *model.ServiceAccount
+	transaction := func(context storage.TransactionContext) error {
+		//1. find service account
+		serviceAccount, err := a.storage.FindServiceAccount(context, id, appID, orgID)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, nil, err)
+		}
+
+		appOrg, err := a.storage.FindApplicationOrganization(appID, orgID)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
+		}
+		if appOrg == nil {
+			return errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, nil)
+		}
+
+		//2. check for updates, update as needed
+		updated := false
+		if name != nil && serviceAccount.Name != *name {
+			serviceAccount.Name = *name
+			updated = true
+		}
+		if permissions != nil {
+			updatedPermissions := make([]model.Permission, 0)
+			added, removed, unchanged := utils.StringListDiff(*permissions, serviceAccount.GetPermissionNames())
+			if len(added) > 0 {
+				permissionList, err := a.CheckPermissions(context, appOrg, *permissions, assignerPermissions)
+				if err != nil {
+					return errors.WrapErrorAction(logutils.ActionValidate, model.TypePermission, nil, err)
+				}
+
+				updatedPermissions = append(updatedPermissions, permissionList...)
+				updated = true
+			}
+			if len(removed) > 0 {
+				err := a.CheckRevokedPermissions(context, appOrg, *permissions, assignerPermissions)
+				if err != nil {
+					return errors.WrapErrorAction("revoking", model.TypePermission, nil, err)
+				}
+
+				updated = true
+			}
+			if len(unchanged) > 0 {
+				permissionList, err := a.storage.FindPermissionsByName(context, unchanged)
+				if err != nil {
+					return errors.WrapErrorAction(logutils.ActionFind, model.TypePermission, nil, err)
+				}
+
+				updatedPermissions = append(updatedPermissions, permissionList...)
+				updated = true
+			}
+
+			serviceAccount.Permissions = updatedPermissions
+		}
+		if scopes != nil && !utils.DeepEqual(serviceAccount.GetScopeStrings(), *scopes) {
+			serviceAccount.Scopes = make([]authorization.Scope, len(*scopes))
+			for i, scopeString := range *scopes {
+				scope, err := authorization.ScopeFromString(scopeString)
+				if err != nil {
+					return errors.WrapErrorAction(logutils.ActionParse, model.TypeScope, nil, err)
+				}
+				serviceAccount.Scopes[i] = *scope
+			}
+			updated = true
+		}
+
+		//3. update service account in database
+		if updated {
+			updatedAccount, err = a.storage.UpdateServiceAccount(context, serviceAccount)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeServiceAccount, nil, err)
+			}
+		}
+
+		return nil
 	}
 
-	updatedAccount, err = a.storage.UpdateServiceAccount(updatedAccount)
+	err := a.storage.PerformTransaction(transaction)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeServiceAccount, nil, err)
+		return nil, err
 	}
 
 	return updatedAccount, nil
