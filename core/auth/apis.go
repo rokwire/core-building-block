@@ -1376,6 +1376,17 @@ func (a *Auth) RegisterServiceAccount(accountID *string, fromAppID *string, from
 		if scopeList == nil {
 			scopeList = fromAccount.Scopes
 		}
+		scopeList = fromAccount.Scopes
+		if scopes != nil {
+			scopeList = make([]authorization.Scope, len(*scopes))
+			for i, scope := range *scopes {
+				s, err := authorization.ScopeFromString(scope)
+				if err != nil {
+					return nil, errors.WrapErrorAction(logutils.ActionParse, model.TypeScope, nil, err)
+				}
+				scopeList[i] = *s
+			}
+		}
 
 		newAccount, err = a.constructServiceAccount(fromAccount.AccountID, newName, appID, orgID, permissionList, scopeList, fromAccount.FirstParty, assignerPermissions)
 		if err != nil {
