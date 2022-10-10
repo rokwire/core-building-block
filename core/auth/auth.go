@@ -1973,9 +1973,11 @@ func (a *Auth) buildAccessTokenForServiceAccount(account model.ServiceAccount, a
 		orgID = account.Organization.ID
 	}
 
-	aud := rokwireTokenAud
+	aud := ""
 	services, scope := a.tokenDataForScopes(account.Scopes)
-	if len(services) > 0 {
+	if account.FirstParty {
+		aud = rokwireTokenAud
+	} else if len(services) > 0 {
 		aud = strings.Join(services, ",")
 	}
 
