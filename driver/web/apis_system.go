@@ -35,6 +35,30 @@ type SystemApisHandler struct {
 	coreAPIs *core.APIs
 }
 
+func (h SystemApisHandler) getAppOrgToken(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	appID := r.URL.Query().Get("app_id")
+	if appID == "" {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("app_id"), nil, http.StatusBadRequest, false)
+	}
+	orgID := r.URL.Query().Get("org_id")
+	if orgID == "" {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("org_id"), nil, http.StatusBadRequest, false)
+	}
+
+	token, err := h.coreAPIs.Auth.GetAdminToken(*claims, appID, orgID, l)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionGet, "app org token", nil, err, http.StatusInternalServerError, true)
+	}
+
+	response := Def.AdminToken{Token: token}
+	responseJSON, err := json.Marshal(response)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, "app org token", nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessJSON(responseJSON)
+}
+
 // createGlobalConfig creates a global config
 func (h SystemApisHandler) createGlobalConfig(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	data, err := ioutil.ReadAll(r.Body)
@@ -93,6 +117,104 @@ func (h SystemApisHandler) updateGlobalConfig(l *logs.Log, r *http.Request, clai
 	err = h.coreAPIs.System.SysUpdateGlobalConfig(setting)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeGlobalConfig, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
+// getApplicationOrganization retrieves app-org for specified id
+func (h SystemApisHandler) getApplicationOrganization(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	params := mux.Vars(r)
+	ID := params["id"]
+	if len(ID) <= 0 {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
+	}
+
+	appOrg, err := h.coreAPIs.System.SysGetApplicationOrganization(ID)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeApplicationOrganization, nil, err, http.StatusInternalServerError, true)
+	}
+
+	responseData := appOrgToDef(appOrg)
+	data, err := json.Marshal(responseData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeApplicationOrganization, nil, err, http.StatusInternalServerError, false)
+	}
+	return l.HttpResponseSuccessJSON(data)
+}
+
+// getApplicationOrganizations retrieves all app-orgs matching the provided query
+func (h SystemApisHandler) getApplicationOrganizations(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	var appID *string
+	appIDRaw := r.URL.Query().Get("app_id")
+	if appIDRaw != "" {
+		appID = &appIDRaw
+	}
+
+	var orgID *string
+	orgIDRaw := r.URL.Query().Get("org_id")
+	if orgIDRaw != "" {
+		orgID = &orgIDRaw
+	}
+
+	appOrgs, err := h.coreAPIs.System.SysGetApplicationOrganizations(appID, orgID)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeApplicationOrganization, nil, err, http.StatusInternalServerError, true)
+	}
+
+	responseData := appOrgsToDef(appOrgs)
+	data, err := json.Marshal(responseData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeApplicationOrganization, nil, err, http.StatusInternalServerError, false)
+	}
+	return l.HttpResponseSuccessJSON(data)
+}
+
+// createApplicationOrganization creates applicationOrganization
+func (h SystemApisHandler) createApplicationOrganization(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorData(logutils.StatusInvalid, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+	var requestData Def.AppOrg
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeApplicationOrganization, nil, err, http.StatusBadRequest, true)
+	}
+
+	//TODO: Fix missing supported auth types, expire policies,
+	appOrg := appOrgFromDef(&requestData)
+	_, err = h.coreAPIs.System.SysCreateApplicationOrganization(requestData.AppId, requestData.OrgId, *appOrg)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeApplicationOrganization, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
+// updateApplicationOrganization updates applicationOrganization
+func (h SystemApisHandler) updateApplicationOrganization(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	params := mux.Vars(r)
+	ID := params["id"]
+	if len(ID) <= 0 {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
+	}
+
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorData(logutils.StatusInvalid, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+	var requestData Def.AppOrg
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeApplicationOrganization, nil, err, http.StatusBadRequest, true)
+	}
+
+	updateAppOrg := appOrgFromDef(&requestData)
+	updateAppOrg.ID = ID
+	err = h.coreAPIs.System.SysUpdateApplicationOrganization(*updateAppOrg)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeApplicationOrganization, nil, err, http.StatusInternalServerError, true)
 	}
 
 	return l.HttpResponseSuccess()
@@ -200,11 +322,7 @@ func (h SystemApisHandler) getServiceRegistrations(l *logs.Log, r *http.Request,
 	}
 	serviceIDs := strings.Split(serviceIDsParam, ",")
 
-	serviceRegs, err := h.coreAPIs.Auth.GetServiceRegistrations(serviceIDs)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeServiceReg, nil, err, http.StatusInternalServerError, true)
-	}
-
+	serviceRegs := h.coreAPIs.Auth.GetServiceRegistrations(serviceIDs)
 	serviceRegResp := serviceRegListToDef(serviceRegs)
 
 	data, err := json.Marshal(serviceRegResp)

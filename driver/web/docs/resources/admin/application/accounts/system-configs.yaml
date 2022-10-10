@@ -50,6 +50,14 @@ put:
       explode: false
       schema:
         type: string
+    - name: create-anonymous
+      in: query
+      description: Create anonymous account if account with ID cannot be found. Default is `false`
+      required: false
+      style: form
+      explode: false
+      schema:
+        type: boolean
   requestBody:
     description: Account system configs (will be merged with existing configs)
     content:

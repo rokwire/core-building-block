@@ -13,6 +13,8 @@ ApplicationTypeFields:
   $ref: "./application/ApplicationTypeFields.yaml"
 ApplicationOrganization:
   $ref: "./application/ApplicationOrganization.yaml"
+AppOrg:
+  $ref: "./application/AppOrg.yaml"
 Permission:
   $ref: "./application/Permission.yaml"
 AppOrgRole:
@@ -29,6 +31,20 @@ OrganizationConfigFields:
   $ref: "./application/OrganizationConfigFields.yaml"
 ApplicationConfig:
   $ref: "./application/ApplicationConfig.yaml"
+IdentityProviderSettings:
+  $ref: "./application/IdentityProviderSettings.yaml"
+SupportedAuthTypes:
+  $ref: "./application/SupportedAuthTypes.yaml"
+SupportedAuthType:
+  $ref: "./application/SupportedAuthType.yaml"
+LoginSessionSettings:
+  $ref: "./application/LoginSessionSettings.yaml"
+YearlyExpirePolicy:
+  $ref: "./application/YearlyExpirePolicy.yaml"
+InactiveExpirePolicy:
+  $ref: "./application/InactiveExpirePolicy.yaml"
+TSLExpirePolicy:
+  $ref: "./application/TSLExpirePolicy.yaml"
 
 # auth
 LoginSession:
@@ -58,6 +74,8 @@ PubKey:
 ServiceScope:
   $ref: "./auth/ServiceScope.yaml"
 
+AdminToken:
+  $ref: "./auth/AdminToken.yaml"
 APIKey:
   $ref: "./auth/APIKey.yaml"
 JWK:
@@ -78,6 +96,8 @@ Profile:
   $ref: "./user/Profile.yaml"
 ProfileFields:
   $ref: "./user/ProfileFields.yaml"
+Username:
+  $ref: "./user/Username.yaml"
 AccountAuthType:
   $ref: "./user/AccountAuthType.yaml"
 AccountAuthTypeFields:
@@ -204,10 +224,6 @@ _services_req_application_org-configs:
 ## end SERVICES section
 
 ## ADMIN section
-
-### admin app-token API
-_admin_res_app-token:
-  $ref: "./apis/admin/app-token/response/Response.yaml"
 
 ### admin application_roles API
 _admin_req_create-application_role:

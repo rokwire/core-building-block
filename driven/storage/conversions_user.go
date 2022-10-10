@@ -20,19 +20,16 @@ import (
 
 // Account
 func accountFromStorage(item account, appOrg model.ApplicationOrganization) model.Account {
-	id := item.ID
-	permissions := item.Permissions
 	roles := accountRolesFromStorage(item.Roles, appOrg)
 	groups := accountGroupsFromStorage(item.Groups, appOrg)
 	authTypes := accountAuthTypesFromStorage(item.AuthTypes)
 	mfaTypes := mfaTypesFromStorage(item.MFATypes)
 	profile := profileFromStorage(item.Profile)
 	devices := accountDevicesFromStorage(item)
-	dateCreated := item.DateCreated
-	dateUpdated := item.DateUpdated
-	return model.Account{ID: id, AppOrg: appOrg, HasPermissions: item.HasPermissions, Permissions: permissions,
-		Roles: roles, Groups: groups, AuthTypes: authTypes, MFATypes: mfaTypes, ExternalIDs: item.ExternalIDs,
-		Preferences: item.Preferences, Profile: profile, SystemConfigs: item.SystemConfigs, Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated}
+	return model.Account{ID: item.ID, AppOrg: appOrg, Anonymous: item.Anonymous, Permissions: item.Permissions, Roles: roles, Groups: groups, AuthTypes: authTypes,
+		MFATypes: mfaTypes, Username: item.Username, ExternalIDs: item.ExternalIDs, Preferences: item.Preferences, Profile: profile, SystemConfigs: item.SystemConfigs,
+		Devices: devices, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated, LastLoginDate: item.LastLoginDate,
+		LastAccessTokenDate: item.LastAccessTokenDate, MostRecentClientVersion: item.MostRecentClientVersion}
 }
 
 func accountsFromStorage(items []account, appOrg model.ApplicationOrganization) []model.Account {
@@ -59,10 +56,13 @@ func accountToStorage(item *model.Account) *account {
 	devices := accountDevicesToStorage(item)
 	dateCreated := item.DateCreated
 	dateUpdated := item.DateUpdated
+	lastLoginDate := item.LastLoginDate
+	lastAccessTokenDate := item.LastAccessTokenDate
+	mostRecentClientVersion := item.MostRecentClientVersion
 
-	return &account{ID: id, AppOrgID: appOrgID, HasPermissions: item.HasPermissions, Permissions: permissions, Roles: roles, Groups: groups, AuthTypes: authTypes,
-		MFATypes: mfaTypes, ExternalIDs: item.ExternalIDs, Preferences: item.Preferences, Profile: profile, SystemConfigs: item.SystemConfigs, Devices: devices,
-		DateCreated: dateCreated, DateUpdated: dateUpdated}
+	return &account{ID: id, AppOrgID: appOrgID, Anonymous: item.Anonymous, Permissions: permissions, Roles: roles, Groups: groups, AuthTypes: authTypes, MFATypes: mfaTypes,
+		Username: item.Username, ExternalIDs: item.ExternalIDs, Preferences: item.Preferences, Profile: profile, SystemConfigs: item.SystemConfigs, Devices: devices,
+		DateCreated: dateCreated, DateUpdated: dateUpdated, LastLoginDate: lastLoginDate, LastAccessTokenDate: lastAccessTokenDate, MostRecentClientVersion: mostRecentClientVersion}
 }
 
 func accountDevicesFromStorage(item account) []model.Device {

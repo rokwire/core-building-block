@@ -1,11 +1,11 @@
 delete:
   tags:
   - Services
-  summary: Delete user account
+  summary: Delete account
   description: |
-    Deletes a user account
+    Deletes account
 
-    **Auth:** Requires user auth token
+    **Auth:** Requires auth token
   security:
     - bearerAuth: []
   responses:
@@ -25,11 +25,11 @@ delete:
 get:
   tags:
   - Services
-  summary: Get user account
+  summary: Get account
   description: |
-    Get the user account
+    Gets account
 
-    **Auth:** Requires user auth token
+    **Auth:** Requires auth token
   security:
     - bearerAuth: []
   responses:

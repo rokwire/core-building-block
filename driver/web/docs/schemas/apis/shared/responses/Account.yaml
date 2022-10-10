@@ -4,6 +4,8 @@ type: object
 properties:
   id:
     type: string
+  username:
+    type: string
   profile:
     $ref: "../../../user/ProfileFields.yaml"
   preferences:
@@ -12,7 +14,7 @@ properties:
   system_configs:
     type: object
     nullable: true
-  has_permissions:
+  system:
     type: boolean
   permissions:
     type: array
@@ -30,5 +32,15 @@ properties:
     type: array
     items:
       $ref: "../../../user/AccountAuthTypeFields.yaml"
-
+  anonymous:
+    type: boolean
+  last_login_date:
+    type: string
+  last_access_token_date:
+    type: string
+  most_recent_client_version:
+    type: string
+  external_ids:
+    type: object
+    nullable: true
 

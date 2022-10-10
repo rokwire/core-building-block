@@ -3,6 +3,8 @@ bin/
 build/
 .vscode/
 *.sh
+*.bat
+*.env
 *.pem
 env.list
 *.exe
