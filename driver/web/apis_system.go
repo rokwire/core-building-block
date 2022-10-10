@@ -416,7 +416,12 @@ func (h SystemApisHandler) getServiceAccounts(l *logs.Log, r *http.Request, clai
 		searchParams["permissions"] = strings.Split(query.Get("permissions"), ",")
 	}
 	if query.Get("scopes") != "" {
-		searchParams["scopes"] = strings.Split(query.Get("scopes"), ",")
+		scopeList := strings.Split(query.Get("scopes"), ",")
+		scopes, err := scopeListFromDef(&scopeList)
+		if err != nil {
+			return l.HttpResponseErrorAction(logutils.ActionParse, model.TypeScope, nil, err, http.StatusInternalServerError, true)
+		}
+		searchParams["scopes"] = scopes
 	}
 
 	serviceAccounts, err := h.coreAPIs.Auth.GetServiceAccounts(searchParams)
@@ -449,6 +454,11 @@ func (h SystemApisHandler) registerServiceAccount(l *logs.Log, r *http.Request, 
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeServiceAccount, nil, err, http.StatusBadRequest, true)
 	}
 
+	scopes, err := scopeListFromDef(requestData.Scopes)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionParse, model.TypeScope, nil, err, http.StatusInternalServerError, true)
+	}
+
 	var creds []model.ServiceAccountCredential
 	if requestData.Creds != nil {
 		creds = serviceAccountCredentialListFromDef(*requestData.Creds)
@@ -456,7 +466,7 @@ func (h SystemApisHandler) registerServiceAccount(l *logs.Log, r *http.Request, 
 
 	assignerPermissions := strings.Split(claims.Permissions, ",")
 	serviceAccount, err := h.coreAPIs.Auth.RegisterServiceAccount(requestData.AccountId, fromAppID, fromOrgID, requestData.Name,
-		requestData.AppId, requestData.OrgId, requestData.Permissions, requestData.Scopes, requestData.FirstParty, creds, assignerPermissions, l)
+		requestData.AppId, requestData.OrgId, requestData.Permissions, scopes, requestData.FirstParty, creds, assignerPermissions, l)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRegister, model.TypeServiceAccount, nil, err, http.StatusInternalServerError, true)
 	}
@@ -543,8 +553,13 @@ func (h SystemApisHandler) updateServiceAccountInstance(l *logs.Log, r *http.Req
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, "service account update request", nil, err, http.StatusBadRequest, true)
 	}
 
+	scopes, err := scopeListFromDef(requestData.Scopes)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionParse, model.TypeScope, nil, err, http.StatusInternalServerError, true)
+	}
+
 	assignerPermissions := strings.Split(claims.Permissions, ",")
-	serviceAccount, err := h.coreAPIs.Auth.UpdateServiceAccountInstance(id, appID, orgID, requestData.Name, requestData.Permissions, requestData.Scopes, assignerPermissions)
+	serviceAccount, err := h.coreAPIs.Auth.UpdateServiceAccountInstance(id, appID, orgID, requestData.Name, requestData.Permissions, scopes, assignerPermissions)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeServiceAccount, nil, err, http.StatusInternalServerError, true)
 	}

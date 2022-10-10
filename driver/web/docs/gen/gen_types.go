@@ -581,6 +581,7 @@ type ServiceAccount struct {
 	Name        string                      `json:"name"`
 	OrgId       string                      `json:"org_id"`
 	Permissions []string                    `json:"permissions"`
+	Scopes      []string                    `json:"scopes"`
 }
 
 // ServiceAccountCredential defines model for ServiceAccountCredential.

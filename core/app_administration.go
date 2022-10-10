@@ -208,7 +208,7 @@ func (app *application) admCreateAppOrgGroup(name string, permissionNames []stri
 		}
 
 		//2. validate permissions
-		permissions, err := app.auth.CheckPermissions(context, appOrg, permissionNames, assignerPermissions)
+		permissions, err := app.auth.CheckPermissions(context, []model.ApplicationOrganization{*appOrg}, permissionNames, assignerPermissions)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionValidate, model.TypePermission, nil, err)
 		}
@@ -436,7 +436,7 @@ func (app *application) admCreateAppOrgRole(name string, description string, per
 		}
 
 		//2. check role permissions
-		permissions, err := app.auth.CheckPermissions(context, appOrg, permissionNames, assignerPermissions)
+		permissions, err := app.auth.CheckPermissions(context, []model.ApplicationOrganization{*appOrg}, permissionNames, assignerPermissions)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionValidate, model.TypePermission, nil, err)
 		}

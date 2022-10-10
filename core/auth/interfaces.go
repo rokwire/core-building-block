@@ -327,7 +327,7 @@ type APIs interface {
 	GetServiceAccounts(params map[string]interface{}) ([]model.ServiceAccount, error)
 
 	//RegisterServiceAccount registers a service account
-	RegisterServiceAccount(accountID *string, fromAppID *string, fromOrgID *string, name *string, appID string, orgID string, permissions *[]string, scopes *[]string,
+	RegisterServiceAccount(accountID *string, fromAppID *string, fromOrgID *string, name *string, appID string, orgID string, permissions *[]string, scopes []authorization.Scope,
 		firstParty *bool, creds []model.ServiceAccountCredential, assignerPermissions []string, l *logs.Log) (*model.ServiceAccount, error)
 
 	//DeregisterServiceAccount deregisters a service account
@@ -337,7 +337,7 @@ type APIs interface {
 	GetServiceAccountInstance(accountID string, appID string, orgID string) (*model.ServiceAccount, error)
 
 	//UpdateServiceAccountInstance updates a service account instance
-	UpdateServiceAccountInstance(id string, appID string, orgID string, name *string, permissions *[]string, scopes *[]string, assignerPermissions []string) (*model.ServiceAccount, error)
+	UpdateServiceAccountInstance(id string, appID string, orgID string, name *string, permissions *[]string, scopes []authorization.Scope, assignerPermissions []string) (*model.ServiceAccount, error)
 
 	//DeregisterServiceAccountInstance deregisters a service account instance
 	DeregisterServiceAccountInstance(id string, appID string, orgID string) error
@@ -395,7 +395,7 @@ type APIs interface {
 	GrantAccountPermissions(context storage.TransactionContext, account *model.Account, permissionNames []string, assignerPermissions []string) error
 
 	//CheckPermissions loads permissions by names from storage and checks that they are assignable and valid for the given appOrg
-	CheckPermissions(context storage.TransactionContext, appOrg *model.ApplicationOrganization, permissionNames []string, assignerPermissions []string) ([]model.Permission, error)
+	CheckPermissions(context storage.TransactionContext, appOrgs []model.ApplicationOrganization, permissionNames []string, assignerPermissions []string) ([]model.Permission, error)
 
 	//GrantAccountRoles grants new roles to an account after validating the assigner has required permissions
 	GrantAccountRoles(context storage.TransactionContext, account *model.Account, roleIDs []string, assignerPermissions []string) error
@@ -553,6 +553,7 @@ type Storage interface {
 
 	//ApplicationsOrganizations
 	FindApplicationsOrganizations() ([]model.ApplicationOrganization, error)
+	FindApplicationOrganizations(appID *string, orgID *string) ([]model.ApplicationOrganization, error)
 	FindApplicationOrganization(appID string, orgID string) (*model.ApplicationOrganization, error)
 
 	//Device

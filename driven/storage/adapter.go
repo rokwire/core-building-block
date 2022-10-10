@@ -1364,6 +1364,8 @@ func (sa *Adapter) FindServiceAccounts(params map[string]interface{}) ([]model.S
 	for k, v := range params {
 		if k == "permissions" {
 			filter = append(filter, primitive.E{Key: k + ".name", Value: bson.M{"$in": v}})
+		} else if k == "scopes" {
+			filter = append(filter, primitive.E{Key: k, Value: bson.M{"$in": v}})
 		} else {
 			filter = append(filter, primitive.E{Key: k, Value: v})
 		}
