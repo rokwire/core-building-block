@@ -167,6 +167,18 @@ func (h TPSApisHandler) getServiceAccessTokens(l *logs.Log, r *http.Request, cla
 	return l.HttpResponseSuccessJSON(respData)
 }
 
+func (h TPSApisHandler) getAccounts(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	l.Debugf("%v", r.URL.Query())
+
+	dummy := make([]interface{}, 0)
+	respData, err := json.Marshal(dummy)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("accounts response"), nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessJSON(respData)
+}
+
 // NewTPSApisHandler creates new tps Handler instance
 func NewTPSApisHandler(coreAPIs *core.APIs) TPSApisHandler {
 	return TPSApisHandler{coreAPIs: coreAPIs}

@@ -1,0 +1,2 @@
+p, all_accounts, /core/bbs/accounts, (GET), All account actions
+p, get_accounts, /core/bbs/accounts, (GET), Get accounts
