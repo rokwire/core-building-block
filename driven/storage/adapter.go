@@ -1761,7 +1761,7 @@ func (sa *Adapter) RemoveAccountsGroup(context TransactionContext, groupID strin
 		}},
 	}
 
-	res, err := sa.db.accounts.UpdateMany(filter, update, nil)
+	res, err := sa.db.accounts.UpdateManyWithContext(context, filter, update, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"group_id": groupID}, err)
 	}

@@ -1519,59 +1519,6 @@ func (a *Auth) checkUsername(context storage.TransactionContext, appOrg *model.A
 	return nil
 }
 
-func (a *Auth) checkGroups(context storage.TransactionContext, appOrg model.ApplicationOrganization, groupIDs []string, assignerPermissions []string) ([]model.AppOrgGroup, error) {
-	//find groups
-	groups, err := a.storage.FindAppOrgGroupsByIDs(context, groupIDs, appOrg.ID)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgGroup, nil, err)
-	}
-	if len(groups) != len(groupIDs) {
-		badIDs := make([]string, 0)
-		for _, gID := range groupIDs {
-			bad := true
-			for _, g := range groups {
-				if g.ID == gID {
-					bad = false
-					break
-				}
-			}
-			if bad {
-				badIDs = append(badIDs, gID)
-			}
-		}
-		return nil, errors.ErrorData(logutils.StatusInvalid, model.TypeAppOrgGroup, &logutils.FieldArgs{"ids": badIDs})
-	}
-
-	//check assigners
-	for _, group := range groups {
-		err = group.CheckAssigners(assignerPermissions)
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionValidate, "assigner permissions", &logutils.FieldArgs{"id": group.ID}, err)
-		}
-	}
-
-	return groups, nil
-}
-
-func (a *Auth) checkRevokedGroups(context storage.TransactionContext, appOrg model.ApplicationOrganization, groupIDs []string, assignerPermissions []string) error {
-	//find groups
-	groups, err := a.storage.FindAppOrgGroupsByIDs(context, groupIDs, appOrg.ID)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgGroup, nil, err)
-	}
-	//Revoke missing groups
-
-	//check assigners
-	for _, group := range groups {
-		err = group.CheckAssigners(assignerPermissions)
-		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionValidate, "assigner permissions", &logutils.FieldArgs{"id": group.ID}, err)
-		}
-	}
-
-	return nil
-}
-
 func (a *Auth) linkAccountAuthType(account model.Account, authType model.AuthType, appOrg model.ApplicationOrganization,
 	creds string, params string, l *logs.Log) (string, *model.AccountAuthType, error) {
 	authImpl, err := a.getAuthTypeImpl(authType)
