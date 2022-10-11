@@ -91,6 +91,13 @@ type Encryption interface {
 // BBs exposes users related APIs used by the platform building blocks
 type BBs interface {
 	BBsGetTest() string
+
+	BBsGetAccounts(searchParams map[string]interface{}) ([]model.Account, error)
+}
+
+// TPS exposes user related APIs used by third-party services
+type TPS interface {
+	TPSGetAccounts(searchParams map[string]interface{}) ([]model.Account, error)
 }
 
 // System exposes system APIs for the driver adapters

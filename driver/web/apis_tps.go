@@ -20,10 +20,12 @@ import (
 	Def "core-building-block/driver/web/docs/gen"
 	"core-building-block/utils"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 
 	"github.com/gorilla/mux"
+	"github.com/rokwire/core-auth-library-go/v2/authorization"
 	"github.com/rokwire/core-auth-library-go/v2/sigauth"
 	"github.com/rokwire/core-auth-library-go/v2/tokenauth"
 	"github.com/rokwire/logging-library-go/errors"
@@ -168,15 +170,43 @@ func (h TPSApisHandler) getServiceAccessTokens(l *logs.Log, r *http.Request, cla
 }
 
 func (h TPSApisHandler) getAccounts(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	l.Debugf("%v", r.URL.Query())
-
-	dummy := make([]interface{}, 0)
-	respData, err := json.Marshal(dummy)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("accounts response"), nil, err, http.StatusInternalServerError, false)
+	if claims.Scope == "" {
+		return l.HttpResponseErrorData(logutils.StatusInvalid, model.TypeScope, nil, nil, http.StatusForbidden, true)
 	}
 
-	return l.HttpResponseSuccessJSON(respData)
+	searchParams := make(map[string]interface{})
+	scopeStrings := strings.Split(claims.Scope, " ")
+	scopes, err := scopeListFromDef(&scopeStrings)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionParse, model.TypeScope, nil, err, http.StatusInternalServerError, true)
+	}
+
+	for k, v := range r.URL.Query() {
+		if len(v) == 0 {
+			continue
+		}
+		value := v[0]
+
+		validKey := false
+		requiredScope := authorization.Scope{ServiceID: "core", Resource: fmt.Sprintf("%s.%s", string(model.TypeAccount), k), Operation: "get"}
+		for _, scope := range scopes {
+			if scope.Match(&requiredScope) {
+				validKey = true
+				searchParams[k] = value
+				break
+			}
+		}
+		if !validKey {
+			return l.HttpResponseErrorData(logutils.StatusInvalid, "accounts search parameter", &logutils.FieldArgs{k: value}, nil, http.StatusForbidden, true)
+		}
+	}
+
+	// respData, err := json.Marshal()
+	// if err != nil {
+	// 	return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("accounts response"), nil, err, http.StatusInternalServerError, false)
+	// }
+
+	return l.HttpResponseSuccessJSON(nil)
 }
 
 // NewTPSApisHandler creates new tps Handler instance
