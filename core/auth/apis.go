@@ -660,7 +660,7 @@ func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID
 		if len(added) > 0 || len(removed) > 0 {
 			newPermissions := []model.Permission{}
 			if len(added) > 0 {
-				addedPermissions, err := a.CheckPermissions(context, appOrg, added, updaterPermissions)
+				addedPermissions, err := a.CheckPermissions(context, appOrg, added, updaterPermissions, false)
 				if err != nil {
 					return errors.WrapErrorAction("adding", model.TypePermission, nil, err)
 				}
@@ -668,7 +668,7 @@ func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID
 			}
 
 			if len(removed) > 0 {
-				err := a.CheckRevokedPermissions(context, appOrg, removed, updaterPermissions)
+				_, err := a.CheckPermissions(context, appOrg, removed, updaterPermissions, true)
 				if err != nil {
 					return errors.WrapErrorAction("revoking", model.TypePermission, nil, err)
 				}
@@ -697,7 +697,7 @@ func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID
 		if len(added) > 0 || len(removed) > 0 {
 			newRoles := []model.AppOrgRole{}
 			if len(added) > 0 {
-				addedRoles, err := a.CheckRoles(context, appOrg, added, updaterPermissions)
+				addedRoles, err := a.CheckRoles(context, appOrg, added, updaterPermissions, false)
 				if err != nil {
 					return errors.WrapErrorAction("adding", model.TypeAccountRoles, nil, err)
 				}
@@ -705,7 +705,7 @@ func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID
 			}
 
 			if len(removed) > 0 {
-				err := a.CheckRevokedRoles(context, appOrg, removed, updaterPermissions)
+				_, err := a.CheckRoles(context, appOrg, removed, updaterPermissions, true)
 				if err != nil {
 					return errors.WrapErrorAction("revoking", model.TypeAccountRoles, nil, err)
 				}
@@ -735,7 +735,7 @@ func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID
 		if len(added) > 0 || len(removed) > 0 {
 			newGroups := []model.AppOrgGroup{}
 			if len(added) > 0 {
-				addedGroups, err := a.checkGroups(context, *appOrg, added, updaterPermissions)
+				addedGroups, err := a.CheckGroups(context, appOrg, added, updaterPermissions, false)
 				if err != nil {
 					return errors.WrapErrorAction("adding", model.TypeAccountGroups, nil, err)
 				}
@@ -743,7 +743,7 @@ func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID
 			}
 
 			if len(removed) > 0 {
-				err := a.checkRevokedGroups(context, *appOrg, removed, updaterPermissions)
+				_, err := a.CheckGroups(context, appOrg, removed, updaterPermissions, true)
 				if err != nil {
 					return errors.WrapErrorAction("revoking", model.TypeAccountGroups, nil, err)
 				}
@@ -1692,7 +1692,7 @@ func (a *Auth) GrantAccountPermissions(context storage.TransactionContext, accou
 	}
 
 	//check permissions
-	permissions, err := a.CheckPermissions(context, &account.AppOrg, newPermissions, assignerPermissions)
+	permissions, err := a.CheckPermissions(context, &account.AppOrg, newPermissions, assignerPermissions, false)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionValidate, model.TypePermission, nil, err)
 	}
@@ -1707,8 +1707,8 @@ func (a *Auth) GrantAccountPermissions(context storage.TransactionContext, accou
 	return nil
 }
 
-// CheckPermissions loads permissions by names from storage and checks that they are assignable and valid for the given appOrg
-func (a *Auth) CheckPermissions(context storage.TransactionContext, appOrg *model.ApplicationOrganization, permissionNames []string, assignerPermissions []string) ([]model.Permission, error) {
+// CheckPermissions loads permissions by names from storage and checks that they are assignable and valid for the given appOrg or revocable
+func (a *Auth) CheckPermissions(context storage.TransactionContext, appOrg *model.ApplicationOrganization, permissionNames []string, assignerPermissions []string, revoke bool) ([]model.Permission, error) {
 	if appOrg == nil {
 		return nil, errors.ErrorData(logutils.StatusInvalid, model.TypeApplicationOrganization, nil)
 	}
@@ -1718,7 +1718,8 @@ func (a *Auth) CheckPermissions(context storage.TransactionContext, appOrg *mode
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypePermission, nil, err)
 	}
-	if len(permissions) != len(permissionNames) {
+	//Allow revocation of missing permissions
+	if len(permissions) != len(permissionNames) && !revoke {
 		badNames := make([]string, 0)
 		for _, pName := range permissionNames {
 			bad := true
@@ -1738,6 +1739,10 @@ func (a *Auth) CheckPermissions(context storage.TransactionContext, appOrg *mode
 	//check if authorized
 	for _, permission := range permissions {
 		if !utils.Contains(appOrg.ServicesIDs, permission.ServiceID) {
+			//Allow revocation of permissions for invalid services
+			if revoke {
+				continue
+			}
 			return nil, errors.ErrorData(logutils.StatusInvalid, model.TypePermission, &logutils.FieldArgs{"name": permission.Name, "service_id": permission.ServiceID})
 		}
 		err = permission.CheckAssigners(assignerPermissions)
@@ -1747,34 +1752,6 @@ func (a *Auth) CheckPermissions(context storage.TransactionContext, appOrg *mode
 	}
 
 	return permissions, nil
-}
-
-// CheckRevokedPermissions loads permissions by names from storage and checks that they are revokable
-func (a *Auth) CheckRevokedPermissions(context storage.TransactionContext, appOrg *model.ApplicationOrganization, permissionNames []string, assignerPermissions []string) error {
-	if appOrg == nil {
-		return errors.ErrorData(logutils.StatusInvalid, model.TypeApplicationOrganization, nil)
-	}
-
-	//find permissions
-	permissions, err := a.storage.FindPermissionsByName(context, permissionNames)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionFind, model.TypePermission, nil, err)
-	}
-	//Allow revocation of missing permissions
-
-	//check if authorized
-	for _, permission := range permissions {
-		//Allow revocation of permissions for invalid services
-		if !utils.Contains(appOrg.ServicesIDs, permission.ServiceID) {
-			continue
-		}
-		err = permission.CheckAssigners(assignerPermissions)
-		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionValidate, "assigner permissions", &logutils.FieldArgs{"name": permission.Name}, err)
-		}
-	}
-
-	return nil
 }
 
 // GrantAccountRoles grants new roles to an account after validating the assigner has required permissions
@@ -1797,7 +1774,7 @@ func (a *Auth) GrantAccountRoles(context storage.TransactionContext, account *mo
 	}
 
 	//check roles
-	roles, err := a.CheckRoles(context, &account.AppOrg, newRoles, assignerPermissions)
+	roles, err := a.CheckRoles(context, &account.AppOrg, newRoles, assignerPermissions, false)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionValidate, model.TypeAppOrgRole, nil, err)
 	}
@@ -1813,8 +1790,8 @@ func (a *Auth) GrantAccountRoles(context storage.TransactionContext, account *mo
 	return nil
 }
 
-// CheckRoles loads appOrg roles by IDs from storage and checks that they are assignable
-func (a *Auth) CheckRoles(context storage.TransactionContext, appOrg *model.ApplicationOrganization, roleIDs []string, assignerPermissions []string) ([]model.AppOrgRole, error) {
+// CheckRoles loads appOrg roles by IDs from storage and checks that they are assignable or revocable
+func (a *Auth) CheckRoles(context storage.TransactionContext, appOrg *model.ApplicationOrganization, roleIDs []string, assignerPermissions []string, revoke bool) ([]model.AppOrgRole, error) {
 	if appOrg == nil {
 		return nil, errors.ErrorData(logutils.StatusInvalid, model.TypeApplicationOrganization, nil)
 	}
@@ -1824,7 +1801,7 @@ func (a *Auth) CheckRoles(context storage.TransactionContext, appOrg *model.Appl
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgRole, nil, err)
 	}
-	if len(roles) != len(roleIDs) {
+	if len(roles) != len(roleIDs) && !revoke {
 		badIDs := make([]string, 0)
 		for _, rID := range roleIDs {
 			bad := true
@@ -1852,30 +1829,6 @@ func (a *Auth) CheckRoles(context storage.TransactionContext, appOrg *model.Appl
 	return roles, nil
 }
 
-// CheckRevokedRoles loads appOrg roles by IDs from storage and checks that they are revocable
-func (a *Auth) CheckRevokedRoles(context storage.TransactionContext, appOrg *model.ApplicationOrganization, roleIDs []string, assignerPermissions []string) error {
-	if appOrg == nil {
-		return errors.ErrorData(logutils.StatusInvalid, model.TypeApplicationOrganization, nil)
-	}
-
-	//find roles
-	roles, err := a.storage.FindAppOrgRolesByIDs(context, roleIDs, appOrg.ID)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgRole, nil, err)
-	}
-	//Allow missing roles to be revoked
-
-	//check if authorized
-	for _, cRole := range roles {
-		err = cRole.CheckAssigners(assignerPermissions)
-		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionValidate, "assigner permissions", &logutils.FieldArgs{"id": cRole.ID}, err)
-		}
-	}
-
-	return nil
-}
-
 // GrantAccountGroups grants new groups to an account after validating the assigner has required permissions
 func (a *Auth) GrantAccountGroups(context storage.TransactionContext, account *model.Account, groupIDs []string, assignerPermissions []string) error {
 	//check if there is data
@@ -1896,7 +1849,7 @@ func (a *Auth) GrantAccountGroups(context storage.TransactionContext, account *m
 	}
 
 	//check groups
-	groups, err := a.checkGroups(context, account.AppOrg, newGroups, assignerPermissions)
+	groups, err := a.CheckGroups(context, &account.AppOrg, newGroups, assignerPermissions, false)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionValidate, model.TypeAppOrgGroup, nil, err)
 	}
@@ -1910,6 +1863,45 @@ func (a *Auth) GrantAccountGroups(context storage.TransactionContext, account *m
 
 	account.Groups = append(account.Groups, accountGroups...)
 	return nil
+}
+
+// CheckGroups loads appOrg groups by IDs from storage and checks that they are assignable or revocable
+func (a *Auth) CheckGroups(context storage.TransactionContext, appOrg *model.ApplicationOrganization, groupIDs []string, assignerPermissions []string, revoke bool) ([]model.AppOrgGroup, error) {
+	if appOrg == nil {
+		return nil, errors.ErrorData(logutils.StatusInvalid, model.TypeApplicationOrganization, nil)
+	}
+
+	//find groups
+	groups, err := a.storage.FindAppOrgGroupsByIDs(context, groupIDs, appOrg.ID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgGroup, nil, err)
+	}
+	if len(groups) != len(groupIDs) && !revoke {
+		badIDs := make([]string, 0)
+		for _, gID := range groupIDs {
+			bad := true
+			for _, g := range groups {
+				if g.ID == gID {
+					bad = false
+					break
+				}
+			}
+			if bad {
+				badIDs = append(badIDs, gID)
+			}
+		}
+		return nil, errors.ErrorData(logutils.StatusInvalid, model.TypeAppOrgGroup, &logutils.FieldArgs{"ids": badIDs})
+	}
+
+	//check assigners
+	for _, group := range groups {
+		err = group.CheckAssigners(assignerPermissions)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionValidate, "assigner permissions", &logutils.FieldArgs{"id": group.ID}, err)
+		}
+	}
+
+	return groups, nil
 }
 
 // GetServiceRegistrations retrieves all service registrations
