@@ -1746,7 +1746,7 @@ func (sa *Adapter) InsertAccountsGroup(context TransactionContext, group model.A
 }
 
 // RemoveAccountsGroup removes accounts from a group
-func (sa *Adapter) RemoveAccountsGroup(groupID string, accountIDs []string) error {
+func (sa *Adapter) RemoveAccountsGroup(context TransactionContext, groupID string, accountIDs []string) error {
 	if len(accountIDs) == 0 {
 		return nil
 	}
