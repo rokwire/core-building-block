@@ -34,7 +34,7 @@ import (
 	"core-building-block/utils"
 	"encoding/base64"
 	"encoding/json"
-	"io"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -275,7 +275,7 @@ func makeRequest(ctx context.Context, method string, pathPart string, data url.V
 	}
 
 	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body)
+	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err)
 	}
