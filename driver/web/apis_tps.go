@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"net/http"
 	"reflect"
+	"strconv"
 	"strings"
 
 	"github.com/gorilla/mux"
@@ -174,21 +175,38 @@ func (h TPSApisHandler) getAccounts(l *logs.Log, r *http.Request, claims *tokena
 	if claims.Scope == "" {
 		return l.HttpResponseErrorData(logutils.StatusInvalid, model.TypeScope, nil, nil, http.StatusForbidden, true)
 	}
-
-	var queryParams map[string]interface{}
-	err := json.NewDecoder(r.Body).Decode(&queryParams)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
-
-	responseKeys := make([]string, 0)
-	searchParams := make(map[string]interface{})
 	scopeStrings := strings.Split(claims.Scope, " ")
 	scopes, err := scopeListFromDef(&scopeStrings)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionParse, model.TypeScope, nil, err, http.StatusInternalServerError, true)
 	}
 
+	//limit and offset
+	limit := 100
+	limitArg := r.URL.Query().Get("limit")
+	if limitArg != "" {
+		limit, err = strconv.Atoi(limitArg)
+		if err != nil {
+			return l.HttpResponseErrorAction(logutils.ActionParse, logutils.TypeArg, logutils.StringArgs("limit"), err, http.StatusBadRequest, false)
+		}
+	}
+	offset := 0
+	offsetArg := r.URL.Query().Get("offset")
+	if offsetArg != "" {
+		offset, err = strconv.Atoi(offsetArg)
+		if err != nil {
+			return l.HttpResponseErrorAction(logutils.ActionParse, logutils.TypeArg, logutils.StringArgs("offset"), err, http.StatusBadRequest, false)
+		}
+	}
+
+	var queryParams map[string]interface{}
+	err = json.NewDecoder(r.Body).Decode(&queryParams)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	responseKeys := make([]string, 0)
+	searchParams := make(map[string]interface{})
 	allAccess := false
 	allAccessScope := authorization.Scope{ServiceID: "core", Resource: string(model.TypeAccount), Operation: "get"}
 	for k, v := range queryParams {
@@ -211,7 +229,7 @@ func (h TPSApisHandler) getAccounts(l *logs.Log, r *http.Request, claims *tokena
 		searchParams[k] = v
 	}
 
-	accounts, err := h.coreAPIs.TPS.TPSGetAccounts(searchParams, allAccess)
+	accounts, err := h.coreAPIs.TPS.TPSGetAccounts(searchParams, claims.AppID, claims.OrgID, limit, offset, allAccess)
 	if err != nil {
 		errFields := logutils.FieldArgs(searchParams)
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeAccount, &errFields, err, http.StatusInternalServerError, false)

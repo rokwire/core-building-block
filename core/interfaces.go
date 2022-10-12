@@ -92,12 +92,12 @@ type Encryption interface {
 type BBs interface {
 	BBsGetTest() string
 
-	BBsGetAccounts(searchParams map[string]interface{}, allAccess bool) ([]model.Account, error)
+	BBsGetAccounts(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool) ([]map[string]interface{}, error)
 }
 
 // TPS exposes user related APIs used by third-party services
 type TPS interface {
-	TPSGetAccounts(searchParams map[string]interface{}, allAccess bool) ([]model.Account, error)
+	TPSGetAccounts(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool) ([]map[string]interface{}, error)
 }
 
 // System exposes system APIs for the driver adapters
@@ -145,6 +145,7 @@ type Storage interface {
 	FindAccountByID(context storage.TransactionContext, id string) (*model.Account, error)
 	FindAccounts(limit int, offset int, appID string, orgID string, accountID *string, firstName *string, lastName *string, authType *string,
 		authTypeIdentifier *string, anonymous *bool, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error)
+	FindAccountsForService(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool) ([]map[string]interface{}, error)
 	FindAccountsByAccountID(appID string, orgID string, accountIDs []string) ([]model.Account, error)
 	FindAccountsByUsername(context storage.TransactionContext, appOrg *model.ApplicationOrganization, username string) ([]model.Account, error)
 

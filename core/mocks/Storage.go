@@ -330,6 +330,29 @@ func (_m *Storage) FindAccountsByUsername(context storage.TransactionContext, ap
 	return r0, r1
 }
 
+// FindAccountsForService provides a mock function with given fields: searchParams, appID, orgID, limit, offset, allAccess
+func (_m *Storage) FindAccountsForService(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool) ([]map[string]interface{}, error) {
+	ret := _m.Called(searchParams, appID, orgID, limit, offset, allAccess)
+
+	var r0 []map[string]interface{}
+	if rf, ok := ret.Get(0).(func(map[string]interface{}, string, string, int, int, bool) []map[string]interface{}); ok {
+		r0 = rf(searchParams, appID, orgID, limit, offset, allAccess)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]map[string]interface{})
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(map[string]interface{}, string, string, int, int, bool) error); ok {
+		r1 = rf(searchParams, appID, orgID, limit, offset, allAccess)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // FindAppConfigByID provides a mock function with given fields: ID
 func (_m *Storage) FindAppConfigByID(ID string) (*model.ApplicationConfig, error) {
 	ret := _m.Called(ID)

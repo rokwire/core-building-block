@@ -440,8 +440,8 @@ func (h SystemApisHandler) getServiceAccounts(l *logs.Log, r *http.Request, clai
 }
 
 func (h SystemApisHandler) registerServiceAccount(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	fromAppID := utils.StringOrNil(r.URL.Query().Get("app_id"))
-	fromOrgID := utils.StringOrNil(r.URL.Query().Get("org_id"))
+	fromAppID := utils.StringOrNil(r.URL.Query().Get("app_id"), "")
+	fromOrgID := utils.StringOrNil(r.URL.Query().Get("org_id"), "")
 
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {

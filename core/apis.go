@@ -457,8 +457,8 @@ func (s *bbsImpl) BBsGetTest() string {
 	return s.app.bbsGetTest()
 }
 
-func (s *bbsImpl) BBsGetAccounts(searchParams map[string]interface{}, allAccess bool) ([]model.Account, error) {
-	return nil, errors.New(logutils.Unimplemented)
+func (s *bbsImpl) BBsGetAccounts(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool) ([]map[string]interface{}, error) {
+	return s.app.storage.FindAccountsForService(searchParams, appID, orgID, limit, offset, allAccess)
 }
 
 ///
@@ -469,8 +469,8 @@ type tpsImpl struct {
 	app *application
 }
 
-func (s *tpsImpl) TPSGetAccounts(searchParams map[string]interface{}, allAccess bool) ([]model.Account, error) {
-	return nil, errors.New(logutils.Unimplemented)
+func (s *tpsImpl) TPSGetAccounts(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool) ([]map[string]interface{}, error) {
+	return s.app.storage.FindAccountsForService(searchParams, appID, orgID, limit, offset, allAccess)
 }
 
 ///

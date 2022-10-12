@@ -196,9 +196,9 @@ func StringListDiff(new []string, old []string) ([]string, []string, []string) {
 	return added, removed, unchanged
 }
 
-// StringOrNil returns a pointer to the input string, but returns nil if input is empty
-func StringOrNil(v string) *string {
-	if v == "" {
+// StringOrNil returns a pointer to the input string, but returns nil if input matches nilVal
+func StringOrNil(v string, nilVal string) *string {
+	if v == nilVal {
 		return nil
 	}
 	return &v

@@ -19,6 +19,7 @@ import (
 	"core-building-block/core/model"
 	"core-building-block/utils"
 	"fmt"
+	"reflect"
 	"strconv"
 	"sync"
 	"time"
@@ -1174,6 +1175,64 @@ func (sa *Adapter) FindAccounts(limit int, offset int, appID string, orgID strin
 	}
 
 	accounts := accountsFromStorage(list, *appOrg)
+	return accounts, nil
+}
+
+// FindAccountsForService finds accounts for a service
+func (sa *Adapter) FindAccountsForService(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool) ([]map[string]interface{}, error) {
+	//find app orgs accessed by service
+	appOrgs, err := sa.FindApplicationOrganizations(utils.StringOrNil(appID, model.AllApps), utils.StringOrNil(orgID, model.AllOrgs))
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": appID, "org_id": orgID}, err)
+	}
+	if len(appOrgs) == 0 {
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": appID, "org_id": orgID})
+	}
+
+	//find the accounts
+	appOrgIDs := make([]string, len(appOrgs))
+	for _, appOrg := range appOrgs {
+		appOrgIDs = append(appOrgIDs, appOrg.ID)
+	}
+	filter := bson.D{primitive.E{Key: "app_org_id", Value: bson.M{"$in": appOrgIDs}}}
+
+	//arbitary filters
+	searchKeys := make([]string, 0)
+	for k, v := range searchParams {
+		searchKeys = append(searchKeys, k)
+		if reflect.TypeOf(v).Kind() == reflect.Slice {
+			filter = append(filter, primitive.E{Key: k, Value: bson.M{"$in": v}})
+		} else {
+			filter = append(filter, primitive.E{Key: k, Value: v})
+		}
+	}
+
+	var accounts []map[string]interface{}
+	options := options.Find()
+	options.SetLimit(int64(limit))
+	options.SetSkip(int64(offset))
+
+	// set projection if scope limited
+	if !allAccess {
+		projection := bson.D{}
+		usesID := false
+		for _, k := range searchKeys {
+			if k == "_id" {
+				usesID = true
+			}
+			projection = append(projection, bson.E{Key: k, Value: 1})
+		}
+		if !usesID {
+			projection = append(projection, bson.E{Key: "_id", Value: 0})
+		}
+		options.SetProjection(projection)
+	}
+
+	err = sa.db.accounts.Find(filter, &accounts, options)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+
 	return accounts, nil
 }
 
