@@ -1,2 +1,2 @@
-p, all_accounts, /core/tps/accounts, (GET), All account actions
-p, get_accounts, /core/tps/accounts, (GET), Get accounts
+p, all_accounts, /core/tps/accounts, (POST), All account actions
+p, get_accounts, /core/tps/accounts, (POST), Get accounts

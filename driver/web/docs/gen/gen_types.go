@@ -1387,15 +1387,8 @@ type PostBbsAccessTokenJSONBody = ServicesReqServiceAccountsAccessToken
 // PostBbsAccessTokensJSONBody defines parameters for PostBbsAccessTokens.
 type PostBbsAccessTokensJSONBody = ServicesReqServiceAccountsAccessTokens
 
-// GetBbsAccountsParams_AccountParams defines parameters for GetBbsAccounts.
-type GetBbsAccountsParams_AccountParams struct {
-	AdditionalProperties map[string]string `json:"-"`
-}
-
-// GetBbsAccountsParams defines parameters for GetBbsAccounts.
-type GetBbsAccountsParams struct {
-	AccountParams *GetBbsAccountsParams_AccountParams `form:"account-params,omitempty" json:"account-params,omitempty"`
-}
+// PostBbsAccountsJSONBody defines parameters for PostBbsAccounts.
+type PostBbsAccountsJSONBody = map[string]interface{}
 
 // PostBbsServiceAccountIdJSONBody defines parameters for PostBbsServiceAccountId.
 type PostBbsServiceAccountIdJSONBody = ServicesReqServiceAccountsParams
@@ -1727,15 +1720,8 @@ type PostTpsAccessTokenJSONBody = ServicesReqServiceAccountsAccessToken
 // PostTpsAccessTokensJSONBody defines parameters for PostTpsAccessTokens.
 type PostTpsAccessTokensJSONBody = ServicesReqServiceAccountsAccessTokens
 
-// GetTpsAccountsParams_AccountParams defines parameters for GetTpsAccounts.
-type GetTpsAccountsParams_AccountParams struct {
-	AdditionalProperties map[string]string `json:"-"`
-}
-
-// GetTpsAccountsParams defines parameters for GetTpsAccounts.
-type GetTpsAccountsParams struct {
-	AccountParams *GetTpsAccountsParams_AccountParams `form:"account-params,omitempty" json:"account-params,omitempty"`
-}
+// PostTpsAccountsJSONBody defines parameters for PostTpsAccounts.
+type PostTpsAccountsJSONBody = map[string]interface{}
 
 // PostTpsServiceAccountIdJSONBody defines parameters for PostTpsServiceAccountId.
 type PostTpsServiceAccountIdJSONBody = ServicesReqServiceAccountsParams
@@ -1823,6 +1809,9 @@ type PostBbsAccessTokenJSONRequestBody = PostBbsAccessTokenJSONBody
 
 // PostBbsAccessTokensJSONRequestBody defines body for PostBbsAccessTokens for application/json ContentType.
 type PostBbsAccessTokensJSONRequestBody = PostBbsAccessTokensJSONBody
+
+// PostBbsAccountsJSONRequestBody defines body for PostBbsAccounts for application/json ContentType.
+type PostBbsAccountsJSONRequestBody = PostBbsAccountsJSONBody
 
 // PostBbsServiceAccountIdJSONRequestBody defines body for PostBbsServiceAccountId for application/json ContentType.
 type PostBbsServiceAccountIdJSONRequestBody = PostBbsServiceAccountIdJSONBody
@@ -1968,114 +1957,11 @@ type PostTpsAccessTokenJSONRequestBody = PostTpsAccessTokenJSONBody
 // PostTpsAccessTokensJSONRequestBody defines body for PostTpsAccessTokens for application/json ContentType.
 type PostTpsAccessTokensJSONRequestBody = PostTpsAccessTokensJSONBody
 
+// PostTpsAccountsJSONRequestBody defines body for PostTpsAccounts for application/json ContentType.
+type PostTpsAccountsJSONRequestBody = PostTpsAccountsJSONBody
+
 // PostTpsServiceAccountIdJSONRequestBody defines body for PostTpsServiceAccountId for application/json ContentType.
 type PostTpsServiceAccountIdJSONRequestBody = PostTpsServiceAccountIdJSONBody
-
-// Getter for additional properties for GetBbsAccountsParams_AccountParams. Returns the specified
-// element and whether it was found
-func (a GetBbsAccountsParams_AccountParams) Get(fieldName string) (value string, found bool) {
-	if a.AdditionalProperties != nil {
-		value, found = a.AdditionalProperties[fieldName]
-	}
-	return
-}
-
-// Setter for additional properties for GetBbsAccountsParams_AccountParams
-func (a *GetBbsAccountsParams_AccountParams) Set(fieldName string, value string) {
-	if a.AdditionalProperties == nil {
-		a.AdditionalProperties = make(map[string]string)
-	}
-	a.AdditionalProperties[fieldName] = value
-}
-
-// Override default JSON handling for GetBbsAccountsParams_AccountParams to handle AdditionalProperties
-func (a *GetBbsAccountsParams_AccountParams) UnmarshalJSON(b []byte) error {
-	object := make(map[string]json.RawMessage)
-	err := json.Unmarshal(b, &object)
-	if err != nil {
-		return err
-	}
-
-	if len(object) != 0 {
-		a.AdditionalProperties = make(map[string]string)
-		for fieldName, fieldBuf := range object {
-			var fieldVal string
-			err := json.Unmarshal(fieldBuf, &fieldVal)
-			if err != nil {
-				return fmt.Errorf("error unmarshaling field %s: %w", fieldName, err)
-			}
-			a.AdditionalProperties[fieldName] = fieldVal
-		}
-	}
-	return nil
-}
-
-// Override default JSON handling for GetBbsAccountsParams_AccountParams to handle AdditionalProperties
-func (a GetBbsAccountsParams_AccountParams) MarshalJSON() ([]byte, error) {
-	var err error
-	object := make(map[string]json.RawMessage)
-
-	for fieldName, field := range a.AdditionalProperties {
-		object[fieldName], err = json.Marshal(field)
-		if err != nil {
-			return nil, fmt.Errorf("error marshaling '%s': %w", fieldName, err)
-		}
-	}
-	return json.Marshal(object)
-}
-
-// Getter for additional properties for GetTpsAccountsParams_AccountParams. Returns the specified
-// element and whether it was found
-func (a GetTpsAccountsParams_AccountParams) Get(fieldName string) (value string, found bool) {
-	if a.AdditionalProperties != nil {
-		value, found = a.AdditionalProperties[fieldName]
-	}
-	return
-}
-
-// Setter for additional properties for GetTpsAccountsParams_AccountParams
-func (a *GetTpsAccountsParams_AccountParams) Set(fieldName string, value string) {
-	if a.AdditionalProperties == nil {
-		a.AdditionalProperties = make(map[string]string)
-	}
-	a.AdditionalProperties[fieldName] = value
-}
-
-// Override default JSON handling for GetTpsAccountsParams_AccountParams to handle AdditionalProperties
-func (a *GetTpsAccountsParams_AccountParams) UnmarshalJSON(b []byte) error {
-	object := make(map[string]json.RawMessage)
-	err := json.Unmarshal(b, &object)
-	if err != nil {
-		return err
-	}
-
-	if len(object) != 0 {
-		a.AdditionalProperties = make(map[string]string)
-		for fieldName, fieldBuf := range object {
-			var fieldVal string
-			err := json.Unmarshal(fieldBuf, &fieldVal)
-			if err != nil {
-				return fmt.Errorf("error unmarshaling field %s: %w", fieldName, err)
-			}
-			a.AdditionalProperties[fieldName] = fieldVal
-		}
-	}
-	return nil
-}
-
-// Override default JSON handling for GetTpsAccountsParams_AccountParams to handle AdditionalProperties
-func (a GetTpsAccountsParams_AccountParams) MarshalJSON() ([]byte, error) {
-	var err error
-	object := make(map[string]json.RawMessage)
-
-	for fieldName, field := range a.AdditionalProperties {
-		object[fieldName], err = json.Marshal(field)
-		if err != nil {
-			return nil, fmt.Errorf("error marshaling '%s': %w", fieldName, err)
-		}
-	}
-	return json.Marshal(object)
-}
 
 // Getter for additional properties for AccountAuthTypeFields_Params. Returns the specified
 // element and whether it was found

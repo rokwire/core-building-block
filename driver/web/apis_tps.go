@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"reflect"
 	"strings"
 
 	"github.com/gorilla/mux"
@@ -174,6 +175,13 @@ func (h TPSApisHandler) getAccounts(l *logs.Log, r *http.Request, claims *tokena
 		return l.HttpResponseErrorData(logutils.StatusInvalid, model.TypeScope, nil, nil, http.StatusForbidden, true)
 	}
 
+	var queryParams map[string]interface{}
+	err := json.NewDecoder(r.Body).Decode(&queryParams)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	responseKeys := make([]string, 0)
 	searchParams := make(map[string]interface{})
 	scopeStrings := strings.Split(claims.Scope, " ")
 	scopes, err := scopeListFromDef(&scopeStrings)
@@ -181,32 +189,54 @@ func (h TPSApisHandler) getAccounts(l *logs.Log, r *http.Request, claims *tokena
 		return l.HttpResponseErrorAction(logutils.ActionParse, model.TypeScope, nil, err, http.StatusInternalServerError, true)
 	}
 
-	for k, v := range r.URL.Query() {
-		if len(v) == 0 {
-			continue
-		}
-		value := v[0]
-
-		validKey := false
-		requiredScope := authorization.Scope{ServiceID: "core", Resource: fmt.Sprintf("%s.%s", string(model.TypeAccount), k), Operation: "get"}
-		for _, scope := range scopes {
-			if scope.Match(&requiredScope) {
-				validKey = true
-				searchParams[k] = value
-				break
+	allAccess := false
+	allAccessScope := authorization.Scope{ServiceID: "core", Resource: string(model.TypeAccount), Operation: "get"}
+	for k, v := range queryParams {
+		if !allAccess {
+			validKey := false
+			requiredScope := authorization.Scope{ServiceID: "core", Resource: fmt.Sprintf("%s.%s", string(model.TypeAccount), k), Operation: "get"}
+			for _, scope := range scopes {
+				if scope.Match(&requiredScope) {
+					allAccess = scope.Match(&allAccessScope)
+					validKey = true
+					break
+				}
+			}
+			if !validKey {
+				return l.HttpResponseErrorData(logutils.StatusInvalid, "accounts search parameter", &logutils.FieldArgs{k: v}, nil, http.StatusForbidden, true)
 			}
 		}
-		if !validKey {
-			return l.HttpResponseErrorData(logutils.StatusInvalid, "accounts search parameter", &logutils.FieldArgs{k: value}, nil, http.StatusForbidden, true)
+
+		responseKeys = append(responseKeys, k)
+		searchParams[k] = v
+	}
+
+	accounts, err := h.coreAPIs.TPS.TPSGetAccounts(searchParams, allAccess)
+	if err != nil {
+		errFields := logutils.FieldArgs(searchParams)
+		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeAccount, &errFields, err, http.StatusInternalServerError, false)
+	}
+
+	var accountsResp interface{}
+	if allAccess {
+		accountsResp = accounts
+	} else {
+		accountsResp := make([]map[string]interface{}, len(accounts))
+		for i, account := range accounts {
+			restrictedData := make(map[string]interface{})
+			for _, key := range responseKeys {
+				restrictedData[key] = reflect.ValueOf(account).FieldByName(key).Interface()
+			}
+			accountsResp[i] = restrictedData
 		}
 	}
 
-	// respData, err := json.Marshal()
-	// if err != nil {
-	// 	return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("accounts response"), nil, err, http.StatusInternalServerError, false)
-	// }
+	respData, err := json.Marshal(accountsResp)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("accounts response"), nil, err, http.StatusInternalServerError, false)
+	}
 
-	return l.HttpResponseSuccessJSON(nil)
+	return l.HttpResponseSuccessJSON(respData)
 }
 
 // NewTPSApisHandler creates new tps Handler instance

@@ -166,6 +166,12 @@ func (h BBsApisHandler) getAccounts(l *logs.Log, r *http.Request, claims *tokena
 		return l.HttpResponseErrorData(logutils.StatusInvalid, model.TypeScope, nil, nil, http.StatusForbidden, true)
 	}
 
+	var queryParams map[string]interface{}
+	err := json.NewDecoder(r.Body).Decode(&queryParams)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
 	responseKeys := make([]string, 0)
 	searchParams := make(map[string]interface{})
 	scopeStrings := strings.Split(claims.Scope, " ")
@@ -176,12 +182,7 @@ func (h BBsApisHandler) getAccounts(l *logs.Log, r *http.Request, claims *tokena
 
 	allAccess := false
 	allAccessScope := authorization.Scope{ServiceID: "core", Resource: string(model.TypeAccount), Operation: "get"}
-	for k, v := range r.URL.Query() {
-		if len(v) == 0 {
-			continue
-		}
-		value := v[0]
-
+	for k, v := range queryParams {
 		if !allAccess {
 			validKey := false
 			requiredScope := authorization.Scope{ServiceID: "core", Resource: fmt.Sprintf("%s.%s", string(model.TypeAccount), k), Operation: "get"}
@@ -193,15 +194,14 @@ func (h BBsApisHandler) getAccounts(l *logs.Log, r *http.Request, claims *tokena
 				}
 			}
 			if !validKey {
-				return l.HttpResponseErrorData(logutils.StatusInvalid, "accounts search parameter", &logutils.FieldArgs{k: value}, nil, http.StatusForbidden, true)
+				return l.HttpResponseErrorData(logutils.StatusInvalid, "accounts search parameter", &logutils.FieldArgs{k: v}, nil, http.StatusForbidden, true)
 			}
 		}
 
 		responseKeys = append(responseKeys, k)
-		searchParams[k] = value
+		searchParams[k] = v
 	}
 
-	//TODO: how to know data type of search param value (e.g., privacy_level: int in DB, string in query)
 	accounts, err := h.coreAPIs.BBs.BBsGetAccounts(searchParams, allAccess)
 	if err != nil {
 		errFields := logutils.FieldArgs(searchParams)

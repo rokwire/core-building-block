@@ -2992,7 +2992,7 @@ paths:
         '500':
           description: Internal error
   /bbs/accounts:
-    get:
+    post:
       tags:
         - BBs
       summary: Finds user accounts
@@ -3002,19 +3002,31 @@ paths:
         **Auth:** Requires service access token with `get_accounts` or `all_accounts` permission
       security:
         - bearerAuth: []
-      parameters:
-        - in: query
-          name: account-params
-          schema:
-            type: object
-            propertyNames:
-              pattern: '^[A-Za-z0-9_]*$'
-            additionalProperties:
-              type: string
-            example:
-              profile.first_name: Example
-              preferences.privacy_level: '4'
-              external_ids.uin: '123456789'
+      requestBody:
+        description: |
+          Service account credentials
+        content:
+          application/json:
+            schema:
+              type: object
+            examples:
+              single_value:
+                summary: Multiple single-value search parameters
+                value: |
+                  {
+                    "profile.first_name": "Example",
+                    "preferences.privacy_level": 4,
+                    "external_ids.uin": "123456789"
+                  }
+              multiple_value:
+                summary: 'Some single-value, some multi-value search parameters'
+                value: |
+                  {
+                    "profile.first_name": "Example",
+                    "preferences.privacy_level": [3, 4, 5],
+                    "external_ids.uin": "123456789"
+                  }
+        required: true
       responses:
         '200':
           description: Success
@@ -3237,7 +3249,7 @@ paths:
         '500':
           description: Internal error
   /tps/accounts:
-    get:
+    post:
       tags:
         - Third-Party Services
       summary: Finds user accounts
@@ -3247,19 +3259,31 @@ paths:
         **Auth:** Requires service access token with `get_accounts` or `all_accounts` permission
       security:
         - bearerAuth: []
-      parameters:
-        - in: query
-          name: account-params
-          schema:
-            type: object
-            propertyNames:
-              pattern: '^[A-Za-z0-9_]*$'
-            additionalProperties:
-              type: string
-            example:
-              profile.first_name: Example
-              preferences.privacy_level: '4'
-              external_ids.uin: '123456789'
+      requestBody:
+        description: |
+          Service account credentials
+        content:
+          application/json:
+            schema:
+              type: object
+            examples:
+              single_value:
+                summary: Multiple single-value search parameters
+                value: |
+                  {
+                    "profile.first_name": "Example",
+                    "preferences.privacy_level": 4,
+                    "external_ids.uin": "123456789"
+                  }
+              multiple_value:
+                summary: 'Some single-value, some multi-value search parameters'
+                value: |
+                  {
+                    "profile.first_name": "Example",
+                    "preferences.privacy_level": [3, 4, 5],
+                    "external_ids.uin": "123456789"
+                  }
+        required: true
       responses:
         '200':
           description: Success
