@@ -275,15 +275,9 @@ func (app *application) admUpdateAppOrgGroup(ID string, name string, description
 		}
 
 		//2. find group, check if update allowed by system flag
-		group, err := app.storage.FindAppOrgGroup(context, ID, appOrg.ID)
+		group, err := app.getAppOrgGroup(context, ID, appOrg.ID, &systemClaim)
 		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgGroup, nil, err)
-		}
-		if group == nil {
-			return errors.ErrorData(logutils.StatusMissing, model.TypeAppOrgGroup, &logutils.FieldArgs{"id": ID})
-		}
-		if group.System && !systemClaim {
-			return errors.ErrorData(logutils.StatusInvalid, logutils.TypeClaim, logutils.StringArgs("system"))
+			return err
 		}
 
 		//3. check group permissions
@@ -455,8 +449,8 @@ func (app *application) admDeleteAppOrgGroup(ID string, appID string, orgID stri
 		return err
 	}
 
-	//2. find the group
-	group, err := app.storage.FindAppOrgGroup(nil, ID, appOrg.ID)
+	//2. find the group, check if delete is allowed
+	group, err := app.getAppOrgGroup(nil, ID, appOrg.ID, &system)
 	if err != nil {
 		return err
 	}
@@ -521,12 +515,9 @@ func (app *application) admAddAccountsToGroup(appID string, orgID string, groupI
 		}
 
 		//2. find group
-		group, err := app.storage.FindAppOrgGroup(context, groupID, accounts[0].AppOrg.ID)
+		group, err := app.getAppOrgGroup(context, groupID, accounts[0].AppOrg.ID, nil)
 		if err != nil {
-			return errors.Wrap("error finding app org group", err)
-		}
-		if group == nil {
-			return errors.New("bad group id params")
+			return err
 		}
 
 		//3. check assigners
@@ -582,12 +573,9 @@ func (app *application) admRemoveAccountsFromGroup(appID string, orgID string, g
 		}
 
 		//2. find group
-		group, err := app.storage.FindAppOrgGroup(context, groupID, accounts[0].AppOrg.ID)
+		group, err := app.getAppOrgGroup(context, groupID, accounts[0].AppOrg.ID, nil)
 		if err != nil {
-			return errors.Wrap("error finding app org group", err)
-		}
-		if group == nil {
-			return errors.New("bad group id params")
+			return err
 		}
 
 		//3. check assigners
@@ -821,12 +809,12 @@ func (app *application) admGetAccounts(limit int, offset int, appID string, orgI
 }
 
 func (app *application) admGetAccount(accountID string) (*model.Account, error) {
-	return app.sharedGetAccount(nil, accountID)
+	return app.getAccount(nil, accountID)
 }
 
 func (app *application) admGetAccountSystemConfigs(appID string, orgID string, accountID string, l *logs.Log) (map[string]interface{}, error) {
 	//find the account
-	account, err := app.sharedGetAccount(nil, accountID)
+	account, err := app.getAccount(nil, accountID)
 	if err != nil {
 		return nil, err
 	}
@@ -846,7 +834,7 @@ func (app *application) admUpdateAccountSystemConfigs(appID string, orgID string
 	created := false
 	transaction := func(context storage.TransactionContext) error {
 		//1. verify that the account is for the current app/org
-		account, err := app.sharedGetAccount(context, accountID)
+		account, err := app.getAccount(context, accountID)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountSystemConfigs, &logutils.FieldArgs{"account_id": accountID}, err)
 		}
@@ -930,7 +918,7 @@ func (app *application) admDeleteApplicationLoginSession(appID string, orgID str
 
 func (app *application) admGetApplicationAccountDevices(appID string, orgID string, accountID string, l *logs.Log) ([]model.Device, error) {
 	//1. find the account
-	account, err := app.sharedGetAccount(nil, accountID)
+	account, err := app.getAccount(nil, accountID)
 	if err != nil {
 		return nil, err
 	}
@@ -959,7 +947,7 @@ func (app *application) admGrantAccountPermissions(appID string, orgID string, a
 
 	transaction := func(context storage.TransactionContext) error {
 		//1. verify that the account is for the current app/org
-		account, err := app.sharedGetAccount(context, accountID)
+		account, err := app.getAccount(context, accountID)
 		if err != nil {
 			return err
 		}
@@ -1072,7 +1060,7 @@ func (app *application) admGrantAccountRoles(appID string, orgID string, account
 
 	transaction := func(context storage.TransactionContext) error {
 		//1. verify that the account is for the current app/org
-		account, err := app.sharedGetAccount(context, accountID)
+		account, err := app.getAccount(context, accountID)
 		if err != nil {
 			return err
 		}

@@ -22,18 +22,6 @@ import (
 	"github.com/rokwire/logging-library-go/logutils"
 )
 
-func (app *application) sharedGetAccount(context storage.TransactionContext, accountID string) (*model.Account, error) {
-	//find the account
-	account, err := app.storage.FindAccountByID(context, accountID)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
-	}
-	if account == nil {
-		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeAccount, nil, err)
-	}
-	return account, nil
-}
-
 func (app *application) sharedUpdateAccountUsername(accountID string, appID string, orgID string, username string) error {
 	if username == "" {
 		err := app.storage.UpdateAccountUsername(nil, accountID, username)

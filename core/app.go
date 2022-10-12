@@ -59,6 +59,18 @@ func (app *application) notifyListeners(message string, data interface{}) {
 	}()
 }
 
+func (app *application) getAccount(context storage.TransactionContext, accountID string) (*model.Account, error) {
+	//find the account
+	account, err := app.storage.FindAccountByID(context, accountID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+	if account == nil {
+		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeAccount, nil, err)
+	}
+	return account, nil
+}
+
 func (app *application) getApplicationOrganization(appID string, orgID string) (*model.ApplicationOrganization, error) {
 	appOrg, err := app.storage.FindApplicationOrganization(appID, orgID)
 	if err != nil {
