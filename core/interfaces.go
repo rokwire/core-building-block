@@ -92,12 +92,12 @@ type Encryption interface {
 type BBs interface {
 	BBsGetTest() string
 
-	BBsGetAccounts(searchParams map[string]interface{}) ([]model.Account, error)
+	BBsGetAccounts(searchParams map[string]interface{}, allAccess bool) ([]model.Account, error)
 }
 
 // TPS exposes user related APIs used by third-party services
 type TPS interface {
-	TPSGetAccounts(searchParams map[string]interface{}) ([]model.Account, error)
+	TPSGetAccounts(searchParams map[string]interface{}, allAccess bool) ([]model.Account, error)
 }
 
 // System exposes system APIs for the driver adapters

@@ -457,7 +457,7 @@ func (s *bbsImpl) BBsGetTest() string {
 	return s.app.bbsGetTest()
 }
 
-func (s *bbsImpl) BBsGetAccounts(searchParams map[string]interface{}) ([]model.Account, error) {
+func (s *bbsImpl) BBsGetAccounts(searchParams map[string]interface{}, allAccess bool) ([]model.Account, error) {
 	return nil, errors.New(logutils.Unimplemented)
 }
 
@@ -469,7 +469,7 @@ type tpsImpl struct {
 	app *application
 }
 
-func (s *tpsImpl) TPSGetAccounts(searchParams map[string]interface{}) ([]model.Account, error) {
+func (s *tpsImpl) TPSGetAccounts(searchParams map[string]interface{}, allAccess bool) ([]model.Account, error) {
 	return nil, errors.New(logutils.Unimplemented)
 }
 
