@@ -59,19 +59,6 @@ func (app *application) notifyListeners(message string, data interface{}) {
 	}()
 }
 
-func (app *application) getAccount(context storage.TransactionContext, accountID string) (*model.Account, error) {
-	//find the account
-	account, err := app.storage.FindAccountByID(context, accountID)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"id": accountID}, err)
-	}
-	if account == nil {
-		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeAccount, &logutils.FieldArgs{"id": accountID}, err)
-	}
-
-	return account, nil
-}
-
 func (app *application) getApplicationOrganization(appID string, orgID string) (*model.ApplicationOrganization, error) {
 	appOrg, err := app.storage.FindApplicationOrganization(appID, orgID)
 	if err != nil {
@@ -135,8 +122,9 @@ func (app *application) grantOrRevokePermissions(context storage.TransactionCont
 		return nil
 	}
 
+	appOrg := container.GetAppOrg()
 	//check permissions
-	permissions, err := app.auth.CheckPermissions(context, container.GetAppOrg().ServicesIDs, checkPermissions, assignerPermissions, revoke)
+	permissions, err := app.auth.CheckPermissions(context, &appOrg, checkPermissions, assignerPermissions, revoke)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionValidate, model.TypePermission, nil, err)
 	}
@@ -145,9 +133,8 @@ func (app *application) grantOrRevokePermissions(context storage.TransactionCont
 	case *model.Account:
 		{
 			if revoke {
-				hasPermissions := len(c.Permissions) > len(checkPermissions) || len(c.Roles) > 0 || len(c.Groups) > 0
 				//delete permissions from an account
-				err = app.storage.DeleteAccountPermissions(context, c.ID, hasPermissions, checkPermissions)
+				err = app.storage.DeleteAccountPermissions(context, c.ID, checkPermissions)
 				if err != nil {
 					return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccountPermissions, nil, err)
 				}
@@ -213,8 +200,9 @@ func (app *application) grantOrRevokeRoles(context storage.TransactionContext, c
 		return nil
 	}
 
+	appOrg := container.GetAppOrg()
 	//check roles
-	roles, err := app.auth.CheckRoles(context, container.GetAppOrg().ID, checkRoles, assignerPermissions, revoke)
+	roles, err := app.auth.CheckRoles(context, &appOrg, checkRoles, assignerPermissions, revoke)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionValidate, model.TypeAppOrgRole, nil, err)
 	}
@@ -223,9 +211,8 @@ func (app *application) grantOrRevokeRoles(context storage.TransactionContext, c
 	case *model.Account:
 		{
 			if revoke {
-				hasPermissions := len(c.Permissions) > 0 || len(c.Roles) > len(checkRoles) || len(c.Groups) > 0
 				//delete roles from an account
-				err = app.storage.DeleteAccountRoles(context, c.ID, hasPermissions, checkRoles)
+				err = app.storage.DeleteAccountRoles(context, c.ID, checkRoles)
 				if err != nil {
 					return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccountRoles, nil, err)
 				}
