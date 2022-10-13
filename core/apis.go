@@ -130,15 +130,9 @@ func (c *APIs) storeSystemData() error {
 			systemAdminApp := &newSystemAdminApp
 
 			//insert system admin apporg
-			emailSupport := []struct {
-				AuthTypeID string                 `bson:"auth_type_id"`
-				Params     map[string]interface{} `bson:"params"`
-			}{
-				{emailAuthType.ID, nil},
-			}
 			supportedAuthTypes := make([]model.AuthTypesSupport, len(systemAdminApp.Types))
 			for i, appType := range systemAdminApp.Types {
-				supportedAuthTypes[i] = model.AuthTypesSupport{AppTypeID: appType.ID, SupportedAuthTypes: emailSupport}
+				supportedAuthTypes[i] = model.AuthTypesSupport{AppTypeID: appType.ID, SupportedAuthTypes: []model.SupportedAuthType{{AuthTypeID: emailAuthType.ID, Params: nil}}}
 			}
 
 			newDocuments["application_organization"] = uuid.NewString()
@@ -298,17 +292,21 @@ func (s *servicesImpl) SerGetAccountSystemConfigs(accountID string) (map[string]
 	return s.app.serGetAccountSystemConfigs(accountID)
 }
 
-func (s *servicesImpl) SerUpdateAccountPreferences(id string, preferences map[string]interface{}) error {
-	return s.app.serUpdateAccountPreferences(id, preferences)
+func (s *servicesImpl) SerUpdateAccountPreferences(id string, appID string, orgID string, anonymous bool, preferences map[string]interface{}, l *logs.Log) (bool, error) {
+	return s.app.serUpdateAccountPreferences(id, appID, orgID, anonymous, preferences, l)
 }
 
 func (s *servicesImpl) SerUpdateProfile(accountID string, profile model.Profile) error {
 	return s.app.serUpdateProfile(accountID, profile)
 }
 
+func (s *servicesImpl) SerUpdateAccountUsername(accountID string, appID string, orgID string, username string) error {
+	return s.app.sharedUpdateAccountUsername(accountID, appID, orgID, username)
+}
+
 func (s *servicesImpl) SerGetAccounts(limit int, offset int, appID string, orgID string, accountID *string, firstName *string, lastName *string, authType *string,
-	authTypeIdentifier *string, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error) {
-	return s.app.serGetAccounts(limit, offset, appID, orgID, accountID, firstName, lastName, authType, authTypeIdentifier, hasPermissions, permissions, roleIDs, groupIDs)
+	authTypeIdentifier *string, anonymous *bool, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error) {
+	return s.app.serGetAccounts(limit, offset, appID, orgID, accountID, firstName, lastName, authType, authTypeIdentifier, anonymous, hasPermissions, permissions, roleIDs, groupIDs)
 }
 
 func (s *servicesImpl) SerGetAuthTest(l *logs.Log) string {
@@ -343,8 +341,12 @@ func (s *administrationImpl) AdmGetApplications(orgID string) ([]model.Applicati
 	return s.app.admGetApplications(orgID)
 }
 
-func (s *administrationImpl) AdmCreateAppOrgGroup(name string, permissionNames []string, rolesIDs []string, appID string, orgID string, assignerPermissions []string, system bool, l *logs.Log) (*model.AppOrgGroup, error) {
-	return s.app.admCreateAppOrgGroup(name, permissionNames, rolesIDs, appID, orgID, assignerPermissions, system, l)
+func (s *administrationImpl) AdmCreateAppOrgGroup(name string, description string, system bool, permissionNames []string, rolesIDs []string, accountIDs []string, appID string, orgID string, assignerPermissions []string, systemClaim bool, l *logs.Log) (*model.AppOrgGroup, error) {
+	return s.app.admCreateAppOrgGroup(name, description, system, permissionNames, rolesIDs, accountIDs, appID, orgID, assignerPermissions, systemClaim, l)
+}
+
+func (s *administrationImpl) AdmUpdateAppOrgGroup(ID string, name string, description string, system bool, permissionNames []string, rolesIDs []string, accountIDs []string, appID string, orgID string, assignerPermissions []string, systemClaim bool, l *logs.Log) (*model.AppOrgGroup, error) {
+	return s.app.admUpdateAppOrgGroup(ID, name, description, system, permissionNames, rolesIDs, accountIDs, appID, orgID, assignerPermissions, systemClaim, l)
 }
 
 func (s *administrationImpl) AdmGetAppOrgGroups(appID string, orgID string) ([]model.AppOrgGroup, error) {
@@ -384,20 +386,24 @@ func (s *administrationImpl) AdmGetApplicationPermissions(appID string, orgID st
 }
 
 func (s *administrationImpl) AdmGetAccounts(limit int, offset int, appID string, orgID string, accountID *string, firstName *string, lastName *string, authType *string,
-	authTypeIdentifier *string, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error) {
-	return s.app.admGetAccounts(limit, offset, appID, orgID, accountID, firstName, lastName, authType, authTypeIdentifier, hasPermissions, permissions, roleIDs, groupIDs)
+	authTypeIdentifier *string, anonymous *bool, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error) {
+	return s.app.admGetAccounts(limit, offset, appID, orgID, accountID, firstName, lastName, authType, authTypeIdentifier, anonymous, hasPermissions, permissions, roleIDs, groupIDs)
 }
 
 func (s *administrationImpl) AdmGetAccount(accountID string) (*model.Account, error) {
 	return s.app.admGetAccount(accountID)
 }
 
+func (s *administrationImpl) AdmUpdateAccountUsername(accountID string, appID string, orgID string, username string) error {
+	return s.app.sharedUpdateAccountUsername(accountID, appID, orgID, username)
+}
+
 func (s *administrationImpl) AdmGetAccountSystemConfigs(appID string, orgID string, accountID string, l *logs.Log) (map[string]interface{}, error) {
 	return s.app.admGetAccountSystemConfigs(appID, orgID, accountID, l)
 }
 
-func (s *administrationImpl) AdmUpdateAccountSystemConfigs(appID string, orgID string, accountID string, configs map[string]interface{}, l *logs.Log) error {
-	return s.app.admUpdateAccountSystemConfigs(appID, orgID, accountID, configs, l)
+func (s *administrationImpl) AdmUpdateAccountSystemConfigs(appID string, orgID string, accountID string, configs map[string]interface{}, createAnonymous bool, l *logs.Log) (bool, error) {
+	return s.app.admUpdateAccountSystemConfigs(appID, orgID, accountID, configs, createAnonymous, l)
 }
 
 func (s *administrationImpl) AdmGrantAccountPermissions(appID string, orgID string, accountID string, permissionNames []string, assignerPermissions []string, l *logs.Log) error {
@@ -471,6 +477,22 @@ func (s *systemImpl) SysGetGlobalConfig() (*model.GlobalConfig, error) {
 
 func (s *systemImpl) SysUpdateGlobalConfig(setting string) error {
 	return s.app.sysUpdateGlobalConfig(setting)
+}
+
+func (s *systemImpl) SysGetApplicationOrganizations(appID *string, orgID *string) ([]model.ApplicationOrganization, error) {
+	return s.app.sysGetApplicationOrganizations(appID, orgID)
+}
+
+func (s *systemImpl) SysGetApplicationOrganization(ID string) (*model.ApplicationOrganization, error) {
+	return s.app.sysGetApplicationOrganization(ID)
+}
+
+func (s *systemImpl) SysCreateApplicationOrganization(appID string, orgID string, appOrg model.ApplicationOrganization) (*model.ApplicationOrganization, error) {
+	return s.app.sysCreateApplicationOrganization(appOrg, appID, orgID)
+}
+
+func (s *systemImpl) SysUpdateApplicationOrganization(appOrg model.ApplicationOrganization) error {
+	return s.app.sysUpdateApplicationOrganization(appOrg)
 }
 
 func (s *systemImpl) SysCreateOrganization(name string, requestType string, organizationDomains []string) (*model.Organization, error) {

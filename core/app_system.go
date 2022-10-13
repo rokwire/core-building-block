@@ -78,6 +78,49 @@ func (app *application) sysUpdateGlobalConfig(setting string) error {
 	return app.storage.PerformTransaction(transaction)
 }
 
+func (app *application) sysGetApplicationOrganizations(appID *string, orgID *string) ([]model.ApplicationOrganization, error) {
+	return app.storage.FindApplicationOrganizations(appID, orgID)
+}
+
+func (app *application) sysGetApplicationOrganization(ID string) (*model.ApplicationOrganization, error) {
+	return app.storage.FindApplicationOrganizationByID(ID)
+}
+
+func (app *application) sysCreateApplicationOrganization(appOrg model.ApplicationOrganization, appID string, orgID string) (*model.ApplicationOrganization, error) {
+	application, err := app.storage.FindApplication(appID)
+	if err != nil || application == nil {
+		return nil, errors.WrapErrorData(logutils.StatusInvalid, model.TypeApplication, nil, err)
+	}
+	appOrg.Application = *application
+
+	organizaiton, err := app.storage.FindOrganization(orgID)
+	if err != nil || organizaiton == nil {
+		return nil, errors.WrapErrorData(logutils.StatusInvalid, model.TypeOrganization, nil, err)
+	}
+	appOrg.Organization = *organizaiton
+
+	appOrgID, _ := uuid.NewUUID()
+	appOrg.ID = appOrgID.String()
+	appOrg.DateCreated = time.Now()
+
+	insertedAppOrg, err := app.storage.InsertApplicationOrganization(nil, appOrg)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
+	}
+
+	return insertedAppOrg, nil
+}
+
+func (app *application) sysUpdateApplicationOrganization(appOrg model.ApplicationOrganization) error {
+	err := app.storage.UpdateApplicationOrganization(nil, appOrg)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeApplicationOrganization, nil, err)
+	}
+
+	return err
+
+}
+
 func (app *application) sysCreateOrganization(name string, requestType string, organizationDomains []string) (*model.Organization, error) {
 	now := time.Now()
 

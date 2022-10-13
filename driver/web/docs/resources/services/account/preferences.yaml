@@ -5,7 +5,7 @@ put:
   description: |
     Updates account preferences
 
-    **Auth:** Requires user auth token
+    **Auth:** Requires auth token
   security:
     - bearerAuth: []
   requestBody:
@@ -34,9 +34,9 @@ get:
   - Services
   summary: Get preferences
   description: |
-    Returns a user preferences
+    Returns account preferences
 
-    **Auth:** Requires user auth token
+    **Auth:** Requires auth token
   security:
     - bearerAuth: []
   responses:

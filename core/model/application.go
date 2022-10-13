@@ -76,17 +76,17 @@ func (p Permission) CheckAssigners(assignerPermissions []string) error {
 		return nil
 	}
 	if len(p.Assigners) == 0 {
-		return errors.Newf("not defined assigners for %s permission", p.Name)
+		return errors.ErrorData(logutils.StatusMissing, "assigners", &logutils.FieldArgs{"name": p.Name})
 	}
 
 	authorizedAssigners := p.Assigners
 	for _, authorizedAssigner := range authorizedAssigners {
-		if !authutils.ContainsString(assignerPermissions, authorizedAssigner) {
-			return errors.Newf("assigner %s is not satisfied", authorizedAssigner)
+		if authutils.ContainsString(assignerPermissions, authorizedAssigner) {
+			return nil
 		}
 	}
-	//all assigners are satisfied
-	return nil
+	//no assigners are satisfied
+	return errors.ErrorAction(logutils.ActionValidate, "assigner permissions", &logutils.FieldArgs{"name": p.Name})
 }
 
 func (p Permission) String() string {
@@ -131,10 +131,10 @@ func (c AppOrgRole) CheckAssigners(assignerPermissions []string) error {
 	for _, permission := range c.Permissions {
 		err := permission.CheckAssigners(assignerPermissions)
 		if err != nil {
-			return errors.Wrapf("error checking role permission assigners", err)
+			return errors.WrapErrorAction(logutils.ActionValidate, "role permission", &logutils.FieldArgs{"id": c.ID, "name": c.Name}, err)
 		}
 	}
-	//it satisfies all permissions
+	//all permissions may be assigned
 	return nil
 }
 
@@ -166,25 +166,39 @@ func (cg AppOrgGroup) CheckAssigners(assignerPermissions []string) error {
 	}
 
 	//check permission
-	if len(cg.Permissions) > 0 {
-		for _, permission := range cg.Permissions {
-			err := permission.CheckAssigners(assignerPermissions)
-			if err != nil {
-				return err
-			}
+	for _, permission := range cg.Permissions {
+		err := permission.CheckAssigners(assignerPermissions)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionValidate, "group permission", &logutils.FieldArgs{"id": cg.ID, "name": cg.Name}, err)
 		}
 	}
 	//check roles
-	if len(cg.Roles) > 0 {
-		for _, role := range cg.Roles {
-			err := role.CheckAssigners(assignerPermissions)
-			if err != nil {
-				return err
-			}
+	for _, role := range cg.Roles {
+		err := role.CheckAssigners(assignerPermissions)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionValidate, "group role", &logutils.FieldArgs{"id": cg.ID, "name": cg.Name}, err)
 		}
 	}
-	//all assigners are satisfied
+	//all permissions and roles may be assigned
 	return nil
+}
+
+// GetAssignedPermissionNames returns a list of names of assigned permissions for this group
+func (cg AppOrgGroup) GetAssignedPermissionNames() []string {
+	names := make([]string, len(cg.Permissions))
+	for i, permission := range cg.Permissions {
+		names[i] = permission.Name
+	}
+	return names
+}
+
+// GetAssignedRoleIDs returns a list of ids of assigned roles for this group
+func (cg AppOrgGroup) GetAssignedRoleIDs() []string {
+	ids := make([]string, len(cg.Roles))
+	for i, role := range cg.Roles {
+		ids[i] = role.ID
+	}
+	return ids
 }
 
 func (cg AppOrgGroup) String() string {
@@ -310,6 +324,8 @@ type IdentityProviderSetting struct {
 
 	UserSpecificFields []string `bson:"user_specific_fields"`
 
+	AlwaysSyncProfile bool `bson:"always_sync_profile"` // if true, profile data will be overwritten with data from external user on each login/refresh
+
 	Roles  map[string]string `bson:"roles"`  //map[identity_provider_role]app_role_id
 	Groups map[string]string `bson:"groups"` //map[identity_provider_group]app_group_id
 }
@@ -369,12 +385,14 @@ func (at ApplicationType) FindVersion(version string) *Version {
 
 // AuthTypesSupport represents supported auth types for an organization in an application type with configs/params
 type AuthTypesSupport struct {
-	AppTypeID string `bson:"app_type_id"`
+	AppTypeID          string              `bson:"app_type_id"`
+	SupportedAuthTypes []SupportedAuthType `bson:"supported_auth_types"`
+}
 
-	SupportedAuthTypes []struct {
-		AuthTypeID string                 `bson:"auth_type_id"`
-		Params     map[string]interface{} `bson:"params"`
-	} `bson:"supported_auth_types"`
+// SupportedAuthType represents a supported auth type
+type SupportedAuthType struct {
+	AuthTypeID string                 `bson:"auth_type_id"`
+	Params     map[string]interface{} `bson:"params"`
 }
 
 // ApplicationConfig represents app configs
@@ -453,4 +471,22 @@ func VersionNumbersFromString(version string) *VersionNumbers {
 	}
 
 	return &VersionNumbers{Major: major, Minor: minor, Patch: patch}
+}
+
+// GetMissingAccountIDs returns a list of account IDs missing from items
+func GetMissingAccountIDs(items []Account, ids []string) []string {
+	missingIDs := make([]string, 0)
+	for _, id := range ids {
+		missing := true
+		for _, e := range items {
+			if e.ID == id {
+				missing = false
+				break
+			}
+		}
+		if missing {
+			missingIDs = append(missingIDs, id)
+		}
+	}
+	return missingIDs
 }

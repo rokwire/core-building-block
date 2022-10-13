@@ -15,11 +15,14 @@
 package web
 
 import (
+	"bytes"
 	"context"
 	"core-building-block/core"
 	"fmt"
 	"html/template"
 	"net/http"
+	"os"
+	"time"
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/getkin/kin-openapi/openapi3filter"
@@ -28,6 +31,7 @@ import (
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
+	"gopkg.in/yaml.v2"
 
 	"github.com/gorilla/mux"
 
@@ -42,6 +46,12 @@ type Adapter struct {
 	env       string
 	serviceID string
 	port      string
+
+	productionServerURL  string
+	testServerURL        string
+	developmentServerURL string
+
+	cachedYamlDoc []byte
 
 	openAPIRouter routers.Router
 	host          string
@@ -106,20 +116,21 @@ func (we Adapter) Start() {
 	servicesSubRouter.HandleFunc("/auth/credential/update", we.wrapFunc(we.servicesApisHandler.updateCredential, we.auth.services.authenticated)).Methods("POST")
 	servicesSubRouter.HandleFunc("/auth/verify-mfa", we.wrapFunc(we.servicesApisHandler.verifyMFA, we.auth.services.user)).Methods("POST")
 	servicesSubRouter.HandleFunc("/auth/authorize-service", we.wrapFunc(we.servicesApisHandler.authorizeService, we.auth.services.user)).Methods("POST")
-	servicesSubRouter.HandleFunc("/auth/service-regs", we.wrapFunc(we.servicesApisHandler.getServiceRegistrations, we.auth.services.user)).Methods("GET")
+	servicesSubRouter.HandleFunc("/auth/service-regs", we.wrapFunc(we.servicesApisHandler.getServiceRegistrations, we.auth.services.standard)).Methods("GET")
 	servicesSubRouter.HandleFunc("/accounts", we.wrapFunc(we.servicesApisHandler.getAccounts, we.auth.services.permissions)).Methods("GET")
 	servicesSubRouter.HandleFunc("/accounts", we.wrapFunc(we.servicesApisHandler.createAdminAccount, we.auth.services.permissions)).Methods("POST")
 	servicesSubRouter.HandleFunc("/accounts", we.wrapFunc(we.servicesApisHandler.updateAdminAccount, we.auth.services.permissions)).Methods("PUT")
-	servicesSubRouter.HandleFunc("/account", we.wrapFunc(we.servicesApisHandler.deleteAccount, we.auth.services.user)).Methods("DELETE")
-	servicesSubRouter.HandleFunc("/account", we.wrapFunc(we.servicesApisHandler.getAccount, we.auth.services.user)).Methods("GET")
+	servicesSubRouter.HandleFunc("/account", we.wrapFunc(we.servicesApisHandler.deleteAccount, we.auth.services.standard)).Methods("DELETE")
+	servicesSubRouter.HandleFunc("/account", we.wrapFunc(we.servicesApisHandler.getAccount, we.auth.services.standard)).Methods("GET")
 	servicesSubRouter.HandleFunc("/account/mfa", we.wrapFunc(we.servicesApisHandler.getMFATypes, we.auth.services.user)).Methods("GET")
 	servicesSubRouter.HandleFunc("/account/mfa", we.wrapFunc(we.servicesApisHandler.addMFAType, we.auth.services.authenticated)).Methods("POST")
 	servicesSubRouter.HandleFunc("/account/mfa", we.wrapFunc(we.servicesApisHandler.removeMFAType, we.auth.services.authenticated)).Methods("DELETE")
-	servicesSubRouter.HandleFunc("/account/preferences", we.wrapFunc(we.servicesApisHandler.updateAccountPreferences, we.auth.services.user)).Methods("PUT")
-	servicesSubRouter.HandleFunc("/account/preferences", we.wrapFunc(we.servicesApisHandler.getPreferences, we.auth.services.user)).Methods("GET")
+	servicesSubRouter.HandleFunc("/account/preferences", we.wrapFunc(we.servicesApisHandler.updateAccountPreferences, we.auth.services.standard)).Methods("PUT")
+	servicesSubRouter.HandleFunc("/account/preferences", we.wrapFunc(we.servicesApisHandler.getPreferences, we.auth.services.standard)).Methods("GET")
 	servicesSubRouter.HandleFunc("/account/profile", we.wrapFunc(we.servicesApisHandler.getProfile, we.auth.services.user)).Methods("GET")
 	servicesSubRouter.HandleFunc("/account/profile", we.wrapFunc(we.servicesApisHandler.updateProfile, we.auth.services.user)).Methods("PUT")
-	servicesSubRouter.HandleFunc("/account/system-configs", we.wrapFunc(we.servicesApisHandler.getAccountSystemConfigs, we.auth.services.user)).Methods("GET")
+	servicesSubRouter.HandleFunc("/account/system-configs", we.wrapFunc(we.servicesApisHandler.getAccountSystemConfigs, we.auth.services.standard)).Methods("GET")
+	servicesSubRouter.HandleFunc("/account/username", we.wrapFunc(we.servicesApisHandler.updateAccountUsername, we.auth.services.user)).Methods("PUT")
 	servicesSubRouter.HandleFunc("/test", we.wrapFunc(we.servicesApisHandler.getTest, nil)).Methods("GET")                               //Public
 	servicesSubRouter.HandleFunc("/application/configs", we.wrapFunc(we.servicesApisHandler.getApplicationConfigs, nil)).Methods("POST") //Requires API key in request
 	servicesSubRouter.HandleFunc("/application/organization/configs", we.wrapFunc(we.servicesApisHandler.getApplicationOrgConfigs, we.auth.services.standard)).Methods("POST")
@@ -141,6 +152,7 @@ func (we Adapter) Start() {
 	adminSubrouter.HandleFunc("/account/mfa", we.wrapFunc(we.adminApisHandler.getMFATypes, we.auth.admin.user)).Methods("GET")
 	adminSubrouter.HandleFunc("/account/mfa", we.wrapFunc(we.adminApisHandler.addMFAType, we.auth.admin.authenticated)).Methods("POST")
 	adminSubrouter.HandleFunc("/account/mfa", we.wrapFunc(we.adminApisHandler.removeMFAType, we.auth.admin.authenticated)).Methods("DELETE")
+	adminSubrouter.HandleFunc("/account/username", we.wrapFunc(we.adminApisHandler.updateAccountUsername, we.auth.admin.user)).Methods("PUT")
 
 	adminSubrouter.HandleFunc("/organization/applications", we.wrapFunc(we.adminApisHandler.getApplications, we.auth.admin.user)).Methods("GET")
 
@@ -148,6 +160,7 @@ func (we Adapter) Start() {
 
 	adminSubrouter.HandleFunc("/application/groups", we.wrapFunc(we.adminApisHandler.getApplicationGroups, we.auth.admin.permissions)).Methods("GET")
 	adminSubrouter.HandleFunc("/application/groups", we.wrapFunc(we.adminApisHandler.createApplicationGroup, we.auth.admin.permissions)).Methods("POST")
+	adminSubrouter.HandleFunc("/application/groups/{id}", we.wrapFunc(we.adminApisHandler.updateApplicationGroup, we.auth.admin.permissions)).Methods("PUT")
 	adminSubrouter.HandleFunc("/application/groups/{id}", we.wrapFunc(we.adminApisHandler.deleteApplicationGroup, we.auth.admin.permissions)).Methods("DELETE")
 
 	adminSubrouter.HandleFunc("/application/groups/{id}/accounts", we.wrapFunc(we.adminApisHandler.addAccountsToGroup, we.auth.admin.permissions)).Methods("PUT")
@@ -201,6 +214,9 @@ func (we Adapter) Start() {
 
 	///system ///
 	systemSubrouter := subRouter.PathPrefix("/system").Subrouter()
+
+	systemSubrouter.HandleFunc("/auth/app-org-token", we.wrapFunc(we.systemApisHandler.getAppOrgToken, we.auth.system.user)).Methods("GET")
+
 	systemSubrouter.HandleFunc("/global-config", we.wrapFunc(we.systemApisHandler.createGlobalConfig, we.auth.system.permissions)).Methods("POST")
 	systemSubrouter.HandleFunc("/global-config", we.wrapFunc(we.systemApisHandler.getGlobalConfig, we.auth.system.permissions)).Methods("GET")
 	systemSubrouter.HandleFunc("/global-config", we.wrapFunc(we.systemApisHandler.updateGlobalConfig, we.auth.system.permissions)).Methods("PUT")
@@ -214,6 +230,11 @@ func (we Adapter) Start() {
 	systemSubrouter.HandleFunc("/applications/{id}", we.wrapFunc(we.systemApisHandler.updateApplication, we.auth.system.permissions)).Methods("PUT")
 	systemSubrouter.HandleFunc("/applications/{id}", we.wrapFunc(we.systemApisHandler.getApplication, we.auth.system.permissions)).Methods("GET")
 	systemSubrouter.HandleFunc("/applications", we.wrapFunc(we.systemApisHandler.getApplications, we.auth.system.permissions)).Methods("GET")
+
+	systemSubrouter.HandleFunc("/app-orgs", we.wrapFunc(we.systemApisHandler.getApplicationOrganizations, we.auth.system.permissions)).Methods("GET")
+	systemSubrouter.HandleFunc("/app-orgs", we.wrapFunc(we.systemApisHandler.createApplicationOrganization, we.auth.system.permissions)).Methods("POST")
+	systemSubrouter.HandleFunc("/app-orgs/{id}", we.wrapFunc(we.systemApisHandler.getApplicationOrganization, we.auth.system.permissions)).Methods("GET")
+	systemSubrouter.HandleFunc("/app-orgs/{id}", we.wrapFunc(we.systemApisHandler.updateApplicationOrganization, we.auth.system.permissions)).Methods("PUT")
 
 	systemSubrouter.HandleFunc("/permissions", we.wrapFunc(we.systemApisHandler.createPermission, we.auth.system.permissions)).Methods("POST")
 	systemSubrouter.HandleFunc("/permissions", we.wrapFunc(we.systemApisHandler.updatePermission, we.auth.system.permissions)).Methods("PUT")
@@ -255,14 +276,76 @@ func (we Adapter) Start() {
 }
 
 func (we Adapter) serveResetCredential(w http.ResponseWriter, r *http.Request) {
-	fmt.Println(r.URL.Path)
 	w.Header().Add("access-control-allow-origin", "*")
 	http.ServeFile(w, r, "./driver/web/ui/reset-credential.html")
 }
 
 func (we Adapter) serveDoc(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("access-control-allow-origin", "*")
-	http.ServeFile(w, r, "./driver/web/docs/gen/def.yaml")
+
+	if we.cachedYamlDoc != nil {
+		http.ServeContent(w, r, "", time.Now(), bytes.NewReader([]byte(we.cachedYamlDoc)))
+	} else {
+		http.ServeFile(w, r, "./driver/web/docs/gen/def.yaml")
+	}
+}
+
+func loadDocsYAML(baseServerURL string, productionServerURL string, testServerURL string, developmentServerURL string) ([]byte, error) {
+	data, _ := os.ReadFile("./driver/web/docs/gen/def.yaml")
+	// yamlMap := make(map[string]interface{})
+	yamlMap := yaml.MapSlice{}
+	err := yaml.Unmarshal(data, &yamlMap)
+	if err != nil {
+		return nil, err
+	}
+
+	for index, item := range yamlMap {
+		if item.Key == "servers" {
+			var serverList []interface{}
+			if baseServerURL != "" {
+				serverList = []interface{}{yaml.MapSlice{yaml.MapItem{Key: "url", Value: baseServerURL}}}
+			} else {
+				ok := false
+				serverList, ok = item.Value.([]interface{})
+				if !ok || len(serverList) != 4 {
+					serverList = make([]interface{}, 4)
+				}
+				if productionServerURL != "" {
+					serverList[0] = yaml.MapSlice{
+						yaml.MapItem{Key: "url", Value: productionServerURL},
+						yaml.MapItem{Key: "description", Value: "Production server"},
+					}
+				}
+				if testServerURL != "" {
+					serverList[1] = yaml.MapSlice{
+						yaml.MapItem{Key: "url", Value: testServerURL},
+						yaml.MapItem{Key: "description", Value: "Test server"},
+					}
+				}
+				if developmentServerURL != "" {
+					serverList[2] = yaml.MapSlice{
+						yaml.MapItem{Key: "url", Value: developmentServerURL},
+						yaml.MapItem{Key: "description", Value: "Development server"},
+					}
+				}
+				serverList[3] = yaml.MapSlice{
+					yaml.MapItem{Key: "url", Value: "http://localhost/core"},
+					yaml.MapItem{Key: "description", Value: "Local server"},
+				}
+			}
+
+			item.Value = serverList
+			yamlMap[index] = item
+			break
+		}
+	}
+
+	yamlDoc, err := yaml.Marshal(&yamlMap)
+	if err != nil {
+		return nil, err
+	}
+
+	return yamlDoc, nil
 }
 
 func (we Adapter) serveDocUI() http.Handler {
@@ -428,12 +511,21 @@ func (we Adapter) validateResponse(requestValidationInput *openapi3filter.Reques
 }
 
 // NewWebAdapter creates new WebAdapter instance
-func NewWebAdapter(env string, serviceID string, serviceRegManager *authservice.ServiceRegManager, port string, coreAPIs *core.APIs, host string, logger *logs.Logger) Adapter {
+func NewWebAdapter(env string, serviceID string, serviceRegManager *authservice.ServiceRegManager, port string, coreAPIs *core.APIs, host string, baseServerURL string, prodServerURL string, testServerURL string, devServerURL string, logger *logs.Logger) Adapter {
 	//openAPI doc
 	loader := &openapi3.Loader{Context: context.Background(), IsExternalRefsAllowed: true}
-	doc, err := loader.LoadFromFile("driver/web/docs/gen/def.yaml")
+	// doc, err := loader.LoadFromFile("driver/web/docs/gen/def.yaml")
+	// if err != nil {
+	// 	logger.Fatalf("error on openapi3 load from file - %s", err.Error())
+	// }
+
+	yamlDoc, err := loadDocsYAML(baseServerURL, prodServerURL, testServerURL, devServerURL)
 	if err != nil {
-		logger.Fatalf("error on openapi3 load from file - %s", err.Error())
+		logger.Fatalf("error parsing docs yaml - %s", err.Error())
+	}
+	doc, err := loader.LoadFromData(yamlDoc)
+	if err != nil {
+		logger.Fatalf("error loading docs yaml - %s", err.Error())
 	}
 	err = doc.Validate(loader.Context)
 	if err != nil {
@@ -467,7 +559,7 @@ func NewWebAdapter(env string, serviceID string, serviceRegManager *authservice.
 	bbsApisHandler := NewBBsApisHandler(coreAPIs)
 	tpsApisHandler := NewTPSApisHandler(coreAPIs)
 	systemApisHandler := NewSystemApisHandler(coreAPIs)
-	return Adapter{env: env, port: port, openAPIRouter: openAPIRouter, host: host, auth: auth, logger: logger, defaultApisHandler: defaultApisHandler, servicesApisHandler: servicesApisHandler, adminApisHandler: adminApisHandler,
+	return Adapter{env: env, port: port, productionServerURL: prodServerURL, testServerURL: testServerURL, developmentServerURL: devServerURL, cachedYamlDoc: yamlDoc, openAPIRouter: openAPIRouter, host: host, auth: auth, logger: logger, defaultApisHandler: defaultApisHandler, servicesApisHandler: servicesApisHandler, adminApisHandler: adminApisHandler,
 		encApisHandler: encApisHandler, bbsApisHandler: bbsApisHandler, tpsApisHandler: tpsApisHandler, systemApisHandler: systemApisHandler, coreAPIs: coreAPIs}
 }
 

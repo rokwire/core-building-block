@@ -27,6 +27,8 @@ const (
 	TypeAccount logutils.MessageDataType = "account"
 	//TypeAccountPreferences account preferences
 	TypeAccountPreferences logutils.MessageDataType = "account preferences"
+	//TypeAccountUsername account username
+	TypeAccountUsername logutils.MessageDataType = "account username"
 	//TypeAccountSystemConfigs account system configs
 	TypeAccountSystemConfigs logutils.MessageDataType = "account system configs"
 	//TypeAccountAuthType account auth type
@@ -37,6 +39,8 @@ const (
 	TypeAccountRoles logutils.MessageDataType = "account roles"
 	//TypeAccountUsageInfo account usage information
 	TypeAccountUsageInfo logutils.MessageDataType = "account usage information"
+	//TypeExternalSystemUser external system user
+	TypeExternalSystemUser logutils.MessageDataType = "external system user"
 	//TypeMFAType mfa type
 	TypeMFAType logutils.MessageDataType = "mfa type"
 	//TypeAccountGroups account groups
@@ -58,21 +62,23 @@ type Account struct {
 
 	AppOrg ApplicationOrganization
 
-	HasPermissions bool
-	Permissions    []Permission
-	Roles          []AccountRole
-	Groups         []AccountGroup
+	Permissions []Permission
+	Roles       []AccountRole
+	Groups      []AccountGroup
 
 	AuthTypes []AccountAuthType
 
 	MFATypes []MFAType
 
+	Username      string
 	ExternalIDs   map[string]string
 	Preferences   map[string]interface{}
 	SystemConfigs map[string]interface{}
 	Profile       Profile //one account has one profile, one profile can be shared between many accounts
 
 	Devices []Device
+
+	Anonymous bool
 
 	DateCreated time.Time
 	DateUpdated *time.Time
@@ -379,6 +385,41 @@ func (aat *AccountAuthType) SetUnverified(value bool) {
 			aat.Account.AuthTypes[i].Unverified = false
 		}
 	}
+}
+
+// Equals checks if two account auth types are equal
+func (aat *AccountAuthType) Equals(other AccountAuthType) bool {
+	if aat.Identifier != other.Identifier {
+		return false
+	}
+	if aat.Account.ID != other.Account.ID {
+		return false
+	}
+	if aat.AuthType.Code != other.AuthType.Code {
+		return false
+	}
+	if aat.Active != other.Active {
+		return false
+	}
+	if aat.Unverified != other.Unverified {
+		return false
+	}
+	if aat.Linked != other.Linked {
+		return false
+	}
+	if !utils.DeepEqual(aat.Params, other.Params) {
+		return false
+	}
+
+	thisCred := aat.Credential
+	otherCred := other.Credential
+	if (thisCred != nil) != (otherCred != nil) {
+		return false
+	} else if thisCred != nil && otherCred != nil && (thisCred.ID != otherCred.ID) {
+		return false
+	}
+
+	return true
 }
 
 // Credential represents a credential for account auth type/s
