@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.26.0] - 2022-10-05
 ### Added
+- BBs/TPS API to search accounts matching criteria [#606](https://github.com/rokwire/core-building-block/issues/606)
 - Add scopes to service accounts [#605](https://github.com/rokwire/core-building-block/issues/605)
 
 ### Fixed
