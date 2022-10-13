@@ -158,7 +158,7 @@ func TestSysGetOrganizations(t *testing.T) {
 
 func TestSysGetApplication(t *testing.T) {
 	storage := genmocks.Storage{}
-	storage.On("FindApplication", "_id").Return(&model.Application{ID: "_id"}, nil)
+	storage.On("FindApplication", nil, "_id").Return(&model.Application{ID: "_id"}, nil)
 	app := core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil, nil, nil)
 
 	getApplication, _ := app.System.SysGetApplication("_id")

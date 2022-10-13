@@ -515,6 +515,10 @@ func (s *systemImpl) SysCreateApplication(name string, multiTenant bool, admin b
 	return s.app.sysCreateApplication(name, multiTenant, admin, sharedIdentities, appTypes)
 }
 
+func (s *systemImpl) SysUpdateApplication(ID string, name string, multiTenant bool, admin bool, sharedIdentities bool, appTypes []model.ApplicationType) error {
+	return s.app.sysUpdateApplication(ID, name, multiTenant, admin, sharedIdentities, appTypes)
+}
+
 func (s *systemImpl) SysGetApplication(ID string) (*model.Application, error) {
 	return s.app.sysGetApplication(ID)
 }

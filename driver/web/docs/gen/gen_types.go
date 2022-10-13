@@ -281,9 +281,13 @@ type AppOrgRole struct {
 
 // Application defines model for Application.
 type Application struct {
-	Fields        *ApplicationFields         `json:"fields,omitempty"`
-	Organizations *[]ApplicationOrganization `json:"organizations,omitempty"`
-	Types         *[]ApplicationType         `json:"types,omitempty"`
+	Admin            bool                       `json:"admin"`
+	Id               *string                    `json:"id,omitempty"`
+	MultiTenant      bool                       `json:"multi_tenant"`
+	Name             string                     `json:"name"`
+	Organizations    *[]ApplicationOrganization `json:"organizations,omitempty"`
+	SharedIdentities bool                       `json:"shared_identities"`
+	Types            *[]ApplicationType         `json:"types,omitempty"`
 }
 
 // ApplicationConfig defines model for ApplicationConfig.
@@ -297,15 +301,6 @@ type ApplicationConfig struct {
 	Version string `json:"version"`
 }
 
-// ApplicationFields defines model for ApplicationFields.
-type ApplicationFields struct {
-	Admin            *bool   `json:"admin,omitempty"`
-	Id               *string `json:"id,omitempty"`
-	MultiTenant      *bool   `json:"multi_tenant,omitempty"`
-	Name             string  `json:"name"`
-	SharedIdentities *bool   `json:"shared_identities,omitempty"`
-}
-
 // ApplicationOrganization defines model for ApplicationOrganization.
 type ApplicationOrganization struct {
 	TODO         *string       `json:"TODO,omitempty"`
@@ -316,13 +311,7 @@ type ApplicationOrganization struct {
 
 // ApplicationType defines model for ApplicationType.
 type ApplicationType struct {
-	Application *Application           `json:"application,omitempty"`
-	Fields      *ApplicationTypeFields `json:"fields,omitempty"`
-}
-
-// ApplicationTypeFields defines model for ApplicationTypeFields.
-type ApplicationTypeFields struct {
-	Id         string    `json:"id"`
+	Id         *string   `json:"id,omitempty"`
 	Identifier string    `json:"identifier"`
 	Name       *string   `json:"name,omitempty"`
 	Versions   *[]string `json:"versions,omitempty"`
@@ -1145,19 +1134,6 @@ type SystemReqCreateOrganization struct {
 // SystemReqCreateOrganizationType defines model for SystemReqCreateOrganization.Type.
 type SystemReqCreateOrganizationType string
 
-// SystemReqCreateApplication defines model for _system_req_create_Application.
-type SystemReqCreateApplication struct {
-	Admin            bool `json:"admin"`
-	ApplicationTypes *[]struct {
-		Identifier string    `json:"identifier"`
-		Name       *string   `json:"name,omitempty"`
-		Versions   *[]string `json:"versions,omitempty"`
-	} `json:"application_types,omitempty"`
-	MultiTenant      bool   `json:"multi_tenant"`
-	Name             string `json:"name"`
-	SharedIdentities bool   `json:"shared_identities"`
-}
-
 // SystemReqCreateApplicationConfigRequest defines model for _system_req_create_ApplicationConfig_Request.
 type SystemReqCreateApplicationConfigRequest struct {
 	AppTypeId string                 `json:"app_type_id"`
@@ -1583,7 +1559,10 @@ type PostSystemApplicationConfigsJSONBody = SystemReqCreateApplicationConfigRequ
 type PutSystemApplicationConfigsIdJSONBody = SystemReqCreateApplicationConfigRequest
 
 // PostSystemApplicationsJSONBody defines parameters for PostSystemApplications.
-type PostSystemApplicationsJSONBody = SystemReqCreateApplication
+type PostSystemApplicationsJSONBody = Application
+
+// PutSystemApplicationsIdJSONBody defines parameters for PutSystemApplicationsId.
+type PutSystemApplicationsIdJSONBody = Application
 
 // PostSystemAuthTypesJSONBody defines parameters for PostSystemAuthTypes.
 type PostSystemAuthTypesJSONBody = SystemReqCreateAuthType
@@ -1905,6 +1884,9 @@ type PutSystemApplicationConfigsIdJSONRequestBody = PutSystemApplicationConfigsI
 
 // PostSystemApplicationsJSONRequestBody defines body for PostSystemApplications for application/json ContentType.
 type PostSystemApplicationsJSONRequestBody = PostSystemApplicationsJSONBody
+
+// PutSystemApplicationsIdJSONRequestBody defines body for PutSystemApplicationsId for application/json ContentType.
+type PutSystemApplicationsIdJSONRequestBody = PutSystemApplicationsIdJSONBody
 
 // PostSystemAuthTypesJSONRequestBody defines body for PostSystemAuthTypes for application/json ContentType.
 type PostSystemAuthTypesJSONRequestBody = PostSystemAuthTypesJSONBody

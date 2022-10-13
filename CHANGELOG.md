@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Update application system API [#549](https://github.com/rokwire/core-building-block/issues/549)
 - Update group admin API [#518](https://github.com/rokwire/core-building-block/issues/518)
 
 ## [1.26.0] - 2022-10-05

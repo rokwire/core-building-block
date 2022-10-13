@@ -1,6 +1,0 @@
-type: object
-properties:
-  fields:
-   $ref: "./ApplicationTypeFields.yaml"
-  application:
-    $ref: "./Application.yaml"
