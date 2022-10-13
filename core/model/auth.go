@@ -34,6 +34,8 @@ const (
 	AllApps string = "all"
 	//AllOrgs indicates that all orgs may be accessed
 	AllOrgs string = "all"
+	//ScopeOperationGet indicates a scope may be used for a GET operation
+	ScopeOperationGet string = "get"
 
 	//TypeLoginSession auth type type
 	TypeLoginSession logutils.MessageDataType = "login session"

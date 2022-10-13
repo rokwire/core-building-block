@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/rokwire/core-auth-library-go/v2/authorization"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
@@ -457,8 +458,8 @@ func (s *bbsImpl) BBsGetTest() string {
 	return s.app.bbsGetTest()
 }
 
-func (s *bbsImpl) BBsGetAccounts(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool) ([]map[string]interface{}, error) {
-	return s.app.storage.FindAccountsForService(searchParams, appID, orgID, limit, offset, allAccess)
+func (s *bbsImpl) BBsGetAccounts(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, scopes []authorization.Scope) ([]map[string]interface{}, error) {
+	return s.app.storage.FindAccountsByParams(searchParams, appID, orgID, limit, offset, allAccess, scopes)
 }
 
 ///
@@ -469,8 +470,8 @@ type tpsImpl struct {
 	app *application
 }
 
-func (s *tpsImpl) TPSGetAccounts(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool) ([]map[string]interface{}, error) {
-	return s.app.storage.FindAccountsForService(searchParams, appID, orgID, limit, offset, allAccess)
+func (s *tpsImpl) TPSGetAccounts(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, scopes []authorization.Scope) ([]map[string]interface{}, error) {
+	return s.app.storage.FindAccountsByParams(searchParams, appID, orgID, limit, offset, allAccess, scopes)
 }
 
 ///

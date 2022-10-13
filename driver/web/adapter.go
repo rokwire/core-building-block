@@ -43,9 +43,8 @@ import (
 
 // Adapter entity
 type Adapter struct {
-	env       string
-	serviceID string
-	port      string
+	env  string
+	port string
 
 	productionServerURL  string
 	testServerURL        string
@@ -558,10 +557,11 @@ func NewWebAdapter(env string, serviceID string, serviceRegManager *authservice.
 	servicesApisHandler := NewServicesApisHandler(coreAPIs)
 	adminApisHandler := NewAdminApisHandler(coreAPIs)
 	encApisHandler := NewEncApisHandler(coreAPIs)
-	bbsApisHandler := NewBBsApisHandler(coreAPIs)
-	tpsApisHandler := NewTPSApisHandler(coreAPIs)
+	bbsApisHandler := NewBBsApisHandler(coreAPIs, serviceID)
+	tpsApisHandler := NewTPSApisHandler(coreAPIs, serviceID)
 	systemApisHandler := NewSystemApisHandler(coreAPIs)
-	return Adapter{env: env, port: port, productionServerURL: prodServerURL, testServerURL: testServerURL, developmentServerURL: devServerURL, cachedYamlDoc: yamlDoc, openAPIRouter: openAPIRouter, host: host, auth: auth, logger: logger, defaultApisHandler: defaultApisHandler, servicesApisHandler: servicesApisHandler, adminApisHandler: adminApisHandler,
+	return Adapter{env: env, port: port, productionServerURL: prodServerURL, testServerURL: testServerURL, developmentServerURL: devServerURL, cachedYamlDoc: yamlDoc,
+		openAPIRouter: openAPIRouter, host: host, auth: auth, logger: logger, defaultApisHandler: defaultApisHandler, servicesApisHandler: servicesApisHandler, adminApisHandler: adminApisHandler,
 		encApisHandler: encApisHandler, bbsApisHandler: bbsApisHandler, tpsApisHandler: tpsApisHandler, systemApisHandler: systemApisHandler, coreAPIs: coreAPIs}
 }
 

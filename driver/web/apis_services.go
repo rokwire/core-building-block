@@ -385,7 +385,7 @@ func (h ServicesApisHandler) authorizeService(l *logs.Log, r *http.Request, clai
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, "auth authorize service request", nil, err, http.StatusBadRequest, true)
 	}
 
-	scopes, err := scopeListFromDef(requestData.ApprovedScopes)
+	scopes, err := scopeListFromDef(requestData.ApprovedScopes, nil)
 	if err != nil {
 		return l.HttpResponseErrorData(logutils.StatusInvalid, "scopes", nil, err, http.StatusBadRequest, true)
 	}

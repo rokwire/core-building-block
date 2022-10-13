@@ -24,6 +24,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/rokwire/core-auth-library-go/v2/authorization"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
@@ -1178,8 +1179,8 @@ func (sa *Adapter) FindAccounts(limit int, offset int, appID string, orgID strin
 	return accounts, nil
 }
 
-// FindAccountsForService finds accounts for a service
-func (sa *Adapter) FindAccountsForService(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool) ([]map[string]interface{}, error) {
+// FindAccountsByParams finds accounts by an arbitrary set of search params
+func (sa *Adapter) FindAccountsByParams(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, scopes []authorization.Scope) ([]map[string]interface{}, error) {
 	//find app orgs accessed by service
 	appOrgs, err := sa.FindApplicationOrganizations(utils.StringOrNil(appID, model.AllApps), utils.StringOrNil(orgID, model.AllOrgs))
 	if err != nil {
@@ -1197,9 +1198,10 @@ func (sa *Adapter) FindAccountsForService(searchParams map[string]interface{}, a
 	filter := bson.D{primitive.E{Key: "app_org_id", Value: bson.M{"$in": appOrgIDs}}}
 
 	//arbitary filters
-	searchKeys := make([]string, 0)
 	for k, v := range searchParams {
-		searchKeys = append(searchKeys, k)
+		if k == "id" {
+			k = "_id"
+		}
 		if reflect.TypeOf(v).Kind() == reflect.Slice {
 			filter = append(filter, primitive.E{Key: k, Value: bson.M{"$in": v}})
 		} else {
@@ -1213,15 +1215,15 @@ func (sa *Adapter) FindAccountsForService(searchParams map[string]interface{}, a
 	options.SetSkip(int64(offset))
 
 	// set projection if scope limited
-	//TODO: should return data be based on search params or all relevant scopes?
 	if !allAccess {
 		projection := bson.D{}
 		usesID := false
-		for _, k := range searchKeys {
-			if k == "_id" {
+		for _, scope := range scopes {
+			if scope.Resource == "id" {
+				scope.Resource = "_id"
 				usesID = true
 			}
-			projection = append(projection, bson.E{Key: k, Value: 1})
+			projection = append(projection, bson.E{Key: scope.Resource, Value: 1})
 		}
 		if !usesID {
 			projection = append(projection, bson.E{Key: "_id", Value: 0})

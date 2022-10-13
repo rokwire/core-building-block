@@ -20,7 +20,6 @@ import (
 	Def "core-building-block/driver/web/docs/gen"
 	"core-building-block/utils"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -36,7 +35,8 @@ import (
 
 // BBsApisHandler handles the APIs implementation used by the platform building blocks
 type BBsApisHandler struct {
-	coreAPIs *core.APIs
+	coreAPIs  *core.APIs
+	serviceID string
 }
 
 // getTest TODO get test
@@ -166,7 +166,9 @@ func (h BBsApisHandler) getAccounts(l *logs.Log, r *http.Request, claims *tokena
 		return l.HttpResponseErrorData(logutils.StatusInvalid, model.TypeScope, nil, nil, http.StatusForbidden, true)
 	}
 	scopeStrings := strings.Split(claims.Scope, " ")
-	scopes, err := scopeListFromDef(&scopeStrings)
+	allAccess := authorization.CheckScopesGlobals(scopeStrings, h.serviceID)
+	accountType := string(model.TypeAccount)
+	accountScopes, err := scopeListFromDef(&scopeStrings, &accountType)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionParse, model.TypeScope, nil, err, http.StatusInternalServerError, true)
 	}
@@ -195,19 +197,19 @@ func (h BBsApisHandler) getAccounts(l *logs.Log, r *http.Request, claims *tokena
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	responseKeys := make([]string, 0)
 	searchParams := make(map[string]interface{})
-	allAccess := false
-	allAccessScope := authorization.Scope{ServiceID: "core", Resource: string(model.TypeAccount), Operation: "get"}
 	for k, v := range queryParams {
 		if !allAccess {
 			validKey := false
-			requiredScope := authorization.Scope{ServiceID: "core", Resource: fmt.Sprintf("%s.%s", string(model.TypeAccount), k), Operation: "get"}
-			for _, scope := range scopes {
-				if scope.Match(&requiredScope) {
-					allAccess = scope.Match(&allAccessScope)
-					validKey = true
-					break
+		validResources:
+			for _, validResource := range utils.StringPrefixes(k, ".") {
+				validScope := authorization.Scope{ServiceID: h.serviceID, Resource: validResource, Operation: model.ScopeOperationGet}
+				for _, scope := range accountScopes {
+					if scope.Match(&validScope) {
+						allAccess = allAccess || (scope.ServiceID == h.serviceID && scope.Resource == authorization.ScopeAll && (scope.Operation == authorization.ScopeAll || scope.Operation == model.ScopeOperationGet))
+						validKey = true
+						break validResources
+					}
 				}
 			}
 			if !validKey {
@@ -215,11 +217,10 @@ func (h BBsApisHandler) getAccounts(l *logs.Log, r *http.Request, claims *tokena
 			}
 		}
 
-		responseKeys = append(responseKeys, k)
 		searchParams[k] = v
 	}
 
-	accounts, err := h.coreAPIs.BBs.BBsGetAccounts(searchParams, claims.AppID, claims.OrgID, limit, offset, allAccess)
+	accounts, err := h.coreAPIs.BBs.BBsGetAccounts(searchParams, claims.AppID, claims.OrgID, limit, offset, allAccess, accountScopes)
 	if err != nil {
 		errFields := logutils.FieldArgs(searchParams)
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeAccount, &errFields, err, http.StatusInternalServerError, false)
@@ -234,6 +235,6 @@ func (h BBsApisHandler) getAccounts(l *logs.Log, r *http.Request, claims *tokena
 }
 
 // NewBBsApisHandler creates new bbs Handler instance
-func NewBBsApisHandler(coreAPIs *core.APIs) BBsApisHandler {
-	return BBsApisHandler{coreAPIs: coreAPIs}
+func NewBBsApisHandler(coreAPIs *core.APIs, serviceID string) BBsApisHandler {
+	return BBsApisHandler{coreAPIs: coreAPIs, serviceID: serviceID}
 }

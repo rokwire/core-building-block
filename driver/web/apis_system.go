@@ -417,7 +417,7 @@ func (h SystemApisHandler) getServiceAccounts(l *logs.Log, r *http.Request, clai
 	}
 	if query.Get("scopes") != "" {
 		scopeList := strings.Split(query.Get("scopes"), ",")
-		scopes, err := scopeListFromDef(&scopeList)
+		scopes, err := scopeListFromDef(&scopeList, nil)
 		if err != nil {
 			return l.HttpResponseErrorAction(logutils.ActionParse, model.TypeScope, nil, err, http.StatusInternalServerError, true)
 		}
@@ -454,7 +454,7 @@ func (h SystemApisHandler) registerServiceAccount(l *logs.Log, r *http.Request, 
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeServiceAccount, nil, err, http.StatusBadRequest, true)
 	}
 
-	scopes, err := scopeListFromDef(requestData.Scopes)
+	scopes, err := scopeListFromDef(requestData.Scopes, nil)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionParse, model.TypeScope, nil, err, http.StatusInternalServerError, true)
 	}
@@ -553,7 +553,7 @@ func (h SystemApisHandler) updateServiceAccountInstance(l *logs.Log, r *http.Req
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, "service account update request", nil, err, http.StatusBadRequest, true)
 	}
 
-	scopes, err := scopeListFromDef(requestData.Scopes)
+	scopes, err := scopeListFromDef(requestData.Scopes, nil)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionParse, model.TypeScope, nil, err, http.StatusInternalServerError, true)
 	}

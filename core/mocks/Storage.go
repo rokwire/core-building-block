@@ -3,9 +3,11 @@
 package mocks
 
 import (
-	model "core-building-block/core/model"
+	authorization "github.com/rokwire/core-auth-library-go/v2/authorization"
 
 	mock "github.com/stretchr/testify/mock"
+
+	model "core-building-block/core/model"
 
 	storage "core-building-block/driven/storage"
 )
@@ -307,6 +309,29 @@ func (_m *Storage) FindAccountsByAccountID(appID string, orgID string, accountID
 	return r0, r1
 }
 
+// FindAccountsByParams provides a mock function with given fields: searchParams, appID, orgID, limit, offset, allAccess, scopes
+func (_m *Storage) FindAccountsByParams(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, scopes []authorization.Scope) ([]map[string]interface{}, error) {
+	ret := _m.Called(searchParams, appID, orgID, limit, offset, allAccess, scopes)
+
+	var r0 []map[string]interface{}
+	if rf, ok := ret.Get(0).(func(map[string]interface{}, string, string, int, int, bool, []authorization.Scope) []map[string]interface{}); ok {
+		r0 = rf(searchParams, appID, orgID, limit, offset, allAccess, scopes)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]map[string]interface{})
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(map[string]interface{}, string, string, int, int, bool, []authorization.Scope) error); ok {
+		r1 = rf(searchParams, appID, orgID, limit, offset, allAccess, scopes)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // FindAccountsByUsername provides a mock function with given fields: context, appOrg, username
 func (_m *Storage) FindAccountsByUsername(context storage.TransactionContext, appOrg *model.ApplicationOrganization, username string) ([]model.Account, error) {
 	ret := _m.Called(context, appOrg, username)
@@ -323,29 +348,6 @@ func (_m *Storage) FindAccountsByUsername(context storage.TransactionContext, ap
 	var r1 error
 	if rf, ok := ret.Get(1).(func(storage.TransactionContext, *model.ApplicationOrganization, string) error); ok {
 		r1 = rf(context, appOrg, username)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// FindAccountsForService provides a mock function with given fields: searchParams, appID, orgID, limit, offset, allAccess
-func (_m *Storage) FindAccountsForService(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool) ([]map[string]interface{}, error) {
-	ret := _m.Called(searchParams, appID, orgID, limit, offset, allAccess)
-
-	var r0 []map[string]interface{}
-	if rf, ok := ret.Get(0).(func(map[string]interface{}, string, string, int, int, bool) []map[string]interface{}); ok {
-		r0 = rf(searchParams, appID, orgID, limit, offset, allAccess)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]map[string]interface{})
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(map[string]interface{}, string, string, int, int, bool) error); ok {
-		r1 = rf(searchParams, appID, orgID, limit, offset, allAccess)
 	} else {
 		r1 = ret.Error(1)
 	}

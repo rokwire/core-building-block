@@ -24,6 +24,7 @@ import (
 	"math/rand"
 	"net/http"
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/rokwire/logging-library-go/logs"
@@ -194,6 +195,16 @@ func StringListDiff(new []string, old []string) ([]string, []string, []string) {
 		}
 	}
 	return added, removed, unchanged
+}
+
+// StringPrefixes returns a list of all prefixes of s delimited by sep, including s itself
+func StringPrefixes(s string, sep string) []string {
+	subStrings := strings.Split(s, sep)
+	prefixes := make([]string, len(subStrings))
+	for i := 1; i <= len(subStrings); i++ {
+		prefixes[i-1] = strings.Join(subStrings[0:i], sep)
+	}
+	return prefixes
 }
 
 // StringOrNil returns a pointer to the input string, but returns nil if input matches nilVal
