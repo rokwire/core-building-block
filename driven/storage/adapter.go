@@ -2946,7 +2946,19 @@ func (sa *Adapter) SaveApplication(context TransactionContext, application model
 }
 
 // FindApplication finds application
-func (sa *Adapter) FindApplication(ID string) (*model.Application, error) {
+func (sa *Adapter) FindApplication(context TransactionContext, ID string) (*model.Application, error) {
+	if context != nil {
+		filter := bson.D{primitive.E{Key: "_id", Value: ID}}
+
+		var app application
+		err := sa.db.applications.FindOneWithContext(context, filter, &app, nil)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, &logutils.FieldArgs{"_id": ID}, err)
+		}
+
+		modelApp := applicationFromStorage(&app)
+		return &modelApp, nil
+	}
 	return sa.getCachedApplication(ID)
 }
 

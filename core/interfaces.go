@@ -200,7 +200,7 @@ type Storage interface {
 
 	InsertApplication(context storage.TransactionContext, application model.Application) (*model.Application, error)
 	SaveApplication(context storage.TransactionContext, application model.Application) error
-	FindApplication(ID string) (*model.Application, error)
+	FindApplication(context storage.TransactionContext, ID string) (*model.Application, error)
 	FindApplications() ([]model.Application, error)
 
 	InsertAuthType(context storage.TransactionContext, authType model.AuthType) (*model.AuthType, error)

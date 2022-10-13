@@ -1858,7 +1858,7 @@ func (a *Auth) constructServiceAccount(accountID string, name string, appID stri
 
 	var application *model.Application
 	if appID != model.AllApps {
-		application, err = a.storage.FindApplication(appID)
+		application, err = a.storage.FindApplication(nil, appID)
 		if err != nil || application == nil {
 			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
 		}

@@ -86,7 +86,8 @@ func applicationTypeToDef(item *model.ApplicationType) *Def.ApplicationType {
 
 	var name *string
 	if len(item.Name) > 0 {
-		name = &item.Name
+		nameStr := item.Name
+		name = &nameStr
 	}
 	var versions *[]string
 	if item.Versions != nil {
@@ -96,8 +97,8 @@ func applicationTypeToDef(item *model.ApplicationType) *Def.ApplicationType {
 		}
 		versions = &versionList
 	}
-	id := item.ID
 
+	id := item.ID
 	return &Def.ApplicationType{Id: &id, Identifier: item.Identifier, Name: name, Versions: versions}
 }
 

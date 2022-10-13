@@ -510,7 +510,7 @@ type Storage interface {
 	UpdateLoginSessionExternalIDs(accountID string, externalIDs map[string]string) error
 
 	//Applications
-	FindApplication(ID string) (*model.Application, error)
+	FindApplication(context storage.TransactionContext, ID string) (*model.Application, error)
 
 	//Organizations
 	FindOrganization(id string) (*model.Organization, error)
