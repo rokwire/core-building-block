@@ -48,7 +48,8 @@ type Administration interface {
 
 	AdmGetApplications(orgID string) ([]model.Application, error)
 
-	AdmCreateAppOrgGroup(name string, permissionNames []string, rolesIDs []string, appID string, orgID string, assignerPermissions []string, system bool, l *logs.Log) (*model.AppOrgGroup, error)
+	AdmCreateAppOrgGroup(name string, description string, system bool, permissionNames []string, rolesIDs []string, accountIDs []string, appID string, orgID string, assignerPermissions []string, systemClaim bool, l *logs.Log) (*model.AppOrgGroup, error)
+	AdmUpdateAppOrgGroup(ID string, name string, description string, system bool, permissionNames []string, rolesIDs []string, accountIDs []string, appID string, orgID string, assignerPermissions []string, systemClaim bool, l *logs.Log) (*model.AppOrgGroup, error)
 	AdmGetAppOrgGroups(appID string, orgID string) ([]model.AppOrgGroup, error)
 	AdmAddAccountsToGroup(appID string, orgID string, groupID string, accountIDs []string, assignerPermissions []string, l *logs.Log) error
 	AdmRemoveAccountsFromGroup(appID string, orgID string, groupID string, accountIDs []string, assignerPermissions []string, l *logs.Log) error
@@ -110,6 +111,7 @@ type System interface {
 	SysUpdateOrganization(ID string, name string, requestType string, organizationDomains []string) error
 
 	SysCreateApplication(name string, multiTenant bool, admin bool, sharedIdentities bool, appTypes []model.ApplicationType) (*model.Application, error)
+	SysUpdateApplication(ID string, name string, multiTenant bool, admin bool, sharedIdentities bool, appTypes []model.ApplicationType) error
 	SysGetApplication(ID string) (*model.Application, error)
 	SysGetApplications() ([]model.Application, error)
 
@@ -136,9 +138,9 @@ type Storage interface {
 	FindAuthType(codeOrID string) (*model.AuthType, error)
 
 	FindAccountByID(context storage.TransactionContext, id string) (*model.Account, error)
-	FindAccounts(limit int, offset int, appID string, orgID string, accountID *string, firstName *string, lastName *string, authType *string,
+	FindAccounts(context storage.TransactionContext, limit *int, offset *int, appID string, orgID string, accountID *string, firstName *string, lastName *string, authType *string,
 		authTypeIdentifier *string, anonymous *bool, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error)
-	FindAccountsByAccountID(appID string, orgID string, accountIDs []string) ([]model.Account, error)
+	FindAccountsByAccountID(context storage.TransactionContext, appID string, orgID string, accountIDs []string) ([]model.Account, error)
 	FindAccountsByUsername(context storage.TransactionContext, appOrg *model.ApplicationOrganization, username string) ([]model.Account, error)
 
 	UpdateAccountPreferences(context storage.TransactionContext, accountID string, preferences map[string]interface{}) error
@@ -148,8 +150,8 @@ type Storage interface {
 	UpdateAccountUsername(context storage.TransactionContext, accountID, username string) error
 	InsertAccountRoles(context storage.TransactionContext, accountID string, appOrgID string, roles []model.AccountRole) error
 	DeleteAccountRoles(context storage.TransactionContext, accountID string, roleIDs []string) error
-	InsertAccountsGroup(group model.AccountGroup, accounts []model.Account) error
-	RemoveAccountsGroup(groupID string, accountIDs []string) error
+	InsertAccountsGroup(context storage.TransactionContext, group model.AccountGroup, accountIDs []string) error
+	RemoveAccountsGroup(context storage.TransactionContext, groupID string, accountIDs []string) error
 	CountAccountsByRoleID(roleID string) (*int64, error)
 	CountAccountsByGroupID(groupID string) (*int64, error)
 
@@ -184,9 +186,9 @@ type Storage interface {
 
 	FindAppOrgGroups(appOrgID string) ([]model.AppOrgGroup, error)
 	FindAppOrgGroupsByIDs(context storage.TransactionContext, ids []string, appOrgID string) ([]model.AppOrgGroup, error)
-	FindAppOrgGroup(id string, appOrgID string) (*model.AppOrgGroup, error)
+	FindAppOrgGroup(context storage.TransactionContext, id string, appOrgID string) (*model.AppOrgGroup, error)
 	InsertAppOrgGroup(context storage.TransactionContext, item model.AppOrgGroup) error
-	UpdateAppOrgGroup(item model.AppOrgGroup) error
+	UpdateAppOrgGroup(context storage.TransactionContext, item model.AppOrgGroup) error
 	DeleteAppOrgGroup(id string) error
 	CountGroupsByRoleID(roleID string) (*int64, error)
 
@@ -197,7 +199,8 @@ type Storage interface {
 	FindOrganizations() ([]model.Organization, error)
 
 	InsertApplication(context storage.TransactionContext, application model.Application) (*model.Application, error)
-	FindApplication(ID string) (*model.Application, error)
+	SaveApplication(context storage.TransactionContext, application model.Application) error
+	FindApplication(context storage.TransactionContext, ID string) (*model.Application, error)
 	FindApplications() ([]model.Application, error)
 
 	InsertAuthType(context storage.TransactionContext, authType model.AuthType) (*model.AuthType, error)

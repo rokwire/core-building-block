@@ -15,7 +15,8 @@ p, all_applications, /core/system/applications, (GET)|(POST)|(DELETE)|(PUT), All
 p, all_applications, /core/system/applications/*, (GET)|(POST)|(DELETE)|(PUT),
 p, get_applications, /core/system/applications, (GET), Get applications
 p, get_applications, /core/system/applications/*, (GET),
-p, update_applications, /core/system/applications, (GET)|(POST), Create applications
+p, update_applications, /core/system/applications, (GET)|(POST), Update and create applications
+p, update_applications, /core/system/applications/*, (GET)|(PUT),
 
 p, get_app_orgs, /core/system/app-orgs, (GET), Get application organizations
 p, get_app_orgs, /core/system/app-orgs/*, (GET),

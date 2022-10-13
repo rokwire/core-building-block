@@ -1,7 +1,0 @@
-required:
-  - id
-type: string
-properties:
-  id:
-    readOnly: true
-    type: string
