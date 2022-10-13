@@ -1191,8 +1191,8 @@ func (sa *Adapter) FindAccountsForService(searchParams map[string]interface{}, a
 
 	//find the accounts
 	appOrgIDs := make([]string, len(appOrgs))
-	for _, appOrg := range appOrgs {
-		appOrgIDs = append(appOrgIDs, appOrg.ID)
+	for i, appOrg := range appOrgs {
+		appOrgIDs[i] = appOrg.ID
 	}
 	filter := bson.D{primitive.E{Key: "app_org_id", Value: bson.M{"$in": appOrgIDs}}}
 
@@ -1213,6 +1213,7 @@ func (sa *Adapter) FindAccountsForService(searchParams map[string]interface{}, a
 	options.SetSkip(int64(offset))
 
 	// set projection if scope limited
+	//TODO: should return data be based on search params or all relevant scopes?
 	if !allAccess {
 		projection := bson.D{}
 		usesID := false
