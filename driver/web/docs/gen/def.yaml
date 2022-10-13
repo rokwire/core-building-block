@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Rokwire Core Building Block API
   description: Core Building Block API Documentation
-  version: 1.24.2
+  version: 1.26.0
 servers:
   - url: 'https://api.rokwire.illinois.edu/core'
     description: Production server
@@ -1116,11 +1116,11 @@ paths:
     delete:
       tags:
         - Services
-      summary: Delete user account
+      summary: Delete account
       description: |
-        Deletes a user account
+        Deletes account
 
-        **Auth:** Requires user auth token
+        **Auth:** Requires auth token
       security:
         - bearerAuth: []
       responses:
@@ -1140,11 +1140,11 @@ paths:
     get:
       tags:
         - Services
-      summary: Get user account
+      summary: Get account
       description: |
-        Get the user account
+        Gets account
 
-        **Auth:** Requires user auth token
+        **Auth:** Requires auth token
       security:
         - bearerAuth: []
       responses:
@@ -1267,7 +1267,7 @@ paths:
       description: |
         Updates account preferences
 
-        **Auth:** Requires user auth token
+        **Auth:** Requires auth token
       security:
         - bearerAuth: []
       requestBody:
@@ -1296,9 +1296,9 @@ paths:
         - Services
       summary: Get preferences
       description: |
-        Returns a user preferences
+        Returns account preferences
 
-        **Auth:** Requires user auth token
+        **Auth:** Requires auth token
       security:
         - bearerAuth: []
       responses:
@@ -1377,7 +1377,7 @@ paths:
       description: |
         Returns account system configs
 
-        **Auth:** Requires user auth token
+        **Auth:** Requires auth token
       security:
         - bearerAuth: []
       responses:
@@ -1388,6 +1388,38 @@ paths:
               schema:
                 type: object
                 nullable: true
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /services/account/username:
+    put:
+      tags:
+        - Services
+      summary: Update account username
+      description: |
+        Update the username associated with the user's account
+
+        **Auth:** Requires user access token
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: Username
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Username'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
         '400':
           description: Bad request
         '401':
@@ -1750,7 +1782,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_admin_res_app-token'
+                $ref: '#/components/schemas/AdminToken'
         '400':
           description: Bad request
         '401':
@@ -1861,6 +1893,38 @@ paths:
       responses:
         '200':
           description: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /admin/account/username:
+    put:
+      tags:
+        - Admin
+      summary: Update account username
+      description: |
+        Update the username associated with the user's account
+
+        **Auth:** Requires user access token
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: Username
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Username'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
         '400':
           description: Bad request
         '401':
@@ -2332,6 +2396,14 @@ paths:
           explode: false
           schema:
             type: string
+        - name: create-anonymous
+          in: query
+          description: Create anonymous account if account with ID cannot be found. Default is `false`
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: boolean
       requestBody:
         description: Account system configs (will be merged with existing configs)
         content:
@@ -2486,7 +2558,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_admin_req_create-application_group'
+              $ref: '#/components/schemas/_admin_req_application_group'
         required: true
       responses:
         '200':
@@ -2502,6 +2574,43 @@ paths:
         '500':
           description: Internal error
   '/admin/application/groups/{id}':
+    put:
+      tags:
+        - Admin
+      summary: Update application group
+      description: |
+        Updates an existing application group
+
+        **Auth:** Requires admin access token with `update_auth-groups` or `all_auth-groups` permission
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: The group ID
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Application group
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_admin_req_application_group'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppOrgGroup'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
     delete:
       tags:
         - Admin
@@ -2788,7 +2897,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/ApplicationFields'
+                  $ref: '#/components/schemas/Application'
         '400':
           description: Bad request
         '401':
@@ -3203,6 +3312,47 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/_services_res_service-accounts_access-tokens'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /system/auth/app-org-token:
+    get:
+      tags:
+        - System
+      summary: App org token
+      description: |
+        Retrieve a system token for the specified application and organization
+
+        **Auth:** Requires system access token
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: app_id
+          in: query
+          description: The application ID of the token to return
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+        - name: org_id
+          in: query
+          description: The organization ID of the token to return
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminToken'
         '400':
           description: Bad request
         '401':
@@ -4032,6 +4182,48 @@ paths:
           description: Not Found
         '500':
           description: Internal error
+    put:
+      tags:
+        - System
+      summary: Update application by ID
+      description: |
+        Updates application by provided ID
+
+        **Auth:** Requires system access token with `update_applications` or `all_applications` permission
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: ID of the application
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+      requestBody:
+        description: updates one application
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Application'
+        required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '404':
+          description: Not Found
+        '500':
+          description: Internal error
   /system/applications:
     get:
       tags:
@@ -4073,7 +4265,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_system_req_create_Application'
+              $ref: '#/components/schemas/Application'
         required: true
       responses:
         '200':
@@ -4583,6 +4775,153 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+  '/system/app-orgs/{id}':
+    get:
+      tags:
+        - System
+      summary: Get app-org
+      description: |
+        Get app-org by ID
+
+        **Auth:** Requires system access token with `get_app_orgs` or `all_app_orgs` permission
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: ID of the app-org to retrieve
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppOrg'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+    put:
+      tags:
+        - System
+      summary: Update app-org by ID
+      description: |
+        Updates app-org by ID
+
+        **Auth:** Requires system access token with `update_app_orgs` or `all_app_orgs` permission
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: ID of the app-org that needs to be updated
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+      requestBody:
+        description: update one app-org
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppOrg'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /system/app-orgs:
+    get:
+      tags:
+        - System
+      summary: Get app-orgs
+      description: |
+        Get all app-orgs matching query
+
+        **Auth:** Requires system access token with `get_app_orgs` or `all_app_orgs` permission
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: app_id
+          in: query
+          description: Application ID to search for
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
+        - name: org_id
+          in: query
+          description: Organization ID to search for
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AppOrg'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+    post:
+      tags:
+        - System
+      summary: Create app-org
+      description: |
+        Create app-org
+
+        **Auth:** Requires system access token with `update_app_orgs` or `all_app_orgs` permission
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: New app-org
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppOrg'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   /ui/credential/reset:
     get:
       tags:
@@ -4685,22 +5024,12 @@ components:
         setting:
           type: string
     Application:
-      type: object
-      properties:
-        fields:
-          $ref: '#/components/schemas/ApplicationFields'
-        types:
-          type: array
-          items:
-            $ref: '#/components/schemas/ApplicationType'
-        organizations:
-          type: array
-          items:
-            $ref: '#/components/schemas/ApplicationOrganization'
-    ApplicationFields:
       required:
         - id
         - name
+        - multi_tenant
+        - admin
+        - shared_identities
       type: object
       properties:
         id:
@@ -4714,20 +5043,22 @@ components:
           type: boolean
         shared_identities:
           type: boolean
+        types:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApplicationType'
+        organizations:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApplicationOrganization'
     ApplicationType:
-      type: object
-      properties:
-        fields:
-          $ref: '#/components/schemas/ApplicationTypeFields'
-        application:
-          $ref: '#/components/schemas/Application'
-    ApplicationTypeFields:
       required:
         - id
         - identifier
       type: object
       properties:
         id:
+          readOnly: true
           type: string
         identifier:
           type: string
@@ -4748,6 +5079,38 @@ components:
           $ref: '#/components/schemas/Organization'
         TODO:
           type: string
+    AppOrg:
+      required:
+        - id
+        - app_id
+        - org_id
+      type: object
+      nullable: true
+      properties:
+        id:
+          readOnly: true
+          type: string
+        app_id:
+          type: string
+        org_id:
+          type: string
+        services_ids:
+          type: array
+          nullable: true
+          items:
+            type: string
+        identity_provider_settings:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/IdentityProviderSettings'
+        supported_auth_types:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/SupportedAuthTypes'
+        login_session_settings:
+          $ref: '#/components/schemas/LoginSessionSettings'
     Permission:
       required:
         - id
@@ -4887,6 +5250,113 @@ components:
           description: conforms major.minor.patch format
         data:
           type: object
+    IdentityProviderSettings:
+      required:
+        - identity_provider_id
+        - user_identifier_field
+      type: object
+      properties:
+        identity_provider_id:
+          type: string
+        user_identifier_field:
+          type: string
+        external_id_fields:
+          type: object
+          additionalProperties:
+            type: string
+        first_name_field:
+          type: string
+        middle_name_field:
+          type: string
+        last_name_field:
+          type: string
+        email_field:
+          type: string
+        roles_field:
+          type: string
+        groups_field:
+          type: string
+        user_specific_fields:
+          type: array
+          items:
+            type: string
+        roles:
+          type: object
+          additionalProperties:
+            type: string
+        groups:
+          type: object
+          additionalProperties:
+            type: string
+        always_sync_profile:
+          type: boolean
+    SupportedAuthTypes:
+      type: object
+      properties:
+        app_type_id:
+          type: string
+        supported_auth_types:
+          type: array
+          items:
+            $ref: '#/components/schemas/SupportedAuthType'
+    SupportedAuthType:
+      type: object
+      properties:
+        auth_type_id:
+          type: string
+        params:
+          type: object
+          additionalProperties: true
+    LoginSessionSettings:
+      type: object
+      properties:
+        max_concurrent_sessions:
+          type: integer
+        inactivity_expire_policy:
+          $ref: '#/components/schemas/InactiveExpirePolicy'
+        time_since_login_expire_policy:
+          $ref: '#/components/schemas/TSLExpirePolicy'
+        yearly_expire_policy:
+          $ref: '#/components/schemas/YearlyExpirePolicy'
+    YearlyExpirePolicy:
+      type: object
+      required:
+        - active
+        - day
+        - month
+        - hour
+        - min
+      properties:
+        active:
+          type: boolean
+        day:
+          type: integer
+        month:
+          type: integer
+        hour:
+          type: integer
+        min:
+          type: integer
+    InactiveExpirePolicy:
+      type: object
+      required:
+        - active
+        - inactivity_period
+      properties:
+        active:
+          type: boolean
+        inactivity_period:
+          type: integer
+    TSLExpirePolicy:
+      type: object
+      required:
+        - active
+        - time_since_login_period
+      properties:
+        active:
+          type: boolean
+        time_since_login_period:
+          type: integer
     LoginSession:
       type: object
       properties:
@@ -5115,6 +5585,13 @@ components:
         explanation:
           description: Explanation displayed to users for why this scope is requested/required
           type: string
+    AdminToken:
+      required:
+        - token
+      type: object
+      properties:
+        token:
+          type: string
     APIKey:
       required:
         - app_id
@@ -5193,6 +5670,8 @@ components:
           $ref: '#/components/schemas/ApplicationOrganization'
         system:
           type: boolean
+        username:
+          type: string
         permissions:
           type: array
           items:
@@ -5212,6 +5691,9 @@ components:
         preferences:
           type: object
           nullable: true
+        external_ids:
+          type: object
+          nullable: true
         system_configs:
           type: object
           nullable: true
@@ -5221,6 +5703,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Device'
+        anonymous:
+          type: boolean
     PartialAccount:
       required:
         - id
@@ -5231,6 +5715,7 @@ components:
         - permissions
         - roles
         - groups
+        - anonymous
         - auth_types
         - date_created
       type: object
@@ -5248,8 +5733,8 @@ components:
           type: string
         system:
           type: boolean
-        has_permissions:
-          type: boolean
+        username:
+          type: string
         permissions:
           type: array
           items:
@@ -5272,22 +5757,24 @@ components:
         params:
           type: object
           nullable: true
+        anonymous:
+          type: boolean
         date_created:
           readOnly: true
           type: string
         date_updated:
           type: string
           nullable: true
+        external_ids:
+          type: object
+          nullable: true
     AccountFields:
       required:
         - id
-        - has_permissions
       type: object
       properties:
         id:
           type: string
-        has_permissions:
-          type: boolean
     Profile:
       type: object
       properties:
@@ -5329,6 +5816,13 @@ components:
         country:
           type: string
           nullable: true
+    Username:
+      required:
+        - username
+      type: object
+      properties:
+        username:
+          type: string
     AccountAuthType:
       type: object
       properties:
@@ -5426,6 +5920,9 @@ components:
           $ref: '#/components/schemas/_shared_req_ProfileNullable'
         preferences:
           type: object
+          nullable: true
+        username:
+          type: string
           nullable: true
     _shared_req_Login_Mfa:
       required:
@@ -5547,6 +6044,9 @@ components:
             type: string
         profile:
           $ref: '#/components/schemas/_shared_req_ProfileNullable'
+        username:
+          type: string
+          nullable: true
     _shared_req_UpdateAccount:
       required:
         - auth_type
@@ -5839,6 +6339,8 @@ components:
       properties:
         id:
           type: string
+        username:
+          type: string
         profile:
           $ref: '#/components/schemas/ProfileFields'
         preferences:
@@ -5847,8 +6349,6 @@ components:
         system_configs:
           type: object
           nullable: true
-        has_permissions:
-          type: boolean
         system:
           type: boolean
         permissions:
@@ -5867,12 +6367,17 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AccountAuthTypeFields'
+        anonymous:
+          type: boolean
         last_login_date:
           type: string
         last_access_token_date:
           type: string
         most_recent_client_version:
           type: string
+        external_ids:
+          type: object
+          nullable: true
     _shared_res_AccountCheck:
       type: boolean
     _shared_res_RokwireToken:
@@ -6177,13 +6682,6 @@ components:
         version:
           type: string
           description: conforms major.minor.patch format
-    _admin_res_app-token:
-      required:
-        - token
-      type: object
-      properties:
-        token:
-          type: string
     _admin_req_create-application_role:
       required:
         - name
@@ -6199,18 +6697,28 @@ components:
           type: array
           items:
             type: string
-    _admin_req_create-application_group:
+    _admin_req_application_group:
       required:
         - name
+        - description
       type: object
       properties:
         name:
           type: string
+        description:
+          type: string
+        system:
+          type: boolean
         permissions:
           type: array
           items:
             type: string
         roles:
+          type: array
+          items:
+            type: string
+        account_ids:
+          nullable: true
           type: array
           items:
             type: string
@@ -6415,89 +6923,6 @@ components:
             - huge
         config:
           $ref: '#/components/schemas/OrganizationConfigFields'
-    _system_req_create_Application:
-      required:
-        - name
-        - multi_tenant
-        - admin
-        - shared_identities
-      type: object
-      properties:
-        name:
-          type: string
-        multi_tenant:
-          type: boolean
-        admin:
-          type: boolean
-        shared_identities:
-          type: boolean
-        application_types:
-          type: array
-          items:
-            required:
-              - identifier
-            type: object
-            properties:
-              identifier:
-                type: string
-              name:
-                type: string
-              versions:
-                type: array
-                items:
-                  type: string
-    _system_req_get_Application:
-      required:
-        - id
-      type: string
-      properties:
-        id:
-          readOnly: true
-          type: string
-    _system_res_get_Application:
-      required:
-        - id
-        - name
-      type: object
-      properties:
-        id:
-          readOnly: true
-          type: string
-        name:
-          type: string
-        multi_tenant:
-          type: boolean
-        shared_identities:
-          type: boolean
-        max_login_session_duration:
-          description: The maximum allowed duration (in hours) of a user's login session for this application
-          type: integer
-        organization:
-          $ref: '#/components/schemas/ApplicationOrganization'
-        applicationType:
-          $ref: '#/components/schemas/ApplicationType'
-    _system_res_get_Applications:
-      required:
-        - id
-        - name
-        - multi_tenant
-        - shared_identities
-      type: object
-      properties:
-        id:
-          readOnly: true
-          type: string
-        name:
-          type: string
-        multi_tenant:
-          type: boolean
-        shared_identities:
-          type: boolean
-        max_login_session_duration:
-          description: The maximum allowed duration (in hours) of a user's login session for this application
-          type: integer
-        application_types:
-          $ref: '#/components/schemas/ApplicationTypeFields'
     _system_req_permissions:
       required:
         - name

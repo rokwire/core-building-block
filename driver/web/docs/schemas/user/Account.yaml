@@ -6,6 +6,8 @@ properties:
     $ref: "../application/ApplicationOrganization.yaml"
   system:
     type: boolean
+  username:
+    type: string
   permissions:
     type: array
     items:
@@ -25,6 +27,9 @@ properties:
   preferences:
     type: object
     nullable: true
+  external_ids:
+    type: object
+    nullable: true
   system_configs:
     type: object
     nullable: true
@@ -34,3 +39,5 @@ properties:
     type: array
     items:
       $ref: "./Device.yaml"
+  anonymous:
+    type: boolean

@@ -1,6 +1,6 @@
+required:
+  - username
 type: object
 properties:
-  id:
-    type: string
-  TODO:
+  username:
     type: string

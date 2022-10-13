@@ -1,0 +1,8 @@
+type: object
+properties:
+  app_type_id:
+    type: string
+  supported_auth_types:
+    type: array
+    items:
+      $ref: "./SupportedAuthType.yaml"

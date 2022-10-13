@@ -43,6 +43,8 @@ const (
 	TypeIdentityProvider logutils.MessageDataType = "identity provider"
 	//TypeIdentityProviderConfig identity provider config type
 	TypeIdentityProviderConfig logutils.MessageDataType = "identity provider config"
+	//TypeIdentityProviderSetting identity provider setting type
+	TypeIdentityProviderSetting logutils.MessageDataType = "identity provider setting"
 	//TypeUserAuth user auth type
 	TypeUserAuth logutils.MessageDataType = "user auth"
 	//TypeAuthCred auth cred type
@@ -91,7 +93,7 @@ type LoginSession struct {
 
 	Identifier      string //it is the account id(anonymous id for anonymous logins)
 	ExternalIDs     map[string]string
-	AccountAuthType *AccountAuthType //it is nil for anonymous logins
+	AccountAuthType *AccountAuthType //it may be nil for anonymous logins
 
 	Device *Device
 

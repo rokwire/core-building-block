@@ -1,0 +1,10 @@
+type: object
+properties:
+  max_concurrent_sessions:
+    type: integer
+  inactivity_expire_policy:
+    $ref: "./InactiveExpirePolicy.yaml"
+  time_since_login_expire_policy:
+    $ref: "./TSLExpirePolicy.yaml"
+  yearly_expire_policy:
+    $ref: "./YearlyExpirePolicy.yaml"
