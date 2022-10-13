@@ -16,3 +16,5 @@ properties:
     type: string
   api_key:
     type: string
+  redirect_uri:	
+    type: string

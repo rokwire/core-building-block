@@ -426,7 +426,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 //	Returns:
 //		Login URL (string): SSO provider login URL to be launched in a browser
 //		Params (map[string]interface{}): Params to be sent in subsequent request (if necessary)
-func (a *Auth) GetLoginURL(authenticationType string, appTypeIdentifier string, orgID string, apiKey string, l *logs.Log) (string, map[string]interface{}, error) {
+func (a *Auth) GetLoginURL(authenticationType string, appTypeIdentifier string, orgID string, redirectURI string, apiKey string, l *logs.Log) (string, map[string]interface{}, error) {
 	//validate if the provided auth type is supported by the provided application and organization
 	authType, appType, _, err := a.validateAuthType(authenticationType, appTypeIdentifier, orgID)
 	if err != nil {
@@ -446,7 +446,7 @@ func (a *Auth) GetLoginURL(authenticationType string, appTypeIdentifier string, 
 	}
 
 	//get login URL
-	loginURL, params, err := authImpl.getLoginURL(*authType, *appType, l)
+	loginURL, params, err := authImpl.getLoginURL(*authType, *appType, redirectURI, l)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionGet, "login url", nil, err)
 	}

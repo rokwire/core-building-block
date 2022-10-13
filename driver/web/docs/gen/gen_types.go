@@ -930,6 +930,7 @@ type SharedReqLoginUrl struct {
 	AppTypeIdentifier string                    `json:"app_type_identifier"`
 	AuthType          SharedReqLoginUrlAuthType `json:"auth_type"`
 	OrgId             string                    `json:"org_id"`
+	RedirectUri       *string                   `json:"redirect_uri,omitempty"`
 }
 
 // SharedReqLoginUrlAuthType defines model for SharedReqLoginUrl.AuthType.

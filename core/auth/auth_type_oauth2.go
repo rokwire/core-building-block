@@ -162,7 +162,7 @@ func (o *oauth2AuthConfig) CheckSubject(tokenSubject string, userSubject string)
 	return true
 }
 
-func (o *oauth2AuthConfig) BuildLoginURLResponse() (string, map[string]interface{}, error) {
+func (o *oauth2AuthConfig) BuildLoginURLResponse(redirectURI string) (string, map[string]interface{}, error) {
 	query := map[string]string{
 		"client_id":    o.ClientID,
 		"redirect_uri": o.RedirectURI,

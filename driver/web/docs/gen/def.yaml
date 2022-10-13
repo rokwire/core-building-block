@@ -5990,6 +5990,8 @@ components:
           type: string
         api_key:
           type: string
+        redirect_uri:
+          type: string
     _shared_req_Refresh:
       required:
         - api_key

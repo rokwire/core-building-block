@@ -97,7 +97,7 @@ type OAuthConfig interface {
 	GetAuthorizationCode(creds string, params string) (string, error)
 	BuildNewTokenRequest(creds string, params string, refresh bool) (*OAuthRequest, map[string]interface{}, error)
 	ParseTokenResponse(response []byte, params map[string]interface{}) (OAuthToken, map[string]interface{}, error)
-	BuildLoginURLResponse() (string, map[string]interface{}, error)
+	BuildLoginURLResponse(redirectURI string) (string, map[string]interface{}, error)
 
 	// GetResponseParams(params string) (map[string]string, error)
 

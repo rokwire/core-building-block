@@ -37,7 +37,7 @@ func (a *samlAuthImpl) externalLogin(authType model.AuthType, appType model.Appl
 	return nil, nil, nil
 }
 
-func (a *samlAuthImpl) getLoginURL(authType model.AuthType, appType model.ApplicationType, l *logs.Log) (string, map[string]interface{}, error) {
+func (a *samlAuthImpl) getLoginURL(authType model.AuthType, appType model.ApplicationType, redirectURI string, l *logs.Log) (string, map[string]interface{}, error) {
 	return "", nil, errors.Newf("get login url operation invalid for auth_type=%s", a.authType)
 }
 

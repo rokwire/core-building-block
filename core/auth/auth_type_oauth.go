@@ -76,13 +76,13 @@ func (a *oauthAuthImpl) refresh(params map[string]interface{}, authType model.Au
 	return a.loadTokensAndInfo(config, authType, appOrg, refreshParams.RefreshToken, string(paramsString), true, l)
 }
 
-func (a *oauthAuthImpl) getLoginURL(authType model.AuthType, appType model.ApplicationType, l *logs.Log) (string, map[string]interface{}, error) {
+func (a *oauthAuthImpl) getLoginURL(authType model.AuthType, appType model.ApplicationType, redirectURI string, l *logs.Log) (string, map[string]interface{}, error) {
 	config, err := a.getOAuthConfig(authType, appType)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionGet, typeAuthConfig, logutils.StringArgs(a.authType), err)
 	}
 
-	return config.BuildLoginURLResponse()
+	return config.BuildLoginURLResponse(redirectURI)
 }
 
 // --- Helper functions ---

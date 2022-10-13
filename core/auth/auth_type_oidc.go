@@ -192,16 +192,20 @@ func (o *oidcAuthConfig) CheckSubject(tokenSubject string, userSubject string) b
 	return tokenSubject == userSubject
 }
 
-func (o *oidcAuthConfig) BuildLoginURLResponse() (string, map[string]interface{}, error) {
+func (o *oidcAuthConfig) BuildLoginURLResponse(redirectURI string) (string, map[string]interface{}, error) {
 	scopes := o.Scopes
 	if len(scopes) == 0 {
 		scopes = "openid profile email offline_access"
 	}
 
+	if o.RedirectURI != "" {
+		redirectURI = o.RedirectURI
+	}
+
 	query := map[string]string{
 		"scope":         scopes,
 		"response_type": "code",
-		"redirect_uri":  o.RedirectURI,
+		"redirect_uri":  redirectURI,
 		"client_id":     o.ClientID,
 	}
 
@@ -210,6 +214,7 @@ func (o *oidcAuthConfig) BuildLoginURLResponse() (string, map[string]interface{}
 	}
 
 	responseParams := make(map[string]interface{})
+	responseParams["redirect_uri"] = redirectURI
 	if o.UsePKCE {
 		codeChallenge, codeVerifier, err := o.generatePkceChallenge()
 		if err != nil {
