@@ -3721,6 +3721,7 @@ paths:
                   {
                     "name": "updated_name",
                     "permissions": ["permission1", "new_permission1"]
+                    "scopes": ["core:resource.value:get", "core:resource.value2.get"],
                   }
         required: true
       responses:
@@ -3832,6 +3833,14 @@ paths:
           explode: false
           schema:
             type: string
+        - name: scopes
+          in: query
+          description: A comma-separated list of service account scopes to search for
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
       responses:
         '200':
           description: Success
@@ -3890,6 +3899,7 @@ paths:
                     "app_id": "9766",
                     "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                     "permissions": ["permission1", "permission2"],
+                    "scopes": ["core:resource.value:get", "core:resource.value2.get"],
                     "first_party": true,
                     "creds": [
                       {
@@ -3913,6 +3923,7 @@ paths:
                     "app_id": "9766",
                     "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
                     "permissions": ["permission1", "permission2"],
+                    "scopes": ["core:resource.value:get", "core:resource.value2.get"],
                     "first_party": true
                   }
               copy_from:
@@ -3922,7 +3933,8 @@ paths:
                     "account_id": "12345678-e2cd-11eb-af68-60f81db5ecc0",
                     "app_id": "9766",
                     "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
-                    "permissions": ["permission1", "permission2"]
+                    "permissions": ["permission1", "permission2"],
+                    "scopes": ["core:resource.value:get", "core:resource.value2.get"],
                   }
         required: true
       responses:
@@ -5375,6 +5387,7 @@ components:
         - app_id
         - org_id
         - permissions
+        - scopes
         - first_party
       type: object
       properties:
@@ -5387,6 +5400,10 @@ components:
         org_id:
           type: string
         permissions:
+          type: array
+          items:
+            type: string
+        scopes:
           type: array
           items:
             type: string
@@ -6919,6 +6936,12 @@ components:
         org_id:
           type: string
         permissions:
+          nullable: true
+          type: array
+          items:
+            type: string
+        scopes:
+          nullable: true
           type: array
           items:
             type: string
@@ -6929,14 +6952,17 @@ components:
           items:
             $ref: '#/components/schemas/ServiceAccountCredential'
     _system_req_update_service-account:
-      required:
-        - name
-        - permissions
       type: object
       properties:
         name:
           type: string
         permissions:
+          nullable: true
+          type: array
+          items:
+            type: string
+        scopes:
+          nullable: true
           type: array
           items:
             type: string

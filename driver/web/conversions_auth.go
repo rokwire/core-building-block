@@ -129,15 +129,11 @@ func serviceAccountToDef(item *model.ServiceAccount) *Def.ServiceAccount {
 	if item.Organization != nil {
 		orgID = item.Organization.ID
 	}
-	permissions := make([]string, len(item.Permissions))
-	for i, p := range item.Permissions {
-		permissions[i] = p.Name
-	}
 	firstParty := item.FirstParty
 	creds := serviceAccountCredentialListToDef(item.Credentials)
 
-	return &Def.ServiceAccount{AccountId: accountID, Name: name, AppId: appID, OrgId: orgID, Permissions: permissions,
-		FirstParty: firstParty, Creds: &creds}
+	return &Def.ServiceAccount{AccountId: accountID, Name: name, AppId: appID, OrgId: orgID, Permissions: item.GetPermissionNames(),
+		Scopes: item.GetScopeStrings(), FirstParty: firstParty, Creds: &creds}
 }
 
 func serviceAccountCredentialFromDef(item *Def.ServiceAccountCredential) *model.ServiceAccountCredential {

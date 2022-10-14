@@ -570,6 +570,7 @@ type ServiceAccount struct {
 	Name        string                      `json:"name"`
 	OrgId       string                      `json:"org_id"`
 	Permissions []string                    `json:"permissions"`
+	Scopes      []string                    `json:"scopes"`
 }
 
 // ServiceAccountCredential defines model for ServiceAccountCredential.
@@ -1168,7 +1169,8 @@ type SystemReqCreateServiceAccount struct {
 	FirstParty  *bool                       `json:"first_party,omitempty"`
 	Name        *string                     `json:"name,omitempty"`
 	OrgId       string                      `json:"org_id"`
-	Permissions *[]string                   `json:"permissions,omitempty"`
+	Permissions *[]string                   `json:"permissions"`
+	Scopes      *[]string                   `json:"scopes"`
 }
 
 // SystemReqPermissions defines model for _system_req_permissions.
@@ -1209,8 +1211,9 @@ type SystemReqUpdateAuthType_Params struct {
 
 // SystemReqUpdateServiceAccount defines model for _system_req_update_service-account.
 type SystemReqUpdateServiceAccount struct {
-	Name        string   `json:"name"`
-	Permissions []string `json:"permissions"`
+	Name        *string   `json:"name,omitempty"`
+	Permissions *[]string `json:"permissions"`
+	Scopes      *[]string `json:"scopes"`
 }
 
 // DeleteAdminAccountMfaParams defines parameters for DeleteAdminAccountMfa.
@@ -1619,6 +1622,9 @@ type GetSystemServiceAccountsParams struct {
 
 	// A comma-separated list of service account permissions to search for
 	Permissions *string `form:"permissions,omitempty" json:"permissions,omitempty"`
+
+	// A comma-separated list of service account scopes to search for
+	Scopes *string `form:"scopes,omitempty" json:"scopes,omitempty"`
 }
 
 // PostSystemServiceAccountsJSONBody defines parameters for PostSystemServiceAccounts.

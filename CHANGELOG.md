@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Add scopes to service accounts [#605](https://github.com/rokwire/core-building-block/issues/605)
 - Update application system API [#549](https://github.com/rokwire/core-building-block/issues/549)
 - Update group admin API [#518](https://github.com/rokwire/core-building-block/issues/518)
 
