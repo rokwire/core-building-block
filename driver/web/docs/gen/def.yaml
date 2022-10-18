@@ -5747,6 +5747,9 @@ components:
         country:
           type: string
           nullable: true
+        unstructured_properties:
+          type: object
+          nullable: true
     Username:
       required:
         - username
@@ -6113,6 +6116,9 @@ components:
         country:
           type: string
           nullable: true
+        unstructured_properties:
+          type: object
+          nullable: true
     _shared_req_ProfileNullable:
       type: object
       nullable: true
@@ -6146,6 +6152,9 @@ components:
           nullable: true
         country:
           type: string
+          nullable: true
+        unstructured_properties:
+          type: object
           nullable: true
     _shared_req_ParamsSetEmailCredential:
       required:

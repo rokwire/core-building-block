@@ -224,9 +224,16 @@ func profileFromDef(item *Def.SharedReqProfile) model.Profile {
 	if item.Country != nil {
 		country = *item.Country
 	}
+
+	//unstructured properties
+	unstructuredProperties := map[string]interface{}{}
+	for k, v := range *item.UnstructuredProperties {
+		unstructuredProperties[k] = v
+	}
+
 	return model.Profile{PhotoURL: photoURL, FirstName: firstName, LastName: lastName,
 		Email: email, Phone: phone, BirthYear: int16(birthYear), Address: address, ZipCode: zipCode,
-		State: state, Country: country}
+		State: state, Country: country, UnstructuredProperties: unstructuredProperties}
 }
 
 func mfaDataListToDef(items []model.MFAType) []Def.SharedResMfa {
@@ -270,7 +277,7 @@ func profileToDef(item *model.Profile) *Def.ProfileFields {
 	birthYear := int(item.BirthYear)
 	return &Def.ProfileFields{Id: &item.ID, PhotoUrl: &item.PhotoURL, FirstName: &item.FirstName, LastName: &item.LastName,
 		Email: &item.Email, Phone: &item.Phone, BirthYear: &birthYear, Address: &item.Address, ZipCode: &item.ZipCode,
-		State: &item.State, Country: &item.Country}
+		State: &item.State, Country: &item.Country, UnstructuredProperties: &item.UnstructuredProperties}
 }
 
 func profileFromDefNullable(item *Def.SharedReqProfileNullable) model.Profile {
@@ -318,9 +325,16 @@ func profileFromDefNullable(item *Def.SharedReqProfileNullable) model.Profile {
 	if item.Country != nil {
 		country = *item.Country
 	}
+
+	//unstructured properties
+	unstructuredProperties := map[string]interface{}{}
+	for k, v := range *item.UnstructuredProperties {
+		unstructuredProperties[k] = v
+	}
+
 	return model.Profile{PhotoURL: photoURL, FirstName: firstName, LastName: lastName,
 		Email: email, Phone: phone, BirthYear: int16(birthYear), Address: address, ZipCode: zipCode,
-		State: state, Country: country}
+		State: state, Country: country, UnstructuredProperties: unstructuredProperties}
 }
 
 // Device
