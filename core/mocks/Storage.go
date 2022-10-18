@@ -3,11 +3,9 @@
 package mocks
 
 import (
-	authorization "github.com/rokwire/core-auth-library-go/v2/authorization"
+	model "core-building-block/core/model"
 
 	mock "github.com/stretchr/testify/mock"
-
-	model "core-building-block/core/model"
 
 	storage "core-building-block/driven/storage"
 )
@@ -309,13 +307,13 @@ func (_m *Storage) FindAccountsByAccountID(context storage.TransactionContext, a
 	return r0, r1
 }
 
-// FindAccountsByParams provides a mock function with given fields: searchParams, appID, orgID, limit, offset, allAccess, scopes
-func (_m *Storage) FindAccountsByParams(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, scopes []authorization.Scope) ([]map[string]interface{}, error) {
-	ret := _m.Called(searchParams, appID, orgID, limit, offset, allAccess, scopes)
+// FindAccountsByParams provides a mock function with given fields: searchParams, appID, orgID, limit, offset, allAccess, approvedKeys
+func (_m *Storage) FindAccountsByParams(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]map[string]interface{}, error) {
+	ret := _m.Called(searchParams, appID, orgID, limit, offset, allAccess, approvedKeys)
 
 	var r0 []map[string]interface{}
-	if rf, ok := ret.Get(0).(func(map[string]interface{}, string, string, int, int, bool, []authorization.Scope) []map[string]interface{}); ok {
-		r0 = rf(searchParams, appID, orgID, limit, offset, allAccess, scopes)
+	if rf, ok := ret.Get(0).(func(map[string]interface{}, string, string, int, int, bool, []string) []map[string]interface{}); ok {
+		r0 = rf(searchParams, appID, orgID, limit, offset, allAccess, approvedKeys)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]map[string]interface{})
@@ -323,8 +321,8 @@ func (_m *Storage) FindAccountsByParams(searchParams map[string]interface{}, app
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(map[string]interface{}, string, string, int, int, bool, []authorization.Scope) error); ok {
-		r1 = rf(searchParams, appID, orgID, limit, offset, allAccess, scopes)
+	if rf, ok := ret.Get(1).(func(map[string]interface{}, string, string, int, int, bool, []string) error); ok {
+		r1 = rf(searchParams, appID, orgID, limit, offset, allAccess, approvedKeys)
 	} else {
 		r1 = ret.Error(1)
 	}

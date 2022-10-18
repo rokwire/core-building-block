@@ -1372,6 +1372,21 @@ type PostBbsAccessTokensJSONBody = ServicesReqServiceAccountsAccessTokens
 // PostBbsAccountsJSONBody defines parameters for PostBbsAccounts.
 type PostBbsAccountsJSONBody = map[string]interface{}
 
+// PostBbsAccountsParams defines parameters for PostBbsAccounts.
+type PostBbsAccountsParams struct {
+	// The application ID to use to filter accounts
+	AppId *string `form:"app_id,omitempty" json:"app_id,omitempty"`
+
+	// The organization ID to use to filter accounts
+	OrgId *string `form:"org_id,omitempty" json:"org_id,omitempty"`
+
+	// The maximum number of accounts to return
+	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+
+	// The index of the first account to return
+	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
+}
+
 // PostBbsServiceAccountIdJSONBody defines parameters for PostBbsServiceAccountId.
 type PostBbsServiceAccountIdJSONBody = ServicesReqServiceAccountsParams
 
@@ -1707,6 +1722,21 @@ type PostTpsAccessTokensJSONBody = ServicesReqServiceAccountsAccessTokens
 
 // PostTpsAccountsJSONBody defines parameters for PostTpsAccounts.
 type PostTpsAccountsJSONBody = map[string]interface{}
+
+// PostTpsAccountsParams defines parameters for PostTpsAccounts.
+type PostTpsAccountsParams struct {
+	// The application ID to use to filter accounts
+	AppId *string `form:"app_id,omitempty" json:"app_id,omitempty"`
+
+	// The organization ID to use to filter accounts
+	OrgId *string `form:"org_id,omitempty" json:"org_id,omitempty"`
+
+	// The maximum number of accounts to return
+	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+
+	// The index of the first account to return
+	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
+}
 
 // PostTpsServiceAccountIdJSONBody defines parameters for PostTpsServiceAccountId.
 type PostTpsServiceAccountIdJSONBody = ServicesReqServiceAccountsParams

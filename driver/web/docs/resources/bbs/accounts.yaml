@@ -3,11 +3,44 @@ post:
     - BBs
   summary: Finds user accounts
   description: |
-    Finds accounts for the specified application
+    Finds accounts for the given app_id and org_id (query or token)
 
     **Auth:** Requires service access token with `get_accounts` or `all_accounts` permission
   security:
     - bearerAuth: []
+  parameters:
+    - name: app_id
+      in: query
+      description: The application ID to use to filter accounts
+      required: false
+      style: form
+      explode: false
+      schema:
+        type: string
+    - name: org_id
+      in: query
+      description: The organization ID to use to filter accounts
+      required: false
+      style: form
+      explode: false
+      schema:
+        type: string
+    - name: limit
+      in: query
+      description: The maximum number of accounts to return
+      required: false
+      style: form
+      explode: false
+      schema:
+        type: integer
+    - name: offset
+      in: query
+      description: The index of the first account to return
+      required: false
+      style: form
+      explode: false
+      schema:
+        type: integer
   requestBody:
     description: |
       Service account credentials

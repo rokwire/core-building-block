@@ -24,7 +24,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/rokwire/core-auth-library-go/v2/authorization"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
@@ -1188,7 +1187,7 @@ func (sa *Adapter) FindAccounts(context TransactionContext, limit *int, offset *
 }
 
 // FindAccountsByParams finds accounts by an arbitrary set of search params
-func (sa *Adapter) FindAccountsByParams(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, scopes []authorization.Scope) ([]map[string]interface{}, error) {
+func (sa *Adapter) FindAccountsByParams(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]map[string]interface{}, error) {
 	//find app orgs accessed by service
 	appOrgs, err := sa.FindApplicationOrganizations(utils.StringOrNil(appID, model.AllApps), utils.StringOrNil(orgID, model.AllOrgs))
 	if err != nil {
@@ -1203,19 +1202,8 @@ func (sa *Adapter) FindAccountsByParams(searchParams map[string]interface{}, app
 	for i, appOrg := range appOrgs {
 		appOrgIDs[i] = appOrg.ID
 	}
-	filter := bson.D{primitive.E{Key: "app_org_id", Value: bson.M{"$in": appOrgIDs}}}
-
-	//arbitary filters
-	for k, v := range searchParams {
-		if k == "id" {
-			k = "_id"
-		}
-		if reflect.TypeOf(v).Kind() == reflect.Slice {
-			filter = append(filter, primitive.E{Key: k, Value: bson.M{"$in": v}})
-		} else {
-			filter = append(filter, primitive.E{Key: k, Value: v})
-		}
-	}
+	searchParams["app_org_id"] = appOrgIDs
+	filter := sa.getFilterForParams(searchParams)
 
 	var accounts []map[string]interface{}
 	options := options.Find()
@@ -1224,19 +1212,7 @@ func (sa *Adapter) FindAccountsByParams(searchParams map[string]interface{}, app
 
 	// set projection if scope limited
 	if !allAccess {
-		projection := bson.D{}
-		usesID := false
-		for _, scope := range scopes {
-			if scope.Resource == "id" {
-				scope.Resource = "_id"
-				usesID = true
-			}
-			projection = append(projection, bson.E{Key: scope.Resource, Value: 1})
-		}
-		if !usesID {
-			projection = append(projection, bson.E{Key: "_id", Value: 0})
-		}
-		options.SetProjection(projection)
+		options.SetProjection(sa.getProjectionForKeys(approvedKeys))
 	}
 
 	err = sa.db.accounts.Find(filter, &accounts, options)
@@ -3545,6 +3521,37 @@ func (sa *Adapter) DeleteDevice(context TransactionContext, id string) error {
 	}
 
 	return nil
+}
+
+func (sa *Adapter) getFilterForParams(params map[string]interface{}) bson.D {
+	filter := bson.D{}
+	for k, v := range params {
+		if k == "id" {
+			k = "_id"
+		}
+		if reflect.TypeOf(v).Kind() == reflect.Slice {
+			filter = append(filter, primitive.E{Key: k, Value: bson.M{"$in": v}})
+		} else {
+			filter = append(filter, primitive.E{Key: k, Value: v})
+		}
+	}
+	return filter
+}
+
+func (sa *Adapter) getProjectionForKeys(keys []string) bson.D {
+	projection := bson.D{}
+	usesID := false
+	for _, k := range keys {
+		if k == "id" {
+			k = "_id"
+			usesID = true
+		}
+		projection = append(projection, bson.E{Key: k, Value: 1})
+	}
+	if !usesID {
+		projection = append(projection, bson.E{Key: "_id", Value: 0})
+	}
+	return projection
 }
 
 func (sa *Adapter) abortTransaction(sessionContext mongo.SessionContext) {

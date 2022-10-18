@@ -175,15 +175,13 @@ func (h TPSApisHandler) getAccounts(l *logs.Log, r *http.Request, claims *tokena
 	if claims.Scope == "" {
 		return l.HttpResponseErrorData(logutils.StatusInvalid, model.TypeScope, nil, nil, http.StatusForbidden, true)
 	}
-	scopeStrings := strings.Split(claims.Scope, " ")
-	allAccess := authorization.CheckScopesGlobals(scopeStrings, h.serviceID)
-	accountType := string(model.TypeAccount)
-	accountScopes, err := scopeListFromDef(&scopeStrings, &accountType)
+
+	scopes, err := authorization.ScopesFromStrings(strings.Split(claims.Scope, " "))
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionParse, model.TypeScope, nil, err, http.StatusInternalServerError, true)
 	}
 
-	//limit and offset
+	// limit and offset
 	limit := 100
 	limitArg := r.URL.Query().Get("limit")
 	if limitArg != "" {
@@ -208,32 +206,19 @@ func (h TPSApisHandler) getAccounts(l *logs.Log, r *http.Request, claims *tokena
 	}
 
 	// limit search params by scopes
-	searchParams := make(map[string]interface{})
-	for k, v := range queryParams {
-		if !allAccess {
-			validKey := false
-		validResources:
-			for _, validResource := range utils.StringPrefixes(k, ".") {
-				validScope := authorization.Scope{ServiceID: h.serviceID, Resource: validResource, Operation: model.ScopeOperationGet}
-				for _, scope := range accountScopes {
-					if scope.Match(&validScope) {
-						allAccess = allAccess || (scope.ServiceID == h.serviceID && scope.Resource == authorization.ScopeAll && (scope.Operation == authorization.ScopeAll || scope.Operation == model.ScopeOperationGet))
-						validKey = true
-						break validResources
-					}
-				}
-			}
-			if !validKey {
-				return l.HttpResponseErrorData(logutils.StatusInvalid, "accounts search parameter", &logutils.FieldArgs{k: v}, nil, http.StatusForbidden, true)
-			}
-		}
-
-		searchParams[k] = v
+	minAllAccessScope := authorization.Scope{ServiceID: h.serviceID, Resource: string(model.TypeAccount), Operation: authorization.ScopeOperationGet}
+	searchKeys := make([]string, 0)
+	for k := range queryParams {
+		searchKeys = append(searchKeys, k)
+	}
+	allAccess, approvedKeys, err := authorization.ResourceAccessForScopes(scopes, minAllAccessScope, searchKeys)
+	if err != nil {
+		return l.HttpResponseErrorData(logutils.StatusInvalid, "accounts query", nil, err, http.StatusForbidden, true)
 	}
 
-	accounts, err := h.coreAPIs.TPS.TPSGetAccounts(searchParams, claims.AppID, claims.OrgID, limit, offset, allAccess, accountScopes)
+	accounts, err := h.coreAPIs.TPS.TPSGetAccounts(queryParams, claims.AppID, claims.OrgID, limit, offset, allAccess, approvedKeys)
 	if err != nil {
-		errFields := logutils.FieldArgs(searchParams)
+		errFields := logutils.FieldArgs(queryParams)
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeAccount, &errFields, err, http.StatusInternalServerError, false)
 	}
 

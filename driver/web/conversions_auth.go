@@ -18,7 +18,6 @@ import (
 	"core-building-block/core/model"
 	Def "core-building-block/driver/web/docs/gen"
 	"core-building-block/utils"
-	"strings"
 
 	"github.com/rokwire/core-auth-library-go/v2/authorization"
 	"github.com/rokwire/core-auth-library-go/v2/authservice"
@@ -327,51 +326,6 @@ func serviceScopeListToDef(items []model.ServiceScope) []Def.ServiceScope {
 		} else {
 			out[i] = Def.ServiceScope{}
 		}
-	}
-	return out
-}
-
-func scopeListFromDef(items *[]string, stripType *string) ([]authorization.Scope, error) {
-	if items == nil || *items == nil {
-		return nil, nil
-	}
-	out := make([]authorization.Scope, len(*items))
-	for i, item := range *items {
-		defItem, err := authorization.ScopeFromString(item)
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionParse, model.TypeScope, nil, err)
-		}
-
-		if stripType != nil {
-			if !strings.HasPrefix(defItem.Resource, *stripType) && defItem.Resource != authorization.ScopeAll {
-				continue
-			}
-			typeResource := strings.Replace(defItem.Resource, *stripType, "", 1)
-			if typeResource == "" {
-				typeResource = authorization.ScopeAll
-			} else if typeResource[0] == '.' {
-				typeResource = typeResource[1:]
-			}
-			defItem.Resource = typeResource
-		}
-
-		if defItem != nil {
-			out[i] = *defItem
-		} else {
-			out[i] = authorization.Scope{}
-		}
-	}
-	return out, nil
-}
-
-func scopeListToDef(items []authorization.Scope) []string {
-	if items == nil {
-		return nil
-	}
-	out := make([]string, len(items))
-	for i, item := range items {
-		defItem := item.String()
-		out[i] = defItem
 	}
 	return out
 }
