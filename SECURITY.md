@@ -4,8 +4,8 @@
 Patches for **Core Building Block** in this repository will only be applied to the following versions:
 | Version | Supported          |
 | ------- | ------------------ |
-| 1.23.0   | :white_check_mark: |
-| < 1.23.0 | :x:                |
+| 1.26.0   | :white_check_mark: |
+| < 1.26.0 | :x:                |
 
 ## Reporting a Bug or Vulnerability
 

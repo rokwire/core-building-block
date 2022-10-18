@@ -1,4 +1,21 @@
+required:
+  - id
+  - name
 type: object
 properties:
-  fields:
-     $ref: "./PermissionFields.yaml"
+  id:
+    type: string
+  name:
+    type: string
+  description:
+    type: string
+  service_id:
+    type: string
+  assigners:
+    type: array
+    items:
+      type: string
+  date_created:
+    type: string
+  date_updated:
+    type: string

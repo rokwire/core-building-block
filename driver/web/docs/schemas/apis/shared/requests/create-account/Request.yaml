@@ -1,0 +1,29 @@
+required:
+  - auth_type
+  - identifier
+type: object
+properties:
+  auth_type:
+    type: string
+    enum:
+      - email
+      - illinois_oidc
+  identifier:
+    type: string
+  permissions:
+    type: array
+    items:
+      type: string
+  role_ids:
+    type: array
+    items:
+      type: string
+  group_ids:
+    type: array
+    items:
+      type: string
+  profile:
+    $ref:  "../ProfileNullable.yaml"
+  username:
+    type: string
+    nullable: true

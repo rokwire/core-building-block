@@ -1,0 +1,40 @@
+get:
+  tags:
+  - System
+  summary: App org token
+  description: |
+    Retrieve a system token for the specified application and organization
+
+    **Auth:** Requires system access token
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: app_id
+      in: query
+      description: The application ID of the token to return
+      required: true
+      style: form
+      explode: false
+      schema:
+        type: string
+    - name: org_id
+      in: query
+      description: The organization ID of the token to return
+      required: true
+      style: form
+      explode: false
+      schema:
+        type: string
+  responses:
+    200:
+      description: Success
+      content:
+        application/json:
+          schema:
+            $ref: "../../../schemas/auth/AdminToken.yaml"
+    400:
+      description: Bad request
+    401:
+      description: Unauthorized
+    500:
+      description: Internal error

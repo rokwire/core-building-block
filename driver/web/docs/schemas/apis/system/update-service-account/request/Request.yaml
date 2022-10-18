@@ -1,11 +1,14 @@
-required:
-  - name
-  - permissions
 type: object
 properties:
   name:
     type: string
   permissions:
+    nullable: true
+    type: array
+    items:
+      type: string
+  scopes:
+    nullable: true
     type: array
     items:
       type: string

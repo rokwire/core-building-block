@@ -142,6 +142,10 @@ func (a *twilioPhoneAuthImpl) signUp(authType model.AuthType, appOrg model.Appli
 	return message, nil, nil
 }
 
+func (a *twilioPhoneAuthImpl) signUpAdmin(authType model.AuthType, appOrg model.ApplicationOrganization, identifier string, password string, newCredentialID string) (map[string]interface{}, map[string]interface{}, error) {
+	return nil, nil, nil
+}
+
 func (a *twilioPhoneAuthImpl) isCredentialVerified(credential *model.Credential, l *logs.Log) (*bool, *bool, error) {
 	return nil, nil, nil
 }
@@ -316,7 +320,7 @@ func (a *twilioPhoneAuthImpl) forgotCredential(credential *model.Credential, ide
 	return nil, nil
 }
 
-//initPhoneAuth initializes and registers a new phone auth instance
+// initPhoneAuth initializes and registers a new phone auth instance
 func initPhoneAuth(auth *Auth, twilioAccountSID string, twilioToken string, twilioServiceSID string) (*twilioPhoneAuthImpl, error) {
 	phone := &twilioPhoneAuthImpl{auth: auth, authType: AuthTypeTwilioPhone, twilioAccountSID: twilioAccountSID, twilioToken: twilioToken, twilioServiceSID: twilioServiceSID}
 

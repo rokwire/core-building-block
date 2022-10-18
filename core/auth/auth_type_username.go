@@ -36,6 +36,10 @@ func (a *usernameAuthImpl) signUp(authType model.AuthType, appOrg model.Applicat
 	return "", nil, nil
 }
 
+func (a *usernameAuthImpl) signUpAdmin(authType model.AuthType, appOrg model.ApplicationOrganization, identifier string, password string, newCredentialID string) (map[string]interface{}, map[string]interface{}, error) {
+	return nil, nil, nil
+}
+
 func (a *usernameAuthImpl) getUserIdentifier(creds string) (string, error) {
 	return "", nil
 }
@@ -68,7 +72,7 @@ func (a *usernameAuthImpl) forgotCredential(credential *model.Credential, identi
 	return nil, nil
 }
 
-//initUsernameAuth initializes and registers a new username auth instance
+// initUsernameAuth initializes and registers a new username auth instance
 func initUsernameAuth(auth *Auth) (*usernameAuthImpl, error) {
 	username := &usernameAuthImpl{auth: auth, authType: authTypeUsername}
 
