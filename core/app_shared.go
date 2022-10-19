@@ -34,6 +34,10 @@ func (app *application) sharedGetAccount(accountID string) (*model.Account, erro
 	return account, nil
 }
 
+func (app *application) sharedGetAccountsByParams(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]map[string]interface{}, error) {
+	return app.storage.FindAccountsByParams(searchParams, appID, orgID, limit, offset, allAccess, approvedKeys)
+}
+
 func (app *application) sharedUpdateAccountUsername(accountID string, appID string, orgID string, username string) error {
 	if username == "" {
 		err := app.storage.UpdateAccountUsername(nil, accountID, username)

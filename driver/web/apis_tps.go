@@ -26,6 +26,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/rokwire/core-auth-library-go/v2/authorization"
+	"github.com/rokwire/core-auth-library-go/v2/authutils"
 	"github.com/rokwire/core-auth-library-go/v2/sigauth"
 	"github.com/rokwire/core-auth-library-go/v2/tokenauth"
 	"github.com/rokwire/logging-library-go/errors"
@@ -173,12 +174,32 @@ func (h TPSApisHandler) getServiceAccessTokens(l *logs.Log, r *http.Request, cla
 func (h TPSApisHandler) getAccounts(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	// get scopes relevant to accounts
 	if claims.Scope == "" {
-		return l.HttpResponseErrorData(logutils.StatusInvalid, model.TypeScope, nil, nil, http.StatusForbidden, true)
+		return l.HttpResponseErrorData(logutils.StatusInvalid, model.TypeScope, nil, nil, http.StatusForbidden, false)
 	}
 
 	scopes, err := authorization.ScopesFromStrings(strings.Split(claims.Scope, " "))
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionParse, model.TypeScope, nil, err, http.StatusInternalServerError, true)
+	}
+
+	// appID and orgID
+	appID := r.URL.Query().Get("app_id")
+	orgID := r.URL.Query().Get("org_id")
+	if appID != "" && orgID != "" {
+		accessAppIDs, accessOrgIDs := authutils.GetAccessPairs(appID, orgID)
+		validPair := false
+		for i := range accessAppIDs {
+			if claims.AppID == accessAppIDs[i] && claims.OrgID == accessOrgIDs[i] {
+				validPair = true
+				break
+			}
+		}
+		if !validPair {
+			return l.HttpResponseErrorData(logutils.StatusInvalid, model.TypeAppOrgPair, nil, nil, http.StatusForbidden, false)
+		}
+	} else {
+		appID = claims.AppID
+		orgID = claims.OrgID
 	}
 
 	// limit and offset
@@ -216,7 +237,7 @@ func (h TPSApisHandler) getAccounts(l *logs.Log, r *http.Request, claims *tokena
 		return l.HttpResponseErrorData(logutils.StatusInvalid, "accounts query", nil, err, http.StatusForbidden, true)
 	}
 
-	accounts, err := h.coreAPIs.TPS.TPSGetAccounts(queryParams, claims.AppID, claims.OrgID, limit, offset, allAccess, approvedKeys)
+	accounts, err := h.coreAPIs.TPS.TPSGetAccounts(queryParams, appID, orgID, limit, offset, allAccess, approvedKeys)
 	if err != nil {
 		errFields := logutils.FieldArgs(queryParams)
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeAccount, &errFields, err, http.StatusInternalServerError, false)

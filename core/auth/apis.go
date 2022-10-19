@@ -24,6 +24,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/rokwire/core-auth-library-go/v2/authorization"
+	"github.com/rokwire/core-auth-library-go/v2/authutils"
 	"github.com/rokwire/core-auth-library-go/v2/sigauth"
 	"github.com/rokwire/core-auth-library-go/v2/tokenauth"
 	"github.com/rokwire/logging-library-go/errors"
@@ -1274,11 +1275,11 @@ func (a *Auth) GetServiceAccountParams(accountID string, firstParty bool, r *sig
 
 	appOrgPairs := make([]model.AppOrgPair, len(accounts))
 	for i, account := range accounts {
-		appID := model.AllApps
+		appID := authutils.AllApps
 		if account.Application != nil {
 			appID = account.Application.ID
 		}
-		orgID := model.AllOrgs
+		orgID := authutils.AllOrgs
 		if account.Organization != nil {
 			orgID = account.Organization.ID
 		}
@@ -1448,11 +1449,11 @@ func (a *Auth) UpdateServiceAccountInstance(id string, appID string, orgID strin
 
 		//2. find app orgs
 		var appIDParam *string
-		if appID != model.AllApps {
+		if appID != authutils.AllApps {
 			appIDParam = &appID
 		}
 		var orgIDParam *string
-		if orgID != model.AllOrgs {
+		if orgID != authutils.AllOrgs {
 			orgIDParam = &orgID
 		}
 		appOrgs, err := a.storage.FindApplicationOrganizations(appIDParam, orgIDParam)

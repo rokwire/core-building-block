@@ -24,6 +24,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/rokwire/core-auth-library-go/v2/authutils"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
@@ -1189,7 +1190,7 @@ func (sa *Adapter) FindAccounts(context TransactionContext, limit *int, offset *
 // FindAccountsByParams finds accounts by an arbitrary set of search params
 func (sa *Adapter) FindAccountsByParams(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]map[string]interface{}, error) {
 	//find app orgs accessed by service
-	appOrgs, err := sa.FindApplicationOrganizations(utils.StringOrNil(appID, model.AllApps), utils.StringOrNil(orgID, model.AllOrgs))
+	appOrgs, err := sa.FindApplicationOrganizations(utils.StringOrNil(appID, authutils.AllApps), utils.StringOrNil(orgID, authutils.AllOrgs))
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": appID, "org_id": orgID}, err)
 	}

@@ -21,6 +21,7 @@ import (
 
 	"github.com/rokwire/core-auth-library-go/v2/authorization"
 	"github.com/rokwire/core-auth-library-go/v2/authservice"
+	"github.com/rokwire/core-auth-library-go/v2/authutils"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logutils"
 )
@@ -121,11 +122,11 @@ func serviceAccountToDef(item *model.ServiceAccount) *Def.ServiceAccount {
 
 	accountID := item.AccountID
 	name := item.Name
-	appID := model.AllApps
+	appID := authutils.AllApps
 	if item.Application != nil {
 		appID = item.Application.ID
 	}
-	orgID := model.AllOrgs
+	orgID := authutils.AllOrgs
 	if item.Organization != nil {
 		orgID = item.Organization.ID
 	}
