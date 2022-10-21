@@ -1221,6 +1221,8 @@ func (sa *Adapter) FindAccountsByParams(searchParams map[string]interface{}, app
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
 
+	sa.convertIDs(accounts)
+
 	return accounts, nil
 }
 
@@ -3530,8 +3532,10 @@ func (sa *Adapter) getFilterForParams(params map[string]interface{}) bson.D {
 		if k == "id" {
 			k = "_id"
 		}
-		if reflect.TypeOf(v).Kind() == reflect.Slice {
+		if v != nil && reflect.TypeOf(v).Kind() == reflect.Slice {
 			filter = append(filter, primitive.E{Key: k, Value: bson.M{"$in": v}})
+		} else if v == "$exists" {
+			filter = append(filter, primitive.E{Key: k, Value: bson.M{"$exists": true}})
 		} else {
 			filter = append(filter, primitive.E{Key: k, Value: v})
 		}
@@ -3553,6 +3557,27 @@ func (sa *Adapter) getProjectionForKeys(keys []string) bson.D {
 		projection = append(projection, bson.E{Key: "_id", Value: 0})
 	}
 	return projection
+}
+
+func (sa *Adapter) convertIDs(results []map[string]interface{}) {
+	for _, result := range results {
+		sa.convertID(result)
+	}
+}
+
+func (sa *Adapter) convertID(result map[string]interface{}) {
+	for k, v := range result {
+		if k == "_id" {
+			result["id"] = v
+			delete(result, "_id")
+		}
+		//TODO: recursively search for embedded _id if necessary
+		// if v != nil && reflect.TypeOf(v).Kind() == reflect.Map {
+		// 	mapVal := v.(map[string]interface{})
+		// 	sa.convertID(mapVal)
+		// 	result[k] = mapVal
+		// }
+	}
 }
 
 func (sa *Adapter) abortTransaction(sessionContext mongo.SessionContext) {

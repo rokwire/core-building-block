@@ -26,7 +26,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/rokwire/core-auth-library-go/v2/authorization"
-	"github.com/rokwire/core-auth-library-go/v2/authutils"
 	"github.com/rokwire/core-auth-library-go/v2/sigauth"
 	"github.com/rokwire/core-auth-library-go/v2/tokenauth"
 	"github.com/rokwire/logging-library-go/errors"
@@ -168,24 +167,11 @@ func (h BBsApisHandler) getAccounts(l *logs.Log, r *http.Request, claims *tokena
 		return l.HttpResponseErrorData(logutils.StatusInvalid, model.TypeScope, nil, nil, http.StatusForbidden, false)
 	}
 
-	scopes, err := authorization.ScopesFromStrings(strings.Split(claims.Scope, " "))
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionParse, model.TypeScope, nil, err, http.StatusInternalServerError, true)
-	}
-
 	// appID and orgID
 	appID := r.URL.Query().Get("app_id")
 	orgID := r.URL.Query().Get("org_id")
 	if appID != "" && orgID != "" {
-		accessAppIDs, accessOrgIDs := authutils.GetAccessPairs(appID, orgID)
-		validPair := false
-		for i := range accessAppIDs {
-			if claims.AppID == accessAppIDs[i] && claims.OrgID == accessOrgIDs[i] {
-				validPair = true
-				break
-			}
-		}
-		if !validPair {
+		if !claims.AppOrg().CanAccessAppOrg(appID, orgID) {
 			return l.HttpResponseErrorData(logutils.StatusInvalid, model.TypeAppOrgPair, nil, nil, http.StatusForbidden, false)
 		}
 	} else {
@@ -196,6 +182,7 @@ func (h BBsApisHandler) getAccounts(l *logs.Log, r *http.Request, claims *tokena
 	// limit and offset
 	limit := 100
 	limitArg := r.URL.Query().Get("limit")
+	var err error
 	if limitArg != "" {
 		limit, err = strconv.Atoi(limitArg)
 		if err != nil {
@@ -218,6 +205,7 @@ func (h BBsApisHandler) getAccounts(l *logs.Log, r *http.Request, claims *tokena
 	}
 
 	// limit search params by scopes
+	scopes := claims.Scopes()
 	minAllAccessScope := authorization.Scope{ServiceID: h.serviceID, Resource: string(model.TypeAccount), Operation: authorization.ScopeOperationGet}
 	searchKeys := make([]string, 0)
 	for k := range queryParams {

@@ -388,7 +388,7 @@ func (h ServicesApisHandler) authorizeService(l *logs.Log, r *http.Request, clai
 
 	var scopes []authorization.Scope
 	if requestData.ApprovedScopes != nil && *requestData.ApprovedScopes != nil {
-		scopes, err = authorization.ScopesFromStrings(*requestData.ApprovedScopes)
+		scopes, err = authorization.ScopesFromStrings(*requestData.ApprovedScopes, false)
 		if err != nil {
 			return l.HttpResponseErrorData(logutils.StatusInvalid, "scopes", nil, err, http.StatusBadRequest, true)
 		}

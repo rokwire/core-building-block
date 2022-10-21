@@ -418,7 +418,7 @@ func (h SystemApisHandler) getServiceAccounts(l *logs.Log, r *http.Request, clai
 	}
 	if query.Get("scopes") != "" {
 		scopeList := strings.Split(query.Get("scopes"), ",")
-		scopes, err := authorization.ScopesFromStrings(scopeList)
+		scopes, err := authorization.ScopesFromStrings(scopeList, false)
 		if err != nil {
 			return l.HttpResponseErrorAction(logutils.ActionParse, model.TypeScope, nil, err, http.StatusInternalServerError, true)
 		}
@@ -457,7 +457,7 @@ func (h SystemApisHandler) registerServiceAccount(l *logs.Log, r *http.Request, 
 
 	var scopes []authorization.Scope
 	if requestData.Scopes != nil && *requestData.Scopes != nil {
-		scopes, err = authorization.ScopesFromStrings(*requestData.Scopes)
+		scopes, err = authorization.ScopesFromStrings(*requestData.Scopes, false)
 		if err != nil {
 			return l.HttpResponseErrorAction(logutils.ActionParse, model.TypeScope, nil, err, http.StatusInternalServerError, true)
 		}
@@ -559,7 +559,7 @@ func (h SystemApisHandler) updateServiceAccountInstance(l *logs.Log, r *http.Req
 
 	var scopes []authorization.Scope
 	if requestData.Scopes != nil && *requestData.Scopes != nil {
-		scopes, err = authorization.ScopesFromStrings(*requestData.Scopes)
+		scopes, err = authorization.ScopesFromStrings(*requestData.Scopes, false)
 		if err != nil {
 			return l.HttpResponseErrorAction(logutils.ActionParse, model.TypeScope, nil, err, http.StatusInternalServerError, true)
 		}
