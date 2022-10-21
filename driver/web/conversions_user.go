@@ -274,10 +274,17 @@ func profileToDef(item *model.Profile) *Def.ProfileFields {
 	if item == nil {
 		return nil
 	}
+
+	//unstructured properties
+	unstructuredProperties := map[string]interface{}{}
+	for k, v := range item.UnstructuredProperties {
+		unstructuredProperties[k] = v
+	}
+
 	birthYear := int(item.BirthYear)
 	return &Def.ProfileFields{Id: &item.ID, PhotoUrl: &item.PhotoURL, FirstName: &item.FirstName, LastName: &item.LastName,
 		Email: &item.Email, Phone: &item.Phone, BirthYear: &birthYear, Address: &item.Address, ZipCode: &item.ZipCode,
-		State: &item.State, Country: &item.Country, UnstructuredProperties: &item.UnstructuredProperties}
+		State: &item.State, Country: &item.Country, UnstructuredProperties: &unstructuredProperties}
 }
 
 func profileFromDefNullable(item *Def.SharedReqProfileNullable) model.Profile {
