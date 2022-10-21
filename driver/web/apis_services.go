@@ -25,6 +25,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/rokwire/core-auth-library-go/v2/authorization"
 	"github.com/rokwire/core-auth-library-go/v2/tokenauth"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
@@ -385,9 +386,12 @@ func (h ServicesApisHandler) authorizeService(l *logs.Log, r *http.Request, clai
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, "auth authorize service request", nil, err, http.StatusBadRequest, true)
 	}
 
-	scopes, err := scopeListFromDef(requestData.ApprovedScopes)
-	if err != nil {
-		return l.HttpResponseErrorData(logutils.StatusInvalid, "scopes", nil, err, http.StatusBadRequest, true)
+	var scopes []authorization.Scope
+	if requestData.ApprovedScopes != nil && *requestData.ApprovedScopes != nil {
+		scopes, err = authorization.ScopesFromStrings(*requestData.ApprovedScopes, false)
+		if err != nil {
+			return l.HttpResponseErrorData(logutils.StatusInvalid, "scopes", nil, err, http.StatusBadRequest, true)
+		}
 	}
 
 	//TODO: Fill "claims" with claims from access token
@@ -396,7 +400,7 @@ func (h ServicesApisHandler) authorizeService(l *logs.Log, r *http.Request, clai
 		return l.HttpResponseErrorAction(logutils.ActionGet, "login url", nil, err, http.StatusInternalServerError, true)
 	}
 
-	scopesResp := scopeListToDef(tokenScopes)
+	scopesResp := authorization.ScopesToStrings(tokenScopes)
 	regResp := serviceRegToDef(reg)
 	tokenType := Def.ServicesResAuthorizeServiceTokenTypeBearer
 

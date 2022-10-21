@@ -30,11 +30,6 @@ import (
 )
 
 const (
-	//AllApps indicates that all apps may be accessed
-	AllApps string = "all"
-	//AllOrgs indicates that all orgs may be accessed
-	AllOrgs string = "all"
-
 	//TypeLoginSession auth type type
 	TypeLoginSession logutils.MessageDataType = "login session"
 	//TypeAuthType auth type type
@@ -59,6 +54,8 @@ const (
 	TypeServiceAccount logutils.MessageDataType = "service account"
 	//TypeServiceAccountCredential service account type
 	TypeServiceAccountCredential logutils.MessageDataType = "service account credential"
+	//TypeAppOrgPair app org pair
+	TypeAppOrgPair logutils.MessageDataType = "app org pair"
 	//TypeServiceReg service reg type
 	TypeServiceReg logutils.MessageDataType = "service reg"
 	//TypeServiceScope service scope type
