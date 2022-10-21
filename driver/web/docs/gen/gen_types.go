@@ -281,9 +281,13 @@ type AppOrgRole struct {
 
 // Application defines model for Application.
 type Application struct {
-	Fields        *ApplicationFields         `json:"fields,omitempty"`
-	Organizations *[]ApplicationOrganization `json:"organizations,omitempty"`
-	Types         *[]ApplicationType         `json:"types,omitempty"`
+	Admin            bool                       `json:"admin"`
+	Id               *string                    `json:"id,omitempty"`
+	MultiTenant      bool                       `json:"multi_tenant"`
+	Name             string                     `json:"name"`
+	Organizations    *[]ApplicationOrganization `json:"organizations,omitempty"`
+	SharedIdentities bool                       `json:"shared_identities"`
+	Types            *[]ApplicationType         `json:"types,omitempty"`
 }
 
 // ApplicationConfig defines model for ApplicationConfig.
@@ -297,15 +301,6 @@ type ApplicationConfig struct {
 	Version string `json:"version"`
 }
 
-// ApplicationFields defines model for ApplicationFields.
-type ApplicationFields struct {
-	Admin            *bool   `json:"admin,omitempty"`
-	Id               *string `json:"id,omitempty"`
-	MultiTenant      *bool   `json:"multi_tenant,omitempty"`
-	Name             string  `json:"name"`
-	SharedIdentities *bool   `json:"shared_identities,omitempty"`
-}
-
 // ApplicationOrganization defines model for ApplicationOrganization.
 type ApplicationOrganization struct {
 	TODO         *string       `json:"TODO,omitempty"`
@@ -316,13 +311,7 @@ type ApplicationOrganization struct {
 
 // ApplicationType defines model for ApplicationType.
 type ApplicationType struct {
-	Application *Application           `json:"application,omitempty"`
-	Fields      *ApplicationTypeFields `json:"fields,omitempty"`
-}
-
-// ApplicationTypeFields defines model for ApplicationTypeFields.
-type ApplicationTypeFields struct {
-	Id         string    `json:"id"`
+	Id         *string   `json:"id,omitempty"`
 	Identifier string    `json:"identifier"`
 	Name       *string   `json:"name,omitempty"`
 	Versions   *[]string `json:"versions,omitempty"`
@@ -581,6 +570,7 @@ type ServiceAccount struct {
 	Name        string                      `json:"name"`
 	OrgId       string                      `json:"org_id"`
 	Permissions []string                    `json:"permissions"`
+	Scopes      []string                    `json:"scopes"`
 }
 
 // ServiceAccountCredential defines model for ServiceAccountCredential.
@@ -659,11 +649,14 @@ type AdminReqAddAccountsToGroup struct {
 	AccountIds []string `json:"account_ids"`
 }
 
-// AdminReqCreateApplicationGroup defines model for _admin_req_create-application_group.
-type AdminReqCreateApplicationGroup struct {
+// AdminReqApplicationGroup defines model for _admin_req_application_group.
+type AdminReqApplicationGroup struct {
+	AccountIds  *[]string `json:"account_ids"`
+	Description string    `json:"description"`
 	Name        string    `json:"name"`
 	Permissions *[]string `json:"permissions,omitempty"`
 	Roles       *[]string `json:"roles,omitempty"`
+	System      *bool     `json:"system,omitempty"`
 }
 
 // AdminReqCreateApplicationRole defines model for _admin_req_create-application_role.
@@ -1142,19 +1135,6 @@ type SystemReqCreateOrganization struct {
 // SystemReqCreateOrganizationType defines model for SystemReqCreateOrganization.Type.
 type SystemReqCreateOrganizationType string
 
-// SystemReqCreateApplication defines model for _system_req_create_Application.
-type SystemReqCreateApplication struct {
-	Admin            bool `json:"admin"`
-	ApplicationTypes *[]struct {
-		Identifier string    `json:"identifier"`
-		Name       *string   `json:"name,omitempty"`
-		Versions   *[]string `json:"versions,omitempty"`
-	} `json:"application_types,omitempty"`
-	MultiTenant      bool   `json:"multi_tenant"`
-	Name             string `json:"name"`
-	SharedIdentities bool   `json:"shared_identities"`
-}
-
 // SystemReqCreateApplicationConfigRequest defines model for _system_req_create_ApplicationConfig_Request.
 type SystemReqCreateApplicationConfigRequest struct {
 	AppTypeId string                 `json:"app_type_id"`
@@ -1189,7 +1169,8 @@ type SystemReqCreateServiceAccount struct {
 	FirstParty  *bool                       `json:"first_party,omitempty"`
 	Name        *string                     `json:"name,omitempty"`
 	OrgId       string                      `json:"org_id"`
-	Permissions *[]string                   `json:"permissions,omitempty"`
+	Permissions *[]string                   `json:"permissions"`
+	Scopes      *[]string                   `json:"scopes"`
 }
 
 // SystemReqPermissions defines model for _system_req_permissions.
@@ -1230,8 +1211,9 @@ type SystemReqUpdateAuthType_Params struct {
 
 // SystemReqUpdateServiceAccount defines model for _system_req_update_service-account.
 type SystemReqUpdateServiceAccount struct {
-	Name        string   `json:"name"`
-	Permissions []string `json:"permissions"`
+	Name        *string   `json:"name,omitempty"`
+	Permissions *[]string `json:"permissions"`
+	Scopes      *[]string `json:"scopes"`
 }
 
 // DeleteAdminAccountMfaParams defines parameters for DeleteAdminAccountMfa.
@@ -1313,7 +1295,10 @@ type PutAdminApplicationAccountsIdSystemConfigsParams struct {
 }
 
 // PostAdminApplicationGroupsJSONBody defines parameters for PostAdminApplicationGroups.
-type PostAdminApplicationGroupsJSONBody = AdminReqCreateApplicationGroup
+type PostAdminApplicationGroupsJSONBody = AdminReqApplicationGroup
+
+// PutAdminApplicationGroupsIdJSONBody defines parameters for PutAdminApplicationGroupsId.
+type PutAdminApplicationGroupsIdJSONBody = AdminReqApplicationGroup
 
 // DeleteAdminApplicationGroupsIdAccountsJSONBody defines parameters for DeleteAdminApplicationGroupsIdAccounts.
 type DeleteAdminApplicationGroupsIdAccountsJSONBody = AdminReqRemoveAccountFromGroup
@@ -1383,6 +1368,24 @@ type PostBbsAccessTokenJSONBody = ServicesReqServiceAccountsAccessToken
 
 // PostBbsAccessTokensJSONBody defines parameters for PostBbsAccessTokens.
 type PostBbsAccessTokensJSONBody = ServicesReqServiceAccountsAccessTokens
+
+// PostBbsAccountsJSONBody defines parameters for PostBbsAccounts.
+type PostBbsAccountsJSONBody = map[string]interface{}
+
+// PostBbsAccountsParams defines parameters for PostBbsAccounts.
+type PostBbsAccountsParams struct {
+	// The application ID to use to filter accounts
+	AppId *string `form:"app_id,omitempty" json:"app_id,omitempty"`
+
+	// The organization ID to use to filter accounts
+	OrgId *string `form:"org_id,omitempty" json:"org_id,omitempty"`
+
+	// The maximum number of accounts to return
+	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+
+	// The index of the first account to return
+	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
+}
 
 // PostBbsServiceAccountIdJSONBody defines parameters for PostBbsServiceAccountId.
 type PostBbsServiceAccountIdJSONBody = ServicesReqServiceAccountsParams
@@ -1577,7 +1580,10 @@ type PostSystemApplicationConfigsJSONBody = SystemReqCreateApplicationConfigRequ
 type PutSystemApplicationConfigsIdJSONBody = SystemReqCreateApplicationConfigRequest
 
 // PostSystemApplicationsJSONBody defines parameters for PostSystemApplications.
-type PostSystemApplicationsJSONBody = SystemReqCreateApplication
+type PostSystemApplicationsJSONBody = Application
+
+// PutSystemApplicationsIdJSONBody defines parameters for PutSystemApplicationsId.
+type PutSystemApplicationsIdJSONBody = Application
 
 // PostSystemAuthTypesJSONBody defines parameters for PostSystemAuthTypes.
 type PostSystemAuthTypesJSONBody = SystemReqCreateAuthType
@@ -1634,6 +1640,9 @@ type GetSystemServiceAccountsParams struct {
 
 	// A comma-separated list of service account permissions to search for
 	Permissions *string `form:"permissions,omitempty" json:"permissions,omitempty"`
+
+	// A comma-separated list of service account scopes to search for
+	Scopes *string `form:"scopes,omitempty" json:"scopes,omitempty"`
 }
 
 // PostSystemServiceAccountsJSONBody defines parameters for PostSystemServiceAccounts.
@@ -1711,6 +1720,24 @@ type PostTpsAccessTokenJSONBody = ServicesReqServiceAccountsAccessToken
 // PostTpsAccessTokensJSONBody defines parameters for PostTpsAccessTokens.
 type PostTpsAccessTokensJSONBody = ServicesReqServiceAccountsAccessTokens
 
+// PostTpsAccountsJSONBody defines parameters for PostTpsAccounts.
+type PostTpsAccountsJSONBody = map[string]interface{}
+
+// PostTpsAccountsParams defines parameters for PostTpsAccounts.
+type PostTpsAccountsParams struct {
+	// The application ID to use to filter accounts
+	AppId *string `form:"app_id,omitempty" json:"app_id,omitempty"`
+
+	// The organization ID to use to filter accounts
+	OrgId *string `form:"org_id,omitempty" json:"org_id,omitempty"`
+
+	// The maximum number of accounts to return
+	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+
+	// The index of the first account to return
+	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
+}
+
 // PostTpsServiceAccountIdJSONBody defines parameters for PostTpsServiceAccountId.
 type PostTpsServiceAccountIdJSONBody = ServicesReqServiceAccountsParams
 
@@ -1765,6 +1792,9 @@ type PutAdminApplicationAccountsIdSystemConfigsJSONRequestBody = PutAdminApplica
 // PostAdminApplicationGroupsJSONRequestBody defines body for PostAdminApplicationGroups for application/json ContentType.
 type PostAdminApplicationGroupsJSONRequestBody = PostAdminApplicationGroupsJSONBody
 
+// PutAdminApplicationGroupsIdJSONRequestBody defines body for PutAdminApplicationGroupsId for application/json ContentType.
+type PutAdminApplicationGroupsIdJSONRequestBody = PutAdminApplicationGroupsIdJSONBody
+
 // DeleteAdminApplicationGroupsIdAccountsJSONRequestBody defines body for DeleteAdminApplicationGroupsIdAccounts for application/json ContentType.
 type DeleteAdminApplicationGroupsIdAccountsJSONRequestBody = DeleteAdminApplicationGroupsIdAccountsJSONBody
 
@@ -1797,6 +1827,9 @@ type PostBbsAccessTokenJSONRequestBody = PostBbsAccessTokenJSONBody
 
 // PostBbsAccessTokensJSONRequestBody defines body for PostBbsAccessTokens for application/json ContentType.
 type PostBbsAccessTokensJSONRequestBody = PostBbsAccessTokensJSONBody
+
+// PostBbsAccountsJSONRequestBody defines body for PostBbsAccounts for application/json ContentType.
+type PostBbsAccountsJSONRequestBody = PostBbsAccountsJSONBody
 
 // PostBbsServiceAccountIdJSONRequestBody defines body for PostBbsServiceAccountId for application/json ContentType.
 type PostBbsServiceAccountIdJSONRequestBody = PostBbsServiceAccountIdJSONBody
@@ -1897,6 +1930,9 @@ type PutSystemApplicationConfigsIdJSONRequestBody = PutSystemApplicationConfigsI
 // PostSystemApplicationsJSONRequestBody defines body for PostSystemApplications for application/json ContentType.
 type PostSystemApplicationsJSONRequestBody = PostSystemApplicationsJSONBody
 
+// PutSystemApplicationsIdJSONRequestBody defines body for PutSystemApplicationsId for application/json ContentType.
+type PutSystemApplicationsIdJSONRequestBody = PutSystemApplicationsIdJSONBody
+
 // PostSystemAuthTypesJSONRequestBody defines body for PostSystemAuthTypes for application/json ContentType.
 type PostSystemAuthTypesJSONRequestBody = PostSystemAuthTypesJSONBody
 
@@ -1941,6 +1977,9 @@ type PostTpsAccessTokenJSONRequestBody = PostTpsAccessTokenJSONBody
 
 // PostTpsAccessTokensJSONRequestBody defines body for PostTpsAccessTokens for application/json ContentType.
 type PostTpsAccessTokensJSONRequestBody = PostTpsAccessTokensJSONBody
+
+// PostTpsAccountsJSONRequestBody defines body for PostTpsAccounts for application/json ContentType.
+type PostTpsAccountsJSONRequestBody = PostTpsAccountsJSONBody
 
 // PostTpsServiceAccountIdJSONRequestBody defines body for PostTpsServiceAccountId for application/json ContentType.
 type PostTpsServiceAccountIdJSONRequestBody = PostTpsServiceAccountIdJSONBody

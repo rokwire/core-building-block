@@ -1433,17 +1433,17 @@ func (a *Auth) constructAccount(context storage.TransactionContext, authType mod
 	var roles []model.AppOrgRole
 	var groups []model.AppOrgGroup
 	if adminSet {
-		permissions, err = a.CheckPermissions(context, &appOrg, permissionNames, assignerPermissions)
+		permissions, err = a.CheckPermissions(context, []model.ApplicationOrganization{appOrg}, permissionNames, assignerPermissions, false)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypePermission, nil, err)
 		}
 
-		roles, err = a.CheckRoles(context, &appOrg, roleIDs, assignerPermissions)
+		roles, err = a.CheckRoles(context, &appOrg, roleIDs, assignerPermissions, false)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeAppOrgRole, nil, err)
 		}
 
-		groups, err = a.checkGroups(context, appOrg, groupIDs, assignerPermissions)
+		groups, err = a.CheckGroups(context, &appOrg, groupIDs, assignerPermissions, false)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeAppOrgGroup, nil, err)
 		}
@@ -1514,59 +1514,6 @@ func (a *Auth) checkUsername(context storage.TransactionContext, appOrg *model.A
 	}
 	if len(accounts) > 0 {
 		return errors.ErrorData(logutils.StatusInvalid, model.TypeAccountUsername, logutils.StringArgs(username+" taken")).SetStatus(utils.ErrorStatusUsernameTaken)
-	}
-
-	return nil
-}
-
-func (a *Auth) checkGroups(context storage.TransactionContext, appOrg model.ApplicationOrganization, groupIDs []string, assignerPermissions []string) ([]model.AppOrgGroup, error) {
-	//find groups
-	groups, err := a.storage.FindAppOrgGroupsByIDs(context, groupIDs, appOrg.ID)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgGroup, nil, err)
-	}
-	if len(groups) != len(groupIDs) {
-		badIDs := make([]string, 0)
-		for _, gID := range groupIDs {
-			bad := true
-			for _, g := range groups {
-				if g.ID == gID {
-					bad = false
-					break
-				}
-			}
-			if bad {
-				badIDs = append(badIDs, gID)
-			}
-		}
-		return nil, errors.ErrorData(logutils.StatusInvalid, model.TypeAppOrgGroup, &logutils.FieldArgs{"ids": badIDs})
-	}
-
-	//check assigners
-	for _, group := range groups {
-		err = group.CheckAssigners(assignerPermissions)
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionValidate, "assigner permissions", &logutils.FieldArgs{"id": group.ID}, err)
-		}
-	}
-
-	return groups, nil
-}
-
-func (a *Auth) checkRevokedGroups(context storage.TransactionContext, appOrg model.ApplicationOrganization, groupIDs []string, assignerPermissions []string) error {
-	//find groups
-	groups, err := a.storage.FindAppOrgGroupsByIDs(context, groupIDs, appOrg.ID)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgGroup, nil, err)
-	}
-	//Revoke missing groups
-
-	//check assigners
-	for _, group := range groups {
-		err = group.CheckAssigners(assignerPermissions)
-		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionValidate, "assigner permissions", &logutils.FieldArgs{"id": group.ID}, err)
-		}
 	}
 
 	return nil
@@ -1897,7 +1844,7 @@ func (a *Auth) deleteAccount(context storage.TransactionContext, account model.A
 	return nil
 }
 
-func (a *Auth) constructServiceAccount(accountID string, name string, appID string, orgID string, permissions []string, firstParty bool, assignerPermissions []string) (*model.ServiceAccount, error) {
+func (a *Auth) constructServiceAccount(accountID string, name string, appID string, orgID string, permissions []string, scopes []authorization.Scope, firstParty bool, assignerPermissions []string) (*model.ServiceAccount, error) {
 	permissionList, err := a.storage.FindPermissionsByName(nil, permissions)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypePermission, nil, err)
@@ -1910,14 +1857,14 @@ func (a *Auth) constructServiceAccount(accountID string, name string, appID stri
 	}
 
 	var application *model.Application
-	if appID != model.AllApps {
-		application, err = a.storage.FindApplication(appID)
+	if appID != authutils.AllApps {
+		application, err = a.storage.FindApplication(nil, appID)
 		if err != nil || application == nil {
 			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
 		}
 	}
 	var organization *model.Organization
-	if orgID != model.AllOrgs {
+	if orgID != authutils.AllOrgs {
 		organization, err = a.storage.FindOrganization(orgID)
 		if err != nil || organization == nil {
 			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
@@ -1925,7 +1872,7 @@ func (a *Auth) constructServiceAccount(accountID string, name string, appID stri
 	}
 
 	return &model.ServiceAccount{AccountID: accountID, Name: name, Application: application, Organization: organization,
-		Permissions: permissionList, FirstParty: firstParty}, nil
+		Permissions: permissionList, Scopes: scopes, FirstParty: firstParty}, nil
 }
 
 func (a *Auth) checkServiceAccountCreds(r *sigauth.Request, accountID *string, firstParty bool, single bool, l *logs.Log) ([]model.ServiceAccount, string, error) {
@@ -1964,17 +1911,25 @@ func (a *Auth) checkServiceAccountCreds(r *sigauth.Request, accountID *string, f
 
 func (a *Auth) buildAccessTokenForServiceAccount(account model.ServiceAccount, authType string) (string, *model.AppOrgPair, error) {
 	permissions := account.GetPermissionNames()
-	appID := model.AllApps
+	appID := authutils.AllApps
 	if account.Application != nil {
 		appID = account.Application.ID
 	}
-	orgID := model.AllOrgs
+	orgID := authutils.AllOrgs
 	if account.Organization != nil {
 		orgID = account.Organization.ID
 	}
 
-	claims := a.getStandardClaims(account.AccountID, "", account.Name, "", "", rokwireTokenAud, orgID, appID, authType, nil, nil, false, true, false, false, true, account.FirstParty, "")
-	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), "")
+	aud := ""
+	services, scope := a.tokenDataForScopes(account.Scopes)
+	if account.FirstParty {
+		aud = rokwireTokenAud
+	} else if len(services) > 0 {
+		aud = strings.Join(services, ",")
+	}
+
+	claims := a.getStandardClaims(account.AccountID, "", account.Name, "", "", aud, orgID, appID, authType, nil, nil, false, true, false, false, true, account.FirstParty, "")
+	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), scope)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
 	}
@@ -2161,20 +2116,26 @@ func (a *Auth) buildRefreshToken() (string, error) {
 
 // getScopedAccessToken returns a scoped access token with the requested scopes
 func (a *Auth) getScopedAccessToken(claims tokenauth.Claims, serviceID string, scopes []authorization.Scope) (string, error) {
-	scopeStrings := []string{}
-	services := []string{serviceID}
-	for _, scope := range scopes {
-		scopeStrings = append(scopeStrings, scope.String())
+	aud, scope := a.tokenDataForScopes(scopes)
+	if !authutils.ContainsString(aud, serviceID) {
+		aud = append(aud, serviceID)
+	}
+
+	scopedClaims := a.getStandardClaims(claims.Subject, "", "", "", "", strings.Join(aud, ","), claims.OrgID, claims.AppID, claims.AuthType, claims.ExternalIDs, &claims.ExpiresAt, claims.Anonymous, claims.Authenticated, false, false, claims.Service, false, claims.SessionID)
+	return a.buildAccessToken(scopedClaims, "", scope)
+}
+
+func (a *Auth) tokenDataForScopes(scopes []authorization.Scope) ([]string, string) {
+	scopeStrings := make([]string, len(scopes))
+	services := []string{}
+	for i, scope := range scopes {
+		scopeStrings[i] = scope.String()
 		if !authutils.ContainsString(services, scope.ServiceID) {
 			services = append(services, scope.ServiceID)
 		}
 	}
 
-	aud := strings.Join(services, ",")
-	scope := strings.Join(scopeStrings, " ")
-
-	scopedClaims := a.getStandardClaims(claims.Subject, "", "", "", "", aud, claims.OrgID, claims.AppID, claims.AuthType, claims.ExternalIDs, &claims.ExpiresAt, claims.Anonymous, claims.Authenticated, false, false, claims.Service, false, claims.SessionID)
-	return a.buildAccessToken(scopedClaims, "", scope)
+	return services, strings.Join(scopeStrings, " ")
 }
 
 func (a *Auth) getStandardClaims(sub string, uid string, name string, email string, phone string, aud string, orgID string, appID string,

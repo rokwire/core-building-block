@@ -21,6 +21,7 @@ import (
 
 	"github.com/rokwire/core-auth-library-go/v2/authorization"
 	"github.com/rokwire/core-auth-library-go/v2/authservice"
+	"github.com/rokwire/core-auth-library-go/v2/authutils"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logutils"
 )
@@ -121,23 +122,19 @@ func serviceAccountToDef(item *model.ServiceAccount) *Def.ServiceAccount {
 
 	accountID := item.AccountID
 	name := item.Name
-	appID := model.AllApps
+	appID := authutils.AllApps
 	if item.Application != nil {
 		appID = item.Application.ID
 	}
-	orgID := model.AllOrgs
+	orgID := authutils.AllOrgs
 	if item.Organization != nil {
 		orgID = item.Organization.ID
-	}
-	permissions := make([]string, len(item.Permissions))
-	for i, p := range item.Permissions {
-		permissions[i] = p.Name
 	}
 	firstParty := item.FirstParty
 	creds := serviceAccountCredentialListToDef(item.Credentials)
 
-	return &Def.ServiceAccount{AccountId: accountID, Name: name, AppId: appID, OrgId: orgID, Permissions: permissions,
-		FirstParty: firstParty, Creds: &creds}
+	return &Def.ServiceAccount{AccountId: accountID, Name: name, AppId: appID, OrgId: orgID, Permissions: item.GetPermissionNames(),
+		Scopes: item.GetScopeStrings(), FirstParty: firstParty, Creds: &creds}
 }
 
 func serviceAccountCredentialFromDef(item *Def.ServiceAccountCredential) *model.ServiceAccountCredential {
@@ -330,37 +327,6 @@ func serviceScopeListToDef(items []model.ServiceScope) []Def.ServiceScope {
 		} else {
 			out[i] = Def.ServiceScope{}
 		}
-	}
-	return out
-}
-
-func scopeListFromDef(items *[]string) ([]authorization.Scope, error) {
-	if items == nil || *items == nil {
-		return nil, nil
-	}
-	out := make([]authorization.Scope, len(*items))
-	for i, item := range *items {
-		defItem, err := authorization.ScopeFromString(item)
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionParse, model.TypeScope, nil, err)
-		}
-		if defItem != nil {
-			out[i] = *defItem
-		} else {
-			out[i] = authorization.Scope{}
-		}
-	}
-	return out, nil
-}
-
-func scopeListToDef(items []authorization.Scope) []string {
-	if items == nil {
-		return nil
-	}
-	out := make([]string, len(items))
-	for i, item := range items {
-		defItem := item.String()
-		out[i] = defItem
 	}
 	return out
 }

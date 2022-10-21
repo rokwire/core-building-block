@@ -327,8 +327,8 @@ type APIs interface {
 	GetServiceAccounts(params map[string]interface{}) ([]model.ServiceAccount, error)
 
 	//RegisterServiceAccount registers a service account
-	RegisterServiceAccount(accountID *string, fromAppID *string, fromOrgID *string, name *string, appID string, orgID string,
-		permissions *[]string, firstParty *bool, creds []model.ServiceAccountCredential, assignerPermissions []string, l *logs.Log) (*model.ServiceAccount, error)
+	RegisterServiceAccount(accountID *string, fromAppID *string, fromOrgID *string, name *string, appID string, orgID string, permissions *[]string, scopes []authorization.Scope,
+		firstParty *bool, creds []model.ServiceAccountCredential, assignerPermissions []string, l *logs.Log) (*model.ServiceAccount, error)
 
 	//DeregisterServiceAccount deregisters a service account
 	DeregisterServiceAccount(accountID string) error
@@ -337,7 +337,7 @@ type APIs interface {
 	GetServiceAccountInstance(accountID string, appID string, orgID string) (*model.ServiceAccount, error)
 
 	//UpdateServiceAccountInstance updates a service account instance
-	UpdateServiceAccountInstance(id string, appID string, orgID string, name string, permissions []string, assignerPermissions []string) (*model.ServiceAccount, error)
+	UpdateServiceAccountInstance(id string, appID string, orgID string, name *string, permissions *[]string, scopes []authorization.Scope, assignerPermissions []string) (*model.ServiceAccount, error)
 
 	//DeregisterServiceAccountInstance deregisters a service account instance
 	DeregisterServiceAccountInstance(id string, appID string, orgID string) error
@@ -394,17 +394,20 @@ type APIs interface {
 	//GrantAccountPermissions grants new permissions to an account after validating the assigner has required permissions
 	GrantAccountPermissions(context storage.TransactionContext, account *model.Account, permissionNames []string, assignerPermissions []string) error
 
-	//CheckPermissions loads permissions by names from storage and checks that they are assignable and valid for the given appOrg
-	CheckPermissions(context storage.TransactionContext, appOrg *model.ApplicationOrganization, permissionNames []string, assignerPermissions []string) ([]model.Permission, error)
+	//CheckPermissions loads permissions by names from storage and checks that they are assignable and valid for the given appOrgs or revocable
+	CheckPermissions(context storage.TransactionContext, appOrgs []model.ApplicationOrganization, permissionNames []string, assignerPermissions []string, revoke bool) ([]model.Permission, error)
 
 	//GrantAccountRoles grants new roles to an account after validating the assigner has required permissions
 	GrantAccountRoles(context storage.TransactionContext, account *model.Account, roleIDs []string, assignerPermissions []string) error
 
-	//CheckRoles loads appOrg roles by IDs from storage and checks that they are assignable
-	CheckRoles(context storage.TransactionContext, appOrg *model.ApplicationOrganization, roleIDs []string, assignerPermissions []string) ([]model.AppOrgRole, error)
+	//CheckRoles loads appOrg roles by IDs from storage and checks that they are assignable or revocable
+	CheckRoles(context storage.TransactionContext, appOrg *model.ApplicationOrganization, roleIDs []string, assignerPermissions []string, revoke bool) ([]model.AppOrgRole, error)
 
 	//GrantAccountGroups grants new groups to an account after validating the assigner has required permissions
 	GrantAccountGroups(context storage.TransactionContext, account *model.Account, groupIDs []string, assignerPermissions []string) error
+
+	//CheckGroups loads appOrg groups by IDs from storage and checks that they are assignable or revocable
+	CheckGroups(context storage.TransactionContext, appOrg *model.ApplicationOrganization, groupIDs []string, assignerPermissions []string, revoke bool) ([]model.AppOrgGroup, error)
 
 	//DeleteAccount deletes an account for the given id
 	DeleteAccount(id string) error
@@ -488,7 +491,7 @@ type Storage interface {
 	FindServiceAccount(context storage.TransactionContext, accountID string, appID string, orgID string) (*model.ServiceAccount, error)
 	FindServiceAccounts(params map[string]interface{}) ([]model.ServiceAccount, error)
 	InsertServiceAccount(account *model.ServiceAccount) error
-	UpdateServiceAccount(account *model.ServiceAccount) (*model.ServiceAccount, error)
+	UpdateServiceAccount(context storage.TransactionContext, account *model.ServiceAccount) (*model.ServiceAccount, error)
 	DeleteServiceAccount(accountID string, appID string, orgID string) error
 	DeleteServiceAccounts(accountID string) error
 
@@ -507,7 +510,7 @@ type Storage interface {
 	UpdateLoginSessionExternalIDs(accountID string, externalIDs map[string]string) error
 
 	//Applications
-	FindApplication(ID string) (*model.Application, error)
+	FindApplication(context storage.TransactionContext, ID string) (*model.Application, error)
 
 	//Organizations
 	FindOrganization(id string) (*model.Organization, error)
@@ -553,6 +556,7 @@ type Storage interface {
 
 	//ApplicationsOrganizations
 	FindApplicationsOrganizations() ([]model.ApplicationOrganization, error)
+	FindApplicationOrganizations(appID *string, orgID *string) ([]model.ApplicationOrganization, error)
 	FindApplicationOrganization(appID string, orgID string) (*model.ApplicationOrganization, error)
 
 	//Device

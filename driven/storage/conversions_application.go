@@ -42,13 +42,20 @@ func applicationsFromStorage(itemsList []application) []model.Application {
 	return items
 }
 
+func applicationToStorage(item *model.Application) *application {
+	applicationTypes := applicationTypesToStorage(item.Types)
+
+	return &application{ID: item.ID, Name: item.Name, MultiTenant: item.MultiTenant, SharedIdentities: item.SharedIdentities, Admin: item.Admin,
+		Types: applicationTypes, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+}
+
 // ApplicationType
 func applicationTypeFromStorage(item *applicationType) model.ApplicationType {
 	if item == nil {
 		return model.ApplicationType{}
 	}
 
-	appType := model.ApplicationType{ID: item.ID, Identifier: item.Identifier, Name: item.Name}
+	appType := model.ApplicationType{ID: item.ID, Identifier: item.Identifier, Name: item.Name, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 	versions := versionsFromStorage(item.Versions, appType)
 	appType.Versions = versions
 
@@ -65,6 +72,23 @@ func applicationTypesFromStorage(itemsList []applicationType) []model.Applicatio
 		items = append(items, applicationTypeFromStorage(&appType))
 	}
 	return items
+}
+
+func applicationTypeToStorage(item model.ApplicationType) applicationType {
+	return applicationType{ID: item.ID, Identifier: item.Identifier, Name: item.Name, Versions: versionsToStorage(item.Versions),
+		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+}
+
+func applicationTypesToStorage(items []model.ApplicationType) []applicationType {
+	if len(items) == 0 {
+		return make([]applicationType, 0)
+	}
+
+	res := make([]applicationType, len(items))
+	for i, appllicationType := range items {
+		res[i] = applicationTypeToStorage(appllicationType)
+	}
+	return res
 }
 
 // AppOrgRole
@@ -262,28 +286,4 @@ func applicationOrganizationFromStorage(item applicationOrganization, applicatio
 		ServicesIDs: item.ServicesIDs, IdentityProvidersSettings: item.IdentityProvidersSettings,
 		SupportedAuthTypes: item.SupportedAuthTypes, LoginsSessionsSetting: item.LoginsSessionsSetting,
 		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
-}
-
-func applicationTypeToStorage(item model.ApplicationType) applicationType {
-	return applicationType{ID: item.ID, Identifier: item.Identifier, Name: item.Name, Versions: versionsToStorage(item.Versions)}
-}
-
-func applicationTypesToStorage(items []model.ApplicationType) []applicationType {
-	if len(items) == 0 {
-		return make([]applicationType, 0)
-	}
-
-	res := make([]applicationType, len(items))
-	for i, appllicationType := range items {
-		res[i] = applicationTypeToStorage(appllicationType)
-	}
-	return res
-}
-
-func applicationToStorage(item *model.Application) *application {
-	applicationTypes := applicationTypesToStorage(item.Types)
-
-	return &application{ID: item.ID, Name: item.Name, MultiTenant: item.MultiTenant,
-		SharedIdentities: item.SharedIdentities, Admin: item.Admin,
-		Types: applicationTypes, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }

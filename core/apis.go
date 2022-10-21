@@ -33,6 +33,7 @@ type APIs struct {
 	Administration Administration //expose to the drivers adapters
 	Encryption     Encryption     //expose to the drivers adapters
 	BBs            BBs            //expose to the drivers adapters
+	TPS            TPS            //expose to the drivers adapters
 	System         System         //expose to the drivers adapters
 
 	Auth auth.APIs //expose to the drivers auth
@@ -254,11 +255,12 @@ func NewCoreAPIs(env string, version string, build string, storage Storage, auth
 	administrationImpl := &administrationImpl{app: &application}
 	encryptionImpl := &encryptionImpl{app: &application}
 	bbsImpl := &bbsImpl{app: &application}
+	tpsImpl := &tpsImpl{app: &application}
 	systemImpl := &systemImpl{app: &application}
 
 	//+ auth
 	coreAPIs := APIs{Services: servicesImpl, Administration: administrationImpl, Encryption: encryptionImpl,
-		BBs: bbsImpl, System: systemImpl, Auth: auth, app: &application, systemAppTypeIdentifier: systemInitSettings["app_type_id"],
+		BBs: bbsImpl, TPS: tpsImpl, System: systemImpl, Auth: auth, app: &application, systemAppTypeIdentifier: systemInitSettings["app_type_id"],
 		systemAppTypeName: systemInitSettings["app_type_name"], systemAPIKey: systemInitSettings["api_key"],
 		systemAccountEmail: systemInitSettings["email"], systemAccountPassword: systemInitSettings["password"], logger: logger}
 
@@ -341,8 +343,12 @@ func (s *administrationImpl) AdmGetApplications(orgID string) ([]model.Applicati
 	return s.app.admGetApplications(orgID)
 }
 
-func (s *administrationImpl) AdmCreateAppOrgGroup(name string, permissionNames []string, rolesIDs []string, appID string, orgID string, assignerPermissions []string, system bool, l *logs.Log) (*model.AppOrgGroup, error) {
-	return s.app.admCreateAppOrgGroup(name, permissionNames, rolesIDs, appID, orgID, assignerPermissions, system, l)
+func (s *administrationImpl) AdmCreateAppOrgGroup(name string, description string, system bool, permissionNames []string, rolesIDs []string, accountIDs []string, appID string, orgID string, assignerPermissions []string, systemClaim bool, l *logs.Log) (*model.AppOrgGroup, error) {
+	return s.app.admCreateAppOrgGroup(name, description, system, permissionNames, rolesIDs, accountIDs, appID, orgID, assignerPermissions, systemClaim, l)
+}
+
+func (s *administrationImpl) AdmUpdateAppOrgGroup(ID string, name string, description string, system bool, permissionNames []string, rolesIDs []string, accountIDs []string, appID string, orgID string, assignerPermissions []string, systemClaim bool, l *logs.Log) (*model.AppOrgGroup, error) {
+	return s.app.admUpdateAppOrgGroup(ID, name, description, system, permissionNames, rolesIDs, accountIDs, appID, orgID, assignerPermissions, systemClaim, l)
 }
 
 func (s *administrationImpl) AdmGetAppOrgGroups(appID string, orgID string) ([]model.AppOrgGroup, error) {
@@ -455,6 +461,22 @@ func (s *bbsImpl) BBsGetTest() string {
 	return s.app.bbsGetTest()
 }
 
+func (s *bbsImpl) BBsGetAccounts(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]map[string]interface{}, error) {
+	return s.app.sharedGetAccountsByParams(searchParams, appID, orgID, limit, offset, allAccess, approvedKeys)
+}
+
+///
+
+//bbsImpl
+
+type tpsImpl struct {
+	app *application
+}
+
+func (s *tpsImpl) TPSGetAccounts(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]map[string]interface{}, error) {
+	return s.app.sharedGetAccountsByParams(searchParams, appID, orgID, limit, offset, allAccess, approvedKeys)
+}
+
 ///
 
 //systemImpl
@@ -509,6 +531,10 @@ func (s *systemImpl) SysGetOrganization(ID string) (*model.Organization, error) 
 
 func (s *systemImpl) SysCreateApplication(name string, multiTenant bool, admin bool, sharedIdentities bool, appTypes []model.ApplicationType) (*model.Application, error) {
 	return s.app.sysCreateApplication(name, multiTenant, admin, sharedIdentities, appTypes)
+}
+
+func (s *systemImpl) SysUpdateApplication(ID string, name string, multiTenant bool, admin bool, sharedIdentities bool, appTypes []model.ApplicationType) error {
+	return s.app.sysUpdateApplication(ID, name, multiTenant, admin, sharedIdentities, appTypes)
 }
 
 func (s *systemImpl) SysGetApplication(ID string) (*model.Application, error) {
