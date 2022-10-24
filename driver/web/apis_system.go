@@ -25,6 +25,7 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
+	"github.com/rokwire/core-auth-library-go/v2/authorization"
 	"github.com/rokwire/core-auth-library-go/v2/tokenauth"
 	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
@@ -417,7 +418,7 @@ func (h SystemApisHandler) getServiceAccounts(l *logs.Log, r *http.Request, clai
 	}
 	if query.Get("scopes") != "" {
 		scopeList := strings.Split(query.Get("scopes"), ",")
-		scopes, err := scopeListFromDef(&scopeList)
+		scopes, err := authorization.ScopesFromStrings(scopeList, false)
 		if err != nil {
 			return l.HttpResponseErrorAction(logutils.ActionParse, model.TypeScope, nil, err, http.StatusInternalServerError, true)
 		}
@@ -440,8 +441,8 @@ func (h SystemApisHandler) getServiceAccounts(l *logs.Log, r *http.Request, clai
 }
 
 func (h SystemApisHandler) registerServiceAccount(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	fromAppID := utils.StringOrNil(r.URL.Query().Get("app_id"))
-	fromOrgID := utils.StringOrNil(r.URL.Query().Get("org_id"))
+	fromAppID := utils.StringOrNil(r.URL.Query().Get("app_id"), "")
+	fromOrgID := utils.StringOrNil(r.URL.Query().Get("org_id"), "")
 
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -454,9 +455,12 @@ func (h SystemApisHandler) registerServiceAccount(l *logs.Log, r *http.Request, 
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeServiceAccount, nil, err, http.StatusBadRequest, true)
 	}
 
-	scopes, err := scopeListFromDef(requestData.Scopes)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionParse, model.TypeScope, nil, err, http.StatusInternalServerError, true)
+	var scopes []authorization.Scope
+	if requestData.Scopes != nil && *requestData.Scopes != nil {
+		scopes, err = authorization.ScopesFromStrings(*requestData.Scopes, false)
+		if err != nil {
+			return l.HttpResponseErrorAction(logutils.ActionParse, model.TypeScope, nil, err, http.StatusInternalServerError, true)
+		}
 	}
 
 	var creds []model.ServiceAccountCredential
@@ -553,9 +557,12 @@ func (h SystemApisHandler) updateServiceAccountInstance(l *logs.Log, r *http.Req
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, "service account update request", nil, err, http.StatusBadRequest, true)
 	}
 
-	scopes, err := scopeListFromDef(requestData.Scopes)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionParse, model.TypeScope, nil, err, http.StatusInternalServerError, true)
+	var scopes []authorization.Scope
+	if requestData.Scopes != nil && *requestData.Scopes != nil {
+		scopes, err = authorization.ScopesFromStrings(*requestData.Scopes, false)
+		if err != nil {
+			return l.HttpResponseErrorAction(logutils.ActionParse, model.TypeScope, nil, err, http.StatusInternalServerError, true)
+		}
 	}
 
 	assignerPermissions := strings.Split(claims.Permissions, ",")

@@ -63,6 +63,27 @@ func accountsToDef(items []model.Account) []Def.SharedResAccount {
 	return result
 }
 
+// func restrictAccountData(item *model.Account, claims *tokenauth.Claims) (*Def.SharedResAccount, error) {
+// 	if item == nil {
+// 		return nil, nil
+// 	}
+// 	if claims == nil {
+// 		return nil, errors.ErrorData(logutils.StatusMissing, logutils.TypeClaims, nil)
+// 	}
+
+// 	scopeStrings := strings.Split(claims.Scope, ",")
+// 	scopes, err := scopeListFromDef(&scopeStrings)
+// 	if err != nil {
+// 		return nil, errors.WrapErrorAction(logutils.ActionParse, model.TypeScope, nil, err)
+// 	}
+
+// 	for _, scope := range scopes {
+// 		// if scope.Operation !=
+// 		//TODO: use scopes to set projections on accounts collection find
+// 		splitResource := strings.Split(scope.Resource, ".")
+// 	}
+// }
+
 func partialAccountToDef(item model.Account, params map[string]interface{}) *Def.PartialAccount {
 	//permissions
 	permissions := applicationPermissionsToDef(item.Permissions)

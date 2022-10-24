@@ -1372,6 +1372,24 @@ type PostBbsAccessTokenJSONBody = ServicesReqServiceAccountsAccessToken
 // PostBbsAccessTokensJSONBody defines parameters for PostBbsAccessTokens.
 type PostBbsAccessTokensJSONBody = ServicesReqServiceAccountsAccessTokens
 
+// PostBbsAccountsJSONBody defines parameters for PostBbsAccounts.
+type PostBbsAccountsJSONBody = map[string]interface{}
+
+// PostBbsAccountsParams defines parameters for PostBbsAccounts.
+type PostBbsAccountsParams struct {
+	// The application ID to use to filter accounts
+	AppId *string `form:"app_id,omitempty" json:"app_id,omitempty"`
+
+	// The organization ID to use to filter accounts
+	OrgId *string `form:"org_id,omitempty" json:"org_id,omitempty"`
+
+	// The maximum number of accounts to return
+	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+
+	// The index of the first account to return
+	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
+}
+
 // PostBbsServiceAccountIdJSONBody defines parameters for PostBbsServiceAccountId.
 type PostBbsServiceAccountIdJSONBody = ServicesReqServiceAccountsParams
 
@@ -1705,6 +1723,24 @@ type PostTpsAccessTokenJSONBody = ServicesReqServiceAccountsAccessToken
 // PostTpsAccessTokensJSONBody defines parameters for PostTpsAccessTokens.
 type PostTpsAccessTokensJSONBody = ServicesReqServiceAccountsAccessTokens
 
+// PostTpsAccountsJSONBody defines parameters for PostTpsAccounts.
+type PostTpsAccountsJSONBody = map[string]interface{}
+
+// PostTpsAccountsParams defines parameters for PostTpsAccounts.
+type PostTpsAccountsParams struct {
+	// The application ID to use to filter accounts
+	AppId *string `form:"app_id,omitempty" json:"app_id,omitempty"`
+
+	// The organization ID to use to filter accounts
+	OrgId *string `form:"org_id,omitempty" json:"org_id,omitempty"`
+
+	// The maximum number of accounts to return
+	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+
+	// The index of the first account to return
+	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
+}
+
 // PostTpsServiceAccountIdJSONBody defines parameters for PostTpsServiceAccountId.
 type PostTpsServiceAccountIdJSONBody = ServicesReqServiceAccountsParams
 
@@ -1794,6 +1830,9 @@ type PostBbsAccessTokenJSONRequestBody = PostBbsAccessTokenJSONBody
 
 // PostBbsAccessTokensJSONRequestBody defines body for PostBbsAccessTokens for application/json ContentType.
 type PostBbsAccessTokensJSONRequestBody = PostBbsAccessTokensJSONBody
+
+// PostBbsAccountsJSONRequestBody defines body for PostBbsAccounts for application/json ContentType.
+type PostBbsAccountsJSONRequestBody = PostBbsAccountsJSONBody
 
 // PostBbsServiceAccountIdJSONRequestBody defines body for PostBbsServiceAccountId for application/json ContentType.
 type PostBbsServiceAccountIdJSONRequestBody = PostBbsServiceAccountIdJSONBody
@@ -1941,6 +1980,9 @@ type PostTpsAccessTokenJSONRequestBody = PostTpsAccessTokenJSONBody
 
 // PostTpsAccessTokensJSONRequestBody defines body for PostTpsAccessTokens for application/json ContentType.
 type PostTpsAccessTokensJSONRequestBody = PostTpsAccessTokensJSONBody
+
+// PostTpsAccountsJSONRequestBody defines body for PostTpsAccounts for application/json ContentType.
+type PostTpsAccountsJSONRequestBody = PostTpsAccountsJSONBody
 
 // PostTpsServiceAccountIdJSONRequestBody defines body for PostTpsServiceAccountId for application/json ContentType.
 type PostTpsServiceAccountIdJSONRequestBody = PostTpsServiceAccountIdJSONBody

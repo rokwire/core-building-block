@@ -33,6 +33,7 @@ type APIs struct {
 	Administration Administration //expose to the drivers adapters
 	Encryption     Encryption     //expose to the drivers adapters
 	BBs            BBs            //expose to the drivers adapters
+	TPS            TPS            //expose to the drivers adapters
 	System         System         //expose to the drivers adapters
 
 	Auth auth.APIs //expose to the drivers auth
@@ -254,11 +255,12 @@ func NewCoreAPIs(env string, version string, build string, storage Storage, auth
 	administrationImpl := &administrationImpl{app: &application}
 	encryptionImpl := &encryptionImpl{app: &application}
 	bbsImpl := &bbsImpl{app: &application}
+	tpsImpl := &tpsImpl{app: &application}
 	systemImpl := &systemImpl{app: &application}
 
 	//+ auth
 	coreAPIs := APIs{Services: servicesImpl, Administration: administrationImpl, Encryption: encryptionImpl,
-		BBs: bbsImpl, System: systemImpl, Auth: auth, app: &application, systemAppTypeIdentifier: systemInitSettings["app_type_id"],
+		BBs: bbsImpl, TPS: tpsImpl, System: systemImpl, Auth: auth, app: &application, systemAppTypeIdentifier: systemInitSettings["app_type_id"],
 		systemAppTypeName: systemInitSettings["app_type_name"], systemAPIKey: systemInitSettings["api_key"],
 		systemAccountEmail: systemInitSettings["email"], systemAccountPassword: systemInitSettings["password"], logger: logger}
 
@@ -457,6 +459,22 @@ type bbsImpl struct {
 
 func (s *bbsImpl) BBsGetTest() string {
 	return s.app.bbsGetTest()
+}
+
+func (s *bbsImpl) BBsGetAccounts(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]map[string]interface{}, error) {
+	return s.app.sharedGetAccountsByParams(searchParams, appID, orgID, limit, offset, allAccess, approvedKeys)
+}
+
+///
+
+//bbsImpl
+
+type tpsImpl struct {
+	app *application
+}
+
+func (s *tpsImpl) TPSGetAccounts(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]map[string]interface{}, error) {
+	return s.app.sharedGetAccountsByParams(searchParams, appID, orgID, limit, offset, allAccess, approvedKeys)
 }
 
 ///

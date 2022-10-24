@@ -21,7 +21,7 @@ p, update_applications, /core/system/applications/*, (GET)|(PUT),
 p, get_app_orgs, /core/system/app-orgs, (GET), Get application organizations
 p, get_app_orgs, /core/system/app-orgs/*, (GET),
 p, update_app_orgs, /core/system/app-orgs, (GET)|(POST), Update and create application organizations
-p, update_app_orgs, /core/system/app-orgs/*, (GET)|(PUT)
+p, update_app_orgs, /core/system/app-orgs/*, (GET)|(PUT),
 p, all_app_orgs, /core/system/app-orgs, (GET)|(POST)|(DELETE)|(PUT), All application organizations
 p, all_app_orgs, /core/system/app-orgs/*, (GET)|(POST)|(DELETE)|(PUT),
 
