@@ -246,10 +246,9 @@ func profileFromDef(item *Def.SharedReqProfile) model.Profile {
 		country = *item.Country
 	}
 
-	//unstructured properties
-	unstructuredProperties := map[string]interface{}{}
-	for k, v := range *item.UnstructuredProperties {
-		unstructuredProperties[k] = v
+	var unstructuredProperties map[string]interface{}
+	if item.UnstructuredProperties != nil {
+		unstructuredProperties = *item.UnstructuredProperties
 	}
 
 	return model.Profile{PhotoURL: photoURL, FirstName: firstName, LastName: lastName,
@@ -296,16 +295,11 @@ func profileToDef(item *model.Profile) *Def.ProfileFields {
 		return nil
 	}
 
-	//unstructured properties
-	unstructuredProperties := map[string]interface{}{}
-	for k, v := range item.UnstructuredProperties {
-		unstructuredProperties[k] = v
-	}
-
-	birthYear := int(item.BirthYear)
-	return &Def.ProfileFields{Id: &item.ID, PhotoUrl: &item.PhotoURL, FirstName: &item.FirstName, LastName: &item.LastName,
-		Email: &item.Email, Phone: &item.Phone, BirthYear: &birthYear, Address: &item.Address, ZipCode: &item.ZipCode,
-		State: &item.State, Country: &item.Country, UnstructuredProperties: &unstructuredProperties}
+	itemVal := *item
+	birthYear := int(itemVal.BirthYear)
+	return &Def.ProfileFields{Id: &itemVal.ID, PhotoUrl: &itemVal.PhotoURL, FirstName: &itemVal.FirstName, LastName: &itemVal.LastName,
+		Email: &itemVal.Email, Phone: &itemVal.Phone, BirthYear: &birthYear, Address: &itemVal.Address, ZipCode: &itemVal.ZipCode,
+		State: &itemVal.State, Country: &itemVal.Country, UnstructuredProperties: &itemVal.UnstructuredProperties}
 }
 
 func profileFromDefNullable(item *Def.SharedReqProfileNullable) model.Profile {
@@ -354,10 +348,9 @@ func profileFromDefNullable(item *Def.SharedReqProfileNullable) model.Profile {
 		country = *item.Country
 	}
 
-	//unstructured properties
-	unstructuredProperties := map[string]interface{}{}
-	for k, v := range *item.UnstructuredProperties {
-		unstructuredProperties[k] = v
+	var unstructuredProperties map[string]interface{}
+	if item.UnstructuredProperties != nil {
+		unstructuredProperties = *item.UnstructuredProperties
 	}
 
 	return model.Profile{PhotoURL: photoURL, FirstName: firstName, LastName: lastName,
