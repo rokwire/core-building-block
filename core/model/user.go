@@ -470,6 +470,8 @@ type Profile struct {
 
 	DateCreated time.Time
 	DateUpdated *time.Time
+
+	UnstructuredProperties map[string]interface{}
 }
 
 // GetFullName returns the user's full name

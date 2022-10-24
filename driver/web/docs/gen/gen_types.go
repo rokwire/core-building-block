@@ -542,17 +542,18 @@ type Profile struct {
 
 // ProfileFields defines model for ProfileFields.
 type ProfileFields struct {
-	Address   *string `json:"address"`
-	BirthYear *int    `json:"birth_year"`
-	Country   *string `json:"country"`
-	Email     *string `json:"email"`
-	FirstName *string `json:"first_name,omitempty"`
-	Id        *string `json:"id,omitempty"`
-	LastName  *string `json:"last_name,omitempty"`
-	Phone     *string `json:"phone"`
-	PhotoUrl  *string `json:"photo_url,omitempty"`
-	State     *string `json:"state"`
-	ZipCode   *string `json:"zip_code"`
+	Address                *string                 `json:"address"`
+	BirthYear              *int                    `json:"birth_year"`
+	Country                *string                 `json:"country"`
+	Email                  *string                 `json:"email"`
+	FirstName              *string                 `json:"first_name,omitempty"`
+	Id                     *string                 `json:"id,omitempty"`
+	LastName               *string                 `json:"last_name,omitempty"`
+	Phone                  *string                 `json:"phone"`
+	PhotoUrl               *string                 `json:"photo_url,omitempty"`
+	State                  *string                 `json:"state"`
+	UnstructuredProperties *map[string]interface{} `json:"unstructured_properties"`
+	ZipCode                *string                 `json:"zip_code"`
 }
 
 // PubKey defines model for PubKey.
@@ -984,30 +985,32 @@ type SharedReqParamsSetEmailCredential struct {
 
 // SharedReqProfile defines model for _shared_req_Profile.
 type SharedReqProfile struct {
-	Address   *string `json:"address"`
-	BirthYear *int    `json:"birth_year"`
-	Country   *string `json:"country"`
-	Email     *string `json:"email"`
-	FirstName *string `json:"first_name"`
-	LastName  *string `json:"last_name"`
-	Phone     *string `json:"phone"`
-	PhotoUrl  *string `json:"photo_url"`
-	State     *string `json:"state"`
-	ZipCode   *string `json:"zip_code"`
+	Address                *string                 `json:"address"`
+	BirthYear              *int                    `json:"birth_year"`
+	Country                *string                 `json:"country"`
+	Email                  *string                 `json:"email"`
+	FirstName              *string                 `json:"first_name"`
+	LastName               *string                 `json:"last_name"`
+	Phone                  *string                 `json:"phone"`
+	PhotoUrl               *string                 `json:"photo_url"`
+	State                  *string                 `json:"state"`
+	UnstructuredProperties *map[string]interface{} `json:"unstructured_properties"`
+	ZipCode                *string                 `json:"zip_code"`
 }
 
 // SharedReqProfileNullable defines model for _shared_req_ProfileNullable.
 type SharedReqProfileNullable struct {
-	Address   *string `json:"address"`
-	BirthYear *int    `json:"birth_year"`
-	Country   *string `json:"country"`
-	Email     *string `json:"email"`
-	FirstName *string `json:"first_name"`
-	LastName  *string `json:"last_name"`
-	Phone     *string `json:"phone"`
-	PhotoUrl  *string `json:"photo_url"`
-	State     *string `json:"state"`
-	ZipCode   *string `json:"zip_code"`
+	Address                *string                 `json:"address"`
+	BirthYear              *int                    `json:"birth_year"`
+	Country                *string                 `json:"country"`
+	Email                  *string                 `json:"email"`
+	FirstName              *string                 `json:"first_name"`
+	LastName               *string                 `json:"last_name"`
+	Phone                  *string                 `json:"phone"`
+	PhotoUrl               *string                 `json:"photo_url"`
+	State                  *string                 `json:"state"`
+	UnstructuredProperties *map[string]interface{} `json:"unstructured_properties"`
+	ZipCode                *string                 `json:"zip_code"`
 }
 
 // SharedReqRefresh defines model for _shared_req_Refresh.
