@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Rokwire Core Building Block API
   description: Core Building Block API Documentation
-  version: 1.27.0
+  version: 1.28.0
 servers:
   - url: 'https://api.rokwire.illinois.edu/core'
     description: Production server
@@ -5919,6 +5919,9 @@ components:
         country:
           type: string
           nullable: true
+        unstructured_properties:
+          type: object
+          nullable: true
     Username:
       required:
         - username
@@ -6285,6 +6288,9 @@ components:
         country:
           type: string
           nullable: true
+        unstructured_properties:
+          type: object
+          nullable: true
     _shared_req_ProfileNullable:
       type: object
       nullable: true
@@ -6318,6 +6324,9 @@ components:
           nullable: true
         country:
           type: string
+          nullable: true
+        unstructured_properties:
+          type: object
           nullable: true
     _shared_req_ParamsSetEmailCredential:
       required:

@@ -2781,6 +2781,7 @@ func (sa *Adapter) UpdateProfile(context TransactionContext, profile model.Profi
 			primitive.E{Key: "profile.state", Value: profile.State},
 			primitive.E{Key: "profile.country", Value: profile.Country},
 			primitive.E{Key: "profile.date_updated", Value: &now},
+			primitive.E{Key: "profile.unstructured_properties", Value: profile.UnstructuredProperties},
 		}},
 	}
 
