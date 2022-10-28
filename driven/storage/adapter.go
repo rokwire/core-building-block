@@ -2341,11 +2341,89 @@ func (sa *Adapter) updatePermission(context TransactionContext, item model.Permi
 }
 
 // DeletePermission deletes permission
-func (sa *Adapter) DeletePermission(id string) error {
+func (sa *Adapter) DeletePermission(context TransactionContext, name string) error {
 	//TODO
 	//This will be slow operation as we keep a copy of the entity in the users collection without index.
 	//Maybe we need to up the transaction timeout for this operation because of this.
-	return errors.New(logutils.Unimplemented)
+
+	if context == nil {
+		transaction := func(newContext TransactionContext) error {
+			return sa.deletePermission(newContext, name)
+		}
+		return sa.PerformTransaction(transaction)
+	}
+
+	return sa.deletePermission(context, name)
+
+}
+
+func (sa *Adapter) deletePermission(context TransactionContext, name string) error {
+
+	//delete permission
+	permissionFilter := bson.M{"name": name}
+
+	_, err := sa.db.permissions.DeleteOneWithContext(context, permissionFilter, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypePermission, &logutils.FieldArgs{"name": name}, err)
+	}
+
+	// update all roles that have the permission
+	key := "permissions.name"
+	roles, err := sa.findAppOrgRoles(context, &key, name, "")
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgRole, nil, err)
+	}
+	for _, r := range roles {
+		for pidx, p := range r.Permissions {
+			if p.Name == name {
+				r.Permissions = append(r.Permissions[:pidx], r.Permissions[pidx+1:]...)
+				err = sa.UpdateAppOrgRole(context, r)
+				if err != nil {
+					return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAppOrgRole, nil, err)
+				}
+				break
+			}
+		}
+	}
+
+	//delete in all groups that have the permisson
+	groups, err := sa.findAppOrgGroups(context, &key, name, "")
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgGroup, nil, err)
+	}
+	for _, g := range groups {
+		for pidx, p := range g.Permissions {
+			if p.Name == name {
+				g.Permissions = append(g.Permissions[:pidx], g.Permissions[pidx+1:]...)
+				err = sa.UpdateAppOrgGroup(context, g)
+				if err != nil {
+					return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAppOrgGroup, nil, err)
+				}
+				break
+			}
+		}
+	}
+
+	//delete in all accounts that have the permisson
+	dependentsFilter := bson.D{primitive.E{Key: "permissions.name", Value: name}}
+	dependentsUpdate := bson.M{"$pull": bson.M{
+		"permissions": bson.M{"name": name},
+	}}
+
+	//accounts
+	res, err := sa.db.accounts.UpdateManyWithContext(context, dependentsFilter, dependentsUpdate, nil)
+	if err = sa.getUpdateManyError(res, err, model.TypeAccount, "permissions.name", name); err != nil {
+		return err
+	}
+
+	//service accounts
+	res, err = sa.db.serviceAccounts.UpdateManyWithContext(context, dependentsFilter, dependentsUpdate, nil)
+	if err = sa.getUpdateManyError(res, err, model.TypeServiceAccount, "permissions.name", name); err != nil {
+		return err
+	}
+
+	return nil
+
 }
 
 // FindAppOrgRoles finds all application organization roles fora given AppOrg ID
