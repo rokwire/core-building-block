@@ -2387,7 +2387,6 @@ func (sa *Adapter) deletePermission(context TransactionContext, name string) err
 	}
 
 	//delete in all groups that have the permisson
-	// update all groups that have the permission
 	groups, err := sa.findAppOrgGroups(context, &key, name, "")
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgGroup, nil, err)
