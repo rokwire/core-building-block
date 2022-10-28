@@ -179,6 +179,8 @@ paths:
     $ref: "./resources/system/applications.yaml"
   /system/permissions:
     $ref: "./resources/system/permissions.yaml"
+  /system/permissions/{name}:
+    $ref: "./resources/system/permissionsname.yaml"
   /system/application/configs:
     $ref: "./resources/system/application-configs.yaml"
   /system/application/configs/{id}:

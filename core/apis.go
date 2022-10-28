@@ -489,6 +489,10 @@ func (s *systemImpl) SysUpdatePermission(name string, description string, servic
 	return s.app.sysUpdatePermission(name, description, serviceID, assigners)
 }
 
+func (s *systemImpl) SysDeletePermission(name string) error {
+	return s.app.sysDeletePermission(name)
+}
+
 func (s *systemImpl) SysGetAppConfigs(appTypeID string, orgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error) {
 	return s.app.sysGetAppConfigs(appTypeID, orgID, versionNumbers)
 }

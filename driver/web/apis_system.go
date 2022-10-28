@@ -762,6 +762,20 @@ func (h SystemApisHandler) updatePermission(l *logs.Log, r *http.Request, claims
 	return l.HttpResponseSuccessJSON(data)
 }
 
+// deletePermission delete an permission
+func (h SystemApisHandler) deletePermission(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+
+	vars := mux.Vars(r)
+	name := vars["name"]
+
+	err := h.coreAPIs.System.SysDeletePermission(name)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypePermission, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccessJSON(nil)
+}
+
 func (h SystemApisHandler) getApplicationConfigs(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	appTypeIdentifier := r.URL.Query().Get("app_type_id")
 	if appTypeIdentifier == "" {

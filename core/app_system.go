@@ -273,6 +273,16 @@ func (app *application) sysUpdatePermission(name string, description string, ser
 	return updatedPermission, nil
 }
 
+func (app *application) sysDeletePermission(name string) error {
+
+	err := app.storage.DeletePermission(nil, name)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypePermission, nil, err)
+	}
+
+	return nil
+}
+
 func (app *application) sysGetAppConfigs(appTypeID string, orgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error) {
 	//get the app type
 	applicationType, err := app.storage.FindApplicationType(appTypeID)
