@@ -1129,8 +1129,9 @@ func (a *Auth) applyLogin(anonymous bool, sub string, authType model.AuthType, a
 			}
 		}
 		// update account usage information
-		if accountAuthType != nil {
-			err = a.storage.UpdateAccountUsageInfo(context, accountAuthType.Account.ID, true, true, clientVersion)
+		// TODO: Handle anonymous accounts if needed in the future
+		if !anonymous {
+			err = a.storage.UpdateAccountUsageInfo(context, sub, true, true, clientVersion)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountUsageInfo, nil, err)
 			}
