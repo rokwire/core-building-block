@@ -151,6 +151,8 @@ paths:
     $ref: "./resources/bbs/access-tokens.yaml"
   /bbs/accounts:
     $ref: "./resources/bbs/accounts.yaml"
+  /bbs/accounts/count:
+   $ref: "./resources/bbs/accounts-count.yaml"
 
   #third-party services
   /tps/service-regs:
@@ -165,6 +167,8 @@ paths:
     $ref: "./resources/tps/access-tokens.yaml"
   /tps/accounts:
     $ref: "./resources/tps/accounts.yaml"
+  /tps/accounts/count:
+   $ref: "./resources/tps/accounts-count.yaml"
 
   #system
   /system/auth/app-org-token:

@@ -1226,6 +1226,42 @@ func (sa *Adapter) FindAccountsByParams(searchParams map[string]interface{}, app
 	return accounts, nil
 }
 
+// FindAccountsByParams finds accounts by an arbitrary set of search params
+func (sa *Adapter) FindAccountsCountByParams(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) (int64, error) {
+	//find app orgs accessed by service
+	appOrgs, err := sa.FindApplicationOrganizations(utils.StringOrNil(appID, authutils.AllApps), utils.StringOrNil(orgID, authutils.AllOrgs))
+	if err != nil {
+		return -1, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": appID, "org_id": orgID}, err)
+	}
+	if len(appOrgs) == 0 {
+		return -1, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": appID, "org_id": orgID})
+	}
+
+	//find the accounts
+	appOrgIDs := make([]string, len(appOrgs))
+	for i, appOrg := range appOrgs {
+		appOrgIDs[i] = appOrg.ID
+	}
+	searchParams["app_org_id"] = appOrgIDs
+	filter := sa.getFilterForParams(searchParams)
+
+	options := options.Find()
+	options.SetLimit(int64(limit))
+	options.SetSkip(int64(offset))
+
+	// set projection if scope limited
+	if !allAccess {
+		options.SetProjection(sa.getProjectionForKeys(approvedKeys))
+	}
+
+	count, err := sa.db.accounts.CountDocuments(filter)
+	if err != nil {
+		return -1, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+
+	return count, nil
+}
+
 // FindAccountsByAccountID finds accounts
 func (sa *Adapter) FindAccountsByAccountID(context TransactionContext, appID string, orgID string, accountIDs []string) ([]model.Account, error) {
 	if len(accountIDs) == 0 {

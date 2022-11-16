@@ -234,3 +234,72 @@ func (h BBsApisHandler) getAccounts(l *logs.Log, r *http.Request, claims *tokena
 func NewBBsApisHandler(coreAPIs *core.APIs, serviceID string) BBsApisHandler {
 	return BBsApisHandler{coreAPIs: coreAPIs, serviceID: serviceID}
 }
+
+func (h BBsApisHandler) getAccountsCount(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	// get scopes relevant to accounts
+	if claims.Scope == "" {
+		return l.HttpResponseErrorData(logutils.StatusInvalid, model.TypeScope, nil, nil, http.StatusForbidden, false)
+	}
+
+	// appID and orgID
+	appID := r.URL.Query().Get("app_id")
+	orgID := r.URL.Query().Get("org_id")
+	if appID != "" && orgID != "" {
+		if !claims.AppOrg().CanAccessAppOrg(appID, orgID) {
+			return l.HttpResponseErrorData(logutils.StatusInvalid, model.TypeAppOrgPair, nil, nil, http.StatusForbidden, false)
+		}
+	} else {
+		appID = claims.AppID
+		orgID = claims.OrgID
+	}
+
+	// limit
+	limit := 100
+	limitArg := r.URL.Query().Get("limit")
+	var err error
+	if limitArg != "" {
+		limit, err = strconv.Atoi(limitArg)
+		if err != nil {
+			return l.HttpResponseErrorAction(logutils.ActionParse, logutils.TypeArg, logutils.StringArgs("limit"), err, http.StatusBadRequest, false)
+		}
+	}
+	offset := 0
+	offsetArg := r.URL.Query().Get("offset")
+	if offsetArg != "" {
+		offset, err = strconv.Atoi(offsetArg)
+		if err != nil {
+			return l.HttpResponseErrorAction(logutils.ActionParse, logutils.TypeArg, logutils.StringArgs("offset"), err, http.StatusBadRequest, false)
+		}
+	}
+
+	var queryParams map[string]interface{}
+	err = json.NewDecoder(r.Body).Decode(&queryParams)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	// limit search params by scopes
+	scopes := claims.Scopes()
+	minAllAccessScope := authorization.Scope{ServiceID: h.serviceID, Resource: string(model.TypeAccount), Operation: authorization.ScopeOperationGet}
+	searchKeys := make([]string, 0)
+	for k := range queryParams {
+		searchKeys = append(searchKeys, k)
+	}
+	allAccess, approvedKeys, err := authorization.ResourceAccessForScopes(scopes, minAllAccessScope, searchKeys)
+	if err != nil {
+		return l.HttpResponseErrorData(logutils.StatusInvalid, "accounts count query", nil, err, http.StatusForbidden, true)
+	}
+
+	count, err := h.coreAPIs.BBs.BBsGetAccountsCount(queryParams, appID, orgID, limit, offset, allAccess, approvedKeys, claims)
+	if err != nil {
+		errFields := logutils.FieldArgs(queryParams)
+		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeAccount, &errFields, err, http.StatusInternalServerError, true)
+	}
+
+	respData, err := json.Marshal(count)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("accounts count response"), nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessJSON(respData)
+}
