@@ -299,7 +299,7 @@ func (h BBsApisHandler) getAccountsCount(l *logs.Log, r *http.Request, claims *t
 
 	respData, err := json.Marshal(count)
 	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("accounts count response test"), nil, err, http.StatusInternalServerError, false)
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("accounts count response"), nil, err, http.StatusInternalServerError, false)
 	}
 
 	return l.HttpResponseSuccessJSON(respData)
