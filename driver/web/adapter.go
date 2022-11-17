@@ -201,6 +201,7 @@ func (we Adapter) Start() {
 	bbsSubrouter.HandleFunc("/access-tokens", we.wrapFunc(we.bbsApisHandler.getServiceAccessTokens, nil)).Methods("POST")         //Public
 
 	bbsSubrouter.HandleFunc("/accounts", we.wrapFunc(we.bbsApisHandler.getAccounts, we.auth.bbs.permissions)).Methods("POST")
+	bbsSubrouter.HandleFunc("/accounts/count", we.wrapFunc(we.bbsApisHandler.getAccountsCount, we.auth.bbs.permissions)).Methods("POST")
 	///
 
 	///third-party services ///
@@ -213,6 +214,7 @@ func (we Adapter) Start() {
 	tpsSubrouter.HandleFunc("/access-tokens", we.wrapFunc(we.tpsApisHandler.getServiceAccessTokens, nil)).Methods("POST")         //Public
 
 	tpsSubrouter.HandleFunc("/accounts", we.wrapFunc(we.tpsApisHandler.getAccounts, we.auth.tps.permissions)).Methods("POST")
+	tpsSubrouter.HandleFunc("/accounts/count", we.wrapFunc(we.tpsApisHandler.getAccountsCount, we.auth.tps.permissions)).Methods("POST")
 	///
 
 	///system ///

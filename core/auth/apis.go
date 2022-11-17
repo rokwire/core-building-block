@@ -403,9 +403,12 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 	}
 
 	// update account usage information
-	err = a.storage.UpdateAccountUsageInfo(nil, loginSession.AccountAuthType.Account.ID, false, true, clientVersion)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountUsageInfo, nil, err)
+	// TODO: Handle anonymous accounts if needed in the future
+	if !anonymous {
+		err = a.storage.UpdateAccountUsageInfo(nil, loginSession.Identifier, false, true, clientVersion)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountUsageInfo, nil, err)
+		}
 	}
 
 	//return the updated session

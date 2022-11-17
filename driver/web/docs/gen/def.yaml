@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Rokwire Core Building Block API
   description: Core Building Block API Documentation
-  version: 1.28.0
+  version: 1.29.0
 servers:
   - url: 'https://api.rokwire.illinois.edu/core'
     description: Production server
@@ -3114,6 +3114,74 @@ paths:
           description: Forbidden
         '500':
           description: Internal error
+  /bbs/accounts/count:
+    post:
+      tags:
+        - BBs
+      summary: Finds the count of user accounts
+      description: |
+        Finds the count of accounts for the given app_id and org_id (query or token)
+
+        **Auth:** Requires service access token with `get_accounts_count` or `get_accounts_count_limited` permission
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: app_id
+          in: query
+          description: The application ID to use to filter accounts
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
+        - name: org_id
+          in: query
+          description: The organization ID to use to filter accounts
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
+      requestBody:
+        description: |
+          Service account credentials
+        content:
+          application/json:
+            schema:
+              type: object
+            examples:
+              single_value:
+                summary: Multiple single-value search parameters
+                value: |
+                  {
+                    "profile.first_name": "Example",
+                    "preferences.privacy_level": 4,
+                    "external_ids.uin": "123456789"
+                  }
+              multiple_value:
+                summary: 'Some single-value, some multi-value search parameters'
+                value: |
+                  {
+                    "profile.first_name": "Example",
+                    "preferences.privacy_level": [3, 4, 5],
+                    "external_ids.uin": "123456789"
+                  }
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: integer
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal error
   /tps/service-regs:
     get:
       tags:
@@ -3396,6 +3464,74 @@ paths:
                 type: array
                 items:
                   type: object
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal error
+  /tps/accounts/count:
+    post:
+      tags:
+        - Third-Party Services
+      summary: Finds the count of user accounts
+      description: |
+        Finds the count of accounts for the given app_id and org_id (query or token)
+
+        **Auth:** Requires service access token with `get_accounts_count` or `get_accounts_count_limited` permission
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: app_id
+          in: query
+          description: The application ID to use to filter accounts
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
+        - name: org_id
+          in: query
+          description: The organization ID to use to filter accounts
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
+      requestBody:
+        description: |
+          Service account credentials
+        content:
+          application/json:
+            schema:
+              type: object
+            examples:
+              single_value:
+                summary: Multiple single-value search parameters
+                value: |
+                  {
+                    "profile.first_name": "Example",
+                    "preferences.privacy_level": 4,
+                    "external_ids.uin": "123456789"
+                  }
+              multiple_value:
+                summary: 'Some single-value, some multi-value search parameters'
+                value: |
+                  {
+                    "profile.first_name": "Example",
+                    "preferences.privacy_level": [3, 4, 5],
+                    "external_ids.uin": "123456789"
+                  }
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: integer
         '400':
           description: Bad request
         '401':

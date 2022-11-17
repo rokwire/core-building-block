@@ -45,6 +45,15 @@ func (app *application) sharedGetAccountsByParams(searchParams map[string]interf
 	return accounts, nil
 }
 
+func (app *application) sharedGetAccountsCountByParams(searchParams map[string]interface{}, appID string, orgID string) (int64, error) {
+	count, err := app.storage.CountAccountsByParams(searchParams, appID, orgID)
+	if err != nil {
+		return -1, err
+	}
+
+	return count, nil
+}
+
 func (app *application) sharedUpdateAccountUsername(accountID string, appID string, orgID string, username string) error {
 	if username == "" {
 		err := app.storage.UpdateAccountUsername(nil, accountID, username)

@@ -1,2 +1,3 @@
 p, all_accounts, /core/tps/accounts, (POST), All account actions
 p, get_accounts, /core/tps/accounts, (POST), Get accounts
+p, get_accounts_count, /core/tps/accounts/count, (POST), Get accounts count
