@@ -62,6 +62,7 @@ ROKWIRE_CORE_BASE_SERVER_URL | < string > | false | URL of base server which ove
 ROKWIRE_CORE_PRODUCTION_SERVER_URL | < string > | false | URL of base server which overrides the production server listed in the docs.
 ROKWIRE_CORE_TEST_SERVER_URL | < string > | false | URL of base server which overrides the test server listed in the docs.
 ROKWIRE_CORE_DEVELOPMENT_SERVER_URL | < string > | false | URL of base server which overrides the development server listed in the docs.
+USER_AGGREGATE_MINIMUM | < int > | false | value retuned if a service has limited permission and count is less than this value.
 
 ### Run Application
 

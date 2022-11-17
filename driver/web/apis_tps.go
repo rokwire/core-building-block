@@ -243,3 +243,53 @@ func (h TPSApisHandler) getAccounts(l *logs.Log, r *http.Request, claims *tokena
 func NewTPSApisHandler(coreAPIs *core.APIs, serviceID string) TPSApisHandler {
 	return TPSApisHandler{coreAPIs: coreAPIs, serviceID: serviceID}
 }
+
+func (h TPSApisHandler) getAccountsCount(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	// get scopes relevant to accounts
+	if claims.Scope == "" {
+		return l.HttpResponseErrorData(logutils.StatusInvalid, model.TypeScope, nil, nil, http.StatusForbidden, false)
+	}
+
+	// appID and orgID
+	appID := r.URL.Query().Get("app_id")
+	orgID := r.URL.Query().Get("org_id")
+	if appID != "" && orgID != "" {
+		if !claims.AppOrg().CanAccessAppOrg(appID, orgID) {
+			return l.HttpResponseErrorData(logutils.StatusInvalid, model.TypeAppOrgPair, nil, nil, http.StatusForbidden, false)
+		}
+	} else {
+		appID = claims.AppID
+		orgID = claims.OrgID
+	}
+
+	var queryParams map[string]interface{}
+	err := json.NewDecoder(r.Body).Decode(&queryParams)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	// limit search params by scopes
+	scopes := claims.Scopes()
+	minAllAccessScope := authorization.Scope{ServiceID: h.serviceID, Resource: string(model.TypeAccount), Operation: authorization.ScopeOperationGet}
+	searchKeys := make([]string, 0)
+	for k := range queryParams {
+		searchKeys = append(searchKeys, k)
+	}
+	_, _, err = authorization.ResourceAccessForScopes(scopes, minAllAccessScope, searchKeys)
+	if err != nil {
+		return l.HttpResponseErrorData(logutils.StatusInvalid, "accounts count query", nil, err, http.StatusForbidden, true)
+	}
+
+	accounts, err := h.coreAPIs.TPS.TPsGetAccountsCount(queryParams, appID, orgID)
+	if err != nil {
+		errFields := logutils.FieldArgs(queryParams)
+		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeAccount, &errFields, err, http.StatusInternalServerError, false)
+	}
+
+	respData, err := json.Marshal(accounts)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("accounts count response"), nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HttpResponseSuccessJSON(respData)
+}

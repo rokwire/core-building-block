@@ -38,6 +38,27 @@ func (_m *Storage) CountAccountsByGroupID(groupID string) (*int64, error) {
 	return r0, r1
 }
 
+// CountAccountsByParams provides a mock function with given fields: searchParams, appID, orgID
+func (_m *Storage) CountAccountsByParams(searchParams map[string]interface{}, appID string, orgID string) (int64, error) {
+	ret := _m.Called(searchParams, appID, orgID)
+
+	var r0 int64
+	if rf, ok := ret.Get(0).(func(map[string]interface{}, string, string) int64); ok {
+		r0 = rf(searchParams, appID, orgID)
+	} else {
+		r0 = ret.Get(0).(int64)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(map[string]interface{}, string, string) error); ok {
+		r1 = rf(searchParams, appID, orgID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // CountAccountsByRoleID provides a mock function with given fields: roleID
 func (_m *Storage) CountAccountsByRoleID(roleID string) (*int64, error) {
 	ret := _m.Called(roleID)
