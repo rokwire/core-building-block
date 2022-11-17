@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Added
 - Create API to get count of accounts matching criteria [#619](https://github.com/rokwire/core-building-block/issues/619)
+### Fixed
+- Panic on anonymous refresh [#621](https://github.com/rokwire/core-building-block/issues/621)
 
 ## [1.28.0] - 2022-10-24
 ### Added
