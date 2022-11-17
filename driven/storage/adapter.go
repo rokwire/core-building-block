@@ -1226,8 +1226,8 @@ func (sa *Adapter) FindAccountsByParams(searchParams map[string]interface{}, app
 	return accounts, nil
 }
 
-// FindAccountsByParams finds accounts by an arbitrary set of search params
-func (sa *Adapter) FindAccountsCountByParams(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) (int64, error) {
+// CountAccountsByParams find accounts by an arbitrary set of search params
+func (sa *Adapter) CountAccountsByParams(searchParams map[string]interface{}, appID string, orgID string) (int64, error) {
 	//find app orgs accessed by service
 	appOrgs, err := sa.FindApplicationOrganizations(utils.StringOrNil(appID, authutils.AllApps), utils.StringOrNil(orgID, authutils.AllOrgs))
 	if err != nil {
@@ -1244,15 +1244,6 @@ func (sa *Adapter) FindAccountsCountByParams(searchParams map[string]interface{}
 	}
 	searchParams["app_org_id"] = appOrgIDs
 	filter := sa.getFilterForParams(searchParams)
-
-	options := options.Find()
-	options.SetLimit(int64(limit))
-	options.SetSkip(int64(offset))
-
-	// set projection if scope limited
-	if !allAccess {
-		options.SetProjection(sa.getProjectionForKeys(approvedKeys))
-	}
 
 	count, err := sa.db.accounts.CountDocuments(filter)
 	if err != nil {
@@ -3563,18 +3554,35 @@ func (sa *Adapter) DeleteDevice(context TransactionContext, id string) error {
 	return nil
 }
 
-func (sa *Adapter) getFilterForParams(params map[string]interface{}) bson.D {
-	filter := bson.D{}
+func (sa *Adapter) getFilterForParams(params map[string]interface{}) bson.M {
+	filter := bson.M{}
 	for k, v := range params {
 		if k == "id" {
 			k = "_id"
 		}
 		if v != nil && reflect.TypeOf(v).Kind() == reflect.Slice {
-			filter = append(filter, primitive.E{Key: k, Value: bson.M{"$in": v}})
+			filter[k] = bson.M{"$in": v}
+		} else if v != nil && reflect.TypeOf(v).Kind() == reflect.Map {
+			vMap, ok := v.(map[string]interface{})
+			if ok {
+				op, okOp := vMap["operation"].(string)
+				val, okVal := vMap["value"]
+				if okOp && okVal {
+					if op == "any" {
+						if val != nil && reflect.TypeOf(val).Kind() == reflect.Slice {
+							filter[k] = bson.M{"$elemMatch": bson.M{"$in": val}}
+						} else {
+							filter[k] = bson.M{"$elemMatch": val}
+						}
+					}
+					continue
+				}
+			}
+			filter[k] = v
 		} else if v == "$exists" {
-			filter = append(filter, primitive.E{Key: k, Value: bson.M{"$exists": true}})
+			filter[k] = bson.M{"$exists": true}
 		} else {
-			filter = append(filter, primitive.E{Key: k, Value: v})
+			filter[k] = v
 		}
 	}
 	return filter

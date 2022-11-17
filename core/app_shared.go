@@ -17,13 +17,8 @@ package core
 import (
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
-	"strconv"
-	"strings"
 
-	"github.com/rokwire/core-auth-library-go/v2/envloader"
-	"github.com/rokwire/core-auth-library-go/v2/tokenauth"
 	"github.com/rokwire/logging-library-go/errors"
-	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
 )
 
@@ -50,31 +45,10 @@ func (app *application) sharedGetAccountsByParams(searchParams map[string]interf
 	return accounts, nil
 }
 
-func (app *application) sharedGetAccountsCountByParams(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string, claims *tokenauth.Claims) (int64, error) {
-	if !strings.Contains(claims.Permissions, "get_accounts_count") {
-		return -1, nil
-	}
-
-	count, err := app.storage.FindAccountsCountByParams(searchParams, appID, orgID, limit, offset, allAccess, approvedKeys)
+func (app *application) sharedGetAccountsCountByParams(searchParams map[string]interface{}, appID string, orgID string) (int64, error) {
+	count, err := app.storage.CountAccountsByParams(searchParams, appID, orgID)
 	if err != nil {
 		return -1, err
-	}
-
-	if strings.Contains(claims.Permissions, "get_accounts_count_limited") {
-		loggerOpts := logs.LoggerOpts{SuppressRequests: []logs.HttpRequestProperties{logs.NewAwsHealthCheckHttpRequestProperties("/core/version")}}
-		logger := logs.NewLogger("core", &loggerOpts)
-		envLoader := envloader.NewEnvLoader("dev", logger)
-		countEnvString := envLoader.GetAndLogEnvVar("USER_AGGREGATE_MINIMUM", false, true)
-		var count int64
-		countEnv, err := strconv.ParseInt(countEnvString, 10, 64)
-		if err != nil {
-			return -1, err
-		}
-
-		if count < countEnv {
-			return countEnv, nil
-		}
-		return count, nil
 	}
 
 	return count, nil

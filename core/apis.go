@@ -22,7 +22,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/rokwire/core-auth-library-go/v2/tokenauth"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
@@ -466,8 +465,8 @@ func (s *bbsImpl) BBsGetAccounts(searchParams map[string]interface{}, appID stri
 	return s.app.sharedGetAccountsByParams(searchParams, appID, orgID, limit, offset, allAccess, approvedKeys)
 }
 
-func (s *bbsImpl) BBsGetAccountsCount(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string, claims *tokenauth.Claims) (int64, error) {
-	return s.app.sharedGetAccountsCountByParams(searchParams, appID, orgID, limit, offset, allAccess, approvedKeys, claims)
+func (s *bbsImpl) BBsGetAccountsCount(searchParams map[string]interface{}, appID string, orgID string) (int64, error) {
+	return s.app.sharedGetAccountsCountByParams(searchParams, appID, orgID)
 }
 
 ///
@@ -482,8 +481,8 @@ func (s *tpsImpl) TPSGetAccounts(searchParams map[string]interface{}, appID stri
 	return s.app.sharedGetAccountsByParams(searchParams, appID, orgID, limit, offset, allAccess, approvedKeys)
 }
 
-func (s *tpsImpl) TPsGetAccountsCount(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string, claims *tokenauth.Claims) (int64, error) {
-	return s.app.sharedGetAccountsCountByParams(searchParams, appID, orgID, limit, offset, allAccess, approvedKeys, claims)
+func (s *tpsImpl) TPsGetAccountsCount(searchParams map[string]interface{}, appID string, orgID string) (int64, error) {
+	return s.app.sharedGetAccountsCountByParams(searchParams, appID, orgID)
 }
 
 ///

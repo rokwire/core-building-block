@@ -3142,22 +3142,6 @@ paths:
           explode: false
           schema:
             type: string
-        - name: limit
-          in: query
-          description: The maximum number of accounts to return
-          required: false
-          style: form
-          explode: false
-          schema:
-            type: integer
-        - name: offset
-          in: query
-          description: The index of the first account to return
-          required: false
-          style: form
-          explode: false
-          schema:
-            type: integer
       requestBody:
         description: |
           Service account credentials
@@ -3516,22 +3500,6 @@ paths:
           explode: false
           schema:
             type: string
-        - name: limit
-          in: query
-          description: The maximum number of accounts to return
-          required: false
-          style: form
-          explode: false
-          schema:
-            type: integer
-        - name: offset
-          in: query
-          description: The index of the first account to return
-          required: false
-          style: form
-          explode: false
-          schema:
-            type: integer
       requestBody:
         description: |
           Service account credentials
