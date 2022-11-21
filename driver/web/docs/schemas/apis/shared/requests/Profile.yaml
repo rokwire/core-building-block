@@ -30,3 +30,6 @@ properties:
   country:
     type: string
     nullable: true
+  unstructured_properties:
+    type: object
+    nullable: true 

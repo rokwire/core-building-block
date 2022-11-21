@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Rokwire Core Building Block API
   description: Core Building Block API Documentation
-  version: 1.23.0
+  version: 1.29.0
 servers:
   - url: https://api.rokwire.illinois.edu/core
     description: Production server
@@ -63,6 +63,8 @@ paths:
     $ref: "./resources/services/auth/authorize-service.yaml"
   /services/auth/service-regs:
     $ref: "./resources/services/auth/service-regs.yaml"
+  /services/accounts:
+    $ref: "./resources/services/accounts.yaml"
   /services/account:
     $ref: "./resources/services/account.yaml"
   /services/account/mfa:
@@ -71,6 +73,10 @@ paths:
     $ref: "./resources/services/account/preferences.yaml"
   /services/account/profile:
     $ref: "./resources/services/account/profile.yaml"
+  /services/account/system-configs:
+    $ref: "./resources/services/account/system-configs.yaml"
+  /services/account/username:
+    $ref: "./resources/services/account/username.yaml"
   /services/test:
     $ref: "./resources/services/test.yaml"
   /services/application/configs:
@@ -95,38 +101,36 @@ paths:
     $ref: "./resources/admin/account.yaml"
   /admin/account/mfa:
     $ref: "./resources/admin/account/mfa.yaml"
+  /admin/account/username:
+    $ref: "./resources/admin/account/username.yaml"
   /admin/application/accounts:
     $ref: "./resources/admin/application/accounts.yaml"
-  /admin/application/account/{id}/devices:
-    $ref: "./resources/admin/application/account/devices.yaml"
-  /admin/application/account/{account_id}/login-sessions/{session_id}:
-    $ref: "./resources/admin/application/account/login-sessions.yaml"
-  /admin/application/account/permissions/grant:
-    $ref: "./resources/admin/application/account/permissions/grant.yaml"
-  /admin/application/account/permissions/revoke:
-    $ref: "./resources/admin/application/account/permissions/revoke.yaml"
-  /admin/application/account/roles/grant:
-    $ref: "./resources/admin/application/account/roles/grant.yaml"
-  /admin/application/account/roles/revoke:
-    $ref: "./resources/admin/application/account/roles/revoke.yaml"
+  /admin/application/accounts/{id}/devices:
+    $ref: "./resources/admin/application/accounts/devices.yaml"
+  /admin/application/accounts/{account_id}/login-sessions/{session_id}:
+    $ref: "./resources/admin/application/accounts/login-sessions.yaml"
+  /admin/application/accounts/{id}/permissions:
+    $ref: "./resources/admin/application/accounts/permissions.yaml"
+  /admin/application/accounts/{id}/roles:
+    $ref: "./resources/admin/application/accounts/roles.yaml"
+  /admin/application/accounts/{id}/system-configs:
+    $ref: "./resources/admin/application/accounts/system-configs.yaml"
   /admin/application/login-sessions:
     $ref: "./resources/admin/application/login-sessions.yaml"
   /admin/application/groups:
     $ref: "./resources/admin/application/groups.yaml"
   /admin/application/groups/{id}:
     $ref: "./resources/admin/application/groupsID.yaml"
-  /admin/application/group/accounts/add:
-    $ref: "./resources/admin/application/group/accounts/add.yaml"
-  /admin/application/group/accounts/remove:
-    $ref: "./resources/admin/application/group/accounts/remove.yaml"
+  /admin/application/groups/{id}/accounts:
+    $ref: "./resources/admin/application/groups/accounts.yaml"
   /admin/application/permissions:
     $ref: "./resources/admin/application/permissions.yaml"
   /admin/application/roles:
     $ref: "./resources/admin/application/roles.yaml"
   /admin/application/roles/{id}:
     $ref: "./resources/admin/application/rolesID.yaml"
-  /admin/application/role/permissions/grant:
-    $ref: "./resources/admin/application/role/permissions/grant.yaml"
+  /admin/application/roles/{id}/permissions:
+    $ref: "./resources/admin/application/roles/permissions.yaml"
   /admin/organization/applications:
     $ref: "./resources/admin/organization/applications.yaml"
  
@@ -143,6 +147,12 @@ paths:
     $ref: "./resources/bbs/service-account.yaml"
   /bbs/access-token:
     $ref: "./resources/bbs/access-token.yaml"
+  /bbs/access-tokens:
+    $ref: "./resources/bbs/access-tokens.yaml"
+  /bbs/accounts:
+    $ref: "./resources/bbs/accounts.yaml"
+  /bbs/accounts/count:
+   $ref: "./resources/bbs/accounts-count.yaml"
 
   #third-party services
   /tps/service-regs:
@@ -153,18 +163,16 @@ paths:
     $ref: "./resources/tps/service-account.yaml"
   /tps/access-token:
     $ref: "./resources/tps/access-token.yaml"
+  /tps/access-tokens:
+    $ref: "./resources/tps/access-tokens.yaml"
+  /tps/accounts:
+    $ref: "./resources/tps/accounts.yaml"
+  /tps/accounts/count:
+   $ref: "./resources/tps/accounts-count.yaml"
 
   #system
-  /system/auth/login:
-    $ref: "./resources/system/auth/login.yaml"
-  /system/auth/mfa:
-    $ref: "./resources/system/auth/mfa.yaml"
-  /system/auth/refresh:
-    $ref: "./resources/system/auth/refresh.yaml"
-  /system/auth/login-url:
-    $ref: "./resources/system/auth/login-url.yaml"
-  /system/auth/verify-mfa:
-    $ref: "./resources/system/auth/verify-mfa.yaml"
+  /system/auth/app-org-token:
+    $ref: "./resources/system/auth/app-org-token.yaml"
   /system/global-config:
     $ref: "./resources/system/global-config.yaml"
   /system/organizations/{id}:
@@ -185,26 +193,20 @@ paths:
     $ref: "./resources/system/applications.yaml"
   /system/permissions:
     $ref: "./resources/system/permissions.yaml"
-  /system/application-roles:
-    $ref: "./resources/system/application-roles.yaml"
-  /system/application-api-keys:
-    $ref: "./resources/system/application-api-keys.yaml"
   /system/application/configs:
     $ref: "./resources/system/application-configs.yaml"
   /system/application/configs/{id}:
     $ref: "./resources/system/application-configsId.yaml"
-  /system/account/permissions:
-    $ref: "./resources/system/account/permissions.yaml"
-  /system/account/roles:
-    $ref: "./resources/system/account/roles.yaml"
-  /system/account/mfa:
-    $ref: "./resources/system/account/mfa.yaml"
   /system/api-keys:
     $ref: "./resources/system/api-keys.yaml"
   /system/auth-types:
     $ref: "./resources/system/auth-types.yaml"
   /system/auth-types/{id}:
     $ref: "./resources/system/auth-typesID.yaml"
+  /system/app-orgs/{id}:
+    $ref: "./resources/system/application-organizationsId.yaml"
+  /system/app-orgs:
+    $ref: "./resources/system/application-organizations.yaml"
 
   #ui
   /ui/credential/reset:

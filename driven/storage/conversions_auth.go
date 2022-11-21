@@ -1,13 +1,28 @@
+// Copyright 2022 Board of Trustees of the University of Illinois.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package storage
 
 import (
 	"core-building-block/core/model"
 
+	"github.com/rokwire/core-auth-library-go/v2/authutils"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logutils"
 )
 
-//LoginSession
+// LoginSession
 func loginSessionFromStorage(item loginSession, authType model.AuthType, account *model.Account,
 	appOrg model.ApplicationOrganization) model.LoginSession {
 	id := item.ID
@@ -69,7 +84,7 @@ func loginSessionToStorage(item model.LoginSession) *loginSession {
 	externalIDs := item.ExternalIDs
 	var accountAuthTypeID *string
 	var accountAuthTypeIdentifier *string
-	if item.AccountAuthType != nil {
+	if item.AccountAuthType != nil && len(item.AccountAuthType.ID) != 0 {
 		accountAuthTypeID = &item.AccountAuthType.ID
 		accountAuthTypeIdentifier = &item.AccountAuthType.Identifier
 	}
@@ -105,26 +120,26 @@ func loginSessionToStorage(item model.LoginSession) *loginSession {
 		DateRefreshed: dateRefreshed, DateUpdated: dateUpdated, DateCreated: dateCreated}
 }
 
-//ServiceAccount
+// ServiceAccount
 func serviceAccountFromStorage(item serviceAccount, sa *Adapter) (*model.ServiceAccount, error) {
 	var err error
 	var application *model.Application
-	if item.AppID != nil {
-		application, err = sa.getCachedApplication(*item.AppID)
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, &logutils.FieldArgs{"app_id": *item.AppID}, err)
+	if item.AppID != authutils.AllApps {
+		application, err = sa.getCachedApplication(item.AppID)
+		if err != nil || application == nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, &logutils.FieldArgs{"app_id": item.AppID}, err)
 		}
 	}
 	var organization *model.Organization
-	if item.OrgID != nil {
-		organization, err = sa.getCachedOrganization(*item.OrgID)
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, &logutils.FieldArgs{"org_id": *item.OrgID}, err)
+	if item.OrgID != authutils.AllOrgs {
+		organization, err = sa.getCachedOrganization(item.OrgID)
+		if err != nil || organization == nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, &logutils.FieldArgs{"org_id": item.OrgID}, err)
 		}
 	}
 
 	return &model.ServiceAccount{AccountID: item.AccountID, Name: item.Name, Application: application, Organization: organization, Permissions: item.Permissions,
-		FirstParty: item.FirstParty, Credentials: item.Credentials, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}, nil
+		Scopes: item.Scopes, FirstParty: item.FirstParty, Credentials: item.Credentials, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}, nil
 }
 
 func serviceAccountListFromStorage(items []serviceAccount, sa *Adapter) []model.ServiceAccount {
@@ -141,15 +156,15 @@ func serviceAccountListFromStorage(items []serviceAccount, sa *Adapter) []model.
 }
 
 func serviceAccountToStorage(item model.ServiceAccount) *serviceAccount {
-	var appID *string
+	appID := authutils.AllApps
 	if item.Application != nil {
-		appID = &item.Application.ID
+		appID = item.Application.ID
 	}
-	var orgID *string
+	orgID := authutils.AllOrgs
 	if item.Organization != nil {
-		orgID = &item.Organization.ID
+		orgID = item.Organization.ID
 	}
 
-	return &serviceAccount{AccountID: item.AccountID, Name: item.Name, AppID: appID, OrgID: orgID, Permissions: item.Permissions,
+	return &serviceAccount{AccountID: item.AccountID, Name: item.Name, AppID: appID, OrgID: orgID, Permissions: item.Permissions, Scopes: item.Scopes,
 		FirstParty: item.FirstParty, Credentials: item.Credentials, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }

@@ -1,41 +1,63 @@
-#TODO - to be done
-p, all_system_core, /core/system/*, (GET)|(POST)|(DELETE)|(PUT)
+p, all_system_core, /core/system/*, (GET)|(POST)|(DELETE)|(PUT), Access all Core BB system and admin endpoints
 
-p, all_global-config, /core/system/global-config, (GET)|(POST)|(DELETE)|(PUT)
-p, get_global-config, /core/system/global-config, (GET)
-p, update_global-config, /core/system/global-config, (PUT)|(POST)
+p, all_global-config, /core/system/global-config, (GET)|(POST)|(DELETE)|(PUT), All global config actions
+p, get_global-config, /core/system/global-config, (GET), Get global configs
+p, update_global-config, /core/system/global-config, (GET)|(PUT)|(POST), Update and create global configs
 
-p, all_organizations, /core/system/organizations, (GET)|(POST)|(DELETE)|(PUT)
-p, get_organizations, /core/system/organizations, (GET)
-p, update_organizations, /core/system/organizations, (PUT)|(POST)
+p, all_organizations, /core/system/organizations, (GET)|(POST)|(DELETE)|(PUT), All organization actions
+p, all_organizations, /core/system/organizations/*, (GET)|(POST)|(DELETE)|(PUT),
+p, get_organizations, /core/system/organizations, (GET), Get organizations
+p, get_organizations, /core/system/organizations/*, (GET),
+p, update_organizations, /core/system/organizations, (GET)|(POST), Update and create organizations
+p, update_organizations, /core/system/organizations/*, (GET)|(PUT),
 
-p, all_applications, /core/system/applications, (GET)|(POST)|(DELETE)|(PUT)
-p, get_applications, /core/system/applications, (GET)
-p, update_applications, /core/system/applications, (POST)
+p, all_applications, /core/system/applications, (GET)|(POST)|(DELETE)|(PUT), All application actions
+p, all_applications, /core/system/applications/*, (GET)|(POST)|(DELETE)|(PUT),
+p, get_applications, /core/system/applications, (GET), Get applications
+p, get_applications, /core/system/applications/*, (GET),
+p, update_applications, /core/system/applications, (GET)|(POST), Update and create applications
+p, update_applications, /core/system/applications/*, (GET)|(PUT),
 
-p, all_appconfigs, /core/system/application/configs, (GET)|(POST)|(PUT)|(DELETE)
-p, get_appconfig, /core/system/application/configs, (GET)
-p, update_appconfig, /core/system/application/configs, (POST)|(PUT)|(DELETE)
+p, get_app_orgs, /core/system/app-orgs, (GET), Get application organizations
+p, get_app_orgs, /core/system/app-orgs/*, (GET),
+p, update_app_orgs, /core/system/app-orgs, (GET)|(POST), Update and create application organizations
+p, update_app_orgs, /core/system/app-orgs/*, (GET)|(PUT),
+p, all_app_orgs, /core/system/app-orgs, (GET)|(POST)|(DELETE)|(PUT), All application organizations
+p, all_app_orgs, /core/system/app-orgs/*, (GET)|(POST)|(DELETE)|(PUT),
 
-p, all_api-keys, /core/system/api-keys, (GET)|(POST)|(DELETE)|(PUT)
-p, all_api-keys, /core/system/application-api-keys, (GET)
-p, get_api-keys, /core/system/api-keys, (GET)
-p, get_api-keys, /core/admin/application-api-keys, (GET)
-p, update_api-keys, /core/system/api-keys, (POST)|(DELETE)|(PUT)
+p, all_permissions, /core/system/permissions, (GET)|(POST)|(DELETE)|(PUT), All permission actions
+p, update_permissions, /core/system/permissions, (POST)|(PUT), Update and create permissions
 
-p, all_service-regs, /core/system/service-regs, (GET)|(POST)|(DELETE)|(PUT)
+p, all_app-configs, /core/system/application/configs, (GET)|(POST)|(PUT)|(DELETE), All app config actions
+p, all_app-configs, /core/system/application/configs/*, (GET)|(POST)|(PUT)|(DELETE), All app config actions
+p, get_app-configs, /core/system/application/configs, (GET), Get app configs
+p, get_app-configs, /core/system/application/configs/*, (GET),
+p, update_app-configs, /core/system/application/configs, (GET)|(POST), Update and create app configs
+p, update_app-configs, /core/system/application/configs/*, (GET)|(PUT),
+p, delete_app-config, /core/system/application/configs/*, (GET)|(DELETE), Delete app configs
+p, delete_app-config, /core/system/application/configs, (GET),
 
-p, all_service-accounts, /core/system/service-accounts, (GET)|(POST)|(DELETE)|(PUT)
+p, all_service-regs, /core/system/service-regs, (GET)|(POST)|(DELETE)|(PUT), All service registration actions
+p, get_service-regs, /core/system/service-regs, (GET), Get service registrations
+p, update_service-regs, /core/system/service-regs, (GET)|(POST)|(PUT), Update and create service registrations
+p, delete_service-regs, /core/system/service-regs, (GET)|(DELETE), Delete service registrations
 
-p, all_permissions, /core/system/permissions, (GET)|(POST)|(DELETE)|(PUT)
+p, all_service-accounts, /core/system/service-accounts, (GET)|(POST)|(DELETE)|(PUT), All service account actions
+p, all_service-accounts, /core/system/service-accounts/*, (GET)|(POST)|(DELETE)|(PUT),
+p, get_service-accounts, /core/system/service-accounts, (GET), Get service accounts
+p, get_service-accounts, /core/system/service-accounts/*, (GET),
+p, update_service-accounts, /core/system/service-accounts, (GET)|(POST)|(PUT), Update and create service accounts
+p, update_service-accounts, /core/system/service-accounts/*, (GET)|(POST)|(PUT),
+p, delete_service-accounts, /core/system/service-accounts, (GET)|(DELETE), Delete service accounts
+p, delete_service-accounts, /core/system/service-accounts/*, (GET)|(DELETE),
 
-p, all_application-roles, /core/system/application-roles, (GET)|(POST)|(DELETE)|(PUT)
+p, all_api-keys, /core/system/api-keys, (GET)|(POST)|(DELETE)|(PUT), All api key actions
+p, get_api-keys, /core/system/api-keys, (GET), Get api keys
+p, update_api-keys, /core/system/api-keys, (GET)|(POST)|(PUT), Update and create api keys
+p, delete_api-keys, /core/system/api-keys, (GET)|(DELETE), Delete api keys
 
-p, all_account-permissions, /core/system/account/permissions, (GET)|(POST)|(DELETE)|(PUT)
-
-p, all_account-roles, /core/system/account/roles, (GET)|(POST)|(DELETE)|(PUT)
-
-p, all_auth_types, /core/system/auth-types, (GET)|(POST)|(PUT)
-p, get_auth_types, /core/system/auth-types, (GET)
-p, create_auth_types, /core/system/auth-types, (GET)|(POST)
-p, update_auth_types, /core/system/auth-types,  (GET)|(POST)
+p, all_auth-types, /core/system/auth-types, (GET)|(POST)|(PUT)|(DELETE), All auth type actions
+p, all_auth-types, /core/system/auth-types/*, (GET)|(POST)|(PUT)|(DELETE),
+p, get_auth-types, /core/system/auth-types, (GET), Get auth types
+p, update_auth-types, /core/system/auth-types, (GET)|(POST), Update and create auth types
+p, update_auth-types, /core/system/auth-types/*, (PUT),

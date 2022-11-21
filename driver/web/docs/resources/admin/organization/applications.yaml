@@ -4,6 +4,8 @@
   summary: Get applications for an organization
   description: |
     Gets applications for an organization
+
+    **Auth:** Requires admin access token
   security:
     - bearerAuth: []
   responses:
@@ -14,7 +16,7 @@
             schema:
               type: array
               items:
-                $ref: "../../../schemas/application/ApplicationFields.yaml"
+                $ref: "../../../schemas/application/Application.yaml"
       400:
         description: Bad request
       401:

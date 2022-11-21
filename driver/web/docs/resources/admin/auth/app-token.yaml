@@ -5,7 +5,7 @@ get:
   description: |
     Retrieve an admin token for the specified application
 
-    **Auth:** Requires user auth token
+    **Auth:** Requires admin access token
   security:
     - bearerAuth: []
   parameters:
@@ -23,7 +23,7 @@ get:
       content:
         application/json:
           schema:
-            $ref: "../../../schemas/apis/admin/app-token/response/Response.yaml"
+            $ref: "../../../schemas/auth/AdminToken.yaml"
     400:
       description: Bad request
     401:

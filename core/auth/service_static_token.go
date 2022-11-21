@@ -1,3 +1,17 @@
+// Copyright 2022 Board of Trustees of the University of Illinois.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package auth
 
 import (
@@ -8,7 +22,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/rokwire/core-auth-library-go/sigauth"
+	"github.com/rokwire/core-auth-library-go/v2/sigauth"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logutils"
 	"gopkg.in/go-playground/validator.v9"
@@ -21,7 +35,7 @@ const (
 	TypeStaticTokenCreds logutils.MessageDataType = "static token creds"
 )
 
-//staticTokenCreds represents the creds struct for static token auth
+// staticTokenCreds represents the creds struct for static token auth
 type staticTokenCreds struct {
 	Token string `json:"token" validate:"required"`
 }
@@ -86,21 +100,15 @@ func (s *staticTokenServiceAuthImpl) addCredentials(creds *model.ServiceAccountC
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
 	}
 
-	encodedToken := s.hashAndEncodeToken(token)
-
-	now := time.Now().UTC()
-	id, _ := uuid.NewUUID()
-
-	creds.ID = id.String()
+	creds.ID = uuid.NewString()
 	creds.Secrets = map[string]interface{}{
-		"token": encodedToken,
+		"token": s.hashAndEncodeToken(token),
 	}
-	creds.DateCreated = now
+	creds.DateCreated = time.Now().UTC()
 
 	displayParams := map[string]interface{}{
 		"token": token,
 	}
-
 	return displayParams, nil
 }
 
@@ -109,7 +117,7 @@ func (s *staticTokenServiceAuthImpl) hashAndEncodeToken(token string) string {
 	return base64.StdEncoding.EncodeToString(hashedToken)
 }
 
-//initStaticTokenServiceAuth initializes and registers a new static token service auth instance
+// initStaticTokenServiceAuth initializes and registers a new static token service auth instance
 func initStaticTokenServiceAuth(auth *Auth) (*staticTokenServiceAuthImpl, error) {
 	staticToken := &staticTokenServiceAuthImpl{auth: auth, serviceAuthType: ServiceAuthTypeStaticToken}
 

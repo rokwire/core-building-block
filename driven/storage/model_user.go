@@ -1,3 +1,17 @@
+// Copyright 2022 Board of Trustees of the University of Illinois.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package storage
 
 import (
@@ -19,16 +33,22 @@ type account struct {
 
 	MFATypes []mfaType `bson:"mfa_types,omitempty"`
 
-	ExternalIDs map[string]string      `bson:"external_ids"`
-	Preferences map[string]interface{} `bson:"preferences"`
-	Profile     profile                `bson:"profile"`
+	Username      string                 `bson:"username"`
+	ExternalIDs   map[string]string      `bson:"external_ids"`
+	Preferences   map[string]interface{} `bson:"preferences"`
+	SystemConfigs map[string]interface{} `bson:"system_configs"`
+	Profile       profile                `bson:"profile"`
 
 	Devices []userDevice `bson:"devices,omitempty"`
 
-	// Anonymous bool         `bson:"anonymous"`
+	Anonymous bool `bson:"anonymous"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
+
+	LastLoginDate           *time.Time `bson:"last_login_date"`
+	LastAccessTokenDate     *time.Time `bson:"last_access_token_date"`
+	MostRecentClientVersion *string    `bson:"most_recent_client_version"`
 }
 
 type accountRole struct {
@@ -74,6 +94,8 @@ type profile struct {
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
+
+	UnstructuredProperties map[string]interface{} `bson:"unstructured_properties"`
 }
 
 type userDevice struct {

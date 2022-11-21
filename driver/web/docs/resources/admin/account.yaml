@@ -5,7 +5,7 @@ get:
   description: |
     Get the user account
 
-    **Auth:** Requires user auth token
+    **Auth:** Requires admin access token
   security:
     - bearerAuth: []
   responses:

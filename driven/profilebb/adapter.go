@@ -1,3 +1,17 @@
+// Copyright 2022 Board of Trustees of the University of Illinois.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package profilebb
 
 import (
@@ -13,7 +27,7 @@ import (
 	"github.com/rokwire/logging-library-go/logutils"
 )
 
-//Adapter implements the ProfileBuildingBlock interface
+// Adapter implements the ProfileBuildingBlock interface
 type Adapter struct {
 	migrate bool
 	host    string
@@ -104,7 +118,7 @@ type interest struct {
 	Subcategories []string `json:"subcategories"`
 }
 
-//GetProfileBBData gets profile data by queryParams
+// GetProfileBBData gets profile data by queryParams
 func (a *Adapter) GetProfileBBData(queryParams map[string]string, l *logs.Log) (*model.Profile, map[string]interface{}, error) {
 	if !a.migrate {
 		return nil, nil, nil
@@ -205,7 +219,7 @@ func parseTime(timeString string) (*time.Time, error) {
 	return &parsedTime, nil
 }
 
-//NewProfileBBAdapter creates a new profile building block adapter instance
+// NewProfileBBAdapter creates a new profile building block adapter instance
 func NewProfileBBAdapter(migrate bool, profileHost string, apiKey string) *Adapter {
 	return &Adapter{migrate: migrate, host: profileHost, apiKey: apiKey}
 }

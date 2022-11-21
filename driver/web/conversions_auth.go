@@ -1,3 +1,17 @@
+// Copyright 2022 Board of Trustees of the University of Illinois.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package web
 
 import (
@@ -5,13 +19,14 @@ import (
 	Def "core-building-block/driver/web/docs/gen"
 	"core-building-block/utils"
 
-	"github.com/rokwire/core-auth-library-go/authorization"
-	"github.com/rokwire/core-auth-library-go/authservice"
+	"github.com/rokwire/core-auth-library-go/v2/authorization"
+	"github.com/rokwire/core-auth-library-go/v2/authservice"
+	"github.com/rokwire/core-auth-library-go/v2/authutils"
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logutils"
 )
 
-//LoginSession
+// LoginSession
 func loginSessionToDef(item model.LoginSession) Def.SharedResLoginSession {
 	var accountAuthTypeID *string
 	var accountAuthTypeIdentifier *string
@@ -107,23 +122,19 @@ func serviceAccountToDef(item *model.ServiceAccount) *Def.ServiceAccount {
 
 	accountID := item.AccountID
 	name := item.Name
-	var appID *string
+	appID := authutils.AllApps
 	if item.Application != nil {
-		appID = &item.Application.ID
+		appID = item.Application.ID
 	}
-	var orgID *string
+	orgID := authutils.AllOrgs
 	if item.Organization != nil {
-		orgID = &item.Organization.ID
-	}
-	permissions := make([]string, len(item.Permissions))
-	for i, p := range item.Permissions {
-		permissions[i] = p.Name
+		orgID = item.Organization.ID
 	}
 	firstParty := item.FirstParty
 	creds := serviceAccountCredentialListToDef(item.Credentials)
 
-	return &Def.ServiceAccount{AccountId: accountID, Name: name, AppId: appID, OrgId: orgID, Permissions: permissions,
-		FirstParty: firstParty, Creds: &creds}
+	return &Def.ServiceAccount{AccountId: accountID, Name: name, AppId: appID, OrgId: orgID, Permissions: item.GetPermissionNames(),
+		Scopes: item.GetScopeStrings(), FirstParty: firstParty, Creds: &creds}
 }
 
 func serviceAccountCredentialFromDef(item *Def.ServiceAccountCredential) *model.ServiceAccountCredential {
@@ -164,7 +175,7 @@ func serviceAccountCredentialToDef(item *model.ServiceAccountCredential) *Def.Se
 
 	id := item.ID
 	params := item.Params
-	dateCreated := item.DateCreated.Format("2006-01-02T15:04:05.000Z")
+	dateCreated := utils.FormatTime(&item.DateCreated)
 
 	return &Def.ServiceAccountCredential{Id: &id, Name: item.Name, Type: Def.ServiceAccountCredentialType(item.Type),
 		Params: &params, DateCreated: &dateCreated}
@@ -320,37 +331,6 @@ func serviceScopeListToDef(items []model.ServiceScope) []Def.ServiceScope {
 	return out
 }
 
-func scopeListFromDef(items *[]string) ([]authorization.Scope, error) {
-	if items == nil || *items == nil {
-		return nil, nil
-	}
-	out := make([]authorization.Scope, len(*items))
-	for i, item := range *items {
-		defItem, err := authorization.ScopeFromString(item)
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionParse, model.TypeScope, nil, err)
-		}
-		if defItem != nil {
-			out[i] = *defItem
-		} else {
-			out[i] = authorization.Scope{}
-		}
-	}
-	return out, nil
-}
-
-func scopeListToDef(items []authorization.Scope) []string {
-	if items == nil {
-		return nil
-	}
-	out := make([]string, len(items))
-	for i, item := range items {
-		defItem := item.String()
-		out[i] = defItem
-	}
-	return out
-}
-
 func jsonWebKeyToDef(item *model.JSONWebKey) *Def.JWK {
 	if item == nil {
 		return nil
@@ -374,7 +354,7 @@ func jsonWebKeySetDef(items *model.JSONWebKeySet) *Def.JWKS {
 	return &Def.JWKS{Keys: out}
 }
 
-//AuthType
+// AuthType
 func authTypeToDef(item *model.AuthType) *Def.AuthTypeFields {
 	if item == nil {
 		return nil
