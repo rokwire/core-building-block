@@ -2166,7 +2166,7 @@ func (a *Auth) generateToken(claims *tokenauth.Claims) (string, error) {
 
 func (a *Auth) getExp(exp *int64) int64 {
 	if exp == nil {
-		defaultTime := time.Now().Add(time.Minute) //TODO: Set up org configs for default token exp
+		defaultTime := time.Now().Add(30 * time.Minute) //TODO: Set up org configs for default token exp
 		return defaultTime.Unix()
 	}
 	expTime := time.Unix(*exp, 0)

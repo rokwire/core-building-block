@@ -68,5 +68,3 @@ require (
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-replace github.com/rokwire/core-auth-library-go/v2 v2.0.3 => ../auth-lib
