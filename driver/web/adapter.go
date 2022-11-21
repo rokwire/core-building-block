@@ -28,9 +28,9 @@ import (
 	"github.com/getkin/kin-openapi/openapi3filter"
 	"github.com/getkin/kin-openapi/routers"
 	"github.com/getkin/kin-openapi/routers/gorillamux"
-	"github.com/rokwire/logging-library-go/errors"
-	"github.com/rokwire/logging-library-go/logs"
-	"github.com/rokwire/logging-library-go/logutils"
+	"github.com/rokwire/logging-library-go/v2/errors"
+	"github.com/rokwire/logging-library-go/v2/logs"
+	"github.com/rokwire/logging-library-go/v2/logutils"
 	"gopkg.in/yaml.v2"
 
 	"github.com/gorilla/mux"
@@ -69,7 +69,7 @@ type Adapter struct {
 	coreAPIs *core.APIs
 }
 
-type handlerFunc = func(*logs.Log, *http.Request, *tokenauth.Claims) logs.HttpResponse
+type handlerFunc = func(*logs.Log, *http.Request, *tokenauth.Claims) logs.HTTPResponse
 
 // Start starts the module
 func (we Adapter) Start() {
@@ -367,18 +367,20 @@ func (we Adapter) wrapFunc(handler handlerFunc, authorization Authorization) htt
 		var err error
 
 		//1. validate request
+		var response logs.HTTPResponse
 		requestValidationInput, err := we.validateRequest(req)
 		if err != nil {
-			logObj.RequestErrorAction(w, logutils.ActionValidate, logutils.TypeRequest, nil, err, http.StatusBadRequest, true)
+			response = logObj.HTTPResponseErrorAction(logutils.ActionValidate, logutils.TypeRequest, nil, err, http.StatusBadRequest, true)
+			we.completeResponse(w, response, logObj)
 			return
 		}
 
 		//2. process it
-		var response logs.HttpResponse
 		if authorization != nil {
 			responseStatus, claims, err := authorization.check(req)
 			if err != nil {
-				logObj.RequestErrorAction(w, logutils.ActionValidate, logutils.TypeRequest, nil, err, responseStatus, true)
+				response = logObj.HTTPResponseErrorAction(logutils.ActionValidate, logutils.TypeRequest, nil, err, responseStatus, true)
+				we.completeResponse(w, response, logObj)
 				return
 			}
 
@@ -392,31 +394,12 @@ func (we Adapter) wrapFunc(handler handlerFunc, authorization Authorization) htt
 		if we.env != "production" {
 			err = we.validateResponse(requestValidationInput, response)
 			if err != nil {
-				logObj.RequestErrorAction(w, logutils.ActionValidate, logutils.TypeResponse, &logutils.FieldArgs{"code": response.ResponseCode, "headers": response.Headers, "body": string(response.Body)}, err, http.StatusInternalServerError, true)
-				return
+				response = logObj.HTTPResponseErrorAction(logutils.ActionValidate, logutils.TypeResponse, &logutils.FieldArgs{"code": response.ResponseCode, "headers": response.Headers, "body": string(response.Body)}, err, http.StatusInternalServerError, true)
 			}
 		}
 
-		//4. return response
-		//4.1 headers
-		if len(response.Headers) > 0 {
-			for key, values := range response.Headers {
-				if len(values) > 0 {
-					for _, value := range values {
-						w.Header().Add(key, value)
-					}
-				}
-			}
-		}
-		//4.2 response code
-		w.WriteHeader(response.ResponseCode)
-		//4.3 body
-		if len(response.Body) > 0 {
-			w.Write(response.Body)
-		}
-
-		//5. print
-		logObj.RequestComplete()
+		//4. complete response
+		we.completeResponse(w, response, logObj)
 	}
 }
 
@@ -435,7 +418,7 @@ func (we Adapter) uiWrapFunc(handler handlerFunc, authorization Authorization) h
 		}
 
 		//2. process it
-		var response logs.HttpResponse
+		var response logs.HTTPResponse
 		if authorization != nil {
 			_, claims, err := authorization.check(req)
 			if err != nil {
@@ -464,7 +447,8 @@ func (we Adapter) serveResponseUI(w http.ResponseWriter, message string, isErr b
 	}
 	tmpl, err := template.ParseFiles(file)
 	if err != nil {
-		l.RequestErrorAction(w, logutils.ActionLoad, "page template", nil, err, http.StatusInternalServerError, true)
+		response := l.HTTPResponseErrorAction(logutils.ActionLoad, "page template", nil, err, http.StatusInternalServerError, true)
+		we.completeResponse(w, response, l)
 		return
 	}
 	data := HTMLResponseTemplate{Message: message}
@@ -495,7 +479,7 @@ func (we Adapter) validateRequest(req *http.Request) (*openapi3filter.RequestVal
 	return requestValidationInput, nil
 }
 
-func (we Adapter) validateResponse(requestValidationInput *openapi3filter.RequestValidationInput, response logs.HttpResponse) error {
+func (we Adapter) validateResponse(requestValidationInput *openapi3filter.RequestValidationInput, response logs.HTTPResponse) error {
 	responseCode := response.ResponseCode
 	body := response.Body
 	header := response.Headers
@@ -513,6 +497,29 @@ func (we Adapter) validateResponse(requestValidationInput *openapi3filter.Reques
 		return err
 	}
 	return nil
+}
+
+func (we Adapter) completeResponse(w http.ResponseWriter, response logs.HTTPResponse, l *logs.Log) {
+	//14. return response
+	//1.1 headers
+	if len(response.Headers) > 0 {
+		for key, values := range response.Headers {
+			if len(values) > 0 {
+				for _, value := range values {
+					w.Header().Add(key, value)
+				}
+			}
+		}
+	}
+	//1.2 response code
+	w.WriteHeader(response.ResponseCode)
+	//1.3 body
+	if len(response.Body) > 0 {
+		w.Write(response.Body)
+	}
+
+	//2. print
+	l.RequestComplete()
 }
 
 // NewWebAdapter creates new WebAdapter instance

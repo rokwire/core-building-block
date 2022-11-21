@@ -37,9 +37,9 @@ import (
 	"gopkg.in/go-playground/validator.v9"
 	"gopkg.in/gomail.v2"
 
-	"github.com/rokwire/logging-library-go/errors"
-	"github.com/rokwire/logging-library-go/logs"
-	"github.com/rokwire/logging-library-go/logutils"
+	"github.com/rokwire/logging-library-go/v2/errors"
+	"github.com/rokwire/logging-library-go/v2/logs"
+	"github.com/rokwire/logging-library-go/v2/logutils"
 )
 
 const (
@@ -317,7 +317,7 @@ func (a *Auth) applySignUpExternal(context storage.TransactionContext, authType 
 
 	externalRoles, externalGroups, err := a.getExternalUserAuthorization(externalUser, identityProviderSetting)
 	if err != nil {
-		l.WarnAction(logutils.ActionGet, "external authorization", err)
+		l.WarnError(logutils.MessageActionError(logutils.ActionGet, "external authorization", nil), err)
 	}
 
 	//4. check username
@@ -1221,7 +1221,7 @@ func (a *Auth) deleteLoginSession(context storage.TransactionContext, loginSessi
 
 	err := a.storage.DeleteLoginSession(context, loginSession.ID)
 	if err != nil {
-		l.WarnAction(logutils.ActionDelete, model.TypeLoginSession, err)
+		l.WarnError(logutils.MessageActionError(logutils.ActionDelete, model.TypeLoginSession, nil), err)
 		return err
 	}
 	return nil
@@ -1240,7 +1240,7 @@ func (a *Auth) deleteLoginSessions(context storage.TransactionContext, loginSess
 	//delete the sessions from the storage
 	err := a.storage.DeleteLoginSessionsByIDs(context, ids)
 	if err != nil {
-		l.WarnAction(logutils.ActionDelete, model.TypeLoginSession, err)
+		l.WarnError(logutils.MessageActionError(logutils.ActionDelete, model.TypeLoginSession, nil), err)
 		return err
 	}
 	return nil
@@ -2166,7 +2166,7 @@ func (a *Auth) generateToken(claims *tokenauth.Claims) (string, error) {
 
 func (a *Auth) getExp(exp *int64) int64 {
 	if exp == nil {
-		defaultTime := time.Now().Add(30 * time.Minute) //TODO: Set up org configs for default token exp
+		defaultTime := time.Now().Add(time.Minute) //TODO: Set up org configs for default token exp
 		return defaultTime.Unix()
 	}
 	expTime := time.Unix(*exp, 0)
