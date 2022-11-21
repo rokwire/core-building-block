@@ -1129,8 +1129,9 @@ func (a *Auth) applyLogin(anonymous bool, sub string, authType model.AuthType, a
 			}
 		}
 		// update account usage information
-		if accountAuthType != nil {
-			err = a.storage.UpdateAccountUsageInfo(context, accountAuthType.Account.ID, true, true, clientVersion)
+		// TODO: Handle anonymous accounts if needed in the future
+		if !anonymous {
+			err = a.storage.UpdateAccountUsageInfo(context, sub, true, true, clientVersion)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountUsageInfo, nil, err)
 			}
@@ -1857,14 +1858,14 @@ func (a *Auth) constructServiceAccount(accountID string, name string, appID stri
 	}
 
 	var application *model.Application
-	if appID != model.AllApps {
+	if appID != authutils.AllApps {
 		application, err = a.storage.FindApplication(nil, appID)
 		if err != nil || application == nil {
 			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
 		}
 	}
 	var organization *model.Organization
-	if orgID != model.AllOrgs {
+	if orgID != authutils.AllOrgs {
 		organization, err = a.storage.FindOrganization(orgID)
 		if err != nil || organization == nil {
 			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
@@ -1911,11 +1912,11 @@ func (a *Auth) checkServiceAccountCreds(r *sigauth.Request, accountID *string, f
 
 func (a *Auth) buildAccessTokenForServiceAccount(account model.ServiceAccount, authType string) (string, *model.AppOrgPair, error) {
 	permissions := account.GetPermissionNames()
-	appID := model.AllApps
+	appID := authutils.AllApps
 	if account.Application != nil {
 		appID = account.Application.ID
 	}
-	orgID := model.AllOrgs
+	orgID := authutils.AllOrgs
 	if account.Organization != nil {
 		orgID = account.Organization.ID
 	}

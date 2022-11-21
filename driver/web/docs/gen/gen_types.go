@@ -542,17 +542,18 @@ type Profile struct {
 
 // ProfileFields defines model for ProfileFields.
 type ProfileFields struct {
-	Address   *string `json:"address"`
-	BirthYear *int    `json:"birth_year"`
-	Country   *string `json:"country"`
-	Email     *string `json:"email"`
-	FirstName *string `json:"first_name,omitempty"`
-	Id        *string `json:"id,omitempty"`
-	LastName  *string `json:"last_name,omitempty"`
-	Phone     *string `json:"phone"`
-	PhotoUrl  *string `json:"photo_url,omitempty"`
-	State     *string `json:"state"`
-	ZipCode   *string `json:"zip_code"`
+	Address                *string                 `json:"address"`
+	BirthYear              *int                    `json:"birth_year"`
+	Country                *string                 `json:"country"`
+	Email                  *string                 `json:"email"`
+	FirstName              *string                 `json:"first_name,omitempty"`
+	Id                     *string                 `json:"id,omitempty"`
+	LastName               *string                 `json:"last_name,omitempty"`
+	Phone                  *string                 `json:"phone"`
+	PhotoUrl               *string                 `json:"photo_url,omitempty"`
+	State                  *string                 `json:"state"`
+	UnstructuredProperties *map[string]interface{} `json:"unstructured_properties"`
+	ZipCode                *string                 `json:"zip_code"`
 }
 
 // PubKey defines model for PubKey.
@@ -984,30 +985,32 @@ type SharedReqParamsSetEmailCredential struct {
 
 // SharedReqProfile defines model for _shared_req_Profile.
 type SharedReqProfile struct {
-	Address   *string `json:"address"`
-	BirthYear *int    `json:"birth_year"`
-	Country   *string `json:"country"`
-	Email     *string `json:"email"`
-	FirstName *string `json:"first_name"`
-	LastName  *string `json:"last_name"`
-	Phone     *string `json:"phone"`
-	PhotoUrl  *string `json:"photo_url"`
-	State     *string `json:"state"`
-	ZipCode   *string `json:"zip_code"`
+	Address                *string                 `json:"address"`
+	BirthYear              *int                    `json:"birth_year"`
+	Country                *string                 `json:"country"`
+	Email                  *string                 `json:"email"`
+	FirstName              *string                 `json:"first_name"`
+	LastName               *string                 `json:"last_name"`
+	Phone                  *string                 `json:"phone"`
+	PhotoUrl               *string                 `json:"photo_url"`
+	State                  *string                 `json:"state"`
+	UnstructuredProperties *map[string]interface{} `json:"unstructured_properties"`
+	ZipCode                *string                 `json:"zip_code"`
 }
 
 // SharedReqProfileNullable defines model for _shared_req_ProfileNullable.
 type SharedReqProfileNullable struct {
-	Address   *string `json:"address"`
-	BirthYear *int    `json:"birth_year"`
-	Country   *string `json:"country"`
-	Email     *string `json:"email"`
-	FirstName *string `json:"first_name"`
-	LastName  *string `json:"last_name"`
-	Phone     *string `json:"phone"`
-	PhotoUrl  *string `json:"photo_url"`
-	State     *string `json:"state"`
-	ZipCode   *string `json:"zip_code"`
+	Address                *string                 `json:"address"`
+	BirthYear              *int                    `json:"birth_year"`
+	Country                *string                 `json:"country"`
+	Email                  *string                 `json:"email"`
+	FirstName              *string                 `json:"first_name"`
+	LastName               *string                 `json:"last_name"`
+	Phone                  *string                 `json:"phone"`
+	PhotoUrl               *string                 `json:"photo_url"`
+	State                  *string                 `json:"state"`
+	UnstructuredProperties *map[string]interface{} `json:"unstructured_properties"`
+	ZipCode                *string                 `json:"zip_code"`
 }
 
 // SharedReqRefresh defines model for _shared_req_Refresh.
@@ -1369,6 +1372,36 @@ type PostBbsAccessTokenJSONBody = ServicesReqServiceAccountsAccessToken
 // PostBbsAccessTokensJSONBody defines parameters for PostBbsAccessTokens.
 type PostBbsAccessTokensJSONBody = ServicesReqServiceAccountsAccessTokens
 
+// PostBbsAccountsJSONBody defines parameters for PostBbsAccounts.
+type PostBbsAccountsJSONBody = map[string]interface{}
+
+// PostBbsAccountsParams defines parameters for PostBbsAccounts.
+type PostBbsAccountsParams struct {
+	// The application ID to use to filter accounts
+	AppId *string `form:"app_id,omitempty" json:"app_id,omitempty"`
+
+	// The organization ID to use to filter accounts
+	OrgId *string `form:"org_id,omitempty" json:"org_id,omitempty"`
+
+	// The maximum number of accounts to return
+	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+
+	// The index of the first account to return
+	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
+}
+
+// PostBbsAccountsCountJSONBody defines parameters for PostBbsAccountsCount.
+type PostBbsAccountsCountJSONBody = map[string]interface{}
+
+// PostBbsAccountsCountParams defines parameters for PostBbsAccountsCount.
+type PostBbsAccountsCountParams struct {
+	// The application ID to use to filter accounts
+	AppId *string `form:"app_id,omitempty" json:"app_id,omitempty"`
+
+	// The organization ID to use to filter accounts
+	OrgId *string `form:"org_id,omitempty" json:"org_id,omitempty"`
+}
+
 // PostBbsServiceAccountIdJSONBody defines parameters for PostBbsServiceAccountId.
 type PostBbsServiceAccountIdJSONBody = ServicesReqServiceAccountsParams
 
@@ -1702,6 +1735,36 @@ type PostTpsAccessTokenJSONBody = ServicesReqServiceAccountsAccessToken
 // PostTpsAccessTokensJSONBody defines parameters for PostTpsAccessTokens.
 type PostTpsAccessTokensJSONBody = ServicesReqServiceAccountsAccessTokens
 
+// PostTpsAccountsJSONBody defines parameters for PostTpsAccounts.
+type PostTpsAccountsJSONBody = map[string]interface{}
+
+// PostTpsAccountsParams defines parameters for PostTpsAccounts.
+type PostTpsAccountsParams struct {
+	// The application ID to use to filter accounts
+	AppId *string `form:"app_id,omitempty" json:"app_id,omitempty"`
+
+	// The organization ID to use to filter accounts
+	OrgId *string `form:"org_id,omitempty" json:"org_id,omitempty"`
+
+	// The maximum number of accounts to return
+	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+
+	// The index of the first account to return
+	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
+}
+
+// PostTpsAccountsCountJSONBody defines parameters for PostTpsAccountsCount.
+type PostTpsAccountsCountJSONBody = map[string]interface{}
+
+// PostTpsAccountsCountParams defines parameters for PostTpsAccountsCount.
+type PostTpsAccountsCountParams struct {
+	// The application ID to use to filter accounts
+	AppId *string `form:"app_id,omitempty" json:"app_id,omitempty"`
+
+	// The organization ID to use to filter accounts
+	OrgId *string `form:"org_id,omitempty" json:"org_id,omitempty"`
+}
+
 // PostTpsServiceAccountIdJSONBody defines parameters for PostTpsServiceAccountId.
 type PostTpsServiceAccountIdJSONBody = ServicesReqServiceAccountsParams
 
@@ -1791,6 +1854,12 @@ type PostBbsAccessTokenJSONRequestBody = PostBbsAccessTokenJSONBody
 
 // PostBbsAccessTokensJSONRequestBody defines body for PostBbsAccessTokens for application/json ContentType.
 type PostBbsAccessTokensJSONRequestBody = PostBbsAccessTokensJSONBody
+
+// PostBbsAccountsJSONRequestBody defines body for PostBbsAccounts for application/json ContentType.
+type PostBbsAccountsJSONRequestBody = PostBbsAccountsJSONBody
+
+// PostBbsAccountsCountJSONRequestBody defines body for PostBbsAccountsCount for application/json ContentType.
+type PostBbsAccountsCountJSONRequestBody = PostBbsAccountsCountJSONBody
 
 // PostBbsServiceAccountIdJSONRequestBody defines body for PostBbsServiceAccountId for application/json ContentType.
 type PostBbsServiceAccountIdJSONRequestBody = PostBbsServiceAccountIdJSONBody
@@ -1938,6 +2007,12 @@ type PostTpsAccessTokenJSONRequestBody = PostTpsAccessTokenJSONBody
 
 // PostTpsAccessTokensJSONRequestBody defines body for PostTpsAccessTokens for application/json ContentType.
 type PostTpsAccessTokensJSONRequestBody = PostTpsAccessTokensJSONBody
+
+// PostTpsAccountsJSONRequestBody defines body for PostTpsAccounts for application/json ContentType.
+type PostTpsAccountsJSONRequestBody = PostTpsAccountsJSONBody
+
+// PostTpsAccountsCountJSONRequestBody defines body for PostTpsAccountsCount for application/json ContentType.
+type PostTpsAccountsCountJSONRequestBody = PostTpsAccountsCountJSONBody
 
 // PostTpsServiceAccountIdJSONRequestBody defines body for PostTpsServiceAccountId for application/json ContentType.
 type PostTpsServiceAccountIdJSONRequestBody = PostTpsServiceAccountIdJSONBody
