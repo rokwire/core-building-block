@@ -63,6 +63,27 @@ func accountsToDef(items []model.Account) []Def.SharedResAccount {
 	return result
 }
 
+// func restrictAccountData(item *model.Account, claims *tokenauth.Claims) (*Def.SharedResAccount, error) {
+// 	if item == nil {
+// 		return nil, nil
+// 	}
+// 	if claims == nil {
+// 		return nil, errors.ErrorData(logutils.StatusMissing, logutils.TypeClaims, nil)
+// 	}
+
+// 	scopeStrings := strings.Split(claims.Scope, ",")
+// 	scopes, err := scopeListFromDef(&scopeStrings)
+// 	if err != nil {
+// 		return nil, errors.WrapErrorAction(logutils.ActionParse, model.TypeScope, nil, err)
+// 	}
+
+// 	for _, scope := range scopes {
+// 		// if scope.Operation !=
+// 		//TODO: use scopes to set projections on accounts collection find
+// 		splitResource := strings.Split(scope.Resource, ".")
+// 	}
+// }
+
 func partialAccountToDef(item model.Account, params map[string]interface{}) *Def.PartialAccount {
 	//permissions
 	permissions := applicationPermissionsToDef(item.Permissions)
@@ -224,9 +245,15 @@ func profileFromDef(item *Def.SharedReqProfile) model.Profile {
 	if item.Country != nil {
 		country = *item.Country
 	}
+
+	var unstructuredProperties map[string]interface{}
+	if item.UnstructuredProperties != nil {
+		unstructuredProperties = *item.UnstructuredProperties
+	}
+
 	return model.Profile{PhotoURL: photoURL, FirstName: firstName, LastName: lastName,
 		Email: email, Phone: phone, BirthYear: int16(birthYear), Address: address, ZipCode: zipCode,
-		State: state, Country: country}
+		State: state, Country: country, UnstructuredProperties: unstructuredProperties}
 }
 
 func mfaDataListToDef(items []model.MFAType) []Def.SharedResMfa {
@@ -267,10 +294,12 @@ func profileToDef(item *model.Profile) *Def.ProfileFields {
 	if item == nil {
 		return nil
 	}
-	birthYear := int(item.BirthYear)
-	return &Def.ProfileFields{Id: &item.ID, PhotoUrl: &item.PhotoURL, FirstName: &item.FirstName, LastName: &item.LastName,
-		Email: &item.Email, Phone: &item.Phone, BirthYear: &birthYear, Address: &item.Address, ZipCode: &item.ZipCode,
-		State: &item.State, Country: &item.Country}
+
+	itemVal := *item
+	birthYear := int(itemVal.BirthYear)
+	return &Def.ProfileFields{Id: &itemVal.ID, PhotoUrl: &itemVal.PhotoURL, FirstName: &itemVal.FirstName, LastName: &itemVal.LastName,
+		Email: &itemVal.Email, Phone: &itemVal.Phone, BirthYear: &birthYear, Address: &itemVal.Address, ZipCode: &itemVal.ZipCode,
+		State: &itemVal.State, Country: &itemVal.Country, UnstructuredProperties: &itemVal.UnstructuredProperties}
 }
 
 func profileFromDefNullable(item *Def.SharedReqProfileNullable) model.Profile {
@@ -318,9 +347,15 @@ func profileFromDefNullable(item *Def.SharedReqProfileNullable) model.Profile {
 	if item.Country != nil {
 		country = *item.Country
 	}
+
+	var unstructuredProperties map[string]interface{}
+	if item.UnstructuredProperties != nil {
+		unstructuredProperties = *item.UnstructuredProperties
+	}
+
 	return model.Profile{PhotoURL: photoURL, FirstName: firstName, LastName: lastName,
 		Email: email, Phone: phone, BirthYear: int16(birthYear), Address: address, ZipCode: zipCode,
-		State: state, Country: country}
+		State: state, Country: country, UnstructuredProperties: unstructuredProperties}
 }
 
 // Device

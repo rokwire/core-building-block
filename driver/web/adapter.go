@@ -43,9 +43,8 @@ import (
 
 // Adapter entity
 type Adapter struct {
-	env       string
-	serviceID string
-	port      string
+	env  string
+	port string
 
 	productionServerURL  string
 	testServerURL        string
@@ -200,6 +199,9 @@ func (we Adapter) Start() {
 	bbsSubrouter.HandleFunc("/service-account/{id}", we.wrapFunc(we.bbsApisHandler.getServiceAccountParams, nil)).Methods("POST") //Public
 	bbsSubrouter.HandleFunc("/access-token", we.wrapFunc(we.bbsApisHandler.getServiceAccessToken, nil)).Methods("POST")           //Public
 	bbsSubrouter.HandleFunc("/access-tokens", we.wrapFunc(we.bbsApisHandler.getServiceAccessTokens, nil)).Methods("POST")         //Public
+
+	bbsSubrouter.HandleFunc("/accounts", we.wrapFunc(we.bbsApisHandler.getAccounts, we.auth.bbs.permissions)).Methods("POST")
+	bbsSubrouter.HandleFunc("/accounts/count", we.wrapFunc(we.bbsApisHandler.getAccountsCount, we.auth.bbs.permissions)).Methods("POST")
 	///
 
 	///third-party services ///
@@ -210,6 +212,9 @@ func (we Adapter) Start() {
 	tpsSubrouter.HandleFunc("/service-account/{id}", we.wrapFunc(we.tpsApisHandler.getServiceAccountParams, nil)).Methods("POST") //Public
 	tpsSubrouter.HandleFunc("/access-token", we.wrapFunc(we.tpsApisHandler.getServiceAccessToken, nil)).Methods("POST")           //Public
 	tpsSubrouter.HandleFunc("/access-tokens", we.wrapFunc(we.tpsApisHandler.getServiceAccessTokens, nil)).Methods("POST")         //Public
+
+	tpsSubrouter.HandleFunc("/accounts", we.wrapFunc(we.tpsApisHandler.getAccounts, we.auth.tps.permissions)).Methods("POST")
+	tpsSubrouter.HandleFunc("/accounts/count", we.wrapFunc(we.tpsApisHandler.getAccountsCount, we.auth.tps.permissions)).Methods("POST")
 	///
 
 	///system ///
@@ -556,10 +561,11 @@ func NewWebAdapter(env string, serviceID string, serviceRegManager *authservice.
 	servicesApisHandler := NewServicesApisHandler(coreAPIs)
 	adminApisHandler := NewAdminApisHandler(coreAPIs)
 	encApisHandler := NewEncApisHandler(coreAPIs)
-	bbsApisHandler := NewBBsApisHandler(coreAPIs)
-	tpsApisHandler := NewTPSApisHandler(coreAPIs)
+	bbsApisHandler := NewBBsApisHandler(coreAPIs, serviceID)
+	tpsApisHandler := NewTPSApisHandler(coreAPIs, serviceID)
 	systemApisHandler := NewSystemApisHandler(coreAPIs)
-	return Adapter{env: env, port: port, productionServerURL: prodServerURL, testServerURL: testServerURL, developmentServerURL: devServerURL, cachedYamlDoc: yamlDoc, openAPIRouter: openAPIRouter, host: host, auth: auth, logger: logger, defaultApisHandler: defaultApisHandler, servicesApisHandler: servicesApisHandler, adminApisHandler: adminApisHandler,
+	return Adapter{env: env, port: port, productionServerURL: prodServerURL, testServerURL: testServerURL, developmentServerURL: devServerURL, cachedYamlDoc: yamlDoc,
+		openAPIRouter: openAPIRouter, host: host, auth: auth, logger: logger, defaultApisHandler: defaultApisHandler, servicesApisHandler: servicesApisHandler, adminApisHandler: adminApisHandler,
 		encApisHandler: encApisHandler, bbsApisHandler: bbsApisHandler, tpsApisHandler: tpsApisHandler, systemApisHandler: systemApisHandler, coreAPIs: coreAPIs}
 }
 
