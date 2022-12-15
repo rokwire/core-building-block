@@ -38,7 +38,7 @@ type totpMfaImpl struct {
 	mfaType string
 }
 
-func (m *totpMfaImpl) verify(context storage.TransactionContext, mfa *model.MFAType, accountID string, code string) (*string, error) {
+func (m *totpMfaImpl) verify(sa storage.Adapter, mfa *model.MFAType, accountID string, code string) (*string, error) {
 	if mfa == nil || mfa.Params == nil {
 		return nil, errors.ErrorData(logutils.StatusMissing, "mfa params", nil)
 	}

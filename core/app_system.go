@@ -59,15 +59,15 @@ func (app *application) sysUpdateGlobalConfig(setting string) error {
 	}
 
 	gc.Setting = setting
-	transaction := func(context storage.TransactionContext) error {
+	transaction := func(sa storage.Adapter) error {
 		//1. clear the global config - we always keep only one global config
-		err := app.storage.DeleteGlobalConfig(context)
+		err := sa.DeleteGlobalConfig(context)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeGlobalConfig, nil, err)
 		}
 
 		//2. add the new one
-		err = app.storage.CreateGlobalConfig(context, gc)
+		err = sa.CreateGlobalConfig(context, gc)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionInsert, model.TypeGlobalConfig, nil, err)
 		}

@@ -37,7 +37,7 @@ type emailMfaImpl struct {
 	mfaType string
 }
 
-func (m *emailMfaImpl) verify(context storage.TransactionContext, mfa *model.MFAType, accountID string, code string) (*string, error) {
+func (m *emailMfaImpl) verify(sa storage.Adapter, mfa *model.MFAType, accountID string, code string) (*string, error) {
 	if mfa == nil || mfa.Params == nil {
 		return nil, errors.ErrorData(logutils.StatusMissing, "mfa params", nil)
 	}
@@ -65,7 +65,7 @@ func (m *emailMfaImpl) verify(context storage.TransactionContext, mfa *model.MFA
 	//remove code and expiration from params in storage
 	delete(mfa.Params, "code")
 	delete(mfa.Params, "expires")
-	err := m.auth.storage.UpdateMFAType(context, mfa, accountID)
+	err := sa.UpdateMFAType(mfa, accountID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeMFAType, nil, err)
 	}

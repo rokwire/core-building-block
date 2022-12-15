@@ -40,7 +40,7 @@ type recoveryMfaImpl struct {
 	mfaType string
 }
 
-func (m *recoveryMfaImpl) verify(context storage.TransactionContext, mfa *model.MFAType, accountID string, code string) (*string, error) {
+func (m *recoveryMfaImpl) verify(sa storage.Adapter, mfa *model.MFAType, accountID string, code string) (*string, error) {
 	if mfa == nil || mfa.Params == nil {
 		return nil, errors.ErrorData(logutils.StatusMissing, "mfa params", nil)
 	}
@@ -66,7 +66,7 @@ func (m *recoveryMfaImpl) verify(context storage.TransactionContext, mfa *model.
 			now := time.Now().UTC()
 			mfa.DateUpdated = &now
 
-			err := m.auth.storage.UpdateMFAType(context, mfa, accountID)
+			err := sa.UpdateMFAType(mfa, accountID)
 			if err != nil {
 				return nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeMFAType, &logutils.FieldArgs{"account_id": accountID, "id": mfa.ID}, err)
 			}

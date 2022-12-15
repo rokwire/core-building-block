@@ -179,12 +179,12 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 //		allSessions (bool): If to remove the current session only or all sessions for the app/org for the account
 func (a *Auth) Logout(appID string, orgID string, currentAccountID string, sessionID string, allSessions bool, l *logs.Log) error {
 	if allSessions {
-		err := a.storage.DeleteLoginSessionsByIdentifier(nil, currentAccountID)
+		err := a.storage.DeleteLoginSessionsByIdentifier(currentAccountID)
 		if err != nil {
 			return errors.Wrapf("error deleting session by accountID - %s", err, currentAccountID)
 		}
 	} else {
-		err := a.storage.DeleteLoginSession(nil, sessionID)
+		err := a.storage.DeleteLoginSession(sessionID)
 		if err != nil {
 			return errors.Wrapf("error deleting session - %s", err, sessionID)
 		}
@@ -288,9 +288,9 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 		l.Infof("the session is expired, so delete it and return null - %s", refreshToken)
 
 		//remove the session
-		err = a.deleteLoginSession(nil, *loginSession, l)
+		err = a.deleteLoginSession(*a.storage.(*storage.Adapter), *loginSession, l)
 		if err != nil {
-			return nil, errors.WrapErrorAction("error deleting expired session", "", nil, err)
+			return nil, errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, nil, err)
 		}
 
 		//return nul
@@ -307,9 +307,9 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 		l.Infof("previous refresh token being used, so delete login session and return null - %s", refreshToken)
 
 		//remove the session
-		err = a.deleteLoginSession(nil, *loginSession, l)
+		err = a.deleteLoginSession(*a.storage.(*storage.Adapter), *loginSession, l)
 		if err != nil {
-			return nil, errors.WrapErrorAction("error deleting expired session", "", nil, err)
+			return nil, errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, nil, err)
 		}
 
 		return nil, nil
@@ -396,7 +396,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 	loginSession.DateRefreshed = &now
 
 	//store the updated session
-	err = a.storage.UpdateLoginSession(nil, *loginSession)
+	err = a.storage.UpdateLoginSession(*loginSession)
 	if err != nil {
 		l.Infof("error updating login session on refresh - %s", refreshToken)
 		return nil, errors.WrapErrorAction("error updating login session on refresh", "", nil, err)
@@ -405,7 +405,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 	// update account usage information
 	// TODO: Handle anonymous accounts if needed in the future
 	if !anonymous {
-		err = a.storage.UpdateAccountUsageInfo(nil, loginSession.Identifier, false, true, clientVersion)
+		err = a.storage.UpdateAccountUsageInfo(loginSession.Identifier, false, true, clientVersion)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountUsageInfo, nil, err)
 		}
@@ -477,15 +477,15 @@ func (a *Auth) LoginMFA(apiKey string, accountID string, sessionID string, ident
 	var message string
 	var loginSession *model.LoginSession
 	var err error
-	transaction := func(context storage.TransactionContext) error {
+	transaction := func(sa storage.Adapter) error {
 		//1. find mfa type in account
-		loginSession, err = a.storage.FindAndUpdateLoginSession(context, sessionID)
+		loginSession, err = sa.FindAndUpdateLoginSession(sessionID)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, &logutils.FieldArgs{"session_id": sessionID}, err)
 		}
 
 		if loginSession.MfaAttempts >= maxMfaAttempts {
-			a.deleteLoginSession(context, *loginSession, l)
+			a.deleteLoginSession(sa, *loginSession, l)
 			message = fmt.Sprintf("max mfa attempts reached: %d", maxMfaAttempts)
 			return errors.New(message)
 		}
@@ -498,7 +498,7 @@ func (a *Auth) LoginMFA(apiKey string, accountID string, sessionID string, ident
 
 		//3. find mfa type in account
 		errFields := &logutils.FieldArgs{"account_id": accountID, "type": mfaType}
-		mfa, err := a.storage.FindMFAType(context, accountID, identifier, mfaType)
+		mfa, err := sa.FindMFAType(accountID, identifier, mfaType)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeMFAType, errFields, err)
 		}
@@ -520,7 +520,7 @@ func (a *Auth) LoginMFA(apiKey string, accountID string, sessionID string, ident
 			return errors.ErrorData(logutils.StatusInvalid, "login state", errFields)
 		}
 		if loginSession.StateExpires != nil && time.Now().UTC().After(*loginSession.StateExpires) {
-			a.deleteLoginSession(context, *loginSession, l)
+			a.deleteLoginSession(sa, *loginSession, l)
 			message = "expired state"
 			return errors.ErrorData(logutils.StatusInvalid, "expired state", nil)
 		}
@@ -530,7 +530,7 @@ func (a *Auth) LoginMFA(apiKey string, accountID string, sessionID string, ident
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionLoadCache, typeMfaType, nil, err)
 		}
-		verifyMsg, err := mfaImpl.verify(context, mfa, accountID, mfaCode)
+		verifyMsg, err := mfaImpl.verify(sa, mfa, accountID, mfaCode)
 		if err != nil {
 			if verifyMsg != nil {
 				message = *verifyMsg
@@ -541,7 +541,7 @@ func (a *Auth) LoginMFA(apiKey string, accountID string, sessionID string, ident
 		loginSession.State = ""
 		loginSession.StateExpires = nil
 		loginSession.MfaAttempts = 0
-		err = a.storage.UpdateLoginSession(context, *loginSession)
+		err = sa.UpdateLoginSession(*loginSession)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeLoginSession, nil, err)
 		}
@@ -578,9 +578,9 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appID string, orgID
 	var accountAuthType *model.AccountAuthType
 	var newAccount *model.Account
 	var params map[string]interface{}
-	transaction := func(context storage.TransactionContext) error {
+	transaction := func(sa storage.Adapter) error {
 		//1. check if the user exists
-		account, err := a.storage.FindAccount(context, appOrg.ID, authType.ID, identifier)
+		account, err := sa.FindAccount(appOrg.ID, authType.ID, identifier)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 		}
@@ -592,7 +592,7 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appID string, orgID
 		profile.DateCreated = time.Now().UTC()
 		if authType.IsExternal {
 			externalUser := model.ExternalSystemUser{Identifier: identifier}
-			accountAuthType, err = a.applySignUpAdminExternal(context, *authType, *appOrg, externalUser, profile, username, permissions, roleIDs, groupIDs, creatorPermissions, clientVersion, l)
+			accountAuthType, err = a.applySignUpAdminExternal(sa, *authType, *appOrg, externalUser, profile, username, permissions, roleIDs, groupIDs, creatorPermissions, clientVersion, l)
 			if err != nil {
 				return errors.WrapErrorAction("signing up", "admin user", &logutils.FieldArgs{"auth_type": authType.Code, "identifier": identifier}, err)
 			}
@@ -603,7 +603,7 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appID string, orgID
 			}
 
 			profile.Email = identifier
-			params, accountAuthType, err = a.applySignUpAdmin(context, authImpl, account, *authType, *appOrg, identifier, "", profile, username, permissions, roleIDs, groupIDs, creatorPermissions, clientVersion, l)
+			params, accountAuthType, err = a.applySignUpAdmin(sa, authImpl, account, *authType, *appOrg, identifier, "", profile, username, permissions, roleIDs, groupIDs, creatorPermissions, clientVersion, l)
 			if err != nil {
 				return errors.WrapErrorAction("signing up", "admin user", &logutils.FieldArgs{"auth_type": authType.Code, "identifier": identifier}, err)
 			}
@@ -639,9 +639,9 @@ func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID
 
 	var updatedAccount *model.Account
 	var params map[string]interface{}
-	transaction := func(context storage.TransactionContext) error {
+	transaction := func(sa storage.Adapter) error {
 		//1. check if the user exists
-		account, err := a.storage.FindAccount(context, appOrg.ID, authType.ID, identifier)
+		account, err := sa.FindAccount(appOrg.ID, authType.ID, identifier)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 		}
@@ -664,7 +664,7 @@ func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID
 		if len(added) > 0 || len(removed) > 0 {
 			newPermissions := []model.Permission{}
 			if len(added) > 0 {
-				addedPermissions, err := a.CheckPermissions(context, []model.ApplicationOrganization{*appOrg}, added, updaterPermissions, false)
+				addedPermissions, err := a.CheckPermissions(sa, []model.ApplicationOrganization{*appOrg}, added, updaterPermissions, false)
 				if err != nil {
 					return errors.WrapErrorAction("adding", model.TypePermission, nil, err)
 				}
@@ -672,7 +672,7 @@ func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID
 			}
 
 			if len(removed) > 0 {
-				_, err := a.CheckPermissions(context, []model.ApplicationOrganization{*appOrg}, removed, updaterPermissions, true)
+				_, err := a.CheckPermissions(sa, []model.ApplicationOrganization{*appOrg}, removed, updaterPermissions, true)
 				if err != nil {
 					return errors.WrapErrorAction("revoking", model.TypePermission, nil, err)
 				}
@@ -680,14 +680,14 @@ func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID
 			}
 
 			if len(unchanged) > 0 {
-				unchangedPermissions, err := a.storage.FindPermissionsByName(context, unchanged)
+				unchangedPermissions, err := sa.FindPermissionsByName(unchanged)
 				if err != nil {
 					return errors.WrapErrorAction(logutils.ActionFind, model.TypePermission, nil, err)
 				}
 				newPermissions = append(newPermissions, unchangedPermissions...)
 			}
 
-			err = a.storage.UpdateAccountPermissions(context, account.ID, newPermissions)
+			err = sa.UpdateAccountPermissions(account.ID, newPermissions)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionUpdate, "admin account permissions", nil, err)
 			}
@@ -701,7 +701,7 @@ func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID
 		if len(added) > 0 || len(removed) > 0 {
 			newRoles := []model.AppOrgRole{}
 			if len(added) > 0 {
-				addedRoles, err := a.CheckRoles(context, appOrg, added, updaterPermissions, false)
+				addedRoles, err := a.CheckRoles(sa, appOrg, added, updaterPermissions, false)
 				if err != nil {
 					return errors.WrapErrorAction("adding", model.TypeAccountRoles, nil, err)
 				}
@@ -709,7 +709,7 @@ func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID
 			}
 
 			if len(removed) > 0 {
-				_, err := a.CheckRoles(context, appOrg, removed, updaterPermissions, true)
+				_, err := a.CheckRoles(sa, appOrg, removed, updaterPermissions, true)
 				if err != nil {
 					return errors.WrapErrorAction("revoking", model.TypeAccountRoles, nil, err)
 				}
@@ -717,7 +717,7 @@ func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID
 			}
 
 			if len(unchanged) > 0 {
-				unchangedRoles, err := a.storage.FindAppOrgRolesByIDs(context, unchanged, appOrg.ID)
+				unchangedRoles, err := sa.FindAppOrgRolesByIDs(unchanged, appOrg.ID)
 				if err != nil {
 					return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountRoles, nil, err)
 				}
@@ -725,7 +725,7 @@ func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID
 			}
 
 			newAccountRoles := model.AccountRolesFromAppOrgRoles(newRoles, true, true)
-			err = a.storage.UpdateAccountRoles(context, account.ID, newAccountRoles)
+			err = sa.UpdateAccountRoles(account.ID, newAccountRoles)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionUpdate, "admin account roles", nil, err)
 			}
@@ -739,7 +739,7 @@ func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID
 		if len(added) > 0 || len(removed) > 0 {
 			newGroups := []model.AppOrgGroup{}
 			if len(added) > 0 {
-				addedGroups, err := a.CheckGroups(context, appOrg, added, updaterPermissions, false)
+				addedGroups, err := a.CheckGroups(sa, appOrg, added, updaterPermissions, false)
 				if err != nil {
 					return errors.WrapErrorAction("adding", model.TypeAccountGroups, nil, err)
 				}
@@ -747,7 +747,7 @@ func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID
 			}
 
 			if len(removed) > 0 {
-				_, err := a.CheckGroups(context, appOrg, removed, updaterPermissions, true)
+				_, err := a.CheckGroups(sa, appOrg, removed, updaterPermissions, true)
 				if err != nil {
 					return errors.WrapErrorAction("revoking", model.TypeAccountGroups, nil, err)
 				}
@@ -755,7 +755,7 @@ func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID
 			}
 
 			if len(unchanged) > 0 {
-				unchangedGroups, err := a.storage.FindAppOrgGroupsByIDs(context, unchanged, appOrg.ID)
+				unchangedGroups, err := sa.FindAppOrgGroupsByIDs(unchanged, appOrg.ID)
 				if err != nil {
 					return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountGroups, nil, err)
 				}
@@ -763,7 +763,7 @@ func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID
 			}
 
 			newAccountGroups := model.AccountGroupsFromAppOrgGroups(newGroups, true, true)
-			err = a.storage.UpdateAccountGroups(context, account.ID, newAccountGroups)
+			err = sa.UpdateAccountGroups(account.ID, newAccountGroups)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionUpdate, "admin account groups", nil, err)
 			}
@@ -774,7 +774,7 @@ func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID
 
 		//6. delete active login sessions if anything was revoked
 		if revoked {
-			err = a.storage.DeleteLoginSessionsByIdentifier(context, account.ID)
+			err = sa.DeleteLoginSessionsByIdentifier(account.ID)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, nil, err)
 			}
@@ -797,7 +797,7 @@ func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID
 }
 
 // CreateAnonymousAccount creates a new anonymous account
-func (a *Auth) CreateAnonymousAccount(context storage.TransactionContext, appID string, orgID string, anonymousID string, preferences map[string]interface{},
+func (a *Auth) CreateAnonymousAccount(sa storage.Adapter, appID string, orgID string, anonymousID string, preferences map[string]interface{},
 	systemConfigs map[string]interface{}, skipExistsCheck bool, l *logs.Log) (*model.Account, error) {
 	// check if the provided auth type is supported by the provided application and organization
 	authType, appOrg, err := a.validateAuthTypeForAppOrg(AuthTypeAnonymous, appID, orgID)
@@ -805,35 +805,22 @@ func (a *Auth) CreateAnonymousAccount(context storage.TransactionContext, appID 
 		return nil, errors.WrapErrorAction(logutils.ActionValidate, typeAuthType, nil, err)
 	}
 
-	// create account
 	var newAccount *model.Account
-	transaction := func(context storage.TransactionContext) error {
-		//1. check if the user exists
-		if context == nil || !skipExistsCheck {
-			account, err := a.storage.FindAccountByID(context, anonymousID)
-			if err != nil {
-				return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
-			}
-			if account != nil {
-				return errors.ErrorData(logutils.StatusFound, model.TypeAccount, &logutils.FieldArgs{"app_org_id": appOrg.ID, "auth_type": authType.Code, "account_id": anonymousID})
-			}
-		}
-
-		newAccount, err = a.applyCreateAnonymousAccount(context, *appOrg, anonymousID, preferences, systemConfigs, l)
+	//1. check if the user exists
+	if !skipExistsCheck {
+		account, err := sa.FindAccountByID(anonymousID)
 		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionCreate, "anonymous account", &logutils.FieldArgs{"account_id": anonymousID}, err)
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 		}
-
-		return nil
+		if account != nil {
+			return nil, errors.ErrorData(logutils.StatusFound, model.TypeAccount, &logutils.FieldArgs{"app_org_id": appOrg.ID, "auth_type": authType.Code, "account_id": anonymousID})
+		}
 	}
 
-	if context == nil {
-		err = a.storage.PerformTransaction(transaction)
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionCreate, "anonymous account", nil, err)
-		}
-	} else {
-		transaction(context)
+	//2. create account
+	newAccount, err = a.applyCreateAnonymousAccount(sa, *appOrg, anonymousID, preferences, systemConfigs, l)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionCreate, "anonymous account", &logutils.FieldArgs{"account_id": anonymousID}, err)
 	}
 
 	return newAccount, nil
@@ -841,7 +828,7 @@ func (a *Auth) CreateAnonymousAccount(context storage.TransactionContext, appID 
 
 // VerifyCredential verifies credential (checks the verification code in the credentials collection)
 func (a *Auth) VerifyCredential(id string, verification string, l *logs.Log) error {
-	credential, err := a.storage.FindCredential(nil, id)
+	credential, err := a.storage.FindCredential(id)
 	if err != nil || credential == nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
 	}
@@ -871,7 +858,7 @@ func (a *Auth) VerifyCredential(id string, verification string, l *logs.Log) err
 
 	credential.Verified = true
 	credential.Value = authTypeCreds
-	if err = a.storage.UpdateCredential(nil, credential); err != nil {
+	if err = a.storage.UpdateCredential(credential); err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
 	}
 
@@ -891,7 +878,7 @@ func (a *Auth) VerifyCredential(id string, verification string, l *logs.Log) err
 // Handle refresh tokens when applicable
 func (a *Auth) UpdateCredential(accountID string, accountAuthTypeID string, params string, l *logs.Log) error {
 	//Get the user credential from account auth type in accounts collection
-	account, err := a.storage.FindAccountByID(nil, accountID)
+	account, err := a.storage.FindAccountByID(accountID)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
@@ -921,7 +908,7 @@ func (a *Auth) UpdateCredential(accountID string, accountAuthTypeID string, para
 	}
 	//Update the credential with new password
 	credential.Value = authTypeCreds
-	if err = a.storage.UpdateCredential(nil, credential); err != nil {
+	if err = a.storage.UpdateCredential(credential); err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
 	}
 
@@ -940,7 +927,7 @@ func (a *Auth) UpdateCredential(accountID string, accountAuthTypeID string, para
 // TODO: Clear login sessions using old creds
 // Handle refresh tokens when applicable
 func (a *Auth) ResetForgotCredential(credsID string, resetCode string, params string, l *logs.Log) error {
-	credential, err := a.storage.FindCredential(nil, credsID)
+	credential, err := a.storage.FindCredential(credsID)
 	if err != nil || credential == nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
 	}
@@ -965,7 +952,7 @@ func (a *Auth) ResetForgotCredential(credsID string, resetCode string, params st
 	}
 	//Update the credential with new password
 	credential.Value = authTypeCreds
-	if err = a.storage.UpdateCredential(nil, credential); err != nil {
+	if err = a.storage.UpdateCredential(credential); err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
 	}
 
@@ -1013,7 +1000,7 @@ func (a *Auth) ForgotCredential(authenticationType string, appTypeIdentifier str
 	authTypeID := authType.ID
 
 	//Find the credential for setting reset code and expiry and sending credID in reset link
-	account, err := a.storage.FindAccount(nil, appOrg.ID, authTypeID, identifier)
+	account, err := a.storage.FindAccount(appOrg.ID, authTypeID, identifier)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
@@ -1040,7 +1027,7 @@ func (a *Auth) ForgotCredential(authenticationType string, appTypeIdentifier str
 	}
 	//Update the credential with reset code and expiry
 	credential.Value = authTypeCreds
-	if err = a.storage.UpdateCredential(nil, credential); err != nil {
+	if err = a.storage.UpdateCredential(credential); err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
 	}
 	return nil
@@ -1066,7 +1053,7 @@ func (a *Auth) SendVerifyCredential(authenticationType string, appTypeIdentifier
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
 	}
-	account, err := a.storage.FindAccount(nil, appOrg.ID, authType.ID, identifier)
+	account, err := a.storage.FindAccount(appOrg.ID, authType.ID, identifier)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
@@ -1106,10 +1093,10 @@ func (a *Auth) SendVerifyCredential(authenticationType string, appTypeIdentifier
 func (a *Auth) VerifyMFA(accountID string, identifier string, mfaType string, mfaCode string) (*string, []string, error) {
 	var recoveryMfa *model.MFAType
 	var message *string
-	transaction := func(context storage.TransactionContext) error {
+	transaction := func(sa storage.Adapter) error {
 		errFields := &logutils.FieldArgs{"account_id": accountID, "type": mfaType}
 		//1. find mfa type in account
-		mfa, err := a.storage.FindMFAType(context, accountID, identifier, mfaType)
+		mfa, err := sa.FindMFAType(accountID, identifier, mfaType)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeMFAType, errFields, err)
 		}
@@ -1129,20 +1116,20 @@ func (a *Auth) VerifyMFA(accountID string, identifier string, mfaType string, mf
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionLoadCache, typeMfaType, nil, err)
 		}
-		message, err = mfaImpl.verify(context, mfa, accountID, mfaCode)
+		message, err = mfaImpl.verify(sa, mfa, accountID, mfaCode)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionValidate, typeMfaType, errFields, err)
 		}
 
 		//3. update existing MFA type
 		mfa.Verified = true
-		err = a.storage.UpdateMFAType(context, mfa, accountID)
+		err = sa.UpdateMFAType(mfa, accountID)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeMFAType, &logutils.FieldArgs{"account_id": accountID, "id": mfa.ID}, err)
 		}
 
 		//4. find account
-		account, err := a.storage.FindAccountByID(context, accountID)
+		account, err := sa.FindAccountByID(accountID)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"_id": accountID}, err)
 		}
@@ -1159,7 +1146,7 @@ func (a *Auth) VerifyMFA(accountID string, identifier string, mfaType string, mf
 			}
 
 			// insert recovery mfa type
-			err = a.storage.InsertMFAType(context, recoveryMfa, accountID)
+			err = sa.InsertMFAType(recoveryMfa, accountID)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionInsert, model.TypeMFAType, &logutils.FieldArgs{"account_id": accountID, "type": MfaTypeRecovery}, err)
 			}
@@ -1219,7 +1206,7 @@ func (a *Auth) AddMFAType(accountID string, identifier string, mfaType string) (
 		return nil, errors.WrapErrorAction("enrolling", typeMfaType, nil, err)
 	}
 
-	err = a.storage.InsertMFAType(nil, newMfa, accountID)
+	err = a.storage.InsertMFAType(newMfa, accountID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionInsert, typeMfaType, &logutils.FieldArgs{"account_id": accountID, "type": mfaType}, err)
 	}
@@ -1234,15 +1221,15 @@ func (a *Auth) AddMFAType(accountID string, identifier string, mfaType string) (
 //		identifier (string): Email, phone, or TOTP device name
 //		mfaType (string): Type of MFA to remove
 func (a *Auth) RemoveMFAType(accountID string, identifier string, mfaType string) error {
-	transaction := func(context storage.TransactionContext) error {
+	transaction := func(sa storage.Adapter) error {
 		//1. remove mfa type from account
-		err := a.storage.DeleteMFAType(context, accountID, identifier, mfaType)
+		err := sa.DeleteMFAType(accountID, identifier, mfaType)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeMFAType, &logutils.FieldArgs{"account_id": accountID, "identifier": identifier, "type": mfaType}, err)
 		}
 
 		//2. find account
-		account, err := a.storage.FindAccountByID(context, accountID)
+		account, err := sa.FindAccountByID(accountID)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 		}
@@ -1252,7 +1239,7 @@ func (a *Auth) RemoveMFAType(accountID string, identifier string, mfaType string
 
 		//3. check if account only has recovery MFA remaining
 		if len(account.MFATypes) == 1 && account.MFATypes[0].Type == MfaTypeRecovery {
-			err = a.storage.DeleteMFAType(context, accountID, MfaTypeRecovery, MfaTypeRecovery)
+			err = sa.DeleteMFAType(accountID, MfaTypeRecovery, MfaTypeRecovery)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionDelete, model.TypeMFAType, &logutils.FieldArgs{"account_id": accountID, "identifier": MfaTypeRecovery, "type": MfaTypeRecovery}, err)
 			}
@@ -1355,7 +1342,7 @@ func (a *Auth) RegisterServiceAccount(accountID *string, fromAppID *string, from
 
 	if accountID != nil && fromAppID != nil && fromOrgID != nil {
 		var fromAccount *model.ServiceAccount
-		fromAccount, err = a.storage.FindServiceAccount(nil, *accountID, *fromAppID, *fromOrgID)
+		fromAccount, err = a.storage.FindServiceAccount(*accountID, *fromAppID, *fromOrgID)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, nil, err)
 		}
@@ -1431,7 +1418,7 @@ func (a *Auth) DeregisterServiceAccount(accountID string) error {
 
 // GetServiceAccountInstance gets a service account instance
 func (a *Auth) GetServiceAccountInstance(accountID string, appID string, orgID string) (*model.ServiceAccount, error) {
-	serviceAccount, err := a.storage.FindServiceAccount(nil, accountID, appID, orgID)
+	serviceAccount, err := a.storage.FindServiceAccount(accountID, appID, orgID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, nil, err)
 	}
@@ -1442,9 +1429,9 @@ func (a *Auth) GetServiceAccountInstance(accountID string, appID string, orgID s
 // UpdateServiceAccountInstance updates a service account instance
 func (a *Auth) UpdateServiceAccountInstance(id string, appID string, orgID string, name *string, permissions *[]string, scopes []authorization.Scope, assignerPermissions []string) (*model.ServiceAccount, error) {
 	var updatedAccount *model.ServiceAccount
-	transaction := func(context storage.TransactionContext) error {
+	transaction := func(sa storage.Adapter) error {
 		//1. find service account
-		serviceAccount, err := a.storage.FindServiceAccount(context, id, appID, orgID)
+		serviceAccount, err := sa.FindServiceAccount(id, appID, orgID)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, nil, err)
 		}
@@ -1477,7 +1464,7 @@ func (a *Auth) UpdateServiceAccountInstance(id string, appID string, orgID strin
 			updatedPermissions := make([]model.Permission, 0)
 			added, removed, unchanged := utils.StringListDiff(*permissions, serviceAccount.GetPermissionNames())
 			if len(added) > 0 {
-				permissionList, err := a.CheckPermissions(context, appOrgs, *permissions, assignerPermissions, false)
+				permissionList, err := a.CheckPermissions(sa, appOrgs, *permissions, assignerPermissions, false)
 				if err != nil {
 					return errors.WrapErrorAction(logutils.ActionValidate, model.TypePermission, nil, err)
 				}
@@ -1486,7 +1473,7 @@ func (a *Auth) UpdateServiceAccountInstance(id string, appID string, orgID strin
 				updated = true
 			}
 			if len(removed) > 0 {
-				_, err := a.CheckPermissions(context, appOrgs, *permissions, assignerPermissions, true)
+				_, err := a.CheckPermissions(sa, appOrgs, *permissions, assignerPermissions, true)
 				if err != nil {
 					return errors.WrapErrorAction("revoking", model.TypePermission, nil, err)
 				}
@@ -1494,7 +1481,7 @@ func (a *Auth) UpdateServiceAccountInstance(id string, appID string, orgID strin
 				updated = true
 			}
 			if len(unchanged) > 0 {
-				permissionList, err := a.storage.FindPermissionsByName(context, unchanged)
+				permissionList, err := sa.FindPermissionsByName(unchanged)
 				if err != nil {
 					return errors.WrapErrorAction(logutils.ActionFind, model.TypePermission, nil, err)
 				}
@@ -1511,7 +1498,7 @@ func (a *Auth) UpdateServiceAccountInstance(id string, appID string, orgID strin
 
 		//4. update service account in database
 		if updated {
-			updatedAccount, err = a.storage.UpdateServiceAccount(context, serviceAccount)
+			updatedAccount, err = sa.UpdateServiceAccount(serviceAccount)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeServiceAccount, nil, err)
 			}
@@ -1656,7 +1643,7 @@ func (a *Auth) LinkAccountAuthType(accountID string, authenticationType string, 
 	message := ""
 	var newAccountAuthType *model.AccountAuthType
 
-	account, err := a.storage.FindAccountByID(nil, accountID)
+	account, err := a.storage.FindAccountByID(accountID)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
@@ -1708,9 +1695,9 @@ func (a *Auth) UnlinkAccountAuthType(accountID string, authenticationType string
 
 // DeleteAccount deletes an account for the given id
 func (a *Auth) DeleteAccount(id string) error {
-	transaction := func(context storage.TransactionContext) error {
+	transaction := func(sa storage.Adapter) error {
 		//1. first find the account record
-		account, err := a.storage.FindAccountByID(context, id)
+		account, err := sa.FindAccountByID(id)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 		}
@@ -1718,7 +1705,7 @@ func (a *Auth) DeleteAccount(id string) error {
 			return errors.ErrorData(logutils.StatusMissing, model.TypeAccount, nil)
 		}
 
-		err = a.deleteAccount(context, *account)
+		err = a.deleteAccount(sa, *account)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
 		}
@@ -1730,7 +1717,7 @@ func (a *Auth) DeleteAccount(id string) error {
 }
 
 // InitializeSystemAccount initializes the first system account
-func (a *Auth) InitializeSystemAccount(context storage.TransactionContext, authType model.AuthType, appOrg model.ApplicationOrganization,
+func (a *Auth) InitializeSystemAccount(sa storage.Adapter, authType model.AuthType, appOrg model.ApplicationOrganization,
 	allSystemPermission string, email string, password string, clientVersion string, l *logs.Log) (string, error) {
 	//auth type
 	authImpl, err := a.getAuthTypeImpl(authType)
@@ -1742,7 +1729,7 @@ func (a *Auth) InitializeSystemAccount(context storage.TransactionContext, authT
 	profile := model.Profile{ID: uuid.NewString(), Email: email, DateCreated: now}
 	permissions := []string{allSystemPermission}
 
-	_, accountAuthType, err := a.applySignUpAdmin(context, authImpl, nil, authType, appOrg, email, password, profile, "", permissions, nil, nil, permissions, &clientVersion, l)
+	_, accountAuthType, err := a.applySignUpAdmin(sa, authImpl, nil, authType, appOrg, email, password, profile, "", permissions, nil, nil, permissions, &clientVersion, l)
 	if err != nil {
 		return "", errors.WrapErrorAction("signing up", "initial system user", &logutils.FieldArgs{"email": email}, err)
 	}
@@ -1751,7 +1738,7 @@ func (a *Auth) InitializeSystemAccount(context storage.TransactionContext, authT
 }
 
 // GrantAccountPermissions grants new permissions to an account after validating the assigner has required permissions
-func (a *Auth) GrantAccountPermissions(context storage.TransactionContext, account *model.Account, permissionNames []string, assignerPermissions []string) error {
+func (a *Auth) GrantAccountPermissions(sa storage.Adapter, account *model.Account, permissionNames []string, assignerPermissions []string) error {
 	//check if there is data
 	if account == nil {
 		return errors.New("no account to grant permissions")
@@ -1770,13 +1757,13 @@ func (a *Auth) GrantAccountPermissions(context storage.TransactionContext, accou
 	}
 
 	//check permissions
-	permissions, err := a.CheckPermissions(context, []model.ApplicationOrganization{account.AppOrg}, newPermissions, assignerPermissions, false)
+	permissions, err := a.CheckPermissions(sa, []model.ApplicationOrganization{account.AppOrg}, newPermissions, assignerPermissions, false)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionValidate, model.TypePermission, nil, err)
 	}
 
 	//update account if authorized
-	err = a.storage.InsertAccountPermissions(context, account.ID, permissions)
+	err = sa.InsertAccountPermissions(account.ID, permissions)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAccountPermissions, &logutils.FieldArgs{"account_id": account.ID}, err)
 	}
@@ -1786,7 +1773,7 @@ func (a *Auth) GrantAccountPermissions(context storage.TransactionContext, accou
 }
 
 // CheckPermissions loads permissions by names from storage and checks that they are assignable and valid for the given appOrgs or revocable
-func (a *Auth) CheckPermissions(context storage.TransactionContext, appOrgs []model.ApplicationOrganization, permissionNames []string, assignerPermissions []string, revoke bool) ([]model.Permission, error) {
+func (a *Auth) CheckPermissions(sa storage.Adapter, appOrgs []model.ApplicationOrganization, permissionNames []string, assignerPermissions []string, revoke bool) ([]model.Permission, error) {
 	if len(appOrgs) == 0 {
 		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, nil)
 	}
@@ -1797,7 +1784,7 @@ func (a *Auth) CheckPermissions(context storage.TransactionContext, appOrgs []mo
 	}
 
 	//find permissions
-	permissions, err := a.storage.FindPermissionsByName(context, permissionNames)
+	permissions, err := sa.FindPermissionsByName(permissionNames)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypePermission, nil, err)
 	}
@@ -1838,7 +1825,7 @@ func (a *Auth) CheckPermissions(context storage.TransactionContext, appOrgs []mo
 }
 
 // GrantAccountRoles grants new roles to an account after validating the assigner has required permissions
-func (a *Auth) GrantAccountRoles(context storage.TransactionContext, account *model.Account, roleIDs []string, assignerPermissions []string) error {
+func (a *Auth) GrantAccountRoles(sa storage.Adapter, account *model.Account, roleIDs []string, assignerPermissions []string) error {
 	//check if there is data
 	if account == nil {
 		return errors.New("no account to grant roles")
@@ -1857,14 +1844,14 @@ func (a *Auth) GrantAccountRoles(context storage.TransactionContext, account *mo
 	}
 
 	//check roles
-	roles, err := a.CheckRoles(context, &account.AppOrg, newRoles, assignerPermissions, false)
+	roles, err := a.CheckRoles(sa, &account.AppOrg, newRoles, assignerPermissions, false)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionValidate, model.TypeAppOrgRole, nil, err)
 	}
 
 	//update account if authorized
 	accountRoles := model.AccountRolesFromAppOrgRoles(roles, true, true)
-	err = a.storage.InsertAccountRoles(context, account.ID, account.AppOrg.ID, accountRoles)
+	err = sa.InsertAccountRoles(account.ID, account.AppOrg.ID, accountRoles)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAccountRoles, &logutils.FieldArgs{"account_id": account.ID}, err)
 	}
@@ -1874,13 +1861,13 @@ func (a *Auth) GrantAccountRoles(context storage.TransactionContext, account *mo
 }
 
 // CheckRoles loads appOrg roles by IDs from storage and checks that they are assignable or revocable
-func (a *Auth) CheckRoles(context storage.TransactionContext, appOrg *model.ApplicationOrganization, roleIDs []string, assignerPermissions []string, revoke bool) ([]model.AppOrgRole, error) {
+func (a *Auth) CheckRoles(sa storage.Adapter, appOrg *model.ApplicationOrganization, roleIDs []string, assignerPermissions []string, revoke bool) ([]model.AppOrgRole, error) {
 	if appOrg == nil {
 		return nil, errors.ErrorData(logutils.StatusInvalid, model.TypeApplicationOrganization, nil)
 	}
 
 	//find roles
-	roles, err := a.storage.FindAppOrgRolesByIDs(context, roleIDs, appOrg.ID)
+	roles, err := sa.FindAppOrgRolesByIDs(roleIDs, appOrg.ID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgRole, nil, err)
 	}
@@ -1913,7 +1900,7 @@ func (a *Auth) CheckRoles(context storage.TransactionContext, appOrg *model.Appl
 }
 
 // GrantAccountGroups grants new groups to an account after validating the assigner has required permissions
-func (a *Auth) GrantAccountGroups(context storage.TransactionContext, account *model.Account, groupIDs []string, assignerPermissions []string) error {
+func (a *Auth) GrantAccountGroups(sa storage.Adapter, account *model.Account, groupIDs []string, assignerPermissions []string) error {
 	//check if there is data
 	if account == nil {
 		return errors.New("no accounts to grant groups")
@@ -1932,14 +1919,14 @@ func (a *Auth) GrantAccountGroups(context storage.TransactionContext, account *m
 	}
 
 	//check groups
-	groups, err := a.CheckGroups(context, &account.AppOrg, newGroups, assignerPermissions, false)
+	groups, err := a.CheckGroups(sa, &account.AppOrg, newGroups, assignerPermissions, false)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionValidate, model.TypeAppOrgGroup, nil, err)
 	}
 
 	//update account if authorized
 	accountGroups := model.AccountGroupsFromAppOrgGroups(groups, true, true)
-	err = a.storage.InsertAccountGroups(context, account.ID, account.AppOrg.ID, accountGroups)
+	err = sa.InsertAccountGroups(account.ID, account.AppOrg.ID, accountGroups)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAccountGroups, &logutils.FieldArgs{"account_id": account.ID}, err)
 	}
@@ -1949,13 +1936,13 @@ func (a *Auth) GrantAccountGroups(context storage.TransactionContext, account *m
 }
 
 // CheckGroups loads appOrg groups by IDs from storage and checks that they are assignable or revocable
-func (a *Auth) CheckGroups(context storage.TransactionContext, appOrg *model.ApplicationOrganization, groupIDs []string, assignerPermissions []string, revoke bool) ([]model.AppOrgGroup, error) {
+func (a *Auth) CheckGroups(sa storage.Adapter, appOrg *model.ApplicationOrganization, groupIDs []string, assignerPermissions []string, revoke bool) ([]model.AppOrgGroup, error) {
 	if appOrg == nil {
 		return nil, errors.ErrorData(logutils.StatusInvalid, model.TypeApplicationOrganization, nil)
 	}
 
 	//find groups
-	groups, err := a.storage.FindAppOrgGroupsByIDs(context, groupIDs, appOrg.ID)
+	groups, err := sa.FindAppOrgGroupsByIDs(groupIDs, appOrg.ID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgGroup, nil, err)
 	}
@@ -2066,7 +2053,7 @@ func (a *Auth) GetAPIKey(ID string) (*model.APIKey, error) {
 func (a *Auth) CreateAPIKey(apiKey model.APIKey) (*model.APIKey, error) {
 	id, _ := uuid.NewUUID()
 	apiKey.ID = id.String()
-	return a.storage.InsertAPIKey(nil, apiKey)
+	return a.storage.InsertAPIKey(apiKey)
 }
 
 // UpdateAPIKey updates an existing API key
