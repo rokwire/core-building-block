@@ -123,29 +123,26 @@ func (sa *Adapter) RegisterStorageListener(listener interfaces.StorageListener) 
 // PerformTransaction performs a transaction
 func (sa *Adapter) PerformTransaction(transaction func(storage interfaces.Storage) error) error {
 	// transaction
-	err := sa.db.dbClient.UseSession(context.Background(), func(sessionContext mongo.SessionContext) error {
+	callback := func(sessionContext mongo.SessionContext) (interface{}, error) {
 		adapter := sa.withContext(sessionContext)
 
-		err := adapter.context.StartTransaction()
+		err := transaction(adapter)
 		if err != nil {
 			adapter.abortTransaction()
-			return errors.WrapErrorAction(logutils.ActionStart, logutils.TypeTransaction, nil, err)
+			return nil, errors.WrapErrorAction("performing", logutils.TypeTransaction, nil, err)
 		}
 
-		err = transaction(adapter)
-		if err != nil {
-			adapter.abortTransaction()
-			return errors.WrapErrorAction("performing", logutils.TypeTransaction, nil, err)
-		}
+		return nil, nil
+	}
 
-		err = adapter.context.CommitTransaction(adapter.context)
-		if err != nil {
-			adapter.abortTransaction()
-			return errors.WrapErrorAction(logutils.ActionCommit, logutils.TypeTransaction, nil, err)
-		}
-		return nil
-	})
+	session, err := sa.db.dbClient.StartSession()
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionStart, "mongo session", nil, err)
+	}
+	context := mongo.NewSessionContext(context.Background(), session)
+	defer session.EndSession(context)
 
+	_, err = session.WithTransaction(context, callback)
 	return err
 }
 
