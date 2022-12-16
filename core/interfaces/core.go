@@ -17,7 +17,7 @@ package interfaces
 import (
 	"core-building-block/core/model"
 
-	"github.com/rokwire/logging-library-go/logs"
+	"github.com/rokwire/logging-library-go/v2/logs"
 )
 
 // Services exposes APIs for the driver adapters

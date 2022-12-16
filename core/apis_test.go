@@ -23,7 +23,7 @@ import (
 	genmocks "core-building-block/core/interfaces/mocks"
 	"core-building-block/core/model"
 
-	"github.com/rokwire/logging-library-go/logs"
+	"github.com/rokwire/logging-library-go/v2/logs"
 	"gotest.tools/assert"
 )
 

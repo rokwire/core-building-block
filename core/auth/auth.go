@@ -36,9 +36,9 @@ import (
 	"gopkg.in/go-playground/validator.v9"
 	"gopkg.in/gomail.v2"
 
-	"github.com/rokwire/logging-library-go/errors"
-	"github.com/rokwire/logging-library-go/logs"
-	"github.com/rokwire/logging-library-go/logutils"
+	"github.com/rokwire/logging-library-go/v2/errors"
+	"github.com/rokwire/logging-library-go/v2/logs"
+	"github.com/rokwire/logging-library-go/v2/logutils"
 )
 
 const (
@@ -316,7 +316,7 @@ func (a *Auth) applySignUpExternal(authType model.AuthType, appOrg model.Applica
 
 	externalRoles, externalGroups, err := a.getExternalUserAuthorization(externalUser, identityProviderSetting)
 	if err != nil {
-		l.WarnAction(logutils.ActionGet, "external authorization", err)
+		l.WarnError(logutils.MessageActionError(logutils.ActionGet, "external authorization", nil), err)
 	}
 
 	//4. check username
@@ -1260,7 +1260,7 @@ func (a *Auth) deleteLoginSession(storage interfaces.Storage, loginSession model
 
 	err := storage.DeleteLoginSession(loginSession.ID)
 	if err != nil {
-		l.WarnAction(logutils.ActionDelete, model.TypeLoginSession, err)
+		l.WarnError(logutils.MessageActionError(logutils.ActionDelete, model.TypeLoginSession, nil), err)
 		return err
 	}
 	return nil
@@ -1279,7 +1279,7 @@ func (a *Auth) deleteLoginSessions(storage interfaces.Storage, loginSessions []m
 	//delete the sessions from the storage
 	err := storage.DeleteLoginSessionsByIDs(ids)
 	if err != nil {
-		l.WarnAction(logutils.ActionDelete, model.TypeLoginSession, err)
+		l.WarnError(logutils.MessageActionError(logutils.ActionDelete, model.TypeLoginSession, nil), err)
 		return err
 	}
 	return nil

@@ -18,8 +18,8 @@ import (
 	"core-building-block/core/interfaces"
 	"core-building-block/core/model"
 
-	"github.com/rokwire/logging-library-go/errors"
-	"github.com/rokwire/logging-library-go/logutils"
+	"github.com/rokwire/logging-library-go/v2/errors"
+	"github.com/rokwire/logging-library-go/v2/logutils"
 )
 
 func (app *application) sharedGetAccount(accountID string) (*model.Account, error) {

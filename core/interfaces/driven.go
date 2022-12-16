@@ -17,7 +17,7 @@ package interfaces
 import (
 	"core-building-block/core/model"
 
-	"github.com/rokwire/logging-library-go/logs"
+	"github.com/rokwire/logging-library-go/v2/logs"
 )
 
 // Storage interface to communicate with the storage
