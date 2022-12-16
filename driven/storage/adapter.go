@@ -138,7 +138,7 @@ func (sa *Adapter) PerformTransaction(transaction func(storage interfaces.Storag
 			return errors.WrapErrorAction("performing", logutils.TypeTransaction, nil, err)
 		}
 
-		err = adapter.context.CommitTransaction(sa.context)
+		err = adapter.context.CommitTransaction(adapter.context)
 		if err != nil {
 			adapter.abortTransaction()
 			return errors.WrapErrorAction(logutils.ActionCommit, logutils.TypeTransaction, nil, err)
