@@ -14,7 +14,10 @@
 
 package core
 
-import "core-building-block/core/interfaces"
+import (
+	"core-building-block/core/interfaces"
+	"core-building-block/core/model"
+)
 
 // application represents the core application code based on hexagonal architecture
 type application struct {
@@ -24,7 +27,7 @@ type application struct {
 
 	storage interfaces.Storage
 
-	listeners []ApplicationListener
+	listeners []interfaces.ApplicationListener
 
 	auth interfaces.Auth
 }
@@ -37,7 +40,7 @@ func (app *application) start() {
 }
 
 // addListener adds application listener
-func (app *application) addListener(listener ApplicationListener) {
+func (app *application) addListener(listener interfaces.ApplicationListener) {
 	//TODO
 	//logs.Println("Application -> AddListener")
 
@@ -48,4 +51,10 @@ func (app *application) notifyListeners(message string, data interface{}) {
 	go func() {
 		// TODO
 	}()
+}
+
+// StorageListener listenes for change data storage events
+type StorageListener struct {
+	app *application
+	model.DefaultStorageListener
 }

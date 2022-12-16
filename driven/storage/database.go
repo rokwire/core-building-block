@@ -55,7 +55,7 @@ type database struct {
 	applicationConfigs              *collectionWrapper
 	permissions                     *collectionWrapper
 
-	listeners []interfaces.Listener
+	listeners []interfaces.StorageListener
 }
 
 func (m *database) start() error {
@@ -221,7 +221,7 @@ func (m *database) start() error {
 	go m.applicationsOrganizations.Watch(nil, m.logger)
 	go m.applicationConfigs.Watch(nil, m.logger)
 
-	m.listeners = []interfaces.Listener{}
+	m.listeners = []interfaces.StorageListener{}
 
 	return nil
 }

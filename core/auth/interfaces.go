@@ -17,7 +17,6 @@ package auth
 import (
 	"core-building-block/core/interfaces"
 	"core-building-block/core/model"
-	// "core-building-block/driven/storage"
 	"time"
 
 	"github.com/rokwire/core-auth-library-go/v2/sigauth"

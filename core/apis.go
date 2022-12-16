@@ -61,7 +61,7 @@ func (c *APIs) Start() {
 }
 
 // AddListener adds application listener
-func (c *APIs) AddListener(listener ApplicationListener) {
+func (c *APIs) AddListener(listener interfaces.ApplicationListener) {
 	c.app.addListener(listener)
 }
 
@@ -247,7 +247,7 @@ func (c *APIs) storeSystemData() error {
 // NewCoreAPIs creates new CoreAPIs
 func NewCoreAPIs(env string, version string, build string, storage interfaces.Storage, auth interfaces.Auth, systemInitSettings map[string]string, logger *logs.Logger) *APIs {
 	//add application instance
-	listeners := []ApplicationListener{}
+	listeners := []interfaces.ApplicationListener{}
 	application := application{env: env, version: version, build: build, storage: storage, listeners: listeners, auth: auth}
 
 	//add coreAPIs instance

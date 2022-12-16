@@ -22,7 +22,7 @@ import (
 
 // Storage interface to communicate with the storage
 type Storage interface {
-	RegisterStorageListener(storageListener Listener)
+	RegisterStorageListener(listener StorageListener)
 
 	PerformTransaction(func(adapter Storage) error) error
 
@@ -223,8 +223,8 @@ type Storage interface {
 	DeleteAppConfig(ID string) error
 }
 
-// Listener represents storage listener
-type Listener interface {
+// StorageListener represents storage listener
+type StorageListener interface {
 	OnAPIKeysUpdated()
 	OnAuthTypesUpdated()
 	OnIdentityProvidersUpdated()

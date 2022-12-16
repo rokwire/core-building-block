@@ -136,3 +136,7 @@ type System interface {
 	SysGetAuthTypes() ([]model.AuthType, error)
 	SysUpdateAuthTypes(ID string, code string, description string, isExternal bool, isAnonymous bool, useCredentials bool, ignoreMFA bool, params map[string]interface{}) error
 }
+
+// ApplicationListener represents application listener
+type ApplicationListener interface {
+}

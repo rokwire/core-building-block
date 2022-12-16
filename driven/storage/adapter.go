@@ -116,8 +116,8 @@ func (sa *Adapter) Start() error {
 }
 
 // RegisterStorageListener registers a data change listener with the storage adapter
-func (sa *Adapter) RegisterStorageListener(storageListener interfaces.Listener) {
-	sa.db.listeners = append(sa.db.listeners, storageListener)
+func (sa *Adapter) RegisterStorageListener(listener interfaces.StorageListener) {
+	sa.db.listeners = append(sa.db.listeners, listener)
 }
 
 // PerformTransaction performs a transaction
@@ -3609,7 +3609,7 @@ func NewStorageAdapter(mongoDBAuth string, mongoDBName string, mongoTimeout stri
 
 type storageListener struct {
 	adapter *Adapter
-	DefaultListenerImpl
+	model.DefaultStorageListener
 }
 
 func (sl *storageListener) OnAuthTypesUpdated() {
@@ -3638,30 +3638,3 @@ func (sl *storageListener) OnApplicationsOrganizationsUpdated() {
 func (sl *storageListener) OnApplicationConfigsUpdated() {
 	sl.adapter.cacheApplicationConfigs()
 }
-
-// DefaultListenerImpl default listener implementation
-type DefaultListenerImpl struct{}
-
-// OnAPIKeysUpdated notifies api keys have been updated
-func (d *DefaultListenerImpl) OnAPIKeysUpdated() {}
-
-// OnAuthTypesUpdated notifies auth types have been updated
-func (d *DefaultListenerImpl) OnAuthTypesUpdated() {}
-
-// OnIdentityProvidersUpdated notifies identity providers have been updated
-func (d *DefaultListenerImpl) OnIdentityProvidersUpdated() {}
-
-// OnServiceRegsUpdated notifies services regs have been updated
-func (d *DefaultListenerImpl) OnServiceRegsUpdated() {}
-
-// OnOrganizationsUpdated notifies organizations have been updated
-func (d *DefaultListenerImpl) OnOrganizationsUpdated() {}
-
-// OnApplicationsUpdated notifies applications have been updated
-func (d *DefaultListenerImpl) OnApplicationsUpdated() {}
-
-// OnApplicationsOrganizationsUpdated notifies applications organizations have been updated
-func (d *DefaultListenerImpl) OnApplicationsOrganizationsUpdated() {}
-
-// OnApplicationConfigsUpdated notifies application configs have been updated
-func (d *DefaultListenerImpl) OnApplicationConfigsUpdated() {}

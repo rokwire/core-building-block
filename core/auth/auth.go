@@ -17,7 +17,6 @@ package auth
 import (
 	"core-building-block/core/interfaces"
 	"core-building-block/core/model"
-	"core-building-block/driven/storage"
 	"core-building-block/utils"
 	"crypto/rsa"
 	"encoding/json"
@@ -2620,7 +2619,7 @@ func NewLocalServiceRegLoader(storage interfaces.Storage) *LocalServiceRegLoader
 // StorageListener represents storage listener implementation for the auth package
 type StorageListener struct {
 	auth *Auth
-	storage.DefaultListenerImpl
+	model.DefaultStorageListener
 }
 
 // OnIdentityProvidersUpdated notifies that identity providers have been updated

@@ -2006,9 +2006,9 @@ func (_m *Storage) PerformTransaction(_a0 func(interfaces.Storage) error) error 
 	return r0
 }
 
-// RegisterStorageListener provides a mock function with given fields: storageListener
-func (_m *Storage) RegisterStorageListener(storageListener interfaces.Listener) {
-	_m.Called(storageListener)
+// RegisterStorageListener provides a mock function with given fields: listener
+func (_m *Storage) RegisterStorageListener(listener interfaces.StorageListener) {
+	_m.Called(listener)
 }
 
 // RemoveAccountsGroup provides a mock function with given fields: groupID, accountIDs
