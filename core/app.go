@@ -14,9 +14,7 @@
 
 package core
 
-import (
-	"core-building-block/core/auth"
-)
+import "core-building-block/core/interfaces"
 
 // application represents the core application code based on hexagonal architecture
 type application struct {
@@ -24,11 +22,11 @@ type application struct {
 	version string
 	build   string
 
-	storage Storage
+	storage interfaces.Storage
 
 	listeners []ApplicationListener
 
-	auth auth.APIs
+	auth interfaces.Auth
 }
 
 // start starts the core part of the application

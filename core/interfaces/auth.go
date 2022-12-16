@@ -23,8 +23,8 @@ import (
 	"github.com/rokwire/logging-library-go/logs"
 )
 
-// APIs is the interface which defines the APIs provided by the auth package
-type APIs interface {
+// Auth is the interface which defines the APIs provided by the auth package
+type Auth interface {
 	//Start starts the auth service
 	Start()
 

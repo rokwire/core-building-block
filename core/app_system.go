@@ -15,8 +15,8 @@
 package core
 
 import (
+	"core-building-block/core/interfaces"
 	"core-building-block/core/model"
-	"core-building-block/driven/storage"
 	"time"
 
 	"github.com/google/uuid"
@@ -34,7 +34,7 @@ func (app *application) sysCreateGlobalConfig(setting string) (*model.GlobalConf
 	}
 
 	gc = &model.GlobalConfig{Setting: setting}
-	err = app.storage.CreateGlobalConfig(nil, gc)
+	err = app.storage.CreateGlobalConfig(gc)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeGlobalConfig, nil, err)
 	}
@@ -59,15 +59,15 @@ func (app *application) sysUpdateGlobalConfig(setting string) error {
 	}
 
 	gc.Setting = setting
-	transaction := func(sa storage.Adapter) error {
+	transaction := func(storage interfaces.Storage) error {
 		//1. clear the global config - we always keep only one global config
-		err := sa.DeleteGlobalConfig(context)
+		err := storage.DeleteGlobalConfig()
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeGlobalConfig, nil, err)
 		}
 
 		//2. add the new one
-		err = sa.CreateGlobalConfig(context, gc)
+		err = storage.CreateGlobalConfig(gc)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionInsert, model.TypeGlobalConfig, nil, err)
 		}
@@ -87,7 +87,7 @@ func (app *application) sysGetApplicationOrganization(ID string) (*model.Applica
 }
 
 func (app *application) sysCreateApplicationOrganization(appOrg model.ApplicationOrganization, appID string, orgID string) (*model.ApplicationOrganization, error) {
-	application, err := app.storage.FindApplication(nil, appID)
+	application, err := app.storage.FindApplication(appID)
 	if err != nil || application == nil {
 		return nil, errors.WrapErrorData(logutils.StatusInvalid, model.TypeApplication, nil, err)
 	}
@@ -103,7 +103,7 @@ func (app *application) sysCreateApplicationOrganization(appOrg model.Applicatio
 	appOrg.ID = appOrgID.String()
 	appOrg.DateCreated = time.Now()
 
-	insertedAppOrg, err := app.storage.InsertApplicationOrganization(nil, appOrg)
+	insertedAppOrg, err := app.storage.InsertApplicationOrganization(appOrg)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
 	}
@@ -112,7 +112,7 @@ func (app *application) sysCreateApplicationOrganization(appOrg model.Applicatio
 }
 
 func (app *application) sysUpdateApplicationOrganization(appOrg model.ApplicationOrganization) error {
-	err := app.storage.UpdateApplicationOrganization(nil, appOrg)
+	err := app.storage.UpdateApplicationOrganization(appOrg)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeApplicationOrganization, nil, err)
 	}
@@ -130,7 +130,7 @@ func (app *application) sysCreateOrganization(name string, requestType string, o
 	organizationID, _ := uuid.NewUUID()
 	organization := model.Organization{ID: organizationID.String(), Name: name, Type: requestType, Config: orgConfig, DateCreated: now}
 
-	insertedOrg, err := app.storage.InsertOrganization(nil, organization)
+	insertedOrg, err := app.storage.InsertOrganization(organization)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
 	}
@@ -169,7 +169,7 @@ func (app *application) sysUpdateOrganization(ID string, name string, requestTyp
 }
 
 func (app *application) sysGetApplication(ID string) (*model.Application, error) {
-	appAdm, err := app.storage.FindApplication(nil, ID)
+	appAdm, err := app.storage.FindApplication(ID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplication, nil, err)
 	}
@@ -196,7 +196,7 @@ func (app *application) sysCreateApplication(name string, multiTenant bool, admi
 	application := model.Application{ID: uuid.NewString(), Name: name, MultiTenant: multiTenant, Admin: admin, SharedIdentities: sharedIdentities,
 		Types: appTypes, DateCreated: now}
 
-	insertedApplication, err := app.storage.InsertApplication(nil, application)
+	insertedApplication, err := app.storage.InsertApplication(application)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeApplication, nil, err)
 	}
@@ -204,9 +204,9 @@ func (app *application) sysCreateApplication(name string, multiTenant bool, admi
 }
 
 func (app *application) sysUpdateApplication(ID string, name string, multiTenant bool, admin bool, sharedIdentities bool, appTypes []model.ApplicationType) error {
-	transaction := func(context storage.TransactionContext) error {
+	transaction := func(storage interfaces.Storage) error {
 		//1. find application
-		application, err := app.storage.FindApplication(context, ID)
+		application, err := storage.FindApplication(ID)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
 		}
@@ -246,7 +246,7 @@ func (app *application) sysUpdateApplication(ID string, name string, multiTenant
 		if updated {
 			updatedApp := model.Application{ID: application.ID, Name: name, MultiTenant: multiTenant, Admin: admin, SharedIdentities: sharedIdentities,
 				Types: appTypes, DateCreated: application.DateCreated, DateUpdated: &now}
-			err = app.storage.SaveApplication(context, updatedApp)
+			err = storage.SaveApplication(updatedApp)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionSave, model.TypeApplication, nil, err)
 			}
@@ -281,7 +281,7 @@ func (app *application) sysCreatePermission(name string, description *string, se
 
 	permission := model.Permission{ID: id.String(), Name: name, Description: descriptionVal, DateCreated: now, ServiceID: serviceIDVal, Assigners: *assigners}
 
-	err := app.storage.InsertPermission(nil, permission)
+	err := app.storage.InsertPermission(permission)
 
 	if err != nil {
 		return nil, err
@@ -291,7 +291,7 @@ func (app *application) sysCreatePermission(name string, description *string, se
 
 func (app *application) sysUpdatePermission(name string, description *string, serviceID *string, assigners *[]string) (*model.Permission, error) {
 	permissionNames := []string{name}
-	permissions, err := app.storage.FindPermissionsByName(nil, permissionNames)
+	permissions, err := app.storage.FindPermissionsByName(permissionNames)
 	if err != nil {
 		return nil, err
 	}
@@ -447,7 +447,7 @@ func (app *application) sysCreateAuthTypes(code string, description string, isEx
 		IsExternal: isExternal, IsAnonymous: isAnonymous, UseCredentials: useCredentials,
 		IgnoreMFA: ignoreMFA, Params: params}
 
-	insertedAuthType, err := app.storage.InsertAuthType(nil, authType)
+	insertedAuthType, err := app.storage.InsertAuthType(authType)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthType, nil, err)
 	}
@@ -470,5 +470,4 @@ func (app *application) SysUpdateAuthTypes(ID string, code string, description s
 	}
 
 	return err
-
 }

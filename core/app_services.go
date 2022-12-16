@@ -15,8 +15,8 @@
 package core
 
 import (
+	"core-building-block/core/interfaces"
 	"core-building-block/core/model"
-	"core-building-block/driven/storage"
 
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
@@ -25,7 +25,7 @@ import (
 
 func (app *application) serGetProfile(accountID string) (*model.Profile, error) {
 	//find the account
-	account, err := app.storage.FindAccountByID(nil, accountID)
+	account, err := app.storage.FindAccountByID(accountID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
@@ -41,7 +41,7 @@ func (app *application) serGetAccount(accountID string) (*model.Account, error) 
 
 func (app *application) serGetPreferences(accountID string) (map[string]interface{}, error) {
 	//find the account
-	account, err := app.storage.FindAccountByID(nil, accountID)
+	account, err := app.storage.FindAccountByID(accountID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountPreferences, &logutils.FieldArgs{"account_id": accountID}, err)
 	}
@@ -55,7 +55,7 @@ func (app *application) serGetPreferences(accountID string) (map[string]interfac
 
 func (app *application) serGetAccountSystemConfigs(accountID string) (map[string]interface{}, error) {
 	//find the account
-	account, err := app.storage.FindAccountByID(nil, accountID)
+	account, err := app.storage.FindAccountByID(accountID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountSystemConfigs, &logutils.FieldArgs{"account_id": accountID}, err)
 	}
@@ -68,7 +68,7 @@ func (app *application) serGetAccountSystemConfigs(accountID string) (map[string
 
 func (app *application) serUpdateProfile(accountID string, profile model.Profile) error {
 	//1. find the account
-	account, err := app.storage.FindAccountByID(nil, accountID)
+	account, err := app.storage.FindAccountByID(accountID)
 	if err != nil {
 		return errors.Wrapf("error finding an account on profile update", err)
 	}
@@ -77,7 +77,7 @@ func (app *application) serUpdateProfile(accountID string, profile model.Profile
 	profile.ID = account.Profile.ID
 
 	//3. update profile
-	err = app.storage.UpdateProfile(nil, profile)
+	err = app.storage.UpdateProfile(profile)
 	if err != nil {
 		return errors.Wrapf("error updating a profile", err)
 	}
@@ -87,21 +87,21 @@ func (app *application) serUpdateProfile(accountID string, profile model.Profile
 func (app *application) serUpdateAccountPreferences(id string, appID string, orgID string, anonymous bool, preferences map[string]interface{}, l *logs.Log) (bool, error) {
 	if anonymous {
 		created := false
-		transaction := func(context storage.TransactionContext) error {
+		transaction := func(storage interfaces.Storage) error {
 			//1. verify that the account is for the current app/org
-			account, err := app.storage.FindAccountByID(context, id)
+			account, err := storage.FindAccountByID(id)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountSystemConfigs, &logutils.FieldArgs{"account_id": id}, err)
 			}
 			if account == nil {
 				created = true
-				_, err = app.auth.CreateAnonymousAccount(context, appID, orgID, id, preferences, nil, true, l)
+				_, err = app.auth.CreateAnonymousAccount(storage, appID, orgID, id, preferences, nil, true, l)
 				if err != nil {
 					return errors.WrapErrorAction(logutils.ActionCreate, model.TypeAccount, nil, err)
 				}
 				return nil
 			}
-			err = app.storage.UpdateAccountPreferences(context, id, preferences)
+			err = storage.UpdateAccountPreferences(id, preferences)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountPreferences, nil, err)
 			}
@@ -115,7 +115,7 @@ func (app *application) serUpdateAccountPreferences(id string, appID string, org
 		return created, nil
 	}
 
-	err := app.storage.UpdateAccountPreferences(nil, id, preferences)
+	err := app.storage.UpdateAccountPreferences(id, preferences)
 	if err != nil {
 		return false, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountPreferences, nil, err)
 	}
@@ -129,7 +129,7 @@ func (app *application) serDeleteAccount(id string) error {
 func (app *application) serGetAccounts(limit int, offset int, appID string, orgID string, accountID *string, firstName *string, lastName *string, authType *string,
 	authTypeIdentifier *string, anonymous *bool, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error) {
 	//find the accounts
-	accounts, err := app.storage.FindAccounts(nil, &limit, &offset, appID, orgID, accountID, firstName, lastName, authType, authTypeIdentifier, anonymous, hasPermissions, permissions, roleIDs, groupIDs)
+	accounts, err := app.storage.FindAccounts(&limit, &offset, appID, orgID, accountID, firstName, lastName, authType, authTypeIdentifier, anonymous, hasPermissions, permissions, roleIDs, groupIDs)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}

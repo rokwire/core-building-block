@@ -91,7 +91,6 @@ type Storage interface {
 	//AccountAuthTypes
 	FindAccountByAuthTypeID(id string) (*model.Account, error)
 	InsertAccountAuthType(item model.AccountAuthType) error
-	UpdateAccountAuthType(item model.AccountAuthType) error
 	DeleteAccountAuthType(item model.AccountAuthType) error
 
 	//ExternalIDs

@@ -15,8 +15,9 @@
 package auth
 
 import (
+	"core-building-block/core/interfaces"
 	"core-building-block/core/model"
-	"core-building-block/driven/storage"
+	// "core-building-block/driven/storage"
 	"time"
 
 	"github.com/rokwire/core-auth-library-go/v2/sigauth"
@@ -98,7 +99,7 @@ type serviceAuthType interface {
 // mfaType is the interface for multi-factor authentication
 type mfaType interface {
 	//verify verifies the code based on stored mfa params
-	verify(sa storage.Adapter, mfa *model.MFAType, accountID string, code string) (*string, error)
+	verify(storage interfaces.Storage, mfa *model.MFAType, accountID string, code string) (*string, error)
 	//enroll creates a mfa type to be added to an account
 	enroll(identifier string) (*model.MFAType, error)
 	//sendCode generates a mfa code and expiration time and sends the code to the user
