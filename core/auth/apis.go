@@ -640,7 +640,6 @@ func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID
 	var updatedAccount *model.Account
 	var params map[string]interface{}
 	transaction := func(storage interfaces.Storage) error {
-		l.Info("1")
 		//1. check if the user exists
 		account, err := storage.FindAccount(appOrg.ID, authType.ID, identifier)
 		if err != nil {
@@ -698,7 +697,6 @@ func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID
 		}
 
 		//4. update account roles
-		l.Info("2")
 		added, removed, unchanged = utils.StringListDiff(roleIDs, account.GetAssignedRoleIDs())
 		if len(added) > 0 || len(removed) > 0 {
 			newRoles := []model.AppOrgRole{}
@@ -737,7 +735,6 @@ func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID
 		}
 
 		//5. update account groups
-		l.Info("3")
 		added, removed, unchanged = utils.StringListDiff(groupIDs, account.GetAssignedGroupIDs())
 		if len(added) > 0 || len(removed) > 0 {
 			newGroups := []model.AppOrgGroup{}
@@ -776,7 +773,6 @@ func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID
 		}
 
 		//6. delete active login sessions if anything was revoked
-		l.Info("4")
 		if revoked {
 			err = storage.DeleteLoginSessionsByIdentifier(account.ID)
 			if err != nil {
@@ -789,7 +785,6 @@ func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID
 			updatedAccount.DateUpdated = &now
 		}
 
-		l.Info("5")
 		return nil
 	}
 
