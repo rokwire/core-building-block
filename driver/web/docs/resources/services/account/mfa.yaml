@@ -43,8 +43,7 @@ post:
         examples:
           email:
             summary: Enroll in email MFA
-            value: |
-              {
+            value: {
                 "identifier": "test@test.com",
                 "type": "email"
               }
@@ -82,8 +81,7 @@ delete:
         examples:
           email:
             summary: Unenroll in email MFA
-            value: |
-              {
+            value: {
                 "identifier": "test@test.com",
                 "type": "email"
               }

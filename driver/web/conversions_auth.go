@@ -130,11 +130,13 @@ func serviceAccountToDef(item *model.ServiceAccount) *Def.ServiceAccount {
 	if item.Organization != nil {
 		orgID = item.Organization.ID
 	}
+	permissions := item.GetPermissionNames()
+	scopes := item.GetScopeStrings()
 	firstParty := item.FirstParty
 	creds := serviceAccountCredentialListToDef(item.Credentials)
 
-	return &Def.ServiceAccount{AccountId: accountID, Name: name, AppId: appID, OrgId: orgID, Permissions: item.GetPermissionNames(),
-		Scopes: item.GetScopeStrings(), FirstParty: firstParty, Creds: &creds}
+	return &Def.ServiceAccount{AccountId: &accountID, Name: &name, AppId: appID, OrgId: orgID, Permissions: &permissions, Scopes: &scopes,
+		FirstParty: &firstParty, Creds: &creds}
 }
 
 func serviceAccountCredentialFromDef(item *Def.ServiceAccountCredential) *model.ServiceAccountCredential {
@@ -355,18 +357,18 @@ func jsonWebKeySetDef(items *model.JSONWebKeySet) *Def.JWKS {
 }
 
 // AuthType
-func authTypeToDef(item *model.AuthType) *Def.AuthTypeFields {
+func authTypeToDef(item *model.AuthType) *Def.AuthType {
 	if item == nil {
 		return nil
 	}
 
-	return &Def.AuthTypeFields{Id: &item.ID, Code: &item.Code, Description: &item.Description,
-		IsExternal: &item.IsExternal, IsAnonymous: &item.IsAnonymous, UseCredentials: &item.UseCredentials,
-		IgnoreMfa: &item.IgnoreMFA, Params: &Def.AuthTypeFields_Params{AdditionalProperties: item.Params}}
+	return &Def.AuthType{Id: &item.ID, Code: item.Code, Description: item.Description,
+		IsExternal: item.IsExternal, IsAnonymous: item.IsAnonymous, UseCredentials: item.UseCredentials,
+		IgnoreMfa: item.IgnoreMFA, Params: &Def.AuthType_Params{AdditionalProperties: item.Params}}
 }
 
-func authTypesToDef(items []model.AuthType) []Def.AuthTypeFields {
-	result := make([]Def.AuthTypeFields, len(items))
+func authTypesToDef(items []model.AuthType) []Def.AuthType {
+	result := make([]Def.AuthType, len(items))
 	for i, item := range items {
 		result[i] = *authTypeToDef(&item)
 	}

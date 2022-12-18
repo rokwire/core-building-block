@@ -14,8 +14,7 @@ post:
         examples:
           static_token:
             summary: Static token
-            value: |
-              {
+            value: {
                 "account_id": "service_account_id",
                 "app_id": "9766",
                 "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
@@ -26,8 +25,7 @@ post:
               }
           signature:
             summary: Signature
-            value: |
-              {
+            value: {
                 "account_id": "service_account_id",
                 "app_id": "9766",
                 "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",

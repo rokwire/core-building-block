@@ -16,8 +16,7 @@ post:
         examples:
           email-sign_up:
             summary: Email
-            value: |
-              {
+            value: {
                 "auth_type": "email",
                 "app_type_identifier": "edu.illinois.rokwire",
                 "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
@@ -32,8 +31,7 @@ post:
               }
           phone:
             summary: Phone
-            value: |
-              {
+            value: {
                 "auth_type": "twilio_phone",
                 "app_type_identifier": "edu.illinois.rokwire",
                 "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
@@ -44,8 +42,7 @@ post:
               }
           illinois_oidc:
             summary: Illinois OIDC
-            value: |
-              {
+            value: {
                 "auth_type": "illinois_oidc",
                 "app_type_identifier": "edu.illinois.rokwire",
                 "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
@@ -111,24 +108,21 @@ delete:
         examples:
           email:
             summary: Email
-            value: |
-              {
+            value: {
                 "auth_type": "email",
                 "app_type_identifier": "edu.illinois.rokwire",
                 "identifier": "test@example.com"
               }
           phone:
             summary: Phone
-            value: |
-              {
+            value: {
                 "auth_type": "twilio_phone",
                 "app_type_identifier": "edu.illinois.rokwire",
                 "identifier": "+12223334444"
               }
           illinois_oidc:
             summary: Illinois OIDC
-            value: |
-              {
+            value: {
                 "auth_type": "illinois_oidc",
                 "app_type_identifier": "edu.illinois.rokwire",
                 "identifier": "123456789"

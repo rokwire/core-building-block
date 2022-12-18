@@ -56,8 +56,7 @@ post:
       application/json:
         schema:
           $ref: '../../schemas/auth/APIKey.yaml'
-        example: |
-          {
+        example: {
             "app_id": "string",
             "key": "string"
           }

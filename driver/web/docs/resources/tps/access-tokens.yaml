@@ -14,8 +14,7 @@ post:
         examples:
           static_token:
             summary: Static token
-            value: |
-              {
+            value: {
                 "account_id": "service_account_id",
                 "auth_type": "static_token",
                 "creds": {
@@ -24,8 +23,7 @@ post:
               }
           signature:
             summary: Signature
-            value: |
-              {
+            value: {
                 "account_id": "service_account_id",
                 "auth_type": "signature",
               }

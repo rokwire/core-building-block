@@ -1,7 +1,10 @@
+required:
+  - id
 type: object
 properties:
-  fields:
-    $ref: "./AccountFields.yaml"
+  id:
+    readOnly: true
+    type: string
   app_org:
     $ref: "../application/ApplicationOrganization.yaml"
   system:

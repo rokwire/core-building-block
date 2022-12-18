@@ -177,7 +177,7 @@ func (h SystemApisHandler) createApplicationOrganization(l *logs.Log, r *http.Re
 	if err != nil {
 		return l.HTTPResponseErrorData(logutils.StatusInvalid, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
-	var requestData Def.AppOrg
+	var requestData Def.ApplicationOrganization
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, model.TypeApplicationOrganization, nil, err, http.StatusBadRequest, true)
@@ -205,7 +205,7 @@ func (h SystemApisHandler) updateApplicationOrganization(l *logs.Log, r *http.Re
 	if err != nil {
 		return l.HTTPResponseErrorData(logutils.StatusInvalid, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
-	var requestData Def.AppOrg
+	var requestData Def.ApplicationOrganization
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, model.TypeApplicationOrganization, nil, err, http.StatusBadRequest, true)
@@ -229,7 +229,7 @@ func (h SystemApisHandler) createOrganization(l *logs.Log, r *http.Request, clai
 		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.SystemReqCreateOrganization
+	var requestData Def.Organization
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, model.TypeOrganization, nil, err, http.StatusBadRequest, true)
@@ -237,9 +237,13 @@ func (h SystemApisHandler) createOrganization(l *logs.Log, r *http.Request, clai
 
 	name := requestData.Name
 	types := requestData.Type
-	domains := requestData.Config.Domains
 
-	_, err = h.coreAPIs.System.SysCreateOrganization(name, string(types), *domains)
+	var domains []string
+	if requestData.Config != nil {
+		domains = requestData.Config.Domains
+	}
+
+	_, err = h.coreAPIs.System.SysCreateOrganization(name, string(types), domains)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionCreate, model.TypeOrganization, nil, err, http.StatusInternalServerError, true)
 	}
@@ -259,7 +263,7 @@ func (h SystemApisHandler) updateOrganization(l *logs.Log, r *http.Request, clai
 	if err != nil {
 		return l.HTTPResponseErrorData(logutils.StatusInvalid, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
-	var requestData Def.SystemReqUpdateOrganization
+	var requestData Def.Organization
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, model.TypeOrganization, nil, err, http.StatusBadRequest, true)
@@ -267,9 +271,13 @@ func (h SystemApisHandler) updateOrganization(l *logs.Log, r *http.Request, clai
 
 	name := requestData.Name
 	requestType := requestData.Type
-	organizationDomains := requestData.Config.Domains
 
-	err = h.coreAPIs.System.SysUpdateOrganization(ID, name, string(requestType), *organizationDomains)
+	var domains []string
+	if requestData.Config != nil {
+		domains = requestData.Config.Domains
+	}
+
+	err = h.coreAPIs.System.SysUpdateOrganization(ID, name, string(requestType), domains)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUpdate, model.TypeOrganization, nil, err, http.StatusInternalServerError, true)
 	}
@@ -449,7 +457,7 @@ func (h SystemApisHandler) registerServiceAccount(l *logs.Log, r *http.Request, 
 		return l.HTTPResponseErrorData(logutils.StatusInvalid, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.SystemReqCreateServiceAccount
+	var requestData Def.ServiceAccount
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, model.TypeServiceAccount, nil, err, http.StatusBadRequest, true)
@@ -868,7 +876,7 @@ func (h SystemApisHandler) createPermission(l *logs.Log, r *http.Request, claims
 		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.SystemReqPermissions
+	var requestData Def.Permission
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, model.TypePermission, nil, err, http.StatusBadRequest, true)
@@ -889,7 +897,7 @@ func (h SystemApisHandler) updatePermission(l *logs.Log, r *http.Request, claims
 		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.SystemReqPermissions
+	var requestData Def.Permission
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, model.TypePermission, nil, err, http.StatusBadRequest, true)
@@ -967,7 +975,7 @@ func (h SystemApisHandler) createApplicationConfig(l *logs.Log, r *http.Request,
 		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.SystemReqCreateApplicationConfigRequest
+	var requestData Def.ApplicationConfig
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("appconfig create request"), nil, err, http.StatusBadRequest, true)
@@ -1005,7 +1013,7 @@ func (h SystemApisHandler) updateApplicationConfig(l *logs.Log, r *http.Request,
 		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.SystemReqCreateApplicationConfigRequest
+	var requestData Def.ApplicationConfig
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("appconfig update request"), nil, err, http.StatusBadRequest, true)
@@ -1047,7 +1055,7 @@ func (h SystemApisHandler) createAuthTypes(l *logs.Log, r *http.Request, claims 
 		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.SystemReqCreateAuthType
+	var requestData Def.AuthType
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, model.TypeOrganization, nil, err, http.StatusBadRequest, true)
@@ -1097,7 +1105,7 @@ func (h SystemApisHandler) updateAuthTypes(l *logs.Log, r *http.Request, claims 
 	if err != nil {
 		return l.HTTPResponseErrorData(logutils.StatusInvalid, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
-	var requestData Def.SystemReqUpdateAuthType
+	var requestData Def.AuthType
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, model.TypeOrganization, nil, err, http.StatusBadRequest, true)

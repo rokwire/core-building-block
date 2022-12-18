@@ -124,11 +124,8 @@ func (app *application) sysUpdateApplicationOrganization(appOrg model.Applicatio
 func (app *application) sysCreateOrganization(name string, requestType string, organizationDomains []string) (*model.Organization, error) {
 	now := time.Now()
 
-	orgConfigID, _ := uuid.NewUUID()
-	orgConfig := model.OrganizationConfig{ID: orgConfigID.String(), Domains: organizationDomains, DateCreated: now}
-
-	organizationID, _ := uuid.NewUUID()
-	organization := model.Organization{ID: organizationID.String(), Name: name, Type: requestType, Config: orgConfig, DateCreated: now}
+	orgConfig := model.OrganizationConfig{ID: uuid.NewString(), Domains: organizationDomains, DateCreated: now}
+	organization := model.Organization{ID: uuid.NewString(), Name: name, Type: requestType, Config: orgConfig, DateCreated: now}
 
 	insertedOrg, err := app.storage.InsertOrganization(nil, organization)
 	if err != nil {
