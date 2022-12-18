@@ -15,6 +15,8 @@
 package web
 
 import (
+	"net/http"
+
 	"github.com/rokwire/core-auth-library-go/v2/authorization"
 	"github.com/rokwire/core-auth-library-go/v2/authservice"
 	"github.com/rokwire/core-auth-library-go/v2/tokenauth"
@@ -26,7 +28,7 @@ import (
 type Auth struct {
 	services *tokenauth.Handlers
 	admin    *tokenauth.Handlers
-	encAuth  *tokenauth.Handlers
+	enc      *tokenauth.Handlers
 	bbs      *tokenauth.Handlers
 	tps      *tokenauth.Handlers
 	system   *tokenauth.Handlers
@@ -70,24 +72,14 @@ func NewAuth(serviceID string, serviceRegManager *authservice.ServiceRegManager)
 	}
 	systemHandlers := tokenauth.NewHandlers(systemAuth)
 
-	auth := Auth{services: &serviceHandlers, admin: &adminHandlers, encAuth: &encHandlers, bbs: &bbsHandlers, tps: &tpsHandlers, system: &systemHandlers}
+	auth := Auth{services: &serviceHandlers, admin: &adminHandlers, enc: &encHandlers, bbs: &bbsHandlers, tps: &tpsHandlers, system: &systemHandlers}
 
 	return &auth, nil
 }
 
 // ServicesAuth
 
-func servicesAuthClaimsCheck(claims *tokenauth.Claims) error {
-	if claims.Admin {
-		return errors.ErrorData(logutils.StatusInvalid, "admin claim", nil)
-	}
-	if claims.System {
-		return errors.ErrorData(logutils.StatusInvalid, "system claim", nil)
-	}
-	return nil
-}
-
-func newServicesAuth(serviceRegManager *authservice.ServiceRegManager, serviceID string) (*tokenauth.ScopeHandler, error) {
+func newServicesAuth(serviceRegManager *authservice.ServiceRegManager, serviceID string) (*tokenauth.StandardHandler, error) {
 	servicesScopeAuth := authorization.NewCasbinScopeAuthorization("driver/web/authorization_services_policy.csv", serviceID)
 	servicesPermissionAuth := authorization.NewCasbinStringAuthorization("driver/web/authorization_services_policy.csv")
 
@@ -96,18 +88,22 @@ func newServicesAuth(serviceRegManager *authservice.ServiceRegManager, serviceID
 		return nil, errors.WrapErrorAction(logutils.ActionStart, "token auth for servicesAuth", nil, err)
 	}
 
-	auth := tokenauth.NewScopeHandler(*servicesTokenAuth, servicesAuthClaimsCheck)
+	check := func(claims *tokenauth.Claims, req *http.Request) (int, error) {
+		if claims.Admin {
+			return http.StatusUnauthorized, errors.ErrorData(logutils.StatusInvalid, "admin claim", nil)
+		}
+		if claims.System {
+			return http.StatusUnauthorized, errors.ErrorData(logutils.StatusInvalid, "system claim", nil)
+		}
+
+		return http.StatusOK, nil
+	}
+
+	auth := tokenauth.NewScopeHandler(*servicesTokenAuth, check)
 	return &auth, nil
 }
 
 // AdminAuth
-
-func adminAuthClaimsCheck(claims *tokenauth.Claims) error {
-	if !claims.Admin {
-		return errors.ErrorData(logutils.StatusInvalid, "admin claim", nil)
-	}
-	return nil
-}
 
 func newAdminAuth(serviceRegManager *authservice.ServiceRegManager) (*tokenauth.StandardHandler, error) {
 	adminPermissionAuth := authorization.NewCasbinStringAuthorization("driver/web/authorization_admin_policy.csv")
@@ -116,7 +112,15 @@ func newAdminAuth(serviceRegManager *authservice.ServiceRegManager) (*tokenauth.
 		return nil, errors.WrapErrorAction(logutils.ActionStart, "token auth for adminAuth", nil, err)
 	}
 
-	auth := tokenauth.NewStandardHandler(*adminTokenAuth, adminAuthClaimsCheck)
+	check := func(claims *tokenauth.Claims, req *http.Request) (int, error) {
+		if !claims.Admin {
+			return http.StatusUnauthorized, errors.ErrorData(logutils.StatusInvalid, "admin claim", nil)
+		}
+
+		return http.StatusOK, nil
+	}
+
+	auth := tokenauth.NewStandardHandler(*adminTokenAuth, check)
 	return &auth, nil
 }
 
@@ -135,16 +139,6 @@ func newEncAuth(serviceRegManager *authservice.ServiceRegManager) (*tokenauth.St
 
 // BBsAuth
 
-func bbsAuthClaimsCheck(claims *tokenauth.Claims) error {
-	if !claims.Service {
-		return errors.ErrorData(logutils.StatusInvalid, "service claim", nil)
-	}
-	if !claims.FirstParty {
-		return errors.ErrorData(logutils.StatusInvalid, "first party claim", nil)
-	}
-	return nil
-}
-
 func newBBsAuth(serviceRegManager *authservice.ServiceRegManager) (*tokenauth.StandardHandler, error) {
 	bbsPermissionAuth := authorization.NewCasbinStringAuthorization("driver/web/authorization_bbs_policy.csv")
 	bbsTokenAuth, err := tokenauth.NewTokenAuth(true, serviceRegManager, bbsPermissionAuth, nil)
@@ -152,21 +146,23 @@ func newBBsAuth(serviceRegManager *authservice.ServiceRegManager) (*tokenauth.St
 		return nil, errors.WrapErrorAction(logutils.ActionStart, "token auth for bbsAuth", nil, err)
 	}
 
-	auth := tokenauth.NewStandardHandler(*bbsTokenAuth, bbsAuthClaimsCheck)
+	check := func(claims *tokenauth.Claims, req *http.Request) (int, error) {
+		if !claims.Service {
+			return http.StatusUnauthorized, errors.ErrorData(logutils.StatusInvalid, "service claim", nil)
+		}
+
+		if !claims.FirstParty {
+			return http.StatusUnauthorized, errors.ErrorData(logutils.StatusInvalid, "first party claim", nil)
+		}
+
+		return http.StatusOK, nil
+	}
+
+	auth := tokenauth.NewStandardHandler(*bbsTokenAuth, check)
 	return &auth, nil
 }
 
 // TPsAuth
-
-func tpsAuthClaimsCheck(claims *tokenauth.Claims) error {
-	if !claims.Service {
-		return errors.ErrorData(logutils.StatusInvalid, "service claim", nil)
-	}
-	if claims.FirstParty {
-		return errors.ErrorData(logutils.StatusInvalid, "first party claim", nil)
-	}
-	return nil
-}
 
 func newTPsAuth(serviceRegManager *authservice.ServiceRegManager) (*tokenauth.StandardHandler, error) {
 	tpsPermissionAuth := authorization.NewCasbinStringAuthorization("driver/web/authorization_tps_policy.csv")
@@ -175,18 +171,23 @@ func newTPsAuth(serviceRegManager *authservice.ServiceRegManager) (*tokenauth.St
 		return nil, errors.WrapErrorAction(logutils.ActionStart, "token auth for tpsAuth", nil, err)
 	}
 
-	auth := tokenauth.NewStandardHandler(*tpsTokenAuth, tpsAuthClaimsCheck)
+	check := func(claims *tokenauth.Claims, req *http.Request) (int, error) {
+		if !claims.Service {
+			return http.StatusUnauthorized, errors.ErrorData(logutils.StatusInvalid, "service claim", nil)
+		}
+
+		if claims.FirstParty {
+			return http.StatusUnauthorized, errors.ErrorData(logutils.StatusInvalid, "first party claim", nil)
+		}
+
+		return http.StatusOK, nil
+	}
+
+	auth := tokenauth.NewStandardHandler(*tpsTokenAuth, check)
 	return &auth, nil
 }
 
 // SystemAuth
-
-func systemAuthClaimsCheck(claims *tokenauth.Claims) error {
-	if !claims.System {
-		return errors.ErrorData(logutils.StatusInvalid, "system claim", nil)
-	}
-	return nil
-}
 
 func newSystemAuth(serviceRegManager *authservice.ServiceRegManager) (*tokenauth.StandardHandler, error) {
 	systemPermissionAuth := authorization.NewCasbinStringAuthorization("driver/web/authorization_system_policy.csv")
@@ -195,6 +196,14 @@ func newSystemAuth(serviceRegManager *authservice.ServiceRegManager) (*tokenauth
 		return nil, errors.WrapErrorAction(logutils.ActionStart, "token auth for systemAuth", nil, err)
 	}
 
-	auth := tokenauth.NewStandardHandler(*systemTokenAuth, systemAuthClaimsCheck)
+	check := func(claims *tokenauth.Claims, req *http.Request) (int, error) {
+		if !claims.System {
+			return http.StatusUnauthorized, errors.ErrorData(logutils.StatusInvalid, "system claim", nil)
+		}
+
+		return http.StatusOK, nil
+	}
+
+	auth := tokenauth.NewStandardHandler(*systemTokenAuth, check)
 	return &auth, nil
 }

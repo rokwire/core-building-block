@@ -88,10 +88,10 @@ github.com/pquerna/cachecontrol v0.1.0 h1:yJMy84ti9h/+OEWa752kBTKv4XC30OtVVHYv/8
 github.com/pquerna/cachecontrol v0.1.0/go.mod h1:NrUG3Z7Rdu85UNR3vm7SOsl1nFIeSiQnrHV5K9mBcUI=
 github.com/pquerna/otp v1.3.0 h1:oJV/SkzR33anKXwQU3Of42rL4wbrffP4uvUf1SvS5Xs=
 github.com/pquerna/otp v1.3.0/go.mod h1:dkJfzwRKNiegxyNb54X/3fLwhCynbMspSyWKnvi1AEg=
-github.com/rokwire/core-auth-library-go/v2 v2.1.0 h1:dxDfw8jKrJdNTH76HFDtN9vfThv3afZJs6hS5dAblpo=
-github.com/rokwire/core-auth-library-go/v2 v2.1.0/go.mod h1:0MO0lt55BvVjLmegbbDeTyNQR+UL0wKzOvZvnMtRw0w=
-github.com/rokwire/logging-library-go/v2 v2.0.0 h1:Uo088Hs3G2LjLveyUCOK3ii0AWYYobb+oDs/dH9uCSY=
-github.com/rokwire/logging-library-go/v2 v2.0.0/go.mod h1:6QSqTlk5nNQcZweqg0sLCCoIwpRpTu3AmOi7EJy38Tg=
+github.com/rokwire/core-auth-library-go/v2 v2.2.0 h1:AMnYyGBIQMVY2w/+gYeVl05BqpBcjttRKj3urXO2OVo=
+github.com/rokwire/core-auth-library-go/v2 v2.2.0/go.mod h1:0MO0lt55BvVjLmegbbDeTyNQR+UL0wKzOvZvnMtRw0w=
+github.com/rokwire/logging-library-go/v2 v2.1.0 h1:8FUjNv2EKLrHe7ZzWad2g0mD3W0kpRoE4hk3KoPUC3c=
+github.com/rokwire/logging-library-go/v2 v2.1.0/go.mod h1:6QSqTlk5nNQcZweqg0sLCCoIwpRpTu3AmOi7EJy38Tg=
 github.com/sirupsen/logrus v1.9.0 h1:trlNQbNUG3OdDrDil03MCb1H2o9nJ1x4/5LYw7byDE0=
 github.com/sirupsen/logrus v1.9.0/go.mod h1:naHLuLoDiP4jHNo9R0sCBMtWGeIprob74mVsIT4qYEQ=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=

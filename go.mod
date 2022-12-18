@@ -9,8 +9,8 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
 	github.com/pquerna/otp v1.3.0
-	github.com/rokwire/core-auth-library-go/v2 v2.1.0
-	github.com/rokwire/logging-library-go/v2 v2.0.0
+	github.com/rokwire/core-auth-library-go/v2 v2.2.0
+	github.com/rokwire/logging-library-go/v2 v2.1.0
 	github.com/stretchr/testify v1.8.1
 	github.com/swaggo/http-swagger v1.3.3
 	go.mongodb.org/mongo-driver v1.10.2
