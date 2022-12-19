@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/coreos/go-oidc v2.2.1+incompatible
-	github.com/getkin/kin-openapi v0.111.0
+	github.com/getkin/kin-openapi v0.110.0
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0

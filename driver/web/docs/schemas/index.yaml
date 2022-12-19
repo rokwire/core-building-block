@@ -39,8 +39,6 @@ TSLExpirePolicy:
 # auth
 LoginSession:
   $ref: "./auth/LoginSession.yaml"
-LoginSessionFields:
-  $ref: "./auth/LoginSessionFields.yaml"
 AuthType:
   $ref: "./auth/AuthType.yaml"
 Credential:
@@ -78,18 +76,14 @@ PartialAccount:
   $ref: "./user/PartialAccount.yaml"
 Profile:
   $ref: "./user/Profile.yaml"
-ProfileFields:
-  $ref: "./user/ProfileFields.yaml"
+ProfileNullable:
+  $ref: "./user/ProfileNullable.yaml"
 Username:
   $ref: "./user/Username.yaml"
 AccountAuthType:
   $ref: "./user/AccountAuthType.yaml"
-AccountAuthTypeFields:
-  $ref: "./user/AccountAuthTypeFields.yaml"
 Device:
   $ref: "./user/Device.yaml"
-DeviceFields:
-  $ref: "./user/DeviceFields.yaml"
 
 ##### APIs requests and responses - they are at bottom
 
@@ -100,8 +94,6 @@ _shared_req_Login:
   $ref: "./apis/shared/requests/login/Request.yaml"
 _shared_req_Login_Mfa:
   $ref: "../schemas/apis/shared/requests/login/MfaRequest.yaml"
-_shared_req_Login_Device:
-  $ref: "./apis/shared/requests/login/Device.yaml"
 _shared_req_LoginUrl:
   $ref: "./apis/shared/requests/login-url/Request.yaml"
 _shared_req_Refresh:
@@ -128,10 +120,6 @@ _shared_req_ParamsOIDC:
   $ref: "./apis/shared/requests/ParamsOIDC.yaml"
 _shared_req_ParamsNone:
   $ref: "./apis/shared/requests/ParamsNone.yaml"
-_shared_req_Profile:
-  $ref: "./apis/shared/requests/Profile.yaml"
-_shared_req_ProfileNullable:
-  $ref: "./apis/shared/requests/ProfileNullable.yaml"
 _shared_req_ParamsSetEmailCredential:
   $ref: "./apis/shared/requests/ParamsSetEmailCredential.yaml"
 
@@ -146,14 +134,10 @@ _shared_res_Refresh:
   $ref: "./apis/shared/responses/refresh/Response.yaml"
 _shared_res_Mfa:
   $ref: "./apis/shared/responses/mfa/Response.yaml"
-_shared_res_Account:
-  $ref: "./apis/shared/responses/Account.yaml"
 _shared_res_AccountCheck:
   $ref: "./apis/shared/responses/AccountCheck.yaml"
 _shared_res_RokwireToken:
   $ref: "./apis/shared/responses/RokwireToken.yaml"
-_shared_res_LoginSession:
-  $ref: "./apis/shared/responses/LoginSession.yaml"
 ## end SHARED requests and responses
 
 ## SERVICES section

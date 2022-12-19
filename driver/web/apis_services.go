@@ -323,7 +323,7 @@ func (h ServicesApisHandler) linkAccountAuthType(l *logs.Log, r *http.Request, c
 		return l.HTTPResponseError("Error linking account auth type", err, http.StatusInternalServerError, true)
 	}
 
-	authTypes := make([]Def.AccountAuthTypeFields, 0)
+	authTypes := make([]Def.AccountAuthType, 0)
 	if account != nil {
 		account.SortAccountAuthTypes(claims.UID)
 		authTypes = accountAuthTypesToDef(account.AuthTypes)
@@ -359,7 +359,7 @@ func (h ServicesApisHandler) unlinkAccountAuthType(l *logs.Log, r *http.Request,
 		return l.HTTPResponseError("Error unlinking account auth type", err, http.StatusInternalServerError, true)
 	}
 
-	authTypes := make([]Def.AccountAuthTypeFields, 0)
+	authTypes := make([]Def.AccountAuthType, 0)
 	if account != nil {
 		account.SortAccountAuthTypes(claims.UID)
 		authTypes = accountAuthTypesToDef(account.AuthTypes)
@@ -446,7 +446,7 @@ func (h ServicesApisHandler) getAccount(l *logs.Log, r *http.Request, claims *to
 		return l.HTTPResponseErrorAction(logutils.ActionGet, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}
 
-	var accountData *Def.SharedResAccount
+	var accountData *Def.Account
 	if account != nil {
 		account.SortAccountAuthTypes(claims.UID)
 		accountData = accountToDef(*account)
@@ -636,7 +636,7 @@ func (h ServicesApisHandler) updateProfile(l *logs.Log, r *http.Request, claims 
 		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.SharedReqProfile
+	var requestData Def.Profile
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, "profile update request", nil, err, http.StatusBadRequest, true)

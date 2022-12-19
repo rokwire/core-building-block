@@ -8,4 +8,4 @@ properties:
   auth_types:
     type: array
     items:
-      $ref: "../../../../../../user/AccountAuthTypeFields.yaml"
+      $ref: "../../../../../../user/AccountAuthType.yaml"

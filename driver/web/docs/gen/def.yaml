@@ -1047,7 +1047,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_shared_res_Account'
+                $ref: '#/components/schemas/Account'
         '400':
           description: Bad request
         '401':
@@ -1221,7 +1221,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProfileFields'
+                $ref: '#/components/schemas/Profile'
         '400':
           description: Bad request
         '401':
@@ -1243,7 +1243,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_shared_req_Profile'
+              $ref: '#/components/schemas/Profile'
         required: true
       responses:
         '200':
@@ -1653,7 +1653,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_shared_res_Account'
+                $ref: '#/components/schemas/Account'
         '400':
           description: Bad request
         '401':
@@ -1983,7 +1983,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/DeviceFields'
+                  $ref: '#/components/schemas/Device'
         '400':
           description: Bad request
         '401':
@@ -2348,7 +2348,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/_shared_res_LoginSession'
+                  $ref: '#/components/schemas/LoginSession'
         '400':
           description: Bad request
         '401':
@@ -4538,6 +4538,11 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/ApplicationConfig'
+            example:
+              version: 1.0.1
+              app_type_id: 7e037f2d-b423-4b4d-a1bc-18507f81c6d1
+              org_id: 0a2eff20-e2cd-11eb-af68-60f81db5ecc0
+              data: {}
         required: true
       responses:
         '200':
@@ -5463,12 +5468,14 @@ components:
     LoginSession:
       type: object
       properties:
-        fields:
-          $ref: '#/components/schemas/LoginSessionFields'
+        id:
+          type: string
+        anonymous:
+          type: boolean
+        identifier:
+          type: string
         app_org:
           $ref: '#/components/schemas/ApplicationOrganization'
-        auth_type:
-          $ref: '#/components/schemas/AuthType'
         app_type:
           $ref: '#/components/schemas/ApplicationType'
         account_auth_type:
@@ -5476,26 +5483,10 @@ components:
           nullable: true
         device:
           $ref: '#/components/schemas/Device'
-    LoginSessionFields:
-      type: object
-      properties:
-        id:
+        ip_address:
           type: string
-        anonymous:
-          type: boolean
-        identifier:
-          type: string
-        id_address:
-          type: string
-        access_token:
-          type: string
-        refresh_tokens:
-          type: array
-          items:
-            type: string
-        params:
-          type: object
-          additionalProperties: true
+        refresh_tokens_count:
+          type: integer
         state:
           type: string
         state_expires:
@@ -5552,19 +5543,13 @@ components:
           type: string
         value:
           type: object
-        accounts_auth_types:
-          type: array
-          items:
-            $ref: '#/components/schemas/AccountAuthType'
     ServiceAccount:
       required:
-        - account_id
         - app_id
         - org_id
       type: object
       properties:
         account_id:
-          readOnly: true
           type: string
         name:
           type: string
@@ -5777,10 +5762,27 @@ components:
           type: string
         app_org:
           $ref: '#/components/schemas/ApplicationOrganization'
-        system:
-          type: boolean
         username:
           type: string
+        profile:
+          $ref: '#/components/schemas/Profile'
+        preferences:
+          type: object
+          nullable: true
+        system_configs:
+          type: object
+          nullable: true
+        anonymous:
+          type: boolean
+        system:
+          type: boolean
+        external_ids:
+          type: object
+          nullable: true
+        auth_types:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccountAuthType'
         permissions:
           type: array
           items:
@@ -5793,27 +5795,16 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AppOrgGroup'
-        auth_types:
-          type: array
-          items:
-            $ref: '#/components/schemas/AccountAuthType'
-        preferences:
-          type: object
-          nullable: true
-        external_ids:
-          type: object
-          nullable: true
-        system_configs:
-          type: object
-          nullable: true
-        profile:
-          $ref: '#/components/schemas/Profile'
         devices:
           type: array
           items:
             $ref: '#/components/schemas/Device'
-        anonymous:
-          type: boolean
+        last_login_date:
+          type: string
+        last_access_token_date:
+          type: string
+        most_recent_client_version:
+          type: string
     PartialAccount:
       required:
         - id
@@ -5859,7 +5850,7 @@ components:
         auth_types:
           type: array
           items:
-            $ref: '#/components/schemas/AccountAuthTypeFields'
+            $ref: '#/components/schemas/AccountAuthType'
         system_configs:
           type: object
           nullable: true
@@ -5878,25 +5869,59 @@ components:
           type: object
           nullable: true
     Profile:
-      type: object
-      properties:
-        fields:
-          $ref: '#/components/schemas/ProfileFields'
-        accounts:
-          type: array
-          items:
-            $ref: '#/components/schemas/Account'
-    ProfileFields:
+      required:
+        - id
       type: object
       properties:
         id:
+          readOnly: true
           type: string
         photo_url:
           type: string
+          nullable: true
         first_name:
           type: string
+          nullable: true
         last_name:
           type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        birth_year:
+          type: integer
+          nullable: true
+        address:
+          type: string
+          nullable: true
+        zip_code:
+          type: string
+          nullable: true
+        state:
+          type: string
+          nullable: true
+        country:
+          type: string
+          nullable: true
+        unstructured_properties:
+          type: object
+          nullable: true
+    ProfileNullable:
+      type: object
+      nullable: true
+      properties:
+        photo_url:
+          type: string
+          nullable: true
+        first_name:
+          type: string
+          nullable: true
+        last_name:
+          type: string
+          nullable: true
         email:
           type: string
           nullable: true
@@ -5929,17 +5954,10 @@ components:
         username:
           type: string
     AccountAuthType:
-      type: object
-      properties:
-        fields:
-          $ref: '#/components/schemas/AccountAuthTypeFields'
-        auth_type:
-          $ref: '#/components/schemas/AuthType'
-        account:
-          $ref: '#/components/schemas/Account'
-        credential:
-          $ref: '#/components/schemas/Credential'
-    AccountAuthTypeFields:
+      required:
+        - id
+        - code
+        - identifier
       type: object
       properties:
         id:
@@ -5956,20 +5974,16 @@ components:
           type: boolean
         unverified:
           type: boolean
+        credential:
+          $ref: '#/components/schemas/Credential'
     Device:
-      type: object
-      properties:
-        fields:
-          $ref: '#/components/schemas/DeviceFields'
-        account:
-          $ref: '#/components/schemas/Account'
-    DeviceFields:
       required:
         - id
         - type
       type: object
       properties:
         id:
+          readOnly: true
           type: string
         device_id:
           type: string
@@ -6017,9 +6031,9 @@ components:
             - $ref: '#/components/schemas/_shared_req_ParamsOIDC'
             - $ref: '#/components/schemas/_shared_req_ParamsNone'
         device:
-          $ref: '#/components/schemas/_shared_req_Login_Device'
+          $ref: '#/components/schemas/Device'
         profile:
-          $ref: '#/components/schemas/_shared_req_ProfileNullable'
+          $ref: '#/components/schemas/ProfileNullable'
         preferences:
           type: object
           nullable: true
@@ -6055,23 +6069,6 @@ components:
             - totp
             - recovery
         code:
-          type: string
-    _shared_req_Login_Device:
-      required:
-        - type
-      type: object
-      description: Client device
-      properties:
-        device_id:
-          type: string
-        type:
-          type: string
-          enum:
-            - mobile
-            - web
-            - desktop
-            - other
-        os:
           type: string
     _shared_req_LoginUrl:
       required:
@@ -6146,7 +6143,7 @@ components:
           items:
             type: string
         profile:
-          $ref: '#/components/schemas/_shared_req_ProfileNullable'
+          $ref: '#/components/schemas/ProfileNullable'
         username:
           type: string
           nullable: true
@@ -6254,79 +6251,6 @@ components:
       type: object
       description: Auth login request params for unlisted auth_types (None)
       nullable: true
-    _shared_req_Profile:
-      type: object
-      properties:
-        photo_url:
-          type: string
-          nullable: true
-        first_name:
-          type: string
-          nullable: true
-        last_name:
-          type: string
-          nullable: true
-        email:
-          type: string
-          nullable: true
-        phone:
-          type: string
-          nullable: true
-        birth_year:
-          type: integer
-          nullable: true
-        address:
-          type: string
-          nullable: true
-        zip_code:
-          type: string
-          nullable: true
-        state:
-          type: string
-          nullable: true
-        country:
-          type: string
-          nullable: true
-        unstructured_properties:
-          type: object
-          nullable: true
-    _shared_req_ProfileNullable:
-      type: object
-      nullable: true
-      properties:
-        photo_url:
-          type: string
-          nullable: true
-        first_name:
-          type: string
-          nullable: true
-        last_name:
-          type: string
-          nullable: true
-        email:
-          type: string
-          nullable: true
-        phone:
-          type: string
-          nullable: true
-        birth_year:
-          type: integer
-          nullable: true
-        address:
-          type: string
-          nullable: true
-        zip_code:
-          type: string
-          nullable: true
-        state:
-          type: string
-          nullable: true
-        country:
-          type: string
-          nullable: true
-        unstructured_properties:
-          type: object
-          nullable: true
     _shared_req_ParamsSetEmailCredential:
       required:
         - new_password
@@ -6343,7 +6267,7 @@ components:
         token:
           $ref: '#/components/schemas/_shared_res_RokwireToken'
         account:
-          $ref: '#/components/schemas/_shared_res_Account'
+          $ref: '#/components/schemas/Account'
         params:
           type: object
           nullable: true
@@ -6430,52 +6354,6 @@ components:
           type: boolean
         params:
           type: object
-    _shared_res_Account:
-      required:
-        - id
-      type: object
-      properties:
-        id:
-          type: string
-        username:
-          type: string
-        profile:
-          $ref: '#/components/schemas/ProfileFields'
-        preferences:
-          type: object
-          nullable: true
-        system_configs:
-          type: object
-          nullable: true
-        system:
-          type: boolean
-        permissions:
-          type: array
-          items:
-            $ref: '#/components/schemas/Permission'
-        roles:
-          type: array
-          items:
-            $ref: '#/components/schemas/AppOrgRole'
-        groups:
-          type: array
-          items:
-            $ref: '#/components/schemas/AppOrgGroup'
-        auth_types:
-          type: array
-          items:
-            $ref: '#/components/schemas/AccountAuthTypeFields'
-        anonymous:
-          type: boolean
-        last_login_date:
-          type: string
-        last_access_token_date:
-          type: string
-        most_recent_client_version:
-          type: string
-        external_ids:
-          type: object
-          nullable: true
     _shared_res_AccountCheck:
       type: boolean
     _shared_res_RokwireToken:
@@ -6492,46 +6370,6 @@ components:
           type: string
           enum:
             - Bearer
-    _shared_res_LoginSession:
-      type: object
-      properties:
-        id:
-          type: string
-        auth_type_code:
-          type: string
-        app_type_id:
-          type: string
-        app_type_identifier:
-          type: string
-        anonymous:
-          type: boolean
-        identifier:
-          type: string
-        account_auth_type_id:
-          type: string
-        account_auth_type_identifier:
-          type: string
-        device_id:
-          type: string
-        ip_address:
-          type: string
-        refresh_tokens_count:
-          type: integer
-        state:
-          type: string
-        state_expires:
-          type: string
-          nullable: true
-        mfa_attempts:
-          type: integer
-        date_refreshed:
-          type: string
-          nullable: true
-        date_updated:
-          type: string
-          nullable: true
-        date_created:
-          type: string
     _services_req_account_auth-type-link:
       required:
         - auth_type
@@ -6588,7 +6426,7 @@ components:
         auth_types:
           type: array
           items:
-            $ref: '#/components/schemas/AccountAuthTypeFields'
+            $ref: '#/components/schemas/AccountAuthType'
     _services_req_credential_update:
       required:
         - account_auth_type_id
