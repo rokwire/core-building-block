@@ -128,8 +128,12 @@ func (sa *Adapter) PerformTransaction(transaction func(storage interfaces.Storag
 
 		err := transaction(adapter)
 		if err != nil {
-			adapter.abortTransaction()
-			return nil, errors.WrapErrorAction("performing", logutils.TypeTransaction, nil, err)
+			if wrappedErr, ok := err.(interface {
+				Internal() error
+			}); ok && wrappedErr.Internal() != nil {
+				return nil, wrappedErr.Internal()
+			}
+			return nil, err
 		}
 
 		return nil, nil
@@ -139,11 +143,14 @@ func (sa *Adapter) PerformTransaction(transaction func(storage interfaces.Storag
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionStart, "mongo session", nil, err)
 	}
-	context := mongo.NewSessionContext(context.Background(), session)
+	context := context.Background()
 	defer session.EndSession(context)
 
 	_, err = session.WithTransaction(context, callback)
-	return err
+	if err != nil {
+		return errors.WrapErrorAction("performing", logutils.TypeTransaction, nil, err)
+	}
+	return nil
 }
 
 // cacheServiceRegs caches the service regs from the DB
@@ -3559,13 +3566,6 @@ func (sa *Adapter) withContext(context mongo.SessionContext) *Adapter {
 		cachedApplicationsOrganizations: sa.cachedApplicationsOrganizations, applicationsOrganizationsLock: sa.applicationsOrganizationsLock,
 		cachedApplicationConfigs: sa.cachedApplicationConfigs, applicationConfigsLock: sa.applicationConfigsLock,
 		cachedAuthTypes: sa.cachedAuthTypes, authTypesLock: sa.authTypesLock,
-	}
-}
-
-func (sa *Adapter) abortTransaction() {
-	err := sa.context.AbortTransaction(sa.context)
-	if err != nil {
-		sa.logger.Errorf("error aborting a transaction - %s", err)
 	}
 }
 
