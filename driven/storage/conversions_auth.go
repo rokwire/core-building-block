@@ -127,14 +127,14 @@ func serviceAccountFromStorage(item serviceAccount, sa *Adapter) (*model.Service
 	if item.AppID != authutils.AllApps {
 		application, err = sa.getCachedApplication(item.AppID)
 		if err != nil || application == nil {
-			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, &logutils.FieldArgs{"app_id": item.AppID}, err)
+			return nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeApplication, &logutils.FieldArgs{"app_id": item.AppID}, err)
 		}
 	}
 	var organization *model.Organization
 	if item.OrgID != authutils.AllOrgs {
 		organization, err = sa.getCachedOrganization(item.OrgID)
 		if err != nil || organization == nil {
-			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, &logutils.FieldArgs{"org_id": item.OrgID}, err)
+			return nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeOrganization, &logutils.FieldArgs{"org_id": item.OrgID}, err)
 		}
 	}
 

@@ -326,7 +326,7 @@ func initPhoneAuth(auth *Auth, twilioAccountSID string, twilioToken string, twil
 
 	err := auth.registerAuthType(phone.authType, phone)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionRegister, typeAuthType, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAuthType, nil, err)
 	}
 
 	return phone, nil

@@ -103,7 +103,7 @@ func initEmailMfa(auth *Auth) (*emailMfaImpl, error) {
 
 	err := auth.registerMfaType(email.mfaType, email)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionRegister, typeMfaType, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeMFAType, nil, err)
 	}
 
 	return email, nil

@@ -30,7 +30,7 @@ func (app *application) sysCreateGlobalConfig(setting string) (*model.GlobalConf
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeGlobalConfig, nil, err)
 	}
 	if gc != nil {
-		return nil, errors.New("global config already exists")
+		return nil, errors.ErrorData("existing", model.TypeGlobalConfig, nil)
 	}
 
 	gc = &model.GlobalConfig{Setting: setting}

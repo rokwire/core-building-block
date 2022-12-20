@@ -28,6 +28,7 @@ import (
 	"time"
 
 	"github.com/rokwire/logging-library-go/v2/logs"
+	"github.com/rokwire/logging-library-go/v2/logutils"
 
 	"github.com/rokwire/logging-library-go/v2/errors"
 )
@@ -62,7 +63,7 @@ func SetRandomSeed() error {
 	seed := make([]byte, 8)
 	_, err := crand.Read(seed)
 	if err != nil {
-		return errors.WrapErrorAction("generating", "math/rand seed", nil, err)
+		return errors.WrapErrorAction(logutils.ActionGenerate, "math/rand seed", nil, err)
 	}
 
 	rand.Seed(int64(binary.LittleEndian.Uint64(seed)))
@@ -108,7 +109,7 @@ func GenerateRandomPassword(s int) string {
 func ConvertToJSON(data interface{}) ([]byte, error) {
 	dataJSON, err := json.Marshal(data)
 	if err != nil {
-		return nil, errors.WrapErrorAction("error converting map to json", "", nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionMarshal, "map to json", nil, err)
 	}
 	return dataJSON, nil
 }

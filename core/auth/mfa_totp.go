@@ -62,13 +62,13 @@ func (m *totpMfaImpl) enroll(identifier string) (*model.MFAType, error) {
 	}
 	key, err := totp.Generate(totpOpts)
 	if err != nil {
-		return nil, errors.WrapErrorAction("generate", "TOTP key", nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionGenerate, "TOTP key", nil, err)
 	}
 
 	var buf bytes.Buffer
 	image, err := key.Image(256, 256)
 	if err != nil {
-		return nil, errors.WrapErrorAction("generate", "TOTP image", nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionGenerate, "TOTP image", nil, err)
 	}
 	err = png.Encode(&buf, image)
 	if err != nil {
@@ -96,7 +96,7 @@ func initTotpMfa(auth *Auth) (*totpMfaImpl, error) {
 
 	err := auth.registerMfaType(totp.mfaType, totp)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionRegister, typeMfaType, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeMFAType, nil, err)
 	}
 
 	return totp, nil

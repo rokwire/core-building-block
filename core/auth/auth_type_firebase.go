@@ -79,7 +79,7 @@ func initFirebaseAuth(auth *Auth) (*firebaseAuthImpl, error) {
 
 	err := auth.registerAuthType(firebase.authType, firebase)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionRegister, typeAuthType, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAuthType, nil, err)
 	}
 
 	return firebase, nil
