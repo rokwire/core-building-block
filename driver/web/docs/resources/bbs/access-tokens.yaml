@@ -14,19 +14,16 @@ post:
         examples:
           static_token:
             summary: Static token
-            value: {
-                "account_id": "service_account_id",
-                "auth_type": "static_token",
-                "creds": {
-                  "token": "account_token"
-                }
-              }
+            value:
+              account_id: service_account_id
+              auth_type: static_token
+              creds:
+                token: account_token
           signature:
             summary: Signature
-            value: {
-                "account_id": "service_account_id",
-                "auth_type": "signature",
-              }
+            value:
+              account_id: service_account_id
+              auth_type: signature
     required: true
   responses:
     200:

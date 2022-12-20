@@ -43,10 +43,9 @@ post:
         examples:
           email:
             summary: Enroll in email MFA
-            value: {
-                "identifier": "test@test.com",
-                "type": "email"
-              }
+            value:
+              identifier: test@test.com
+              type: email
     required: true
   responses:
     200:
@@ -81,10 +80,9 @@ delete:
         examples:
           email:
             summary: Unenroll in email MFA
-            value: {
-                "identifier": "test@test.com",
-                "type": "email"
-              }
+            value:
+              identifier: test@test.com
+              type: email
   responses:
     200:
       description: Success
