@@ -85,7 +85,7 @@ func (a *emailAuthImpl) signUp(authType model.AuthType, appOrg model.Application
 	}
 	//check if the passwrod matches with the confirm password one
 	if password != confirmPassword {
-		return "", nil, errors.ErrorData(logutils.StatusInvalid, "password fields", nil)
+		return "", nil, errors.ErrorData(logutils.StatusInvalid, "mismatching password fields", nil)
 	}
 
 	emailCreds, err := a.buildCredentials(authType, appOrg.Application.Name, email, password, newCredentialID)
@@ -459,7 +459,7 @@ func (a *emailAuthImpl) forgotCredential(credential *model.Credential, identifie
 	emailCreds.ResetExpiry = time.Now().Add(time.Hour * 24)
 	err = a.sendPasswordResetEmail(credential.ID, resetCode, identifier, appName)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionSend, "passwrod reset email", nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionSend, "password reset email", nil, err)
 	}
 	credsMap, err := emailCredsToMap(emailCreds)
 	if err != nil {
