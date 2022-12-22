@@ -470,7 +470,7 @@ func (h AdminApisHandler) getAccount(l *logs.Log, r *http.Request, claims *token
 		return l.HTTPResponseErrorAction(logutils.ActionGet, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}
 
-	var accountData *Def.SharedResAccount
+	var accountData *Def.Account
 	if account != nil {
 		account.SortAccountAuthTypes(claims.UID)
 		accountData = accountToDef(*account)

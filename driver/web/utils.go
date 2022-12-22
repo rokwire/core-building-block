@@ -34,7 +34,7 @@ func authBuildLoginResponse(l *logs.Log, loginSession *model.LoginSession) logs.
 	rokwireToken := Def.SharedResRokwireToken{AccessToken: &accessToken, RefreshToken: &refreshToken, TokenType: &tokenType}
 
 	//account
-	var accountData *Def.SharedResAccount
+	var accountData *Def.Account
 	if loginSession.AccountAuthType != nil {
 		account := loginSession.AccountAuthType.Account
 		accountData = accountToDef(account)

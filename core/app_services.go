@@ -70,7 +70,7 @@ func (app *application) serUpdateProfile(accountID string, profile model.Profile
 	//1. find the account
 	account, err := app.storage.FindAccountByID(accountID)
 	if err != nil {
-		return errors.Wrapf("error finding an account on profile update", err)
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
 
 	//2. get the profile ID from the account
@@ -79,7 +79,7 @@ func (app *application) serUpdateProfile(accountID string, profile model.Profile
 	//3. update profile
 	err = app.storage.UpdateProfile(profile)
 	if err != nil {
-		return errors.Wrapf("error updating a profile", err)
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeProfile, nil, err)
 	}
 	return nil
 }

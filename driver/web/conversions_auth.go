@@ -27,33 +27,27 @@ import (
 )
 
 // LoginSession
-func loginSessionToDef(item model.LoginSession) Def.SharedResLoginSession {
-	var accountAuthTypeID *string
-	var accountAuthTypeIdentifier *string
+func loginSessionToDef(item model.LoginSession) Def.LoginSession {
+	var accountAuthType *Def.AccountAuthType
 	if item.AccountAuthType != nil {
-		accountAuthTypeID = &item.AccountAuthType.ID
-		accountAuthTypeIdentifier = &item.AccountAuthType.Identifier
+		aatValue := accountAuthTypeToDef(*item.AccountAuthType)
+		accountAuthType = &aatValue
 	}
 
-	appTypeID := item.AppType.ID
-	appTypeIdentifier := item.AppType.Identifier
-	authTypeCode := item.AuthType.Code
-	deviceID := item.Device.ID
 	refreshTokensCount := len(item.RefreshTokens)
 	stateExpires := utils.FormatTime(item.StateExpires)
 	dateRefreshed := utils.FormatTime(item.DateRefreshed)
 	dateUpdated := utils.FormatTime(item.DateUpdated)
 	dateCreated := utils.FormatTime(&item.DateCreated)
-	return Def.SharedResLoginSession{Id: &item.ID, Anonymous: &item.Anonymous, AccountAuthTypeId: accountAuthTypeID,
-		AccountAuthTypeIdentifier: accountAuthTypeIdentifier, AppTypeId: &appTypeID, AppTypeIdentifier: &appTypeIdentifier,
-		AuthTypeCode: &authTypeCode, Identifier: &item.Identifier, IpAddress: &item.IPAddress, DeviceId: &deviceID,
+	return Def.LoginSession{Id: &item.ID, Anonymous: &item.Anonymous, AccountAuthType: accountAuthType, AppOrg: appOrgToDef(&item.AppOrg),
+		AppType: applicationTypeToDef(&item.AppType), Device: deviceToDef(item.Device), Identifier: &item.Identifier, IpAddress: &item.IPAddress,
 		RefreshTokensCount: &refreshTokensCount, State: &item.State, MfaAttempts: &item.MfaAttempts, StateExpires: &stateExpires,
 		DateRefreshed: &dateRefreshed, DateUpdated: &dateUpdated, DateCreated: &dateCreated,
 	}
 }
 
-func loginSessionsToDef(items []model.LoginSession) []Def.SharedResLoginSession {
-	result := make([]Def.SharedResLoginSession, len(items))
+func loginSessionsToDef(items []model.LoginSession) []Def.LoginSession {
+	result := make([]Def.LoginSession, len(items))
 	for i, item := range items {
 		result[i] = loginSessionToDef(item)
 	}
@@ -130,11 +124,13 @@ func serviceAccountToDef(item *model.ServiceAccount) *Def.ServiceAccount {
 	if item.Organization != nil {
 		orgID = item.Organization.ID
 	}
+	permissions := item.GetPermissionNames()
+	scopes := item.GetScopeStrings()
 	firstParty := item.FirstParty
 	creds := serviceAccountCredentialListToDef(item.Credentials)
 
-	return &Def.ServiceAccount{AccountId: accountID, Name: name, AppId: appID, OrgId: orgID, Permissions: item.GetPermissionNames(),
-		Scopes: item.GetScopeStrings(), FirstParty: firstParty, Creds: &creds}
+	return &Def.ServiceAccount{AccountId: &accountID, Name: &name, AppId: appID, OrgId: orgID, Permissions: &permissions, Scopes: &scopes,
+		FirstParty: &firstParty, Creds: &creds}
 }
 
 func serviceAccountCredentialFromDef(item *Def.ServiceAccountCredential) *model.ServiceAccountCredential {
@@ -355,18 +351,18 @@ func jsonWebKeySetDef(items *model.JSONWebKeySet) *Def.JWKS {
 }
 
 // AuthType
-func authTypeToDef(item *model.AuthType) *Def.AuthTypeFields {
+func authTypeToDef(item *model.AuthType) *Def.AuthType {
 	if item == nil {
 		return nil
 	}
 
-	return &Def.AuthTypeFields{Id: &item.ID, Code: &item.Code, Description: &item.Description,
-		IsExternal: &item.IsExternal, IsAnonymous: &item.IsAnonymous, UseCredentials: &item.UseCredentials,
-		IgnoreMfa: &item.IgnoreMFA, Params: &Def.AuthTypeFields_Params{AdditionalProperties: item.Params}}
+	return &Def.AuthType{Id: &item.ID, Code: item.Code, Description: item.Description,
+		IsExternal: item.IsExternal, IsAnonymous: item.IsAnonymous, UseCredentials: item.UseCredentials,
+		IgnoreMfa: item.IgnoreMFA, Params: &Def.AuthType_Params{AdditionalProperties: item.Params}}
 }
 
-func authTypesToDef(items []model.AuthType) []Def.AuthTypeFields {
-	result := make([]Def.AuthTypeFields, len(items))
+func authTypesToDef(items []model.AuthType) []Def.AuthType {
+	result := make([]Def.AuthType, len(items))
 	for i, item := range items {
 		result[i] = *authTypeToDef(&item)
 	}

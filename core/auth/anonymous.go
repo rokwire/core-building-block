@@ -15,6 +15,7 @@
 package auth
 
 import (
+	"core-building-block/core/model"
 	"encoding/json"
 
 	"github.com/google/uuid"
@@ -63,7 +64,7 @@ func initAnonymousAuth(auth *Auth) (*anonymousAuthImpl, error) {
 
 	err := auth.registerAnonymousAuthType(anonymous.authType, anonymous)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionRegister, typeAuthType, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAuthType, nil, err)
 	}
 
 	return anonymous, nil

@@ -38,7 +38,7 @@ func (a *samlAuthImpl) externalLogin(authType model.AuthType, appType model.Appl
 }
 
 func (a *samlAuthImpl) getLoginURL(authType model.AuthType, appType model.ApplicationType, redirectURI string, l *logs.Log) (string, map[string]interface{}, error) {
-	return "", nil, errors.Newf("get login url operation invalid for auth_type=%s", a.authType)
+	return "", nil, errors.ErrorData(logutils.StatusInvalid, "operation", logutils.StringArgs(a.authType))
 }
 
 func (a *samlAuthImpl) refresh(params map[string]interface{}, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error) {
@@ -51,7 +51,7 @@ func initSamlAuth(auth *Auth) (*samlAuthImpl, error) {
 
 	err := auth.registerExternalAuthType(saml.authType, saml)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionRegister, typeAuthType, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAuthType, nil, err)
 	}
 
 	return saml, nil

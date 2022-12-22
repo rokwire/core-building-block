@@ -1,11 +1,13 @@
 type: object
 properties:
-  fields:
-    $ref: "./LoginSessionFields.yaml"
+  id:
+    type: string
+  anonymous:
+    type: boolean
+  identifier:
+    type: string
   app_org:
     $ref: "../application/ApplicationOrganization.yaml"
-  auth_type:
-    $ref: "./AuthType.yaml"
   app_type:
     $ref: "../application/ApplicationType.yaml"
   account_auth_type:
@@ -13,3 +15,22 @@ properties:
     nullable: true
   device:
     $ref: "../user/Device.yaml"
+  ip_address:
+    type: string
+  refresh_tokens_count:
+    type: integer
+  state:
+    type: string
+  state_expires:
+    type: string
+    nullable: true
+  mfa_attempts:
+    type: integer
+  date_refreshed:
+    type: string
+    nullable: true
+  date_updated:
+    type: string
+    nullable: true
+  date_created:
+    type: string

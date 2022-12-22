@@ -500,7 +500,7 @@ func (we Adapter) validateResponse(requestValidationInput *openapi3filter.Reques
 }
 
 func (we Adapter) completeResponse(w http.ResponseWriter, response logs.HTTPResponse, l *logs.Log) {
-	//14. return response
+	//1. return response
 	//1.1 headers
 	if len(response.Headers) > 0 {
 		for key, values := range response.Headers {

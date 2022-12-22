@@ -119,7 +119,7 @@ func applicationPermissionToDef(item model.Permission) Def.Permission {
 	}
 	description := item.Description
 	serviceID := item.ServiceID
-	return Def.Permission{Id: item.ID, Name: item.Name, Description: &description, ServiceId: &serviceID, Assigners: &assigners, DateCreated: &dateCreated, DateUpdated: dateUpdated}
+	return Def.Permission{Id: &item.ID, Name: item.Name, Description: &description, ServiceId: &serviceID, Assigners: &assigners, DateCreated: &dateCreated, DateUpdated: dateUpdated}
 }
 
 func applicationPermissionsToDef(items []model.Permission) []Def.Permission {
@@ -131,7 +131,7 @@ func applicationPermissionsToDef(items []model.Permission) []Def.Permission {
 }
 
 // AppOrg
-func appOrgFromDef(item *Def.AppOrg) *model.ApplicationOrganization {
+func appOrgFromDef(item *Def.ApplicationOrganization) *model.ApplicationOrganization {
 	if item == nil {
 		return nil
 	}
@@ -151,7 +151,7 @@ func appOrgFromDef(item *Def.AppOrg) *model.ApplicationOrganization {
 	return &model.ApplicationOrganization{ID: id, ServicesIDs: serviceIds, IdentityProvidersSettings: identityProviderSettings, SupportedAuthTypes: supportedAuthTypes, LoginsSessionsSetting: *loginsSessionsSetting}
 }
 
-func appOrgToDef(item *model.ApplicationOrganization) *Def.AppOrg {
+func appOrgToDef(item *model.ApplicationOrganization) *Def.ApplicationOrganization {
 	if item == nil {
 		return nil
 	}
@@ -161,21 +161,21 @@ func appOrgToDef(item *model.ApplicationOrganization) *Def.AppOrg {
 	loginsSessionsSetting := loginSessionSettingsToDef(item.LoginsSessionsSetting)
 	id := item.ID
 	serviceIDs := item.ServicesIDs
-	return &Def.AppOrg{Id: &id, AppId: item.Application.ID, OrgId: item.Organization.ID, ServicesIds: &serviceIDs,
+	return &Def.ApplicationOrganization{Id: &id, AppId: item.Application.ID, OrgId: item.Organization.ID, ServicesIds: &serviceIDs,
 		IdentityProviderSettings: &identityProviderSettings, SupportedAuthTypes: &supportedAuthTypes, LoginSessionSettings: &loginsSessionsSetting}
 }
 
-func appOrgsToDef(items []model.ApplicationOrganization) []Def.AppOrg {
+func appOrgsToDef(items []model.ApplicationOrganization) []Def.ApplicationOrganization {
 	if items == nil {
 		return nil
 	}
-	out := make([]Def.AppOrg, len(items))
+	out := make([]Def.ApplicationOrganization, len(items))
 	for i, item := range items {
 		defItem := appOrgToDef(&item)
 		if defItem != nil {
 			out[i] = *defItem
 		} else {
-			out[i] = Def.AppOrg{}
+			out[i] = Def.ApplicationOrganization{}
 		}
 	}
 
@@ -446,10 +446,9 @@ func organizationToDef(item *model.Organization) *Def.Organization {
 		return nil
 	}
 	id := item.ID
-	fields := Def.OrganizationFields{Id: &id, Name: item.Name, Type: Def.OrganizationFieldsType(item.Type)}
 	config := item.Config
 
-	return &Def.Organization{Config: organizationConfigToDef(&config), Fields: &fields}
+	return &Def.Organization{Id: &id, Name: item.Name, Type: Def.OrganizationType(item.Type), Config: organizationConfigToDef(&config)}
 }
 
 func organizationsToDef(items []model.Organization) []Def.Organization {
@@ -460,28 +459,22 @@ func organizationsToDef(items []model.Organization) []Def.Organization {
 	return result
 }
 
-func organizationConfigToDef(item *model.OrganizationConfig) *Def.OrganizationConfigFields {
+func organizationConfigToDef(item *model.OrganizationConfig) *Def.OrganizationConfig {
 	if item == nil {
 		return nil
 	}
 
 	var id *string
 	if len(item.ID) > 0 {
-		idString := item.ID
-		id = &idString
-	}
-	var domains *[]string
-	if len(item.Domains) > 0 {
-		domainList := item.Domains
-		domains = &domainList
+		id = &item.ID
 	}
 
-	return &Def.OrganizationConfigFields{Id: id, Domains: domains}
+	return &Def.OrganizationConfig{Id: id, Domains: item.Domains}
 }
 
 // App Config
 func appConfigToDef(item model.ApplicationConfig) Def.ApplicationConfig {
-	defConfig := Def.ApplicationConfig{Id: item.ID, AppTypeId: item.ApplicationType.ID, Version: item.Version.VersionNumbers.String(), Data: item.Data}
+	defConfig := Def.ApplicationConfig{Id: &item.ID, AppTypeId: item.ApplicationType.ID, Version: item.Version.VersionNumbers.String(), Data: item.Data}
 	if item.AppOrg != nil {
 		orgID := item.AppOrg.Organization.ID
 		defConfig.OrgId = &orgID

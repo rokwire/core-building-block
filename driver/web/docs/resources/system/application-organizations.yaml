@@ -33,7 +33,7 @@ get:
           schema:
             type: array
             items:
-              $ref: "../../schemas/application/AppOrg.yaml"
+              $ref: "../../schemas/application/ApplicationOrganization.yaml"
     400:
       description: Bad request
     401:
@@ -55,7 +55,7 @@ post:
     content:
       application/json:
         schema:
-          $ref: "../../schemas/application/AppOrg.yaml"
+          $ref: "../../schemas/application/ApplicationOrganization.yaml"
     required: true
   responses:
     200:

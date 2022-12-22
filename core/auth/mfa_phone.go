@@ -103,7 +103,7 @@ func initPhoneMfa(auth *Auth) (*phoneMfaImpl, error) {
 
 	err := auth.registerMfaType(phone.mfaType, phone)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionRegister, typeMfaType, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeMFAType, nil, err)
 	}
 
 	return phone, nil
