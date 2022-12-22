@@ -68,7 +68,7 @@ func NewAuth(serviceID string, serviceRegManager *authservice.ServiceRegManager)
 
 	systemAuth, err := newSystemAuth(serviceRegManager)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionCreate, "auth handler", nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionCreate, "system auth", nil, err)
 	}
 	systemHandlers := tokenauth.NewHandlers(systemAuth)
 

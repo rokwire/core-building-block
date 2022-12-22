@@ -1190,7 +1190,7 @@ func (app *application) admGrantPermissionsToRole(appID string, orgID string, ro
 	//insert permission into a role
 	err = app.storage.InsertAppOrgRolePermissions(nil, roleID, permissions)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionGrant, model.TypePermission, &logutils.FieldArgs{"names": permissionNames}, err)
+		return errors.WrapErrorAction(logutils.ActionGrant, model.TypePermission, &logutils.FieldArgs{"names": permissionNames, "role_id": roleID}, err)
 	}
 
 	return nil

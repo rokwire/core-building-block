@@ -180,7 +180,7 @@ func (a *Auth) Logout(appID string, orgID string, currentAccountID string, sessi
 	if allSessions {
 		err := a.storage.DeleteLoginSessionsByIdentifier(nil, currentAccountID)
 		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, &logutils.FieldArgs{"account_id": currentAccountID}, err)
+			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, &logutils.FieldArgs{"identifier": currentAccountID}, err)
 		}
 	} else {
 		err := a.storage.DeleteLoginSession(nil, sessionID)
@@ -950,7 +950,7 @@ func (a *Auth) ResetForgotCredential(credsID string, resetCode string, params st
 		return errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeAuthType, logutils.StringArgs(credential.AuthType.ID), err)
 	}
 	if !authType.UseCredentials {
-		return errors.ErrorData(logutils.StatusInvalid, model.TypeAuthType, logutils.StringArgs("reset forgot password"))
+		return errors.ErrorData(logutils.StatusInvalid, model.TypeAuthType, logutils.StringArgs("reset forgot credential"))
 	}
 
 	authImpl, err := a.getAuthTypeImpl(*authType)
@@ -1545,8 +1545,7 @@ func (a *Auth) AddServiceAccountCredential(accountID string, creds *model.Servic
 
 	serviceAuthType, err := a.getServiceAuthTypeImpl(creds.Type)
 	if err != nil {
-		l.Info("error getting service auth type on add service credential")
-		return nil, errors.WrapErrorAction(logutils.ActionGet, "service auth type", nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionGet, typeServiceAuthType, nil, err)
 	}
 
 	displayParams, err := serviceAuthType.addCredentials(creds)
