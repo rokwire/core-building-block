@@ -411,7 +411,7 @@ type LoginSession struct {
 	DateCreated        *string                  `json:"date_created,omitempty"`
 	DateRefreshed      *string                  `json:"date_refreshed"`
 	DateUpdated        *string                  `json:"date_updated"`
-	Device             *Device                  `json:"device,omitempty"`
+	DeviceId           *string                  `json:"device_id,omitempty"`
 	Id                 *string                  `json:"id,omitempty"`
 	Identifier         *string                  `json:"identifier,omitempty"`
 	IpAddress          *string                  `json:"ip_address,omitempty"`

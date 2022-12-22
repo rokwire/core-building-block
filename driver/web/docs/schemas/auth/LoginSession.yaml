@@ -13,8 +13,8 @@ properties:
   account_auth_type:
     $ref: "../user/AccountAuthType.yaml"
     nullable: true
-  device:
-    $ref: "../user/Device.yaml"
+  device_id:
+    type: string
   ip_address:
     type: string
   refresh_tokens_count:

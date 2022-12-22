@@ -1067,9 +1067,12 @@ func (h SystemApisHandler) createAuthTypes(l *logs.Log, r *http.Request, claims 
 	isAnonymous := requestData.IsAnonymous
 	useCredentials := requestData.UseCredentials
 	ignoreMFA := requestData.IgnoreMfa
-	params := requestData.Params
+	var params map[string]interface{}
+	if requestData.Params != nil {
+		params = requestData.Params.AdditionalProperties
+	}
 
-	_, err = h.coreAPIs.System.SysCreateAuthTypes(code, description, isExternal, isAnonymous, useCredentials, ignoreMFA, params.AdditionalProperties)
+	_, err = h.coreAPIs.System.SysCreateAuthTypes(code, description, isExternal, isAnonymous, useCredentials, ignoreMFA, params)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionCreate, model.TypeAuthType, nil, err, http.StatusInternalServerError, true)
 	}
@@ -1117,9 +1120,12 @@ func (h SystemApisHandler) updateAuthTypes(l *logs.Log, r *http.Request, claims 
 	isAnonymous := requestData.IsAnonymous
 	useCredentials := requestData.UseCredentials
 	ignoreMFA := requestData.IgnoreMfa
-	params := requestData.Params
+	var params map[string]interface{}
+	if requestData.Params != nil {
+		params = requestData.Params.AdditionalProperties
+	}
 
-	err = h.coreAPIs.System.SysUpdateAuthTypes(ID, code, description, isExternal, isAnonymous, useCredentials, ignoreMFA, params.AdditionalProperties)
+	err = h.coreAPIs.System.SysUpdateAuthTypes(ID, code, description, isExternal, isAnonymous, useCredentials, ignoreMFA, params)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUpdate, model.TypeAuthType, nil, err, http.StatusInternalServerError, true)
 	}
