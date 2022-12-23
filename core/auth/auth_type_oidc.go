@@ -273,6 +273,26 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 		return nil, nil, errors.WrapErrorAction(logutils.ActionGet, typeOidcToken, nil, err)
 	}
 
+	oidcParams := map[string]interface{}{"token_type": token.TokenType}
+	pubKey := a.auth.authPrivKey.PublicKey
+	randomKey, err := utils.GenerateRandomBytes(16)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction("generating", "random key", nil, err)
+	}
+	oidcParams["key"], oidcParams["id_token"], err = utils.Encrypt([]byte(token.IDToken), &pubKey, randomKey)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionEncrypt, "oidc id token", nil, err)
+	}
+	_, oidcParams["access_token"], err = utils.Encrypt([]byte(token.AccessToken), &pubKey, randomKey)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionEncrypt, "oidc access token", nil, err)
+	}
+	_, oidcParams["refresh_token"], err = utils.Encrypt([]byte(token.RefreshToken), &pubKey, randomKey)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionEncrypt, "oidc refresh token", nil, err)
+	}
+	//TODO: need to send back raw tokens in login, refresh responses, but store encrypted data in DB
+
 	sub, err := a.checkToken(token.IDToken, authType, appType, oidcConfig, l)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, typeOidcToken, nil, err)
@@ -350,12 +370,6 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 
 	externalUser := model.ExternalSystemUser{Identifier: identifier, ExternalIDs: externalIDs, FirstName: firstName,
 		MiddleName: middleName, LastName: lastName, Email: email, Roles: roles, Groups: groups, SystemSpecific: systemSpecific}
-
-	oidcParams := map[string]interface{}{}
-	oidcParams["id_token"] = token.IDToken
-	oidcParams["access_token"] = token.AccessToken
-	oidcParams["refresh_token"] = token.RefreshToken
-	oidcParams["token_type"] = token.TokenType
 
 	params := map[string]interface{}{}
 	params["oidc_token"] = oidcParams

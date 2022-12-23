@@ -15,7 +15,11 @@
 package utils
 
 import (
+	"bytes"
+	"crypto/aes"
+	"crypto/cipher"
 	crand "crypto/rand"
+	"crypto/rsa"
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/binary"
@@ -28,6 +32,7 @@ import (
 	"time"
 
 	"github.com/rokwire/logging-library-go/logs"
+	"github.com/rokwire/logging-library-go/logutils"
 
 	"github.com/rokwire/logging-library-go/errors"
 )
@@ -221,4 +226,53 @@ func GetPrintableString(v *string, defaultVal string) string {
 		return *v
 	}
 	return defaultVal
+}
+
+// Encrypt data with AES-128 encryption algorithm and returns the encrypted blob and the AES key encrypted with RSA
+func Encrypt(data []byte, pub *rsa.PublicKey, randomKey []byte) (string, string, error) {
+	initVector := []byte("\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00")
+
+	if len(randomKey) == 0 {
+		randomKey = make([]byte, 16)
+		_, err := rand.Read(randomKey)
+		if err != nil {
+			return "", "", errors.WrapErrorAction("generating", "random key", nil, err)
+		}
+	}
+	//Encrypt blobJSON with AES using random key(CBC mode, PKCS7 padding, 0 IV) and convert to base 64 to get encrypted_data
+	cipherBlock, err := aes.NewCipher(randomKey)
+	if err != nil {
+		return "", "", errors.WrapErrorAction(logutils.ActionCreate, "AES cipher block", nil, err)
+	}
+
+	paddedData := PKCS7Padding(data, cipherBlock.BlockSize())
+	cipherText := make([]byte, len(paddedData))
+	mode := cipher.NewCBCEncrypter(cipherBlock, initVector)
+	mode.CryptBlocks(cipherText, paddedData)
+	//Encrypt the session key with RSA public key
+	encryptedKeyBytes, err := EncryptWithPublicKey(randomKey, pub)
+	if err != nil || encryptedKeyBytes == nil {
+		return "", "", err
+	}
+	encryptedKey := base64.StdEncoding.EncodeToString(encryptedKeyBytes)
+	encryptedData := base64.StdEncoding.EncodeToString(cipherText)
+	return encryptedKey, encryptedData, nil
+}
+
+// PKCS7Padding returns the data with correct padding for AES block
+func PKCS7Padding(ciphertext []byte, blockSize int) []byte {
+	n := blockSize - (len(ciphertext) % blockSize)
+	pb := make([]byte, len(ciphertext)+n)
+	copy(pb, ciphertext)
+	copy(pb[len(ciphertext):], bytes.Repeat([]byte{byte(n)}, n))
+	return pb
+}
+
+// EncryptWithPublicKey encrypts data with RSA public key
+func EncryptWithPublicKey(data []byte, pub *rsa.PublicKey) ([]byte, error) {
+	cipherText, err := rsa.EncryptPKCS1v15(crand.Reader, pub, data)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionEncrypt, logutils.TypeString, logutils.StringArgs("RSA public key"), err)
+	}
+	return cipherText, nil
 }
