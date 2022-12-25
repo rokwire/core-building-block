@@ -103,6 +103,7 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 	var message string
 	var accountAuthType *model.AccountAuthType
 	var responseParams map[string]interface{}
+	var storageParams map[string]interface{}
 	var externalIDs map[string]string
 	var mfaTypes []model.MFAType
 	var state string
@@ -123,7 +124,7 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 			accountAuthType = &model.AccountAuthType{Account: *account}
 		}
 	} else if authType.IsExternal {
-		accountAuthType, responseParams, mfaTypes, externalIDs, err = a.applyExternalAuthType(*authType, *appType, *appOrg, creds, params, clientVersion, profile, preferences, username, admin, l)
+		accountAuthType, responseParams, storageParams, mfaTypes, externalIDs, err = a.applyExternalAuthType(*authType, *appType, *appOrg, creds, params, clientVersion, profile, preferences, username, admin, l)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction("apply external auth type", "user", nil, err)
 
@@ -161,12 +162,13 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 	}
 
 	//now we are ready to apply login for the user or anonymous
-	loginSession, err := a.applyLogin(anonymous, sub, *authType, *appOrg, accountAuthType, *appType, externalIDs, ipAddress, deviceType, deviceOS, deviceID, clientVersion, responseParams, state, l)
+	loginSession, err := a.applyLogin(anonymous, sub, *authType, *appOrg, accountAuthType, *appType, externalIDs, ipAddress, deviceType, deviceOS, deviceID, clientVersion, storageParams, state, l)
 	if err != nil {
 		return nil, nil, nil, errors.WrapErrorAction("error apply login auth type", "user", nil, err)
 	}
 
 	if loginSession.State == "" {
+		loginSession.Params = responseParams
 		return nil, loginSession, nil, nil
 	}
 
@@ -336,6 +338,9 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 	permissions := []string{}
 
 	// - generate new params and update the account if needed(if external auth type)
+	var externalUser *model.ExternalSystemUser
+	var responseParams map[string]interface{}
+	var storageParams map[string]interface{}
 	if loginSession.AuthType.IsExternal {
 		extAuthType, err := a.getExternalAuthTypeImpl(loginSession.AuthType)
 		if err != nil {
@@ -343,7 +348,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 			return nil, errors.WrapErrorAction("error getting external auth type on refresh", "", nil, err)
 		}
 
-		externalUser, refreshedData, err := extAuthType.refresh(loginSession.Params, loginSession.AuthType, loginSession.AppType, loginSession.AppOrg, l)
+		externalUser, responseParams, storageParams, err = extAuthType.refresh(loginSession.Params, loginSession.AuthType, loginSession.AppType, loginSession.AppOrg, l)
 		if err != nil {
 			l.Infof("error refreshing external auth type on refresh - %s", refreshToken)
 			return nil, errors.WrapErrorAction("error refreshing external auth type on refresh", "", nil, err)
@@ -355,7 +360,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 			return nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeExternalSystemUser, logutils.StringArgs("refresh"), err)
 		}
 
-		loginSession.Params = refreshedData //assign the refreshed data
+		loginSession.Params = storageParams //assign the refreshed storage params
 		if newAccount != nil {
 			loginSession.ExternalIDs = newAccount.ExternalIDs
 		}
@@ -412,6 +417,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 	}
 
 	//return the updated session
+	loginSession.Params = responseParams
 	return loginSession, nil
 }
 

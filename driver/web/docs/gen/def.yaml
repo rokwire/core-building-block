@@ -6499,8 +6499,6 @@ components:
                       type: string
                     token_type:
                       type: string
-                redirect_uri:
-                  type: string
             - type: object
               description: Auth login response params for auth_type="anonymous"
               properties:

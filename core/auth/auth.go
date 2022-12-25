@@ -208,7 +208,7 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 }
 
 func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, clientVersion *string,
-	regProfile model.Profile, regPreferences map[string]interface{}, username string, admin bool, l *logs.Log) (*model.AccountAuthType, map[string]interface{}, []model.MFAType, map[string]string, error) {
+	regProfile model.Profile, regPreferences map[string]interface{}, username string, admin bool, l *logs.Log) (*model.AccountAuthType, map[string]interface{}, map[string]interface{}, []model.MFAType, map[string]string, error) {
 	var accountAuthType *model.AccountAuthType
 	var mfaTypes []model.MFAType
 	var externalIDs map[string]string
@@ -216,20 +216,20 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 	//external auth type
 	authImpl, err := a.getExternalAuthTypeImpl(authType)
 	if err != nil {
-		return nil, nil, nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeExternalAuthType, nil, err)
+		return nil, nil, nil, nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeExternalAuthType, nil, err)
 	}
 
 	//1. get the user from the external system
 	//var externalUser *model.ExternalSystemUser
-	externalUser, extParams, err := authImpl.externalLogin(authType, appType, appOrg, creds, params, l)
+	externalUser, extParams, storageParams, err := authImpl.externalLogin(authType, appType, appOrg, creds, params, l)
 	if err != nil {
-		return nil, nil, nil, nil, errors.WrapErrorAction("logging in", "external user", nil, err)
+		return nil, nil, nil, nil, nil, errors.WrapErrorAction("logging in", "external user", nil, err)
 	}
 
 	//2. check if the user exists
 	account, err := a.storage.FindAccount(nil, appOrg.ID, authType.ID, externalUser.Identifier)
 	if err != nil {
-		return nil, nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+		return nil, nil, nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
 	a.setLogContext(account, l)
 
@@ -238,7 +238,7 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 		//account exists
 		accountAuthType, err = a.applySignInExternal(account, authType, appOrg, *externalUser, l)
 		if err != nil {
-			return nil, nil, nil, nil, errors.Wrap("error on apply sign in external", err)
+			return nil, nil, nil, nil, nil, errors.Wrap("error on apply sign in external", err)
 		}
 		mfaTypes = account.GetVerifiedMFATypes()
 		externalIDs = account.ExternalIDs
@@ -246,15 +246,15 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 		//user does not exist, we need to register it
 		accountAuthType, err = a.applySignUpExternal(nil, authType, appOrg, *externalUser, regProfile, regPreferences, username, clientVersion, l)
 		if err != nil {
-			return nil, nil, nil, nil, errors.Wrap("error on apply sign up external", err)
+			return nil, nil, nil, nil, nil, errors.Wrap("error on apply sign up external", err)
 		}
 		externalIDs = externalUser.ExternalIDs
 	} else {
-		return nil, nil, nil, nil, errors.Newf("admin account sign up is not allowed: identifier=%s auth_type=%s app_org_id=%s", externalUser.Identifier, authType.Code, appOrg.ID).SetStatus(utils.ErrorStatusNotAllowed)
+		return nil, nil, nil, nil, nil, errors.Newf("admin account sign up is not allowed: identifier=%s auth_type=%s app_org_id=%s", externalUser.Identifier, authType.Code, appOrg.ID).SetStatus(utils.ErrorStatusNotAllowed)
 	}
 
 	//TODO: make sure we do not return any refresh tokens in extParams
-	return accountAuthType, extParams, mfaTypes, externalIDs, nil
+	return accountAuthType, extParams, storageParams, mfaTypes, externalIDs, nil
 }
 
 func (a *Auth) applySignInExternal(account *model.Account, authType model.AuthType, appOrg model.ApplicationOrganization,
@@ -1627,7 +1627,7 @@ func (a *Auth) linkAccountAuthTypeExternal(account model.Account, authType model
 		return nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeAuthType, nil, err)
 	}
 
-	externalUser, _, err := authImpl.externalLogin(authType, appType, appOrg, creds, params, l)
+	externalUser, _, _, err := authImpl.externalLogin(authType, appType, appOrg, creds, params, l)
 	if err != nil {
 		return nil, errors.WrapErrorAction("logging in", "external user", nil, err)
 	}

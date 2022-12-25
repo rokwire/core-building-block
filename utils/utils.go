@@ -228,16 +228,14 @@ func GetPrintableString(v *string, defaultVal string) string {
 	return defaultVal
 }
 
-// Encrypt data with AES-128 encryption algorithm and returns the encrypted blob and the AES key encrypted with RSA
-func Encrypt(data []byte, pub *rsa.PublicKey, randomKey []byte) (string, string, error) {
+// Encrypt data with AES-128 encryption algorithm and returns the encrypted data and the AES key encrypted with RSA
+func Encrypt(data []byte, pub *rsa.PublicKey) (string, string, error) {
 	initVector := []byte("\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00")
 
-	if len(randomKey) == 0 {
-		randomKey = make([]byte, 16)
-		_, err := rand.Read(randomKey)
-		if err != nil {
-			return "", "", errors.WrapErrorAction("generating", "random key", nil, err)
-		}
+	randomKey := make([]byte, 16)
+	_, err := rand.Read(randomKey)
+	if err != nil {
+		return "", "", errors.WrapErrorAction("generating", "random key", nil, err)
 	}
 	//Encrypt blobJSON with AES using random key(CBC mode, PKCS7 padding, 0 IV) and convert to base 64 to get encrypted_data
 	cipherBlock, err := aes.NewCipher(randomKey)
@@ -273,6 +271,44 @@ func EncryptWithPublicKey(data []byte, pub *rsa.PublicKey) ([]byte, error) {
 	cipherText, err := rsa.EncryptPKCS1v15(crand.Reader, pub, data)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionEncrypt, logutils.TypeString, logutils.StringArgs("RSA public key"), err)
+	}
+	return cipherText, nil
+}
+
+// Decrypt decrypts data using AES-128 with the key decrypted using priv
+func Decrypt(data string, key string, priv *rsa.PrivateKey) ([]byte, error) {
+	//1. decrypt key
+	decodedKey, err := base64.StdEncoding.DecodeString(key)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionDecode, "key string", nil, err)
+	}
+	decryptedKey, err := DecryptWithPrivateKey(decodedKey, priv)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionDecrypt, "decoded key string", nil, err)
+	}
+
+	//2. decrypt data
+	initVector := []byte("\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00")
+	decodedData, err := base64.StdEncoding.DecodeString(data)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionDecode, "data string", nil, err)
+	}
+	cipherBlock, err := aes.NewCipher(decryptedKey)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionCreate, "AES cipher block", nil, err)
+	}
+	decryptedData := make([]byte, len(decodedData))
+	mode := cipher.NewCBCDecrypter(cipherBlock, initVector)
+	mode.CryptBlocks(decryptedData, decodedData)
+
+	return decryptedData, nil
+}
+
+// DecryptWithPrivateKey decrypts data with RSA private key
+func DecryptWithPrivateKey(data []byte, priv *rsa.PrivateKey) ([]byte, error) {
+	cipherText, err := rsa.DecryptPKCS1v15(crand.Reader, priv, data)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionDecrypt, logutils.TypeString, logutils.StringArgs("RSA private key"), err)
 	}
 	return cipherText, nil
 }
