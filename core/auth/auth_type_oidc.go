@@ -264,7 +264,7 @@ func (a *oidcAuthImpl) refreshToken(authType model.AuthType, appType model.Appli
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionDecrypt, "refresh token", nil, err)
 		}
-		refreshToken = string(refreshTokenBytes)
+		refreshToken = strings.TrimSpace(string(refreshTokenBytes))
 	}
 	bodyData := map[string]string{
 		"refresh_token": refreshToken,
