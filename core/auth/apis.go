@@ -272,13 +272,25 @@ func (a *Auth) CanLink(authenticationType string, userIdentifier string, apiKey 
 //			Params (interface{}): authType-specific set of parameters passed back to client
 func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string, l *logs.Log) (*model.LoginSession, error) {
 	var loginSession *model.LoginSession
+	var err error
 
 	//find the login session for the refresh token
-	loginSession, err := a.storage.FindLoginSession(refreshToken)
-	if err != nil {
-		l.Infof("error finding session by refresh token - %s", refreshToken)
-		return nil, errors.WrapErrorAction("error finding session by refresh token", "", nil, err)
+	refreshTokenParts := strings.Split(refreshToken, ":")
+	if len(refreshTokenParts) > 1 {
+		refreshToken = a.hashAndEncodeToken(refreshTokenParts[1])
+		loginSession, err = a.storage.FindLoginSessionByID(refreshTokenParts[0])
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, nil, err)
+		}
+	} else {
+		refreshToken = a.hashAndEncodeToken(refreshToken)
+		loginSession, err = a.storage.FindLoginSession(refreshToken)
+		if err != nil {
+			l.Infof("error finding session by refresh token - %s", refreshToken)
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, nil, err)
+		}
 	}
+
 	if loginSession == nil {
 		l.Infof("there is no a session for refresh token - %s", refreshToken)
 		return nil, nil
@@ -344,13 +356,11 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 	if loginSession.AuthType.IsExternal {
 		extAuthType, err := a.getExternalAuthTypeImpl(loginSession.AuthType)
 		if err != nil {
-			l.Infof("error getting external auth type on refresh - %s", refreshToken)
 			return nil, errors.WrapErrorAction("error getting external auth type on refresh", "", nil, err)
 		}
 
 		externalUser, responseParams, storageParams, err = extAuthType.refresh(loginSession.Params, loginSession.AuthType, loginSession.AppType, loginSession.AppOrg, l)
 		if err != nil {
-			l.Infof("error refreshing external auth type on refresh - %s", refreshToken)
 			return nil, errors.WrapErrorAction("error refreshing external auth type on refresh", "", nil, err)
 		}
 
@@ -381,20 +391,18 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 	claims := a.getStandardClaims(sub, uid, name, email, phone, rokwireTokenAud, orgID, appID, authType, loginSession.ExternalIDs, nil, anonymous, false, loginSession.AppOrg.Application.Admin, loginSession.AppOrg.Organization.System, false, true, loginSession.ID)
 	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), authorization.ScopeGlobal)
 	if err != nil {
-		l.Infof("error generating acccess token on refresh - %s", refreshToken)
-		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, logutils.StringArgs("access"), err)
 	}
 	loginSession.AccessToken = accessToken //set the generated token
 	// - generate new refresh token
 	refreshToken, err = a.buildRefreshToken()
 	if err != nil {
-		l.Infof("error generating refresh token on refresh - %s", refreshToken)
-		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, logutils.StringArgs("refresh"), err)
 	}
 	if loginSession.RefreshTokens == nil {
 		loginSession.RefreshTokens = make([]string, 0)
 	}
-	loginSession.RefreshTokens = append(loginSession.RefreshTokens, refreshToken) //set the generated token
+	loginSession.RefreshTokens = append(loginSession.RefreshTokens, a.hashAndEncodeToken(refreshToken)) // store the hash of the generated token
 
 	now := time.Now()
 	loginSession.DateUpdated = &now
@@ -403,8 +411,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 	//store the updated session
 	err = a.storage.UpdateLoginSession(nil, *loginSession)
 	if err != nil {
-		l.Infof("error updating login session on refresh - %s", refreshToken)
-		return nil, errors.WrapErrorAction("error updating login session on refresh", "", nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeLoginSession, nil, err)
 	}
 
 	// update account usage information
@@ -417,6 +424,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 	}
 
 	//return the updated session
+	loginSession.RefreshTokens = []string{fmt.Sprintf("%s:%s", loginSession.ID, refreshToken)} // return the raw refresh token prefixed by <session ID>:
 	loginSession.Params = responseParams
 	return loginSession, nil
 }

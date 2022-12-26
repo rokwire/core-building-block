@@ -20,6 +20,7 @@ import (
 	"core-building-block/driven/storage"
 	"core-building-block/utils"
 	"crypto/rsa"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -1070,7 +1071,7 @@ func (a *Auth) applyLogin(anonymous bool, sub string, authType model.AuthType, a
 
 	var err error
 	var loginSession *model.LoginSession
-
+	var refreshToken string
 	transaction := func(context storage.TransactionContext) error {
 		///1. assign device to session and account
 		var device *model.Device
@@ -1102,6 +1103,8 @@ func (a *Auth) applyLogin(anonymous bool, sub string, authType model.AuthType, a
 		if err != nil {
 			return errors.WrapErrorAction("error creating a session", "", nil, err)
 		}
+		refreshToken = loginSession.CurrentRefreshToken()
+		loginSession.RefreshTokens = []string{a.hashAndEncodeToken(refreshToken)} // store the hash of the generated refresh token
 
 		//1. store login session
 		err = a.storage.InsertLoginSession(context, *loginSession)
@@ -1144,6 +1147,7 @@ func (a *Auth) applyLogin(anonymous bool, sub string, authType model.AuthType, a
 		return nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeUserAuth, nil, err)
 	}
 
+	loginSession.RefreshTokens = []string{fmt.Sprintf("%s:%s", loginSession.ID, refreshToken)} // return the raw refresh token prefixed by <session ID>:
 	return loginSession, nil
 }
 
@@ -2180,6 +2184,11 @@ func (a *Auth) getExp(exp *int64) int64 {
 	}
 
 	return *exp
+}
+
+func (a *Auth) hashAndEncodeToken(token string) string {
+	hashedToken := utils.SHA256Hash([]byte(token))
+	return base64.StdEncoding.EncodeToString(hashedToken)
 }
 
 func (a *Auth) getExternalUserAuthorization(externalUser model.ExternalSystemUser, identityProviderSetting *model.IdentityProviderSetting) ([]string, []string, error) {

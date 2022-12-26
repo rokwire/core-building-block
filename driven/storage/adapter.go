@@ -843,6 +843,19 @@ func (sa *Adapter) FindLoginSessionsByParams(appID string, orgID string, session
 	return loginSessions, nil
 }
 
+// FindLoginSessionByID finds a login session by ID
+func (sa *Adapter) FindLoginSessionByID(id string) (*model.LoginSession, error) {
+	//find loggin session
+	filter := bson.D{primitive.E{Key: "_id", Value: id}}
+	var session loginSession
+	err := sa.db.loginsSessions.FindOne(filter, &session, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, &logutils.FieldArgs{"id": id}, err)
+	}
+
+	return sa.buildLoginSession(nil, &session)
+}
+
 // FindLoginSession finds a login session
 func (sa *Adapter) FindLoginSession(refreshToken string) (*model.LoginSession, error) {
 	//find loggin session

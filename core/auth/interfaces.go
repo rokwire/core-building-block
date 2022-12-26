@@ -461,6 +461,7 @@ type Storage interface {
 	//LoginsSessions
 	InsertLoginSession(context storage.TransactionContext, session model.LoginSession) error
 	FindLoginSessions(context storage.TransactionContext, identifier string) ([]model.LoginSession, error)
+	FindLoginSessionByID(id string) (*model.LoginSession, error)
 	FindLoginSession(refreshToken string) (*model.LoginSession, error)
 	FindAndUpdateLoginSession(context storage.TransactionContext, id string) (*model.LoginSession, error)
 	UpdateLoginSession(context storage.TransactionContext, loginSession model.LoginSession) error
