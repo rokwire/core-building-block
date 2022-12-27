@@ -38,7 +38,8 @@ func (a *Auth) Start() {
 	storageListener := StorageListener{auth: a}
 	a.storage.RegisterStorageListener(&storageListener)
 
-	go a.setupDeleteSessionsTimer()
+	go utils.StartTimer(a.deleteSessionsTimer, a.deleteSessionsTimerDone, time.Hour*time.Duration(sessionDeletePeriod), a.deleteSessions, "delete sessions", a.logger)
+	go utils.StartTimer(a.sessionIDCacheTimer, a.sessionIDCacheTimerDone, time.Minute*time.Duration(sessionIDRatePeriod), a.clearSessionIDCache, "clear session id cache", a.logger)
 }
 
 // GetHost returns the host/issuer of the auth service
@@ -270,29 +271,44 @@ func (a *Auth) CanLink(authenticationType string, userIdentifier string, apiKey 
 //			Access token (string): Signed ROKWIRE access token to be used to authorize future requests
 //			Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
 //			Params (interface{}): authType-specific set of parameters passed back to client
-func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string, l *logs.Log) (*model.LoginSession, error) {
+func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string, l *logs.Log) (_ *model.LoginSession, refreshErr error) {
 	var loginSession *model.LoginSession
+	var sessionID string
 	var err error
 
 	//find the login session for the refresh token
 	refreshTokenParts := strings.Split(refreshToken, ":")
 	if len(refreshTokenParts) > 1 {
+		sessionID = refreshTokenParts[0]
+		if a.sessionIDLimitReached(sessionID) {
+			return nil, nil
+		}
+		defer func() {
+			if taggedErr, ok := refreshErr.(*errors.Error); ok && taggedErr.HasTag(sessionIDRateLimitTag) {
+				a.incrementCachedSessionIDCount(sessionID)
+			}
+		}()
+
 		refreshToken = a.hashAndEncodeToken(refreshTokenParts[1])
-		loginSession, err = a.storage.FindLoginSessionByID(refreshTokenParts[0])
+		loginSession, err = a.storage.FindLoginSessionByID(sessionID)
 		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, nil, err)
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, nil, err).AddTag(sessionIDRateLimitTag)
 		}
 	} else {
+		//TODO: cache refresh tokens too?
 		refreshToken = a.hashAndEncodeToken(refreshToken)
 		loginSession, err = a.storage.FindLoginSession(refreshToken)
 		if err != nil {
 			l.Infof("error finding session by refresh token - %s", refreshToken)
-			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, nil, err)
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, nil, err).AddTag(sessionIDRateLimitTag)
 		}
 	}
 
 	if loginSession == nil {
-		l.Infof("there is no a session for refresh token - %s", refreshToken)
+		l.Infof("there is no a session for refresh token - %s", utils.GetLogValue(refreshToken, 10))
+		if sessionID != "" {
+			a.incrementCachedSessionIDCount(sessionID)
+		}
 		return nil, nil
 	}
 	l.SetContext("account_id", loginSession.Identifier)
@@ -304,7 +320,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 		//remove the session
 		err = a.deleteLoginSession(nil, *loginSession, l)
 		if err != nil {
-			return nil, errors.WrapErrorAction("error deleting expired session", "", nil, err)
+			return nil, errors.WrapErrorAction("error deleting expired session", "", nil, err).AddTag(sessionIDRateLimitTag)
 		}
 
 		//return nul
@@ -323,7 +339,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 		//remove the session
 		err = a.deleteLoginSession(nil, *loginSession, l)
 		if err != nil {
-			return nil, errors.WrapErrorAction("error deleting expired session", "", nil, err)
+			return nil, errors.WrapErrorAction("error deleting expired session", "", nil, err).AddTag(sessionIDRateLimitTag)
 		}
 
 		return nil, nil
@@ -332,7 +348,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 	//TODO: Ideally we would not make many database calls before validating the API key. Currently needed to get app ID
 	err = a.validateAPIKey(apiKey, loginSession.AppOrg.Application.ID)
 	if err != nil {
-		return nil, errors.WrapErrorData(logutils.StatusInvalid, model.TypeAPIKey, nil, err)
+		return nil, errors.WrapErrorData(logutils.StatusInvalid, model.TypeAPIKey, nil, err).AddTag(sessionIDRateLimitTag)
 	}
 
 	///now:

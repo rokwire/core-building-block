@@ -850,6 +850,9 @@ func (sa *Adapter) FindLoginSessionByID(id string) (*model.LoginSession, error) 
 	var session loginSession
 	err := sa.db.loginsSessions.FindOne(filter, &session, nil)
 	if err != nil {
+		if err.Error() == mongo.ErrNoDocuments.Error() {
+			return nil, nil
+		}
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, &logutils.FieldArgs{"id": id}, err)
 	}
 

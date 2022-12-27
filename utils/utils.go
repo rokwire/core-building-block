@@ -312,3 +312,38 @@ func DecryptWithPrivateKey(data []byte, priv *rsa.PrivateKey) ([]byte, error) {
 	}
 	return cipherText, nil
 }
+
+// StartTimer starts a timer with the given name, period, and function to call when the timer goes off
+func StartTimer(timer *time.Timer, timerDone chan bool, period time.Duration, periodicFunc func(), name string, logger *logs.Logger) {
+	if logger != nil {
+		logger.Info("start timer for " + name)
+	}
+
+	//cancel if active
+	if timer != nil {
+		timerDone <- true
+		timer.Stop()
+	}
+
+	onTimer(timer, timerDone, period, periodicFunc, name, logger)
+}
+
+func onTimer(timer *time.Timer, timerDone chan bool, period time.Duration, periodicFunc func(), name string, logger *logs.Logger) {
+	if logger != nil {
+		logger.Info(name)
+	}
+
+	periodicFunc()
+
+	timer = time.NewTimer(period)
+	select {
+	case <-timer.C:
+		// timer expired
+		timer = nil
+
+		onTimer(timer, timerDone, period, periodicFunc, name, logger)
+	case <-timerDone:
+		// timer aborted
+		timer = nil
+	}
+}
