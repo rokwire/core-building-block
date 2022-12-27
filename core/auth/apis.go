@@ -281,6 +281,12 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 	if len(refreshTokenParts) > 1 {
 		sessionID = refreshTokenParts[0]
 		if a.sessionIDLimitReached(sessionID) {
+			//remove the session
+			err = a.deleteLoginSession(nil, model.LoginSession{ID: sessionID}, l)
+			if err != nil {
+				return nil, errors.WrapErrorAction("error deleting expired session", "", nil, err).AddTag(sessionIDRateLimitTag)
+			}
+
 			return nil, nil
 		}
 		defer func() {
