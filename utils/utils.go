@@ -261,12 +261,11 @@ func Encrypt(data []byte, pub *rsa.PublicKey) (string, string, error) {
 
 // PKCS7Padding returns the data with correct padding for AES block
 func PKCS7Padding(ciphertext []byte, blockSize int) ([]byte, error) {
-	cipherTextLen := len(ciphertext)
-	if cipherTextLen > 100*1024*1024 || cipherTextLen < 0 {
-		return nil, errors.ErrorData(logutils.StatusInvalid, "cipher text length", logutils.StringArgs("100MB limit"))
+	paddedLen := len(ciphertext) + blockSize - (len(ciphertext) % blockSize)
+	if paddedLen > 100*1024*1024 || paddedLen < 0 {
+		return nil, errors.ErrorData(logutils.StatusInvalid, "padded cipher text length", logutils.StringArgs("100MB limit"))
 	}
-	n := blockSize - (cipherTextLen % blockSize)
-	pb := make([]byte, cipherTextLen+n)
+	pb := make([]byte, paddedLen)
 	copy(pb, ciphertext)
 	return pb, nil
 }
