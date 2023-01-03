@@ -15,7 +15,6 @@
 package utils
 
 import (
-	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
 	crand "crypto/rand"
@@ -243,7 +242,10 @@ func Encrypt(data []byte, pub *rsa.PublicKey) (string, string, error) {
 		return "", "", errors.WrapErrorAction(logutils.ActionCreate, "AES cipher block", nil, err)
 	}
 
-	paddedData := PKCS7Padding(data, uint8(cipherBlock.BlockSize()))
+	paddedData, err := PKCS7Padding(data, cipherBlock.BlockSize())
+	if err != nil {
+		return "", "", errors.WrapErrorAction("padding", logutils.TypeString, nil, err)
+	}
 	cipherText := make([]byte, len(paddedData))
 	mode := cipher.NewCBCEncrypter(cipherBlock, initVector)
 	mode.CryptBlocks(cipherText, paddedData)
@@ -258,12 +260,15 @@ func Encrypt(data []byte, pub *rsa.PublicKey) (string, string, error) {
 }
 
 // PKCS7Padding returns the data with correct padding for AES block
-func PKCS7Padding(ciphertext []byte, blockSize uint8) []byte {
-	n := int(blockSize) - (len(ciphertext) % int(blockSize))
-	pb := make([]byte, len(ciphertext)+n)
+func PKCS7Padding(ciphertext []byte, blockSize int) ([]byte, error) {
+	cipherTextLen := len(ciphertext)
+	if cipherTextLen > 100*1024*1024 {
+		return nil, errors.ErrorData(logutils.StatusInvalid, "cipher text length", logutils.StringArgs("100MB limit"))
+	}
+	n := blockSize - (cipherTextLen % blockSize)
+	pb := make([]byte, cipherTextLen+n)
 	copy(pb, ciphertext)
-	copy(pb[len(ciphertext):], bytes.Repeat([]byte{byte(n)}, n))
-	return pb
+	return pb, nil
 }
 
 // EncryptWithPublicKey encrypts data with RSA public key
