@@ -135,6 +135,15 @@ func main() {
 		logger.Infof("Error parsing max token exp, applying defaults: %v", err)
 	}
 
+	allowLegacyRefreshStr := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_ALLOW_LEGACY_REFRESH", false, false)
+	allowLegacyRefresh := true
+	allowLegacyRefreshVal, err := strconv.ParseBool(allowLegacyRefreshStr)
+	if err == nil {
+		allowLegacyRefresh = allowLegacyRefreshVal
+	} else {
+		logger.Infof("Error parsing allow legacy refresh, applying defaults: %v", err)
+	}
+
 	//profile bb adapter
 	migrateProfiles := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_MIGRATE_PROFILES", false, false)
 	migrate, err := strconv.ParseBool(migrateProfiles)
@@ -146,7 +155,7 @@ func main() {
 	profileBBApiKey := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_PROFILE_BB_API_KEY", false, true)
 	profileBBAdapter := profilebb.NewProfileBBAdapter(migrate, profileBBHost, profileBBApiKey)
 
-	auth, err := auth.NewAuth(serviceID, host, authPrivKey, storageAdapter, emailer, minTokenExp, maxTokenExp, twilioAccountSID, twilioToken, twilioServiceSID, profileBBAdapter, smtpHost, smtpPortNum, smtpUser, smtpPassword, smtpFrom, logger)
+	auth, err := auth.NewAuth(serviceID, host, authPrivKey, storageAdapter, emailer, minTokenExp, maxTokenExp, allowLegacyRefresh, twilioAccountSID, twilioToken, twilioServiceSID, profileBBAdapter, smtpHost, smtpPortNum, smtpUser, smtpPassword, smtpFrom, logger)
 	if err != nil {
 		logger.Fatalf("Error initializing auth: %v", err)
 	}

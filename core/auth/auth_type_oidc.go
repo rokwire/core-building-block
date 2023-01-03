@@ -284,23 +284,10 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 	}
 
 	oidcParamsEnc := map[string]interface{}{"token_type": token.TokenType}
-	// randomKey, err := utils.GenerateRandomBytes(16)
-	// if err != nil {
-	// 	return nil, nil, nil, errors.WrapErrorAction("generating", "random key", nil, err)
-	// }
-	// oidcParamsEnc["key"], oidcParamsEnc["id_token"], err = utils.Encrypt([]byte(token.IDToken), &pubKey, randomKey)
-	// if err != nil {
-	// 	return nil, nil, nil, errors.WrapErrorAction(logutils.ActionEncrypt, "oidc id token", nil, err)
-	// }
-	// _, oidcParamsEnc["access_token"], err = utils.Encrypt([]byte(token.AccessToken), &pubKey, randomKey)
-	// if err != nil {
-	// 	return nil, nil, nil, errors.WrapErrorAction(logutils.ActionEncrypt, "oidc access token", nil, err)
-	// }
 	oidcParamsEnc["key"], oidcParamsEnc["refresh_token"], err = utils.Encrypt([]byte(token.RefreshToken), &a.auth.authPrivKey.PublicKey)
 	if err != nil {
 		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionEncrypt, "oidc refresh token", nil, err)
 	}
-	//TODO: need to send back raw tokens in login, refresh responses, but store encrypted data in DB
 
 	sub, err := a.checkToken(token.IDToken, authType, appType, oidcConfig, l)
 	if err != nil {
@@ -380,7 +367,7 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 	externalUser := model.ExternalSystemUser{Identifier: identifier, ExternalIDs: externalIDs, FirstName: firstName,
 		MiddleName: middleName, LastName: lastName, Email: email, Roles: roles, Groups: groups, SystemSpecific: systemSpecific}
 
-	oidcParams := map[string]interface{}{"token_type": token.TokenType, "id_token": token.IDToken, "access_token": token.AccessToken, "refresh_token": token.RefreshToken}
+	oidcParams := map[string]interface{}{"token_type": token.TokenType, "id_token": token.IDToken, "access_token": token.AccessToken}
 	params := map[string]interface{}{"oidc_token": oidcParams}
 	paramsEnc := map[string]interface{}{"oidc_token": oidcParamsEnc, "redirect_uri": redirectURI}
 	return &externalUser, params, paramsEnc, nil

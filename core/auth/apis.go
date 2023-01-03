@@ -300,8 +300,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, nil, err).AddTag(sessionIDRateLimitTag)
 		}
-	} else {
-		//TODO: cache refresh tokens too?
+	} else if a.allowLegacyRefresh {
 		refreshToken = a.hashAndEncodeToken(refreshToken)
 		loginSession, err = a.storage.FindLoginSession(refreshToken)
 		if err != nil {

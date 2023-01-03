@@ -96,10 +96,11 @@ type Auth struct {
 	ServiceRegManager *authservice.ServiceRegManager
 	SignatureAuth     *sigauth.SignatureAuth
 
-	serviceID   string
-	host        string //Service host
-	minTokenExp int64  //Minimum access token expiration time in minutes
-	maxTokenExp int64  //Maximum access token expiration time in minutes
+	serviceID          string
+	host               string //Service host
+	minTokenExp        int64  //Minimum access token expiration time in minutes
+	maxTokenExp        int64  //Maximum access token expiration time in minutes
+	allowLegacyRefresh bool
 
 	profileBB ProfileBuildingBlock
 
@@ -124,7 +125,7 @@ type Auth struct {
 }
 
 // NewAuth creates a new auth instance
-func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage Storage, emailer Emailer, minTokenExp *int64, maxTokenExp *int64, twilioAccountSID string,
+func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage Storage, emailer Emailer, minTokenExp *int64, maxTokenExp *int64, allowLegacyRefresh bool, twilioAccountSID string,
 	twilioToken string, twilioServiceSID string, profileBB *profilebb.Adapter, smtpHost string, smtpPortNum int, smtpUser string, smtpPassword string, smtpFrom string, logger *logs.Logger) (*Auth, error) {
 	if minTokenExp == nil {
 		var minTokenExpVal int64 = 5
@@ -155,8 +156,8 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 
 	auth := &Auth{storage: storage, emailer: emailer, logger: logger, authTypes: authTypes, externalAuthTypes: externalAuthTypes, anonymousAuthTypes: anonymousAuthTypes,
 		serviceAuthTypes: serviceAuthTypes, mfaTypes: mfaTypes, authPrivKey: authPrivKey, ServiceRegManager: nil, serviceID: serviceID, host: host, minTokenExp: *minTokenExp,
-		maxTokenExp: *maxTokenExp, profileBB: profileBB, cachedIdentityProviders: cachedIdentityProviders, identityProvidersLock: identityProvidersLock, apiKeys: apiKeys, apiKeysLock: apiKeysLock,
-		deleteSessionsTimerDone: deleteSessionsTimerDone, sessionIDCacheTimerDone: sessionIDCacheTimerDone, emailDialer: emailDialer, emailFrom: smtpFrom}
+		maxTokenExp: *maxTokenExp, allowLegacyRefresh: allowLegacyRefresh, profileBB: profileBB, cachedIdentityProviders: cachedIdentityProviders, identityProvidersLock: identityProvidersLock,
+		apiKeys: apiKeys, apiKeysLock: apiKeysLock, deleteSessionsTimerDone: deleteSessionsTimerDone, sessionIDCacheTimerDone: sessionIDCacheTimerDone, emailDialer: emailDialer, emailFrom: smtpFrom}
 
 	err := auth.storeReg()
 	if err != nil {
