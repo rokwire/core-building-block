@@ -243,7 +243,7 @@ func Encrypt(data []byte, pub *rsa.PublicKey) (string, string, error) {
 		return "", "", errors.WrapErrorAction(logutils.ActionCreate, "AES cipher block", nil, err)
 	}
 
-	paddedData := PKCS7Padding(data, cipherBlock.BlockSize())
+	paddedData := PKCS7Padding(data, uint8(cipherBlock.BlockSize()))
 	cipherText := make([]byte, len(paddedData))
 	mode := cipher.NewCBCEncrypter(cipherBlock, initVector)
 	mode.CryptBlocks(cipherText, paddedData)
@@ -258,8 +258,8 @@ func Encrypt(data []byte, pub *rsa.PublicKey) (string, string, error) {
 }
 
 // PKCS7Padding returns the data with correct padding for AES block
-func PKCS7Padding(ciphertext []byte, blockSize int) []byte {
-	n := blockSize - (len(ciphertext) % blockSize)
+func PKCS7Padding(ciphertext []byte, blockSize uint8) []byte {
+	n := int(blockSize) - (len(ciphertext) % int(blockSize))
 	pb := make([]byte, len(ciphertext)+n)
 	copy(pb, ciphertext)
 	copy(pb[len(ciphertext):], bytes.Repeat([]byte{byte(n)}, n))
