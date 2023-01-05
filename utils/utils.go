@@ -228,46 +228,37 @@ func GetPrintableString(v *string, defaultVal string) string {
 }
 
 // Encrypt data with AES-128 encryption algorithm and returns the encrypted data and the AES key encrypted with RSA
-func Encrypt(data []byte, pub *rsa.PublicKey) (string, string, error) {
-	initVector := []byte("\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00")
-
-	randomKey := make([]byte, 16)
-	_, err := rand.Read(randomKey)
+func Encrypt(data []byte, pub *rsa.PublicKey) (string, string, string, error) {
+	blockSize := 16
+	randomKey, err := GenerateRandomBytes(blockSize)
 	if err != nil {
-		return "", "", errors.WrapErrorAction("generating", "random key", nil, err)
+		return "", "", "", errors.WrapErrorAction("generating", "random bytes", logutils.StringArgs("session key"), err)
 	}
 	//Encrypt blobJSON with AES using random key(CBC mode, PKCS7 padding, 0 IV) and convert to base 64 to get encrypted_data
 	cipherBlock, err := aes.NewCipher(randomKey)
 	if err != nil {
-		return "", "", errors.WrapErrorAction(logutils.ActionCreate, "AES cipher block", nil, err)
+		return "", "", "", errors.WrapErrorAction(logutils.ActionCreate, "AES cipher block", nil, err)
 	}
 
-	paddedData, err := PKCS7Padding(data, cipherBlock.BlockSize())
+	nonce, err := GenerateRandomBytes(12)
 	if err != nil {
-		return "", "", errors.WrapErrorAction("padding", logutils.TypeString, nil, err)
+		return "", "", "", errors.WrapErrorAction("generating", "random bytes", logutils.StringArgs("nonce"), err)
 	}
-	cipherText := make([]byte, len(paddedData))
-	mode := cipher.NewCBCEncrypter(cipherBlock, initVector)
-	mode.CryptBlocks(cipherText, paddedData)
+	gcm, err := cipher.NewGCM(cipherBlock)
+	if err != nil {
+		return "", "", "", errors.WrapErrorAction(logutils.ActionCreate, "block cipher", logutils.StringArgs("GCM"), err)
+	}
+	cipherText := gcm.Seal(nil, nonce, data, nil)
+
 	//Encrypt the session key with RSA public key
 	encryptedKeyBytes, err := EncryptWithPublicKey(randomKey, pub)
 	if err != nil || encryptedKeyBytes == nil {
-		return "", "", err
+		return "", "", "", err
 	}
-	encryptedKey := base64.StdEncoding.EncodeToString(encryptedKeyBytes)
-	encryptedData := base64.StdEncoding.EncodeToString(cipherText)
-	return encryptedKey, encryptedData, nil
-}
-
-// PKCS7Padding returns the data with correct padding for AES block
-func PKCS7Padding(ciphertext []byte, blockSize int) ([]byte, error) {
-	paddedLen := len(ciphertext) + blockSize - (len(ciphertext) % blockSize)
-	if paddedLen > 100*1024*1024 || paddedLen < 0 {
-		return nil, errors.ErrorData(logutils.StatusInvalid, "padded cipher text length", logutils.StringArgs("100MB limit"))
-	}
-	pb := make([]byte, paddedLen)
-	copy(pb, ciphertext)
-	return pb, nil
+	encodedKey := base64.StdEncoding.EncodeToString(encryptedKeyBytes)
+	encodedNonce := base64.StdEncoding.EncodeToString(nonce)
+	encodedData := base64.StdEncoding.EncodeToString(cipherText)
+	return encodedKey, encodedNonce, encodedData, nil
 }
 
 // EncryptWithPublicKey encrypts data with RSA public key
@@ -280,7 +271,7 @@ func EncryptWithPublicKey(data []byte, pub *rsa.PublicKey) ([]byte, error) {
 }
 
 // Decrypt decrypts data using AES-128 with the key decrypted using priv
-func Decrypt(data string, key string, priv *rsa.PrivateKey) ([]byte, error) {
+func Decrypt(data string, key string, nonce string, priv *rsa.PrivateKey) ([]byte, error) {
 	//1. decrypt key
 	decodedKey, err := base64.StdEncoding.DecodeString(key)
 	if err != nil {
@@ -292,7 +283,10 @@ func Decrypt(data string, key string, priv *rsa.PrivateKey) ([]byte, error) {
 	}
 
 	//2. decrypt data
-	initVector := []byte("\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00")
+	decodedNonce, err := base64.StdEncoding.DecodeString(nonce)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionDecode, "iv string", nil, err)
+	}
 	decodedData, err := base64.StdEncoding.DecodeString(data)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionDecode, "data string", nil, err)
@@ -301,9 +295,15 @@ func Decrypt(data string, key string, priv *rsa.PrivateKey) ([]byte, error) {
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, "AES cipher block", nil, err)
 	}
-	decryptedData := make([]byte, len(decodedData))
-	mode := cipher.NewCBCDecrypter(cipherBlock, initVector)
-	mode.CryptBlocks(decryptedData, decodedData)
+
+	gcm, err := cipher.NewGCM(cipherBlock)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionCreate, "block cipher", logutils.StringArgs("GCM"), err)
+	}
+	decryptedData, err := gcm.Open(nil, decodedNonce, decodedData, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionDecrypt, "decoded data string", nil, err)
+	}
 
 	return decryptedData, nil
 }

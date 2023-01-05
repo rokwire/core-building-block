@@ -84,6 +84,7 @@ type oidcToken struct {
 
 type oidcRefreshParams struct {
 	Key          string
+	Nonce        string
 	RefreshToken string
 	RedirectURI  string
 }
@@ -95,6 +96,7 @@ func oidcRefreshParamsFromMap(val map[string]interface{}) (*oidcRefreshParams, e
 	}
 
 	key, _ := oidcToken["key"].(string)
+	nonce, _ := oidcToken["nonce"].(string)
 	refreshToken, ok := oidcToken["refresh_token"].(string)
 	if !ok {
 		return nil, errors.ErrorData(logutils.StatusMissing, "refresh token", nil)
@@ -104,7 +106,7 @@ func oidcRefreshParamsFromMap(val map[string]interface{}) (*oidcRefreshParams, e
 		return nil, errors.ErrorData(logutils.StatusMissing, "redirect uri", nil)
 	}
 
-	return &oidcRefreshParams{Key: key, RefreshToken: refreshToken, RedirectURI: redirectURI}, nil
+	return &oidcRefreshParams{Key: key, Nonce: nonce, RefreshToken: refreshToken, RedirectURI: redirectURI}, nil
 }
 
 func (a *oidcAuthImpl) externalLogin(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, map[string]interface{}, error) {
@@ -259,8 +261,8 @@ func (a *oidcAuthImpl) refreshToken(authType model.AuthType, appType model.Appli
 	}
 
 	refreshToken := params.RefreshToken
-	if params.Key != "" {
-		refreshTokenBytes, err := utils.Decrypt(params.RefreshToken, params.Key, a.auth.authPrivKey)
+	if params.Key != "" && params.Nonce != "" {
+		refreshTokenBytes, err := utils.Decrypt(params.RefreshToken, params.Key, params.Nonce, a.auth.authPrivKey)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionDecrypt, "refresh token", nil, err)
 		}
@@ -284,7 +286,7 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 	}
 
 	oidcParamsEnc := map[string]interface{}{"token_type": token.TokenType}
-	oidcParamsEnc["key"], oidcParamsEnc["refresh_token"], err = utils.Encrypt([]byte(token.RefreshToken), &a.auth.authPrivKey.PublicKey)
+	oidcParamsEnc["key"], oidcParamsEnc["nonce"], oidcParamsEnc["refresh_token"], err = utils.Encrypt([]byte(token.RefreshToken), &a.auth.authPrivKey.PublicKey)
 	if err != nil {
 		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionEncrypt, "oidc refresh token", nil, err)
 	}
