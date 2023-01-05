@@ -85,25 +85,26 @@ func TestAdmGetTest(t *testing.T) {
 func TestSysCreateGlobalConfig(t *testing.T) {
 	storage := genmocks.Storage{}
 	storage.On("GetGlobalConfig").Return(nil, nil)
-	storage.On("CreateGlobalConfig", nil, &model.GlobalConfig{Setting: "setting"}).Return(nil)
+	storage.On("CreateGlobalConfig", nil, model.GlobalConfig{"setting": "setting"}).Return(nil)
 
 	coreAPIs := buildTestCoreAPIs(&storage)
 
-	gc, _ := coreAPIs.System.SysCreateGlobalConfig("setting")
-	if gc == nil {
-		t.Error("gc is nil")
+	gc := model.GlobalConfig{"setting": "setting"}
+	err := coreAPIs.System.SysCreateGlobalConfig(gc)
+	if err != nil {
+		t.Error("we are not expecting error")
 		return
 	}
-	assert.Equal(t, gc.Setting, "setting", "setting is different")
+	assert.Equal(t, gc["setting"], "setting", "setting is different")
 
 	//second case - error
 	storage2 := genmocks.Storage{}
 	storage2.On("GetGlobalConfig").Return(nil, nil)
-	storage2.On("CreateGlobalConfig", nil, &model.GlobalConfig{Setting: "setting"}).Return(errors.New("error occured"))
+	storage2.On("CreateGlobalConfig", nil, model.GlobalConfig{"setting": "setting"}).Return(errors.New("error occured"))
 
 	coreAPIs = buildTestCoreAPIs(&storage2)
 
-	_, err := coreAPIs.System.SysCreateGlobalConfig("setting")
+	err = coreAPIs.System.SysCreateGlobalConfig(gc)
 	if err == nil {
 		t.Error("we are expecting error")
 		return

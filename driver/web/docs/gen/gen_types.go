@@ -386,9 +386,7 @@ type DeviceFields struct {
 type DeviceFieldsType string
 
 // GlobalConfig defines model for GlobalConfig.
-type GlobalConfig struct {
-	Setting string `json:"setting"`
-}
+type GlobalConfig = map[string]interface{}
 
 // IdentityProviderSettings defines model for IdentityProviderSettings.
 type IdentityProviderSettings struct {

@@ -2864,21 +2864,21 @@ func (sa *Adapter) FindProfiles(appID string, authTypeID string, accountAuthType
 }
 
 // CreateGlobalConfig creates global config
-func (sa *Adapter) CreateGlobalConfig(context TransactionContext, globalConfig *model.GlobalConfig) error {
-	if globalConfig == nil {
-		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs("global_config"))
+func (sa *Adapter) CreateGlobalConfig(context TransactionContext, globalConfig model.GlobalConfig) error {
+	if len(globalConfig) == 0 {
+		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs("global config"))
 	}
 
 	_, err := sa.db.globalConfig.InsertOneWithContext(context, globalConfig)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeGlobalConfig, &logutils.FieldArgs{"setting": globalConfig.Setting}, err)
+		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeGlobalConfig, nil, err)
 	}
 
 	return nil
 }
 
 // GetGlobalConfig give config
-func (sa *Adapter) GetGlobalConfig() (*model.GlobalConfig, error) {
+func (sa *Adapter) GetGlobalConfig() (model.GlobalConfig, error) {
 	filter := bson.D{}
 	var result []model.GlobalConfig
 	err := sa.db.globalConfig.Find(filter, &result, nil)
@@ -2889,8 +2889,10 @@ func (sa *Adapter) GetGlobalConfig() (*model.GlobalConfig, error) {
 		//no record
 		return nil, nil
 	}
-	return &result[0], nil
 
+	gc := result[0]
+	delete(gc, "_id")
+	return gc, nil
 }
 
 // DeleteGlobalConfig deletes the global configuration from storage

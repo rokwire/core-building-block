@@ -493,16 +493,16 @@ type systemImpl struct {
 	app *application
 }
 
-func (s *systemImpl) SysCreateGlobalConfig(setting string) (*model.GlobalConfig, error) {
-	return s.app.sysCreateGlobalConfig(setting)
+func (s *systemImpl) SysCreateGlobalConfig(config model.GlobalConfig) error {
+	return s.app.sysCreateGlobalConfig(config)
 }
 
-func (s *systemImpl) SysGetGlobalConfig() (*model.GlobalConfig, error) {
+func (s *systemImpl) SysGetGlobalConfig() (model.GlobalConfig, error) {
 	return s.app.sysGetGlobalConfig()
 }
 
-func (s *systemImpl) SysUpdateGlobalConfig(setting string) error {
-	return s.app.sysUpdateGlobalConfig(setting)
+func (s *systemImpl) SysUpdateGlobalConfig(config model.GlobalConfig) error {
+	return s.app.sysUpdateGlobalConfig(config)
 }
 
 func (s *systemImpl) SysGetApplicationOrganizations(appID *string, orgID *string) ([]model.ApplicationOrganization, error) {

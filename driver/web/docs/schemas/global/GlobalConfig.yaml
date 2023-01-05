@@ -1,6 +1,1 @@
-required:
-  - setting
 type: object
-properties:
-  setting:
-    type: string

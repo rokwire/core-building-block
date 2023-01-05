@@ -73,7 +73,7 @@ func (h SystemApisHandler) createGlobalConfig(l *logs.Log, r *http.Request, clai
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeGlobalConfig, nil, err, http.StatusBadRequest, true)
 	}
 
-	_, err = h.coreAPIs.System.SysCreateGlobalConfig(requestData.Setting)
+	err = h.coreAPIs.System.SysCreateGlobalConfig(requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypeGlobalConfig, nil, err, http.StatusInternalServerError, true)
 	}
@@ -88,11 +88,10 @@ func (h SystemApisHandler) getGlobalConfig(l *logs.Log, r *http.Request, claims 
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeGlobalConfig, nil, err, http.StatusInternalServerError, true)
 	}
 
-	var responseData *Def.GlobalConfig
-	if config != nil {
-		responseData = &Def.GlobalConfig{Setting: config.Setting}
+	if config == nil {
+		config = make(model.GlobalConfig)
 	}
-	data, err := json.Marshal(responseData)
+	data, err := json.Marshal(config)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeGlobalConfig, nil, err, http.StatusInternalServerError, false)
 	}
@@ -113,9 +112,7 @@ func (h SystemApisHandler) updateGlobalConfig(l *logs.Log, r *http.Request, clai
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeGlobalConfig, nil, err, http.StatusBadRequest, true)
 	}
 
-	setting := updateConfig.Setting
-
-	err = h.coreAPIs.System.SysUpdateGlobalConfig(setting)
+	err = h.coreAPIs.System.SysUpdateGlobalConfig(updateConfig)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeGlobalConfig, nil, err, http.StatusInternalServerError, true)
 	}

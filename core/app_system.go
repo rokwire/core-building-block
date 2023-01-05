@@ -24,32 +24,31 @@ import (
 	"github.com/rokwire/logging-library-go/logutils"
 )
 
-func (app *application) sysCreateGlobalConfig(setting string) (*model.GlobalConfig, error) {
+func (app *application) sysCreateGlobalConfig(config model.GlobalConfig) error {
+	gc, err := app.storage.GetGlobalConfig()
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeGlobalConfig, nil, err)
+	}
+	if len(gc) != 0 {
+		return errors.New("global config already exists")
+	}
+
+	err = app.storage.CreateGlobalConfig(nil, config)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeGlobalConfig, nil, err)
+	}
+	return nil
+}
+
+func (app *application) sysGetGlobalConfig() (model.GlobalConfig, error) {
 	gc, err := app.storage.GetGlobalConfig()
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeGlobalConfig, nil, err)
 	}
-	if gc != nil {
-		return nil, errors.New("global config already exists")
-	}
-
-	gc = &model.GlobalConfig{Setting: setting}
-	err = app.storage.CreateGlobalConfig(nil, gc)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeGlobalConfig, nil, err)
-	}
 	return gc, nil
 }
 
-func (app *application) sysGetGlobalConfig() (*model.GlobalConfig, error) {
-	gc, err := app.storage.GetGlobalConfig()
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeGlobalConfig, nil, err)
-	}
-	return gc, nil
-}
-
-func (app *application) sysUpdateGlobalConfig(setting string) error {
+func (app *application) sysUpdateGlobalConfig(config model.GlobalConfig) error {
 	gc, err := app.storage.GetGlobalConfig()
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeGlobalConfig, nil, err)
@@ -58,7 +57,6 @@ func (app *application) sysUpdateGlobalConfig(setting string) error {
 		return errors.WrapErrorData(logutils.StatusMissing, model.TypeGlobalConfig, nil, err)
 	}
 
-	gc.Setting = setting
 	transaction := func(context storage.TransactionContext) error {
 		//1. clear the global config - we always keep only one global config
 		err := app.storage.DeleteGlobalConfig(context)
@@ -67,7 +65,7 @@ func (app *application) sysUpdateGlobalConfig(setting string) error {
 		}
 
 		//2. add the new one
-		err = app.storage.CreateGlobalConfig(context, gc)
+		err = app.storage.CreateGlobalConfig(context, config)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionInsert, model.TypeGlobalConfig, nil, err)
 		}

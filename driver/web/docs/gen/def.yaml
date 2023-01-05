@@ -5251,12 +5251,7 @@ components:
       bearerFormat: JWT
   schemas:
     GlobalConfig:
-      required:
-        - setting
       type: object
-      properties:
-        setting:
-          type: string
     Application:
       required:
         - id

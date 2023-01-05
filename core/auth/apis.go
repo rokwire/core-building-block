@@ -300,12 +300,19 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, nil, err).AddTag(sessionIDRateLimitTag)
 		}
-	} else if a.allowLegacyRefresh {
-		refreshToken = a.hashAndEncodeToken(refreshToken)
-		loginSession, err = a.storage.FindLoginSession(refreshToken)
+	} else {
+		// read allow_legacy_refresh flag from global config
+		gc, err := a.storage.GetGlobalConfig()
 		if err != nil {
-			l.Infof("error finding session by refresh token - %s", refreshToken)
-			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, nil, err).AddTag(sessionIDRateLimitTag)
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeGlobalConfig, nil, err)
+		}
+		if (gc == nil) || (gc["allow_legacy_refresh"] != false) {
+			refreshToken = a.hashAndEncodeToken(refreshToken)
+			loginSession, err = a.storage.FindLoginSession(refreshToken)
+			if err != nil {
+				l.Infof("error finding session by refresh token - %s", refreshToken)
+				return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, nil, err).AddTag(sessionIDRateLimitTag)
+			}
 		}
 	}
 

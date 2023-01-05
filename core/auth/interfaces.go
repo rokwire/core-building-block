@@ -582,6 +582,9 @@ type Storage interface {
 	//AccountGroups
 	UpdateAccountGroups(context storage.TransactionContext, accountID string, groups []model.AccountGroup) error
 	InsertAccountGroups(context storage.TransactionContext, accountID string, appOrgID string, groups []model.AccountGroup) error
+
+	//GlobalConfig
+	GetGlobalConfig() (model.GlobalConfig, error)
 }
 
 // ProfileBuildingBlock is used by auth to communicate with the profile building block.
