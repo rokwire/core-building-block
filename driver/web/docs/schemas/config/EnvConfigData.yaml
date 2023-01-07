@@ -1,0 +1,5 @@
+type: object
+properties:
+  allow_legacy_refresh:
+    type: boolean
+    nullable: true
