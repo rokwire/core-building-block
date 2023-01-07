@@ -18,18 +18,43 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logutils"
 )
 
 const (
-	//TypeGlobalConfig ...
-	TypeGlobalConfig logutils.MessageDataType = "global config"
+	// TypeConfig configs type
+	TypeConfig logutils.MessageDataType = "config"
+	// TypeEnvConfigData env configs type
+	TypeEnvConfigData logutils.MessageDataType = "env config data"
 	//TypeOrganizationConfig ...
 	TypeOrganizationConfig logutils.MessageDataType = "org config"
+
+	// ConfigIDEnv is the Config ID for EnvConfigData
+	ConfigIDEnv string = "env"
 )
 
-// GlobalConfig represents global config for the system
-type GlobalConfig map[string]interface{}
+// Config contains generic configs
+type Config struct {
+	ID          string      `json:"id" bson:"_id"`
+	Data        interface{} `json:"data" bson:"data"`
+	DateCreated time.Time   `json:"date_created" bson:"date_created"`
+	DateUpdated *time.Time  `json:"date_updated" bson:"date_updated"`
+}
+
+// DataAsEnvConfig returns the config Data as an EnvConfigData if the cast succeeds
+func (c Config) DataAsEnvConfig() (*EnvConfigData, error) {
+	data, ok := c.Data.(EnvConfigData)
+	if !ok {
+		return nil, errors.ErrorData(logutils.StatusInvalid, TypeEnvConfigData, nil)
+	}
+	return &data, nil
+}
+
+// EnvConfigData contains environment configs for this service
+type EnvConfigData struct {
+	AllowLegacyRefresh bool `json:"allow_legacy_refresh" bson:"allow_legacy_refresh"`
+}
 
 // OrganizationConfig represents configuration for an organization
 type OrganizationConfig struct {

@@ -301,19 +301,19 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, nil, err).AddTag(sessionIDRateLimitTag)
 		}
 	} else {
-		// read allow_legacy_refresh flag from global config
-		gc, err := a.storage.GetGlobalConfig()
+		// read allow_legacy_refresh flag from config
+		// config, err := a.storage.FindConfig(model.ConfigIDEnv)
+		// if err != nil {
+		// 	return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeConfig, nil, err)
+		// }
+		// if (gc == nil) || (gc["allow_legacy_refresh"] != false) {
+		refreshToken = a.hashAndEncodeToken(refreshToken)
+		loginSession, err = a.storage.FindLoginSession(refreshToken)
 		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeGlobalConfig, nil, err)
+			l.Infof("error finding session by refresh token - %s", refreshToken)
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, nil, err).AddTag(sessionIDRateLimitTag)
 		}
-		if (gc == nil) || (gc["allow_legacy_refresh"] != false) {
-			refreshToken = a.hashAndEncodeToken(refreshToken)
-			loginSession, err = a.storage.FindLoginSession(refreshToken)
-			if err != nil {
-				l.Infof("error finding session by refresh token - %s", refreshToken)
-				return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, nil, err).AddTag(sessionIDRateLimitTag)
-			}
-		}
+		// }
 	}
 
 	if loginSession == nil {

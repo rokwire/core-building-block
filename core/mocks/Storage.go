@@ -105,20 +105,6 @@ func (_m *Storage) CountGroupsByRoleID(roleID string) (*int64, error) {
 	return r0, r1
 }
 
-// CreateGlobalConfig provides a mock function with given fields: context, globalConfig
-func (_m *Storage) CreateGlobalConfig(context storage.TransactionContext, globalConfig model.GlobalConfig) error {
-	ret := _m.Called(context, globalConfig)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(storage.TransactionContext, model.GlobalConfig) error); ok {
-		r0 = rf(context, globalConfig)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
 // DeleteAccountPermissions provides a mock function with given fields: context, accountID, permissionNames
 func (_m *Storage) DeleteAccountPermissions(context storage.TransactionContext, accountID string, permissionNames []string) error {
 	ret := _m.Called(context, accountID, permissionNames)
@@ -189,8 +175,8 @@ func (_m *Storage) DeleteAppOrgRole(id string) error {
 	return r0
 }
 
-// DeleteDevice provides a mock function with given fields: context, id
-func (_m *Storage) DeleteDevice(context storage.TransactionContext, id string) error {
+// DeleteConfig provides a mock function with given fields: context, id
+func (_m *Storage) DeleteConfig(context storage.TransactionContext, id string) error {
 	ret := _m.Called(context, id)
 
 	var r0 error
@@ -203,13 +189,13 @@ func (_m *Storage) DeleteDevice(context storage.TransactionContext, id string) e
 	return r0
 }
 
-// DeleteGlobalConfig provides a mock function with given fields: context
-func (_m *Storage) DeleteGlobalConfig(context storage.TransactionContext) error {
-	ret := _m.Called(context)
+// DeleteDevice provides a mock function with given fields: context, id
+func (_m *Storage) DeleteDevice(context storage.TransactionContext, id string) error {
+	ret := _m.Called(context, id)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(storage.TransactionContext) error); ok {
-		r0 = rf(context)
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string) error); ok {
+		r0 = rf(context, id)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -788,6 +774,29 @@ func (_m *Storage) FindAuthTypes() ([]model.AuthType, error) {
 	return r0, r1
 }
 
+// FindConfig provides a mock function with given fields: id
+func (_m *Storage) FindConfig(id string) (*model.Config, error) {
+	ret := _m.Called(id)
+
+	var r0 *model.Config
+	if rf, ok := ret.Get(0).(func(string) *model.Config); ok {
+		r0 = rf(id)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.Config)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // FindLoginSessionsByParams provides a mock function with given fields: appID, orgID, sessionID, identifier, accountAuthTypeIdentifier, appTypeID, appTypeIdentifier, anonymous, deviceID, ipAddress
 func (_m *Storage) FindLoginSessionsByParams(appID string, orgID string, sessionID *string, identifier *string, accountAuthTypeIdentifier *string, appTypeID *string, appTypeIdentifier *string, anonymous *bool, deviceID *string, ipAddress *string) ([]model.LoginSession, error) {
 	ret := _m.Called(appID, orgID, sessionID, identifier, accountAuthTypeIdentifier, appTypeID, appTypeIdentifier, anonymous, deviceID, ipAddress)
@@ -913,29 +922,6 @@ func (_m *Storage) FindSystemOrganization() (*model.Organization, error) {
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*model.Organization)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func() error); ok {
-		r1 = rf()
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// GetGlobalConfig provides a mock function with given fields:
-func (_m *Storage) GetGlobalConfig() (model.GlobalConfig, error) {
-	ret := _m.Called()
-
-	var r0 model.GlobalConfig
-	if rf, ok := ret.Get(0).(func() model.GlobalConfig); ok {
-		r0 = rf()
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(model.GlobalConfig)
 		}
 	}
 
@@ -1146,6 +1132,20 @@ func (_m *Storage) InsertAuthType(context storage.TransactionContext, authType m
 	}
 
 	return r0, r1
+}
+
+// InsertConfig provides a mock function with given fields: context, config
+func (_m *Storage) InsertConfig(context storage.TransactionContext, config model.Config) error {
+	ret := _m.Called(context, config)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, model.Config) error); ok {
+		r0 = rf(context, config)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
 }
 
 // InsertOrganization provides a mock function with given fields: context, organization

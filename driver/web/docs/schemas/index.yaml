@@ -1,6 +1,6 @@
-# global
-GlobalConfig:
-  $ref: "./global/GlobalConfig.yaml"
+# config
+Config:
+  $ref: "./config/Config.yaml"
 
 # application
 Application:

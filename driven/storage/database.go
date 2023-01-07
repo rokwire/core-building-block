@@ -42,7 +42,7 @@ type database struct {
 	devices                         *collectionWrapper
 	credentials                     *collectionWrapper
 	loginsSessions                  *collectionWrapper
-	globalConfig                    *collectionWrapper
+	configs                         *collectionWrapper
 	serviceRegs                     *collectionWrapper
 	serviceAccounts                 *collectionWrapper
 	serviceAuthorizations           *collectionWrapper
@@ -134,8 +134,8 @@ func (m *database) start() error {
 		return err
 	}
 
-	globalConfig := &collectionWrapper{database: m, coll: db.Collection("global_config")}
-	err = m.applyGlobalConfigChecks(globalConfig)
+	configs := &collectionWrapper{database: m, coll: db.Collection("configs")}
+	err = m.applyConfigsChecks(configs)
 	if err != nil {
 		return err
 	}
@@ -198,7 +198,7 @@ func (m *database) start() error {
 	m.devices = devices
 	m.credentials = credentials
 	m.loginsSessions = loginsSessions
-	m.globalConfig = globalConfig
+	m.configs = configs
 	m.apiKeys = apiKeys
 	m.serviceRegs = serviceRegs
 	m.serviceAccounts = serviceAccounts
@@ -333,10 +333,10 @@ func (m *database) applyAPIKeysChecks(apiKeys *collectionWrapper) error {
 	return nil
 }
 
-func (m *database) applyGlobalConfigChecks(configs *collectionWrapper) error {
-	m.logger.Info("apply global config checks.....")
+func (m *database) applyConfigsChecks(configs *collectionWrapper) error {
+	m.logger.Info("apply configs checks.....")
 
-	m.logger.Info("global config checks passed")
+	m.logger.Info("configs checks passed")
 	return nil
 }
 

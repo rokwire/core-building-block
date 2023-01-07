@@ -222,9 +222,9 @@ func (we Adapter) Start() {
 
 	systemSubrouter.HandleFunc("/auth/app-org-token", we.wrapFunc(we.systemApisHandler.getAppOrgToken, we.auth.system.user)).Methods("GET")
 
-	systemSubrouter.HandleFunc("/global-config", we.wrapFunc(we.systemApisHandler.createGlobalConfig, we.auth.system.permissions)).Methods("POST")
-	systemSubrouter.HandleFunc("/global-config", we.wrapFunc(we.systemApisHandler.getGlobalConfig, we.auth.system.permissions)).Methods("GET")
-	systemSubrouter.HandleFunc("/global-config", we.wrapFunc(we.systemApisHandler.updateGlobalConfig, we.auth.system.permissions)).Methods("PUT")
+	systemSubrouter.HandleFunc("/configs/{id}", we.wrapFunc(we.systemApisHandler.createConfig, we.auth.system.permissions)).Methods("POST")
+	systemSubrouter.HandleFunc("/configs/{id}", we.wrapFunc(we.systemApisHandler.getConfig, we.auth.system.permissions)).Methods("GET")
+	systemSubrouter.HandleFunc("/configs/{id}", we.wrapFunc(we.systemApisHandler.updateConfig, we.auth.system.permissions)).Methods("PUT")
 
 	systemSubrouter.HandleFunc("/organizations", we.wrapFunc(we.systemApisHandler.createOrganization, we.auth.system.permissions)).Methods("POST")
 	systemSubrouter.HandleFunc("/organizations/{id}", we.wrapFunc(we.systemApisHandler.updateOrganization, we.auth.system.permissions)).Methods("PUT")

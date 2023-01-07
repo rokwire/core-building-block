@@ -2863,44 +2863,38 @@ func (sa *Adapter) FindProfiles(appID string, authTypeID string, accountAuthType
 	return result, nil
 }
 
-// CreateGlobalConfig creates global config
-func (sa *Adapter) CreateGlobalConfig(context TransactionContext, globalConfig model.GlobalConfig) error {
-	if len(globalConfig) == 0 {
-		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs("global config"))
-	}
-
-	_, err := sa.db.globalConfig.InsertOneWithContext(context, globalConfig)
+// InsertConfig inserts a new config
+func (sa *Adapter) InsertConfig(context TransactionContext, config model.Config) error {
+	_, err := sa.db.configs.InsertOneWithContext(context, config)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeGlobalConfig, nil, err)
+		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeConfig, nil, err)
 	}
 
 	return nil
 }
 
-// GetGlobalConfig give config
-func (sa *Adapter) GetGlobalConfig() (model.GlobalConfig, error) {
-	filter := bson.D{}
-	var result []model.GlobalConfig
-	err := sa.db.globalConfig.Find(filter, &result, nil)
+// FindConfig finds config by id
+func (sa *Adapter) FindConfig(id string) (*model.Config, error) {
+	filter := bson.M{"_id": id}
+	var result []model.Config
+	err := sa.db.configs.Find(filter, &result, nil)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeGlobalConfig, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeConfig, nil, err)
 	}
 	if len(result) == 0 {
 		//no record
 		return nil, nil
 	}
 
-	gc := result[0]
-	delete(gc, "_id")
-	return gc, nil
+	return &result[0], nil
 }
 
-// DeleteGlobalConfig deletes the global configuration from storage
-func (sa *Adapter) DeleteGlobalConfig(context TransactionContext) error {
-	delFilter := bson.D{}
-	_, err := sa.db.globalConfig.DeleteManyWithContext(context, delFilter, nil)
+// DeleteConfig deletes a configuration from storage
+func (sa *Adapter) DeleteConfig(context TransactionContext, id string) error {
+	delFilter := bson.M{"_id": id}
+	_, err := sa.db.configs.DeleteManyWithContext(context, delFilter, nil)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeGlobalConfig, nil, err)
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeConfig, nil, err)
 	}
 
 	return nil

@@ -3581,24 +3581,33 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /system/global-config:
+  '/system/configs/{id}':
     get:
       tags:
         - System
-      summary: Get global config
+      summary: Get config
       description: |
         Gives the system global config
 
         **Auth:** Requires system access token with `get_global-config`, `update_global-config`, or `all_global-config` permission
       security:
         - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: config ID
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
       responses:
         '200':
           description: Success
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GlobalConfig'
+                $ref: '#/components/schemas/Config'
         '400':
           description: Bad request
         '401':
@@ -3615,11 +3624,20 @@ paths:
         **Auth:** Requires system access token with `update_global-config` or `all_global-config` permission
       security:
         - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: config ID
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/GlobalConfig'
+              $ref: '#/components/schemas/Config'
         required: true
       responses:
         '200':
@@ -3645,11 +3663,20 @@ paths:
         **Auth:** Requires system access token with `update_global-config` or `all_global-config` permission
       security:
         - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: config ID
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/GlobalConfig'
+              $ref: '#/components/schemas/Config'
         required: true
       responses:
         '200':
@@ -5250,8 +5277,30 @@ components:
       scheme: bearer
       bearerFormat: JWT
   schemas:
-    GlobalConfig:
+    Config:
+      required:
+        - id
+        - data
+        - date_created
+        - date_updated
       type: object
+      properties:
+        id:
+          readOnly: true
+          type: string
+        data:
+          anyOf:
+            - type: object
+              properties:
+                allow_legacy_refresh:
+                  type: boolean
+                  nullable: true
+        date_created:
+          readOnly: true
+          type: string
+        date_updated:
+          readOnly: true
+          type: string
     Application:
       required:
         - id

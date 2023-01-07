@@ -356,6 +356,14 @@ type AuthTypeFields_Params struct {
 	AdditionalProperties map[string]interface{} `json:"-"`
 }
 
+// Config defines model for Config.
+type Config struct {
+	Data        interface{} `json:"data"`
+	DateCreated *string     `json:"date_created,omitempty"`
+	DateUpdated *string     `json:"date_updated,omitempty"`
+	Id          *string     `json:"id,omitempty"`
+}
+
 // Credential defines model for Credential.
 type Credential struct {
 	AccountsAuthTypes *[]AccountAuthType `json:"accounts_auth_types,omitempty"`
@@ -384,9 +392,6 @@ type DeviceFields struct {
 
 // DeviceFieldsType defines model for DeviceFields.Type.
 type DeviceFieldsType string
-
-// GlobalConfig defines model for GlobalConfig.
-type GlobalConfig = map[string]interface{}
 
 // IdentityProviderSettings defines model for IdentityProviderSettings.
 type IdentityProviderSettings struct {
@@ -1613,11 +1618,11 @@ type GetSystemAuthAppOrgTokenParams struct {
 	OrgId string `form:"org_id" json:"org_id"`
 }
 
-// PostSystemGlobalConfigJSONBody defines parameters for PostSystemGlobalConfig.
-type PostSystemGlobalConfigJSONBody = GlobalConfig
+// PostSystemConfigsIdJSONBody defines parameters for PostSystemConfigsId.
+type PostSystemConfigsIdJSONBody = Config
 
-// PutSystemGlobalConfigJSONBody defines parameters for PutSystemGlobalConfig.
-type PutSystemGlobalConfigJSONBody = GlobalConfig
+// PutSystemConfigsIdJSONBody defines parameters for PutSystemConfigsId.
+type PutSystemConfigsIdJSONBody = Config
 
 // PostSystemOrganizationsJSONBody defines parameters for PostSystemOrganizations.
 type PostSystemOrganizationsJSONBody = SystemReqCreateOrganization
@@ -1967,11 +1972,11 @@ type PostSystemAuthTypesJSONRequestBody = PostSystemAuthTypesJSONBody
 // PutSystemAuthTypesIdJSONRequestBody defines body for PutSystemAuthTypesId for application/json ContentType.
 type PutSystemAuthTypesIdJSONRequestBody = PutSystemAuthTypesIdJSONBody
 
-// PostSystemGlobalConfigJSONRequestBody defines body for PostSystemGlobalConfig for application/json ContentType.
-type PostSystemGlobalConfigJSONRequestBody = PostSystemGlobalConfigJSONBody
+// PostSystemConfigsIdJSONRequestBody defines body for PostSystemConfigsId for application/json ContentType.
+type PostSystemConfigsIdJSONRequestBody = PostSystemConfigsIdJSONBody
 
-// PutSystemGlobalConfigJSONRequestBody defines body for PutSystemGlobalConfig for application/json ContentType.
-type PutSystemGlobalConfigJSONRequestBody = PutSystemGlobalConfigJSONBody
+// PutSystemConfigsIdJSONRequestBody defines body for PutSystemConfigsId for application/json ContentType.
+type PutSystemConfigsIdJSONRequestBody = PutSystemConfigsIdJSONBody
 
 // PostSystemOrganizationsJSONRequestBody defines body for PostSystemOrganizations for application/json ContentType.
 type PostSystemOrganizationsJSONRequestBody = PostSystemOrganizationsJSONBody
