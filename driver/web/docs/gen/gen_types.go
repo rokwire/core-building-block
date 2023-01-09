@@ -393,6 +393,11 @@ type DeviceFields struct {
 // DeviceFieldsType defines model for DeviceFields.Type.
 type DeviceFieldsType string
 
+// EnvConfigData defines model for EnvConfigData.
+type EnvConfigData struct {
+	AllowLegacyRefresh *bool `json:"allow_legacy_refresh"`
+}
+
 // IdentityProviderSettings defines model for IdentityProviderSettings.
 type IdentityProviderSettings struct {
 	AlwaysSyncProfile   *bool                                      `json:"always_sync_profile,omitempty"`

@@ -1,6 +1,8 @@
 # config
 Config:
   $ref: "./config/Config.yaml"
+EnvConfigData:
+  $ref: "./config/EnvConfigData.yaml"
 
 # application
 Application:

@@ -60,30 +60,6 @@ func (h SystemApisHandler) getAppOrgToken(l *logs.Log, r *http.Request, claims *
 	return l.HttpResponseSuccessJSON(responseJSON)
 }
 
-// createConfig creates a config by id
-func (h SystemApisHandler) createConfig(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	params := mux.Vars(r)
-	id := params["id"]
-	if len(id) <= 0 {
-		return l.HttpResponseErrorData(logutils.StatusMissing, "path param", logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
-	}
-
-	var requestData Def.Config
-	err := json.NewDecoder(r.Body).Decode(&requestData)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, true)
-	}
-
-	config := configFromDef(requestData)
-	config.ID = id
-	err = h.coreAPIs.System.SysCreateConfig(config)
-	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypeConfig, nil, err, http.StatusInternalServerError, true)
-	}
-
-	return l.HttpResponseSuccess()
-}
-
 // getConfig gets config by id
 func (h SystemApisHandler) getConfig(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	params := mux.Vars(r)
@@ -108,6 +84,29 @@ func (h SystemApisHandler) getConfig(l *logs.Log, r *http.Request, claims *token
 	return l.HttpResponseSuccessJSON(data)
 }
 
+// createConfig creates a config by id
+func (h SystemApisHandler) createConfig(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	params := mux.Vars(r)
+	id := params["id"]
+	if len(id) <= 0 {
+		return l.HttpResponseErrorData(logutils.StatusMissing, "path param", logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.Config
+	err := json.NewDecoder(r.Body).Decode(&requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, true)
+	}
+
+	config := configFromDef(requestData, id)
+	err = h.coreAPIs.System.SysCreateConfig(config)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypeConfig, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
 // updateConfig updates a config by id
 func (h SystemApisHandler) updateConfig(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
 	params := mux.Vars(r)
@@ -122,11 +121,26 @@ func (h SystemApisHandler) updateConfig(l *logs.Log, r *http.Request, claims *to
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, true)
 	}
 
-	config := configFromDef(requestData)
-	config.ID = id
+	config := configFromDef(requestData, id)
 	err = h.coreAPIs.System.SysUpdateConfig(config)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeConfig, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
+// deleteConfig deletes a config by id
+func (h SystemApisHandler) deleteConfig(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	params := mux.Vars(r)
+	id := params["id"]
+	if len(id) <= 0 {
+		return l.HttpResponseErrorData(logutils.StatusMissing, "path param", logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
+	}
+
+	err := h.coreAPIs.System.SysDeleteConfig(id)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionDelete, model.TypeConfig, nil, err, http.StatusInternalServerError, true)
 	}
 
 	return l.HttpResponseSuccess()

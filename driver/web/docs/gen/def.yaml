@@ -3587,9 +3587,9 @@ paths:
         - System
       summary: Get config
       description: |
-        Gives the system global config
+        Get an existing config
 
-        **Auth:** Requires system access token with `get_global-config`, `update_global-config`, or `all_global-config` permission
+        **Auth:** Requires system access token with `get_configs`, `update_configs`, or `all_configs` permission
       security:
         - bearerAuth: []
       parameters:
@@ -3617,11 +3617,11 @@ paths:
     post:
       tags:
         - System
-      summary: Create global config
+      summary: Create config
       description: |
-        Creates the system global config
+        Creates a new config
 
-        **Auth:** Requires system access token with `update_global-config` or `all_global-config` permission
+        **Auth:** Requires system access token with `update_configs` or `all_configs` permission
       security:
         - bearerAuth: []
       parameters:
@@ -3656,11 +3656,11 @@ paths:
     put:
       tags:
         - System
-      summary: Update global config
+      summary: Update config
       description: |
-        Updates the system global config
+        Updates an existing config
 
-        **Auth:** Requires system access token with `update_global-config` or `all_global-config` permission
+        **Auth:** Requires system access token with `update_configs` or `all_configs` permission
       security:
         - bearerAuth: []
       parameters:
@@ -3678,6 +3678,39 @@ paths:
             schema:
               $ref: '#/components/schemas/Config'
         required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+    delete:
+      tags:
+        - System
+      summary: Delete config
+      description: |
+        Deletes a config
+
+        **Auth:** Requires system access token with `delete_configs` or `all_configs` permission
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: config ID
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
       responses:
         '200':
           description: Success
@@ -5290,17 +5323,19 @@ components:
           type: string
         data:
           anyOf:
-            - type: object
-              properties:
-                allow_legacy_refresh:
-                  type: boolean
-                  nullable: true
+            - $ref: '#/components/schemas/EnvConfigData'
         date_created:
           readOnly: true
           type: string
         date_updated:
           readOnly: true
           type: string
+    EnvConfigData:
+      type: object
+      properties:
+        allow_legacy_refresh:
+          type: boolean
+          nullable: true
     Application:
       required:
         - id

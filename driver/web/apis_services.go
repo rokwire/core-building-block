@@ -171,7 +171,6 @@ func (h ServicesApisHandler) refresh(l *logs.Log, r *http.Request, claims *token
 	}
 	if loginSession == nil {
 		//if login session is null then unauthorized
-		l.Infof("trying to refresh - %s", requestData.RefreshToken)
 		return l.HttpResponseError(http.StatusText(http.StatusUnauthorized), nil, http.StatusUnauthorized, true)
 	}
 

@@ -43,7 +43,7 @@ type Config struct {
 }
 
 // DataAsEnvConfig returns the config Data as an EnvConfigData if the cast succeeds
-func (c Config) DataAsEnvConfig() (*EnvConfigData, error) {
+func (c *Config) DataAsEnvConfig() (*EnvConfigData, error) {
 	data, ok := c.Data.(EnvConfigData)
 	if !ok {
 		return nil, errors.ErrorData(logutils.StatusInvalid, TypeEnvConfigData, nil)
@@ -53,7 +53,7 @@ func (c Config) DataAsEnvConfig() (*EnvConfigData, error) {
 
 // EnvConfigData contains environment configs for this service
 type EnvConfigData struct {
-	AllowLegacyRefresh bool `json:"allow_legacy_refresh" bson:"allow_legacy_refresh"`
+	AllowLegacyRefresh *bool `json:"allow_legacy_refresh,omitempty" bson:"allow_legacy_refresh,omitempty"`
 }
 
 // OrganizationConfig represents configuration for an organization

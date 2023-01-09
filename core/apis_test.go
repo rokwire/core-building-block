@@ -83,14 +83,15 @@ func TestAdmGetTest(t *testing.T) {
 
 //System
 
-func TestSysCreateGlobalConfig(t *testing.T) {
+func TestSysCreateConfig(t *testing.T) {
 	anyConfig := mock.AnythingOfType("model.Config")
 	storage := genmocks.Storage{}
-	storage.On("InsertConfig", nil, anyConfig).Return(nil)
+	storage.On("InsertConfig", anyConfig).Return(nil)
 
 	coreAPIs := buildTestCoreAPIs(&storage)
 
-	config := model.Config{ID: model.ConfigIDEnv, Data: model.EnvConfigData{AllowLegacyRefresh: true}}
+	trueVal := true
+	config := model.Config{ID: model.ConfigIDEnv, Data: model.EnvConfigData{AllowLegacyRefresh: &trueVal}}
 	err := coreAPIs.System.SysCreateConfig(config)
 	if err != nil {
 		t.Error("we are not expecting error")
@@ -99,7 +100,7 @@ func TestSysCreateGlobalConfig(t *testing.T) {
 
 	//second case - error
 	storage2 := genmocks.Storage{}
-	storage2.On("InsertConfig", nil, anyConfig).Return(errors.New("error occured"))
+	storage2.On("InsertConfig", anyConfig).Return(errors.New("error occured"))
 
 	coreAPIs = buildTestCoreAPIs(&storage2)
 

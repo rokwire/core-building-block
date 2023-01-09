@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -59,6 +60,9 @@ type Adapter struct {
 
 	cachedApplicationConfigs *syncmap.Map
 	applicationConfigsLock   *sync.RWMutex
+
+	cachedConfigs *syncmap.Map
+	configsLock   *sync.RWMutex
 }
 
 // Start starts the storage
@@ -107,6 +111,12 @@ func (sa *Adapter) Start() error {
 	err = sa.cacheApplicationConfigs()
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionCache, model.TypeApplicationConfig, nil, err)
+	}
+
+	// cache configs
+	err = sa.cacheConfigs()
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionCache, model.TypeConfig, nil, err)
 	}
 
 	return err
@@ -696,6 +706,75 @@ func (sa *Adapter) getCachedApplicationConfigByID(id string) (*model.Application
 	}
 
 	return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationConfig, errArgs)
+}
+
+// cacheConfigs caches the configs from the DB
+func (sa *Adapter) cacheConfigs() error {
+	sa.db.logger.Info("cacheConfigs...")
+
+	configs, err := sa.loadConfigs()
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionLoad, model.TypeConfig, nil, err)
+	}
+
+	sa.setCachedConfigs(configs)
+
+	return nil
+}
+
+func (sa *Adapter) setCachedConfigs(configs []model.Config) {
+	sa.configsLock.Lock()
+	defer sa.configsLock.Unlock()
+
+	sa.cachedConfigs = &syncmap.Map{}
+
+	for _, config := range configs {
+		err := parseConfigsData(&config)
+		if err != nil {
+			sa.db.logger.Warn(err.Error())
+		}
+		sa.cachedConfigs.Store(config.ID, config)
+	}
+}
+
+func parseConfigsData(config *model.Config) error {
+	bsonBytes, err := bson.Marshal(config.Data)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUnmarshal, model.TypeConfig, nil, err)
+	}
+	if strings.HasPrefix(config.ID, model.ConfigIDEnv) {
+		var envData model.EnvConfigData
+		err = bson.Unmarshal(bsonBytes, &envData)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionUnmarshal, model.TypeEnvConfigData, nil, err)
+		}
+		config.Data = envData
+	} else {
+		var mapData map[string]interface{}
+		err = bson.Unmarshal(bsonBytes, &mapData)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionUnmarshal, model.TypeConfig, nil, err)
+		}
+		config.Data = mapData
+	}
+	return nil
+}
+
+func (sa *Adapter) getCachedConfig(id string) (*model.Config, error) {
+	sa.configsLock.RLock()
+	defer sa.configsLock.RUnlock()
+
+	errArgs := &logutils.FieldArgs{"id": id}
+
+	item, _ := sa.cachedConfigs.Load(id)
+	if item != nil {
+		config, ok := item.(model.Config)
+		if !ok {
+			return nil, errors.ErrorAction(logutils.ActionCast, model.TypeConfig, errArgs)
+		}
+		return &config, nil
+	}
+	return nil, nil
 }
 
 // loadAuthTypes loads all auth types
@@ -2863,9 +2942,27 @@ func (sa *Adapter) FindProfiles(appID string, authTypeID string, accountAuthType
 	return result, nil
 }
 
+// loadConfigs loads configs
+func (sa *Adapter) loadConfigs() ([]model.Config, error) {
+	filter := bson.M{}
+
+	var configs []model.Config
+	err := sa.db.configs.Find(filter, &configs, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeConfig, nil, err)
+	}
+
+	return configs, nil
+}
+
+// FindConfig finds config by id
+func (sa *Adapter) FindConfig(id string) (*model.Config, error) {
+	return sa.getCachedConfig(id)
+}
+
 // InsertConfig inserts a new config
-func (sa *Adapter) InsertConfig(context TransactionContext, config model.Config) error {
-	_, err := sa.db.configs.InsertOneWithContext(context, config)
+func (sa *Adapter) InsertConfig(config model.Config) error {
+	_, err := sa.db.configs.InsertOne(config)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeConfig, nil, err)
 	}
@@ -2873,28 +2970,29 @@ func (sa *Adapter) InsertConfig(context TransactionContext, config model.Config)
 	return nil
 }
 
-// FindConfig finds config by id
-func (sa *Adapter) FindConfig(id string) (*model.Config, error) {
-	filter := bson.M{"_id": id}
-	var result []model.Config
-	err := sa.db.configs.Find(filter, &result, nil)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeConfig, nil, err)
+// UpdateConfig updates an existing config
+func (sa *Adapter) UpdateConfig(config model.Config) error {
+	filter := bson.M{"_id": config.ID}
+	update := bson.D{
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "data", Value: config.Data},
+			primitive.E{Key: "date_updated", Value: config.DateUpdated},
+		}},
 	}
-	if len(result) == 0 {
-		//no record
-		return nil, nil
+	_, err := sa.db.configs.UpdateOne(filter, update, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeConfig, &logutils.FieldArgs{"id": config.ID}, err)
 	}
 
-	return &result[0], nil
+	return nil
 }
 
 // DeleteConfig deletes a configuration from storage
-func (sa *Adapter) DeleteConfig(context TransactionContext, id string) error {
+func (sa *Adapter) DeleteConfig(id string) error {
 	delFilter := bson.M{"_id": id}
-	_, err := sa.db.configs.DeleteManyWithContext(context, delFilter, nil)
+	_, err := sa.db.configs.DeleteMany(delFilter, nil)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeConfig, nil, err)
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeConfig, &logutils.FieldArgs{"id": id}, err)
 	}
 
 	return nil
@@ -3671,12 +3769,17 @@ func NewStorageAdapter(mongoDBAuth string, mongoDBName string, mongoTimeout stri
 	cachedApplicationConfigs := &syncmap.Map{}
 	applicationConfigsLock := &sync.RWMutex{}
 
+	cachedConfigs := &syncmap.Map{}
+	configsLock := &sync.RWMutex{}
+
 	db := &database{mongoDBAuth: mongoDBAuth, mongoDBName: mongoDBName, mongoTimeout: timeout, logger: logger}
 	return &Adapter{db: db, logger: logger, cachedServiceRegs: cachedServiceRegs, serviceRegsLock: serviceRegsLock,
 		cachedOrganizations: cachedOrganizations, organizationsLock: organizationsLock,
 		cachedApplications: cachedApplications, applicationsLock: applicationsLock,
 		cachedAuthTypes: cachedAuthTypes, authTypesLock: authTypesLock,
-		cachedApplicationsOrganizations: cachedApplicationsOrganizations, applicationsOrganizationsLock: applicationsOrganizationsLock, cachedApplicationConfigs: cachedApplicationConfigs, applicationConfigsLock: applicationConfigsLock}
+		cachedApplicationsOrganizations: cachedApplicationsOrganizations, applicationsOrganizationsLock: applicationsOrganizationsLock,
+		cachedApplicationConfigs: cachedApplicationConfigs, applicationConfigsLock: applicationConfigsLock,
+		cachedConfigs: cachedConfigs, configsLock: configsLock}
 }
 
 type storageListener struct {
@@ -3711,6 +3814,10 @@ func (sl *storageListener) OnApplicationConfigsUpdated() {
 	sl.adapter.cacheApplicationConfigs()
 }
 
+func (sl *storageListener) OnConfigsUpdated() {
+	sl.adapter.cacheConfigs()
+}
+
 // Listener represents storage listener
 type Listener interface {
 	OnAPIKeysUpdated()
@@ -3721,6 +3828,7 @@ type Listener interface {
 	OnApplicationsUpdated()
 	OnApplicationsOrganizationsUpdated()
 	OnApplicationConfigsUpdated()
+	OnConfigsUpdated()
 }
 
 // DefaultListenerImpl default listener implementation
@@ -3749,6 +3857,9 @@ func (d *DefaultListenerImpl) OnApplicationsOrganizationsUpdated() {}
 
 // OnApplicationConfigsUpdated notifies application configs have been updated
 func (d *DefaultListenerImpl) OnApplicationConfigsUpdated() {}
+
+// OnConfigsUpdated notifies configs have been updated
+func (d *DefaultListenerImpl) OnConfigsUpdated() {}
 
 // TransactionContext wraps mongo.SessionContext for use by external packages
 type TransactionContext interface {

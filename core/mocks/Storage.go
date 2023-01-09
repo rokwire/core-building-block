@@ -175,13 +175,13 @@ func (_m *Storage) DeleteAppOrgRole(id string) error {
 	return r0
 }
 
-// DeleteConfig provides a mock function with given fields: context, id
-func (_m *Storage) DeleteConfig(context storage.TransactionContext, id string) error {
-	ret := _m.Called(context, id)
+// DeleteConfig provides a mock function with given fields: id
+func (_m *Storage) DeleteConfig(id string) error {
+	ret := _m.Called(id)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string) error); ok {
-		r0 = rf(context, id)
+	if rf, ok := ret.Get(0).(func(string) error); ok {
+		r0 = rf(id)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -1134,13 +1134,13 @@ func (_m *Storage) InsertAuthType(context storage.TransactionContext, authType m
 	return r0, r1
 }
 
-// InsertConfig provides a mock function with given fields: context, config
-func (_m *Storage) InsertConfig(context storage.TransactionContext, config model.Config) error {
-	ret := _m.Called(context, config)
+// InsertConfig provides a mock function with given fields: config
+func (_m *Storage) InsertConfig(config model.Config) error {
+	ret := _m.Called(config)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(storage.TransactionContext, model.Config) error); ok {
-		r0 = rf(context, config)
+	if rf, ok := ret.Get(0).(func(model.Config) error); ok {
+		r0 = rf(config)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -1365,6 +1365,20 @@ func (_m *Storage) UpdateAuthTypes(ID string, code string, description string, i
 	var r0 error
 	if rf, ok := ret.Get(0).(func(string, string, string, bool, bool, bool, bool, map[string]interface{}) error); ok {
 		r0 = rf(ID, code, description, isExternal, isAnonymous, useCredentials, ignoreMFA, params)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// UpdateConfig provides a mock function with given fields: config
+func (_m *Storage) UpdateConfig(config model.Config) error {
+	ret := _m.Called(config)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(model.Config) error); ok {
+		r0 = rf(config)
 	} else {
 		r0 = ret.Error(0)
 	}
