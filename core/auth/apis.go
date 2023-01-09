@@ -305,18 +305,20 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeConfig, nil, err)
 		}
+
+		var envData *model.EnvConfigData
 		if config != nil {
-			envData, err := config.DataAsEnvConfig()
+			envData, err = config.DataAsEnvConfig()
 			if err != nil {
 				return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeEnvConfigData, nil, err)
 			}
-			if (envData == nil) || (envData.AllowLegacyRefresh != nil && *envData.AllowLegacyRefresh) {
-				refreshToken = a.hashAndEncodeToken(refreshToken)
-				loginSession, err = a.storage.FindLoginSession(refreshToken)
-				if err != nil {
-					l.Infof("error finding session by refresh token - %s", refreshToken)
-					return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, nil, err).AddTag(sessionIDRateLimitTag)
-				}
+		}
+		if (envData == nil) || (envData.AllowLegacyRefresh != nil && *envData.AllowLegacyRefresh) {
+			refreshToken = a.hashAndEncodeToken(refreshToken)
+			loginSession, err = a.storage.FindLoginSession(refreshToken)
+			if err != nil {
+				l.Infof("error finding session by refresh token - %s", refreshToken)
+				return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, nil, err).AddTag(sessionIDRateLimitTag)
 			}
 		}
 	}
