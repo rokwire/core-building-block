@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"context"
 	"core-building-block/core"
+	"core-building-block/core/model"
 	"fmt"
 	"html/template"
 	"net/http"
@@ -37,6 +38,7 @@ import (
 
 	"github.com/rokwire/core-auth-library-go/v2/authservice"
 	"github.com/rokwire/core-auth-library-go/v2/tokenauth"
+	"github.com/rokwire/core-auth-library-go/v2/webauth"
 
 	httpSwagger "github.com/swaggo/http-swagger"
 )
@@ -67,6 +69,9 @@ type Adapter struct {
 	systemApisHandler   SystemApisHandler
 
 	coreAPIs *core.APIs
+
+	corsAllowedOrigins []string
+	corsAllowedHeaders []string
 }
 
 type handlerFunc = func(*logs.Log, *http.Request, *tokenauth.Claims) logs.HTTPResponse
@@ -275,7 +280,7 @@ func (we Adapter) Start() {
 	systemSubrouter.HandleFunc("/auth-types/{id}", we.wrapFunc(we.systemApisHandler.updateAuthTypes, we.auth.system.Permissions)).Methods("PUT")
 	///
 
-	err := http.ListenAndServe(":"+we.port, router)
+	err := http.ListenAndServe(":"+we.port, webauth.SetupCORS(we.corsAllowedOrigins, we.corsAllowedHeaders, router))
 	if err != nil {
 		we.logger.Fatalf("error on listen and server - %s", err.Error())
 	}
@@ -509,7 +514,8 @@ func (we Adapter) completeResponse(w http.ResponseWriter, response logs.HTTPResp
 }
 
 // NewWebAdapter creates new WebAdapter instance
-func NewWebAdapter(env string, serviceID string, serviceRegManager *authservice.ServiceRegManager, port string, coreAPIs *core.APIs, host string, baseServerURL string, prodServerURL string, testServerURL string, devServerURL string, logger *logs.Logger) Adapter {
+func NewWebAdapter(env string, serviceID string, serviceRegManager *authservice.ServiceRegManager, port string, coreAPIs *core.APIs, host string, storage core.Storage,
+	baseServerURL string, prodServerURL string, testServerURL string, devServerURL string, logger *logs.Logger) Adapter {
 	//openAPI doc
 	loader := &openapi3.Loader{Context: context.Background(), IsExternalRefsAllowed: true}
 	// doc, err := loader.LoadFromFile("driver/web/docs/gen/def.yaml")
@@ -545,6 +551,26 @@ func NewWebAdapter(env string, serviceID string, serviceRegManager *authservice.
 		logger.Fatalf("error on openapi3 gorillamux router - %s", err.Error())
 	}
 
+	// read CORS parameters from stored env config
+	var envData *model.EnvConfigData
+	var corsAllowedHeaders []string
+	corsAllowedOrigins := []string{"*"}
+	config, err := storage.FindConfig(model.ConfigIDEnv)
+	if err != nil {
+		logger.Fatal(err.Error())
+	}
+	if config != nil {
+		envData, err = config.DataAsEnvConfig()
+		if err != nil {
+			logger.Fatal(err.Error())
+		}
+
+		corsAllowedHeaders = envData.CORSAllowedHeaders
+		if envData.CORSAllowedOrigins != nil {
+			corsAllowedOrigins = envData.CORSAllowedOrigins
+		}
+	}
+
 	auth, err := NewAuth(serviceID, serviceRegManager)
 	if err != nil {
 		logger.Fatal(err.Error())
@@ -559,7 +585,8 @@ func NewWebAdapter(env string, serviceID string, serviceRegManager *authservice.
 	systemApisHandler := NewSystemApisHandler(coreAPIs)
 	return Adapter{env: env, port: port, productionServerURL: prodServerURL, testServerURL: testServerURL, developmentServerURL: devServerURL, cachedYamlDoc: yamlDoc,
 		openAPIRouter: openAPIRouter, host: host, auth: auth, logger: logger, defaultApisHandler: defaultApisHandler, servicesApisHandler: servicesApisHandler, adminApisHandler: adminApisHandler,
-		encApisHandler: encApisHandler, bbsApisHandler: bbsApisHandler, tpsApisHandler: tpsApisHandler, systemApisHandler: systemApisHandler, coreAPIs: coreAPIs}
+		encApisHandler: encApisHandler, bbsApisHandler: bbsApisHandler, tpsApisHandler: tpsApisHandler, systemApisHandler: systemApisHandler, coreAPIs: coreAPIs,
+		corsAllowedOrigins: corsAllowedOrigins, corsAllowedHeaders: corsAllowedHeaders}
 }
 
 // AppListener implements core.ApplicationListener interface

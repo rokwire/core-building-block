@@ -24,6 +24,7 @@ require (
 require (
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/rs/cors v1.8.3 // indirect
 )
 
 require (
@@ -71,3 +72,5 @@ require (
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace github.com/rokwire/core-auth-library-go/v2 v2.2.0 => ../auth-lib

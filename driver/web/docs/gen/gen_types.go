@@ -334,7 +334,9 @@ type DeviceType string
 
 // EnvConfigData defines model for EnvConfigData.
 type EnvConfigData struct {
-	AllowLegacyRefresh *bool `json:"allow_legacy_refresh"`
+	AllowLegacyRefresh *bool     `json:"allow_legacy_refresh"`
+	CorsAllowedHeaders *[]string `json:"cors_allowed_headers"`
+	CorsAllowedOrigins *[]string `json:"cors_allowed_origins"`
 }
 
 // IdentityProviderSettings defines model for IdentityProviderSettings.
