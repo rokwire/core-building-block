@@ -3,7 +3,7 @@ properties:
   token:
     $ref: "../RokwireToken.yaml"
   account:
-    $ref: "../Account.yaml"
+    $ref: "../../../../user/Account.yaml"
   params:
     type: object
     nullable: true

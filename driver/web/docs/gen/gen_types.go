@@ -12,12 +12,12 @@ const (
 	BearerAuthScopes = "bearerAuth.Scopes"
 )
 
-// Defines values for DeviceFieldsType.
+// Defines values for DeviceType.
 const (
-	DeviceFieldsTypeDesktop DeviceFieldsType = "desktop"
-	DeviceFieldsTypeMobile  DeviceFieldsType = "mobile"
-	DeviceFieldsTypeOther   DeviceFieldsType = "other"
-	DeviceFieldsTypeWeb     DeviceFieldsType = "web"
+	Desktop DeviceType = "desktop"
+	Mobile  DeviceType = "mobile"
+	Other   DeviceType = "other"
+	Web     DeviceType = "web"
 )
 
 // Defines values for JWKAlg.
@@ -35,13 +35,13 @@ const (
 	Sig JWKUse = "sig"
 )
 
-// Defines values for OrganizationFieldsType.
+// Defines values for OrganizationType.
 const (
-	OrganizationFieldsTypeHuge   OrganizationFieldsType = "huge"
-	OrganizationFieldsTypeLarge  OrganizationFieldsType = "large"
-	OrganizationFieldsTypeMedium OrganizationFieldsType = "medium"
-	OrganizationFieldsTypeMicro  OrganizationFieldsType = "micro"
-	OrganizationFieldsTypeSmall  OrganizationFieldsType = "small"
+	Huge   OrganizationType = "huge"
+	Large  OrganizationType = "large"
+	Medium OrganizationType = "medium"
+	Micro  OrganizationType = "micro"
+	Small  OrganizationType = "small"
 )
 
 // Defines values for ServiceAccountCredentialType.
@@ -127,14 +127,6 @@ const (
 	SharedReqLoginUrlAuthTypeIllinoisOidc SharedReqLoginUrlAuthType = "illinois_oidc"
 )
 
-// Defines values for SharedReqLoginDeviceType.
-const (
-	SharedReqLoginDeviceTypeDesktop SharedReqLoginDeviceType = "desktop"
-	SharedReqLoginDeviceTypeMobile  SharedReqLoginDeviceType = "mobile"
-	SharedReqLoginDeviceTypeOther   SharedReqLoginDeviceType = "other"
-	SharedReqLoginDeviceTypeWeb     SharedReqLoginDeviceType = "web"
-)
-
 // Defines values for SharedReqLoginMfaType.
 const (
 	SharedReqLoginMfaTypeEmail    SharedReqLoginMfaType = "email"
@@ -161,24 +153,6 @@ const (
 	SharedResRokwireTokenTokenTypeBearer SharedResRokwireTokenTokenType = "Bearer"
 )
 
-// Defines values for SystemReqCreateOrganizationType.
-const (
-	SystemReqCreateOrganizationTypeHuge   SystemReqCreateOrganizationType = "huge"
-	SystemReqCreateOrganizationTypeLarge  SystemReqCreateOrganizationType = "large"
-	SystemReqCreateOrganizationTypeMedium SystemReqCreateOrganizationType = "medium"
-	SystemReqCreateOrganizationTypeMicro  SystemReqCreateOrganizationType = "micro"
-	SystemReqCreateOrganizationTypeSmall  SystemReqCreateOrganizationType = "small"
-)
-
-// Defines values for SystemReqUpdateOrganizationType.
-const (
-	Huge   SystemReqUpdateOrganizationType = "huge"
-	Large  SystemReqUpdateOrganizationType = "large"
-	Medium SystemReqUpdateOrganizationType = "medium"
-	Micro  SystemReqUpdateOrganizationType = "micro"
-	Small  SystemReqUpdateOrganizationType = "small"
-)
-
 // API key record
 type APIKey struct {
 	AppId string  `json:"app_id"`
@@ -188,64 +162,44 @@ type APIKey struct {
 
 // Account defines model for Account.
 type Account struct {
-	Anonymous     *bool                    `json:"anonymous,omitempty"`
-	AppOrg        *ApplicationOrganization `json:"app_org,omitempty"`
-	AuthTypes     *[]AccountAuthType       `json:"auth_types,omitempty"`
-	Devices       *[]Device                `json:"devices,omitempty"`
-	ExternalIds   *map[string]interface{}  `json:"external_ids"`
-	Fields        *AccountFields           `json:"fields,omitempty"`
-	Groups        *[]AppOrgGroup           `json:"groups,omitempty"`
-	Permissions   *[]Permission            `json:"permissions,omitempty"`
-	Preferences   *map[string]interface{}  `json:"preferences"`
-	Profile       *Profile                 `json:"profile,omitempty"`
-	Roles         *[]AppOrgRole            `json:"roles,omitempty"`
-	System        *bool                    `json:"system,omitempty"`
-	SystemConfigs *map[string]interface{}  `json:"system_configs"`
-	Username      *string                  `json:"username,omitempty"`
+	Anonymous               *bool                    `json:"anonymous,omitempty"`
+	AppOrg                  *ApplicationOrganization `json:"app_org"`
+	AuthTypes               *[]AccountAuthType       `json:"auth_types,omitempty"`
+	Devices                 *[]Device                `json:"devices,omitempty"`
+	ExternalIds             *map[string]interface{}  `json:"external_ids"`
+	Groups                  *[]AppOrgGroup           `json:"groups,omitempty"`
+	Id                      *string                  `json:"id,omitempty"`
+	LastAccessTokenDate     *string                  `json:"last_access_token_date,omitempty"`
+	LastLoginDate           *string                  `json:"last_login_date,omitempty"`
+	MostRecentClientVersion *string                  `json:"most_recent_client_version,omitempty"`
+	Permissions             *[]Permission            `json:"permissions,omitempty"`
+	Preferences             *map[string]interface{}  `json:"preferences"`
+	Profile                 *Profile                 `json:"profile,omitempty"`
+	Roles                   *[]AppOrgRole            `json:"roles,omitempty"`
+	System                  *bool                    `json:"system,omitempty"`
+	SystemConfigs           *map[string]interface{}  `json:"system_configs"`
+	Username                *string                  `json:"username,omitempty"`
 }
 
 // AccountAuthType defines model for AccountAuthType.
 type AccountAuthType struct {
-	Account    *Account               `json:"account,omitempty"`
-	AuthType   *AuthType              `json:"auth_type,omitempty"`
-	Credential *Credential            `json:"credential,omitempty"`
-	Fields     *AccountAuthTypeFields `json:"fields,omitempty"`
+	Active     *bool                   `json:"active,omitempty"`
+	Code       string                  `json:"code"`
+	Credential *Credential             `json:"credential,omitempty"`
+	Id         string                  `json:"id"`
+	Identifier string                  `json:"identifier"`
+	Params     *AccountAuthType_Params `json:"params"`
+	Unverified *bool                   `json:"unverified,omitempty"`
 }
 
-// AccountAuthTypeFields defines model for AccountAuthTypeFields.
-type AccountAuthTypeFields struct {
-	Active     *bool                         `json:"active,omitempty"`
-	Code       *string                       `json:"code,omitempty"`
-	Id         *string                       `json:"id,omitempty"`
-	Identifier *string                       `json:"identifier,omitempty"`
-	Params     *AccountAuthTypeFields_Params `json:"params"`
-	Unverified *bool                         `json:"unverified,omitempty"`
-}
-
-// AccountAuthTypeFields_Params defines model for AccountAuthTypeFields.Params.
-type AccountAuthTypeFields_Params struct {
+// AccountAuthType_Params defines model for AccountAuthType.Params.
+type AccountAuthType_Params struct {
 	AdditionalProperties map[string]interface{} `json:"-"`
-}
-
-// AccountFields defines model for AccountFields.
-type AccountFields struct {
-	Id string `json:"id"`
 }
 
 // AdminToken defines model for AdminToken.
 type AdminToken struct {
 	Token string `json:"token"`
-}
-
-// AppOrg defines model for AppOrg.
-type AppOrg struct {
-	AppId                    string                      `json:"app_id"`
-	Id                       *string                     `json:"id,omitempty"`
-	IdentityProviderSettings *[]IdentityProviderSettings `json:"identity_provider_settings"`
-	LoginSessionSettings     *LoginSessionSettings       `json:"login_session_settings,omitempty"`
-	OrgId                    string                      `json:"org_id"`
-	ServicesIds              *[]string                   `json:"services_ids"`
-	SupportedAuthTypes       *[]SupportedAuthTypes       `json:"supported_auth_types"`
 }
 
 // AppOrgGroup defines model for AppOrgGroup.
@@ -281,20 +235,19 @@ type AppOrgRole struct {
 
 // Application defines model for Application.
 type Application struct {
-	Admin            bool                       `json:"admin"`
-	Id               *string                    `json:"id,omitempty"`
-	MultiTenant      bool                       `json:"multi_tenant"`
-	Name             string                     `json:"name"`
-	Organizations    *[]ApplicationOrganization `json:"organizations,omitempty"`
-	SharedIdentities bool                       `json:"shared_identities"`
-	Types            *[]ApplicationType         `json:"types,omitempty"`
+	Admin            bool               `json:"admin"`
+	Id               *string            `json:"id,omitempty"`
+	MultiTenant      bool               `json:"multi_tenant"`
+	Name             string             `json:"name"`
+	SharedIdentities bool               `json:"shared_identities"`
+	Types            *[]ApplicationType `json:"types,omitempty"`
 }
 
 // ApplicationConfig defines model for ApplicationConfig.
 type ApplicationConfig struct {
 	AppTypeId string                 `json:"app_type_id"`
 	Data      map[string]interface{} `json:"data"`
-	Id        string                 `json:"id"`
+	Id        *string                `json:"id,omitempty"`
 	OrgId     *string                `json:"org_id,omitempty"`
 
 	// conforms major.minor.patch format
@@ -303,10 +256,13 @@ type ApplicationConfig struct {
 
 // ApplicationOrganization defines model for ApplicationOrganization.
 type ApplicationOrganization struct {
-	TODO         *string       `json:"TODO,omitempty"`
-	Application  *Application  `json:"application,omitempty"`
-	Id           *string       `json:"id,omitempty"`
-	Organization *Organization `json:"organization,omitempty"`
+	AppId                    string                      `json:"app_id"`
+	Id                       *string                     `json:"id,omitempty"`
+	IdentityProviderSettings *[]IdentityProviderSettings `json:"identity_provider_settings"`
+	LoginSessionSettings     *LoginSessionSettings       `json:"login_session_settings,omitempty"`
+	OrgId                    string                      `json:"org_id"`
+	ServicesIds              *[]string                   `json:"services_ids"`
+	SupportedAuthTypes       *[]SupportedAuthTypes       `json:"supported_auth_types"`
 }
 
 // ApplicationType defines model for ApplicationType.
@@ -327,32 +283,27 @@ type AuthServiceReg struct {
 
 // AuthType defines model for AuthType.
 type AuthType struct {
-	Fields *AuthTypeFields `json:"fields,omitempty"`
-}
-
-// AuthTypeFields defines model for AuthTypeFields.
-type AuthTypeFields struct {
 	// username or email or phone or illinois_oidc etc
-	Code        *string `json:"code,omitempty"`
-	Description *string `json:"description,omitempty"`
+	Code        string  `json:"code"`
+	Description string  `json:"description"`
 	Id          *string `json:"id,omitempty"`
 
 	// says if login using this auth type may bypass account MFA
-	IgnoreMfa *bool `json:"ignore_mfa,omitempty"`
+	IgnoreMfa bool `json:"ignore_mfa"`
 
 	// says if the auth type results in anonymous users
-	IsAnonymous *bool `json:"is_anonymous,omitempty"`
+	IsAnonymous bool `json:"is_anonymous"`
 
 	// says if the users source is external - identity providers
-	IsExternal *bool                  `json:"is_external,omitempty"`
-	Params     *AuthTypeFields_Params `json:"params,omitempty"`
+	IsExternal bool             `json:"is_external"`
+	Params     *AuthType_Params `json:"params,omitempty"`
 
 	// says if the auth type uses credentials
-	UseCredentials *bool `json:"use_credentials,omitempty"`
+	UseCredentials bool `json:"use_credentials"`
 }
 
-// AuthTypeFields_Params defines model for AuthTypeFields.Params.
-type AuthTypeFields_Params struct {
+// AuthType_Params defines model for AuthType.Params.
+type AuthType_Params struct {
 	AdditionalProperties map[string]interface{} `json:"-"`
 }
 
@@ -366,32 +317,20 @@ type Config struct {
 
 // Credential defines model for Credential.
 type Credential struct {
-	AccountsAuthTypes *[]AccountAuthType `json:"accounts_auth_types,omitempty"`
-	Fields            *CredentialFields  `json:"fields,omitempty"`
-}
-
-// CredentialFields defines model for CredentialFields.
-type CredentialFields struct {
 	Id    *string                 `json:"id,omitempty"`
 	Value *map[string]interface{} `json:"value,omitempty"`
 }
 
 // Device defines model for Device.
 type Device struct {
-	Account *Account      `json:"account,omitempty"`
-	Fields  *DeviceFields `json:"fields,omitempty"`
+	DeviceId *string    `json:"device_id,omitempty"`
+	Id       *string    `json:"id,omitempty"`
+	Os       *string    `json:"os,omitempty"`
+	Type     DeviceType `json:"type"`
 }
 
-// DeviceFields defines model for DeviceFields.
-type DeviceFields struct {
-	DeviceId *string          `json:"device_id,omitempty"`
-	Id       string           `json:"id"`
-	Os       *string          `json:"os,omitempty"`
-	Type     DeviceFieldsType `json:"type"`
-}
-
-// DeviceFieldsType defines model for DeviceFields.Type.
-type DeviceFieldsType string
+// DeviceType defines model for Device.Type.
+type DeviceType string
 
 // EnvConfigData defines model for EnvConfigData.
 type EnvConfigData struct {
@@ -471,6 +410,25 @@ type JWKS struct {
 	Keys []JWK `json:"keys"`
 }
 
+// LoginSession defines model for LoginSession.
+type LoginSession struct {
+	AccountAuthType    *AccountAuthType         `json:"account_auth_type,omitempty"`
+	Anonymous          *bool                    `json:"anonymous,omitempty"`
+	AppOrg             *ApplicationOrganization `json:"app_org"`
+	AppType            *ApplicationType         `json:"app_type,omitempty"`
+	DateCreated        *string                  `json:"date_created,omitempty"`
+	DateRefreshed      *string                  `json:"date_refreshed"`
+	DateUpdated        *string                  `json:"date_updated"`
+	DeviceId           *string                  `json:"device_id,omitempty"`
+	Id                 *string                  `json:"id,omitempty"`
+	Identifier         *string                  `json:"identifier,omitempty"`
+	IpAddress          *string                  `json:"ip_address,omitempty"`
+	MfaAttempts        *int                     `json:"mfa_attempts,omitempty"`
+	RefreshTokensCount *int                     `json:"refresh_tokens_count,omitempty"`
+	State              *string                  `json:"state,omitempty"`
+	StateExpires       *string                  `json:"state_expires"`
+}
+
 // LoginSessionSettings defines model for LoginSessionSettings.
 type LoginSessionSettings struct {
 	InactivityExpirePolicy     *InactiveExpirePolicy `json:"inactivity_expire_policy,omitempty"`
@@ -487,34 +445,29 @@ type OIDCDiscovery struct {
 
 // Organization defines model for Organization.
 type Organization struct {
-	Config *OrganizationConfigFields `json:"config,omitempty"`
-	Fields *OrganizationFields       `json:"fields,omitempty"`
+	Config *OrganizationConfig `json:"config,omitempty"`
+	Id     *string             `json:"id,omitempty"`
+	Name   string              `json:"name"`
+	Type   OrganizationType    `json:"type"`
 }
 
-// OrganizationConfigFields defines model for OrganizationConfigFields.
-type OrganizationConfigFields struct {
+// OrganizationType defines model for Organization.Type.
+type OrganizationType string
+
+// OrganizationConfig defines model for OrganizationConfig.
+type OrganizationConfig struct {
 	// organization domains
-	Domains *[]string `json:"domains,omitempty"`
+	Domains []string `json:"domains"`
 
 	// organization config id
 	Id *string `json:"id,omitempty"`
 }
 
-// OrganizationFields defines model for OrganizationFields.
-type OrganizationFields struct {
-	Id   *string                `json:"id,omitempty"`
-	Name string                 `json:"name"`
-	Type OrganizationFieldsType `json:"type"`
-}
-
-// OrganizationFieldsType defines model for OrganizationFields.Type.
-type OrganizationFieldsType string
-
 // PartialAccount defines model for PartialAccount.
 type PartialAccount struct {
 	Anonymous     bool                    `json:"anonymous"`
 	AppId         string                  `json:"app_id"`
-	AuthTypes     []AccountAuthTypeFields `json:"auth_types"`
+	AuthTypes     []AccountAuthType       `json:"auth_types"`
 	DateCreated   *string                 `json:"date_created,omitempty"`
 	DateUpdated   *string                 `json:"date_updated"`
 	ExternalIds   *map[string]interface{} `json:"external_ids"`
@@ -537,28 +490,37 @@ type Permission struct {
 	DateCreated *string   `json:"date_created,omitempty"`
 	DateUpdated *string   `json:"date_updated,omitempty"`
 	Description *string   `json:"description,omitempty"`
-	Id          string    `json:"id"`
+	Id          *string   `json:"id,omitempty"`
 	Name        string    `json:"name"`
 	ServiceId   *string   `json:"service_id,omitempty"`
 }
 
 // Profile defines model for Profile.
 type Profile struct {
-	Accounts *[]Account     `json:"accounts,omitempty"`
-	Fields   *ProfileFields `json:"fields,omitempty"`
-}
-
-// ProfileFields defines model for ProfileFields.
-type ProfileFields struct {
 	Address                *string                 `json:"address"`
 	BirthYear              *int                    `json:"birth_year"`
 	Country                *string                 `json:"country"`
 	Email                  *string                 `json:"email"`
-	FirstName              *string                 `json:"first_name,omitempty"`
+	FirstName              *string                 `json:"first_name"`
 	Id                     *string                 `json:"id,omitempty"`
-	LastName               *string                 `json:"last_name,omitempty"`
+	LastName               *string                 `json:"last_name"`
 	Phone                  *string                 `json:"phone"`
-	PhotoUrl               *string                 `json:"photo_url,omitempty"`
+	PhotoUrl               *string                 `json:"photo_url"`
+	State                  *string                 `json:"state"`
+	UnstructuredProperties *map[string]interface{} `json:"unstructured_properties"`
+	ZipCode                *string                 `json:"zip_code"`
+}
+
+// ProfileNullable defines model for ProfileNullable.
+type ProfileNullable struct {
+	Address                *string                 `json:"address"`
+	BirthYear              *int                    `json:"birth_year"`
+	Country                *string                 `json:"country"`
+	Email                  *string                 `json:"email"`
+	FirstName              *string                 `json:"first_name"`
+	LastName               *string                 `json:"last_name"`
+	Phone                  *string                 `json:"phone"`
+	PhotoUrl               *string                 `json:"photo_url"`
 	State                  *string                 `json:"state"`
 	UnstructuredProperties *map[string]interface{} `json:"unstructured_properties"`
 	ZipCode                *string                 `json:"zip_code"`
@@ -572,14 +534,14 @@ type PubKey struct {
 
 // ServiceAccount defines model for ServiceAccount.
 type ServiceAccount struct {
-	AccountId   string                      `json:"account_id"`
+	AccountId   *string                     `json:"account_id,omitempty"`
 	AppId       string                      `json:"app_id"`
 	Creds       *[]ServiceAccountCredential `json:"creds,omitempty"`
-	FirstParty  bool                        `json:"first_party"`
-	Name        string                      `json:"name"`
+	FirstParty  *bool                       `json:"first_party,omitempty"`
+	Name        *string                     `json:"name,omitempty"`
 	OrgId       string                      `json:"org_id"`
-	Permissions []string                    `json:"permissions"`
-	Scopes      []string                    `json:"scopes"`
+	Permissions *[]string                   `json:"permissions"`
+	Scopes      *[]string                   `json:"scopes"`
 }
 
 // ServiceAccountCredential defines model for ServiceAccountCredential.
@@ -826,8 +788,8 @@ type ServicesReqServiceAccountsParamsAuthType string
 
 // ServicesResAccountAuthTypeLink defines model for _services_res_account_auth-type-link.
 type ServicesResAccountAuthTypeLink struct {
-	AuthTypes []AccountAuthTypeFields `json:"auth_types"`
-	Message   *string                 `json:"message"`
+	AuthTypes []AccountAuthType `json:"auth_types"`
+	Message   *string           `json:"message"`
 }
 
 // ServicesResAuthorizeService defines model for _services_res_authorize-service.
@@ -875,7 +837,7 @@ type SharedReqCreateAccount struct {
 	GroupIds    *[]string                      `json:"group_ids,omitempty"`
 	Identifier  string                         `json:"identifier"`
 	Permissions *[]string                      `json:"permissions,omitempty"`
-	Profile     *SharedReqProfileNullable      `json:"profile"`
+	Profile     *ProfileNullable               `json:"profile"`
 	RoleIds     *[]string                      `json:"role_ids,omitempty"`
 	Username    *string                        `json:"username"`
 }
@@ -906,18 +868,16 @@ type SharedReqCredsTwilioPhone struct {
 
 // SharedReqLogin defines model for _shared_req_Login.
 type SharedReqLogin struct {
-	ApiKey            string                 `json:"api_key"`
-	AppTypeIdentifier string                 `json:"app_type_identifier"`
-	AuthType          SharedReqLoginAuthType `json:"auth_type"`
-	Creds             *interface{}           `json:"creds,omitempty"`
-
-	// Client device
-	Device      SharedReqLoginDevice      `json:"device"`
-	OrgId       string                    `json:"org_id"`
-	Params      *interface{}              `json:"params,omitempty"`
-	Preferences *map[string]interface{}   `json:"preferences"`
-	Profile     *SharedReqProfileNullable `json:"profile"`
-	Username    *string                   `json:"username"`
+	ApiKey            string                  `json:"api_key"`
+	AppTypeIdentifier string                  `json:"app_type_identifier"`
+	AuthType          SharedReqLoginAuthType  `json:"auth_type"`
+	Creds             *interface{}            `json:"creds,omitempty"`
+	Device            Device                  `json:"device"`
+	OrgId             string                  `json:"org_id"`
+	Params            *interface{}            `json:"params,omitempty"`
+	Preferences       *map[string]interface{} `json:"preferences"`
+	Profile           *ProfileNullable        `json:"profile"`
+	Username          *string                 `json:"username"`
 }
 
 // SharedReqLoginAuthType defines model for SharedReqLogin.AuthType.
@@ -934,16 +894,6 @@ type SharedReqLoginUrl struct {
 
 // SharedReqLoginUrlAuthType defines model for SharedReqLoginUrl.AuthType.
 type SharedReqLoginUrlAuthType string
-
-// Client device
-type SharedReqLoginDevice struct {
-	DeviceId *string                  `json:"device_id,omitempty"`
-	Os       *string                  `json:"os,omitempty"`
-	Type     SharedReqLoginDeviceType `json:"type"`
-}
-
-// SharedReqLoginDeviceType defines model for SharedReqLoginDevice.Type.
-type SharedReqLoginDeviceType string
 
 // SharedReqLoginMfa defines model for _shared_req_Login_Mfa.
 type SharedReqLoginMfa struct {
@@ -991,36 +941,6 @@ type SharedReqParamsSetEmailCredential struct {
 	NewPassword     string `json:"new_password"`
 }
 
-// SharedReqProfile defines model for _shared_req_Profile.
-type SharedReqProfile struct {
-	Address                *string                 `json:"address"`
-	BirthYear              *int                    `json:"birth_year"`
-	Country                *string                 `json:"country"`
-	Email                  *string                 `json:"email"`
-	FirstName              *string                 `json:"first_name"`
-	LastName               *string                 `json:"last_name"`
-	Phone                  *string                 `json:"phone"`
-	PhotoUrl               *string                 `json:"photo_url"`
-	State                  *string                 `json:"state"`
-	UnstructuredProperties *map[string]interface{} `json:"unstructured_properties"`
-	ZipCode                *string                 `json:"zip_code"`
-}
-
-// SharedReqProfileNullable defines model for _shared_req_ProfileNullable.
-type SharedReqProfileNullable struct {
-	Address                *string                 `json:"address"`
-	BirthYear              *int                    `json:"birth_year"`
-	Country                *string                 `json:"country"`
-	Email                  *string                 `json:"email"`
-	FirstName              *string                 `json:"first_name"`
-	LastName               *string                 `json:"last_name"`
-	Phone                  *string                 `json:"phone"`
-	PhotoUrl               *string                 `json:"photo_url"`
-	State                  *string                 `json:"state"`
-	UnstructuredProperties *map[string]interface{} `json:"unstructured_properties"`
-	ZipCode                *string                 `json:"zip_code"`
-}
-
 // SharedReqRefresh defines model for _shared_req_Refresh.
 type SharedReqRefresh struct {
 	ApiKey       string `json:"api_key"`
@@ -1039,55 +959,15 @@ type SharedReqUpdateAccount struct {
 // SharedReqUpdateAccountAuthType defines model for SharedReqUpdateAccount.AuthType.
 type SharedReqUpdateAccountAuthType string
 
-// SharedResAccount defines model for _shared_res_Account.
-type SharedResAccount struct {
-	Anonymous               *bool                    `json:"anonymous,omitempty"`
-	AuthTypes               *[]AccountAuthTypeFields `json:"auth_types,omitempty"`
-	ExternalIds             *map[string]interface{}  `json:"external_ids"`
-	Groups                  *[]AppOrgGroup           `json:"groups,omitempty"`
-	Id                      string                   `json:"id"`
-	LastAccessTokenDate     *string                  `json:"last_access_token_date,omitempty"`
-	LastLoginDate           *string                  `json:"last_login_date,omitempty"`
-	MostRecentClientVersion *string                  `json:"most_recent_client_version,omitempty"`
-	Permissions             *[]Permission            `json:"permissions,omitempty"`
-	Preferences             *map[string]interface{}  `json:"preferences"`
-	Profile                 *ProfileFields           `json:"profile,omitempty"`
-	Roles                   *[]AppOrgRole            `json:"roles,omitempty"`
-	System                  *bool                    `json:"system,omitempty"`
-	SystemConfigs           *map[string]interface{}  `json:"system_configs"`
-	Username                *string                  `json:"username,omitempty"`
-}
-
 // SharedResAccountCheck defines model for _shared_res_AccountCheck.
 type SharedResAccountCheck = bool
 
 // SharedResLogin defines model for _shared_res_Login.
 type SharedResLogin struct {
-	Account *SharedResAccount      `json:"account,omitempty"`
+	Account *Account               `json:"account,omitempty"`
 	Message *string                `json:"message,omitempty"`
 	Params  *interface{}           `json:"params"`
 	Token   *SharedResRokwireToken `json:"token,omitempty"`
-}
-
-// SharedResLoginSession defines model for _shared_res_LoginSession.
-type SharedResLoginSession struct {
-	AccountAuthTypeId         *string `json:"account_auth_type_id,omitempty"`
-	AccountAuthTypeIdentifier *string `json:"account_auth_type_identifier,omitempty"`
-	Anonymous                 *bool   `json:"anonymous,omitempty"`
-	AppTypeId                 *string `json:"app_type_id,omitempty"`
-	AppTypeIdentifier         *string `json:"app_type_identifier,omitempty"`
-	AuthTypeCode              *string `json:"auth_type_code,omitempty"`
-	DateCreated               *string `json:"date_created,omitempty"`
-	DateRefreshed             *string `json:"date_refreshed"`
-	DateUpdated               *string `json:"date_updated"`
-	DeviceId                  *string `json:"device_id,omitempty"`
-	Id                        *string `json:"id,omitempty"`
-	Identifier                *string `json:"identifier,omitempty"`
-	IpAddress                 *string `json:"ip_address,omitempty"`
-	MfaAttempts               *int    `json:"mfa_attempts,omitempty"`
-	RefreshTokensCount        *int    `json:"refresh_tokens_count,omitempty"`
-	State                     *string `json:"state,omitempty"`
-	StateExpires              *string `json:"state_expires"`
 }
 
 // SharedResLoginUrl defines model for _shared_res_LoginUrl.
@@ -1134,91 +1014,6 @@ type SharedResRokwireToken struct {
 
 // The type of the provided tokens to be specified when they are sent in the "Authorization" header
 type SharedResRokwireTokenTokenType string
-
-// SystemReqCreateOrganization defines model for _system_req_create-Organization.
-type SystemReqCreateOrganization struct {
-	Config *OrganizationConfigFields       `json:"config,omitempty"`
-	Id     *string                         `json:"id,omitempty"`
-	Name   string                          `json:"name"`
-	Type   SystemReqCreateOrganizationType `json:"type"`
-}
-
-// SystemReqCreateOrganizationType defines model for SystemReqCreateOrganization.Type.
-type SystemReqCreateOrganizationType string
-
-// SystemReqCreateApplicationConfigRequest defines model for _system_req_create_ApplicationConfig_Request.
-type SystemReqCreateApplicationConfigRequest struct {
-	AppTypeId string                 `json:"app_type_id"`
-	Data      map[string]interface{} `json:"data"`
-	OrgId     *string                `json:"org_id,omitempty"`
-
-	// conforms major.minor.patch format
-	Version string `json:"version"`
-}
-
-// SystemReqCreateAuthType defines model for _system_req_create_auth_type.
-type SystemReqCreateAuthType struct {
-	Code           string                          `json:"code"`
-	Description    string                          `json:"description"`
-	IgnoreMfa      bool                            `json:"ignore_mfa"`
-	IsAnonymous    bool                            `json:"is_anonymous"`
-	IsExternal     bool                            `json:"is_external"`
-	Params         *SystemReqCreateAuthType_Params `json:"params,omitempty"`
-	UseCredentials bool                            `json:"use_credentials"`
-}
-
-// SystemReqCreateAuthType_Params defines model for SystemReqCreateAuthType.Params.
-type SystemReqCreateAuthType_Params struct {
-	AdditionalProperties map[string]interface{} `json:"-"`
-}
-
-// SystemReqCreateServiceAccount defines model for _system_req_create_service-account.
-type SystemReqCreateServiceAccount struct {
-	AccountId   *string                     `json:"account_id,omitempty"`
-	AppId       string                      `json:"app_id"`
-	Creds       *[]ServiceAccountCredential `json:"creds,omitempty"`
-	FirstParty  *bool                       `json:"first_party,omitempty"`
-	Name        *string                     `json:"name,omitempty"`
-	OrgId       string                      `json:"org_id"`
-	Permissions *[]string                   `json:"permissions"`
-	Scopes      *[]string                   `json:"scopes"`
-}
-
-// SystemReqPermissions defines model for _system_req_permissions.
-type SystemReqPermissions struct {
-	// permissions that could assign current permission to accounts
-	Assigners   *[]string `json:"assigners,omitempty"`
-	Description *string   `json:"description,omitempty"`
-	Name        string    `json:"name"`
-	ServiceId   *string   `json:"service_id,omitempty"`
-}
-
-// SystemReqUpdateOrganization defines model for _system_req_update_Organization.
-type SystemReqUpdateOrganization struct {
-	Config *OrganizationConfigFields       `json:"config,omitempty"`
-	Id     *string                         `json:"id,omitempty"`
-	Name   string                          `json:"name"`
-	Type   SystemReqUpdateOrganizationType `json:"type"`
-}
-
-// SystemReqUpdateOrganizationType defines model for SystemReqUpdateOrganization.Type.
-type SystemReqUpdateOrganizationType string
-
-// SystemReqUpdateAuthType defines model for _system_req_update_auth_type.
-type SystemReqUpdateAuthType struct {
-	Code           string                          `json:"code"`
-	Description    string                          `json:"description"`
-	IgnoreMfa      bool                            `json:"ignore_mfa"`
-	IsAnonymous    bool                            `json:"is_anonymous"`
-	IsExternal     bool                            `json:"is_external"`
-	Params         *SystemReqUpdateAuthType_Params `json:"params,omitempty"`
-	UseCredentials bool                            `json:"use_credentials"`
-}
-
-// SystemReqUpdateAuthType_Params defines model for SystemReqUpdateAuthType.Params.
-type SystemReqUpdateAuthType_Params struct {
-	AdditionalProperties map[string]interface{} `json:"-"`
-}
 
 // SystemReqUpdateServiceAccount defines model for _system_req_update_service-account.
 type SystemReqUpdateServiceAccount struct {
@@ -1429,7 +1224,7 @@ type PostServicesAccountMfaJSONBody = SharedReqMfa
 type PutServicesAccountPreferencesJSONBody = map[string]interface{}
 
 // PutServicesAccountProfileJSONBody defines parameters for PutServicesAccountProfile.
-type PutServicesAccountProfileJSONBody = SharedReqProfile
+type PutServicesAccountProfileJSONBody = Profile
 
 // PutServicesAccountUsernameJSONBody defines parameters for PutServicesAccountUsername.
 type PutServicesAccountUsernameJSONBody = Username
@@ -1584,10 +1379,10 @@ type GetSystemAppOrgsParams struct {
 }
 
 // PostSystemAppOrgsJSONBody defines parameters for PostSystemAppOrgs.
-type PostSystemAppOrgsJSONBody = AppOrg
+type PostSystemAppOrgsJSONBody = ApplicationOrganization
 
 // PutSystemAppOrgsIdJSONBody defines parameters for PutSystemAppOrgsId.
-type PutSystemAppOrgsIdJSONBody = AppOrg
+type PutSystemAppOrgsIdJSONBody = ApplicationOrganization
 
 // GetSystemApplicationConfigsParams defines parameters for GetSystemApplicationConfigs.
 type GetSystemApplicationConfigsParams struct {
@@ -1597,10 +1392,10 @@ type GetSystemApplicationConfigsParams struct {
 }
 
 // PostSystemApplicationConfigsJSONBody defines parameters for PostSystemApplicationConfigs.
-type PostSystemApplicationConfigsJSONBody = SystemReqCreateApplicationConfigRequest
+type PostSystemApplicationConfigsJSONBody = ApplicationConfig
 
 // PutSystemApplicationConfigsIdJSONBody defines parameters for PutSystemApplicationConfigsId.
-type PutSystemApplicationConfigsIdJSONBody = SystemReqCreateApplicationConfigRequest
+type PutSystemApplicationConfigsIdJSONBody = ApplicationConfig
 
 // PostSystemApplicationsJSONBody defines parameters for PostSystemApplications.
 type PostSystemApplicationsJSONBody = Application
@@ -1609,10 +1404,10 @@ type PostSystemApplicationsJSONBody = Application
 type PutSystemApplicationsIdJSONBody = Application
 
 // PostSystemAuthTypesJSONBody defines parameters for PostSystemAuthTypes.
-type PostSystemAuthTypesJSONBody = SystemReqCreateAuthType
+type PostSystemAuthTypesJSONBody = AuthType
 
 // PutSystemAuthTypesIdJSONBody defines parameters for PutSystemAuthTypesId.
-type PutSystemAuthTypesIdJSONBody = SystemReqUpdateAuthType
+type PutSystemAuthTypesIdJSONBody = AuthType
 
 // GetSystemAuthAppOrgTokenParams defines parameters for GetSystemAuthAppOrgToken.
 type GetSystemAuthAppOrgTokenParams struct {
@@ -1630,16 +1425,16 @@ type PostSystemConfigsIdJSONBody = Config
 type PutSystemConfigsIdJSONBody = Config
 
 // PostSystemOrganizationsJSONBody defines parameters for PostSystemOrganizations.
-type PostSystemOrganizationsJSONBody = SystemReqCreateOrganization
+type PostSystemOrganizationsJSONBody = Organization
 
 // PutSystemOrganizationsIdJSONBody defines parameters for PutSystemOrganizationsId.
-type PutSystemOrganizationsIdJSONBody = SystemReqUpdateOrganization
+type PutSystemOrganizationsIdJSONBody = Organization
 
 // PostSystemPermissionsJSONBody defines parameters for PostSystemPermissions.
-type PostSystemPermissionsJSONBody = SystemReqPermissions
+type PostSystemPermissionsJSONBody = Permission
 
 // PutSystemPermissionsJSONBody defines parameters for PutSystemPermissions.
-type PutSystemPermissionsJSONBody = SystemReqPermissions
+type PutSystemPermissionsJSONBody = Permission
 
 // DeleteSystemServiceAccountsParams defines parameters for DeleteSystemServiceAccounts.
 type DeleteSystemServiceAccountsParams struct {
@@ -1669,7 +1464,7 @@ type GetSystemServiceAccountsParams struct {
 }
 
 // PostSystemServiceAccountsJSONBody defines parameters for PostSystemServiceAccounts.
-type PostSystemServiceAccountsJSONBody = SystemReqCreateServiceAccount
+type PostSystemServiceAccountsJSONBody = ServiceAccount
 
 // PostSystemServiceAccountsParams defines parameters for PostSystemServiceAccounts.
 type PostSystemServiceAccountsParams struct {
@@ -2025,25 +1820,25 @@ type PostTpsAccountsCountJSONRequestBody = PostTpsAccountsCountJSONBody
 // PostTpsServiceAccountIdJSONRequestBody defines body for PostTpsServiceAccountId for application/json ContentType.
 type PostTpsServiceAccountIdJSONRequestBody = PostTpsServiceAccountIdJSONBody
 
-// Getter for additional properties for AccountAuthTypeFields_Params. Returns the specified
+// Getter for additional properties for AccountAuthType_Params. Returns the specified
 // element and whether it was found
-func (a AccountAuthTypeFields_Params) Get(fieldName string) (value interface{}, found bool) {
+func (a AccountAuthType_Params) Get(fieldName string) (value interface{}, found bool) {
 	if a.AdditionalProperties != nil {
 		value, found = a.AdditionalProperties[fieldName]
 	}
 	return
 }
 
-// Setter for additional properties for AccountAuthTypeFields_Params
-func (a *AccountAuthTypeFields_Params) Set(fieldName string, value interface{}) {
+// Setter for additional properties for AccountAuthType_Params
+func (a *AccountAuthType_Params) Set(fieldName string, value interface{}) {
 	if a.AdditionalProperties == nil {
 		a.AdditionalProperties = make(map[string]interface{})
 	}
 	a.AdditionalProperties[fieldName] = value
 }
 
-// Override default JSON handling for AccountAuthTypeFields_Params to handle AdditionalProperties
-func (a *AccountAuthTypeFields_Params) UnmarshalJSON(b []byte) error {
+// Override default JSON handling for AccountAuthType_Params to handle AdditionalProperties
+func (a *AccountAuthType_Params) UnmarshalJSON(b []byte) error {
 	object := make(map[string]json.RawMessage)
 	err := json.Unmarshal(b, &object)
 	if err != nil {
@@ -2064,8 +1859,8 @@ func (a *AccountAuthTypeFields_Params) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-// Override default JSON handling for AccountAuthTypeFields_Params to handle AdditionalProperties
-func (a AccountAuthTypeFields_Params) MarshalJSON() ([]byte, error) {
+// Override default JSON handling for AccountAuthType_Params to handle AdditionalProperties
+func (a AccountAuthType_Params) MarshalJSON() ([]byte, error) {
 	var err error
 	object := make(map[string]json.RawMessage)
 
@@ -2078,25 +1873,25 @@ func (a AccountAuthTypeFields_Params) MarshalJSON() ([]byte, error) {
 	return json.Marshal(object)
 }
 
-// Getter for additional properties for AuthTypeFields_Params. Returns the specified
+// Getter for additional properties for AuthType_Params. Returns the specified
 // element and whether it was found
-func (a AuthTypeFields_Params) Get(fieldName string) (value interface{}, found bool) {
+func (a AuthType_Params) Get(fieldName string) (value interface{}, found bool) {
 	if a.AdditionalProperties != nil {
 		value, found = a.AdditionalProperties[fieldName]
 	}
 	return
 }
 
-// Setter for additional properties for AuthTypeFields_Params
-func (a *AuthTypeFields_Params) Set(fieldName string, value interface{}) {
+// Setter for additional properties for AuthType_Params
+func (a *AuthType_Params) Set(fieldName string, value interface{}) {
 	if a.AdditionalProperties == nil {
 		a.AdditionalProperties = make(map[string]interface{})
 	}
 	a.AdditionalProperties[fieldName] = value
 }
 
-// Override default JSON handling for AuthTypeFields_Params to handle AdditionalProperties
-func (a *AuthTypeFields_Params) UnmarshalJSON(b []byte) error {
+// Override default JSON handling for AuthType_Params to handle AdditionalProperties
+func (a *AuthType_Params) UnmarshalJSON(b []byte) error {
 	object := make(map[string]json.RawMessage)
 	err := json.Unmarshal(b, &object)
 	if err != nil {
@@ -2117,8 +1912,8 @@ func (a *AuthTypeFields_Params) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-// Override default JSON handling for AuthTypeFields_Params to handle AdditionalProperties
-func (a AuthTypeFields_Params) MarshalJSON() ([]byte, error) {
+// Override default JSON handling for AuthType_Params to handle AdditionalProperties
+func (a AuthType_Params) MarshalJSON() ([]byte, error) {
 	var err error
 	object := make(map[string]json.RawMessage)
 
@@ -2331,112 +2126,6 @@ func (a *SupportedAuthType_Params) UnmarshalJSON(b []byte) error {
 
 // Override default JSON handling for SupportedAuthType_Params to handle AdditionalProperties
 func (a SupportedAuthType_Params) MarshalJSON() ([]byte, error) {
-	var err error
-	object := make(map[string]json.RawMessage)
-
-	for fieldName, field := range a.AdditionalProperties {
-		object[fieldName], err = json.Marshal(field)
-		if err != nil {
-			return nil, fmt.Errorf("error marshaling '%s': %w", fieldName, err)
-		}
-	}
-	return json.Marshal(object)
-}
-
-// Getter for additional properties for SystemReqCreateAuthType_Params. Returns the specified
-// element and whether it was found
-func (a SystemReqCreateAuthType_Params) Get(fieldName string) (value interface{}, found bool) {
-	if a.AdditionalProperties != nil {
-		value, found = a.AdditionalProperties[fieldName]
-	}
-	return
-}
-
-// Setter for additional properties for SystemReqCreateAuthType_Params
-func (a *SystemReqCreateAuthType_Params) Set(fieldName string, value interface{}) {
-	if a.AdditionalProperties == nil {
-		a.AdditionalProperties = make(map[string]interface{})
-	}
-	a.AdditionalProperties[fieldName] = value
-}
-
-// Override default JSON handling for SystemReqCreateAuthType_Params to handle AdditionalProperties
-func (a *SystemReqCreateAuthType_Params) UnmarshalJSON(b []byte) error {
-	object := make(map[string]json.RawMessage)
-	err := json.Unmarshal(b, &object)
-	if err != nil {
-		return err
-	}
-
-	if len(object) != 0 {
-		a.AdditionalProperties = make(map[string]interface{})
-		for fieldName, fieldBuf := range object {
-			var fieldVal interface{}
-			err := json.Unmarshal(fieldBuf, &fieldVal)
-			if err != nil {
-				return fmt.Errorf("error unmarshaling field %s: %w", fieldName, err)
-			}
-			a.AdditionalProperties[fieldName] = fieldVal
-		}
-	}
-	return nil
-}
-
-// Override default JSON handling for SystemReqCreateAuthType_Params to handle AdditionalProperties
-func (a SystemReqCreateAuthType_Params) MarshalJSON() ([]byte, error) {
-	var err error
-	object := make(map[string]json.RawMessage)
-
-	for fieldName, field := range a.AdditionalProperties {
-		object[fieldName], err = json.Marshal(field)
-		if err != nil {
-			return nil, fmt.Errorf("error marshaling '%s': %w", fieldName, err)
-		}
-	}
-	return json.Marshal(object)
-}
-
-// Getter for additional properties for SystemReqUpdateAuthType_Params. Returns the specified
-// element and whether it was found
-func (a SystemReqUpdateAuthType_Params) Get(fieldName string) (value interface{}, found bool) {
-	if a.AdditionalProperties != nil {
-		value, found = a.AdditionalProperties[fieldName]
-	}
-	return
-}
-
-// Setter for additional properties for SystemReqUpdateAuthType_Params
-func (a *SystemReqUpdateAuthType_Params) Set(fieldName string, value interface{}) {
-	if a.AdditionalProperties == nil {
-		a.AdditionalProperties = make(map[string]interface{})
-	}
-	a.AdditionalProperties[fieldName] = value
-}
-
-// Override default JSON handling for SystemReqUpdateAuthType_Params to handle AdditionalProperties
-func (a *SystemReqUpdateAuthType_Params) UnmarshalJSON(b []byte) error {
-	object := make(map[string]json.RawMessage)
-	err := json.Unmarshal(b, &object)
-	if err != nil {
-		return err
-	}
-
-	if len(object) != 0 {
-		a.AdditionalProperties = make(map[string]interface{})
-		for fieldName, fieldBuf := range object {
-			var fieldVal interface{}
-			err := json.Unmarshal(fieldBuf, &fieldVal)
-			if err != nil {
-				return fmt.Errorf("error unmarshaling field %s: %w", fieldName, err)
-			}
-			a.AdditionalProperties[fieldName] = fieldVal
-		}
-	}
-	return nil
-}
-
-// Override default JSON handling for SystemReqUpdateAuthType_Params to handle AdditionalProperties
-func (a SystemReqUpdateAuthType_Params) MarshalJSON() ([]byte, error) {
 	var err error
 	object := make(map[string]json.RawMessage)
 

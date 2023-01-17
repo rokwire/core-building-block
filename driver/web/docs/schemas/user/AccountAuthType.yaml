@@ -1,10 +1,22 @@
+required:
+  - id
+  - code
+  - identifier
 type: object
 properties:
-  fields:
-    $ref: "./AccountAuthTypeFields.yaml"
-  auth_type:
-    $ref: "../auth/AuthType.yaml"
-  account:
-    $ref: "./Account.yaml"
+  id:
+    type: string
+  code:
+    type: string
+  identifier:
+    type: string
+  params:  
+    type: object
+    additionalProperties: true
+    nullable: true
+  active:
+    type: boolean
+  unverified:
+    type: boolean
   credential:
     $ref: "../auth/Credential.yaml"

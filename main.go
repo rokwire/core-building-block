@@ -29,7 +29,7 @@ import (
 	"github.com/golang-jwt/jwt"
 
 	"github.com/rokwire/core-auth-library-go/v2/envloader"
-	"github.com/rokwire/logging-library-go/logs"
+	"github.com/rokwire/logging-library-go/v2/logs"
 )
 
 var (
@@ -43,7 +43,7 @@ func main() {
 	if len(Version) == 0 {
 		Version = "dev"
 	}
-	loggerOpts := logs.LoggerOpts{SuppressRequests: []logs.HttpRequestProperties{logs.NewAwsHealthCheckHttpRequestProperties("/core/version")}}
+	loggerOpts := logs.LoggerOpts{SuppressRequests: []logs.HTTPRequestProperties{logs.NewAwsHealthCheckHTTPRequestProperties("/core/version")}}
 	logger := logs.NewLogger("core", &loggerOpts)
 	envLoader := envloader.NewEnvLoader(Version, logger)
 

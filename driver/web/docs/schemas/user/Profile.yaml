@@ -1,8 +1,40 @@
+required:
+  - id
 type: object
 properties:
-  fields:
-    $ref: "./ProfileFields.yaml"
-  accounts:
-    type: array
-    items:
-      $ref: "./Account.yaml"
+  id:
+    readOnly: true
+    type: string
+  photo_url:
+    type: string
+    nullable: true
+  first_name:
+    type: string
+    nullable: true
+  last_name:
+    type: string
+    nullable: true
+  email:
+    type: string
+    nullable: true
+  phone:
+    type: string
+    nullable: true
+  birth_year:
+    type: integer
+    nullable: true
+  address:
+    type: string
+    nullable: true
+  zip_code:
+    type: string
+    nullable: true
+  state:
+    type: string
+    nullable: true
+  country:
+    type: string
+    nullable: true
+  unstructured_properties:
+    type: object
+    nullable: true 

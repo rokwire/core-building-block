@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Changed
 - Clean up stored auth tokens [#628](https://github.com/rokwire/core-building-block/issues/628)
+- Upgrade dependencies [#624](https://github.com/rokwire/core-building-block/issues/624)
 
 ## [1.29.0] - 2022-11-16
 ### Added

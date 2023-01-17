@@ -22,9 +22,9 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/rokwire/logging-library-go/errors"
-	"github.com/rokwire/logging-library-go/logs"
-	"github.com/rokwire/logging-library-go/logutils"
+	"github.com/rokwire/logging-library-go/v2/errors"
+	"github.com/rokwire/logging-library-go/v2/logs"
+	"github.com/rokwire/logging-library-go/v2/logutils"
 )
 
 // Adapter implements the ProfileBuildingBlock interface
@@ -170,7 +170,7 @@ func (a *Adapter) GetProfileBBData(queryParams map[string]string, l *logs.Log) (
 	now := time.Now()
 	dateCreated, err := parseTime(profileData.PII.DateCreated)
 	if err != nil {
-		l.WarnAction(logutils.ActionParse, "date created", err)
+		l.WarnError(logutils.MessageActionError(logutils.ActionParse, "date created", nil), err)
 		dateCreated = &now
 	}
 	existingProfile := model.Profile{FirstName: profileData.PII.FirstName, LastName: profileData.PII.LastName,
@@ -200,7 +200,7 @@ func (a *Adapter) reformatPreferences(nonPII *profileBBNonPII, l *logs.Log) map[
 
 	dateCreated, err := parseTime(nonPII.CreationDate)
 	if err != nil {
-		l.WarnAction(logutils.ActionParse, "date created", err)
+		l.WarnError(logutils.MessageActionError(logutils.ActionParse, "date created", nil), err)
 		preferences["date_created"] = time.Now()
 	} else {
 		preferences["date_created"] = dateCreated

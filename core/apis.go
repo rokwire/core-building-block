@@ -22,9 +22,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/rokwire/logging-library-go/errors"
-	"github.com/rokwire/logging-library-go/logs"
-	"github.com/rokwire/logging-library-go/logutils"
+	"github.com/rokwire/logging-library-go/v2/errors"
+	"github.com/rokwire/logging-library-go/v2/logs"
+	"github.com/rokwire/logging-library-go/v2/logutils"
 )
 
 // APIs exposes to the drivers adapters access to the core functionality
@@ -98,7 +98,7 @@ func (c *APIs) storeSystemData() error {
 		}
 		if systemOrg == nil {
 			newDocuments["organization"] = uuid.NewString()
-			systemOrgConfig := model.OrganizationConfig{ID: uuid.NewString(), DateCreated: time.Now().UTC()}
+			systemOrgConfig := model.OrganizationConfig{ID: uuid.NewString(), Domains: []string{}, DateCreated: time.Now().UTC()}
 			newSystemOrg := model.Organization{ID: newDocuments["organization"], Name: "System", Type: "small", System: true, Config: systemOrgConfig, DateCreated: time.Now().UTC()}
 			_, err = c.app.storage.InsertOrganization(context, newSystemOrg)
 			if err != nil {
