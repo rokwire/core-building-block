@@ -3072,6 +3072,14 @@ paths:
           explode: false
           schema:
             type: integer
+        - name: range_index
+          in: query
+          description: The index id string of the last account to return
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
       requestBody:
         description: |
           Service account credentials
