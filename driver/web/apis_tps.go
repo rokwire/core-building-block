@@ -198,6 +198,9 @@ func (h TPSApisHandler) getAccounts(l *logs.Log, r *http.Request, claims *tokena
 			return l.HttpResponseErrorAction(logutils.ActionParse, logutils.TypeArg, logutils.StringArgs("limit"), err, http.StatusBadRequest, false)
 		}
 	}
+
+	rangeIndex := r.URL.Query().Get("rangeIndex")
+
 	offset := 0
 	offsetArg := r.URL.Query().Get("offset")
 	if offsetArg != "" {
@@ -225,7 +228,7 @@ func (h TPSApisHandler) getAccounts(l *logs.Log, r *http.Request, claims *tokena
 		return l.HttpResponseErrorData(logutils.StatusInvalid, "accounts query", nil, err, http.StatusForbidden, true)
 	}
 
-	accounts, err := h.coreAPIs.TPS.TPSGetAccounts(queryParams, appID, orgID, limit, offset, allAccess, approvedKeys)
+	accounts, err := h.coreAPIs.TPS.TPSGetAccounts(queryParams, appID, orgID, limit, offset, allAccess, approvedKeys, rangeIndex)
 	if err != nil {
 		errFields := logutils.FieldArgs(queryParams)
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeAccount, &errFields, err, http.StatusInternalServerError, false)
