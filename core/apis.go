@@ -477,8 +477,8 @@ type tpsImpl struct {
 	app *application
 }
 
-func (s *tpsImpl) TPSGetAccounts(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]map[string]interface{}, error) {
-	return s.app.sharedGetAccountsByParams(searchParams, appID, orgID, limit, offset, allAccess, approvedKeys, "")
+func (s *tpsImpl) TPSGetAccounts(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string, rangeIndex string) ([]map[string]interface{}, error) {
+	return s.app.sharedGetAccountsByParams(searchParams, appID, orgID, limit, offset, allAccess, approvedKeys, rangeIndex)
 }
 
 func (s *tpsImpl) TPsGetAccountsCount(searchParams map[string]interface{}, appID string, orgID string) (int64, error) {
