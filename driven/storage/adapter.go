@@ -1188,7 +1188,7 @@ func (sa *Adapter) FindAccounts(context TransactionContext, limit *int, offset *
 }
 
 // FindAccountsByParams finds accounts by an arbitrary set of search params
-func (sa *Adapter) FindAccountsByParams(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]map[string]interface{}, error) {
+func (sa *Adapter) FindAccountsByParams(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string, rangeIndex string) ([]map[string]interface{}, error) {
 	//find app orgs accessed by service
 	appOrgs, err := sa.FindApplicationOrganizations(utils.StringOrNil(appID, authutils.AllApps), utils.StringOrNil(orgID, authutils.AllOrgs))
 	if err != nil {
@@ -1203,19 +1203,26 @@ func (sa *Adapter) FindAccountsByParams(searchParams map[string]interface{}, app
 	for i, appOrg := range appOrgs {
 		appOrgIDs[i] = appOrg.ID
 	}
-	searchParams["app_org_id"] = appOrgIDs
-	filter := sa.getFilterForParams(searchParams)
 
-	var accounts []map[string]interface{}
 	options := options.Find()
-	options.SetLimit(int64(limit))
-	options.SetSkip(int64(offset))
+	var filter bson.M
+	if rangeIndex == "" {
+		searchParams["app_org_id"] = appOrgIDs
+		filter = sa.getFilterForParams(searchParams)
+		options.SetLimit(int64(limit))
+		options.SetSkip(int64(offset))
+	} else {
+		filter = bson.M{"_id": bson.M{"$lt": rangeIndex}}
+		options.SetSort(bson.D{{"_id", 1}})
+		options.SetLimit(int64(limit))
+	}
 
 	// set projection if scope limited
 	if !allAccess {
 		options.SetProjection(sa.getProjectionForKeys(approvedKeys))
 	}
 
+	var accounts []map[string]interface{}
 	err = sa.db.accounts.Find(filter, &accounts, options)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
