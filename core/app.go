@@ -136,7 +136,7 @@ func (app *application) grantOrRevokePermissions(context storage.TransactionCont
 
 	appOrg := container.GetAppOrg()
 	//check permissions
-	permissions, err := app.auth.CheckPermissions(context, &appOrg, checkPermissions, assignerPermissions, revoke)
+	permissions, err := app.auth.CheckPermissions(context, []model.ApplicationOrganization{appOrg}, checkPermissions, assignerPermissions, revoke)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionValidate, model.TypePermission, nil, err)
 	}

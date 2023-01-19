@@ -664,6 +664,9 @@ func (app *application) admUpdateAppOrgRole(ID string, name string, description 
 		if err != nil {
 			return err
 		}
+		if appOrg == nil {
+			return errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": appID, "org_id": orgID})
+		}
 
 		//2. find role, check if update allowed by system flag
 		role, err := app.getAppOrgRole(context, ID, appOrg.ID, systemClaim)
@@ -677,7 +680,7 @@ func (app *application) admUpdateAppOrgRole(ID string, name string, description 
 		added, removed, unchanged := utils.StringListDiff(permissionNames, role.GetAssignedPermissionNames())
 		if len(added) > 0 || len(removed) > 0 {
 			if len(added) > 0 {
-				addedPermissions, err := app.auth.CheckPermissions(context, appOrg, added, assignerPermissions, false)
+				addedPermissions, err := app.auth.CheckPermissions(context, []model.ApplicationOrganization{*appOrg}, added, assignerPermissions, false)
 				if err != nil {
 					return errors.WrapErrorAction("adding", model.TypePermission, nil, err)
 				}
@@ -685,7 +688,7 @@ func (app *application) admUpdateAppOrgRole(ID string, name string, description 
 			}
 
 			if len(removed) > 0 {
-				_, err := app.auth.CheckPermissions(context, appOrg, removed, assignerPermissions, true)
+				_, err := app.auth.CheckPermissions(context, []model.ApplicationOrganization{*appOrg}, removed, assignerPermissions, true)
 				if err != nil {
 					return errors.WrapErrorAction("revoking", model.TypePermission, nil, err)
 				}
