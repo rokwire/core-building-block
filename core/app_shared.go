@@ -22,6 +22,38 @@ import (
 	"github.com/rokwire/logging-library-go/logutils"
 )
 
+func (app *application) sharedGetAccount(accountID string) (*model.Account, error) {
+	//find the account
+	account, err := app.storage.FindAccountByID(nil, accountID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+	if account == nil {
+		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeAccount, nil, err)
+	}
+	return account, nil
+}
+
+func (app *application) sharedGetAccountsByParams(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]map[string]interface{}, error) {
+	accounts, err := app.storage.FindAccountsByParams(searchParams, appID, orgID, limit, offset, allAccess, approvedKeys)
+	if err != nil {
+		return nil, err
+	}
+	if accounts == nil {
+		return []map[string]interface{}{}, nil
+	}
+	return accounts, nil
+}
+
+func (app *application) sharedGetAccountsCountByParams(searchParams map[string]interface{}, appID string, orgID string) (int64, error) {
+	count, err := app.storage.CountAccountsByParams(searchParams, appID, orgID)
+	if err != nil {
+		return -1, err
+	}
+
+	return count, nil
+}
+
 func (app *application) sharedUpdateAccountUsername(accountID string, appID string, orgID string, username string) error {
 	if username == "" {
 		err := app.storage.UpdateAccountUsername(nil, accountID, username)

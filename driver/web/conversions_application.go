@@ -20,19 +20,55 @@ import (
 	"core-building-block/utils"
 )
 
-//Application
-//TODO
-/*
-func applicationToDef(item *model.Application) *Def.Application {
+// Application
+func applicationToDef(item model.Application) Def.Application {
+	types := applicationTypeListToDef(item.Types)
+
+	return Def.Application{Id: &item.ID, Name: item.Name, MultiTenant: item.MultiTenant, Admin: item.Admin,
+		SharedIdentities: item.SharedIdentities, Types: &types}
+}
+
+func applicationsToDef(item []model.Application) []Def.Application {
+	result := make([]Def.Application, len(item))
+	for i, item := range item {
+		result[i] = applicationToDef(item)
+	}
+	return result
+}
+
+// Application Type
+func applicationTypeListFromDef(items []Def.ApplicationType) []model.ApplicationType {
+	result := make([]model.ApplicationType, len(items))
+	for i, item := range items {
+		result[i] = *applicationTypeFromDef(&item)
+	}
+	return result
+}
+
+func applicationTypeFromDef(item *Def.ApplicationType) *model.ApplicationType {
 	if item == nil {
 		return nil
 	}
 
-	fields := Def.ApplicationFields{Id: item.ID, Name: item.Name, MultiTenant: &item.MultiTenant,
-		RequiresOwnUsers: &item.RequiresOwnUsers}
-	types := applicationTypeListToDef(item.Types)
+	id := ""
+	if item.Id != nil {
+		id = *item.Id
+	}
+	name := ""
+	if item.Name != nil {
+		name = *item.Name
+	}
+	versions := make([]model.Version, 0)
+	if item.Versions != nil {
+		for _, v := range *item.Versions {
+			versionNumbers := model.VersionNumbersFromString(v)
+			if versionNumbers != nil {
+				versions = append(versions, model.Version{VersionNumbers: *versionNumbers, ApplicationType: model.ApplicationType{ID: id}})
+			}
+		}
+	}
 
-	return &Def.Application{Fields: &fields, Types: &types}
+	return &model.ApplicationType{ID: id, Identifier: item.Identifier, Name: name, Versions: versions}
 }
 
 func applicationTypeListToDef(items []model.ApplicationType) []Def.ApplicationType {
@@ -50,28 +86,20 @@ func applicationTypeToDef(item *model.ApplicationType) *Def.ApplicationType {
 
 	var name *string
 	if len(item.Name) > 0 {
-		name = &item.Name
+		nameStr := item.Name
+		name = &nameStr
 	}
 	var versions *[]string
-	if len(item.Versions) > 0 {
-		versions = &item.Versions
+	if item.Versions != nil {
+		versionList := make([]string, len(item.Versions))
+		for i, v := range item.Versions {
+			versionList[i] = v.VersionNumbers.String()
+		}
+		versions = &versionList
 	}
 
-	return &Def.ApplicationType{Fields: &Def.ApplicationTypeFields{Id: item.ID, Identifier: item.Identifier, Name: name, Versions: versions}}
-} */
-
-func applicationToDef(item model.Application) Def.ApplicationFields {
-
-	return Def.ApplicationFields{Id: &item.ID, Name: item.Name, MultiTenant: &item.MultiTenant,
-		SharedIdentities: &item.SharedIdentities}
-}
-
-func applicationsToDef(item []model.Application) []Def.ApplicationFields {
-	result := make([]Def.ApplicationFields, len(item))
-	for i, item := range item {
-		result[i] = applicationToDef(item)
-	}
-	return result
+	id := item.ID
+	return &Def.ApplicationType{Id: &id, Identifier: item.Identifier, Name: name, Versions: versions}
 }
 
 // ApplicationPermission

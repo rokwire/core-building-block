@@ -38,6 +38,27 @@ func (_m *Storage) CountAccountsByGroupID(groupID string) (*int64, error) {
 	return r0, r1
 }
 
+// CountAccountsByParams provides a mock function with given fields: searchParams, appID, orgID
+func (_m *Storage) CountAccountsByParams(searchParams map[string]interface{}, appID string, orgID string) (int64, error) {
+	ret := _m.Called(searchParams, appID, orgID)
+
+	var r0 int64
+	if rf, ok := ret.Get(0).(func(map[string]interface{}, string, string) int64); ok {
+		r0 = rf(searchParams, appID, orgID)
+	} else {
+		r0 = ret.Get(0).(int64)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(map[string]interface{}, string, string) error); ok {
+		r1 = rf(searchParams, appID, orgID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // CountAccountsByRoleID provides a mock function with given fields: roleID
 func (_m *Storage) CountAccountsByRoleID(roleID string) (*int64, error) {
 	ret := _m.Called(roleID)
@@ -307,6 +328,29 @@ func (_m *Storage) FindAccountsByAccountID(context storage.TransactionContext, a
 	return r0, r1
 }
 
+// FindAccountsByParams provides a mock function with given fields: searchParams, appID, orgID, limit, offset, allAccess, approvedKeys
+func (_m *Storage) FindAccountsByParams(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]map[string]interface{}, error) {
+	ret := _m.Called(searchParams, appID, orgID, limit, offset, allAccess, approvedKeys)
+
+	var r0 []map[string]interface{}
+	if rf, ok := ret.Get(0).(func(map[string]interface{}, string, string, int, int, bool, []string) []map[string]interface{}); ok {
+		r0 = rf(searchParams, appID, orgID, limit, offset, allAccess, approvedKeys)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]map[string]interface{})
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(map[string]interface{}, string, string, int, int, bool, []string) error); ok {
+		r1 = rf(searchParams, appID, orgID, limit, offset, allAccess, approvedKeys)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // FindAccountsByUsername provides a mock function with given fields: context, appOrg, username
 func (_m *Storage) FindAccountsByUsername(context storage.TransactionContext, appOrg *model.ApplicationOrganization, username string) ([]model.Account, error) {
 	ret := _m.Called(context, appOrg, username)
@@ -537,13 +581,13 @@ func (_m *Storage) FindAppOrgRolesByIDs(context storage.TransactionContext, ids 
 	return r0, r1
 }
 
-// FindApplication provides a mock function with given fields: ID
-func (_m *Storage) FindApplication(ID string) (*model.Application, error) {
-	ret := _m.Called(ID)
+// FindApplication provides a mock function with given fields: context, ID
+func (_m *Storage) FindApplication(context storage.TransactionContext, ID string) (*model.Application, error) {
+	ret := _m.Called(context, ID)
 
 	var r0 *model.Application
-	if rf, ok := ret.Get(0).(func(string) *model.Application); ok {
-		r0 = rf(ID)
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string) *model.Application); ok {
+		r0 = rf(context, ID)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*model.Application)
@@ -551,8 +595,8 @@ func (_m *Storage) FindApplication(ID string) (*model.Application, error) {
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(string) error); ok {
-		r1 = rf(ID)
+	if rf, ok := ret.Get(1).(func(storage.TransactionContext, string) error); ok {
+		r1 = rf(context, ID)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -1181,6 +1225,20 @@ func (_m *Storage) RemoveAccountsGroup(context storage.TransactionContext, group
 	var r0 error
 	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, []string) error); ok {
 		r0 = rf(context, groupID, accountIDs)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// SaveApplication provides a mock function with given fields: context, application
+func (_m *Storage) SaveApplication(context storage.TransactionContext, application model.Application) error {
+	ret := _m.Called(context, application)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, model.Application) error); ok {
+		r0 = rf(context, application)
 	} else {
 		r0 = ret.Error(0)
 	}
