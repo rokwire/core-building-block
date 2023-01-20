@@ -5,9 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## Unreleased
 ### Added
 - Support for OAuth 2.0 Access Tokens [#523](https://github.com/rokwire/core-building-block/issues/523)
+
+## [1.29.0] - 2022-11-16
+### Added
+- Create API to get count of accounts matching criteria [#619](https://github.com/rokwire/core-building-block/issues/619)
+### Fixed
+- Panic on anonymous refresh [#621](https://github.com/rokwire/core-building-block/issues/621)
+
+## [1.28.0] - 2022-10-24
+### Added
+- Add unstructured additional properties to profile [#609](https://github.com/rokwire/core-building-block/issues/609)
+
+## [1.27.0] - 2022-10-21
+### Added
+- BBs/TPS API to search accounts matching criteria [#606](https://github.com/rokwire/core-building-block/issues/606)
+- Add scopes to service accounts [#605](https://github.com/rokwire/core-building-block/issues/605)
 - Update application system API [#549](https://github.com/rokwire/core-building-block/issues/549)
 - Update group admin API [#518](https://github.com/rokwire/core-building-block/issues/518)
 
@@ -343,7 +358,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Users authentication polish [#155](https://github.com/rokwire/core-building-block/issues/155)
 - Optimise the Mongo DB collections indexes usage [#146](https://github.com/rokwire/core-building-block/issues/146)
 
-[Unreleased]: https://github.com/rokwire/core-building-block/compare/v1.26.0...HEAD
+[Unreleased]: https://github.com/rokwire/core-building-block/compare/v1.29.0...HEAD
+[1.29.0]: https://github.com/rokwire/core-building-block/compare/v1.28.0...v1.29.0
+[1.28.0]: https://github.com/rokwire/core-building-block/compare/v1.27.0...v1.28.0
+[1.27.0]: https://github.com/rokwire/core-building-block/compare/v1.26.0...v1.27.0
 [1.26.0]: https://github.com/rokwire/core-building-block/compare/v1.25.0...v1.26.0
 [1.25.0]: https://github.com/rokwire/core-building-block/compare/v1.24.2...v1.25.0
 [1.24.2]: https://github.com/rokwire/core-building-block/compare/v1.24.1...v1.24.2

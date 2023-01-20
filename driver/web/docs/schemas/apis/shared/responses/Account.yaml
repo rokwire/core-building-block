@@ -42,5 +42,4 @@ properties:
     type: string
   external_ids:
     type: object
-    nullable: true
-
+    nullable: true 

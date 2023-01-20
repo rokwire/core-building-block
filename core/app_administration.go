@@ -212,7 +212,7 @@ func (app *application) admCreateAppOrgGroup(name string, description string, sy
 		}
 
 		//2. validate permissions
-		permissions, err := app.auth.CheckPermissions(context, appOrg, permissionNames, assignerPermissions, false)
+		permissions, err := app.auth.CheckPermissions(context, []model.ApplicationOrganization{*appOrg}, permissionNames, assignerPermissions, false)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionValidate, model.TypePermission, nil, err)
 		}
@@ -292,7 +292,7 @@ func (app *application) admUpdateAppOrgGroup(ID string, name string, description
 		added, removed, unchanged := utils.StringListDiff(permissionNames, group.GetAssignedPermissionNames())
 		if len(added) > 0 || len(removed) > 0 {
 			if len(added) > 0 {
-				addedPermissions, err := app.auth.CheckPermissions(context, appOrg, added, assignerPermissions, false)
+				addedPermissions, err := app.auth.CheckPermissions(context, []model.ApplicationOrganization{*appOrg}, added, assignerPermissions, false)
 				if err != nil {
 					return errors.WrapErrorAction("adding", model.TypePermission, nil, err)
 				}
@@ -300,7 +300,7 @@ func (app *application) admUpdateAppOrgGroup(ID string, name string, description
 			}
 
 			if len(removed) > 0 {
-				_, err := app.auth.CheckPermissions(context, appOrg, removed, assignerPermissions, true)
+				_, err := app.auth.CheckPermissions(context, []model.ApplicationOrganization{*appOrg}, removed, assignerPermissions, true)
 				if err != nil {
 					return errors.WrapErrorAction("revoking", model.TypePermission, nil, err)
 				}
@@ -634,7 +634,7 @@ func (app *application) admCreateAppOrgRole(name string, description string, per
 		}
 
 		//2. check role permissions
-		permissions, err := app.auth.CheckPermissions(context, appOrg, permissionNames, assignerPermissions, false)
+		permissions, err := app.auth.CheckPermissions(context, []model.ApplicationOrganization{*appOrg}, permissionNames, assignerPermissions, false)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionValidate, model.TypePermission, nil, err)
 		}

@@ -26,6 +26,7 @@ import (
 	"net/url"
 	"reflect"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/rokwire/logging-library-go/logs"
@@ -231,9 +232,19 @@ func EncodeQueryValues(values map[string]string) string {
 	return data.Encode()
 }
 
-// StringOrNil returns a pointer to the input string, but returns nil if input is empty
-func StringOrNil(v string) *string {
-	if v == "" {
+// StringPrefixes returns a list of all prefixes of s delimited by sep, including s itself
+func StringPrefixes(s string, sep string) []string {
+	subStrings := strings.Split(s, sep)
+	prefixes := make([]string, len(subStrings))
+	for i := 1; i <= len(subStrings); i++ {
+		prefixes[i-1] = strings.Join(subStrings[0:i], sep)
+	}
+	return prefixes
+}
+
+// StringOrNil returns a pointer to the input string, but returns nil if input matches nilVal
+func StringOrNil(v string, nilVal string) *string {
+	if v == nilVal {
 		return nil
 	}
 	return &v

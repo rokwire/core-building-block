@@ -94,6 +94,8 @@ type profile struct {
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
+
+	UnstructuredProperties map[string]interface{} `bson:"unstructured_properties"`
 }
 
 type userDevice struct {
