@@ -108,8 +108,7 @@ func (o *oidcAuthConfig) BuildNewTokenRequest(creds string, params string, refre
 	}
 
 	body := map[string]string{
-		"client_id":    o.ClientID,
-		"redirect_uri": redirectURI,
+		"client_id": o.ClientID,
 	}
 	if o.ClientSecret != "" {
 		body["client_secret"] = o.ClientSecret
@@ -129,6 +128,7 @@ func (o *oidcAuthConfig) BuildNewTokenRequest(creds string, params string, refre
 
 		body["code"] = parsedCreds.Get("code")
 		body["grant_type"] = "authorization_code"
+		body["redirect_uri"] = redirectURI
 
 		if len(loginParams.CodeVerifier) > 0 {
 			body["code_verifier"] = loginParams.CodeVerifier
