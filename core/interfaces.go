@@ -100,7 +100,7 @@ type BBs interface {
 // TPS exposes user related APIs used by third-party services
 type TPS interface {
 	TPSGetAccounts(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]map[string]interface{}, error)
-	TPsGetAccountsCount(searchParams map[string]interface{}, appID string, orgID string) (int64, error)
+	TPSGetAccountsCount(searchParams map[string]interface{}, appID string, orgID string) (int64, error)
 }
 
 // System exposes system APIs for the driver adapters

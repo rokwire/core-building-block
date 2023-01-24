@@ -60,7 +60,7 @@ func NewAuth(serviceID string, serviceRegManager *authservice.ServiceRegManager)
 	}
 	bbsHandlers := tokenauth.NewHandlers(bbsAuth)
 
-	tpsAuth, err := newTPsAuth(serviceRegManager)
+	tpsAuth, err := newTPSAuth(serviceRegManager)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, "tps auth", nil, err)
 	}
@@ -80,7 +80,7 @@ func NewAuth(serviceID string, serviceRegManager *authservice.ServiceRegManager)
 // ServicesAuth
 
 func newServicesAuth(serviceRegManager *authservice.ServiceRegManager, serviceID string) (*tokenauth.StandardHandler, error) {
-	servicesScopeAuth := authorization.NewCasbinScopeAuthorization("driver/web/authorization_services_policy.csv", serviceID)
+	servicesScopeAuth := authorization.NewCasbinScopeAuthorization("driver/web/scope_authorization_services_policy.csv", serviceID)
 	servicesPermissionAuth := authorization.NewCasbinStringAuthorization("driver/web/authorization_services_policy.csv")
 
 	servicesTokenAuth, err := tokenauth.NewTokenAuth(true, serviceRegManager, servicesPermissionAuth, servicesScopeAuth)
@@ -90,10 +90,10 @@ func newServicesAuth(serviceRegManager *authservice.ServiceRegManager, serviceID
 
 	check := func(claims *tokenauth.Claims, req *http.Request) (int, error) {
 		if claims.Admin {
-			return http.StatusUnauthorized, errors.ErrorData(logutils.StatusInvalid, "admin claim", nil)
+			return http.StatusForbidden, errors.ErrorData(logutils.StatusInvalid, "admin claim", nil)
 		}
 		if claims.System {
-			return http.StatusUnauthorized, errors.ErrorData(logutils.StatusInvalid, "system claim", nil)
+			return http.StatusForbidden, errors.ErrorData(logutils.StatusInvalid, "system claim", nil)
 		}
 
 		return http.StatusOK, nil
@@ -114,7 +114,7 @@ func newAdminAuth(serviceRegManager *authservice.ServiceRegManager) (*tokenauth.
 
 	check := func(claims *tokenauth.Claims, req *http.Request) (int, error) {
 		if !claims.Admin {
-			return http.StatusUnauthorized, errors.ErrorData(logutils.StatusInvalid, "admin claim", nil)
+			return http.StatusForbidden, errors.ErrorData(logutils.StatusInvalid, "admin claim", nil)
 		}
 
 		return http.StatusOK, nil
@@ -148,11 +148,11 @@ func newBBsAuth(serviceRegManager *authservice.ServiceRegManager) (*tokenauth.St
 
 	check := func(claims *tokenauth.Claims, req *http.Request) (int, error) {
 		if !claims.Service {
-			return http.StatusUnauthorized, errors.ErrorData(logutils.StatusInvalid, "service claim", nil)
+			return http.StatusForbidden, errors.ErrorData(logutils.StatusInvalid, "service claim", nil)
 		}
 
 		if !claims.FirstParty {
-			return http.StatusUnauthorized, errors.ErrorData(logutils.StatusInvalid, "first party claim", nil)
+			return http.StatusForbidden, errors.ErrorData(logutils.StatusInvalid, "first party claim", nil)
 		}
 
 		return http.StatusOK, nil
@@ -162,9 +162,9 @@ func newBBsAuth(serviceRegManager *authservice.ServiceRegManager) (*tokenauth.St
 	return &auth, nil
 }
 
-// TPsAuth
+// TPSAuth
 
-func newTPsAuth(serviceRegManager *authservice.ServiceRegManager) (*tokenauth.StandardHandler, error) {
+func newTPSAuth(serviceRegManager *authservice.ServiceRegManager) (*tokenauth.StandardHandler, error) {
 	tpsPermissionAuth := authorization.NewCasbinStringAuthorization("driver/web/authorization_tps_policy.csv")
 	tpsTokenAuth, err := tokenauth.NewTokenAuth(true, serviceRegManager, tpsPermissionAuth, nil)
 	if err != nil {
@@ -173,11 +173,11 @@ func newTPsAuth(serviceRegManager *authservice.ServiceRegManager) (*tokenauth.St
 
 	check := func(claims *tokenauth.Claims, req *http.Request) (int, error) {
 		if !claims.Service {
-			return http.StatusUnauthorized, errors.ErrorData(logutils.StatusInvalid, "service claim", nil)
+			return http.StatusForbidden, errors.ErrorData(logutils.StatusInvalid, "service claim", nil)
 		}
 
 		if claims.FirstParty {
-			return http.StatusUnauthorized, errors.ErrorData(logutils.StatusInvalid, "first party claim", nil)
+			return http.StatusForbidden, errors.ErrorData(logutils.StatusInvalid, "first party claim", nil)
 		}
 
 		return http.StatusOK, nil
@@ -198,7 +198,7 @@ func newSystemAuth(serviceRegManager *authservice.ServiceRegManager) (*tokenauth
 
 	check := func(claims *tokenauth.Claims, req *http.Request) (int, error) {
 		if !claims.System {
-			return http.StatusUnauthorized, errors.ErrorData(logutils.StatusInvalid, "system claim", nil)
+			return http.StatusForbidden, errors.ErrorData(logutils.StatusInvalid, "system claim", nil)
 		}
 
 		return http.StatusOK, nil

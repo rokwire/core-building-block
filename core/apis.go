@@ -481,7 +481,7 @@ func (s *tpsImpl) TPSGetAccounts(searchParams map[string]interface{}, appID stri
 	return s.app.sharedGetAccountsByParams(searchParams, appID, orgID, limit, offset, allAccess, approvedKeys)
 }
 
-func (s *tpsImpl) TPsGetAccountsCount(searchParams map[string]interface{}, appID string, orgID string) (int64, error) {
+func (s *tpsImpl) TPSGetAccountsCount(searchParams map[string]interface{}, appID string, orgID string) (int64, error) {
 	return s.app.sharedGetAccountsCountByParams(searchParams, appID, orgID)
 }
 

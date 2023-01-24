@@ -5545,11 +5545,13 @@ components:
           type: object
     ServiceAccount:
       required:
+        - account_id
         - app_id
         - org_id
       type: object
       properties:
         account_id:
+          readOnly: true
           type: string
         name:
           type: string
