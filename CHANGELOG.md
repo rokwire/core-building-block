@@ -7,10 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
-- Upgrade dependencies [#624](https://github.com/rokwire/core-building-block/issues/624)
-
-### Fixed
 - Improve transaction context handling [#613](https://github.com/rokwire/core-building-block/issues/613)
+- Upgrade dependencies [#624](https://github.com/rokwire/core-building-block/issues/624)
 
 ## [1.29.0] - 2022-11-16
 ### Added
