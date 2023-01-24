@@ -47,6 +47,7 @@ type oidcAuthConfig struct {
 	Scopes             string            `json:"scopes"`
 	UseRefresh         bool              `json:"use_refresh"`
 	UsePKCE            bool              `json:"use_pkce"`
+	UseState           bool              `json:"use_state"`
 	ClientID           string            `json:"client_id" validate:"required"`
 	ClientSecret       string            `json:"client_secret"`
 	AuthorizeClaims    string            `json:"authorize_claims"`
@@ -90,15 +91,6 @@ func (o *oidcAuthConfig) GetUserInfoURL() string {
 	return url
 }
 
-func (o *oidcAuthConfig) GetAuthorizationCode(creds string, params string) (string, error) {
-	parsedCreds, err := utils.QueryValuesFromURL(creds)
-	if err != nil {
-		return "", errors.WrapErrorAction(logutils.ActionParse, "oidc creds", nil, err)
-	}
-
-	return parsedCreds.Get("code"), nil
-}
-
 func (o *oidcAuthConfig) BuildNewTokenRequest(creds string, params string, refresh bool) (*oauthprovider.OAuthRequest, map[string]interface{}, error) {
 	if refresh && !o.UseRefresh {
 		return nil, nil, nil
@@ -126,7 +118,16 @@ func (o *oidcAuthConfig) BuildNewTokenRequest(creds string, params string, refre
 		body["refresh_token"] = creds
 		body["grant_type"] = "refresh_token"
 	} else {
-		body["code"] = creds
+		parsedCreds, err := utils.QueryValuesFromURL(creds)
+		if err != nil {
+			return nil, nil, errors.WrapErrorAction(logutils.ActionParse, "oidc creds", nil, err)
+		}
+		//state in creds must match state generated for login url (if used)
+		if o.UseState && loginParams.State != parsedCreds.Get("state") {
+			return nil, nil, errors.ErrorData(logutils.StatusInvalid, "oidc login", &logutils.FieldArgs{"state": parsedCreds.Get("state")})
+		}
+
+		body["code"] = parsedCreds.Get("code")
 		body["grant_type"] = "authorization_code"
 
 		if len(loginParams.CodeVerifier) > 0 {
@@ -224,6 +225,14 @@ func (o *oidcAuthConfig) BuildLoginURLResponse(redirectURI string) (string, map[
 		query["code_challenge"] = codeChallenge
 		responseParams["pkce_verifier"] = codeVerifier
 	}
+	if o.UseState {
+		state, err := utils.GenerateRandomString(50)
+		if err != nil {
+			return "", nil, errors.WrapErrorAction("generating", "random state", nil, err)
+		}
+		query["state"] = state
+		responseParams["state"] = state
+	}
 
 	return o.GetAuthorizeURL() + "?" + utils.EncodeQueryValues(query), responseParams, nil
 }
@@ -273,6 +282,7 @@ func (t *oidcToken) GetIDToken() string {
 
 type oidcLoginParams struct {
 	CodeVerifier string `json:"pkce_verifier"`
+	State        string `json:"state"`
 	RedirectURI  string `json:"redirect_uri"`
 }
 

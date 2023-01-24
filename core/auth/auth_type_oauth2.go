@@ -83,32 +83,6 @@ func (o *oauth2AuthConfig) GetUserInfoURL() string {
 	return url
 }
 
-func (o *oauth2AuthConfig) GetAuthorizationCode(creds string, params string) (string, error) {
-	var loginParams oauth2LoginParams
-	if o.UseState {
-		err := json.Unmarshal([]byte(params), &loginParams)
-		if err != nil {
-			return "", errors.WrapErrorAction(logutils.ActionUnmarshal, typeOAuth2LoginParams, nil, err)
-		}
-		validate := validator.New()
-		err = validate.Struct(loginParams)
-		if err != nil {
-			return "", errors.WrapErrorAction(logutils.ActionValidate, typeOAuth2LoginParams, nil, err)
-		}
-	}
-
-	parsedCreds, err := utils.QueryValuesFromURL(creds)
-	if err != nil {
-		return "", errors.WrapErrorAction(logutils.ActionParse, "oauth2 creds", nil, err)
-	}
-	//state in creds must match state generated for login url (if used)
-	if o.UseState && loginParams.State != parsedCreds.Get("state") {
-		return "", errors.ErrorData(logutils.StatusInvalid, "oauth2 login", &logutils.FieldArgs{"state": parsedCreds.Get("state")})
-	}
-
-	return parsedCreds.Get("code"), nil
-}
-
 func (o *oauth2AuthConfig) BuildNewTokenRequest(creds string, params string, refresh bool) (*oauthprovider.OAuthRequest, map[string]interface{}, error) {
 	if refresh && !o.UseRefresh {
 		return nil, nil, nil
@@ -125,7 +99,24 @@ func (o *oauth2AuthConfig) BuildNewTokenRequest(creds string, params string, ref
 		body["refresh_token"] = creds
 		body["grant_type"] = "refresh_token"
 	} else {
-		body["code"] = creds
+		parsedCreds, err := utils.QueryValuesFromURL(creds)
+		if err != nil {
+			return nil, nil, errors.WrapErrorAction(logutils.ActionParse, "oauth2 creds", nil, err)
+		}
+
+		if o.UseState {
+			var loginParams oauth2LoginParams
+			err = json.Unmarshal([]byte(params), &loginParams)
+			if err != nil {
+				return nil, nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeOAuth2LoginParams, nil, err)
+			}
+			//state in creds must match state generated for login url (if used)
+			if loginParams.State != parsedCreds.Get("state") {
+				return nil, nil, errors.ErrorData(logutils.StatusInvalid, "oauth2 login", &logutils.FieldArgs{"state": parsedCreds.Get("state")})
+			}
+		}
+
+		body["code"] = parsedCreds.Get("code")
 	}
 
 	encoded := utils.EncodeQueryValues(body)
@@ -172,7 +163,7 @@ func (o *oauth2AuthConfig) BuildLoginURLResponse(redirectURI string) (string, ma
 
 	responseParams := make(map[string]interface{})
 	if o.UseState {
-		state, err := o.generateState()
+		state, err := utils.GenerateRandomString(50)
 		if err != nil {
 			return "", nil, errors.WrapErrorAction("generating", "random state", nil, err)
 		}
@@ -181,18 +172,6 @@ func (o *oauth2AuthConfig) BuildLoginURLResponse(redirectURI string) (string, ma
 	}
 
 	return o.GetAuthorizeURL() + "?" + utils.EncodeQueryValues(query), responseParams, nil
-}
-
-// --- Helper functions ---
-
-// generateState generates and returns a randomized state string
-func (o *oauth2AuthConfig) generateState() (string, error) {
-	state, err := utils.GenerateRandomString(50)
-	if err != nil {
-		return "", errors.WrapErrorAction("generating", "state string", nil, err)
-	}
-
-	return state, nil
 }
 
 type oauth2Token struct {

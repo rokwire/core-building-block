@@ -94,12 +94,9 @@ type OAuthConfig interface {
 	GetTokenURL() string
 	GetUserInfoURL() string
 
-	GetAuthorizationCode(creds string, params string) (string, error)
 	BuildNewTokenRequest(creds string, params string, refresh bool) (*OAuthRequest, map[string]interface{}, error)
 	ParseTokenResponse(response []byte, params map[string]interface{}) (OAuthToken, map[string]interface{}, error)
 	BuildLoginURLResponse(redirectURI string) (string, map[string]interface{}, error)
-
-	// GetResponseParams(params string) (map[string]string, error)
 
 	CheckIDToken(token OAuthToken) (string, error)
 	CheckSubject(tokenSubject string, userSubject string) bool

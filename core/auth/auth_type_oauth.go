@@ -49,12 +49,7 @@ func (a *oauthAuthImpl) externalLogin(authType model.AuthType, appType model.App
 		return nil, nil, errors.WrapErrorAction(logutils.ActionGet, typeAuthConfig, logutils.StringArgs(a.authType), err)
 	}
 
-	code, err := config.GetAuthorizationCode(creds, params)
-	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionGet, "authorization code", logutils.StringArgs(a.authType), err)
-	}
-
-	return a.loadTokensAndInfo(config, authType, appOrg, code, params, false, l)
+	return a.loadTokensAndInfo(config, authType, appOrg, creds, params, false, l)
 }
 
 func (a *oauthAuthImpl) refresh(params map[string]interface{}, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error) {
