@@ -98,7 +98,7 @@ func (c *APIs) storeSystemData() error {
 		}
 		if systemOrg == nil {
 			newDocuments["organization"] = uuid.NewString()
-			systemOrgConfig := model.OrganizationConfig{ID: uuid.NewString(), DateCreated: time.Now().UTC()}
+			systemOrgConfig := model.OrganizationConfig{ID: uuid.NewString(), Domains: []string{}, DateCreated: time.Now().UTC()}
 			newSystemOrg := model.Organization{ID: newDocuments["organization"], Name: "System", Type: "small", System: true, Config: systemOrgConfig, DateCreated: time.Now().UTC()}
 			_, err = storage.InsertOrganization(newSystemOrg)
 			if err != nil {
@@ -481,7 +481,7 @@ func (s *tpsImpl) TPSGetAccounts(searchParams map[string]interface{}, appID stri
 	return s.app.sharedGetAccountsByParams(searchParams, appID, orgID, limit, offset, allAccess, approvedKeys)
 }
 
-func (s *tpsImpl) TPsGetAccountsCount(searchParams map[string]interface{}, appID string, orgID string) (int64, error) {
+func (s *tpsImpl) TPSGetAccountsCount(searchParams map[string]interface{}, appID string, orgID string) (int64, error) {
 	return s.app.sharedGetAccountsCountByParams(searchParams, appID, orgID)
 }
 

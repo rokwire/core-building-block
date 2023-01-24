@@ -501,22 +501,7 @@ func (we Adapter) validateResponse(requestValidationInput *openapi3filter.Reques
 
 func (we Adapter) completeResponse(w http.ResponseWriter, response logs.HTTPResponse, l *logs.Log) {
 	//1. return response
-	//1.1 headers
-	if len(response.Headers) > 0 {
-		for key, values := range response.Headers {
-			if len(values) > 0 {
-				for _, value := range values {
-					w.Header().Add(key, value)
-				}
-			}
-		}
-	}
-	//1.2 response code
-	w.WriteHeader(response.ResponseCode)
-	//1.3 body
-	if len(response.Body) > 0 {
-		w.Write(response.Body)
-	}
+	l.SendHTTPResponse(w, response)
 
 	//2. print
 	l.RequestComplete()

@@ -280,7 +280,7 @@ func (h TPSApisHandler) getAccountsCount(l *logs.Log, r *http.Request, claims *t
 		return l.HTTPResponseErrorData(logutils.StatusInvalid, "accounts count query", nil, err, http.StatusForbidden, true)
 	}
 
-	accounts, err := h.coreAPIs.TPS.TPsGetAccountsCount(queryParams, appID, orgID)
+	accounts, err := h.coreAPIs.TPS.TPSGetAccountsCount(queryParams, appID, orgID)
 	if err != nil {
 		errFields := logutils.FieldArgs(queryParams)
 		return l.HTTPResponseErrorAction(logutils.ActionGet, model.TypeAccount, &errFields, err, http.StatusInternalServerError, false)

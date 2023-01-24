@@ -5481,8 +5481,8 @@ components:
         account_auth_type:
           $ref: '#/components/schemas/AccountAuthType'
           nullable: true
-        device:
-          $ref: '#/components/schemas/Device'
+        device_id:
+          type: string
         ip_address:
           type: string
         refresh_tokens_count:

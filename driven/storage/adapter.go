@@ -594,7 +594,7 @@ func (sa *Adapter) cacheApplicationConfigs() error {
 
 	applicationConfigs, err := sa.loadAppConfigs()
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationConfig, nil, err)
+		return errors.WrapErrorAction(logutils.ActionLoad, model.TypeApplicationConfig, nil, err)
 	}
 
 	sa.setCachedApplicationConfigs(&applicationConfigs)
@@ -615,12 +615,12 @@ func (sa *Adapter) setCachedApplicationConfigs(applicationConfigs *[]model.Appli
 
 		err := validate.Struct(config)
 		if err != nil {
-			sa.logger.Errorf("failed to validate and cache application config with appID_version %s_%s: %s", config.AppOrg.ID, config.Version.VersionNumbers.String(), err.Error())
+			sa.logger.Errorf("failed to validate and cache application config with appOrgID_version %s_%s: %s", config.AppOrg.ID, config.Version.VersionNumbers.String(), err.Error())
 		} else {
 			// key 1 - ID
 			sa.cachedApplicationConfigs.Store(config.ID, config)
 
-			// key 2 - cahce pair {appTypeID_appOrgID: []model.ApplicationConfigs}
+			// key 2 - cache pair {appTypeID_appOrgID: []model.ApplicationConfigs}
 			appTypeID := config.ApplicationType.ID
 			key := appTypeID
 			if config.AppOrg != nil {
@@ -2285,7 +2285,7 @@ func (sa *Adapter) FindPermissionsByName(names []string) ([]model.Permission, er
 func (sa *Adapter) InsertPermission(item model.Permission) error {
 	_, err := sa.db.permissions.InsertOneWithContext(sa.context, item)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionInsert, model.TypePermission, &logutils.FieldArgs{"_id": item.ID, "name": item.Name}, err)
+		return errors.WrapErrorAction(logutils.ActionInsert, model.TypePermission, &logutils.FieldArgs{"name": item.Name, "duplicate": mongo.IsDuplicateKeyError(err)}, err)
 	}
 
 	return nil
@@ -2328,6 +2328,7 @@ func (sa *Adapter) UpdatePermission(item model.Permission) error {
 	now := time.Now().UTC()
 	permissionUpdate := bson.D{
 		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "description", Value: item.Description},
 			primitive.E{Key: "service_id", Value: item.ServiceID},
 			primitive.E{Key: "assigners", Value: item.Assigners},
 			primitive.E{Key: "date_updated", Value: &now},
@@ -2340,7 +2341,7 @@ func (sa *Adapter) UpdatePermission(item model.Permission) error {
 	}
 
 	if res.ModifiedCount != 1 {
-		return errors.ErrorAction(logutils.ActionUpdate, model.TypePermission, logutils.StringArgs("unexpected modified count"))
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypePermission, &logutils.FieldArgs{"name": item.Name, "modified": res.ModifiedCount, "expected": 1})
 	}
 
 	return nil
@@ -2992,11 +2993,6 @@ func (sa *Adapter) loadAppConfigs() ([]model.ApplicationConfig, error) {
 	err := sa.db.applicationConfigs.Find(filter, &list, options)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationConfig, nil, err)
-	}
-
-	if len(list) == 0 {
-		//no data
-		return make([]model.ApplicationConfig, 0), nil
 	}
 
 	result := make([]model.ApplicationConfig, len(list))

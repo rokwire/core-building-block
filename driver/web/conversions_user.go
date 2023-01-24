@@ -50,8 +50,8 @@ func accountToDef(item model.Account) *Def.Account {
 	lastLoginDate := utils.FormatTime(item.LastLoginDate)
 	lastAccessTokenDate := utils.FormatTime(item.LastAccessTokenDate)
 
-	return &Def.Account{Id: &item.ID, Anonymous: &item.Anonymous, System: &item.AppOrg.Organization.System, Permissions: &permissions, Roles: &roles, Groups: &groups, AuthTypes: &authTypes, Username: username, Profile: profile,
-		Preferences: preferences, SystemConfigs: systemConfigs,
+	return &Def.Account{Id: &item.ID, Anonymous: &item.Anonymous, System: &item.AppOrg.Organization.System, Permissions: &permissions, Roles: &roles, Groups: &groups,
+		AuthTypes: &authTypes, Username: username, Profile: profile, Preferences: preferences, SystemConfigs: systemConfigs,
 		LastLoginDate: &lastLoginDate, LastAccessTokenDate: &lastAccessTokenDate, MostRecentClientVersion: item.MostRecentClientVersion, ExternalIds: &externalIds}
 }
 

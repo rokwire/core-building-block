@@ -332,6 +332,9 @@ func (app *application) sysGetAppConfigs(appTypeID string, orgID *string, versio
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": appID, "org_id": *orgID}, err)
 		}
+		if appOrg == nil {
+			return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": appID, "org_id": *orgID})
+		}
 		appOrgID = &appOrg.ID
 	}
 

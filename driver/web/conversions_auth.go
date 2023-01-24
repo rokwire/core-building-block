@@ -33,6 +33,10 @@ func loginSessionToDef(item model.LoginSession) Def.LoginSession {
 		aatValue := accountAuthTypeToDef(*item.AccountAuthType)
 		accountAuthType = &aatValue
 	}
+	var deviceID *string
+	if item.Device != nil {
+		deviceID = &item.Device.ID
+	}
 
 	refreshTokensCount := len(item.RefreshTokens)
 	stateExpires := utils.FormatTime(item.StateExpires)
@@ -40,7 +44,7 @@ func loginSessionToDef(item model.LoginSession) Def.LoginSession {
 	dateUpdated := utils.FormatTime(item.DateUpdated)
 	dateCreated := utils.FormatTime(&item.DateCreated)
 	return Def.LoginSession{Id: &item.ID, Anonymous: &item.Anonymous, AccountAuthType: accountAuthType, AppOrg: appOrgToDef(&item.AppOrg),
-		AppType: applicationTypeToDef(&item.AppType), Device: deviceToDef(item.Device), Identifier: &item.Identifier, IpAddress: &item.IPAddress,
+		AppType: applicationTypeToDef(&item.AppType), DeviceId: deviceID, Identifier: &item.Identifier, IpAddress: &item.IPAddress,
 		RefreshTokensCount: &refreshTokensCount, State: &item.State, MfaAttempts: &item.MfaAttempts, StateExpires: &stateExpires,
 		DateRefreshed: &dateRefreshed, DateUpdated: &dateUpdated, DateCreated: &dateCreated,
 	}
@@ -226,8 +230,9 @@ func serviceRegToDef(item *model.ServiceReg) *Def.ServiceReg {
 	}
 
 	var serviceAccountID *string
-	if item.Registration.ServiceAccountID != "" {
-		serviceAccountID = &item.Registration.ServiceAccountID
+	serviceAccountIDVal := item.Registration.ServiceAccountID
+	if serviceAccountIDVal != "" {
+		serviceAccountID = &serviceAccountIDVal
 	}
 	pubKey := pubKeyToDef(item.Registration.PubKey)
 	scopes := serviceScopeListToDef(item.Scopes)
@@ -255,8 +260,9 @@ func authServiceRegToDef(item *authservice.ServiceReg) *Def.AuthServiceReg {
 	}
 
 	var serviceAccountID *string
-	if item.ServiceAccountID != "" {
-		serviceAccountID = &item.ServiceAccountID
+	serviceAccountIDVal := item.ServiceAccountID
+	if serviceAccountIDVal != "" {
+		serviceAccountID = &serviceAccountIDVal
 	}
 	pubKey := pubKeyToDef(item.PubKey)
 	return &Def.AuthServiceReg{ServiceId: item.ServiceID, ServiceAccountId: serviceAccountID, Host: item.Host, PubKey: pubKey}
@@ -356,7 +362,12 @@ func authTypeToDef(item *model.AuthType) *Def.AuthType {
 		return nil
 	}
 
-	return &Def.AuthType{Id: &item.ID, Code: item.Code, Description: item.Description,
+	var id *string
+	idVal := item.ID
+	if idVal != "" {
+		id = &idVal
+	}
+	return &Def.AuthType{Id: id, Code: item.Code, Description: item.Description,
 		IsExternal: item.IsExternal, IsAnonymous: item.IsAnonymous, UseCredentials: item.UseCredentials,
 		IgnoreMfa: item.IgnoreMFA, Params: &Def.AuthType_Params{AdditionalProperties: item.Params}}
 }
@@ -364,7 +375,12 @@ func authTypeToDef(item *model.AuthType) *Def.AuthType {
 func authTypesToDef(items []model.AuthType) []Def.AuthType {
 	result := make([]Def.AuthType, len(items))
 	for i, item := range items {
-		result[i] = *authTypeToDef(&item)
+		authType := authTypeToDef(&item)
+		if authType != nil {
+			result[i] = *authType
+		} else {
+			result[i] = Def.AuthType{}
+		}
 	}
 	return result
 }
