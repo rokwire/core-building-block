@@ -25,6 +25,7 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
+	"github.com/rokwire/core-auth-library-go/v2/authorization"
 	"github.com/rokwire/core-auth-library-go/v2/tokenauth"
 	"github.com/rokwire/logging-library-go/logs"
 	"github.com/rokwire/logging-library-go/logutils"
@@ -117,6 +118,104 @@ func (h SystemApisHandler) updateGlobalConfig(l *logs.Log, r *http.Request, clai
 	err = h.coreAPIs.System.SysUpdateGlobalConfig(setting)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeGlobalConfig, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
+// getApplicationOrganization retrieves app-org for specified id
+func (h SystemApisHandler) getApplicationOrganization(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	params := mux.Vars(r)
+	ID := params["id"]
+	if len(ID) <= 0 {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
+	}
+
+	appOrg, err := h.coreAPIs.System.SysGetApplicationOrganization(ID)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeApplicationOrganization, nil, err, http.StatusInternalServerError, true)
+	}
+
+	responseData := appOrgToDef(appOrg)
+	data, err := json.Marshal(responseData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeApplicationOrganization, nil, err, http.StatusInternalServerError, false)
+	}
+	return l.HttpResponseSuccessJSON(data)
+}
+
+// getApplicationOrganizations retrieves all app-orgs matching the provided query
+func (h SystemApisHandler) getApplicationOrganizations(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	var appID *string
+	appIDRaw := r.URL.Query().Get("app_id")
+	if appIDRaw != "" {
+		appID = &appIDRaw
+	}
+
+	var orgID *string
+	orgIDRaw := r.URL.Query().Get("org_id")
+	if orgIDRaw != "" {
+		orgID = &orgIDRaw
+	}
+
+	appOrgs, err := h.coreAPIs.System.SysGetApplicationOrganizations(appID, orgID)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeApplicationOrganization, nil, err, http.StatusInternalServerError, true)
+	}
+
+	responseData := appOrgsToDef(appOrgs)
+	data, err := json.Marshal(responseData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeApplicationOrganization, nil, err, http.StatusInternalServerError, false)
+	}
+	return l.HttpResponseSuccessJSON(data)
+}
+
+// createApplicationOrganization creates applicationOrganization
+func (h SystemApisHandler) createApplicationOrganization(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorData(logutils.StatusInvalid, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+	var requestData Def.AppOrg
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeApplicationOrganization, nil, err, http.StatusBadRequest, true)
+	}
+
+	//TODO: Fix missing supported auth types, expire policies,
+	appOrg := appOrgFromDef(&requestData)
+	_, err = h.coreAPIs.System.SysCreateApplicationOrganization(requestData.AppId, requestData.OrgId, *appOrg)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeApplicationOrganization, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
+// updateApplicationOrganization updates applicationOrganization
+func (h SystemApisHandler) updateApplicationOrganization(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	params := mux.Vars(r)
+	ID := params["id"]
+	if len(ID) <= 0 {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
+	}
+
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorData(logutils.StatusInvalid, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+	var requestData Def.AppOrg
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeApplicationOrganization, nil, err, http.StatusBadRequest, true)
+	}
+
+	updateAppOrg := appOrgFromDef(&requestData)
+	updateAppOrg.ID = ID
+	err = h.coreAPIs.System.SysUpdateApplicationOrganization(*updateAppOrg)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeApplicationOrganization, nil, err, http.StatusInternalServerError, true)
 	}
 
 	return l.HttpResponseSuccess()
@@ -317,6 +416,14 @@ func (h SystemApisHandler) getServiceAccounts(l *logs.Log, r *http.Request, clai
 	if query.Get("permissions") != "" {
 		searchParams["permissions"] = strings.Split(query.Get("permissions"), ",")
 	}
+	if query.Get("scopes") != "" {
+		scopeList := strings.Split(query.Get("scopes"), ",")
+		scopes, err := authorization.ScopesFromStrings(scopeList, false)
+		if err != nil {
+			return l.HttpResponseErrorAction(logutils.ActionParse, model.TypeScope, nil, err, http.StatusInternalServerError, true)
+		}
+		searchParams["scopes"] = scopes
+	}
 
 	serviceAccounts, err := h.coreAPIs.Auth.GetServiceAccounts(searchParams)
 	if err != nil {
@@ -334,8 +441,8 @@ func (h SystemApisHandler) getServiceAccounts(l *logs.Log, r *http.Request, clai
 }
 
 func (h SystemApisHandler) registerServiceAccount(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	fromAppID := utils.StringOrNil(r.URL.Query().Get("app_id"))
-	fromOrgID := utils.StringOrNil(r.URL.Query().Get("org_id"))
+	fromAppID := utils.StringOrNil(r.URL.Query().Get("app_id"), "")
+	fromOrgID := utils.StringOrNil(r.URL.Query().Get("org_id"), "")
 
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -348,6 +455,14 @@ func (h SystemApisHandler) registerServiceAccount(l *logs.Log, r *http.Request, 
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeServiceAccount, nil, err, http.StatusBadRequest, true)
 	}
 
+	var scopes []authorization.Scope
+	if requestData.Scopes != nil && *requestData.Scopes != nil {
+		scopes, err = authorization.ScopesFromStrings(*requestData.Scopes, false)
+		if err != nil {
+			return l.HttpResponseErrorAction(logutils.ActionParse, model.TypeScope, nil, err, http.StatusInternalServerError, true)
+		}
+	}
+
 	var creds []model.ServiceAccountCredential
 	if requestData.Creds != nil {
 		creds = serviceAccountCredentialListFromDef(*requestData.Creds)
@@ -355,7 +470,7 @@ func (h SystemApisHandler) registerServiceAccount(l *logs.Log, r *http.Request, 
 
 	assignerPermissions := strings.Split(claims.Permissions, ",")
 	serviceAccount, err := h.coreAPIs.Auth.RegisterServiceAccount(requestData.AccountId, fromAppID, fromOrgID, requestData.Name,
-		requestData.AppId, requestData.OrgId, requestData.Permissions, requestData.FirstParty, creds, assignerPermissions, l)
+		requestData.AppId, requestData.OrgId, requestData.Permissions, scopes, requestData.FirstParty, creds, assignerPermissions, l)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionRegister, model.TypeServiceAccount, nil, err, http.StatusInternalServerError, true)
 	}
@@ -442,8 +557,16 @@ func (h SystemApisHandler) updateServiceAccountInstance(l *logs.Log, r *http.Req
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, "service account update request", nil, err, http.StatusBadRequest, true)
 	}
 
+	var scopes []authorization.Scope
+	if requestData.Scopes != nil && *requestData.Scopes != nil {
+		scopes, err = authorization.ScopesFromStrings(*requestData.Scopes, false)
+		if err != nil {
+			return l.HttpResponseErrorAction(logutils.ActionParse, model.TypeScope, nil, err, http.StatusInternalServerError, true)
+		}
+	}
+
 	assignerPermissions := strings.Split(claims.Permissions, ",")
-	serviceAccount, err := h.coreAPIs.Auth.UpdateServiceAccountInstance(id, appID, orgID, requestData.Name, requestData.Permissions, assignerPermissions)
+	serviceAccount, err := h.coreAPIs.Auth.UpdateServiceAccountInstance(id, appID, orgID, requestData.Name, requestData.Permissions, scopes, assignerPermissions)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeServiceAccount, nil, err, http.StatusInternalServerError, true)
 	}
@@ -674,37 +797,51 @@ func (h SystemApisHandler) createApplication(l *logs.Log, r *http.Request, claim
 		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.SystemReqCreateApplication
+	var requestData Def.Application
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeApplication, nil, err, http.StatusBadRequest, true)
 	}
 
-	name := requestData.Name
-	multiTenant := requestData.MultiTenant
-	admin := requestData.Admin
-	sharedIdentities := requestData.SharedIdentities
-	applicationTypes := requestData.ApplicationTypes
-
 	appTypes := make([]model.ApplicationType, 0)
-	if applicationTypes != nil {
-		for _, at := range *applicationTypes {
-			versions := make([]model.Version, 0)
-			if at.Versions != nil {
-				for _, v := range *at.Versions {
-					versionNumbers := model.VersionNumbersFromString(v)
-					if versionNumbers != nil {
-						versions = append(versions, model.Version{VersionNumbers: *versionNumbers})
-					}
-				}
-			}
-			appTypes = append(appTypes, model.ApplicationType{Identifier: at.Identifier, Name: *at.Name, Versions: versions})
-		}
+	if requestData.Types != nil {
+		appTypes = applicationTypeListFromDef(*requestData.Types)
 	}
 
-	_, err = h.coreAPIs.System.SysCreateApplication(name, multiTenant, admin, sharedIdentities, appTypes)
+	_, err = h.coreAPIs.System.SysCreateApplication(requestData.Name, requestData.MultiTenant, requestData.Admin, requestData.SharedIdentities, appTypes)
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionCreate, model.TypeApplication, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HttpResponseSuccess()
+}
+
+func (h SystemApisHandler) updateApplication(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+	params := mux.Vars(r)
+	ID := params["id"]
+	if len(ID) <= 0 {
+		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
+	}
+
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.Application
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUnmarshal, model.TypeApplication, nil, err, http.StatusBadRequest, true)
+	}
+
+	appTypes := make([]model.ApplicationType, 0)
+	if requestData.Types != nil {
+		appTypes = applicationTypeListFromDef(*requestData.Types)
+	}
+
+	err = h.coreAPIs.System.SysUpdateApplication(ID, requestData.Name, requestData.MultiTenant, requestData.Admin, requestData.SharedIdentities, appTypes)
+	if err != nil {
+		return l.HttpResponseErrorAction(logutils.ActionUpdate, model.TypeApplication, nil, err, http.StatusInternalServerError, true)
 	}
 
 	return l.HttpResponseSuccess()
@@ -715,11 +852,7 @@ func (h SystemApisHandler) getApplications(l *logs.Log, r *http.Request, claims 
 	if err != nil {
 		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeApplication, nil, err, http.StatusInternalServerError, true)
 	}
-	var response []Def.ApplicationFields
-	for _, application := range applications {
-		r := applicationToDef(application)
-		response = append(response, r)
-	}
+	response := applicationsToDef(applications)
 
 	data, err := json.Marshal(response)
 	if err != nil {

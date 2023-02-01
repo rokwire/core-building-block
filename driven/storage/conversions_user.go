@@ -223,7 +223,8 @@ func accountGroupsToStorage(items []model.AccountGroup) []accountGroup {
 func profileFromStorage(item profile) model.Profile {
 	return model.Profile{ID: item.ID, PhotoURL: item.PhotoURL, FirstName: item.FirstName, LastName: item.LastName,
 		Email: item.Email, Phone: item.Phone, BirthYear: item.BirthYear, Address: item.Address, ZipCode: item.ZipCode,
-		State: item.State, Country: item.Country, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+		State: item.State, Country: item.Country, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated,
+		UnstructuredProperties: item.UnstructuredProperties}
 }
 
 func profilesFromStorage(items []account, sa Adapter) []model.Profile {
@@ -261,7 +262,8 @@ func profilesFromStorage(items []account, sa Adapter) []model.Profile {
 func profileToStorage(item model.Profile) profile {
 	return profile{ID: item.ID, PhotoURL: item.PhotoURL, FirstName: item.FirstName, LastName: item.LastName,
 		Email: item.Email, Phone: item.Phone, BirthYear: item.BirthYear, Address: item.Address, ZipCode: item.ZipCode,
-		State: item.State, Country: item.Country, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+		State: item.State, Country: item.Country, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated,
+		UnstructuredProperties: item.UnstructuredProperties}
 }
 
 // Device

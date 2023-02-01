@@ -1,0 +1,4 @@
+package: Def
+generate:
+  models: true
+output: driver/web/docs/gen/gen_types.go

@@ -43,9 +43,8 @@ import (
 
 // Adapter entity
 type Adapter struct {
-	env       string
-	serviceID string
-	port      string
+	env  string
+	port string
 
 	productionServerURL  string
 	testServerURL        string
@@ -160,6 +159,7 @@ func (we Adapter) Start() {
 
 	adminSubrouter.HandleFunc("/application/groups", we.wrapFunc(we.adminApisHandler.getApplicationGroups, we.auth.admin.permissions)).Methods("GET")
 	adminSubrouter.HandleFunc("/application/groups", we.wrapFunc(we.adminApisHandler.createApplicationGroup, we.auth.admin.permissions)).Methods("POST")
+	adminSubrouter.HandleFunc("/application/groups/{id}", we.wrapFunc(we.adminApisHandler.updateApplicationGroup, we.auth.admin.permissions)).Methods("PUT")
 	adminSubrouter.HandleFunc("/application/groups/{id}", we.wrapFunc(we.adminApisHandler.deleteApplicationGroup, we.auth.admin.permissions)).Methods("DELETE")
 
 	adminSubrouter.HandleFunc("/application/groups/{id}/accounts", we.wrapFunc(we.adminApisHandler.addAccountsToGroup, we.auth.admin.permissions)).Methods("PUT")
@@ -168,6 +168,7 @@ func (we Adapter) Start() {
 	adminSubrouter.HandleFunc("/application/roles", we.wrapFunc(we.adminApisHandler.getApplicationRoles, we.auth.admin.permissions)).Methods("GET")
 	adminSubrouter.HandleFunc("/application/roles", we.wrapFunc(we.adminApisHandler.createApplicationRole, we.auth.admin.permissions)).Methods("POST")
 	adminSubrouter.HandleFunc("/application/roles/{id}", we.wrapFunc(we.adminApisHandler.deleteApplicationRole, we.auth.admin.permissions)).Methods("DELETE")
+	adminSubrouter.HandleFunc("/application/roles/{id}", we.wrapFunc(we.adminApisHandler.updateApplicationRole, we.auth.admin.permissions)).Methods("PUT")
 	adminSubrouter.HandleFunc("/application/roles/{id}/permissions", we.wrapFunc(we.adminApisHandler.grantPermissionsToRole, we.auth.admin.permissions)).Methods("PUT")
 
 	adminSubrouter.HandleFunc("/application/permissions", we.wrapFunc(we.adminApisHandler.getApplicationPermissions, we.auth.admin.permissions)).Methods("GET")
@@ -199,6 +200,9 @@ func (we Adapter) Start() {
 	bbsSubrouter.HandleFunc("/service-account/{id}", we.wrapFunc(we.bbsApisHandler.getServiceAccountParams, nil)).Methods("POST") //Public
 	bbsSubrouter.HandleFunc("/access-token", we.wrapFunc(we.bbsApisHandler.getServiceAccessToken, nil)).Methods("POST")           //Public
 	bbsSubrouter.HandleFunc("/access-tokens", we.wrapFunc(we.bbsApisHandler.getServiceAccessTokens, nil)).Methods("POST")         //Public
+
+	bbsSubrouter.HandleFunc("/accounts", we.wrapFunc(we.bbsApisHandler.getAccounts, we.auth.bbs.permissions)).Methods("POST")
+	bbsSubrouter.HandleFunc("/accounts/count", we.wrapFunc(we.bbsApisHandler.getAccountsCount, we.auth.bbs.permissions)).Methods("POST")
 	///
 
 	///third-party services ///
@@ -209,6 +213,9 @@ func (we Adapter) Start() {
 	tpsSubrouter.HandleFunc("/service-account/{id}", we.wrapFunc(we.tpsApisHandler.getServiceAccountParams, nil)).Methods("POST") //Public
 	tpsSubrouter.HandleFunc("/access-token", we.wrapFunc(we.tpsApisHandler.getServiceAccessToken, nil)).Methods("POST")           //Public
 	tpsSubrouter.HandleFunc("/access-tokens", we.wrapFunc(we.tpsApisHandler.getServiceAccessTokens, nil)).Methods("POST")         //Public
+
+	tpsSubrouter.HandleFunc("/accounts", we.wrapFunc(we.tpsApisHandler.getAccounts, we.auth.tps.permissions)).Methods("POST")
+	tpsSubrouter.HandleFunc("/accounts/count", we.wrapFunc(we.tpsApisHandler.getAccountsCount, we.auth.tps.permissions)).Methods("POST")
 	///
 
 	///system ///
@@ -226,8 +233,14 @@ func (we Adapter) Start() {
 	systemSubrouter.HandleFunc("/organizations", we.wrapFunc(we.systemApisHandler.getOrganizations, we.auth.system.permissions)).Methods("GET")
 
 	systemSubrouter.HandleFunc("/applications", we.wrapFunc(we.systemApisHandler.createApplication, we.auth.system.permissions)).Methods("POST")
+	systemSubrouter.HandleFunc("/applications/{id}", we.wrapFunc(we.systemApisHandler.updateApplication, we.auth.system.permissions)).Methods("PUT")
 	systemSubrouter.HandleFunc("/applications/{id}", we.wrapFunc(we.systemApisHandler.getApplication, we.auth.system.permissions)).Methods("GET")
 	systemSubrouter.HandleFunc("/applications", we.wrapFunc(we.systemApisHandler.getApplications, we.auth.system.permissions)).Methods("GET")
+
+	systemSubrouter.HandleFunc("/app-orgs", we.wrapFunc(we.systemApisHandler.getApplicationOrganizations, we.auth.system.permissions)).Methods("GET")
+	systemSubrouter.HandleFunc("/app-orgs", we.wrapFunc(we.systemApisHandler.createApplicationOrganization, we.auth.system.permissions)).Methods("POST")
+	systemSubrouter.HandleFunc("/app-orgs/{id}", we.wrapFunc(we.systemApisHandler.getApplicationOrganization, we.auth.system.permissions)).Methods("GET")
+	systemSubrouter.HandleFunc("/app-orgs/{id}", we.wrapFunc(we.systemApisHandler.updateApplicationOrganization, we.auth.system.permissions)).Methods("PUT")
 
 	systemSubrouter.HandleFunc("/permissions", we.wrapFunc(we.systemApisHandler.createPermission, we.auth.system.permissions)).Methods("POST")
 	systemSubrouter.HandleFunc("/permissions", we.wrapFunc(we.systemApisHandler.updatePermission, we.auth.system.permissions)).Methods("PUT")
@@ -269,7 +282,6 @@ func (we Adapter) Start() {
 }
 
 func (we Adapter) serveResetCredential(w http.ResponseWriter, r *http.Request) {
-	fmt.Println(r.URL.Path)
 	w.Header().Add("access-control-allow-origin", "*")
 	http.ServeFile(w, r, "./driver/web/ui/reset-credential.html")
 }
@@ -550,10 +562,11 @@ func NewWebAdapter(env string, serviceID string, serviceRegManager *authservice.
 	servicesApisHandler := NewServicesApisHandler(coreAPIs)
 	adminApisHandler := NewAdminApisHandler(coreAPIs)
 	encApisHandler := NewEncApisHandler(coreAPIs)
-	bbsApisHandler := NewBBsApisHandler(coreAPIs)
-	tpsApisHandler := NewTPSApisHandler(coreAPIs)
+	bbsApisHandler := NewBBsApisHandler(coreAPIs, serviceID)
+	tpsApisHandler := NewTPSApisHandler(coreAPIs, serviceID)
 	systemApisHandler := NewSystemApisHandler(coreAPIs)
-	return Adapter{env: env, port: port, productionServerURL: prodServerURL, testServerURL: testServerURL, developmentServerURL: devServerURL, cachedYamlDoc: yamlDoc, openAPIRouter: openAPIRouter, host: host, auth: auth, logger: logger, defaultApisHandler: defaultApisHandler, servicesApisHandler: servicesApisHandler, adminApisHandler: adminApisHandler,
+	return Adapter{env: env, port: port, productionServerURL: prodServerURL, testServerURL: testServerURL, developmentServerURL: devServerURL, cachedYamlDoc: yamlDoc,
+		openAPIRouter: openAPIRouter, host: host, auth: auth, logger: logger, defaultApisHandler: defaultApisHandler, servicesApisHandler: servicesApisHandler, adminApisHandler: adminApisHandler,
 		encApisHandler: encApisHandler, bbsApisHandler: bbsApisHandler, tpsApisHandler: tpsApisHandler, systemApisHandler: systemApisHandler, coreAPIs: coreAPIs}
 }
 

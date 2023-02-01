@@ -32,6 +32,8 @@ const (
 	TypePermission logutils.MessageDataType = "permission"
 	//TypeAppOrgRole ...
 	TypeAppOrgRole logutils.MessageDataType = "application organization role"
+	//TypeAppOrgRolePermissions ...
+	TypeAppOrgRolePermissions logutils.MessageDataType = "application organization role permissions"
 	//TypeAppOrgGroup ...
 	TypeAppOrgGroup logutils.MessageDataType = "application organization group"
 	//TypeOrganization ...
@@ -70,6 +72,16 @@ type Permission struct {
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
+}
+
+// PermissionContainer is a set of functions used to interact with objects containing permissions
+type PermissionContainer interface {
+	// GetPermissionNamed returns the permission for a name if the container has it directly
+	GetPermissionNamed(name string) *Permission
+	// GetAssignedPermissionNames returns a list of names of directly assigned permissions
+	GetAssignedPermissionNames() []string
+	// GetAppOrg returns the container's application organization
+	GetAppOrg() ApplicationOrganization
 }
 
 // CheckAssigners checks if the passed permissions satisfy the needed assigners for the permission
@@ -111,14 +123,14 @@ type AppOrgRole struct {
 	DateUpdated *time.Time
 }
 
-// GetPermissionNamed returns the permission for a name if the role has it
-func (c AppOrgRole) GetPermissionNamed(name string) *Permission {
-	for _, permission := range c.Permissions {
-		if permission.Name == name {
-			return &permission
-		}
-	}
-	return nil
+// RoleContainer is a set of functions used to interact with objects containing roles
+type RoleContainer interface {
+	// GetRole returns the role for an ID if the container has it directly
+	GetRole(id string) *AppOrgRole
+	// GetAssignedRoleIDs returns a list of ids of directly assigned roles
+	GetAssignedRoleIDs() []string
+	// GetAppOrg returns the container's application organization
+	GetAppOrg() ApplicationOrganization
 }
 
 // CheckAssigners checks if the passed permissions satisfy the needed assigners for all role permissions
@@ -138,6 +150,30 @@ func (c AppOrgRole) CheckAssigners(assignerPermissions []string) error {
 	}
 	//all permissions may be assigned
 	return nil
+}
+
+// GetPermissionNamed returns the permission for a name if the role has it directly
+func (c AppOrgRole) GetPermissionNamed(name string) *Permission {
+	for _, permission := range c.Permissions {
+		if permission.Name == name {
+			return &permission
+		}
+	}
+	return nil
+}
+
+// GetAssignedPermissionNames returns a list of names of assigned permissions for this role
+func (c AppOrgRole) GetAssignedPermissionNames() []string {
+	names := make([]string, len(c.Permissions))
+	for i, permission := range c.Permissions {
+		names[i] = permission.Name
+	}
+	return names
+}
+
+// GetAppOrg returns the role's application organization
+func (c AppOrgRole) GetAppOrg() ApplicationOrganization {
+	return c.AppOrg
 }
 
 func (c AppOrgRole) String() string {
@@ -185,8 +221,51 @@ func (cg AppOrgGroup) CheckAssigners(assignerPermissions []string) error {
 	return nil
 }
 
+// GetAssignedPermissionNames returns a list of names of assigned permissions for this group
+func (cg AppOrgGroup) GetAssignedPermissionNames() []string {
+	names := make([]string, len(cg.Permissions))
+	for i, permission := range cg.Permissions {
+		names[i] = permission.Name
+	}
+	return names
+}
+
+// GetAssignedRoleIDs returns a list of ids of assigned roles for this group
+func (cg AppOrgGroup) GetAssignedRoleIDs() []string {
+	ids := make([]string, len(cg.Roles))
+	for i, role := range cg.Roles {
+		ids[i] = role.ID
+	}
+	return ids
+}
+
 func (cg AppOrgGroup) String() string {
 	return fmt.Sprintf("[ID:%s\nName:%s\nAppOrg:%s]", cg.ID, cg.Name, cg.AppOrg.ID)
+}
+
+// GetPermissionNamed returns the permission for a name if the group has it directly
+func (cg AppOrgGroup) GetPermissionNamed(name string) *Permission {
+	for _, permission := range cg.Permissions {
+		if permission.Name == name {
+			return &permission
+		}
+	}
+	return nil
+}
+
+// GetRole returns the role for an ID if the group has it
+func (cg AppOrgGroup) GetRole(id string) *AppOrgRole {
+	for _, role := range cg.Roles {
+		if role.ID == id {
+			return &role
+		}
+	}
+	return nil
+}
+
+// GetAppOrg returns the group's application organization
+func (cg AppOrgGroup) GetAppOrg() ApplicationOrganization {
+	return cg.AppOrg
 }
 
 // Application represents users application entity - safer community, uuic, etc
@@ -308,6 +387,8 @@ type IdentityProviderSetting struct {
 
 	UserSpecificFields []string `bson:"user_specific_fields"`
 
+	AlwaysSyncProfile bool `bson:"always_sync_profile"` // if true, profile data will be overwritten with data from external user on each login/refresh
+
 	Roles  map[string]string `bson:"roles"`  //map[identity_provider_role]app_role_id
 	Groups map[string]string `bson:"groups"` //map[identity_provider_group]app_group_id
 }
@@ -350,16 +431,31 @@ type ApplicationType struct {
 	Versions   []Version //1.1.0, 1.2.0 etc
 
 	Application Application
+
+	DateCreated time.Time
+	DateUpdated *time.Time
+}
+
+// FindVersion finds a version by string
+func (at ApplicationType) FindVersion(version string) *Version {
+	for _, v := range at.Versions {
+		if v.VersionNumbers.String() == version {
+			return &v
+		}
+	}
+	return nil
 }
 
 // AuthTypesSupport represents supported auth types for an organization in an application type with configs/params
 type AuthTypesSupport struct {
-	AppTypeID string `bson:"app_type_id"`
+	AppTypeID          string              `bson:"app_type_id"`
+	SupportedAuthTypes []SupportedAuthType `bson:"supported_auth_types"`
+}
 
-	SupportedAuthTypes []struct {
-		AuthTypeID string                 `bson:"auth_type_id"`
-		Params     map[string]interface{} `bson:"params"`
-	} `bson:"supported_auth_types"`
+// SupportedAuthType represents a supported auth type
+type SupportedAuthType struct {
+	AuthTypeID string                 `bson:"auth_type_id"`
+	Params     map[string]interface{} `bson:"params"`
 }
 
 // ApplicationConfig represents app configs
@@ -438,4 +534,22 @@ func VersionNumbersFromString(version string) *VersionNumbers {
 	}
 
 	return &VersionNumbers{Major: major, Minor: minor, Patch: patch}
+}
+
+// GetMissingAccountIDs returns a list of account IDs missing from items
+func GetMissingAccountIDs(items []Account, ids []string) []string {
+	missingIDs := make([]string, 0)
+	for _, id := range ids {
+		missing := true
+		for _, e := range items {
+			if e.ID == id {
+				missing = false
+				break
+			}
+		}
+		if missing {
+			missingIDs = append(missingIDs, id)
+		}
+	}
+	return missingIDs
 }

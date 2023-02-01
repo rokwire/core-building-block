@@ -30,11 +30,6 @@ import (
 )
 
 const (
-	//AllApps indicates that all apps may be accessed
-	AllApps string = "all"
-	//AllOrgs indicates that all orgs may be accessed
-	AllOrgs string = "all"
-
 	//TypeLoginSession auth type type
 	TypeLoginSession logutils.MessageDataType = "login session"
 	//TypeAuthType auth type type
@@ -43,6 +38,8 @@ const (
 	TypeIdentityProvider logutils.MessageDataType = "identity provider"
 	//TypeIdentityProviderConfig identity provider config type
 	TypeIdentityProviderConfig logutils.MessageDataType = "identity provider config"
+	//TypeIdentityProviderSetting identity provider setting type
+	TypeIdentityProviderSetting logutils.MessageDataType = "identity provider setting"
 	//TypeUserAuth user auth type
 	TypeUserAuth logutils.MessageDataType = "user auth"
 	//TypeAuthCred auth cred type
@@ -57,6 +54,8 @@ const (
 	TypeServiceAccount logutils.MessageDataType = "service account"
 	//TypeServiceAccountCredential service account type
 	TypeServiceAccountCredential logutils.MessageDataType = "service account credential"
+	//TypeAppOrgPair app org pair
+	TypeAppOrgPair logutils.MessageDataType = "app org pair"
 	//TypeServiceReg service reg type
 	TypeServiceReg logutils.MessageDataType = "service reg"
 	//TypeServiceScope service scope type
@@ -332,6 +331,7 @@ type ServiceAccount struct {
 	Organization *Organization
 
 	Permissions []Permission
+	Scopes      []authorization.Scope
 	FirstParty  bool
 
 	Credentials []ServiceAccountCredential
@@ -347,6 +347,15 @@ func (s ServiceAccount) GetPermissionNames() []string {
 		permissions[i] = permission.Name
 	}
 	return permissions
+}
+
+// GetScopeStrings returns all names of scopes granted to this account
+func (s ServiceAccount) GetScopeStrings() []string {
+	scopes := make([]string, len(s.Scopes))
+	for i, scope := range s.Scopes {
+		scopes[i] = scope.String()
+	}
+	return scopes
 }
 
 // AppOrgPair represents an appID, orgID pair entity

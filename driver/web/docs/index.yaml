@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Rokwire Core Building Block API
   description: Core Building Block API Documentation
-  version: 1.24.2
+  version: 1.29.0
 servers:
   - url: https://api.rokwire.illinois.edu/core
     description: Production server
@@ -149,6 +149,10 @@ paths:
     $ref: "./resources/bbs/access-token.yaml"
   /bbs/access-tokens:
     $ref: "./resources/bbs/access-tokens.yaml"
+  /bbs/accounts:
+    $ref: "./resources/bbs/accounts.yaml"
+  /bbs/accounts/count:
+   $ref: "./resources/bbs/accounts-count.yaml"
 
   #third-party services
   /tps/service-regs:
@@ -161,6 +165,10 @@ paths:
     $ref: "./resources/tps/access-token.yaml"
   /tps/access-tokens:
     $ref: "./resources/tps/access-tokens.yaml"
+  /tps/accounts:
+    $ref: "./resources/tps/accounts.yaml"
+  /tps/accounts/count:
+   $ref: "./resources/tps/accounts-count.yaml"
 
   #system
   /system/auth/app-org-token:
@@ -195,6 +203,10 @@ paths:
     $ref: "./resources/system/auth-types.yaml"
   /system/auth-types/{id}:
     $ref: "./resources/system/auth-typesID.yaml"
+  /system/app-orgs/{id}:
+    $ref: "./resources/system/application-organizationsId.yaml"
+  /system/app-orgs:
+    $ref: "./resources/system/application-organizations.yaml"
 
   #ui
   /ui/credential/reset:

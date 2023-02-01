@@ -39,6 +39,8 @@ const (
 	TypeAccountRoles logutils.MessageDataType = "account roles"
 	//TypeAccountUsageInfo account usage information
 	TypeAccountUsageInfo logutils.MessageDataType = "account usage information"
+	//TypeExternalSystemUser external system user
+	TypeExternalSystemUser logutils.MessageDataType = "external system user"
 	//TypeMFAType mfa type
 	TypeMFAType logutils.MessageDataType = "mfa type"
 	//TypeAccountGroups account groups
@@ -218,11 +220,11 @@ func (a Account) GetActiveRoles() []AccountRole {
 	return roles
 }
 
-// GetRole returns the role for an id if the account has it
-func (a Account) GetRole(id string) *AccountRole {
+// GetRole returns the role for an id if the account has it directly
+func (a Account) GetRole(id string) *AppOrgRole {
 	for _, role := range a.Roles {
 		if role.Role.ID == id {
-			return &role
+			return &role.Role
 		}
 	}
 	return nil
@@ -235,32 +237,6 @@ func (a Account) GetAssignedRoleIDs() []string {
 		ids[i] = role.Role.ID
 	}
 	return ids
-}
-
-// CheckForRoleChanges checks for changes to account roles given a potential list of new roles
-func (a Account) CheckForRoleChanges(new []string) bool {
-	unchanged := make([]bool, len(a.Roles))
-
-	for _, newR := range new {
-		found := false
-		for i, r := range a.Roles {
-			if r.Role.ID == newR {
-				found = true
-				unchanged[i] = true
-				break
-			}
-		}
-		if !found {
-			return true
-		}
-	}
-	for i := range a.Roles {
-		if !unchanged[i] {
-			return true
-		}
-	}
-
-	return false
 }
 
 // GetActiveGroups returns all active groups
@@ -293,30 +269,9 @@ func (a Account) GetAssignedGroupIDs() []string {
 	return ids
 }
 
-// CheckForGroupChanges checks for changes to account groups given a potential list of new groups
-func (a Account) CheckForGroupChanges(new []string) bool {
-	unchanged := make([]bool, len(a.Groups))
-
-	for _, newG := range new {
-		found := false
-		for i, g := range a.Groups {
-			if g.Group.ID == newG {
-				found = true
-				unchanged[i] = true
-				break
-			}
-		}
-		if !found {
-			return true
-		}
-	}
-	for i := range a.Groups {
-		if !unchanged[i] {
-			return true
-		}
-	}
-
-	return false
+// GetAppOrg returns the account's application organization
+func (a Account) GetAppOrg() ApplicationOrganization {
+	return a.AppOrg
 }
 
 // AccountRole represents a role assigned to an account
@@ -385,6 +340,41 @@ func (aat *AccountAuthType) SetUnverified(value bool) {
 	}
 }
 
+// Equals checks if two account auth types are equal
+func (aat *AccountAuthType) Equals(other AccountAuthType) bool {
+	if aat.Identifier != other.Identifier {
+		return false
+	}
+	if aat.Account.ID != other.Account.ID {
+		return false
+	}
+	if aat.AuthType.Code != other.AuthType.Code {
+		return false
+	}
+	if aat.Active != other.Active {
+		return false
+	}
+	if aat.Unverified != other.Unverified {
+		return false
+	}
+	if aat.Linked != other.Linked {
+		return false
+	}
+	if !utils.DeepEqual(aat.Params, other.Params) {
+		return false
+	}
+
+	thisCred := aat.Credential
+	otherCred := other.Credential
+	if (thisCred != nil) != (otherCred != nil) {
+		return false
+	} else if thisCred != nil && otherCred != nil && (thisCred.ID != otherCred.ID) {
+		return false
+	}
+
+	return true
+}
+
 // Credential represents a credential for account auth type/s
 type Credential struct {
 	ID string
@@ -433,6 +423,8 @@ type Profile struct {
 
 	DateCreated time.Time
 	DateUpdated *time.Time
+
+	UnstructuredProperties map[string]interface{}
 }
 
 // GetFullName returns the user's full name
