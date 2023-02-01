@@ -524,7 +524,7 @@ func NewWebAdapter(env string, serviceID string, serviceRegManager *authservice.
 	if err != nil {
 		logger.Fatalf("error loading docs yaml - %s", err.Error())
 	}
-	err = doc.Validate(loader.Context)
+	err = doc.Validate(loader.Context, openapi3.EnableExamplesValidation())
 	if err != nil {
 		logger.Fatalf("error on openapi3 validate - %s", err.Error())
 	}
