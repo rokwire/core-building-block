@@ -13,6 +13,7 @@ properties:
       - email
       - twilio_phone
       - illinois_oidc
+      - github_oauth2
       - anonymous
   app_type_identifier:
     type: string

@@ -288,21 +288,6 @@ type AuthCreds struct {
 	DateUpdated *time.Time `bson:"date_updated"`
 }
 
-// AuthRefresh represents refresh token info used by auth
-// TODO remove
-type AuthRefresh struct {
-	PreviousToken string                 `bson:"previous_token"`
-	CurrentToken  string                 `bson:"current_token" validate:"required"`
-	Expires       *time.Time             `bson:"exp" validate:"required"`
-	AppID         string                 `bson:"app_id" validate:"required"`
-	OrgID         string                 `bson:"org_id" validate:"required"`
-	CredsID       string                 `bson:"creds_id" validate:"required"`
-	Params        map[string]interface{} `bson:"params"`
-
-	DateCreated time.Time  `bson:"date_created"`
-	DateUpdated *time.Time `bson:"date_updated"`
-}
-
 // ServiceReg represents a service registration entity
 type ServiceReg struct {
 	Registration authservice.ServiceReg `json:"registration" bson:"registration"`

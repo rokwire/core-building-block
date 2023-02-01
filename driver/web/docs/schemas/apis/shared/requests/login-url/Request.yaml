@@ -3,18 +3,18 @@ required:
   - app_type_identifier
   - org_id
   - api_key
-  - redirect_uri
 type: object
 properties:
   auth_type:
     type: string
     enum:
       - illinois_oidc
+      - github_oauth2
   app_type_identifier:
     type: string
   org_id:
     type: string
   api_key:
     type: string
-  redirect_uri:
+  redirect_uri:	
     type: string

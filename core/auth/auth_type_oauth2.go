@@ -1,0 +1,215 @@
+// Copyright 2022 Board of Trustees of the University of Illinois.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package auth
+
+import (
+	"core-building-block/driven/oauthprovider"
+	"core-building-block/utils"
+	"encoding/json"
+	"fmt"
+	"strconv"
+	"strings"
+
+	"github.com/rokwire/logging-library-go/errors"
+	"github.com/rokwire/logging-library-go/logutils"
+	"gopkg.in/go-playground/validator.v9"
+)
+
+const (
+	//AuthTypeOAuth2 oauth2 auth type
+	AuthTypeOAuth2 string = "oauth2"
+
+	typeOAuth2LoginParams logutils.MessageDataType = "oauth2 login params"
+)
+
+type oauth2AuthConfig struct {
+	Host         string `json:"host" validate:"required"`
+	RedirectURI  string `json:"redirect_uri" validate:"required"`
+	AuthorizeURL string `json:"authorize_url"`
+	TokenURL     string `json:"token_url"`
+	UserInfoURL  string `json:"userinfo_url"`
+	Scopes       string `json:"scopes"`
+	AllowSignUp  bool   `json:"allow_signup"`
+	UseState     bool   `json:"use_state"`
+	UseRefresh   bool   `json:"use_refresh"`
+	ClientID     string `json:"client_id" validate:"required"`
+	ClientSecret string `json:"client_secret" validate:"required"`
+}
+
+func (o *oauth2AuthConfig) GetAuthorizeURL() string {
+	url := o.Host + "/login/oauth/authorize"
+	if len(o.AuthorizeURL) > 0 {
+		url = o.AuthorizeURL
+	}
+
+	return url
+}
+
+func (o *oauth2AuthConfig) GetTokenURL() string {
+	tokenURL := o.Host + "/login/oauth/access_token"
+	if len(o.TokenURL) > 0 {
+		tokenURL = o.TokenURL
+	}
+
+	url := ""
+	if strings.Contains(tokenURL, "{client_id}") {
+		url = strings.ReplaceAll(tokenURL, "{client_id}", o.ClientID)
+		url = strings.ReplaceAll(url, "{client_secret}", o.ClientSecret)
+	} else {
+		url = tokenURL
+	}
+
+	return url
+}
+
+func (o *oauth2AuthConfig) GetUserInfoURL() string {
+	url := o.Host + "/login/oauth/user"
+	if len(o.UserInfoURL) > 0 {
+		url = o.UserInfoURL
+	}
+
+	return url
+}
+
+func (o *oauth2AuthConfig) BuildNewTokenRequest(creds string, params string, refresh bool) (*oauthprovider.OAuthRequest, map[string]interface{}, error) {
+	if refresh && !o.UseRefresh {
+		return nil, nil, nil
+	}
+
+	body := map[string]string{
+		"client_id":    o.ClientID,
+		"redirect_uri": o.RedirectURI,
+	}
+	if o.ClientSecret != "" {
+		body["client_secret"] = o.ClientSecret
+	}
+	if refresh {
+		body["refresh_token"] = creds
+		body["grant_type"] = "refresh_token"
+	} else {
+		parsedCreds, err := utils.QueryValuesFromURL(creds)
+		if err != nil {
+			return nil, nil, errors.WrapErrorAction(logutils.ActionParse, "oauth2 creds", nil, err)
+		}
+
+		if o.UseState {
+			var loginParams oauth2LoginParams
+			err = json.Unmarshal([]byte(params), &loginParams)
+			if err != nil {
+				return nil, nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeOAuth2LoginParams, nil, err)
+			}
+			//state in creds must match state generated for login url (if used)
+			if loginParams.State != parsedCreds.Get("state") {
+				return nil, nil, errors.ErrorData(logutils.StatusInvalid, "oauth2 login", &logutils.FieldArgs{"state": parsedCreds.Get("state")})
+			}
+		}
+
+		body["code"] = parsedCreds.Get("code")
+	}
+
+	encoded := utils.EncodeQueryValues(body)
+	headers := map[string]string{
+		"Accept":         "application/json",
+		"Content-Type":   "application/x-www-form-urlencoded",
+		"Content-Length": strconv.Itoa(len(body)),
+	}
+
+	return &oauthprovider.OAuthRequest{Method: methodPost, URL: o.GetTokenURL(), Body: encoded, Headers: headers}, map[string]interface{}{}, nil
+}
+
+func (o *oauth2AuthConfig) ParseTokenResponse(response []byte, params map[string]interface{}) (oauthprovider.OAuthToken, map[string]interface{}, error) {
+	var token oauth2Token
+	err := json.Unmarshal(response, &token)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionUnmarshal, logutils.TypeToken, nil, err)
+	}
+	validate := validator.New()
+	err = validate.Struct(token)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, logutils.TypeToken, nil, err)
+	}
+
+	params["oauth2_token"] = token.GetResponseParams()
+	return &token, params, nil
+}
+
+func (o *oauth2AuthConfig) CheckIDToken(token oauthprovider.OAuthToken) (string, error) {
+	return "", nil
+}
+
+func (o *oauth2AuthConfig) CheckSubject(tokenSubject string, userSubject string) bool {
+	return true
+}
+
+func (o *oauth2AuthConfig) BuildLoginURLResponse(redirectURI string) (string, map[string]interface{}, error) {
+	query := map[string]string{
+		"client_id":    o.ClientID,
+		"redirect_uri": o.RedirectURI,
+		"scope":        o.Scopes,
+		"allow_signup": strconv.FormatBool(o.AllowSignUp),
+	}
+
+	responseParams := make(map[string]interface{})
+	if o.UseState {
+		state, err := utils.GenerateRandomString(50)
+		if err != nil {
+			return "", nil, errors.WrapErrorAction("generating", "random state", nil, err)
+		}
+		query["state"] = state
+		responseParams["state"] = state
+	}
+
+	return o.GetAuthorizeURL() + "?" + utils.EncodeQueryValues(query), responseParams, nil
+}
+
+type oauth2Token struct {
+	AccessToken  string `json:"access_token" validate:"required"`
+	RefreshToken string `json:"refresh_token"`
+	TokenType    string `json:"token_type" validate:"required"`
+	Scope        string `json:"scope" validate:"required"`
+}
+
+func (t *oauth2Token) GetAuthorizationHeader() string {
+	return fmt.Sprintf("%s %s", t.TokenType, t.AccessToken)
+}
+
+func (t *oauth2Token) GetResponseParams() map[string]interface{} {
+	return map[string]interface{}{
+		"access_token":  t.AccessToken,
+		"refresh_token": t.RefreshToken,
+		"token_type":    t.TokenType,
+		"scope":         t.Scope,
+	}
+}
+
+func (t *oauth2Token) GetIDToken() string {
+	return ""
+}
+
+type oauth2LoginParams struct {
+	State string `json:"state"`
+}
+
+// initOAuth2Auth initializes and registers a new OAuth auth instance for OAuth2
+func initOAuth2Auth(auth *Auth) (*oauthAuthImpl, error) {
+	oauth2 := &oauthAuthImpl{auth: auth, authType: AuthTypeOAuth2}
+
+	err := auth.registerExternalAuthType(AuthTypeOAuth2, oauth2)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionRegister, typeAuthType, logutils.StringArgs(AuthTypeOAuth2), err)
+	}
+
+	return oauth2, nil
+}

@@ -53,6 +53,7 @@ const (
 // Defines values for ServicesReqAccountAuthTypeLinkAuthType.
 const (
 	ServicesReqAccountAuthTypeLinkAuthTypeEmail        ServicesReqAccountAuthTypeLinkAuthType = "email"
+	ServicesReqAccountAuthTypeLinkAuthTypeGithubOauth2 ServicesReqAccountAuthTypeLinkAuthType = "github_oauth2"
 	ServicesReqAccountAuthTypeLinkAuthTypeIllinoisOidc ServicesReqAccountAuthTypeLinkAuthType = "illinois_oidc"
 	ServicesReqAccountAuthTypeLinkAuthTypeTwilioPhone  ServicesReqAccountAuthTypeLinkAuthType = "twilio_phone"
 	ServicesReqAccountAuthTypeLinkAuthTypeUsername     ServicesReqAccountAuthTypeLinkAuthType = "username"
@@ -61,6 +62,7 @@ const (
 // Defines values for ServicesReqAccountAuthTypeUnlinkAuthType.
 const (
 	ServicesReqAccountAuthTypeUnlinkAuthTypeEmail        ServicesReqAccountAuthTypeUnlinkAuthType = "email"
+	ServicesReqAccountAuthTypeUnlinkAuthTypeGithubOauth2 ServicesReqAccountAuthTypeUnlinkAuthType = "github_oauth2"
 	ServicesReqAccountAuthTypeUnlinkAuthTypeIllinoisOidc ServicesReqAccountAuthTypeUnlinkAuthType = "illinois_oidc"
 	ServicesReqAccountAuthTypeUnlinkAuthTypeTwilioPhone  ServicesReqAccountAuthTypeUnlinkAuthType = "twilio_phone"
 	ServicesReqAccountAuthTypeUnlinkAuthTypeUsername     ServicesReqAccountAuthTypeUnlinkAuthType = "username"
@@ -103,6 +105,7 @@ const (
 const (
 	SharedReqAccountCheckAuthTypeAnonymous    SharedReqAccountCheckAuthType = "anonymous"
 	SharedReqAccountCheckAuthTypeEmail        SharedReqAccountCheckAuthType = "email"
+	SharedReqAccountCheckAuthTypeGithubOauth2 SharedReqAccountCheckAuthType = "github_oauth2"
 	SharedReqAccountCheckAuthTypeIllinoisOidc SharedReqAccountCheckAuthType = "illinois_oidc"
 	SharedReqAccountCheckAuthTypeTwilioPhone  SharedReqAccountCheckAuthType = "twilio_phone"
 	SharedReqAccountCheckAuthTypeUsername     SharedReqAccountCheckAuthType = "username"
@@ -111,6 +114,7 @@ const (
 // Defines values for SharedReqCreateAccountAuthType.
 const (
 	SharedReqCreateAccountAuthTypeEmail        SharedReqCreateAccountAuthType = "email"
+	SharedReqCreateAccountAuthTypeGithubOauth2 SharedReqCreateAccountAuthType = "github_oauth2"
 	SharedReqCreateAccountAuthTypeIllinoisOidc SharedReqCreateAccountAuthType = "illinois_oidc"
 )
 
@@ -118,12 +122,14 @@ const (
 const (
 	SharedReqLoginAuthTypeAnonymous    SharedReqLoginAuthType = "anonymous"
 	SharedReqLoginAuthTypeEmail        SharedReqLoginAuthType = "email"
+	SharedReqLoginAuthTypeGithubOauth2 SharedReqLoginAuthType = "github_oauth2"
 	SharedReqLoginAuthTypeIllinoisOidc SharedReqLoginAuthType = "illinois_oidc"
 	SharedReqLoginAuthTypeTwilioPhone  SharedReqLoginAuthType = "twilio_phone"
 )
 
 // Defines values for SharedReqLoginUrlAuthType.
 const (
+	SharedReqLoginUrlAuthTypeGithubOauth2 SharedReqLoginUrlAuthType = "github_oauth2"
 	SharedReqLoginUrlAuthTypeIllinoisOidc SharedReqLoginUrlAuthType = "illinois_oidc"
 )
 
@@ -153,6 +159,7 @@ const (
 // Defines values for SharedReqUpdateAccountAuthType.
 const (
 	Email        SharedReqUpdateAccountAuthType = "email"
+	GithubOauth2 SharedReqUpdateAccountAuthType = "github_oauth2"
 	IllinoisOidc SharedReqUpdateAccountAuthType = "illinois_oidc"
 )
 
@@ -887,6 +894,10 @@ type SharedReqCredsEmail struct {
 	Password string `json:"password"`
 }
 
+// Auth login creds for auth_type="oauth2" (or variants)
+//   - full redirect URI received from OAuth2 provider
+type SharedReqCredsOAuth2 = string
+
 // Auth login creds for auth_type="oidc" (or variants)
 //   - full redirect URI received from OIDC provider
 type SharedReqCredsOIDC = string
@@ -922,7 +933,7 @@ type SharedReqLoginUrl struct {
 	AppTypeIdentifier string                    `json:"app_type_identifier"`
 	AuthType          SharedReqLoginUrlAuthType `json:"auth_type"`
 	OrgId             string                    `json:"org_id"`
-	RedirectUri       string                    `json:"redirect_uri"`
+	RedirectUri       *string                   `json:"redirect_uri,omitempty"`
 }
 
 // SharedReqLoginUrlAuthType defines model for SharedReqLoginUrl.AuthType.
@@ -972,10 +983,14 @@ type SharedReqParamsEmail struct {
 // Auth login request params for unlisted auth_types (None)
 type SharedReqParamsNone = map[string]interface{}
 
+// Auth login params for auth_type="oauth2" (or variants)
+type SharedReqParamsOAuth2 struct {
+	State *string `json:"state,omitempty"`
+}
+
 // Auth login params for auth_type="oidc" (or variants)
 type SharedReqParamsOIDC struct {
 	PkceVerifier *string `json:"pkce_verifier,omitempty"`
-	RedirectUri  *string `json:"redirect_uri,omitempty"`
 }
 
 // SharedReqParamsSetEmailCredential defines model for _shared_req_ParamsSetEmailCredential.

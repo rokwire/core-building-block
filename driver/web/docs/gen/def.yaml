@@ -143,8 +143,41 @@ paths:
                     "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
                     "creds": "https://redirect.example.com?code=ai324uith8gSEefesEguorgwsf43",
                     "params": {
-                      "redirect_uri": "https://redirect.example.com",
                       "pkce_verifier": "w4iuhfq0u43hfq38ghn3gnSFSFiqp3ugnpugnqiprgUGNPINfsdoirpgia"
+                    },
+                    "preferences":{
+                        "key1":"value1",
+                        "key2":"value2"
+                    },
+                    "profile":{
+                      "address": "address",
+                      "birth_year": 1990,
+                      "country": "county",
+                      "email": "email",
+                      "first_name": "first name",
+                      "last_name": "last name",
+                      "phone": "+000000000000",
+                      "photo_url": "photo url",
+                      "state": "state",
+                      "zip_code": "zip code"
+                    },
+                    "device": {
+                      "type": "mobile",
+                      "device_id": "5555",
+                      "os": "Android"
+                    }
+                  }
+              github_oauth2:
+                summary: GitHub OAuth2 login
+                value: |
+                  {
+                    "auth_type": "github_oauth2",
+                    "app_type_identifier": "edu.illinois.rokwire",
+                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
+                    "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
+                    "creds": "https://redirect.example.com?code=ai324uith8gSEefesEguorgwsf43&state=vrH0c-seVXlmROlKa7ILgPw0d2Ukk8GjjOzhFJ2qmVDbL_MNy6mRcTH4tmDCvKIUxHQ=",
+                    "params": {
+                      "state": "vrH0c-seVXlmROlKa7ILgPw0d2Ukk8GjjOzhFJ2qmVDbL_MNy6mRcTH4tmDCvKIUxHQ="
                     },
                     "preferences":{
                         "key1":"value1",
@@ -686,8 +719,20 @@ paths:
                     "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
                     "creds": "https://redirect.example.com?code=ai324uith8gSEefesEguorgwsf43",
                     "params": {
-                      "redirect_uri": "https://redirect.example.com",
                       "pkce_verifier": "w4iuhfq0u43hfq38ghn3gnSFSFiqp3ugnpugnqiprgUGNPINfsdoirpgia"
+                    }
+                  }
+              github_oauth2:
+                summary: GitHub OAuth2
+                value: |
+                  {
+                    "auth_type": "github_oauth2",
+                    "app_type_identifier": "edu.illinois.rokwire",
+                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
+                    "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
+                    "creds": "https://redirect.example.com?code=ai324uith8gSEefesEguorgwsf43&state=vrH0c-seVXlmROlKa7ILgPw0d2Ukk8GjjOzhFJ2qmVDbL_MNy6mRcTH4tmDCvKIUxHQ=",
+                    "params": {
+                      "state": "vrH0c-seVXlmROlKa7ILgPw0d2Ukk8GjjOzhFJ2qmVDbL_MNy6mRcTH4tmDCvKIUxHQ="
                     }
                   }
         required: true
@@ -764,6 +809,14 @@ paths:
                 value: |
                   {
                     "auth_type": "illinois_oidc",
+                    "app_type_identifier": "edu.illinois.rokwire",
+                    "identifier": "123456789"
+                  }
+              github_oauth2:
+                summary: GitHub OAuth2
+                value: |
+                  {
+                    "auth_type": "github_oauth2",
                     "app_type_identifier": "edu.illinois.rokwire",
                     "identifier": "123456789"
                   }
@@ -1500,8 +1553,41 @@ paths:
                     "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
                     "creds": "https://redirect.example.com?code=ai324uith8gSEefesEguorgwsf43",
                     "params": {
-                      "redirect_uri": "https://redirect.example.com",
                       "pkce_verifier": "w4iuhfq0u43hfq38ghn3gnSFSFiqp3ugnpugnqiprgUGNPINfsdoirpgia"
+                    },
+                    "preferences":{
+                        "key1":"value1",
+                        "key2":"value2"
+                    },
+                    "profile":{
+                      "address": "address",
+                      "birth_year": 1990,
+                      "country": "county",
+                      "email": "email",
+                      "first_name": "first name",
+                      "last_name": "last name",
+                      "phone": "+000000000000",
+                      "photo_url": "photo url",
+                      "state": "state",
+                      "zip_code": "zip code"
+                    },
+                    "device": {
+                      "type": "mobile",
+                      "device_id": "5555",
+                      "os": "Android"
+                    }
+                  }
+              github_oauth2:
+                summary: GitHub OAuth2
+                value: |
+                  {
+                    "auth_type": "github_oauth2",
+                    "app_type_identifier": "edu.illinois.rokwire",
+                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
+                    "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
+                    "creds": "https://redirect.example.com?code=ai324uith8gSEefesEguorgwsf43&state=vrH0c-seVXlmROlKa7ILgPw0d2Ukk8GjjOzhFJ2qmVDbL_MNy6mRcTH4tmDCvKIUxHQ=",
+                    "params": {
+                      "state": "vrH0c-seVXlmROlKa7ILgPw0d2Ukk8GjjOzhFJ2qmVDbL_MNy6mRcTH4tmDCvKIUxHQ="
                     },
                     "preferences":{
                         "key1":"value1",
@@ -6171,6 +6257,7 @@ components:
             - email
             - twilio_phone
             - illinois_oidc
+            - github_oauth2
             - anonymous
         app_type_identifier:
           type: string
@@ -6183,12 +6270,14 @@ components:
             - $ref: '#/components/schemas/_shared_req_CredsEmail'
             - $ref: '#/components/schemas/_shared_req_CredsTwilioPhone'
             - $ref: '#/components/schemas/_shared_req_CredsOIDC'
+            - $ref: '#/components/schemas/_shared_req_CredsOAuth2'
             - $ref: '#/components/schemas/_shared_req_CredsAPIKey'
         params:
           type: object
           anyOf:
             - $ref: '#/components/schemas/_shared_req_ParamsEmail'
             - $ref: '#/components/schemas/_shared_req_ParamsOIDC'
+            - $ref: '#/components/schemas/_shared_req_ParamsOAuth2'
             - $ref: '#/components/schemas/_shared_req_ParamsNone'
         device:
           $ref: '#/components/schemas/_shared_req_Login_Device'
@@ -6253,13 +6342,13 @@ components:
         - app_type_identifier
         - org_id
         - api_key
-        - redirect_uri
       type: object
       properties:
         auth_type:
           type: string
           enum:
             - illinois_oidc
+            - github_oauth2
         app_type_identifier:
           type: string
         org_id:
@@ -6305,6 +6394,7 @@ components:
           enum:
             - email
             - illinois_oidc
+            - github_oauth2
         identifier:
           type: string
         permissions:
@@ -6335,6 +6425,7 @@ components:
           enum:
             - email
             - illinois_oidc
+            - github_oauth2
         identifier:
           type: string
         permissions:
@@ -6365,6 +6456,7 @@ components:
             - email
             - twilio_phone
             - illinois_oidc
+            - github_oauth2
             - anonymous
         app_type_identifier:
           type: string
@@ -6400,6 +6492,11 @@ components:
       description: |
         Auth login creds for auth_type="oidc" (or variants)
           - full redirect URI received from OIDC provider
+    _shared_req_CredsOAuth2:
+      type: string
+      description: |
+        Auth login creds for auth_type="oauth2" (or variants)
+          - full redirect URI received from OAuth2 provider
     _shared_req_CredsAPIKey:
       type: object
       description: Auth login creds for auth_type="anonymous"
@@ -6420,9 +6517,13 @@ components:
       type: object
       description: Auth login params for auth_type="oidc" (or variants)
       properties:
-        redirect_uri:
-          type: string
         pkce_verifier:
+          type: string
+    _shared_req_ParamsOAuth2:
+      type: object
+      description: Auth login params for auth_type="oauth2" (or variants)
+      properties:
+        state:
           type: string
     _shared_req_ParamsNone:
       type: object
@@ -6719,6 +6820,7 @@ components:
             - email
             - twilio_phone
             - illinois_oidc
+            - github_oauth2
             - username
         app_type_identifier:
           type: string
@@ -6746,6 +6848,7 @@ components:
             - email
             - twilio_phone
             - illinois_oidc
+            - github_oauth2
             - username
         app_type_identifier:
           type: string

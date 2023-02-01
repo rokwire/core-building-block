@@ -3749,16 +3749,15 @@ func (sl *storageListener) OnServiceRegsUpdated() {
 
 func (sl *storageListener) OnOrganizationsUpdated() {
 	sl.adapter.cacheOrganizations()
+	sl.adapter.cacheApplicationsOrganizations()
 }
 
 func (sl *storageListener) OnApplicationsUpdated() {
 	sl.adapter.cacheApplications()
-	sl.adapter.cacheOrganizations()
+	sl.adapter.cacheApplicationsOrganizations()
 }
 
 func (sl *storageListener) OnApplicationsOrganizationsUpdated() {
-	sl.adapter.cacheApplications()
-	sl.adapter.cacheOrganizations()
 	sl.adapter.cacheApplicationsOrganizations()
 }
 

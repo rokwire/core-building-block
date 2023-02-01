@@ -16,6 +16,7 @@ package auth
 
 import (
 	"core-building-block/core/model"
+	"core-building-block/driven/oauthprovider"
 	"core-building-block/driven/storage"
 	"time"
 
@@ -205,7 +206,6 @@ type APIs interface {
 	//		authType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
 	//		appTypeIdentifier (string): Identifier of the app type/client that the user is logging in from
 	//		orgID (string): ID of the organization that the user is logging in
-	//		redirectURI (string): Registered redirect URI where client will receive response
 	//		apiKey (string): API key to validate the specified app
 	//		l (*loglib.Log): Log object pointer for request
 	//	Returns:
@@ -591,4 +591,10 @@ type ProfileBuildingBlock interface {
 // Emailer is used by core to send emails
 type Emailer interface {
 	Send(toEmail string, subject string, body string, attachmentFilename *string) error
+}
+
+// OAuthProvider is used by auth to authenticate users via an external OAuth provider
+type OAuthProvider interface {
+	LoadToken(config oauthprovider.OAuthConfig, creds string, params string, refresh bool) (oauthprovider.OAuthToken, map[string]interface{}, error)
+	LoadUserInfo(config oauthprovider.OAuthConfig, token oauthprovider.OAuthToken) ([]byte, error)
 }

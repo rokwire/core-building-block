@@ -12,6 +12,7 @@ properties:
       - email
       - twilio_phone
       - illinois_oidc
+      - github_oauth2
       - anonymous
   app_type_identifier:
     type: string
@@ -24,12 +25,14 @@ properties:
       - $ref: "../CredsEmail.yaml"
       - $ref: "../CredsTwilioPhone.yaml"
       - $ref: "../CredsOIDC.yaml"
+      - $ref: "../CredsOAuth2.yaml"
       - $ref: "../CredsAPIKey.yaml"
   params:
     type: object
     anyOf:
       - $ref: "../ParamsEmail.yaml"
       - $ref: "../ParamsOIDC.yaml"
+      - $ref: "../ParamsOAuth2.yaml"
       - $ref: "../ParamsNone.yaml"
   device:
     $ref: "./Device.yaml"

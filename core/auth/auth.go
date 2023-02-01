@@ -35,7 +35,6 @@ import (
 	"github.com/rokwire/core-auth-library-go/v2/tokenauth"
 	"golang.org/x/sync/syncmap"
 	"gopkg.in/go-playground/validator.v9"
-	"gopkg.in/gomail.v2"
 
 	"github.com/rokwire/logging-library-go/errors"
 	"github.com/rokwire/logging-library-go/logs"
@@ -75,8 +74,9 @@ const (
 
 // Auth represents the auth functionality unit
 type Auth struct {
-	storage Storage
-	emailer Emailer
+	storage       Storage
+	emailer       Emailer
+	oauthProvider OAuthProvider
 
 	logger *logs.Logger
 
@@ -98,9 +98,6 @@ type Auth struct {
 
 	profileBB ProfileBuildingBlock
 
-	emailFrom   string
-	emailDialer *gomail.Dialer
-
 	cachedIdentityProviders *syncmap.Map //cache identityProviders
 	identityProvidersLock   *sync.RWMutex
 
@@ -113,7 +110,7 @@ type Auth struct {
 }
 
 // NewAuth creates a new auth instance
-func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage Storage, emailer Emailer, minTokenExp *int64, maxTokenExp *int64, twilioAccountSID string,
+func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage Storage, emailer Emailer, oauthProvider OAuthProvider, minTokenExp *int64, maxTokenExp *int64, twilioAccountSID string,
 	twilioToken string, twilioServiceSID string, profileBB *profilebb.Adapter, smtpHost string, smtpPortNum int, smtpUser string, smtpPassword string, smtpFrom string, logger *logs.Logger) (*Auth, error) {
 	if minTokenExp == nil {
 		var minTokenExpVal int64 = 5
@@ -124,8 +121,6 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 		var maxTokenExpVal int64 = 60
 		maxTokenExp = &maxTokenExpVal
 	}
-	//maybe set up from config collection for diff types of auth
-	emailDialer := gomail.NewDialer(smtpHost, smtpPortNum, smtpUser, smtpPassword)
 
 	authTypes := map[string]authType{}
 	externalAuthTypes := map[string]externalAuthType{}
@@ -141,10 +136,10 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 
 	timerDone := make(chan bool)
 
-	auth := &Auth{storage: storage, emailer: emailer, logger: logger, authTypes: authTypes, externalAuthTypes: externalAuthTypes, anonymousAuthTypes: anonymousAuthTypes,
-		serviceAuthTypes: serviceAuthTypes, mfaTypes: mfaTypes, authPrivKey: authPrivKey, ServiceRegManager: nil, serviceID: serviceID, host: host, minTokenExp: *minTokenExp,
-		maxTokenExp: *maxTokenExp, profileBB: profileBB, cachedIdentityProviders: cachedIdentityProviders, identityProvidersLock: identityProvidersLock,
-		timerDone: timerDone, emailDialer: emailDialer, emailFrom: smtpFrom, apiKeys: apiKeys, apiKeysLock: apiKeysLock}
+	auth := &Auth{storage: storage, emailer: emailer, oauthProvider: oauthProvider, logger: logger, authTypes: authTypes, externalAuthTypes: externalAuthTypes,
+		anonymousAuthTypes: anonymousAuthTypes, serviceAuthTypes: serviceAuthTypes, mfaTypes: mfaTypes, authPrivKey: authPrivKey, ServiceRegManager: nil, serviceID: serviceID, host: host,
+		minTokenExp: *minTokenExp, maxTokenExp: *maxTokenExp, profileBB: profileBB, cachedIdentityProviders: cachedIdentityProviders, identityProvidersLock: identityProvidersLock,
+		timerDone: timerDone, apiKeys: apiKeys, apiKeysLock: apiKeysLock}
 
 	err := auth.storeReg()
 	if err != nil {
@@ -184,6 +179,7 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 
 	initOidcAuth(auth)
 	initSamlAuth(auth)
+	initOAuth2Auth(auth)
 
 	initStaticTokenServiceAuth(auth)
 	initSignatureServiceAuth(auth)
@@ -2045,6 +2041,10 @@ func (a *Auth) validateAuthTypeForAppOrg(authenticationType string, appID string
 	return nil, nil, errors.ErrorData(logutils.StatusInvalid, typeAuthType, &logutils.FieldArgs{"app_org_id": appOrg.ID, "auth_type": authenticationType})
 }
 
+func (a *Auth) isValidAdminAuthType(authenticationType string) bool {
+	return authenticationType == AuthTypeEmail || strings.HasSuffix("_"+authenticationType, "_oidc") || strings.HasSuffix("_"+authenticationType, "_oauth2")
+}
+
 func (a *Auth) getAuthTypeImpl(authType model.AuthType) (authType, error) {
 	if auth, ok := a.authTypes[authType.Code]; ok {
 		return auth, nil
@@ -2059,6 +2059,10 @@ func (a *Auth) getExternalAuthTypeImpl(authType model.AuthType) (externalAuthTyp
 	//illinois_oidc, other_oidc
 	if strings.HasSuffix(authType.Code, "_oidc") {
 		key = "oidc"
+	}
+	//github_oauth2, other_oauth2
+	if strings.HasSuffix(authType.Code, "_oauth2") {
+		key = "oauth2"
 	}
 
 	if auth, ok := a.externalAuthTypes[key]; ok {
