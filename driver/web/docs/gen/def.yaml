@@ -5511,13 +5511,18 @@ components:
           type: boolean
         identifier:
           type: string
-        app_org:
-          $ref: '#/components/schemas/ApplicationOrganization'
-        app_type:
-          $ref: '#/components/schemas/ApplicationType'
-        account_auth_type:
-          $ref: '#/components/schemas/AccountAuthType'
-          nullable: true
+        auth_type_code:
+          type: string
+        app_org_id:
+          type: string
+        app_type_id:
+          type: string
+        app_type_identifier:
+          type: string
+        account_auth_type_id:
+          type: string
+        account_auth_type_identifier:
+          type: string
         device_id:
           type: string
         ip_address:
@@ -5573,13 +5578,6 @@ components:
         params:
           type: object
           additionalProperties: true
-    Credential:
-      type: object
-      properties:
-        id:
-          type: string
-        value:
-          type: object
     ServiceAccount:
       required:
         - app_id
@@ -5915,13 +5913,10 @@ components:
           type: string
         photo_url:
           type: string
-          nullable: true
         first_name:
           type: string
-          nullable: true
         last_name:
           type: string
-          nullable: true
         email:
           type: string
           nullable: true
@@ -6011,8 +6006,6 @@ components:
           type: boolean
         unverified:
           type: boolean
-        credential:
-          $ref: '#/components/schemas/Credential'
     Device:
       required:
         - id

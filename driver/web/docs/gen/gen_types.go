@@ -185,7 +185,6 @@ type Account struct {
 type AccountAuthType struct {
 	Active     *bool                   `json:"active,omitempty"`
 	Code       string                  `json:"code"`
-	Credential *Credential             `json:"credential,omitempty"`
 	Id         string                  `json:"id"`
 	Identifier string                  `json:"identifier"`
 	Params     *AccountAuthType_Params `json:"params"`
@@ -307,12 +306,6 @@ type AuthType_Params struct {
 	AdditionalProperties map[string]interface{} `json:"-"`
 }
 
-// Credential defines model for Credential.
-type Credential struct {
-	Id    *string                 `json:"id,omitempty"`
-	Value *map[string]interface{} `json:"value,omitempty"`
-}
-
 // Device defines model for Device.
 type Device struct {
 	DeviceId *string    `json:"device_id,omitempty"`
@@ -404,21 +397,24 @@ type JWKS struct {
 
 // LoginSession defines model for LoginSession.
 type LoginSession struct {
-	AccountAuthType    *AccountAuthType         `json:"account_auth_type,omitempty"`
-	Anonymous          *bool                    `json:"anonymous,omitempty"`
-	AppOrg             *ApplicationOrganization `json:"app_org"`
-	AppType            *ApplicationType         `json:"app_type,omitempty"`
-	DateCreated        *string                  `json:"date_created,omitempty"`
-	DateRefreshed      *string                  `json:"date_refreshed"`
-	DateUpdated        *string                  `json:"date_updated"`
-	DeviceId           *string                  `json:"device_id,omitempty"`
-	Id                 *string                  `json:"id,omitempty"`
-	Identifier         *string                  `json:"identifier,omitempty"`
-	IpAddress          *string                  `json:"ip_address,omitempty"`
-	MfaAttempts        *int                     `json:"mfa_attempts,omitempty"`
-	RefreshTokensCount *int                     `json:"refresh_tokens_count,omitempty"`
-	State              *string                  `json:"state,omitempty"`
-	StateExpires       *string                  `json:"state_expires"`
+	AccountAuthTypeId         *string `json:"account_auth_type_id,omitempty"`
+	AccountAuthTypeIdentifier *string `json:"account_auth_type_identifier,omitempty"`
+	Anonymous                 *bool   `json:"anonymous,omitempty"`
+	AppOrgId                  *string `json:"app_org_id,omitempty"`
+	AppTypeId                 *string `json:"app_type_id,omitempty"`
+	AppTypeIdentifier         *string `json:"app_type_identifier,omitempty"`
+	AuthTypeCode              *string `json:"auth_type_code,omitempty"`
+	DateCreated               *string `json:"date_created,omitempty"`
+	DateRefreshed             *string `json:"date_refreshed"`
+	DateUpdated               *string `json:"date_updated"`
+	DeviceId                  *string `json:"device_id,omitempty"`
+	Id                        *string `json:"id,omitempty"`
+	Identifier                *string `json:"identifier,omitempty"`
+	IpAddress                 *string `json:"ip_address,omitempty"`
+	MfaAttempts               *int    `json:"mfa_attempts,omitempty"`
+	RefreshTokensCount        *int    `json:"refresh_tokens_count,omitempty"`
+	State                     *string `json:"state,omitempty"`
+	StateExpires              *string `json:"state_expires"`
 }
 
 // LoginSessionSettings defines model for LoginSessionSettings.
@@ -493,11 +489,11 @@ type Profile struct {
 	BirthYear              *int                    `json:"birth_year"`
 	Country                *string                 `json:"country"`
 	Email                  *string                 `json:"email"`
-	FirstName              *string                 `json:"first_name"`
+	FirstName              *string                 `json:"first_name,omitempty"`
 	Id                     *string                 `json:"id,omitempty"`
-	LastName               *string                 `json:"last_name"`
+	LastName               *string                 `json:"last_name,omitempty"`
 	Phone                  *string                 `json:"phone"`
-	PhotoUrl               *string                 `json:"photo_url"`
+	PhotoUrl               *string                 `json:"photo_url,omitempty"`
 	State                  *string                 `json:"state"`
 	UnstructuredProperties *map[string]interface{} `json:"unstructured_properties"`
 	ZipCode                *string                 `json:"zip_code"`

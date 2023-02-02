@@ -41,8 +41,6 @@ LoginSession:
   $ref: "./auth/LoginSession.yaml"
 AuthType:
   $ref: "./auth/AuthType.yaml"
-Credential:
-  $ref: "./auth/Credential.yaml"
 ServiceAccount:
   $ref: "./auth/ServiceAccount.yaml"
 AppOrgPair:

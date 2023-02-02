@@ -6,13 +6,18 @@ properties:
     type: boolean
   identifier:
     type: string
-  app_org:
-    $ref: "../application/ApplicationOrganization.yaml"
-  app_type:
-    $ref: "../application/ApplicationType.yaml"
-  account_auth_type:
-    $ref: "../user/AccountAuthType.yaml"
-    nullable: true
+  auth_type_code:
+    type: string
+  app_org_id:
+    type: string
+  app_type_id:
+    type: string
+  app_type_identifier:
+    type: string
+  account_auth_type_id:
+    type: string
+  account_auth_type_identifier:
+    type: string
   device_id:
     type: string
   ip_address:
