@@ -366,11 +366,11 @@ func (a *emailAuthImpl) restartCredentialVerification(credential *model.Credenti
 
 func (a *emailAuthImpl) compareCode(credCode string, requestCode string, expiryTime time.Time, l *logs.Log) error {
 	if expiryTime.Before(time.Now()) {
-		return errors.New("Code has expired")
+		return errors.ErrorData("expired", "code", nil)
 	}
 
 	if subtle.ConstantTimeCompare([]byte(credCode), []byte(requestCode)) == 0 {
-		return errors.ErrorData(logutils.StatusInvalid, "Invalid code", nil)
+		return errors.ErrorData(logutils.StatusInvalid, "code", nil)
 	}
 	return nil
 }

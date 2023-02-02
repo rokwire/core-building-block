@@ -294,7 +294,7 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 
 	userClaimsSub, _ := userClaims["sub"].(string)
 	if userClaimsSub != sub {
-		return nil, nil, errors.Newf("mismatching user info sub %s and id token sub %s", userClaimsSub, sub)
+		return nil, nil, errors.ErrorData("mismatched", "sub fields", &logutils.FieldArgs{"user info": userClaimsSub, "id token": sub})
 	}
 
 	identityProviderID, _ := authType.Params["identity_provider"].(string)

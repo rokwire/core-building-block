@@ -194,7 +194,7 @@ _services_req_application_org-configs:
 ## ADMIN section
 
 ### admin application_roles API
-_admin_req_create-application_role:
+_admin_req_application_role:
   $ref: "./apis/admin/application/roles/request/Request.yaml"
 
 ### admin application_groups API
