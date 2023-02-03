@@ -45,146 +45,119 @@ paths:
             examples:
               email-sign_in:
                 summary: Email - sign in
-                value: |
-                  {
-                    "auth_type": "email",
-                    "app_type_identifier": "edu.illinois.rokwire",
-                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
-                    "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
-                    "creds": {
-                      "email": "test@example.com", 
-                      "password": "test12345"
-                    },
-                    "device": {
-                      "type": "mobile",
-                      "device_id": "5555",
-                      "os": "Android"
-                    }
-                  }
+                value:
+                  auth_type: email
+                  app_type_identifier: edu.illinois.rokwire
+                  org_id: 0a2eff20-e2cd-11eb-af68-60f81db5ecc0
+                  api_key: 95a463e3-2ce8-450b-ba75-d8506b874738
+                  creds:
+                    email: test@example.com
+                    password: test12345
+                  device:
+                    type: mobile
+                    device_id: '5555'
+                    os: Android
               email-sign_up:
                 summary: Email - sign up
-                value: |
-                  {
-                    "auth_type": "email",
-                    "app_type_identifier": "edu.illinois.rokwire",
-                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
-                    "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
-                    "creds": {
-                      "email": "test@example.com", 
-                      "password": "test12345"
-                    },
-                    "params":{
-                        "sign_up":true,
-                        "confirm_password": "test12345"
-                    },
-                    "preferences":{
-                        "key1":"value1",
-                        "key2":"value2"
-                    },
-                    "profile":{
-                      "address": "address",
-                      "birth_year": 1990,
-                      "country": "county",
-                      "email": "email",
-                      "first_name": "first name",
-                      "last_name": "last name",
-                      "phone": "+000000000000",
-                      "photo_url": "photo url",
-                      "state": "state",
-                      "zip_code": "zip code"
-                    },
-                    "device": {
-                      "type": "mobile",
-                      "device_id": "5555",
-                      "os": "Android"
-                    }
-                  }
+                value:
+                  auth_type: email
+                  app_type_identifier: edu.illinois.rokwire
+                  org_id: 0a2eff20-e2cd-11eb-af68-60f81db5ecc0
+                  api_key: 95a463e3-2ce8-450b-ba75-d8506b874738
+                  creds:
+                    email: test@example.com
+                    password: test12345
+                  params:
+                    sign_up: true
+                    confirm_password: test12345
+                  preferences:
+                    key1: value1
+                    key2: value2
+                  profile:
+                    address: address
+                    birth_year: 1990
+                    country: county
+                    email: email
+                    first_name: first name
+                    last_name: last name
+                    phone: '+000000000000'
+                    photo_url: photo url
+                    state: state
+                    zip_code: zip code
+                  device:
+                    type: mobile
+                    device_id: '5555'
+                    os: Android
               phone:
                 summary: Phone - sign in OR sign up
-                value: |
-                  {
-                    "auth_type": "twilio_phone",
-                    "app_type_identifier": "edu.illinois.rokwire",
-                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
-                    "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
-                    "creds": {
-                      "phone": "+12223334444", 
-                      "code": "123456"
-                    },
-                    "preferences":{
-                        "key1":"value1",
-                        "key2":"value2"
-                    },
-                    "profile":{
-                      "address": "address",
-                      "birth_year": 1990,
-                      "country": "county",
-                      "email": "email",
-                      "first_name": "first name",
-                      "last_name": "last name",
-                      "phone": "+000000000000",
-                      "photo_url": "photo url",
-                      "state": "state",
-                      "zip_code": "zip code"
-                    },
-                    "device": {
-                      "type": "mobile",
-                      "device_id": "5555",
-                      "os": "Android"
-                    }
-                  }
+                value:
+                  auth_type: twilio_phone
+                  app_type_identifier: edu.illinois.rokwire
+                  org_id: 0a2eff20-e2cd-11eb-af68-60f81db5ecc0
+                  api_key: 95a463e3-2ce8-450b-ba75-d8506b874738
+                  creds:
+                    phone: '+12223334444'
+                    code: '123456'
+                  preferences:
+                    key1: value1
+                    key2: value2
+                  profile:
+                    address: address
+                    birth_year: 1990
+                    country: county
+                    email: email
+                    first_name: first name
+                    last_name: last name
+                    phone: '+000000000000'
+                    photo_url: photo url
+                    state: state
+                    zip_code: zip code
+                  device:
+                    type: mobile
+                    device_id: '5555'
+                    os: Android
               illinois_oidc:
                 summary: Illinois OIDC login
-                value: |
-                  {
-                    "auth_type": "illinois_oidc",
-                    "app_type_identifier": "edu.illinois.rokwire",
-                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
-                    "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
-                    "creds": "https://redirect.example.com?code=ai324uith8gSEefesEguorgwsf43",
-                    "params": {
-                      "redirect_uri": "https://redirect.example.com",
-                      "pkce_verifier": "w4iuhfq0u43hfq38ghn3gnSFSFiqp3ugnpugnqiprgUGNPINfsdoirpgia"
-                    },
-                    "preferences":{
-                        "key1":"value1",
-                        "key2":"value2"
-                    },
-                    "profile":{
-                      "address": "address",
-                      "birth_year": 1990,
-                      "country": "county",
-                      "email": "email",
-                      "first_name": "first name",
-                      "last_name": "last name",
-                      "phone": "+000000000000",
-                      "photo_url": "photo url",
-                      "state": "state",
-                      "zip_code": "zip code"
-                    },
-                    "device": {
-                      "type": "mobile",
-                      "device_id": "5555",
-                      "os": "Android"
-                    }
-                  }
+                value:
+                  auth_type: illinois_oidc
+                  app_type_identifier: edu.illinois.rokwire
+                  org_id: 0a2eff20-e2cd-11eb-af68-60f81db5ecc0
+                  api_key: 95a463e3-2ce8-450b-ba75-d8506b874738
+                  creds: 'https://redirect.example.com?code=ai324uith8gSEefesEguorgwsf43'
+                  params:
+                    redirect_uri: 'https://redirect.example.com'
+                    pkce_verifier: w4iuhfq0u43hfq38ghn3gnSFSFiqp3ugnpugnqiprgUGNPINfsdoirpgia
+                  preferences:
+                    key1: value1
+                    key2: value2
+                  profile:
+                    address: address
+                    birth_year: 1990
+                    country: county
+                    email: email
+                    first_name: first name
+                    last_name: last name
+                    phone: '+000000000000'
+                    photo_url: photo url
+                    state: state
+                    zip_code: zip code
+                  device:
+                    type: mobile
+                    device_id: '5555'
+                    os: Android
               anonymous:
                 summary: Anonymous login
-                value: |
-                  {
-                    "auth_type": "anonymous",
-                    "app_type_identifier": "edu.illinois.rokwire",
-                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
-                    "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
-                    "creds": {
-                      "anonymous_id": "dbb5ea5d-6c6c-44b8-9952-7ebf0e844beb"
-                    },
-                    "device": {
-                      "type": "mobile",
-                      "device_id": "5555",
-                      "os": "Android"
-                    }
-                  }
+                value:
+                  auth_type: anonymous
+                  app_type_identifier: edu.illinois.rokwire
+                  org_id: 0a2eff20-e2cd-11eb-af68-60f81db5ecc0
+                  api_key: 95a463e3-2ce8-450b-ba75-d8506b874738
+                  creds:
+                    anonymous_id: dbb5ea5d-6c6c-44b8-9952-7ebf0e844beb
+                  device:
+                    type: mobile
+                    device_id: '5555'
+                    os: Android
         required: true
       responses:
         '200':
@@ -650,46 +623,36 @@ paths:
             examples:
               email-sign_up:
                 summary: Email
-                value: |
-                  {
-                    "auth_type": "email",
-                    "app_type_identifier": "edu.illinois.rokwire",
-                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
-                    "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
-                    "creds": {
-                      "email": "test@example.com", 
-                      "password": "test12345"
-                    },
-                    "params":{
-                        "confirm_password": "test12345"
-                    }
-                  }
+                value:
+                  auth_type: email
+                  app_type_identifier: edu.illinois.rokwire
+                  org_id: 0a2eff20-e2cd-11eb-af68-60f81db5ecc0
+                  api_key: 95a463e3-2ce8-450b-ba75-d8506b874738
+                  creds:
+                    email: test@example.com
+                    password: test12345
+                  params:
+                    confirm_password: test12345
               phone:
                 summary: Phone
-                value: |
-                  {
-                    "auth_type": "twilio_phone",
-                    "app_type_identifier": "edu.illinois.rokwire",
-                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
-                    "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
-                    "creds": {
-                      "phone": "+12223334444"
-                    }
-                  }
+                value:
+                  auth_type: twilio_phone
+                  app_type_identifier: edu.illinois.rokwire
+                  org_id: 0a2eff20-e2cd-11eb-af68-60f81db5ecc0
+                  api_key: 95a463e3-2ce8-450b-ba75-d8506b874738
+                  creds:
+                    phone: '+12223334444'
               illinois_oidc:
                 summary: Illinois OIDC
-                value: |
-                  {
-                    "auth_type": "illinois_oidc",
-                    "app_type_identifier": "edu.illinois.rokwire",
-                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
-                    "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
-                    "creds": "https://redirect.example.com?code=ai324uith8gSEefesEguorgwsf43",
-                    "params": {
-                      "redirect_uri": "https://redirect.example.com",
-                      "pkce_verifier": "w4iuhfq0u43hfq38ghn3gnSFSFiqp3ugnpugnqiprgUGNPINfsdoirpgia"
-                    }
-                  }
+                value:
+                  auth_type: illinois_oidc
+                  app_type_identifier: edu.illinois.rokwire
+                  org_id: 0a2eff20-e2cd-11eb-af68-60f81db5ecc0
+                  api_key: 95a463e3-2ce8-450b-ba75-d8506b874738
+                  creds: 'https://redirect.example.com?code=ai324uith8gSEefesEguorgwsf43'
+                  params:
+                    redirect_uri: 'https://redirect.example.com'
+                    pkce_verifier: w4iuhfq0u43hfq38ghn3gnSFSFiqp3ugnpugnqiprgUGNPINfsdoirpgia
         required: true
       responses:
         '200':
@@ -745,28 +708,22 @@ paths:
             examples:
               email:
                 summary: Email
-                value: |
-                  {
-                    "auth_type": "email",
-                    "app_type_identifier": "edu.illinois.rokwire",
-                    "identifier": "test@example.com"
-                  }
+                value:
+                  auth_type: email
+                  app_type_identifier: edu.illinois.rokwire
+                  identifier: test@example.com
               phone:
                 summary: Phone
-                value: |
-                  {
-                    "auth_type": "twilio_phone",
-                    "app_type_identifier": "edu.illinois.rokwire",
-                    "identifier": "+12223334444"
-                  }
+                value:
+                  auth_type: twilio_phone
+                  app_type_identifier: edu.illinois.rokwire
+                  identifier: '+12223334444'
               illinois_oidc:
                 summary: Illinois OIDC
-                value: |
-                  {
-                    "auth_type": "illinois_oidc",
-                    "app_type_identifier": "edu.illinois.rokwire",
-                    "identifier": "123456789"
-                  }
+                value:
+                  auth_type: illinois_oidc
+                  app_type_identifier: edu.illinois.rokwire
+                  identifier: '123456789'
         required: true
       responses:
         '200':
@@ -807,40 +764,30 @@ paths:
               examples:
                 authorized:
                   summary: Service authorized
-                  value: |
-                    {
-                      "access_token": "string",
-                      "token_type": "Bearer",
-                      "approved_scopes": [
-                        "string"
-                      ]
-                    }
+                  value:
+                    access_token: string
+                    token_type: Bearer
+                    approved_scopes:
+                      - string
                 unauthorized:
                   summary: Service unauthorized
-                  value: |
-                    {
-                      "service_reg": {
-                        "service_id": "string",
-                        "service_account_id": "string",
-                        "host": "string",
-                        "pub_key": {
-                          "key_pem": "string",
-                          "alg": "string"
-                        },
-                        "name": "string",
-                        "description": "string",
-                        "info_url": "string",
-                        "logo_url": "string",
-                        "scopes": [
-                          {
-                            "scope": "string",
-                            "required": true,
-                            "explanation": "string"
-                          }
-                        ],
-                        "first_party": true
-                      }
-                    }
+                  value:
+                    service_reg:
+                      service_id: string
+                      service_account_id: string
+                      host: string
+                      pub_key:
+                        key_pem: string
+                        alg: string
+                      name: string
+                      description: string
+                      info_url: string
+                      logo_url: string
+                      scopes:
+                        - scope: string
+                          required: true
+                          explanation: string
+                      first_party: true
         '400':
           description: Bad request
         '401':
@@ -1100,7 +1047,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_shared_res_Account'
+                $ref: '#/components/schemas/Account'
         '400':
           description: Bad request
         '401':
@@ -1153,11 +1100,9 @@ paths:
             examples:
               email:
                 summary: Enroll in email MFA
-                value: |
-                  {
-                    "identifier": "test@test.com",
-                    "type": "email"
-                  }
+                value:
+                  identifier: test@test.com
+                  type: email
         required: true
       responses:
         '200':
@@ -1192,11 +1137,9 @@ paths:
             examples:
               email:
                 summary: Unenroll in email MFA
-                value: |
-                  {
-                    "identifier": "test@test.com",
-                    "type": "email"
-                  }
+                value:
+                  identifier: test@test.com
+                  type: email
       responses:
         '200':
           description: Success
@@ -1278,7 +1221,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProfileFields'
+                $ref: '#/components/schemas/Profile'
         '400':
           description: Bad request
         '401':
@@ -1300,7 +1243,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_shared_req_Profile'
+              $ref: '#/components/schemas/Profile'
         required: true
       responses:
         '200':
@@ -1474,57 +1417,47 @@ paths:
             examples:
               email:
                 summary: Email
-                value: |
-                  {
-                    "auth_type": "email",
-                    "app_type_identifier": "edu.illinois.rokwire",
-                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
-                    "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
-                    "creds": {
-                      "email": "test@example.com", 
-                      "password": "test12345"
-                    },
-                    "device": {
-                      "type": "mobile",
-                      "device_id": "5555",
-                      "os": "Android"
-                    }
-                  }
+                value:
+                  auth_type: email
+                  app_type_identifier: edu.illinois.rokwire
+                  org_id: 0a2eff20-e2cd-11eb-af68-60f81db5ecc0
+                  api_key: 95a463e3-2ce8-450b-ba75-d8506b874738
+                  creds:
+                    email: test@example.com
+                    password: test12345
+                  device:
+                    type: mobile
+                    device_id: '5555'
+                    os: Android
               illinois_oidc:
                 summary: Illinois OIDC
-                value: |
-                  {
-                    "auth_type": "illinois_oidc",
-                    "app_type_identifier": "edu.illinois.rokwire",
-                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
-                    "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
-                    "creds": "https://redirect.example.com?code=ai324uith8gSEefesEguorgwsf43",
-                    "params": {
-                      "redirect_uri": "https://redirect.example.com",
-                      "pkce_verifier": "w4iuhfq0u43hfq38ghn3gnSFSFiqp3ugnpugnqiprgUGNPINfsdoirpgia"
-                    },
-                    "preferences":{
-                        "key1":"value1",
-                        "key2":"value2"
-                    },
-                    "profile":{
-                      "address": "address",
-                      "birth_year": 1990,
-                      "country": "county",
-                      "email": "email",
-                      "first_name": "first name",
-                      "last_name": "last name",
-                      "phone": "+000000000000",
-                      "photo_url": "photo url",
-                      "state": "state",
-                      "zip_code": "zip code"
-                    },
-                    "device": {
-                      "type": "mobile",
-                      "device_id": "5555",
-                      "os": "Android"
-                    }
-                  }
+                value:
+                  auth_type: illinois_oidc
+                  app_type_identifier: edu.illinois.rokwire
+                  org_id: 0a2eff20-e2cd-11eb-af68-60f81db5ecc0
+                  api_key: 95a463e3-2ce8-450b-ba75-d8506b874738
+                  creds: 'https://redirect.example.com?code=ai324uith8gSEefesEguorgwsf43'
+                  params:
+                    redirect_uri: 'https://redirect.example.com'
+                    pkce_verifier: w4iuhfq0u43hfq38ghn3gnSFSFiqp3ugnpugnqiprgUGNPINfsdoirpgia
+                  preferences:
+                    key1: value1
+                    key2: value2
+                  profile:
+                    address: address
+                    birth_year: 1990
+                    country: county
+                    email: email
+                    first_name: first name
+                    last_name: last name
+                    phone: '+000000000000'
+                    photo_url: photo url
+                    state: state
+                    zip_code: zip code
+                  device:
+                    type: mobile
+                    device_id: '5555'
+                    os: Android
         required: true
       responses:
         '200':
@@ -1720,7 +1653,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/_shared_res_Account'
+                $ref: '#/components/schemas/Account'
         '400':
           description: Bad request
         '401':
@@ -2050,7 +1983,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/DeviceFields'
+                  $ref: '#/components/schemas/Device'
         '400':
           description: Bad request
         '401':
@@ -2415,7 +2348,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/_shared_res_LoginSession'
+                  $ref: '#/components/schemas/LoginSession'
         '400':
           description: Bad request
         '401':
@@ -2938,19 +2871,14 @@ paths:
             examples:
               static_token:
                 summary: Static token
-                value: |
-                  {
-                    "auth_type": "static_token",
-                    "creds": {
-                      "token": "account_token"
-                    }
-                  }
+                value:
+                  auth_type: static_token
+                  creds:
+                    token: account_token
               signature:
                 summary: Signature
-                value: |
-                  {
-                    "auth_type": "signature"
-                  }
+                value:
+                  auth_type: signature
         required: true
       responses:
         '200':
@@ -2984,25 +2912,20 @@ paths:
             examples:
               static_token:
                 summary: Static token
-                value: |
-                  {
-                    "account_id": "service_account_id",
-                    "app_id": "9766",
-                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
-                    "auth_type": "static_token",
-                    "creds": {
-                      "token": "account_token"
-                    }
-                  }
+                value:
+                  account_id: service_account_id
+                  app_id: '9766'
+                  org_id: 0a2eff20-e2cd-11eb-af68-60f81db5ecc0
+                  auth_type: static_token
+                  creds:
+                    token: account_token
               signature:
                 summary: Signature
-                value: |
-                  {
-                    "account_id": "service_account_id",
-                    "app_id": "9766",
-                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
-                    "auth_type": "signature",
-                  }
+                value:
+                  account_id: service_account_id
+                  app_id: '9766'
+                  org_id: 0a2eff20-e2cd-11eb-af68-60f81db5ecc0
+                  auth_type: signature
         required: true
       responses:
         '200':
@@ -3034,21 +2957,16 @@ paths:
             examples:
               static_token:
                 summary: Static token
-                value: |
-                  {
-                    "account_id": "service_account_id",
-                    "auth_type": "static_token",
-                    "creds": {
-                      "token": "account_token"
-                    }
-                  }
+                value:
+                  account_id: service_account_id
+                  auth_type: static_token
+                  creds:
+                    token: account_token
               signature:
                 summary: Signature
-                value: |
-                  {
-                    "account_id": "service_account_id",
-                    "auth_type": "signature",
-                  }
+                value:
+                  account_id: service_account_id
+                  auth_type: signature
         required: true
       responses:
         '200':
@@ -3119,20 +3037,19 @@ paths:
             examples:
               single_value:
                 summary: Multiple single-value search parameters
-                value: |
-                  {
-                    "profile.first_name": "Example",
-                    "preferences.privacy_level": 4,
-                    "external_ids.uin": "123456789"
-                  }
+                value:
+                  profile.first_name: Example
+                  preferences.privacy_level: 4
+                  external_ids.uin: '123456789'
               multiple_value:
                 summary: 'Some single-value, some multi-value search parameters'
-                value: |
-                  {
-                    "profile.first_name": "Example",
-                    "preferences.privacy_level": [3, 4, 5],
-                    "external_ids.uin": "123456789"
-                  }
+                value:
+                  profile.first_name: Example
+                  preferences.privacy_level:
+                    - 3
+                    - 4
+                    - 5
+                  external_ids.uin: '123456789'
         required: true
       responses:
         '200':
@@ -3189,20 +3106,19 @@ paths:
             examples:
               single_value:
                 summary: Multiple single-value search parameters
-                value: |
-                  {
-                    "profile.first_name": "Example",
-                    "preferences.privacy_level": 4,
-                    "external_ids.uin": "123456789"
-                  }
+                value:
+                  profile.first_name: Example
+                  preferences.privacy_level: 4
+                  external_ids.uin: '123456789'
               multiple_value:
                 summary: 'Some single-value, some multi-value search parameters'
-                value: |
-                  {
-                    "profile.first_name": "Example",
-                    "preferences.privacy_level": [3, 4, 5],
-                    "external_ids.uin": "123456789"
-                  }
+                value:
+                  profile.first_name: Example
+                  preferences.privacy_level:
+                    - 3
+                    - 4
+                    - 5
+                  external_ids.uin: '123456789'
         required: true
       responses:
         '200':
@@ -3296,19 +3212,14 @@ paths:
             examples:
               static_token:
                 summary: Static token
-                value: |
-                  {
-                    "auth_type": "static_token",
-                    "creds": {
-                      "token": "account_token"
-                    }
-                  }
+                value:
+                  auth_type: static_token
+                  creds:
+                    token: account_token
               signature:
                 summary: Signature
-                value: |
-                  {
-                    "auth_type": "signature"
-                  }
+                value:
+                  auth_type: signature
         required: true
       responses:
         '200':
@@ -3342,25 +3253,20 @@ paths:
             examples:
               static_token:
                 summary: Static token
-                value: |
-                  {
-                    "account_id": "service_account_id",
-                    "app_id": "9766",
-                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
-                    "auth_type": "static_token",
-                    "creds": {
-                      "token": "account_token"
-                    }
-                  }
+                value:
+                  account_id: service_account_id
+                  app_id: '9766'
+                  org_id: 0a2eff20-e2cd-11eb-af68-60f81db5ecc0
+                  auth_type: static_token
+                  creds:
+                    token: account_token
               signature:
                 summary: Signature
-                value: |
-                  {
-                    "account_id": "service_account_id",
-                    "app_id": "9766",
-                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
-                    "auth_type": "signature",
-                  }
+                value:
+                  account_id: service_account_id
+                  app_id: '9766'
+                  org_id: 0a2eff20-e2cd-11eb-af68-60f81db5ecc0
+                  auth_type: signature
         required: true
       responses:
         '200':
@@ -3392,21 +3298,16 @@ paths:
             examples:
               static_token:
                 summary: Static token
-                value: |
-                  {
-                    "account_id": "service_account_id",
-                    "auth_type": "static_token",
-                    "creds": {
-                      "token": "account_token"
-                    }
-                  }
+                value:
+                  account_id: service_account_id
+                  auth_type: static_token
+                  creds:
+                    token: account_token
               signature:
                 summary: Signature
-                value: |
-                  {
-                    "account_id": "service_account_id",
-                    "auth_type": "signature",
-                  }
+                value:
+                  account_id: service_account_id
+                  auth_type: signature
         required: true
       responses:
         '200':
@@ -3477,20 +3378,19 @@ paths:
             examples:
               single_value:
                 summary: Multiple single-value search parameters
-                value: |
-                  {
-                    "profile.first_name": "Example",
-                    "preferences.privacy_level": 4,
-                    "external_ids.uin": "123456789"
-                  }
+                value:
+                  profile.first_name: Example
+                  preferences.privacy_level: 4
+                  external_ids.uin: '123456789'
               multiple_value:
                 summary: 'Some single-value, some multi-value search parameters'
-                value: |
-                  {
-                    "profile.first_name": "Example",
-                    "preferences.privacy_level": [3, 4, 5],
-                    "external_ids.uin": "123456789"
-                  }
+                value:
+                  profile.first_name: Example
+                  preferences.privacy_level:
+                    - 3
+                    - 4
+                    - 5
+                  external_ids.uin: '123456789'
         required: true
       responses:
         '200':
@@ -3547,20 +3447,19 @@ paths:
             examples:
               single_value:
                 summary: Multiple single-value search parameters
-                value: |
-                  {
-                    "profile.first_name": "Example",
-                    "preferences.privacy_level": 4,
-                    "external_ids.uin": "123456789"
-                  }
+                value:
+                  profile.first_name: Example
+                  preferences.privacy_level: 4
+                  external_ids.uin: '123456789'
               multiple_value:
                 summary: 'Some single-value, some multi-value search parameters'
-                value: |
-                  {
-                    "profile.first_name": "Example",
-                    "preferences.privacy_level": [3, 4, 5],
-                    "external_ids.uin": "123456789"
-                  }
+                value:
+                  profile.first_name: Example
+                  preferences.privacy_level:
+                    - 3
+                    - 4
+                    - 5
+                  external_ids.uin: '123456789'
         required: true
       responses:
         '200':
@@ -3761,7 +3660,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_system_req_update_Organization'
+              $ref: '#/components/schemas/Organization'
         required: true
       responses:
         '200':
@@ -3818,7 +3717,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_system_req_create-Organization'
+              $ref: '#/components/schemas/Organization'
         required: true
       responses:
         '200':
@@ -4062,12 +3961,14 @@ paths:
             examples:
               update_account:
                 summary: Update service account
-                value: |
-                  {
-                    "name": "updated_name",
-                    "permissions": ["permission1", "new_permission1"]
-                    "scopes": ["core:resource.value:get", "core:resource.value2.get"],
-                  }
+                value:
+                  name: updated_name
+                  permissions:
+                    - permission1
+                    - new_permission1
+                  scopes:
+                    - 'core:resource.value:get'
+                    - 'core:resource.value2.get'
         required: true
       responses:
         '200':
@@ -4234,53 +4135,53 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_system_req_create_service-account'
+              $ref: '#/components/schemas/ServiceAccount'
             examples:
               initial_creds:
                 summary: Register new account with initial credentials
-                value: |
-                  {
-                    "name": "test_account",
-                    "app_id": "9766",
-                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
-                    "permissions": ["permission1", "permission2"],
-                    "scopes": ["core:resource.value:get", "core:resource.value2.get"],
-                    "first_party": true,
-                    "creds": [
-                      {
-                        "name": "initial_token",
-                        "type": "static_token"
-                      },
-                      {
-                        "name": "initial_signature",
-                        "type": "signature",
-                        "params": {
-                          "key_pem": "public_key_pem"
-                        }
-                      }
-                    ]
-                  }
+                value:
+                  name: test_account
+                  app_id: '9766'
+                  org_id: 0a2eff20-e2cd-11eb-af68-60f81db5ecc0
+                  permissions:
+                    - permission1
+                    - permission2
+                  scopes:
+                    - 'core:resource.value:get'
+                    - 'core:resource.value2.get'
+                  first_party: true
+                  creds:
+                    - name: initial_token
+                      type: static_token
+                    - name: initial_signature
+                      type: signature
+                      params:
+                        key_pem: public_key_pem
               no_initial_creds:
                 summary: Register new account without initial credentials
-                value: |
-                  {
-                    "name": "test_account",
-                    "app_id": "9766",
-                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
-                    "permissions": ["permission1", "permission2"],
-                    "scopes": ["core:resource.value:get", "core:resource.value2.get"],
-                    "first_party": true
-                  }
+                value:
+                  name: test_account
+                  app_id: '9766'
+                  org_id: 0a2eff20-e2cd-11eb-af68-60f81db5ecc0
+                  permissions:
+                    - permission1
+                    - permission2
+                  scopes:
+                    - 'core:resource.value:get'
+                    - 'core:resource.value2.get'
+                  first_party: true
               copy_from:
                 summary: Register new account instance by copying from existing account instance
-                value: |
-                  {
-                    "account_id": "12345678-e2cd-11eb-af68-60f81db5ecc0",
-                    "app_id": "9766",
-                    "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
-                    "permissions": ["permission1", "permission2"],
-                    "scopes": ["core:resource.value:get", "core:resource.value2.get"],
-                  }
+                value:
+                  account_id: 12345678-e2cd-11eb-af68-60f81db5ecc0
+                  app_id: '9766'
+                  org_id: 0a2eff20-e2cd-11eb-af68-60f81db5ecc0
+                  permissions:
+                    - permission1
+                    - permission2
+                  scopes:
+                    - 'core:resource.value:get'
+                    - 'core:resource.value2.get'
         required: true
       responses:
         '200':
@@ -4353,21 +4254,16 @@ paths:
             examples:
               static_token:
                 summary: Add static token credential
-                value: |
-                  {
-                    "name": "token_cred",
-                    "type": "static_token"
-                  }
+                value:
+                  name: token_cred
+                  type: static_token
               signature:
                 summary: Add signature credential
-                value: |
-                  {
-                    "name": "signature_cred",
-                    "type": "signature",
-                    "params": {
-                      "key_pem": "public_key_pem"
-                    }
-                  }
+                value:
+                  name: signature_cred
+                  type: signature
+                  params:
+                    key_pem: public_key_pem
         required: true
       responses:
         '200':
@@ -4568,7 +4464,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_system_req_permissions'
+              $ref: '#/components/schemas/Permission'
         required: true
       responses:
         '200':
@@ -4599,7 +4495,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_system_req_permissions'
+              $ref: '#/components/schemas/Permission'
         required: true
       responses:
         '200':
@@ -4678,7 +4574,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_system_req_create_ApplicationConfig_Request'
+              $ref: '#/components/schemas/ApplicationConfig'
             example:
               version: 1.0.1
               app_type_id: 7e037f2d-b423-4b4d-a1bc-18507f81c6d1
@@ -4755,7 +4651,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_system_req_create_ApplicationConfig_Request'
+              $ref: '#/components/schemas/ApplicationConfig'
             example:
               version: 1.0.1
               app_type_id: 7e037f2d-b423-4b4d-a1bc-18507f81c6d1
@@ -4863,11 +4759,9 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/APIKey'
-            example: |
-              {
-                "app_id": "string",
-                "key": "string"
-              }
+            example:
+              app_id: string
+              key: string
         required: true
       responses:
         '200':
@@ -4968,7 +4862,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/AuthTypeFields'
+                  $ref: '#/components/schemas/AuthType'
         '400':
           description: Bad request
         '401':
@@ -4990,7 +4884,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_system_req_create_auth_type'
+              $ref: '#/components/schemas/AuthType'
         required: true
       responses:
         '200':
@@ -5029,7 +4923,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_system_req_update_auth_type'
+              $ref: '#/components/schemas/AuthType'
         required: true
       responses:
         '200':
@@ -5039,7 +4933,7 @@ paths:
               schema:
                 type: string
                 items:
-                  $ref: '#/components/schemas/AuthTypeFields'
+                  $ref: '#/components/schemas/AuthType'
         '400':
           description: Bad request
         '401':
@@ -5072,7 +4966,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AppOrg'
+                $ref: '#/components/schemas/ApplicationOrganization'
         '400':
           description: Bad request
         '401':
@@ -5103,7 +4997,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AppOrg'
+              $ref: '#/components/schemas/ApplicationOrganization'
         required: true
       responses:
         '200':
@@ -5155,7 +5049,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/AppOrg'
+                  $ref: '#/components/schemas/ApplicationOrganization'
         '400':
           description: Bad request
         '401':
@@ -5177,7 +5071,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AppOrg'
+              $ref: '#/components/schemas/ApplicationOrganization'
         required: true
       responses:
         '200':
@@ -5318,10 +5212,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ApplicationType'
-        organizations:
-          type: array
-          items:
-            $ref: '#/components/schemas/ApplicationOrganization'
     ApplicationType:
       required:
         - id
@@ -5340,17 +5230,6 @@ components:
           items:
             type: string
     ApplicationOrganization:
-      type: object
-      properties:
-        id:
-          type: string
-        application:
-          $ref: '#/components/schemas/Application'
-        organization:
-          $ref: '#/components/schemas/Organization'
-        TODO:
-          type: string
-    AppOrg:
       required:
         - id
         - app_id
@@ -5389,6 +5268,7 @@ components:
       type: object
       properties:
         id:
+          readOnly: true
           type: string
         name:
           type: string
@@ -5459,13 +5339,6 @@ components:
           items:
             $ref: '#/components/schemas/AppOrgRole'
     Organization:
-      type: object
-      properties:
-        fields:
-          $ref: '#/components/schemas/OrganizationFields'
-        config:
-          $ref: '#/components/schemas/OrganizationConfigFields'
-    OrganizationFields:
       required:
         - id
         - name
@@ -5485,12 +5358,12 @@ components:
             - medium
             - large
             - huge
+        config:
+          $ref: '#/components/schemas/OrganizationConfig'
     OrganizationConfig:
-      type: object
-      properties:
-        fields:
-          $ref: '#/components/schemas/OrganizationConfigFields'
-    OrganizationConfigFields:
+      required:
+        - id
+        - domains
       type: object
       properties:
         id:
@@ -5512,6 +5385,7 @@ components:
       properties:
         id:
           type: string
+          readOnly: true
         app_type_id:
           type: string
         org_id:
@@ -5631,39 +5505,30 @@ components:
     LoginSession:
       type: object
       properties:
-        fields:
-          $ref: '#/components/schemas/LoginSessionFields'
-        app_org:
-          $ref: '#/components/schemas/ApplicationOrganization'
-        auth_type:
-          $ref: '#/components/schemas/AuthType'
-        app_type:
-          $ref: '#/components/schemas/ApplicationType'
-        account_auth_type:
-          $ref: '#/components/schemas/AccountAuthType'
-          nullable: true
-        device:
-          $ref: '#/components/schemas/Device'
-    LoginSessionFields:
-      type: object
-      properties:
         id:
           type: string
         anonymous:
           type: boolean
         identifier:
           type: string
-        id_address:
+        auth_type_code:
           type: string
-        access_token:
+        app_org_id:
           type: string
-        refresh_tokens:
-          type: array
-          items:
-            type: string
-        params:
-          type: object
-          additionalProperties: true
+        app_type_id:
+          type: string
+        app_type_identifier:
+          type: string
+        account_auth_type_id:
+          type: string
+        account_auth_type_identifier:
+          type: string
+        device_id:
+          type: string
+        ip_address:
+          type: string
+        refresh_tokens_count:
+          type: integer
         state:
           type: string
         state_expires:
@@ -5680,14 +5545,18 @@ components:
         date_created:
           type: string
     AuthType:
-      type: object
-      properties:
-        fields:
-          $ref: '#/components/schemas/AuthTypeFields'
-    AuthTypeFields:
+      required:
+        - id
+        - code
+        - description
+        - is_external
+        - is_anonymous
+        - use_credentials
+        - ignore_mfa
       type: object
       properties:
         id:
+          readOnly: true
           type: string
         code:
           type: string
@@ -5709,31 +5578,10 @@ components:
         params:
           type: object
           additionalProperties: true
-    Credential:
-      type: object
-      properties:
-        fields:
-          $ref: '#/components/schemas/CredentialFields'
-        accounts_auth_types:
-          type: array
-          items:
-            $ref: '#/components/schemas/AccountAuthType'
-    CredentialFields:
-      type: object
-      properties:
-        id:
-          type: string
-        value:
-          type: object
     ServiceAccount:
       required:
-        - account_id
-        - name
         - app_id
         - org_id
-        - permissions
-        - scopes
-        - first_party
       type: object
       properties:
         account_id:
@@ -5745,10 +5593,12 @@ components:
         org_id:
           type: string
         permissions:
+          nullable: true
           type: array
           items:
             type: string
         scopes:
+          nullable: true
           type: array
           items:
             type: string
@@ -5938,16 +5788,36 @@ components:
         jwks_uri:
           type: string
     Account:
+      required:
+        - id
       type: object
       properties:
-        fields:
-          $ref: '#/components/schemas/AccountFields'
+        id:
+          readOnly: true
+          type: string
         app_org:
           $ref: '#/components/schemas/ApplicationOrganization'
-        system:
-          type: boolean
         username:
           type: string
+        profile:
+          $ref: '#/components/schemas/Profile'
+        preferences:
+          type: object
+          nullable: true
+        system_configs:
+          type: object
+          nullable: true
+        anonymous:
+          type: boolean
+        system:
+          type: boolean
+        external_ids:
+          type: object
+          nullable: true
+        auth_types:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccountAuthType'
         permissions:
           type: array
           items:
@@ -5960,27 +5830,16 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AppOrgGroup'
-        auth_types:
-          type: array
-          items:
-            $ref: '#/components/schemas/AccountAuthType'
-        preferences:
-          type: object
-          nullable: true
-        external_ids:
-          type: object
-          nullable: true
-        system_configs:
-          type: object
-          nullable: true
-        profile:
-          $ref: '#/components/schemas/Profile'
         devices:
           type: array
           items:
             $ref: '#/components/schemas/Device'
-        anonymous:
-          type: boolean
+        last_login_date:
+          type: string
+        last_access_token_date:
+          type: string
+        most_recent_client_version:
+          type: string
     PartialAccount:
       required:
         - id
@@ -6026,7 +5885,7 @@ components:
         auth_types:
           type: array
           items:
-            $ref: '#/components/schemas/AccountAuthTypeFields'
+            $ref: '#/components/schemas/AccountAuthType'
         system_configs:
           type: object
           nullable: true
@@ -6044,26 +5903,13 @@ components:
         external_ids:
           type: object
           nullable: true
-    AccountFields:
+    Profile:
       required:
         - id
       type: object
       properties:
         id:
-          type: string
-    Profile:
-      type: object
-      properties:
-        fields:
-          $ref: '#/components/schemas/ProfileFields'
-        accounts:
-          type: array
-          items:
-            $ref: '#/components/schemas/Account'
-    ProfileFields:
-      type: object
-      properties:
-        id:
+          readOnly: true
           type: string
         photo_url:
           type: string
@@ -6071,6 +5917,43 @@ components:
           type: string
         last_name:
           type: string
+        email:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        birth_year:
+          type: integer
+          nullable: true
+        address:
+          type: string
+          nullable: true
+        zip_code:
+          type: string
+          nullable: true
+        state:
+          type: string
+          nullable: true
+        country:
+          type: string
+          nullable: true
+        unstructured_properties:
+          type: object
+          nullable: true
+    ProfileNullable:
+      type: object
+      nullable: true
+      properties:
+        photo_url:
+          type: string
+          nullable: true
+        first_name:
+          type: string
+          nullable: true
+        last_name:
+          type: string
+          nullable: true
         email:
           type: string
           nullable: true
@@ -6103,17 +5986,10 @@ components:
         username:
           type: string
     AccountAuthType:
-      type: object
-      properties:
-        fields:
-          $ref: '#/components/schemas/AccountAuthTypeFields'
-        auth_type:
-          $ref: '#/components/schemas/AuthType'
-        account:
-          $ref: '#/components/schemas/Account'
-        credential:
-          $ref: '#/components/schemas/Credential'
-    AccountAuthTypeFields:
+      required:
+        - id
+        - code
+        - identifier
       type: object
       properties:
         id:
@@ -6131,19 +6007,13 @@ components:
         unverified:
           type: boolean
     Device:
-      type: object
-      properties:
-        fields:
-          $ref: '#/components/schemas/DeviceFields'
-        account:
-          $ref: '#/components/schemas/Account'
-    DeviceFields:
       required:
         - id
         - type
       type: object
       properties:
         id:
+          readOnly: true
           type: string
         device_id:
           type: string
@@ -6191,9 +6061,9 @@ components:
             - $ref: '#/components/schemas/_shared_req_ParamsOIDC'
             - $ref: '#/components/schemas/_shared_req_ParamsNone'
         device:
-          $ref: '#/components/schemas/_shared_req_Login_Device'
+          $ref: '#/components/schemas/Device'
         profile:
-          $ref: '#/components/schemas/_shared_req_ProfileNullable'
+          $ref: '#/components/schemas/ProfileNullable'
         preferences:
           type: object
           nullable: true
@@ -6229,23 +6099,6 @@ components:
             - totp
             - recovery
         code:
-          type: string
-    _shared_req_Login_Device:
-      required:
-        - type
-      type: object
-      description: Client device
-      properties:
-        device_id:
-          type: string
-        type:
-          type: string
-          enum:
-            - mobile
-            - web
-            - desktop
-            - other
-        os:
           type: string
     _shared_req_LoginUrl:
       required:
@@ -6320,7 +6173,7 @@ components:
           items:
             type: string
         profile:
-          $ref: '#/components/schemas/_shared_req_ProfileNullable'
+          $ref: '#/components/schemas/ProfileNullable'
         username:
           type: string
           nullable: true
@@ -6428,79 +6281,6 @@ components:
       type: object
       description: Auth login request params for unlisted auth_types (None)
       nullable: true
-    _shared_req_Profile:
-      type: object
-      properties:
-        photo_url:
-          type: string
-          nullable: true
-        first_name:
-          type: string
-          nullable: true
-        last_name:
-          type: string
-          nullable: true
-        email:
-          type: string
-          nullable: true
-        phone:
-          type: string
-          nullable: true
-        birth_year:
-          type: integer
-          nullable: true
-        address:
-          type: string
-          nullable: true
-        zip_code:
-          type: string
-          nullable: true
-        state:
-          type: string
-          nullable: true
-        country:
-          type: string
-          nullable: true
-        unstructured_properties:
-          type: object
-          nullable: true
-    _shared_req_ProfileNullable:
-      type: object
-      nullable: true
-      properties:
-        photo_url:
-          type: string
-          nullable: true
-        first_name:
-          type: string
-          nullable: true
-        last_name:
-          type: string
-          nullable: true
-        email:
-          type: string
-          nullable: true
-        phone:
-          type: string
-          nullable: true
-        birth_year:
-          type: integer
-          nullable: true
-        address:
-          type: string
-          nullable: true
-        zip_code:
-          type: string
-          nullable: true
-        state:
-          type: string
-          nullable: true
-        country:
-          type: string
-          nullable: true
-        unstructured_properties:
-          type: object
-          nullable: true
     _shared_req_ParamsSetEmailCredential:
       required:
         - new_password
@@ -6517,7 +6297,7 @@ components:
         token:
           $ref: '#/components/schemas/_shared_res_RokwireToken'
         account:
-          $ref: '#/components/schemas/_shared_res_Account'
+          $ref: '#/components/schemas/Account'
         params:
           type: object
           nullable: true
@@ -6604,52 +6384,6 @@ components:
           type: boolean
         params:
           type: object
-    _shared_res_Account:
-      required:
-        - id
-      type: object
-      properties:
-        id:
-          type: string
-        username:
-          type: string
-        profile:
-          $ref: '#/components/schemas/ProfileFields'
-        preferences:
-          type: object
-          nullable: true
-        system_configs:
-          type: object
-          nullable: true
-        system:
-          type: boolean
-        permissions:
-          type: array
-          items:
-            $ref: '#/components/schemas/Permission'
-        roles:
-          type: array
-          items:
-            $ref: '#/components/schemas/AppOrgRole'
-        groups:
-          type: array
-          items:
-            $ref: '#/components/schemas/AppOrgGroup'
-        auth_types:
-          type: array
-          items:
-            $ref: '#/components/schemas/AccountAuthTypeFields'
-        anonymous:
-          type: boolean
-        last_login_date:
-          type: string
-        last_access_token_date:
-          type: string
-        most_recent_client_version:
-          type: string
-        external_ids:
-          type: object
-          nullable: true
     _shared_res_AccountCheck:
       type: boolean
     _shared_res_RokwireToken:
@@ -6666,46 +6400,6 @@ components:
           type: string
           enum:
             - Bearer
-    _shared_res_LoginSession:
-      type: object
-      properties:
-        id:
-          type: string
-        auth_type_code:
-          type: string
-        app_type_id:
-          type: string
-        app_type_identifier:
-          type: string
-        anonymous:
-          type: boolean
-        identifier:
-          type: string
-        account_auth_type_id:
-          type: string
-        account_auth_type_identifier:
-          type: string
-        device_id:
-          type: string
-        ip_address:
-          type: string
-        refresh_tokens_count:
-          type: integer
-        state:
-          type: string
-        state_expires:
-          type: string
-          nullable: true
-        mfa_attempts:
-          type: integer
-        date_refreshed:
-          type: string
-          nullable: true
-        date_updated:
-          type: string
-          nullable: true
-        date_created:
-          type: string
     _services_req_account_auth-type-link:
       required:
         - auth_type
@@ -6762,7 +6456,7 @@ components:
         auth_types:
           type: array
           items:
-            $ref: '#/components/schemas/AccountAuthTypeFields'
+            $ref: '#/components/schemas/AccountAuthType'
     _services_req_credential_update:
       required:
         - account_auth_type_id
@@ -7057,256 +6751,6 @@ components:
           type: array
           items:
             type: string
-    _system_req_create-Organization:
-      required:
-        - name
-        - type
-      type: object
-      properties:
-        id:
-          readOnly: true
-          type: string
-        name:
-          type: string
-        type:
-          type: string
-          enum:
-            - micro
-            - small
-            - medium
-            - large
-            - huge
-        config:
-          $ref: '#/components/schemas/OrganizationConfigFields'
-    _system_res_create_Organization:
-      required:
-        - id
-        - name
-        - type
-      type: object
-      properties:
-        id:
-          readOnly: true
-          type: string
-        name:
-          type: string
-        type:
-          type: string
-          enum:
-            - micro
-            - small
-            - medium
-            - large
-            - huge
-        config:
-          $ref: '#/components/schemas/OrganizationConfigFields'
-    _system_req_update_Organization:
-      required:
-        - id
-        - name
-        - type
-      type: object
-      properties:
-        id:
-          readOnly: true
-          type: string
-        name:
-          type: string
-        type:
-          type: string
-          enum:
-            - micro
-            - small
-            - medium
-            - large
-            - huge
-        config:
-          $ref: '#/components/schemas/OrganizationConfigFields'
-    _system_res_update_Organization:
-      required:
-        - id
-        - name
-        - type
-      type: object
-      properties:
-        id:
-          readOnly: true
-          type: string
-        name:
-          type: string
-        type:
-          type: string
-          enum:
-            - micro
-            - small
-            - medium
-            - large
-            - huge
-        config:
-          $ref: '#/components/schemas/OrganizationConfigFields'
-    _system_req_get_Organization:
-      required:
-        - id
-      properties:
-        id:
-          readOnly: true
-          type: string
-    _system_res_get_Organization:
-      required:
-        - id
-        - name
-        - type
-      type: object
-      properties:
-        id:
-          readOnly: true
-          type: string
-        name:
-          type: string
-        type:
-          type: string
-          enum:
-            - micro
-            - small
-            - medium
-            - large
-            - huge
-        config:
-          $ref: '#/components/schemas/OrganizationConfigFields'
-    _system_res_get_Organizations:
-      required:
-        - id
-        - name
-        - type
-      type: object
-      properties:
-        id:
-          readOnly: true
-          type: string
-        name:
-          type: string
-        type:
-          type: string
-          enum:
-            - micro
-            - small
-            - medium
-            - large
-            - huge
-        config:
-          $ref: '#/components/schemas/OrganizationConfigFields'
-    _system_req_permissions:
-      required:
-        - name
-      type: object
-      properties:
-        name:
-          type: string
-        description:
-          type: string
-        service_id:
-          type: string
-        assigners:
-          type: array
-          description: permissions that could assign current permission to accounts
-          items:
-            type: string
-    _system_req_create_auth_type:
-      type: object
-      required:
-        - code
-        - description
-        - is_external
-        - is_anonymous
-        - use_credentials
-        - ignore_mfa
-      properties:
-        code:
-          type: string
-        description:
-          type: string
-        is_external:
-          type: boolean
-        is_anonymous:
-          type: boolean
-        use_credentials:
-          type: boolean
-        ignore_mfa:
-          type: boolean
-        params:
-          type: object
-          additionalProperties: true
-    _system_req_update_auth_type:
-      type: object
-      required:
-        - code
-        - description
-        - is_external
-        - is_anonymous
-        - use_credentials
-        - ignore_mfa
-      properties:
-        code:
-          type: string
-        description:
-          type: string
-        is_external:
-          type: boolean
-        is_anonymous:
-          type: boolean
-        use_credentials:
-          type: boolean
-        ignore_mfa:
-          type: boolean
-        params:
-          type: object
-          additionalProperties: true
-    _system_req_create_ApplicationConfig_Request:
-      required:
-        - app_type_id
-        - version
-        - data
-      type: object
-      properties:
-        app_type_id:
-          type: string
-        org_id:
-          type: string
-        version:
-          type: string
-          description: conforms major.minor.patch format
-        data:
-          type: object
-    _system_req_create_service-account:
-      required:
-        - app_id
-        - org_id
-      type: object
-      properties:
-        account_id:
-          type: string
-        name:
-          type: string
-        app_id:
-          type: string
-        org_id:
-          type: string
-        permissions:
-          nullable: true
-          type: array
-          items:
-            type: string
-        scopes:
-          nullable: true
-          type: array
-          items:
-            type: string
-        first_party:
-          type: boolean
-        creds:
-          type: array
-          items:
-            $ref: '#/components/schemas/ServiceAccountCredential'
     _system_req_update_service-account:
       type: object
       properties:

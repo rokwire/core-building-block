@@ -18,7 +18,7 @@ import (
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
 
-	"github.com/rokwire/logging-library-go/logs"
+	"github.com/rokwire/logging-library-go/v2/logs"
 )
 
 // Services exposes APIs for the driver adapters
@@ -101,7 +101,7 @@ type BBs interface {
 // TPS exposes user related APIs used by third-party services
 type TPS interface {
 	TPSGetAccounts(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]map[string]interface{}, error)
-	TPsGetAccountsCount(searchParams map[string]interface{}, appID string, orgID string) (int64, error)
+	TPSGetAccountsCount(searchParams map[string]interface{}, appID string, orgID string) (int64, error)
 }
 
 // System exposes system APIs for the driver adapters

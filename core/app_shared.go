@@ -18,8 +18,8 @@ import (
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
 
-	"github.com/rokwire/logging-library-go/errors"
-	"github.com/rokwire/logging-library-go/logutils"
+	"github.com/rokwire/logging-library-go/v2/errors"
+	"github.com/rokwire/logging-library-go/v2/logutils"
 )
 
 func (app *application) sharedGetAccountsByParams(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]map[string]interface{}, error) {

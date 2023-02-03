@@ -19,7 +19,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/rokwire/logging-library-go/logutils"
+	"github.com/rokwire/logging-library-go/v2/logutils"
 )
 
 const (

@@ -42,7 +42,7 @@ properties:
   auth_types:
     type: array
     items:
-      $ref: "../user/AccountAuthTypeFields.yaml"
+      $ref: "../user/AccountAuthType.yaml"
   system_configs:
     type: object
     nullable: true

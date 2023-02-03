@@ -21,9 +21,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/rokwire/logging-library-go/errors"
-	"github.com/rokwire/logging-library-go/logs"
-	"github.com/rokwire/logging-library-go/logutils"
+	"github.com/rokwire/logging-library-go/v2/errors"
+	"github.com/rokwire/logging-library-go/v2/logs"
+	"github.com/rokwire/logging-library-go/v2/logutils"
 )
 
 func (app *application) admGetTest() string {
@@ -240,7 +240,7 @@ func (app *application) admCreateAppOrgGroup(name string, description string, sy
 
 			accounts, err := app.storage.FindAccountsByAccountID(context, appID, orgID, accountIDs)
 			if err != nil {
-				return errors.Wrap("error finding account", err)
+				return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 			}
 			if len(accounts) < len(accountIDs) {
 				if missing := model.GetMissingAccountIDs(accounts, accountIDs); len(missing) > 0 {
@@ -271,7 +271,7 @@ func (app *application) admUpdateAppOrgGroup(ID string, name string, description
 		//1. get application organization entity
 		appOrg, err := app.storage.FindApplicationOrganization(appID, orgID)
 		if err != nil || appOrg == nil {
-			return errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
 		}
 
 		//2. find group, check if update allowed by system flag
@@ -288,7 +288,7 @@ func (app *application) admUpdateAppOrgGroup(ID string, name string, description
 			if len(added) > 0 {
 				addedPermissions, err := app.auth.CheckPermissions(context, []model.ApplicationOrganization{*appOrg}, added, assignerPermissions, false)
 				if err != nil {
-					return errors.WrapErrorAction("adding", model.TypePermission, nil, err)
+					return errors.WrapErrorAction(logutils.ActionGrant, model.TypePermission, nil, err)
 				}
 				newPermissions = append(newPermissions, addedPermissions...)
 			}
@@ -296,7 +296,7 @@ func (app *application) admUpdateAppOrgGroup(ID string, name string, description
 			if len(removed) > 0 {
 				_, err := app.auth.CheckPermissions(context, []model.ApplicationOrganization{*appOrg}, removed, assignerPermissions, true)
 				if err != nil {
-					return errors.WrapErrorAction("revoking", model.TypePermission, nil, err)
+					return errors.WrapErrorAction(logutils.ActionRevoke, model.TypePermission, nil, err)
 				}
 			}
 
@@ -319,7 +319,7 @@ func (app *application) admUpdateAppOrgGroup(ID string, name string, description
 			if len(added) > 0 {
 				addedRoles, err := app.auth.CheckRoles(context, appOrg, added, assignerPermissions, false)
 				if err != nil {
-					return errors.WrapErrorAction("adding", model.TypeAppOrgRole, nil, err)
+					return errors.WrapErrorAction(logutils.ActionGrant, model.TypeAppOrgRole, nil, err)
 				}
 				newRoles = append(newRoles, addedRoles...)
 			}
@@ -327,7 +327,7 @@ func (app *application) admUpdateAppOrgGroup(ID string, name string, description
 			if len(removed) > 0 {
 				_, err := app.auth.CheckRoles(context, appOrg, removed, assignerPermissions, true)
 				if err != nil {
-					return errors.WrapErrorAction("revoking", model.TypeAppOrgRole, nil, err)
+					return errors.WrapErrorAction(logutils.ActionRevoke, model.TypeAppOrgRole, nil, err)
 				}
 			}
 
@@ -459,7 +459,7 @@ func (app *application) admDeleteAppOrgGroup(ID string, appID string, orgID stri
 	for _, permission := range group.Permissions {
 		err = permission.CheckAssigners(assignerPermissions)
 		if err != nil {
-			return errors.Wrapf("error checking permission assigners", err)
+			return errors.WrapErrorAction(logutils.ActionValidate, "assigner permissions", logutils.StringArgs("permissions"), err)
 		}
 	}
 
@@ -467,21 +467,17 @@ func (app *application) admDeleteAppOrgGroup(ID string, appID string, orgID stri
 	for _, roles := range group.Roles {
 		err = roles.CheckAssigners(assignerPermissions)
 		if err != nil {
-			return errors.Wrapf("error checking roles assigners", err)
+			return errors.WrapErrorAction(logutils.ActionValidate, "assigner permissions", logutils.StringArgs("roles"), err)
 		}
 	}
 
 	//5. check if the group has accounts relations
 	numberOfAccounts, err := app.storage.CountAccountsByGroupID(ID)
 	if err != nil {
-		return errors.WrapErrorAction("error checking the accounts count by group id", "", nil, err)
+		return errors.WrapErrorAction(logutils.ActionCount, model.TypeAccount, nil, err)
 	}
 	if *numberOfAccounts > 0 {
-		accountString := "accounts"
-		if *numberOfAccounts == 1 {
-			accountString = "account"
-		}
-		return errors.Newf("%s is used by %d %s and cannot be deleted", group.Name, *numberOfAccounts, accountString)
+		return errors.ErrorData(logutils.StatusInvalid, model.TypeAppOrgGroup, &logutils.FieldArgs{"name": group.Name, "num_accounts": *numberOfAccounts})
 	}
 
 	//6. delete the group
@@ -495,23 +491,23 @@ func (app *application) admDeleteAppOrgGroup(ID string, appID string, orgID stri
 func (app *application) admAddAccountsToGroup(appID string, orgID string, groupID string, accountIDs []string, assignerPermissions []string, l *logs.Log) error {
 	//validate
 	if len(assignerPermissions) == 0 {
-		return errors.New("no permissions from admin assigner")
+		return errors.ErrorData(logutils.StatusMissing, "assigner permissions", nil)
 	}
 	if len(groupID) == 0 {
-		return errors.New("no group id")
+		return errors.ErrorData(logutils.StatusMissing, "group id", nil)
 	}
 	if len(accountIDs) == 0 {
-		return errors.New("no accounts ids")
+		return errors.ErrorData(logutils.StatusMissing, "account ids", nil)
 	}
 
 	transaction := func(context storage.TransactionContext) error {
 		//1. find accounts
 		accounts, err := app.storage.FindAccountsByAccountID(context, appID, orgID, accountIDs)
 		if err != nil {
-			return errors.Wrap("error finding account", err)
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 		}
 		if len(accounts) != len(accountIDs) {
-			return errors.New("bad accounts ids params")
+			return errors.ErrorData(logutils.StatusInvalid, "account id", &logutils.FieldArgs{"ids": accountIDs})
 		}
 
 		//2. find group
@@ -523,14 +519,14 @@ func (app *application) admAddAccountsToGroup(appID string, orgID string, groupI
 		//3. check assigners
 		err = group.CheckAssigners(assignerPermissions)
 		if err != nil {
-			return errors.Wrap("not allowed", err).SetStatus(utils.ErrorStatusNotAllowed)
+			return errors.WrapErrorAction(logutils.ActionValidate, "assigner permissions", logutils.StringArgs("group"), err).SetStatus(utils.ErrorStatusNotAllowed)
 		}
 
 		//4. ensure that the accounts do not have the group before adding
 		updateAccounts := make([]string, 0)
 		for _, account := range accounts {
 			if account.Anonymous {
-				return errors.Newf("cannot grant permissions to anonymous accounts: ID=%s", account.ID)
+				return errors.ErrorData(logutils.StatusInvalid, model.TypeAccount, &logutils.FieldArgs{"id": account.ID, "anonymous": true})
 			}
 			if account.GetGroup(groupID) == nil {
 				updateAccounts = append(updateAccounts, account.ID)
@@ -541,7 +537,7 @@ func (app *application) admAddAccountsToGroup(appID string, orgID string, groupI
 		accountGroup := model.AccountGroup{Group: *group, Active: true, AdminSet: true}
 		err = app.storage.InsertAccountsGroup(context, accountGroup, updateAccounts)
 		if err != nil {
-			return errors.Wrapf("error inserting accounts group - %s", err, groupID)
+			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"ids": updateAccounts, "group_id": groupID}, err)
 		}
 
 		return nil
@@ -553,23 +549,23 @@ func (app *application) admAddAccountsToGroup(appID string, orgID string, groupI
 func (app *application) admRemoveAccountsFromGroup(appID string, orgID string, groupID string, accountIDs []string, assignerPermissions []string, l *logs.Log) error {
 	//validate
 	if len(assignerPermissions) == 0 {
-		return errors.New("no permissions from admin assigner")
+		return errors.ErrorData(logutils.StatusMissing, "assigner permissions", nil)
 	}
 	if len(groupID) == 0 {
-		return errors.New("no group id")
+		return errors.ErrorData(logutils.StatusMissing, "group id", nil)
 	}
 	if len(accountIDs) == 0 {
-		return errors.New("no accounts ids")
+		return errors.ErrorData(logutils.StatusMissing, "account ids", nil)
 	}
 
 	transaction := func(context storage.TransactionContext) error {
 		//1. find accounts
 		accounts, err := app.storage.FindAccountsByAccountID(context, appID, orgID, accountIDs)
 		if err != nil {
-			return errors.Wrap("error finding account", err)
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 		}
 		if len(accounts) != len(accountIDs) {
-			return errors.New("bad accounts ids params")
+			return errors.ErrorData(logutils.StatusMissing, model.TypeAccount, &logutils.FieldArgs{"ids": accountIDs})
 		}
 
 		//2. find group
@@ -581,7 +577,7 @@ func (app *application) admRemoveAccountsFromGroup(appID string, orgID string, g
 		//3. check assigners
 		err = group.CheckAssigners(assignerPermissions)
 		if err != nil {
-			return errors.Wrap("not allowed", err).SetStatus(utils.ErrorStatusNotAllowed)
+			return errors.WrapErrorAction(logutils.ActionValidate, "assigner permissions", logutils.StringArgs("group"), err).SetStatus(utils.ErrorStatusNotAllowed)
 		}
 
 		//4. ensure that the accounts have the group
@@ -650,7 +646,7 @@ func (app *application) admGetAppOrgRoles(appID string, orgID string) ([]model.A
 	//find application organization roles
 	getAppOrgRoles, err := app.storage.FindAppOrgRoles(appOrg.ID)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeAppOrgRole, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgRole, nil, err)
 	}
 
 	return getAppOrgRoles, nil
@@ -748,34 +744,26 @@ func (app *application) admDeleteAppOrgRole(ID string, appID string, orgID strin
 	for _, permission := range role.Permissions {
 		err = permission.CheckAssigners(assignerPermissions)
 		if err != nil {
-			return errors.Wrapf("error checking permission assigners", err)
+			return errors.WrapErrorAction(logutils.ActionValidate, "assigner permissions", logutils.StringArgs("role"), err)
 		}
 	}
 
 	//4. check if the role has accounts relations
 	numberOfAccounts, err := app.storage.CountAccountsByRoleID(ID)
 	if err != nil {
-		return errors.WrapErrorAction("error checking the accounts count by role id", "", nil, err)
+		return errors.WrapErrorAction(logutils.ActionCount, model.TypeAccount, &logutils.FieldArgs{"role_id": ID}, err)
 	}
 	if *numberOfAccounts > 0 {
-		accountString := "accounts"
-		if *numberOfAccounts == 1 {
-			accountString = "account"
-		}
-		return errors.Newf("%s is used by %d %s and cannot be deleted", role.Name, *numberOfAccounts, accountString)
+		return errors.ErrorData(logutils.StatusInvalid, model.TypeAppOrgRole, &logutils.FieldArgs{"name": role.Name, "num_accounts": *numberOfAccounts})
 	}
 
 	//6. check if the role has groups relations
 	numberOfGroups, err := app.storage.CountGroupsByRoleID(ID)
 	if err != nil {
-		return errors.WrapErrorAction("error checking the groups count by role id", "", nil, err)
+		return errors.WrapErrorAction(logutils.ActionCount, model.TypeAppOrgGroup, &logutils.FieldArgs{"role_id": ID}, err)
 	}
 	if *numberOfGroups > 0 {
-		groupString := "groups"
-		if *numberOfGroups == 1 {
-			groupString = "group"
-		}
-		return errors.Newf("%s is used by %d %s and cannot be deleted", role.Name, *numberOfGroups, groupString)
+		return errors.ErrorData(logutils.StatusInvalid, model.TypeAppOrgRole, &logutils.FieldArgs{"name": role.Name, "num_groups": *numberOfGroups})
 	}
 
 	//7. delete the role
@@ -796,7 +784,7 @@ func (app *application) admGetApplicationPermissions(appID string, orgID string,
 	//2. find permissions by the service ids
 	permissions, err := app.storage.FindPermissionsByServiceIDs(appOrg.ServicesIDs)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypePermission, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypePermission, nil, err)
 	}
 	return permissions, nil
 }
@@ -823,7 +811,7 @@ func (app *application) admGetAccountSystemConfigs(appID string, orgID string, a
 	}
 	if account.AppOrg.Application.ID != appID || account.AppOrg.Organization.ID != orgID {
 		l.Warnf("someone is trying to get system configs for %s for different app/org", accountID)
-		return nil, errors.Newf("not allowed").SetStatus(utils.ErrorStatusNotAllowed)
+		return nil, errors.ErrorData(logutils.StatusInvalid, model.TypeAccount, &logutils.FieldArgs{"id": accountID, "app_id": account.AppOrg.Application.ID, "org_id": account.AppOrg.Organization.ID}).SetStatus(utils.ErrorStatusNotAllowed)
 	}
 
 	return account.SystemConfigs, nil
@@ -831,7 +819,7 @@ func (app *application) admGetAccountSystemConfigs(appID string, orgID string, a
 
 func (app *application) admUpdateAccountSystemConfigs(appID string, orgID string, accountID string, configs map[string]interface{}, createAnonymous bool, l *logs.Log) (bool, error) {
 	if len(configs) == 0 {
-		return false, errors.New("no new configs")
+		return false, errors.ErrorData(logutils.StatusMissing, "new account system configs", nil)
 	}
 
 	created := false
@@ -849,13 +837,13 @@ func (app *application) admUpdateAccountSystemConfigs(appID string, orgID string
 			created = true
 			_, err = app.auth.CreateAnonymousAccount(context, appID, orgID, accountID, nil, configs, true, l)
 			if err != nil {
-				return errors.WrapErrorAction(logutils.ActionCreate, model.TypeAccount, nil, err)
+				return errors.WrapErrorAction(logutils.ActionCreate, model.TypeAccount, &logutils.FieldArgs{"anonymous": true}, err)
 			}
 			return nil
 		}
 		if account.AppOrg.Application.ID != appID || account.AppOrg.Organization.ID != orgID {
 			l.Warnf("someone is trying to update system configs for %s for different app/org", accountID)
-			return errors.Newf("not allowed").SetStatus(utils.ErrorStatusNotAllowed)
+			return errors.ErrorData(logutils.StatusInvalid, model.TypeAccount, &logutils.FieldArgs{"id": accountID, "app_id": account.AppOrg.Application.ID, "org_id": account.AppOrg.Organization.ID}).SetStatus(utils.ErrorStatusNotAllowed)
 		}
 
 		//2. merge new configs on top of existing ones
@@ -898,16 +886,16 @@ func (app *application) admDeleteApplicationLoginSession(appID string, orgID str
 	//1. do not allow to logout the current account
 	if currentAccountID == identifier {
 		l.Infof("%s is trying to logout self", currentAccountID)
-		return errors.New("cannot logout yourself")
+		return errors.ErrorData(logutils.StatusInvalid, "account ID", &logutils.FieldArgs{"id": identifier, "self": true})
 	}
 
 	//2. validate if the session is for the current app/org and account
 	sessions, err := app.storage.FindLoginSessionsByParams(appID, orgID, &sessionID, &identifier, nil, nil, nil, nil, nil, nil)
 	if err != nil {
-		return errors.Wrap("error checking if it is valid to remove account session", err)
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, &logutils.FieldArgs{"id": sessionID, "app_id": appID, "org_id": orgID, "identifier": identifier}, err)
 	}
 	if len(sessions) == 0 {
-		return errors.New("not valid params")
+		return errors.ErrorData(logutils.StatusMissing, model.TypeLoginSession, &logutils.FieldArgs{"id": sessionID, "app_id": appID, "org_id": orgID, "identifier": identifier})
 	}
 
 	//3. delete the session
@@ -933,7 +921,7 @@ func (app *application) admGetApplicationAccountDevices(appID string, orgID stri
 	}
 	if appOrg.ID != account.AppOrg.ID {
 		l.Warnf("someone from app(%s) org(%s) is trying to access an account %s", appID, orgID, accountID)
-		return nil, errors.Newf("not allowed to access data").SetStatus(utils.ErrorStatusNotAllowed)
+		return nil, errors.ErrorData(logutils.StatusInvalid, model.TypeAccount, &logutils.FieldArgs{"id": accountID, "app_org_id": account.AppOrg.ID}).SetStatus(utils.ErrorStatusNotAllowed)
 	}
 
 	return account.Devices, nil
@@ -942,10 +930,10 @@ func (app *application) admGetApplicationAccountDevices(appID string, orgID stri
 func (app *application) admGrantAccountPermissions(appID string, orgID string, accountID string, permissionNames []string, assignerPermissions []string, l *logs.Log) error {
 	//check if there is data
 	if len(assignerPermissions) == 0 {
-		return errors.New("no permissions from admin assigner")
+		return errors.ErrorData(logutils.StatusMissing, "assigner permissions", nil)
 	}
 	if len(permissionNames) == 0 {
-		return errors.New("no permissions for granting")
+		return errors.ErrorData(logutils.StatusMissing, model.TypePermission, nil)
 	}
 
 	transaction := func(context storage.TransactionContext) error {
@@ -955,17 +943,17 @@ func (app *application) admGrantAccountPermissions(appID string, orgID string, a
 			return err
 		}
 		if account.Anonymous {
-			return errors.Newf("cannot grant permissions to anonymous accounts: ID=%s", accountID)
+			return errors.ErrorData(logutils.StatusInvalid, model.TypeAccount, &logutils.FieldArgs{"id": accountID, "anonymous": true})
 		}
 		if (account.AppOrg.Application.ID != appID) || (account.AppOrg.Organization.ID != orgID) {
 			l.Warnf("someone is trying to grant permissions to %s for different app/org", accountID)
-			return errors.Newf("not allowed").SetStatus(utils.ErrorStatusNotAllowed)
+			return errors.ErrorData(logutils.StatusInvalid, model.TypeAccount, &logutils.FieldArgs{"id": accountID, "app_id": account.AppOrg.Application.ID, "org_id": account.AppOrg.Organization.ID}).SetStatus(utils.ErrorStatusNotAllowed)
 		}
 
 		//2. grant account permissions
 		err = app.grantOrRevokePermissions(context, account, permissionNames, assignerPermissions, false)
 		if err != nil {
-			return errors.WrapErrorAction("granting", model.TypeAccountPermissions, nil, err)
+			return errors.WrapErrorAction(logutils.ActionGrant, model.TypeAccountPermissions, nil, err)
 		}
 
 		return nil
@@ -977,73 +965,27 @@ func (app *application) admGrantAccountPermissions(appID string, orgID string, a
 func (app *application) admRevokeAccountPermissions(appID string, orgID string, accountID string, permissionNames []string, assignerPermissions []string, l *logs.Log) error {
 	//check if there is data
 	if len(assignerPermissions) == 0 {
-		return errors.New("no permissions from admin assigner")
+		return errors.ErrorData(logutils.StatusMissing, "assigner permissions", nil)
 	}
 	if len(permissionNames) == 0 {
-		return errors.New("no permissions for revoking")
+		return errors.ErrorData(logutils.StatusMissing, model.TypePermission, nil)
 	}
 
-	//verify that the account is for the current app/org
-	account, err := app.storage.FindAccountByID(nil, accountID)
-	if err != nil {
-		return errors.Wrap("error finding account on permissions revoking", err)
-	}
-	if account == nil {
-		return errors.Newf("no account")
-	}
-	if (account.AppOrg.Application.ID != appID) || (account.AppOrg.Organization.ID != orgID) {
-		l.Warnf("someone is trying to revoke permissions from %s for different app/org", accountID)
-		return errors.Newf("not allowed")
-	}
-
-	//verify that the account has the permissions which are supposed to be revoked
-	numRevoked := 0
-	for _, current := range permissionNames {
-		hasP := account.GetPermissionNamed(current)
-		if hasP == nil {
-			l.Infof("trying to revoke %s for %s but the account does not have it", current, accountID)
-			return errors.Newf("%s cannot be revoked from %s", current, accountID)
-		}
-
-		numRevoked++
-	}
-
-	//find permissions
-	permissions, err := app.storage.FindPermissionsByName(nil, permissionNames)
-	if err != nil {
-		return err
-	}
-	if len(permissions) == 0 {
-		return errors.Newf("no permissions found for names: %v", permissionNames)
-	}
-
-	//check if authorized
-	removePermissions := make([]string, 0)
-	for _, permission := range permissions {
-		err = permission.CheckAssigners(assignerPermissions)
-		if err != nil {
-			return errors.Wrapf("error checking permission assigners", err)
-		}
-
-		removePermissions = append(removePermissions, permission.Name)
-	}
-
-	//delete permissions from an account AND delete all sessions for the account
 	transaction := func(context storage.TransactionContext) error {
-		//delete permissions from an account
-		err = app.storage.DeleteAccountPermissions(context, accountID, removePermissions)
+		//1. verify that the account is for the current app/org
+		account, err := app.getAccount(context, accountID)
 		if err != nil {
 			return err
 		}
 		if (account.AppOrg.Application.ID != appID) || (account.AppOrg.Organization.ID != orgID) {
 			l.Warnf("someone is trying to revoke permissions from %s for different app/org", accountID)
-			return errors.Newf("not allowed").SetStatus(utils.ErrorStatusNotAllowed)
+			return errors.ErrorData(logutils.StatusInvalid, model.TypeAccount, &logutils.FieldArgs{"id": accountID, "app_id": account.AppOrg.Application.ID, "org_id": account.AppOrg.Organization.ID}).SetStatus(utils.ErrorStatusNotAllowed)
 		}
 
 		//2. revoke account permissions
 		err = app.grantOrRevokePermissions(context, account, permissionNames, assignerPermissions, true)
 		if err != nil {
-			return errors.WrapErrorAction("revoking", model.TypeAccountPermissions, nil, err)
+			return errors.WrapErrorAction(logutils.ActionRevoke, model.TypeAccountPermissions, nil, err)
 		}
 
 		return nil
@@ -1055,10 +997,10 @@ func (app *application) admRevokeAccountPermissions(appID string, orgID string, 
 func (app *application) admGrantAccountRoles(appID string, orgID string, accountID string, roleIDs []string, assignerPermissions []string, l *logs.Log) error {
 	//check if there is data
 	if len(assignerPermissions) == 0 {
-		return errors.New("no permissions from admin assigner")
+		return errors.ErrorData(logutils.StatusMissing, "assigner permissions", nil)
 	}
 	if len(roleIDs) == 0 {
-		return errors.New("no roles for granting")
+		return errors.ErrorData(logutils.StatusMissing, "role ids", nil)
 	}
 
 	transaction := func(context storage.TransactionContext) error {
@@ -1068,17 +1010,17 @@ func (app *application) admGrantAccountRoles(appID string, orgID string, account
 			return err
 		}
 		if account.Anonymous {
-			return errors.Newf("cannot grant roles to anonymous accounts: ID=%s", accountID)
+			return errors.ErrorData(logutils.StatusInvalid, model.TypeAccount, &logutils.FieldArgs{"id": account.ID, "anonymous": true})
 		}
 		if (account.AppOrg.Application.ID != appID) || (account.AppOrg.Organization.ID != orgID) {
 			l.Warnf("someone is trying to grant roles to %s for different app/org", accountID)
-			return errors.Newf("not allowed").SetStatus(utils.ErrorStatusNotAllowed)
+			return errors.ErrorData(logutils.StatusInvalid, model.TypeAccount, &logutils.FieldArgs{"id": accountID, "app_id": account.AppOrg.Application.ID, "org_id": account.AppOrg.Organization.ID}).SetStatus(utils.ErrorStatusNotAllowed)
 		}
 
 		//2. grant account roles
 		err = app.grantOrRevokeRoles(context, account, roleIDs, assignerPermissions, false)
 		if err != nil {
-			return errors.WrapErrorAction("granting", model.TypeAccountRoles, nil, err)
+			return errors.WrapErrorAction(logutils.ActionGrant, model.TypeAccountRoles, nil, err)
 		}
 
 		return nil
@@ -1090,70 +1032,30 @@ func (app *application) admGrantAccountRoles(appID string, orgID string, account
 func (app *application) admRevokeAccountRoles(appID string, orgID string, accountID string, roleIDs []string, assignerPermissions []string, l *logs.Log) error {
 	//check if there is data
 	if len(assignerPermissions) == 0 {
-		return errors.New("no permissions from admin assigner")
+		return errors.ErrorData(logutils.StatusMissing, "assigner permissions", nil)
 	}
 	if len(roleIDs) == 0 {
-		return errors.New("no roles for revoking")
+		return errors.ErrorData(logutils.StatusMissing, "role ids", nil)
 	}
 
-	//verify that the account is for the current app/org
-	account, err := app.storage.FindAccountByID(nil, accountID)
-	if err != nil {
-		return errors.Wrap("error finding account on roles revoking", err)
-	}
-	if account == nil {
-		return errors.Newf("no account")
-	}
-	if (account.AppOrg.Application.ID != appID) || (account.AppOrg.Organization.ID != orgID) {
-		l.Warnf("someone is trying to revoke roles from %s for different app/org", accountID)
-		return errors.Newf("not allowed")
-	}
-
-	//verify that the account has the roles which are supposed to be revoked
-	numRevoked := 0
-	for _, roleID := range roleIDs {
-		hasR := account.GetRole(roleID)
-		if hasR == nil {
-			l.Infof("trying to revoke role %s for %s but the account does not have it", roleID, accountID)
-			return errors.Newf("%s cannot be revoked from %s", roleID, accountID)
-		}
-
-		numRevoked++
-	}
-
-	//find roles
-	roles, err := app.storage.FindAppOrgRolesByIDs(nil, roleIDs, account.AppOrg.ID)
-	if err != nil {
-		return errors.Wrap("error finding roles on revoking roles", err)
-	}
-	if len(roles) == 0 {
-		return errors.Newf("no roles found for ids: %v", roleIDs)
-	}
-
-	//check if authorized
-	for _, role := range roles {
-		err = role.CheckAssigners(assignerPermissions)
-		if err != nil {
-			return errors.Wrapf("error checking permission assigners when revoking roles from an account", err)
-		}
-	}
-
-	//delete roles from an account AND delete all sessions for the account
 	transaction := func(context storage.TransactionContext) error {
-		//delete roles from an account
-		err = app.storage.DeleteAccountRoles(context, accountID, roleIDs)
+		//1. verify that the account is for the current app/org
+		account, err := app.getAccount(context, accountID)
 		if err != nil {
 			return err
 		}
+		if account.Anonymous {
+			return errors.ErrorData(logutils.StatusInvalid, model.TypeAccount, &logutils.FieldArgs{"id": account.ID, "anonymous": true})
+		}
 		if (account.AppOrg.Application.ID != appID) || (account.AppOrg.Organization.ID != orgID) {
-			l.Warnf("someone is trying to revoke roles fom %s for different app/org", accountID)
-			return errors.Newf("not allowed").SetStatus(utils.ErrorStatusNotAllowed)
+			l.Warnf("someone is trying to revoke roles from %s for different app/org", accountID)
+			return errors.ErrorData(logutils.StatusInvalid, model.TypeAccount, &logutils.FieldArgs{"id": accountID, "app_id": account.AppOrg.Application.ID, "org_id": account.AppOrg.Organization.ID}).SetStatus(utils.ErrorStatusNotAllowed)
 		}
 
 		//2. revoke account roles
 		err = app.grantOrRevokeRoles(context, account, roleIDs, assignerPermissions, true)
 		if err != nil {
-			return errors.WrapErrorAction("revoking", model.TypeAccountRoles, nil, err)
+			return errors.WrapErrorAction(logutils.ActionRevoke, model.TypeAccountRoles, nil, err)
 		}
 
 		return nil
@@ -1165,10 +1067,10 @@ func (app *application) admRevokeAccountRoles(appID string, orgID string, accoun
 func (app *application) admGrantPermissionsToRole(appID string, orgID string, roleID string, permissionNames []string, assignerPermissions []string, system bool, l *logs.Log) error {
 	//check if there is data
 	if len(assignerPermissions) == 0 {
-		return errors.New("no permissions from admin assigner")
+		return errors.ErrorData(logutils.StatusMissing, "assigner permissions", nil)
 	}
 	if len(permissionNames) == 0 {
-		return errors.New("no permissions for granting")
+		return errors.ErrorData(logutils.StatusMissing, model.TypePermission, nil)
 	}
 
 	transaction := func(context storage.TransactionContext) error {
