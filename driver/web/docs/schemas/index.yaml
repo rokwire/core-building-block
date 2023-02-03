@@ -120,6 +120,10 @@ _shared_req_ParamsNone:
   $ref: "./apis/shared/requests/ParamsNone.yaml"
 _shared_req_ParamsSetEmailCredential:
   $ref: "./apis/shared/requests/ParamsSetEmailCredential.yaml"
+_shared_req_app-configs:
+  $ref: "./apis/shared/requests/app-configs/Request.yaml"
+_shared_req_app-configs-org:
+  $ref: "./apis/shared/requests/app-configs/organization/Request.yaml"
 
 ### responses
 _shared_res_Login:
@@ -182,11 +186,6 @@ _services_res_service-accounts_access-tokens:
 _services_service-accounts_CredsStaticToken:
   $ref: "./apis/shared/requests/service-accounts/CredsStaticToken.yaml"
 
-### app-configs API
-_services_req_application_configs:
-  $ref: "./apis/services/application/configs/request/Request.yaml"
-_services_req_application_org-configs:
-  $ref: "./apis/services/application/organization/configs/request/Request.yaml"
 ## end SERVICES section
 
 ## ADMIN section

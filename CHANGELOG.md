@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Added
 - Update role admin API [#516](https://github.com/rokwire/core-building-block/issues/516)
+- Add admin application config endpoints [#633](https://github.com/rokwire/core-building-block/issues/633)
 ### Changed
 - Upgrade dependencies [#624](https://github.com/rokwire/core-building-block/issues/624)
 ### Fixed

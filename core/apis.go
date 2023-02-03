@@ -339,6 +339,10 @@ func (s *administrationImpl) AdmGetTestModel() string {
 	return s.app.admGetTestModel()
 }
 
+func (s *administrationImpl) AdmGetAppConfig(appTypeIdentifier string, orgID *string, versionNumbers model.VersionNumbers, apiKey *string) (*model.ApplicationConfig, error) {
+	return s.app.adminGetAppConfig(appTypeIdentifier, orgID, versionNumbers, apiKey)
+}
+
 func (s *administrationImpl) AdmGetApplications(orgID string) ([]model.Application, error) {
 	return s.app.admGetApplications(orgID)
 }
