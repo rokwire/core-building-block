@@ -10,7 +10,7 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/pquerna/otp v1.4.0
 	github.com/rokwire/core-auth-library-go/v2 v2.2.0
-	github.com/rokwire/logging-library-go/v2 v2.1.0
+	github.com/rokwire/logging-library-go/v2 v2.2.0
 	github.com/stretchr/testify v1.8.1
 	github.com/swaggo/http-swagger v1.3.3
 	go.mongodb.org/mongo-driver v1.11.1
@@ -31,7 +31,7 @@ require (
 require (
 	github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible // indirect
 	github.com/KyleBanks/depth v1.2.1 // indirect
-	github.com/aws/aws-sdk-go v1.44.182 // indirect
+	github.com/aws/aws-sdk-go v1.44.187 // indirect
 	github.com/boombuler/barcode v1.0.1 // indirect
 	github.com/casbin/casbin/v2 v2.60.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
