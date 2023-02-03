@@ -462,7 +462,7 @@ func (a *oidcAuthImpl) loadOidcUserInfo(token *oidcToken, url string) ([]byte, e
 }
 
 func (a *oidcAuthImpl) getOidcAuthConfig(authType model.AuthType, appType model.ApplicationType) (*oidcAuthConfig, error) {
-	errFields := &logutils.FieldArgs{"auth_type_id": authType.ID, "app_type_id": appType}
+	errFields := &logutils.FieldArgs{"auth_type_id": authType.ID, "app_type_id": appType.ID}
 
 	identityProviderID, ok := authType.Params["identity_provider"].(string)
 	if !ok {
