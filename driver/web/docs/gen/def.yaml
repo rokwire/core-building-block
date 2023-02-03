@@ -1867,11 +1867,11 @@ paths:
               $ref: '#/components/schemas/_shared_req_app-configs'
             example:
               version: 1.0.1
-              app_type_identifier: edu.illinois.rokwire.android
+              app_type_identifier: edu.illinois.rokwire.admin.android
               api_key: ''
       responses:
         '200':
-          description: successfully read app configuration
+          description: Success
           content:
             application/json:
               schema:
@@ -1902,10 +1902,10 @@ paths:
               $ref: '#/components/schemas/_shared_req_app-configs-org'
             example:
               version: 1.0.1
-              app_type_identifier: edu.illinois.rokwire.android
+              app_type_identifier: edu.illinois.rokwire.admin.android
       responses:
         '200':
-          description: successfully read app configuration
+          description: Success
           content:
             application/json:
               schema:

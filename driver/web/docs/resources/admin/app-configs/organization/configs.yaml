@@ -15,10 +15,10 @@ post:
           $ref: "../../../../schemas/apis/shared/requests/app-configs/organization/Request.yaml"
         example:
           version: "1.0.1"
-          app_type_identifier: "edu.illinois.rokwire.android"
+          app_type_identifier: "edu.illinois.rokwire.admin.android"
   responses:
     200:
-      description: successfully read app configuration
+      description: Success
       content:
         application/json:
           schema:
