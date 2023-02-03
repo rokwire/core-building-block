@@ -37,6 +37,10 @@ const (
 // Config contains generic configs
 type Config struct {
 	ID          string      `json:"id" bson:"_id"`
+	Type        string      `json:"type" bson:"type"`
+	AppID       string      `json:"app_id" bson:"app_id"`
+	OrgID       string      `json:"org_id" bson:"org_id"`
+	System      bool        `json:"system" bson:"system"`
 	Data        interface{} `json:"data" bson:"data"`
 	DateCreated time.Time   `json:"date_created" bson:"date_created"`
 	DateUpdated *time.Time  `json:"date_updated" bson:"date_updated"`

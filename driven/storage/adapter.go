@@ -737,7 +737,7 @@ func (sa *Adapter) setCachedConfigs(configs []model.Config) {
 		if err != nil {
 			sa.db.logger.Warn(err.Error())
 		}
-		sa.cachedConfigs.Store(config.ID, config)
+		sa.cachedConfigs.Store(fmt.Sprintf("%s_%s_%s", config.Type, config.AppID, config.OrgID), config)
 	}
 }
 
@@ -764,13 +764,13 @@ func parseConfigsData(config *model.Config) error {
 	return nil
 }
 
-func (sa *Adapter) getCachedConfig(id string) (*model.Config, error) {
+func (sa *Adapter) getCachedConfig(configType string, appID string, orgID string) (*model.Config, error) {
 	sa.configsLock.RLock()
 	defer sa.configsLock.RUnlock()
 
-	errArgs := &logutils.FieldArgs{"id": id}
+	errArgs := &logutils.FieldArgs{"type": configType, "app_id": appID, "org_id": orgID}
 
-	item, _ := sa.cachedConfigs.Load(id)
+	item, _ := sa.cachedConfigs.Load(fmt.Sprintf("%s_%s_%s", configType, appID, orgID))
 	if item != nil {
 		config, ok := item.(model.Config)
 		if !ok {
@@ -779,6 +779,32 @@ func (sa *Adapter) getCachedConfig(id string) (*model.Config, error) {
 		return &config, nil
 	}
 	return nil, nil
+}
+
+func (sa *Adapter) getCachedConfigs(configType string, appID *string, orgID *string) ([]model.Config, error) {
+	sa.configsLock.RLock()
+	defer sa.configsLock.RUnlock()
+
+	var err error
+	configList := make([]model.Config, 0)
+	sa.cachedConfigs.Range(func(key, item interface{}) bool {
+		if item == nil {
+			return false
+		}
+
+		config, ok := item.(model.Config)
+		if !ok {
+			err = errors.ErrorAction(logutils.ActionCast, model.TypeConfig, &logutils.FieldArgs{"key": key})
+			return false
+		}
+
+		if config.Type == configType && (appID == nil || *appID == config.AppID) && (orgID == nil || *orgID == config.OrgID) {
+			configList = append(configList, config)
+		}
+		return true
+	})
+
+	return configList, err
 }
 
 // loadAuthTypes loads all auth types
@@ -3017,9 +3043,14 @@ func (sa *Adapter) loadConfigs() ([]model.Config, error) {
 	return configs, nil
 }
 
-// FindConfig finds config by id
-func (sa *Adapter) FindConfig(id string) (*model.Config, error) {
-	return sa.getCachedConfig(id)
+// FindConfig finds the config for the specified type, appID, and orgID
+func (sa *Adapter) FindConfig(configType string, appID string, orgID string) (*model.Config, error) {
+	return sa.getCachedConfig(configType, appID, orgID)
+}
+
+// FindConfigs finds all configs for the specified type, nullable appID, and nullable orgID
+func (sa *Adapter) FindConfigs(configType string, appID *string, orgID *string) ([]model.Config, error) {
+	return sa.getCachedConfigs(configType, appID, orgID)
 }
 
 // InsertConfig inserts a new config
@@ -3034,7 +3065,7 @@ func (sa *Adapter) InsertConfig(config model.Config) error {
 
 // UpdateConfig updates an existing config
 func (sa *Adapter) UpdateConfig(config model.Config) error {
-	filter := bson.M{"_id": config.ID}
+	filter := bson.M{"type": config.Type, "app_id": config.AppID, "org_id": config.OrgID}
 	update := bson.D{
 		primitive.E{Key: "$set", Value: bson.D{
 			primitive.E{Key: "data", Value: config.Data},

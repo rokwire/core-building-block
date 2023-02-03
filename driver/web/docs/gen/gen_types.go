@@ -308,10 +308,14 @@ type AuthType_Params struct {
 
 // Config defines model for Config.
 type Config struct {
+	AppId       string      `json:"app_id"`
 	Data        interface{} `json:"data"`
 	DateCreated *string     `json:"date_created,omitempty"`
 	DateUpdated *string     `json:"date_updated,omitempty"`
 	Id          *string     `json:"id,omitempty"`
+	OrgId       string      `json:"org_id"`
+	System      bool        `json:"system"`
+	Type        string      `json:"type"`
 }
 
 // Device defines model for Device.

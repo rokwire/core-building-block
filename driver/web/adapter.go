@@ -37,6 +37,7 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/rokwire/core-auth-library-go/v2/authservice"
+	"github.com/rokwire/core-auth-library-go/v2/authutils"
 	"github.com/rokwire/core-auth-library-go/v2/tokenauth"
 	"github.com/rokwire/core-auth-library-go/v2/webauth"
 
@@ -152,6 +153,11 @@ func (we Adapter) Start() {
 	adminSubrouter.HandleFunc("/auth/verify-mfa", we.wrapFunc(we.adminApisHandler.verifyMFA, we.auth.admin.User)).Methods("POST")
 	adminSubrouter.HandleFunc("/auth/app-token", we.wrapFunc(we.adminApisHandler.getAppToken, we.auth.admin.User)).Methods("GET")
 
+	adminSubrouter.HandleFunc("/configs/{id}", we.wrapFunc(we.adminApisHandler.getConfig, we.auth.system.Permissions)).Methods("GET")
+	adminSubrouter.HandleFunc("/configs", we.wrapFunc(we.adminApisHandler.createConfig, we.auth.system.Permissions)).Methods("POST")
+	adminSubrouter.HandleFunc("/configs", we.wrapFunc(we.adminApisHandler.updateConfig, we.auth.system.Permissions)).Methods("PUT")
+	adminSubrouter.HandleFunc("/configs/{id}", we.wrapFunc(we.adminApisHandler.deleteConfig, we.auth.system.Permissions)).Methods("DELETE")
+
 	adminSubrouter.HandleFunc("/account", we.wrapFunc(we.adminApisHandler.getAccount, we.auth.admin.User)).Methods("GET")
 	adminSubrouter.HandleFunc("/account/mfa", we.wrapFunc(we.adminApisHandler.getMFATypes, we.auth.admin.User)).Methods("GET")
 	adminSubrouter.HandleFunc("/account/mfa", we.wrapFunc(we.adminApisHandler.addMFAType, we.auth.admin.Authenticated)).Methods("POST")
@@ -227,11 +233,6 @@ func (we Adapter) Start() {
 	systemSubrouter := subRouter.PathPrefix("/system").Subrouter()
 
 	systemSubrouter.HandleFunc("/auth/app-org-token", we.wrapFunc(we.systemApisHandler.getAppOrgToken, we.auth.system.User)).Methods("GET")
-
-	systemSubrouter.HandleFunc("/configs/{id}", we.wrapFunc(we.systemApisHandler.getConfig, we.auth.system.Permissions)).Methods("GET")
-	systemSubrouter.HandleFunc("/configs/{id}", we.wrapFunc(we.systemApisHandler.createConfig, we.auth.system.Permissions)).Methods("POST")
-	systemSubrouter.HandleFunc("/configs/{id}", we.wrapFunc(we.systemApisHandler.updateConfig, we.auth.system.Permissions)).Methods("PUT")
-	systemSubrouter.HandleFunc("/configs/{id}", we.wrapFunc(we.systemApisHandler.deleteConfig, we.auth.system.Permissions)).Methods("DELETE")
 
 	systemSubrouter.HandleFunc("/organizations", we.wrapFunc(we.systemApisHandler.createOrganization, we.auth.system.Permissions)).Methods("POST")
 	systemSubrouter.HandleFunc("/organizations/{id}", we.wrapFunc(we.systemApisHandler.updateOrganization, we.auth.system.Permissions)).Methods("PUT")
@@ -556,7 +557,7 @@ func NewWebAdapter(env string, serviceID string, serviceRegManager *authservice.
 	var envData *model.EnvConfigData
 	var corsAllowedHeaders []string
 	corsAllowedOrigins := []string{"*"}
-	config, err := storage.FindConfig(model.ConfigIDEnv)
+	config, err := storage.FindConfig(model.ConfigIDEnv, authutils.AllApps, authutils.AllOrgs)
 	if err != nil {
 		logger.Fatal(err.Error())
 	}

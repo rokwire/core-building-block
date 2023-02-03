@@ -28,20 +28,10 @@ func configToDef(item model.Config) Def.Config {
 		dateUpdated = &formatted
 	}
 
-	return Def.Config{Id: &item.ID, Data: item.Data, DateCreated: &dateCreated, DateUpdated: dateUpdated}
+	return Def.Config{Id: &item.ID, Type: item.Type, AppId: item.AppID, OrgId: item.OrgID, System: item.System, Data: item.Data,
+		DateCreated: &dateCreated, DateUpdated: dateUpdated}
 }
 
-func configFromDef(item Def.Config, id string) model.Config {
-	// config := model.Config{ID: id}
-
-	// switch t := item.Data.(type) {
-	// case Def.EnvConfigData:
-	// 	config.Data = envConfigDataFromDef(t)
-	// }
-
-	return model.Config{ID: id, Data: item.Data}
-}
-
-func envConfigDataFromDef(item Def.EnvConfigData) model.EnvConfigData {
-	return model.EnvConfigData{AllowLegacyRefresh: item.AllowLegacyRefresh}
+func configFromDef(item Def.Config) model.Config {
+	return model.Config{Type: item.Type, AppID: item.AppId, OrgID: item.OrgId, System: item.System, Data: item.Data}
 }

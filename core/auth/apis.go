@@ -267,7 +267,7 @@ func (a *Auth) CanLink(authenticationType string, userIdentifier string, apiKey 
 //			Access token (string): Signed ROKWIRE access token to be used to authorize future requests
 //			Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
 //			Params (interface{}): authType-specific set of parameters passed back to client
-func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string, l *logs.Log) (_ *model.LoginSession, refreshErr error) {
+func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string, l *logs.Log) (*model.LoginSession, error) {
 	var loginSession *model.LoginSession
 
 	//find the login session for the refresh token
@@ -276,7 +276,6 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 		l.Infof("error finding session by refresh token - %s", refreshToken)
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, logutils.StringArgs("refresh token"), err)
 	}
-
 	if loginSession == nil {
 		l.Infof("there is no a session for refresh token - %s", refreshToken)
 		return nil, nil

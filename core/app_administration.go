@@ -181,6 +181,63 @@ func (app *application) admGetTestModel() string {
 	return ""
 }
 
+func (app *application) admGetConfig(id string, system bool) (*model.Config, error) {
+	//TODO: handle system
+	// config, err := app.storage.FindConfig(id)
+	// if err != nil {
+	// 	return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeConfig, nil, err)
+	// }
+	// return config, nil
+	return nil, errors.New(logutils.Unimplemented)
+}
+
+func (app *application) admCreateConfig(config model.Config, system bool) error {
+	if !system && config.System {
+		return errors.ErrorData(logutils.StatusInvalid, "system claim", nil)
+	}
+
+	config.ID = uuid.NewString()
+	config.DateCreated = time.Now().UTC()
+	err := app.storage.InsertConfig(config)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeConfig, nil, err)
+	}
+	return nil
+}
+
+func (app *application) admUpdateConfig(config model.Config, system bool) error {
+	oldConfig, err := app.storage.FindConfig(config.Type, config.AppID, config.OrgID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeConfig, nil, err)
+	}
+	if oldConfig == nil {
+		return errors.ErrorData(logutils.StatusMissing, model.TypeConfig, nil)
+	}
+
+	if !system && (config.System || oldConfig.System) {
+		return errors.ErrorData(logutils.StatusInvalid, "system claim", nil)
+	}
+
+	now := time.Now().UTC()
+	config.DateUpdated = &now
+
+	err = app.storage.UpdateConfig(config)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeConfig, nil, err)
+	}
+	return nil
+}
+
+func (app *application) admDeleteConfig(id string, system bool) error {
+	//TODO: handle system
+	// err := app.storage.DeleteConfig(id)
+	// if err != nil {
+	// 	return errors.WrapErrorAction(logutils.ActionDelete, model.TypeConfig, nil, err)
+	// }
+	// return nil
+	return errors.New(logutils.Unimplemented)
+}
+
 func (app *application) admGetApplications(orgID string) ([]model.Application, error) {
 	applicationsOrganizations, err := app.storage.FindApplicationsOrganizationsByOrgID(orgID)
 	if err != nil {

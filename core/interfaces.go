@@ -46,6 +46,11 @@ type Administration interface {
 	AdmGetTest() string
 	AdmGetTestModel() string
 
+	AdmGetConfig(id string, system bool) (*model.Config, error)
+	AdmCreateConfig(config model.Config, system bool) error
+	AdmUpdateConfig(config model.Config, system bool) error
+	AdmDeleteConfig(id string, system bool) error
+
 	AdmGetApplications(orgID string) ([]model.Application, error)
 
 	AdmCreateAppOrgGroup(name string, description string, system bool, permissionNames []string, rolesIDs []string, accountIDs []string, appID string, orgID string, assignerPermissions []string, systemClaim bool, l *logs.Log) (*model.AppOrgGroup, error)
@@ -106,11 +111,6 @@ type TPS interface {
 
 // System exposes system APIs for the driver adapters
 type System interface {
-	SysGetConfig(id string) (*model.Config, error)
-	SysCreateConfig(config model.Config) error
-	SysUpdateConfig(config model.Config) error
-	SysDeleteConfig(id string) error
-
 	SysGetApplicationOrganization(ID string) (*model.ApplicationOrganization, error)
 	SysGetApplicationOrganizations(appID *string, orgID *string) ([]model.ApplicationOrganization, error)
 	SysCreateApplicationOrganization(appID string, orgID string, appOrg model.ApplicationOrganization) (*model.ApplicationOrganization, error)
@@ -178,7 +178,8 @@ type Storage interface {
 	SaveDevice(context storage.TransactionContext, device *model.Device) error
 	DeleteDevice(context storage.TransactionContext, id string) error
 
-	FindConfig(id string) (*model.Config, error)
+	FindConfig(configType string, appID string, orgID string) (*model.Config, error)
+	FindConfigs(configType string, appID *string, orgID *string) ([]model.Config, error)
 	InsertConfig(config model.Config) error
 	UpdateConfig(config model.Config) error
 	DeleteConfig(id string) error
