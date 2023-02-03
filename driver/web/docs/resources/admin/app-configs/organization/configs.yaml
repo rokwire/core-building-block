@@ -1,14 +1,13 @@
 post:
   tags:
-  - Services
-  summary: Gets organization-specific app configs
+  - Admin
+  summary: Gets organization-specific admin app configs
   description: |
-    Returns the app config for the highest version that is equal to or less than the provided version for the currently authenticated organization
+    Returns the admin app config for the highest version that is equal to or less than the provided version for the currently authenticated organization
 
-    **Auth:** Requires auth token
+    **Auth:** Requires admin auth token
   security:
   - bearerAuth: []
-  deprecated: true
   requestBody:
     content:
       application/json:
@@ -16,10 +15,10 @@ post:
           $ref: "../../../../schemas/apis/shared/requests/app-configs/organization/Request.yaml"
         example:
           version: "1.0.1"
-          app_type_identifier: "edu.illinois.rokwire.android"
+          app_type_identifier: "edu.illinois.rokwire.admin.android"
   responses:
     200:
-      description: successfully read app configuration
+      description: Success
       content:
         application/json:
           schema:

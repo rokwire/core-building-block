@@ -181,6 +181,10 @@ func (app *application) admGetTestModel() string {
 	return ""
 }
 
+func (app *application) adminGetAppConfig(appTypeIdentifier string, orgID *string, versionNumbers model.VersionNumbers, apiKey *string) (*model.ApplicationConfig, error) {
+	return app.sharedGetAppConfig(appTypeIdentifier, orgID, versionNumbers, apiKey, true)
+}
+
 func (app *application) admGetApplications(orgID string) ([]model.Application, error) {
 	applicationsOrganizations, err := app.storage.FindApplicationsOrganizationsByOrgID(orgID)
 	if err != nil {

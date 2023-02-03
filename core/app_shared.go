@@ -22,6 +22,50 @@ import (
 	"github.com/rokwire/logging-library-go/v2/logutils"
 )
 
+func (app *application) sharedGetAppConfig(appTypeIdentifier string, orgID *string, versionNumbers model.VersionNumbers, apiKey *string, admin bool) (*model.ApplicationConfig, error) {
+	//get the app type
+	applicationType, err := app.storage.FindApplicationType(appTypeIdentifier)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationType, logutils.StringArgs(appTypeIdentifier), err)
+	}
+	if applicationType == nil {
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationType, logutils.StringArgs(appTypeIdentifier))
+	}
+
+	if !admin && applicationType.Application.Admin {
+		return nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeClaim, logutils.StringArgs("admin"))
+	}
+
+	appID := applicationType.Application.ID
+
+	if orgID == nil || apiKey != nil {
+		err = app.auth.ValidateAPIKey(appID, *apiKey)
+		if err != nil {
+			return nil, errors.WrapErrorData(logutils.StatusInvalid, model.TypeAPIKey, nil, err)
+		}
+	}
+
+	var appOrgID *string
+	if orgID != nil {
+		appOrg, err := app.storage.FindApplicationOrganization(appID, *orgID)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": appID, "org_id": *orgID}, err)
+		}
+		appOrgID = &appOrg.ID
+	}
+
+	appConfigs, err := app.storage.FindAppConfigByVersion(applicationType.ID, appOrgID, versionNumbers)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationConfig, nil, err)
+	}
+
+	if appConfigs == nil {
+		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeApplicationConfig, nil, err)
+	}
+
+	return appConfigs, nil
+}
+
 func (app *application) sharedGetAccountsByParams(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]map[string]interface{}, error) {
 	accounts, err := app.storage.FindAccountsByParams(searchParams, appID, orgID, limit, offset, allAccess, approvedKeys)
 	if err != nil {
