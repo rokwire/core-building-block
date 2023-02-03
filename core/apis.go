@@ -138,7 +138,7 @@ func (c *APIs) storeSystemData() error {
 
 			newDocuments["application_organization"] = uuid.NewString()
 			newSystemAdminAppOrg := model.ApplicationOrganization{ID: newDocuments["application_organization"], Application: *systemAdminApp, Organization: *systemOrg,
-				SupportedAuthTypes: supportedAuthTypes, DateCreated: time.Now().UTC()}
+				SupportedAuthTypes: supportedAuthTypes, ServicesIDs: []string{model.ServiceIDCore}, DateCreated: time.Now().UTC()}
 			_, err = c.app.storage.InsertApplicationOrganization(context, newSystemAdminAppOrg)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionSave, model.TypeApplicationOrganization, nil, err)
@@ -189,7 +189,7 @@ func (c *APIs) storeSystemData() error {
 					}
 				}
 				if !found {
-					newPermission := model.Permission{ID: uuid.NewString(), Name: name, Description: desc, ServiceID: "core",
+					newPermission := model.Permission{ID: uuid.NewString(), Name: name, Description: desc, ServiceID: model.ServiceIDCore,
 						Assigners: []string{model.PermissionAllSystemCore}, DateCreated: time.Now().UTC()}
 					insert = append(insert, newPermission)
 				}

@@ -166,12 +166,16 @@ func (sa *Adapter) setCachedServiceRegs(serviceRegs *[]model.ServiceReg) {
 	validate := validator.New()
 
 	for _, serviceReg := range *serviceRegs {
-		err := validate.Struct(serviceReg)
-		if err == nil {
-			sa.cachedServiceRegs.Store(serviceReg.Registration.ServiceID, serviceReg)
-		} else {
-			sa.logger.Errorf("failed to validate and cache service registration with registration.service_id %s: %s", serviceReg.Registration.ServiceID, err.Error())
-		}
+		sa.validateAndCacheServiceReg(serviceReg, validate)
+	}
+}
+
+func (sa *Adapter) validateAndCacheServiceReg(reg model.ServiceReg, validate *validator.Validate) {
+	err := validate.Struct(reg)
+	if err == nil {
+		sa.cachedServiceRegs.Store(reg.Registration.ServiceID, reg)
+	} else {
+		sa.logger.Errorf("failed to validate and cache service registration with registration.service_id %s: %s", reg.Registration.ServiceID, err.Error())
 	}
 }
 
@@ -705,9 +709,6 @@ func (sa *Adapter) loadAuthTypes() ([]model.AuthType, error) {
 	err := sa.db.authTypes.Find(filter, &result, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthType, nil, err)
-	}
-	if len(result) == 0 {
-		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeAuthType, nil, err)
 	}
 
 	return result, nil
@@ -3518,12 +3519,20 @@ func (sa *Adapter) UpdateServiceReg(reg *model.ServiceReg) error {
 }
 
 // SaveServiceReg saves the service registration to the storage
-func (sa *Adapter) SaveServiceReg(reg *model.ServiceReg) error {
+func (sa *Adapter) SaveServiceReg(reg *model.ServiceReg, immediateCache bool) error {
+	if reg == nil {
+		return nil
+	}
+
 	filter := bson.M{"registration.service_id": reg.Registration.ServiceID}
 	opts := options.Replace().SetUpsert(true)
 	err := sa.db.serviceRegs.ReplaceOne(filter, reg, opts)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionSave, model.TypeServiceReg, &logutils.FieldArgs{"service_id": reg.Registration.ServiceID}, err)
+	}
+
+	if immediateCache {
+		sa.validateAndCacheServiceReg(*reg, validator.New())
 	}
 
 	return nil

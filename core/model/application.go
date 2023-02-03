@@ -57,6 +57,8 @@ const (
 	PermissionAllSystemCore string = "all_system_core"
 	//PermissionGrantAllPermissions ...
 	PermissionGrantAllPermissions string = "grant_all_permissions"
+	//ServiceIDCore ...
+	ServiceIDCore string = "core"
 )
 
 // Permission represents permission entity
