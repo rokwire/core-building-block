@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Added
+- Enable CORS [#632](https://github.com/rokwire/core-building-block/issues/632)
 - Update role admin API [#516](https://github.com/rokwire/core-building-block/issues/516)
 ### Changed
 - Upgrade dependencies [#624](https://github.com/rokwire/core-building-block/issues/624)
