@@ -331,7 +331,6 @@ type DeviceType string
 
 // EnvConfigData defines model for EnvConfigData.
 type EnvConfigData struct {
-	AllowLegacyRefresh *bool     `json:"allow_legacy_refresh"`
 	CorsAllowedHeaders *[]string `json:"cors_allowed_headers"`
 	CorsAllowedOrigins *[]string `json:"cors_allowed_origins"`
 }
@@ -1181,6 +1180,12 @@ type PostAdminAuthRefreshJSONBody = SharedReqRefresh
 // PostAdminAuthVerifyMfaJSONBody defines parameters for PostAdminAuthVerifyMfa.
 type PostAdminAuthVerifyMfaJSONBody = SharedReqMfa
 
+// PostAdminConfigsJSONBody defines parameters for PostAdminConfigs.
+type PostAdminConfigsJSONBody = Config
+
+// PutAdminConfigsJSONBody defines parameters for PutAdminConfigs.
+type PutAdminConfigsJSONBody = Config
+
 // PostBbsAccessTokenJSONBody defines parameters for PostBbsAccessToken.
 type PostBbsAccessTokenJSONBody = ServicesReqServiceAccountsAccessToken
 
@@ -1436,12 +1441,6 @@ type GetSystemAuthAppOrgTokenParams struct {
 	OrgId string `form:"org_id" json:"org_id"`
 }
 
-// PostSystemConfigsIdJSONBody defines parameters for PostSystemConfigsId.
-type PostSystemConfigsIdJSONBody = Config
-
-// PutSystemConfigsIdJSONBody defines parameters for PutSystemConfigsId.
-type PutSystemConfigsIdJSONBody = Config
-
 // PostSystemOrganizationsJSONBody defines parameters for PostSystemOrganizations.
 type PostSystemOrganizationsJSONBody = Organization
 
@@ -1679,6 +1678,12 @@ type PostAdminAuthRefreshJSONRequestBody = PostAdminAuthRefreshJSONBody
 // PostAdminAuthVerifyMfaJSONRequestBody defines body for PostAdminAuthVerifyMfa for application/json ContentType.
 type PostAdminAuthVerifyMfaJSONRequestBody = PostAdminAuthVerifyMfaJSONBody
 
+// PostAdminConfigsJSONRequestBody defines body for PostAdminConfigs for application/json ContentType.
+type PostAdminConfigsJSONRequestBody = PostAdminConfigsJSONBody
+
+// PutAdminConfigsJSONRequestBody defines body for PutAdminConfigs for application/json ContentType.
+type PutAdminConfigsJSONRequestBody = PutAdminConfigsJSONBody
+
 // PostBbsAccessTokenJSONRequestBody defines body for PostBbsAccessToken for application/json ContentType.
 type PostBbsAccessTokenJSONRequestBody = PostBbsAccessTokenJSONBody
 
@@ -1804,12 +1809,6 @@ type PostSystemAuthTypesJSONRequestBody = PostSystemAuthTypesJSONBody
 
 // PutSystemAuthTypesIdJSONRequestBody defines body for PutSystemAuthTypesId for application/json ContentType.
 type PutSystemAuthTypesIdJSONRequestBody = PutSystemAuthTypesIdJSONBody
-
-// PostSystemConfigsIdJSONRequestBody defines body for PostSystemConfigsId for application/json ContentType.
-type PostSystemConfigsIdJSONRequestBody = PostSystemConfigsIdJSONBody
-
-// PutSystemConfigsIdJSONRequestBody defines body for PutSystemConfigsId for application/json ContentType.
-type PutSystemConfigsIdJSONRequestBody = PutSystemConfigsIdJSONBody
 
 // PostSystemOrganizationsJSONRequestBody defines body for PostSystemOrganizations for application/json ContentType.
 type PostSystemOrganizationsJSONRequestBody = PostSystemOrganizationsJSONBody

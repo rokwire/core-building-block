@@ -30,8 +30,8 @@ const (
 	//TypeOrganizationConfig ...
 	TypeOrganizationConfig logutils.MessageDataType = "org config"
 
-	// ConfigIDEnv is the Config ID for EnvConfigData
-	ConfigIDEnv string = "env"
+	// ConfigTypeEnv is the Config type for EnvConfigData
+	ConfigTypeEnv string = "env"
 )
 
 // Config contains generic configs
@@ -57,7 +57,6 @@ func (c *Config) DataAsEnvConfig() (*EnvConfigData, error) {
 
 // EnvConfigData contains environment configs for this service
 type EnvConfigData struct {
-	AllowLegacyRefresh *bool    `json:"allow_legacy_refresh,omitempty" bson:"allow_legacy_refresh,omitempty"`
 	CORSAllowedOrigins []string `json:"cors_allowed_origins,omitempty" bson:"cors_allowed_origins"`
 	CORSAllowedHeaders []string `json:"cors_allowed_headers,omitempty" bson:"cors_allowed_headers"`
 }

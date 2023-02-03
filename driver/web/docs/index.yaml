@@ -141,7 +141,12 @@ paths:
     $ref: "./resources/admin/application/roles/permissions.yaml"
   /admin/organization/applications:
     $ref: "./resources/admin/organization/applications.yaml"
- 
+  /admin/configs:
+    $ref: "./resources/admin/configs.yaml"
+    
+  # /admin/configs/{id}:
+  #   $ref: "./resources/admin/configsId.yaml"
+  
   #enc
   /enc/test:
     $ref: "./resources/enc/test.yaml"
@@ -181,8 +186,6 @@ paths:
   #system
   /system/auth/app-org-token:
     $ref: "./resources/system/auth/app-org-token.yaml"
-  /system/configs/{id}:
-    $ref: "./resources/system/configsId.yaml"
   /system/organizations/{id}:
     $ref: "./resources/system/organizationsId.yaml"
   /system/organizations:

@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 
@@ -746,7 +745,7 @@ func parseConfigsData(config *model.Config) error {
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUnmarshal, model.TypeConfig, nil, err)
 	}
-	if strings.HasPrefix(config.ID, model.ConfigIDEnv) {
+	if config.Type == model.ConfigTypeEnv {
 		var envData model.EnvConfigData
 		err = bson.Unmarshal(bsonBytes, &envData)
 		if err != nil {
