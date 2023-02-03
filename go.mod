@@ -9,7 +9,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
 	github.com/pquerna/otp v1.4.0
-	github.com/rokwire/core-auth-library-go/v2 v2.2.0
+	github.com/rokwire/core-auth-library-go/v2 v2.1.1-0.20230125225150-a2080663cffb
 	github.com/rokwire/logging-library-go/v2 v2.2.0
 	github.com/stretchr/testify v1.8.1
 	github.com/swaggo/http-swagger v1.3.3
@@ -25,6 +25,8 @@ require (
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 // indirect
 	github.com/perimeterx/marshmallow v1.1.4 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/rogpeppe/go-internal v1.9.0 // indirect
+	github.com/rs/cors v1.8.3 // indirect
 )
 
 require (

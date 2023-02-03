@@ -23,6 +23,7 @@ import (
 	"core-building-block/core/model"
 
 	"github.com/rokwire/logging-library-go/v2/logs"
+	"github.com/stretchr/testify/mock"
 	"gotest.tools/assert"
 )
 
@@ -82,34 +83,34 @@ func TestAdmGetTest(t *testing.T) {
 
 //System
 
-func TestSysCreateGlobalConfig(t *testing.T) {
+func TestSysCreateConfig(t *testing.T) {
+	anyConfig := mock.AnythingOfType("model.Config")
 	storage := genmocks.Storage{}
-	storage.On("GetGlobalConfig").Return(nil, nil)
-	storage.On("CreateGlobalConfig", nil, &model.GlobalConfig{Setting: "setting"}).Return(nil)
+	storage.On("InsertConfig", anyConfig).Return(nil)
 
 	coreAPIs := buildTestCoreAPIs(&storage)
 
-	gc, _ := coreAPIs.System.SysCreateGlobalConfig("setting")
-	if gc == nil {
-		t.Error("gc is nil")
+	trueVal := true
+	config := model.Config{ID: model.ConfigIDEnv, Data: model.EnvConfigData{AllowLegacyRefresh: &trueVal}}
+	err := coreAPIs.System.SysCreateConfig(config)
+	if err != nil {
+		t.Error("we are not expecting error")
 		return
 	}
-	assert.Equal(t, gc.Setting, "setting", "setting is different")
 
 	//second case - error
 	storage2 := genmocks.Storage{}
-	storage2.On("GetGlobalConfig").Return(nil, nil)
-	storage2.On("CreateGlobalConfig", nil, &model.GlobalConfig{Setting: "setting"}).Return(errors.New("error occured"))
+	storage2.On("InsertConfig", anyConfig).Return(errors.New("error occured"))
 
 	coreAPIs = buildTestCoreAPIs(&storage2)
 
-	_, err := coreAPIs.System.SysCreateGlobalConfig("setting")
+	err = coreAPIs.System.SysCreateConfig(config)
 	if err == nil {
 		t.Error("we are expecting error")
 		return
 	}
 	errText := err.Error()
-	assert.Equal(t, errText, "core-building-block/core.(*application).sysCreateGlobalConfig() error inserting global config: error occured", "error is different: "+err.Error())
+	assert.Equal(t, errText, "core-building-block/core.(*application).sysCreateConfig() error inserting config: error occured", "error is different: "+err.Error())
 }
 
 func TestSysGetOrganization(t *testing.T) {

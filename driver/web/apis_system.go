@@ -60,64 +60,87 @@ func (h SystemApisHandler) getAppOrgToken(l *logs.Log, r *http.Request, claims *
 	return l.HTTPResponseSuccessJSON(responseJSON)
 }
 
-// createGlobalConfig creates a global config
-func (h SystemApisHandler) createGlobalConfig(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+// getConfig gets config by id
+func (h SystemApisHandler) getConfig(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
+	params := mux.Vars(r)
+	id := params["id"]
+	if len(id) <= 0 {
+		return l.HTTPResponseErrorData(logutils.StatusMissing, logutils.TypePathParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.GlobalConfig
-	err = json.Unmarshal(data, &requestData)
+	config, err := h.coreAPIs.System.SysGetConfig(id)
 	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, model.TypeGlobalConfig, nil, err, http.StatusBadRequest, true)
+		return l.HTTPResponseErrorAction(logutils.ActionGet, model.TypeConfig, nil, err, http.StatusInternalServerError, true)
+	}
+	if config == nil {
+		return l.HTTPResponseErrorData(logutils.StatusMissing, model.TypeConfig, &logutils.FieldArgs{"id": id}, nil, http.StatusNotFound, true)
 	}
 
-	_, err = h.coreAPIs.System.SysCreateGlobalConfig(requestData.Setting)
+	data, err := json.Marshal(configToDef(*config))
 	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionCreate, model.TypeGlobalConfig, nil, err, http.StatusInternalServerError, true)
-	}
-
-	return l.HTTPResponseSuccess()
-}
-
-// getGlobalConfig gets config
-func (h SystemApisHandler) getGlobalConfig(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	config, err := h.coreAPIs.System.SysGetGlobalConfig()
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionGet, model.TypeGlobalConfig, nil, err, http.StatusInternalServerError, true)
-	}
-
-	var responseData *Def.GlobalConfig
-	if config != nil {
-		responseData = &Def.GlobalConfig{Setting: config.Setting}
-	}
-	data, err := json.Marshal(responseData)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeGlobalConfig, nil, err, http.StatusInternalServerError, false)
+		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeConfig, nil, err, http.StatusInternalServerError, false)
 	}
 
 	return l.HTTPResponseSuccessJSON(data)
 }
 
-// updateGlobalConfig updates global config
-func (h SystemApisHandler) updateGlobalConfig(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+// createConfig creates a config by id
+func (h SystemApisHandler) createConfig(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
+	params := mux.Vars(r)
+	id := params["id"]
+	if len(id) <= 0 {
+		return l.HTTPResponseErrorData(logutils.StatusMissing, logutils.TypePathParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
 	}
 
-	var updateConfig Def.GlobalConfig
-	err = json.Unmarshal(data, &updateConfig)
+	var requestData Def.Config
+	err := json.NewDecoder(r.Body).Decode(&requestData)
 	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, model.TypeGlobalConfig, nil, err, http.StatusBadRequest, true)
+		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, true)
 	}
 
-	setting := updateConfig.Setting
-
-	err = h.coreAPIs.System.SysUpdateGlobalConfig(setting)
+	config := configFromDef(requestData, id)
+	err = h.coreAPIs.System.SysCreateConfig(config)
 	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionUpdate, model.TypeGlobalConfig, nil, err, http.StatusInternalServerError, true)
+		return l.HTTPResponseErrorAction(logutils.ActionCreate, model.TypeConfig, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HTTPResponseSuccess()
+}
+
+// updateConfig updates a config by id
+func (h SystemApisHandler) updateConfig(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
+	params := mux.Vars(r)
+	id := params["id"]
+	if len(id) <= 0 {
+		return l.HTTPResponseErrorData(logutils.StatusMissing, logutils.TypePathParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.Config
+	err := json.NewDecoder(r.Body).Decode(&requestData)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, true)
+	}
+
+	config := configFromDef(requestData, id)
+	err = h.coreAPIs.System.SysUpdateConfig(config)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionUpdate, model.TypeConfig, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HTTPResponseSuccess()
+}
+
+// deleteConfig deletes a config by id
+func (h SystemApisHandler) deleteConfig(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
+	params := mux.Vars(r)
+	id := params["id"]
+	if len(id) <= 0 {
+		return l.HTTPResponseErrorData(logutils.StatusMissing, logutils.TypePathParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
+	}
+
+	err := h.coreAPIs.System.SysDeleteConfig(id)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionDelete, model.TypeConfig, nil, err, http.StatusInternalServerError, true)
 	}
 
 	return l.HTTPResponseSuccess()

@@ -106,9 +106,10 @@ type TPS interface {
 
 // System exposes system APIs for the driver adapters
 type System interface {
-	SysCreateGlobalConfig(setting string) (*model.GlobalConfig, error)
-	SysGetGlobalConfig() (*model.GlobalConfig, error)
-	SysUpdateGlobalConfig(setting string) error
+	SysGetConfig(id string) (*model.Config, error)
+	SysCreateConfig(config model.Config) error
+	SysUpdateConfig(config model.Config) error
+	SysDeleteConfig(id string) error
 
 	SysGetApplicationOrganization(ID string) (*model.ApplicationOrganization, error)
 	SysGetApplicationOrganizations(appID *string, orgID *string) ([]model.ApplicationOrganization, error)
@@ -177,9 +178,10 @@ type Storage interface {
 	SaveDevice(context storage.TransactionContext, device *model.Device) error
 	DeleteDevice(context storage.TransactionContext, id string) error
 
-	CreateGlobalConfig(context storage.TransactionContext, globalConfig *model.GlobalConfig) error
-	GetGlobalConfig() (*model.GlobalConfig, error)
-	DeleteGlobalConfig(context storage.TransactionContext) error
+	FindConfig(id string) (*model.Config, error)
+	InsertConfig(config model.Config) error
+	UpdateConfig(config model.Config) error
+	DeleteConfig(id string) error
 
 	FindPermissionsByName(context storage.TransactionContext, names []string) ([]model.Permission, error)
 	FindPermissionsByServiceIDs(serviceIDs []string) ([]model.Permission, error)

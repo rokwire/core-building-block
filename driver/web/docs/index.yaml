@@ -173,8 +173,8 @@ paths:
   #system
   /system/auth/app-org-token:
     $ref: "./resources/system/auth/app-org-token.yaml"
-  /system/global-config:
-    $ref: "./resources/system/global-config.yaml"
+  /system/configs/{id}:
+    $ref: "./resources/system/configsId.yaml"
   /system/organizations/{id}:
     $ref: "./resources/system/organizationsId.yaml"
   /system/organizations:
