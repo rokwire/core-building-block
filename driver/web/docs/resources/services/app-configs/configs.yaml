@@ -6,7 +6,6 @@ post:
     Returns the default app config for the highest version that is equal to or less than the provided version
 
     **Auth:** Requires a valid API Key for access.
-  deprecated: true
   requestBody:
     description: |
       App config query
