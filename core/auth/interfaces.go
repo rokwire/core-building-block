@@ -22,7 +22,7 @@ import (
 	"github.com/rokwire/core-auth-library-go/v2/authorization"
 	"github.com/rokwire/core-auth-library-go/v2/sigauth"
 	"github.com/rokwire/core-auth-library-go/v2/tokenauth"
-	"github.com/rokwire/logging-library-go/logs"
+	"github.com/rokwire/logging-library-go/v2/logs"
 )
 
 // authType is the interface for authentication for auth types which are not external for the system(the users do not come from external system)
@@ -534,7 +534,7 @@ type Storage interface {
 	FindServiceReg(serviceID string) (*model.ServiceReg, error)
 	InsertServiceReg(reg *model.ServiceReg) error
 	UpdateServiceReg(reg *model.ServiceReg) error
-	SaveServiceReg(reg *model.ServiceReg) error
+	SaveServiceReg(reg *model.ServiceReg, immediateCache bool) error
 	DeleteServiceReg(serviceID string) error
 
 	//IdentityProviders

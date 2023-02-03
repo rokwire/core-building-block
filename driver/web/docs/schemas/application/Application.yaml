@@ -21,7 +21,3 @@ properties:
     type: array
     items:
       $ref: "./ApplicationType.yaml"
-  organizations:
-    type: array
-    items:
-      $ref: "./ApplicationOrganization.yaml"

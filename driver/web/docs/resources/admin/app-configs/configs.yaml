@@ -1,0 +1,34 @@
+post:
+  tags:
+  - Admin
+  summary: Gets default admin app config
+  description: |
+    Returns the default admin app config for the highest version that is equal to or less than the provided version
+
+    **Auth:** Requires a valid API Key for access.
+  requestBody:
+    description: |
+      App config query
+    content:
+      application/json:
+        schema:
+          $ref: "../../../schemas/apis/shared/requests/app-configs/Request.yaml"
+        example:
+          version: "1.0.1"
+          app_type_identifier: "edu.illinois.rokwire.admin.android"
+          api_key: ""
+  responses:
+    200:
+      description: Success
+      content:
+        application/json:
+          schema:
+            $ref: "../../../schemas/application/ApplicationConfig.yaml"
+    400:
+      description: Bad request.
+    401:
+      description: Unauthorized
+    404:
+      description: AppConfig not found
+    500:
+      description: Internal error

@@ -18,7 +18,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/rokwire/logging-library-go/logs"
+	"github.com/rokwire/logging-library-go/v2/logs"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -517,14 +517,11 @@ func (m *database) applyPermissionsChecks(permissions *collectionWrapper) error 
 func (m *database) applyApplicationConfigsChecks(applicationConfigs *collectionWrapper) error {
 	m.logger.Info("apply applications configs checks.....")
 
-	//disable the problem index for now! Look at https://github.com/rokwire/core-building-block/issues/424
-	/*
-		//add appconfigs index
-		err := applicationConfigs.AddIndex(bson.D{primitive.E{Key: "app_type_id", Value: 1}, primitive.E{Key: "app_org_id", Value: 1}, primitive.E{Key: "version.version_numbers.major", Value: -1}, primitive.E{Key: "version.version_numbers.minor", Value: -1}, primitive.E{Key: "version.version_numbers.patch", Value: -1}}, true)
-		if err != nil {
-			return err
-		}
-	*/
+	//add appconfigs index
+	err := applicationConfigs.AddIndex(bson.D{primitive.E{Key: "app_type_id", Value: 1}, primitive.E{Key: "app_org_id", Value: 1}, primitive.E{Key: "version.version_numbers.major", Value: -1}, primitive.E{Key: "version.version_numbers.minor", Value: -1}, primitive.E{Key: "version.version_numbers.patch", Value: -1}}, true)
+	if err != nil {
+		return err
+	}
 
 	m.logger.Info("applications configs checks passed")
 	return nil
