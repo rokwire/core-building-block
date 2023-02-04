@@ -1,11 +1,11 @@
 get:
   tags:
-  - System
+  - Admin
   summary: Get config
   description: |
     Get an existing config
 
-    **Auth:** Requires system access token with `get_configs`, `update_configs`, or `all_configs` permission
+    **Auth:** Requires admin access token with `get_core_configs`, `update_core_configs`, or `all_core_configs` permission
   security:
     - bearerAuth: []
   parameters:
@@ -23,7 +23,7 @@ get:
         content:
           application/json:
             schema:
-              $ref: "../../schemas/config/Config.yaml"
+              $ref: "../../../schemas/config/Config.yaml"
       400:
         description: Bad request
       401:
@@ -32,12 +32,12 @@ get:
         description: Internal error
 post:
   tags:
-  - System
+  - Admin
   summary: Create config
   description: |
     Creates a new config
 
-    **Auth:** Requires system access token with `update_configs` or `all_configs` permission
+    **Auth:** Requires admin access token with `update_core_configs` or `all_core_configs` permission
   security:
     - bearerAuth: []
   parameters:
@@ -53,7 +53,7 @@ post:
     content:
       application/json:
         schema:
-          $ref: "../../schemas/config/Config.yaml"
+          $ref: "../../../schemas/config/Config.yaml"
     required: true
   responses:
       200:
@@ -71,12 +71,12 @@ post:
         description: Internal error
 put:
   tags:
-  - System
+  - Admin
   summary: Update config
   description: |
     Updates an existing config
 
-    **Auth:** Requires system access token with `update_configs` or `all_configs` permission
+    **Auth:** Requires admin access token with `update_core_configs` or `all_core_configs` permission
   security:
     - bearerAuth: []
   parameters:
@@ -92,7 +92,7 @@ put:
     content:
       application/json:
         schema:
-          $ref: "../../schemas/config/Config.yaml"
+          $ref: "../../../schemas/config/Config.yaml"
     required: true
   responses:
     200:
@@ -110,12 +110,12 @@ put:
       description: Internal error
 delete:
   tags:
-  - System
+  - Admin
   summary: Delete config
   description: |
     Deletes a config
 
-    **Auth:** Requires system access token with `delete_configs` or `all_configs` permission
+    **Auth:** Requires admin access token with `delete_core_configs` or `all_core_configs` permission
   security:
     - bearerAuth: []
   parameters:

@@ -79,11 +79,7 @@ func TestAdmGetTest(t *testing.T) {
 	}
 }
 
-///
-
-//System
-
-func TestSysCreateConfig(t *testing.T) {
+func TestAdmCreateConfig(t *testing.T) {
 	anyConfig := mock.AnythingOfType("model.Config")
 	storage := genmocks.Storage{}
 	storage.On("InsertConfig", anyConfig).Return(nil)
@@ -92,7 +88,7 @@ func TestSysCreateConfig(t *testing.T) {
 
 	trueVal := true
 	config := model.Config{ID: model.ConfigIDEnv, Data: model.EnvConfigData{AllowLegacyRefresh: &trueVal}}
-	err := coreAPIs.System.SysCreateConfig(config)
+	err := coreAPIs.Administration.AdmCreateConfig(config, true)
 	if err != nil {
 		t.Error("we are not expecting error")
 		return
@@ -104,14 +100,18 @@ func TestSysCreateConfig(t *testing.T) {
 
 	coreAPIs = buildTestCoreAPIs(&storage2)
 
-	err = coreAPIs.System.SysCreateConfig(config)
+	err = coreAPIs.Administration.AdmCreateConfig(config, true)
 	if err == nil {
 		t.Error("we are expecting error")
 		return
 	}
 	errText := err.Error()
-	assert.Equal(t, errText, "core-building-block/core.(*application).sysCreateConfig() error inserting config: error occured", "error is different: "+err.Error())
+	assert.Equal(t, errText, "core-building-block/core.(*application).admCreateConfig() error inserting config: error occured", "error is different: "+err.Error())
 }
+
+///
+
+//System
 
 func TestSysGetOrganization(t *testing.T) {
 	storage := genmocks.Storage{}

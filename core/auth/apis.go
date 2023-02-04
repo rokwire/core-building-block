@@ -275,7 +275,6 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 	var sessionID string
 	var err error
 
-	//find the login session for the refresh token
 	refreshTokenParts := strings.Split(refreshToken, ":")
 	if len(refreshTokenParts) > 1 {
 		sessionID = refreshTokenParts[0]
@@ -300,7 +299,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, nil, err).AddTag(sessionIDRateLimitTag)
 		}
 	} else {
-		config, err := a.storage.FindConfig(model.ConfigIDEnv)
+		config, err := a.storage.FindConfig(model.ConfigIDEnv, authutils.AllApps, authutils.AllOrgs)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeConfig, nil, err)
 		}
@@ -321,7 +320,6 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 			}
 		}
 	}
-
 	if loginSession == nil {
 		l.Infof("there is no a session for refresh token - %s", utils.GetLogValue(refreshToken, 10))
 		if sessionID != "" {

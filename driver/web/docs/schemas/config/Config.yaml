@@ -1,5 +1,9 @@
 required:
   - id
+  - type
+  - app_id
+  - org_id
+  - system
   - data
   - date_created
   - date_updated
@@ -8,6 +12,14 @@ properties:
   id:
     readOnly: true
     type: string
+  type:
+    type: string
+  app_id:
+    type: string
+  org_id:
+    type: string
+  system:
+    type: boolean
   data:
     anyOf:
       - $ref: "./EnvConfigData.yaml"

@@ -584,7 +584,7 @@ type Storage interface {
 	InsertAccountGroups(context storage.TransactionContext, accountID string, appOrgID string, groups []model.AccountGroup) error
 
 	//Configs
-	FindConfig(id string) (*model.Config, error)
+	FindConfig(configType string, appID string, orgID string) (*model.Config, error)
 }
 
 // ProfileBuildingBlock is used by auth to communicate with the profile building block.

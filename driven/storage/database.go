@@ -337,6 +337,11 @@ func (m *database) applyAPIKeysChecks(apiKeys *collectionWrapper) error {
 func (m *database) applyConfigsChecks(configs *collectionWrapper) error {
 	m.logger.Info("apply configs checks.....")
 
+	err := configs.AddIndex(bson.D{primitive.E{Key: "type", Value: 1}, primitive.E{Key: "app_id", Value: 1}, primitive.E{Key: "org_id", Value: 1}}, true)
+	if err != nil {
+		return err
+	}
+
 	m.logger.Info("configs checks passed")
 	return nil
 }

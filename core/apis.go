@@ -331,6 +331,22 @@ type administrationImpl struct {
 	app *application
 }
 
+func (s *administrationImpl) AdmGetConfig(id string, system bool) (*model.Config, error) {
+	return s.app.admGetConfig(id, system)
+}
+
+func (s *administrationImpl) AdmCreateConfig(config model.Config, system bool) error {
+	return s.app.admCreateConfig(config, system)
+}
+
+func (s *administrationImpl) AdmUpdateConfig(config model.Config, system bool) error {
+	return s.app.admUpdateConfig(config, system)
+}
+
+func (s *administrationImpl) AdmDeleteConfig(id string, system bool) error {
+	return s.app.admDeleteConfig(id, system)
+}
+
 func (s *administrationImpl) AdmGetTest() string {
 	return s.app.admGetTest()
 }
@@ -499,22 +515,6 @@ func (s *tpsImpl) TPSGetAccountsCount(searchParams map[string]interface{}, appID
 
 type systemImpl struct {
 	app *application
-}
-
-func (s *systemImpl) SysGetConfig(id string) (*model.Config, error) {
-	return s.app.sysGetConfig(id)
-}
-
-func (s *systemImpl) SysCreateConfig(config model.Config) error {
-	return s.app.sysCreateConfig(config)
-}
-
-func (s *systemImpl) SysUpdateConfig(config model.Config) error {
-	return s.app.sysUpdateConfig(config)
-}
-
-func (s *systemImpl) SysDeleteConfig(id string) error {
-	return s.app.sysDeleteConfig(id)
 }
 
 func (s *systemImpl) SysGetApplicationOrganizations(appID *string, orgID *string) ([]model.ApplicationOrganization, error) {

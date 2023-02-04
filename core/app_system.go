@@ -24,41 +24,6 @@ import (
 	"github.com/rokwire/logging-library-go/v2/logutils"
 )
 
-func (app *application) sysGetConfig(id string) (*model.Config, error) {
-	config, err := app.storage.FindConfig(id)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeConfig, nil, err)
-	}
-	return config, nil
-}
-
-func (app *application) sysCreateConfig(config model.Config) error {
-	config.DateCreated = time.Now().UTC()
-	err := app.storage.InsertConfig(config)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeConfig, nil, err)
-	}
-	return nil
-}
-
-func (app *application) sysUpdateConfig(config model.Config) error {
-	now := time.Now().UTC()
-	config.DateUpdated = &now
-	err := app.storage.UpdateConfig(config)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeConfig, nil, err)
-	}
-	return nil
-}
-
-func (app *application) sysDeleteConfig(id string) error {
-	err := app.storage.DeleteConfig(id)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeConfig, nil, err)
-	}
-	return nil
-}
-
 func (app *application) sysGetApplicationOrganizations(appID *string, orgID *string) ([]model.ApplicationOrganization, error) {
 	return app.storage.FindApplicationOrganizations(appID, orgID)
 }
