@@ -23,6 +23,7 @@ p, all_auth-roles, /core/admin/application/roles/*, (GET)|(POST)|(PUT)|(DELETE),
 p, all_auth-roles, /core/admin/application/roles/*/permissions, (PUT),
 p, get_auth-roles, /core/admin/application/roles, (GET), Get auth roles
 p, update_auth-roles, /core/admin/application/roles, (GET)|(POST)|(PUT), Update and create auth roles
+p, update_auth-roles, /core/admin/application/roles/*, (PUT),
 p, update_auth-roles, /core/admin/application/roles/*/permissions, (PUT),
 p, delete_auth-roles, /core/admin/application/roles/*, (DELETE), Delete auth roles
 p, delete_auth-roles, /core/admin/application/roles, (GET),

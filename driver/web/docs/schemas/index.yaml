@@ -11,8 +11,6 @@ ApplicationType:
   $ref: "./application/ApplicationType.yaml"
 ApplicationOrganization:
   $ref: "./application/ApplicationOrganization.yaml"
-AppOrg:
-  $ref: "./application/AppOrg.yaml"
 Permission:
   $ref: "./application/Permission.yaml"
 AppOrgRole:
@@ -21,12 +19,8 @@ AppOrgGroup:
   $ref: "./application/AppOrgGroup.yaml"
 Organization:
   $ref: "./application/Organization.yaml"
-OrganizationFields:
-  $ref: "./application/OrganizationFields.yaml"
 OrganizationConfig:
   $ref: "./application/OrganizationConfig.yaml"
-OrganizationConfigFields:
-  $ref: "./application/OrganizationConfigFields.yaml"
 ApplicationConfig:
   $ref: "./application/ApplicationConfig.yaml"
 IdentityProviderSettings:
@@ -47,16 +41,8 @@ TSLExpirePolicy:
 # auth
 LoginSession:
   $ref: "./auth/LoginSession.yaml"
-LoginSessionFields:
-  $ref: "./auth/LoginSessionFields.yaml"
 AuthType:
   $ref: "./auth/AuthType.yaml"
-AuthTypeFields:
-  $ref: "./auth/AuthTypeFields.yaml"
-Credential:
-  $ref: "./auth/Credential.yaml"
-CredentialFields:
-  $ref: "./auth/CredentialFields.yaml"
 ServiceAccount:
   $ref: "./auth/ServiceAccount.yaml"
 AppOrgPair:
@@ -88,22 +74,16 @@ Account:
   $ref: "./user/Account.yaml"
 PartialAccount:
   $ref: "./user/PartialAccount.yaml"
-AccountFields:
-  $ref: "./user/AccountFields.yaml"
 Profile:
   $ref: "./user/Profile.yaml"
-ProfileFields:
-  $ref: "./user/ProfileFields.yaml"
+ProfileNullable:
+  $ref: "./user/ProfileNullable.yaml"
 Username:
   $ref: "./user/Username.yaml"
 AccountAuthType:
   $ref: "./user/AccountAuthType.yaml"
-AccountAuthTypeFields:
-  $ref: "./user/AccountAuthTypeFields.yaml"
 Device:
   $ref: "./user/Device.yaml"
-DeviceFields:
-  $ref: "./user/DeviceFields.yaml"
 
 ##### APIs requests and responses - they are at bottom
 
@@ -114,8 +94,6 @@ _shared_req_Login:
   $ref: "./apis/shared/requests/login/Request.yaml"
 _shared_req_Login_Mfa:
   $ref: "../schemas/apis/shared/requests/login/MfaRequest.yaml"
-_shared_req_Login_Device:
-  $ref: "./apis/shared/requests/login/Device.yaml"
 _shared_req_LoginUrl:
   $ref: "./apis/shared/requests/login-url/Request.yaml"
 _shared_req_Refresh:
@@ -142,12 +120,12 @@ _shared_req_ParamsOIDC:
   $ref: "./apis/shared/requests/ParamsOIDC.yaml"
 _shared_req_ParamsNone:
   $ref: "./apis/shared/requests/ParamsNone.yaml"
-_shared_req_Profile:
-  $ref: "./apis/shared/requests/Profile.yaml"
-_shared_req_ProfileNullable:
-  $ref: "./apis/shared/requests/ProfileNullable.yaml"
 _shared_req_ParamsSetEmailCredential:
   $ref: "./apis/shared/requests/ParamsSetEmailCredential.yaml"
+_shared_req_app-configs:
+  $ref: "./apis/shared/requests/app-configs/Request.yaml"
+_shared_req_app-configs-org:
+  $ref: "./apis/shared/requests/app-configs/organization/Request.yaml"
 
 ### responses
 _shared_res_Login:
@@ -160,14 +138,10 @@ _shared_res_Refresh:
   $ref: "./apis/shared/responses/refresh/Response.yaml"
 _shared_res_Mfa:
   $ref: "./apis/shared/responses/mfa/Response.yaml"
-_shared_res_Account:
-  $ref: "./apis/shared/responses/Account.yaml"
 _shared_res_AccountCheck:
   $ref: "./apis/shared/responses/AccountCheck.yaml"
 _shared_res_RokwireToken:
   $ref: "./apis/shared/responses/RokwireToken.yaml"
-_shared_res_LoginSession:
-  $ref: "./apis/shared/responses/LoginSession.yaml"
 ## end SHARED requests and responses
 
 ## SERVICES section
@@ -214,17 +188,12 @@ _services_res_service-accounts_access-tokens:
 _services_service-accounts_CredsStaticToken:
   $ref: "./apis/shared/requests/service-accounts/CredsStaticToken.yaml"
 
-### app-configs API
-_services_req_application_configs:
-  $ref: "./apis/services/application/configs/request/Request.yaml"
-_services_req_application_org-configs:
-  $ref: "./apis/services/application/organization/configs/request/Request.yaml"
 ## end SERVICES section
 
 ## ADMIN section
 
 ### admin application_roles API
-_admin_req_create-application_role:
+_admin_req_application_role:
   $ref: "./apis/admin/application/roles/request/Request.yaml"
 
 ### admin application_groups API
@@ -262,39 +231,7 @@ _admin_req_grant-permissions-to-role:
 
 ## SYSTEM section
 
-### organization API
-_system_req_create-Organization:
-  $ref: "./apis/system/create-organization/request/Request.yaml"
-_system_res_create_Organization:
-  $ref: "./apis/system/create-organization/response/Response.yaml"
-_system_req_update_Organization:
-  $ref: "./apis/system/update-organization/request/Request.yaml"
-_system_res_update_Organization:
-  $ref: "./apis/system/update-organization/response/Response.yaml"
-_system_req_get_Organization:
-  $ref: "./apis/system/get-organization/request/Request.yaml"
-_system_res_get_Organization:
-  $ref: "./apis/system/get-organization/response/Response.yaml"
-_system_res_get_Organizations:
-  $ref: "./apis/system/get-organizations/response/Response.yaml"
- 
-### permissions API
-_system_req_permissions:
-  $ref: "./apis/system/permissions/request/Request.yaml"
-
-### auth_type API
-_system_req_create_auth_type:
-  $ref: "./apis/system/auth-types/request/Request.yaml"
-_system_req_update_auth_type:
-  $ref: "./apis/system/auth-typesID/request/Request.yaml"
-
-### application config API
-_system_req_create_ApplicationConfig_Request:
-  $ref: "./apis/system/application-config/request/Request.yaml"
-
 ### service accounts API
-_system_req_create_service-account:
-  $ref: "./apis/system/create-service-account/request/Request.yaml"
 _system_req_update_service-account:
   $ref: "./apis/system/update-service-account/request/Request.yaml"
 

@@ -18,7 +18,7 @@ import (
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
 
-	"github.com/rokwire/logging-library-go/logs"
+	"github.com/rokwire/logging-library-go/v2/logs"
 )
 
 // Services exposes APIs for the driver adapters
@@ -55,8 +55,9 @@ type Administration interface {
 	AdmRemoveAccountsFromGroup(appID string, orgID string, groupID string, accountIDs []string, assignerPermissions []string, l *logs.Log) error
 	AdmDeleteAppOrgGroup(ID string, appID string, orgID string, assignerPermissions []string, system bool, l *logs.Log) error
 
-	AdmCreateAppOrgRole(name string, description string, permissionNames []string, appID string, orgID string, assignerPermissions []string, system bool, l *logs.Log) (*model.AppOrgRole, error)
+	AdmCreateAppOrgRole(name string, description string, system bool, permissionNames []string, appID string, orgID string, assignerPermissions []string, systemClaim bool, l *logs.Log) (*model.AppOrgRole, error)
 	AdmGetAppOrgRoles(appID string, orgID string) ([]model.AppOrgRole, error)
+	AdmUpdateAppOrgRole(ID string, name string, description string, system bool, permissionNames []string, appID string, orgID string, assignerPermissions []string, systemClaim bool, l *logs.Log) (*model.AppOrgRole, error)
 	AdmGrantPermissionsToRole(appID string, orgID string, roleID string, permissionNames []string, assignerPermissions []string, system bool, l *logs.Log) error
 	AdmDeleteAppOrgRole(ID string, appID string, orgID string, assignerPermissions []string, system bool, l *logs.Log) error
 
@@ -82,6 +83,8 @@ type Administration interface {
 	AdmDeleteApplicationLoginSession(appID string, orgID string, currentAccountID string, identifier string, sessionID string, l *logs.Log) error
 
 	AdmGetApplicationAccountDevices(appID string, orgID string, accountID string, l *logs.Log) ([]model.Device, error)
+
+	AdmGetAppConfig(appTypeIdentifier string, orgID *string, versionNumbers model.VersionNumbers, apiKey *string) (*model.ApplicationConfig, error)
 }
 
 // Encryption exposes APIs for the Encryption building block
@@ -100,7 +103,7 @@ type BBs interface {
 // TPS exposes user related APIs used by third-party services
 type TPS interface {
 	TPSGetAccounts(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]map[string]interface{}, error)
-	TPsGetAccountsCount(searchParams map[string]interface{}, appID string, orgID string) (int64, error)
+	TPSGetAccountsCount(searchParams map[string]interface{}, appID string, orgID string) (int64, error)
 }
 
 // System exposes system APIs for the driver adapters
@@ -191,9 +194,9 @@ type Storage interface {
 
 	FindAppOrgRoles(appOrgID string) ([]model.AppOrgRole, error)
 	FindAppOrgRolesByIDs(context storage.TransactionContext, ids []string, appOrgID string) ([]model.AppOrgRole, error)
-	FindAppOrgRole(id string, appOrgID string) (*model.AppOrgRole, error)
+	FindAppOrgRole(context storage.TransactionContext, id string, appOrgID string) (*model.AppOrgRole, error)
 	InsertAppOrgRole(context storage.TransactionContext, item model.AppOrgRole) error
-	UpdateAppOrgRole(item model.AppOrgRole) error
+	UpdateAppOrgRole(context storage.TransactionContext, item model.AppOrgRole) error
 	DeleteAppOrgRole(id string) error
 	InsertAppOrgRolePermissions(context storage.TransactionContext, roleID string, permissionNames []model.Permission) error
 

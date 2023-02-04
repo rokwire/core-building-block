@@ -1,6 +1,21 @@
+required:
+  - id
+  - name
+  - type
 type: object
 properties:
-  fields:
-     $ref: "./OrganizationFields.yaml"
+  id:
+    readOnly: true
+    type: string
+  name:
+    type: string
+  type:
+    type: string
+    enum:
+      - micro
+      - small
+      - medium
+      - large
+      - huge
   config:
-    $ref: "./OrganizationConfigFields.yaml"
+    $ref: "./OrganizationConfig.yaml"
