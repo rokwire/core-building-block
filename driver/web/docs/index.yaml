@@ -143,9 +143,8 @@ paths:
     $ref: "./resources/admin/organization/applications.yaml"
   /admin/configs:
     $ref: "./resources/admin/configs.yaml"
-    
-  # /admin/configs/{id}:
-  #   $ref: "./resources/admin/configsId.yaml"
+  /admin/configs/{id}:
+    $ref: "./resources/admin/configsId.yaml"
   
   #enc
   /enc/test:

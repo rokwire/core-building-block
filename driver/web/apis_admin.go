@@ -281,6 +281,12 @@ func (h AdminApisHandler) createConfig(l *logs.Log, r *http.Request, claims *tok
 
 // updateConfig updates a config by id
 func (h AdminApisHandler) updateConfig(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
+	params := mux.Vars(r)
+	id := params["id"]
+	if len(id) <= 0 {
+		return l.HTTPResponseErrorData(logutils.StatusMissing, logutils.TypePathParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
+	}
+
 	var requestData Def.Config
 	err := json.NewDecoder(r.Body).Decode(&requestData)
 	if err != nil {
@@ -288,6 +294,7 @@ func (h AdminApisHandler) updateConfig(l *logs.Log, r *http.Request, claims *tok
 	}
 
 	config := configFromDef(requestData)
+	config.ID = id
 	err = h.coreAPIs.Administration.AdmUpdateConfig(config, claims.System)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUpdate, model.TypeConfig, nil, err, http.StatusInternalServerError, true)

@@ -1183,8 +1183,8 @@ type PostAdminAuthVerifyMfaJSONBody = SharedReqMfa
 // PostAdminConfigsJSONBody defines parameters for PostAdminConfigs.
 type PostAdminConfigsJSONBody = Config
 
-// PutAdminConfigsJSONBody defines parameters for PutAdminConfigs.
-type PutAdminConfigsJSONBody = Config
+// PutAdminConfigsIdJSONBody defines parameters for PutAdminConfigsId.
+type PutAdminConfigsIdJSONBody = Config
 
 // PostBbsAccessTokenJSONBody defines parameters for PostBbsAccessToken.
 type PostBbsAccessTokenJSONBody = ServicesReqServiceAccountsAccessToken
@@ -1681,8 +1681,8 @@ type PostAdminAuthVerifyMfaJSONRequestBody = PostAdminAuthVerifyMfaJSONBody
 // PostAdminConfigsJSONRequestBody defines body for PostAdminConfigs for application/json ContentType.
 type PostAdminConfigsJSONRequestBody = PostAdminConfigsJSONBody
 
-// PutAdminConfigsJSONRequestBody defines body for PutAdminConfigs for application/json ContentType.
-type PutAdminConfigsJSONRequestBody = PutAdminConfigsJSONBody
+// PutAdminConfigsIdJSONRequestBody defines body for PutAdminConfigsId for application/json ContentType.
+type PutAdminConfigsIdJSONRequestBody = PutAdminConfigsIdJSONBody
 
 // PostBbsAccessTokenJSONRequestBody defines body for PostBbsAccessToken for application/json ContentType.
 type PostBbsAccessTokenJSONRequestBody = PostBbsAccessTokenJSONBody

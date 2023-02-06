@@ -161,7 +161,7 @@ func (we Adapter) Start() {
 
 	// adminSubrouter.HandleFunc("/configs/{id}", we.wrapFunc(we.adminApisHandler.getConfig, we.auth.system.Permissions)).Methods("GET")
 	adminSubrouter.HandleFunc("/configs", we.wrapFunc(we.adminApisHandler.createConfig, we.auth.system.Permissions)).Methods("POST")
-	adminSubrouter.HandleFunc("/configs", we.wrapFunc(we.adminApisHandler.updateConfig, we.auth.system.Permissions)).Methods("PUT")
+	adminSubrouter.HandleFunc("/configs/{id}", we.wrapFunc(we.adminApisHandler.updateConfig, we.auth.system.Permissions)).Methods("PUT")
 	// adminSubrouter.HandleFunc("/configs/{id}", we.wrapFunc(we.adminApisHandler.deleteConfig, we.auth.system.Permissions)).Methods("DELETE")
 
 	adminSubrouter.HandleFunc("/account", we.wrapFunc(we.adminApisHandler.getAccount, we.auth.admin.User)).Methods("GET")
