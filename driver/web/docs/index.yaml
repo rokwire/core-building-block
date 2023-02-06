@@ -111,8 +111,10 @@ paths:
     $ref: "./resources/admin/app-configs/configs.yaml"
   /admin/app-configs/organization:
     $ref: "./resources/admin/app-configs/organization/configs.yaml"
+  /admin/configs:
+    $ref: "./resources/admin/configs.yaml"
   /admin/configs/{id}:
-    $ref: "./resources/admin/configs/configsId.yaml"
+    $ref: "./resources/admin/configsId.yaml"
   /admin/application/accounts:
     $ref: "./resources/admin/application/accounts.yaml"
   /admin/application/accounts/{id}/devices:
