@@ -20,6 +20,14 @@ import (
 	"core-building-block/utils"
 )
 
+func configListToDef(items []model.Config) []Def.Config {
+	result := make([]Def.Config, len(items))
+	for i, item := range items {
+		result[i] = configToDef(item)
+	}
+	return result
+}
+
 func configToDef(item model.Config) Def.Config {
 	var dateUpdated *string
 	dateCreated := utils.FormatTime(&item.DateCreated)

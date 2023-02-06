@@ -47,6 +47,7 @@ type Administration interface {
 	AdmGetTestModel() string
 
 	AdmGetConfig(id string, system bool) (*model.Config, error)
+	AdmGetConfigs(configType *string, appID *string, orgID *string, system bool) ([]model.Config, error)
 	AdmCreateConfig(config model.Config, system bool) error
 	AdmUpdateConfig(config model.Config, system bool) error
 	AdmDeleteConfig(id string, system bool) error
@@ -181,7 +182,8 @@ type Storage interface {
 	DeleteDevice(context storage.TransactionContext, id string) error
 
 	FindConfig(configType string, appID string, orgID string) (*model.Config, error)
-	FindConfigs(configType string, appID *string, orgID *string) ([]model.Config, error)
+	FindConfigByID(id string) (*model.Config, error)
+	FindConfigs(configType *string, appID *string, orgID *string) ([]model.Config, error)
 	InsertConfig(config model.Config) error
 	UpdateConfig(config model.Config) error
 	DeleteConfig(id string) error

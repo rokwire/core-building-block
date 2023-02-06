@@ -7,8 +7,11 @@ p, get_test, /core/admin/test, (GET), Get test data
 p, get_test-model, /core/admin/test-model, (GET), Get test models
 
 p, all_core_configs, /core/admin/configs/*, (GET)|(POST)|(DELETE)|(PUT), All configs actions
+p, all_core_configs, /core/admin/configs, (GET)|(POST),
 p, get_core_configs, /core/admin/configs/*, (GET), Get configs
+p, get_core_configs, /core/admin/configs, (GET),
 p, update_core_configs, /core/admin/configs/*, (GET)|(PUT)|(POST), Update and create configs
+p, update_core_configs, /core/admin/configs, (GET)|(POST),
 p, delete_core_configs, /core/admin/configs/*, (DELETE), Delete configs
 
 p, all_login-sessions, /core/admin/application/login-sessions, (GET), All login session actions

@@ -335,6 +335,10 @@ func (s *administrationImpl) AdmGetConfig(id string, system bool) (*model.Config
 	return s.app.admGetConfig(id, system)
 }
 
+func (s *administrationImpl) AdmGetConfigs(configType *string, appID *string, orgID *string, system bool) ([]model.Config, error) {
+	return s.app.admGetConfigs(configType, appID, orgID, system)
+}
+
 func (s *administrationImpl) AdmCreateConfig(config model.Config, system bool) error {
 	return s.app.admCreateConfig(config, system)
 }

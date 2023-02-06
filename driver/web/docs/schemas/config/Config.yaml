@@ -29,3 +29,4 @@ properties:
   date_updated:
     readOnly: true
     type: string
+    nullable: true

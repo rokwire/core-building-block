@@ -186,13 +186,38 @@ func (app *application) adminGetAppConfig(appTypeIdentifier string, orgID *strin
 }
 
 func (app *application) admGetConfig(id string, system bool) (*model.Config, error) {
-	//TODO: handle system
-	// config, err := app.storage.FindConfig(id)
-	// if err != nil {
-	// 	return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeConfig, nil, err)
-	// }
-	// return config, nil
-	return nil, errors.New(logutils.Unimplemented)
+	config, err := app.storage.FindConfigByID(id)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeConfig, nil, err)
+	}
+	if config == nil {
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeConfig, &logutils.FieldArgs{"id": id})
+	}
+
+	if !system && config.System {
+		return nil, errors.ErrorData(logutils.StatusInvalid, "system claim", nil)
+	}
+
+	return config, nil
+}
+
+func (app *application) admGetConfigs(configType *string, appID *string, orgID *string, system bool) ([]model.Config, error) {
+	configs, err := app.storage.FindConfigs(configType, appID, orgID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeConfig, nil, err)
+	}
+
+	if !system {
+		allowedConfigs := make([]model.Config, 0)
+		for _, config := range configs {
+			if !config.System {
+				allowedConfigs = append(allowedConfigs, config)
+			}
+		}
+		return allowedConfigs, nil
+	}
+
+	return configs, nil
 }
 
 func (app *application) admCreateConfig(config model.Config, system bool) error {
@@ -215,7 +240,7 @@ func (app *application) admUpdateConfig(config model.Config, system bool) error 
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeConfig, nil, err)
 	}
 	if oldConfig == nil {
-		return errors.ErrorData(logutils.StatusMissing, model.TypeConfig, nil)
+		return errors.ErrorData(logutils.StatusMissing, model.TypeConfig, &logutils.FieldArgs{"type": config.Type, "app_id": config.AppID, "org_id": config.OrgID})
 	}
 
 	if !system && (config.System || oldConfig.System) {
@@ -233,13 +258,23 @@ func (app *application) admUpdateConfig(config model.Config, system bool) error 
 }
 
 func (app *application) admDeleteConfig(id string, system bool) error {
-	//TODO: handle system
-	// err := app.storage.DeleteConfig(id)
-	// if err != nil {
-	// 	return errors.WrapErrorAction(logutils.ActionDelete, model.TypeConfig, nil, err)
-	// }
-	// return nil
-	return errors.New(logutils.Unimplemented)
+	config, err := app.storage.FindConfigByID(id)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeConfig, nil, err)
+	}
+	if config == nil {
+		return errors.ErrorData(logutils.StatusMissing, model.TypeConfig, &logutils.FieldArgs{"id": id})
+	}
+
+	if !system && config.System {
+		return errors.ErrorData(logutils.StatusInvalid, "system claim", nil)
+	}
+
+	err = app.storage.DeleteConfig(id)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeConfig, nil, err)
+	}
+	return nil
 }
 
 func (app *application) admGetApplications(orgID string) ([]model.Application, error) {

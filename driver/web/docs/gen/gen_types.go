@@ -311,7 +311,7 @@ type Config struct {
 	AppId       string      `json:"app_id"`
 	Data        interface{} `json:"data"`
 	DateCreated *string     `json:"date_created,omitempty"`
-	DateUpdated *string     `json:"date_updated,omitempty"`
+	DateUpdated *string     `json:"date_updated"`
 	Id          *string     `json:"id,omitempty"`
 	OrgId       string      `json:"org_id"`
 	System      bool        `json:"system"`
@@ -1179,8 +1179,20 @@ type PostAdminAuthRefreshJSONBody = SharedReqRefresh
 // PostAdminAuthVerifyMfaJSONBody defines parameters for PostAdminAuthVerifyMfa.
 type PostAdminAuthVerifyMfaJSONBody = SharedReqMfa
 
-// PostAdminConfigsIdJSONBody defines parameters for PostAdminConfigsId.
-type PostAdminConfigsIdJSONBody = Config
+// GetAdminConfigsParams defines parameters for GetAdminConfigs.
+type GetAdminConfigsParams struct {
+	// config type
+	Type *string `form:"type,omitempty" json:"type,omitempty"`
+
+	// config app ID
+	AppId *string `form:"app_id,omitempty" json:"app_id,omitempty"`
+
+	// config org ID
+	OrgId *string `form:"org_id,omitempty" json:"org_id,omitempty"`
+}
+
+// PostAdminConfigsJSONBody defines parameters for PostAdminConfigs.
+type PostAdminConfigsJSONBody = Config
 
 // PutAdminConfigsIdJSONBody defines parameters for PutAdminConfigsId.
 type PutAdminConfigsIdJSONBody = Config
@@ -1677,8 +1689,8 @@ type PostAdminAuthRefreshJSONRequestBody = PostAdminAuthRefreshJSONBody
 // PostAdminAuthVerifyMfaJSONRequestBody defines body for PostAdminAuthVerifyMfa for application/json ContentType.
 type PostAdminAuthVerifyMfaJSONRequestBody = PostAdminAuthVerifyMfaJSONBody
 
-// PostAdminConfigsIdJSONRequestBody defines body for PostAdminConfigsId for application/json ContentType.
-type PostAdminConfigsIdJSONRequestBody = PostAdminConfigsIdJSONBody
+// PostAdminConfigsJSONRequestBody defines body for PostAdminConfigs for application/json ContentType.
+type PostAdminConfigsJSONRequestBody = PostAdminConfigsJSONBody
 
 // PutAdminConfigsIdJSONRequestBody defines body for PutAdminConfigsId for application/json ContentType.
 type PutAdminConfigsIdJSONRequestBody = PutAdminConfigsIdJSONBody
