@@ -1938,22 +1938,6 @@ paths:
           explode: false
           schema:
             type: string
-        - name: all_apps
-          in: query
-          description: whether to search for configs used across apps for claimed org
-          required: false
-          style: form
-          explode: false
-          schema:
-            type: boolean
-        - name: all_orgs
-          in: query
-          description: whether to search for configs used across orgs for claimed app
-          required: false
-          style: form
-          explode: false
-          schema:
-            type: boolean
       responses:
         '200':
           description: Success
@@ -1984,6 +1968,34 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/Config'
+            examples:
+              system:
+                summary: System-wide config
+                value:
+                  type: config_type
+                  all_apps: true
+                  all_orgs: true
+                  system: true
+                  data:
+                    allow_legacy_refresh: true
+              org_admin:
+                summary: Organization-wide config
+                value:
+                  type: config_type
+                  all_apps: true
+                  all_orgs: false
+                  system: false
+                  data:
+                    allow_legacy_refresh: false
+              app_org_specific:
+                summary: Application organization specific config
+                value:
+                  type: config_type
+                  all_apps: false
+                  all_orgs: false
+                  system: false
+                  data:
+                    allow_legacy_refresh: true
         required: true
       responses:
         '200':
@@ -2056,6 +2068,34 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/Config'
+            examples:
+              system:
+                summary: System-wide config
+                value:
+                  type: config_type
+                  all_apps: true
+                  all_orgs: true
+                  system: true
+                  data:
+                    allow_legacy_refresh: true
+              org_admin:
+                summary: Organization-wide config
+                value:
+                  type: config_type
+                  all_apps: true
+                  all_orgs: false
+                  system: false
+                  data:
+                    allow_legacy_refresh: false
+              app_org_specific:
+                summary: Application organization specific config
+                value:
+                  type: config_type
+                  all_apps: false
+                  all_orgs: false
+                  system: false
+                  data:
+                    allow_legacy_refresh: true
         required: true
       responses:
         '200':

@@ -335,8 +335,8 @@ func (s *administrationImpl) AdmGetConfig(id string, appID string, orgID string,
 	return s.app.admGetConfig(id, appID, orgID, system)
 }
 
-func (s *administrationImpl) AdmGetConfigs(configType *string, appID *string, orgID *string, appIDClaim string, orgIDClaim string, system bool) ([]model.Config, error) {
-	return s.app.admGetConfigs(configType, appID, orgID, appIDClaim, orgIDClaim, system)
+func (s *administrationImpl) AdmGetConfigs(configType *string, appID string, orgID string, system bool) ([]model.Config, error) {
+	return s.app.admGetConfigs(configType, appID, orgID, system)
 }
 
 func (s *administrationImpl) AdmCreateConfig(config model.Config, appID string, orgID string, system bool) error {

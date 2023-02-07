@@ -328,26 +328,13 @@ func (h AdminApisHandler) getConfig(l *logs.Log, r *http.Request, claims *tokena
 
 // getConfig gets config by id
 func (h AdminApisHandler) getConfigs(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	//type
 	var configType *string
 	typeParam := r.URL.Query().Get("type")
 	if len(typeParam) > 0 {
 		configType = &typeParam
 	}
-	//appID
-	var appID *string
-	appIDParam := r.URL.Query().Get("app_id")
-	if len(appIDParam) > 0 {
-		appID = &appIDParam
-	}
-	//orgID
-	var orgID *string
-	orgIDParam := r.URL.Query().Get("org_id")
-	if len(orgIDParam) > 0 {
-		orgID = &orgIDParam
-	}
 
-	configs, err := h.coreAPIs.Administration.AdmGetConfigs(configType, appID, orgID, claims.AppID, claims.OrgID, claims.System)
+	configs, err := h.coreAPIs.Administration.AdmGetConfigs(configType, claims.AppID, claims.OrgID, claims.System)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionGet, model.TypeConfig, nil, err, http.StatusInternalServerError, true)
 	}

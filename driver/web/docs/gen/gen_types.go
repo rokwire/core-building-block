@@ -1185,12 +1185,6 @@ type PostAdminAuthVerifyMfaJSONBody = SharedReqMfa
 type GetAdminConfigsParams struct {
 	// config type
 	Type *string `form:"type,omitempty" json:"type,omitempty"`
-
-	// whether to search for configs used across apps for claimed org
-	AllApps *bool `form:"all_apps,omitempty" json:"all_apps,omitempty"`
-
-	// whether to search for configs used across orgs for claimed app
-	AllOrgs *bool `form:"all_orgs,omitempty" json:"all_orgs,omitempty"`
 }
 
 // PostAdminConfigsJSONBody defines parameters for PostAdminConfigs.

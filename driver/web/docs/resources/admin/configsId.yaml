@@ -54,6 +54,34 @@ put:
       application/json:
         schema:
           $ref: "../../schemas/config/Config.yaml"
+        examples:
+          system:
+            summary: System-wide config
+            value: 
+              type: "config_type"
+              all_apps: true
+              all_orgs: true
+              system: true
+              data:
+                allow_legacy_refresh: true
+          org_admin:
+            summary: Organization-wide config
+            value: 
+              type: "config_type"
+              all_apps: true
+              all_orgs: false
+              system: false
+              data:
+                allow_legacy_refresh: false
+          app_org_specific:
+            summary: Application organization specific config
+            value: 
+              type: "config_type"
+              all_apps: false
+              all_orgs: false
+              system: false
+              data:
+                allow_legacy_refresh: true
     required: true
   responses:
     200:

@@ -820,13 +820,13 @@ func (_m *Storage) FindConfigByID(id string) (*model.Config, error) {
 	return r0, r1
 }
 
-// FindConfigs provides a mock function with given fields: configType, appID, orgID
-func (_m *Storage) FindConfigs(configType *string, appID *string, orgID *string) ([]model.Config, error) {
-	ret := _m.Called(configType, appID, orgID)
+// FindConfigs provides a mock function with given fields: configType
+func (_m *Storage) FindConfigs(configType *string) ([]model.Config, error) {
+	ret := _m.Called(configType)
 
 	var r0 []model.Config
-	if rf, ok := ret.Get(0).(func(*string, *string, *string) []model.Config); ok {
-		r0 = rf(configType, appID, orgID)
+	if rf, ok := ret.Get(0).(func(*string) []model.Config); ok {
+		r0 = rf(configType)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]model.Config)
@@ -834,8 +834,8 @@ func (_m *Storage) FindConfigs(configType *string, appID *string, orgID *string)
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(*string, *string, *string) error); ok {
-		r1 = rf(configType, appID, orgID)
+	if rf, ok := ret.Get(1).(func(*string) error); ok {
+		r1 = rf(configType)
 	} else {
 		r1 = ret.Error(1)
 	}

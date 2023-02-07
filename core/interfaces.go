@@ -47,7 +47,7 @@ type Administration interface {
 	AdmGetTestModel() string
 
 	AdmGetConfig(id string, appID string, orgID string, system bool) (*model.Config, error)
-	AdmGetConfigs(configType *string, appID *string, orgID *string, appIDClaim string, orgIDClaim string, system bool) ([]model.Config, error)
+	AdmGetConfigs(configType *string, appID string, orgID string, system bool) ([]model.Config, error)
 	AdmCreateConfig(config model.Config, appID string, orgID string, system bool) error
 	AdmUpdateConfig(config model.Config, appID string, orgID string, system bool) error
 	AdmDeleteConfig(id string, appID string, orgID string, system bool) error
@@ -183,7 +183,7 @@ type Storage interface {
 
 	FindConfig(configType string, appID string, orgID string) (*model.Config, error)
 	FindConfigByID(id string) (*model.Config, error)
-	FindConfigs(configType *string, appID *string, orgID *string) ([]model.Config, error)
+	FindConfigs(configType *string) ([]model.Config, error)
 	InsertConfig(config model.Config) error
 	UpdateConfig(config model.Config) error
 	DeleteConfig(id string) error

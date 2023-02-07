@@ -789,7 +789,7 @@ func (sa *Adapter) getCachedConfig(id string, configType string, appID string, o
 	return nil, nil
 }
 
-func (sa *Adapter) getCachedConfigs(configType *string, appID *string, orgID *string) ([]model.Config, error) {
+func (sa *Adapter) getCachedConfigs(configType *string) ([]model.Config, error) {
 	sa.configsLock.RLock()
 	defer sa.configsLock.RUnlock()
 
@@ -810,20 +810,10 @@ func (sa *Adapter) getCachedConfigs(configType *string, appID *string, orgID *st
 			return false
 		}
 
-		match := true
-		if configType != nil && !strings.HasPrefix(keyStr, fmt.Sprintf("%s_", *configType)) {
-			match = false
-		}
-		if appID != nil && !strings.Contains(keyStr, fmt.Sprintf("_%s_", *appID)) {
-			match = false
-		}
-		if orgID != nil && !strings.HasSuffix(keyStr, fmt.Sprintf("_%s", *orgID)) {
-			match = false
-		}
-
-		if match {
+		if configType == nil || strings.HasPrefix(keyStr, fmt.Sprintf("%s_", *configType)) {
 			configList = append(configList, config)
 		}
+
 		return true
 	})
 
@@ -3092,9 +3082,9 @@ func (sa *Adapter) FindConfigByID(id string) (*model.Config, error) {
 	return sa.getCachedConfig(id, "", "", "")
 }
 
-// FindConfigs finds all configs for the specified type, nullable appID, and nullable orgID
-func (sa *Adapter) FindConfigs(configType *string, appID *string, orgID *string) ([]model.Config, error) {
-	return sa.getCachedConfigs(configType, appID, orgID)
+// FindConfigs finds all configs for the specified type
+func (sa *Adapter) FindConfigs(configType *string) ([]model.Config, error) {
+	return sa.getCachedConfigs(configType)
 }
 
 // InsertConfig inserts a new config
@@ -3109,16 +3099,20 @@ func (sa *Adapter) InsertConfig(config model.Config) error {
 
 // UpdateConfig updates an existing config
 func (sa *Adapter) UpdateConfig(config model.Config) error {
-	filter := bson.M{"type": config.Type, "app_id": config.AppID, "org_id": config.OrgID}
+	filter := bson.M{"_id": config.ID}
 	update := bson.D{
 		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "type", Value: config.Type},
+			primitive.E{Key: "app_id", Value: config.AppID},
+			primitive.E{Key: "org_id", Value: config.OrgID},
+			primitive.E{Key: "system", Value: config.System},
 			primitive.E{Key: "data", Value: config.Data},
 			primitive.E{Key: "date_updated", Value: config.DateUpdated},
 		}},
 	}
 	_, err := sa.db.configs.UpdateOne(filter, update, nil)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeConfig, &logutils.FieldArgs{"type": config.Type, "app_id": config.AppID, "org_id": config.OrgID}, err)
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeConfig, &logutils.FieldArgs{"id": config.ID}, err)
 	}
 
 	return nil

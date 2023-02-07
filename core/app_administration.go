@@ -203,8 +203,8 @@ func (app *application) admGetConfig(id string, appID string, orgID string, syst
 	return config, nil
 }
 
-func (app *application) admGetConfigs(configType *string, appID *string, orgID *string, appIDClaim string, orgIDClaim string, system bool) ([]model.Config, error) {
-	configs, err := app.storage.FindConfigs(configType, appID, orgID)
+func (app *application) admGetConfigs(configType *string, appID string, orgID string, system bool) ([]model.Config, error) {
+	configs, err := app.storage.FindConfigs(configType)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeConfig, nil, err)
 	}
@@ -212,10 +212,7 @@ func (app *application) admGetConfigs(configType *string, appID *string, orgID *
 	if !system {
 		allowedConfigs := make([]model.Config, 0)
 		for _, config := range configs {
-			ok, err := app.checkConfigAccess(&config, appIDClaim, orgIDClaim, system)
-			if err != nil {
-				return nil, errors.WrapErrorAction(logutils.ActionValidate, "config access", nil, err)
-			}
+			ok, _ := app.checkConfigAccess(&config, appID, orgID, system)
 			if ok {
 				allowedConfigs = append(allowedConfigs, config)
 			}
@@ -295,14 +292,16 @@ func (app *application) checkConfigAccess(config *model.Config, appIDClaim strin
 	}
 
 	claimsMatch := true
+	sysOrgIDClaim := systemClaim
 	if !systemClaim {
 		// org admins: cannot manage system configs, can only manage configs for their orgID
 		if config.System {
 			return false, errors.ErrorData(logutils.StatusInvalid, "system claim", nil)
 		}
 		if config.OrgID != orgIDClaim {
-			claimsMatch = false
+			return false, errors.ErrorData(logutils.StatusInvalid, model.TypeConfig, &logutils.FieldArgs{"org_id": config.OrgID})
 		}
+		sysOrgIDClaim = false
 	} else {
 		// system admins: configs access allowed for any orgID (can use "all" when using the system organization)
 		organization, err := app.storage.FindOrganization(orgIDClaim)
@@ -312,6 +311,8 @@ func (app *application) checkConfigAccess(config *model.Config, appIDClaim strin
 		if organization == nil {
 			return false, errors.ErrorData(logutils.StatusMissing, model.TypeOrganization, &logutils.FieldArgs{"id": orgIDClaim})
 		}
+
+		sysOrgIDClaim = organization.System
 		if config.OrgID != authutils.AllOrgs {
 			if config.OrgID != orgIDClaim {
 				claimsMatch = false
@@ -330,7 +331,8 @@ func (app *application) checkConfigAccess(config *model.Config, appIDClaim strin
 		return false, errors.ErrorData(logutils.StatusMissing, model.TypeApplication, &logutils.FieldArgs{"id": appIDClaim})
 	}
 	if config.AppID != authutils.AllApps {
-		if config.AppID != appIDClaim {
+		// give access to any appID to system admins using the system organization and an admin application
+		if (!application.Admin || !sysOrgIDClaim) && config.AppID != appIDClaim {
 			claimsMatch = false
 		}
 	} else if !application.Admin {
