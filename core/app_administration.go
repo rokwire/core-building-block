@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/rokwire/core-auth-library-go/v2/authutils"
 	"github.com/rokwire/logging-library-go/v2/errors"
 	"github.com/rokwire/logging-library-go/v2/logs"
 	"github.com/rokwire/logging-library-go/v2/logutils"
@@ -185,23 +186,24 @@ func (app *application) adminGetAppConfig(appTypeIdentifier string, orgID *strin
 	return app.sharedGetAppConfig(appTypeIdentifier, orgID, versionNumbers, apiKey, true)
 }
 
-func (app *application) admGetConfig(id string, system bool) (*model.Config, error) {
+func (app *application) admGetConfig(id string, appID string, orgID string, system bool) (*model.Config, error) {
 	config, err := app.storage.FindConfigByID(id)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeConfig, nil, err)
 	}
-	if config == nil {
-		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeConfig, &logutils.FieldArgs{"id": id})
-	}
 
-	if !system && config.System {
-		return nil, errors.ErrorData(logutils.StatusInvalid, "system claim", nil)
+	ok, err := app.checkConfigAccess(config, appID, orgID, system)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionValidate, "config access", nil, err)
+	}
+	if !ok {
+		return nil, errors.ErrorAction(logutils.ActionGet, model.TypeConfig, logutils.StringArgs("invalid claims"))
 	}
 
 	return config, nil
 }
 
-func (app *application) admGetConfigs(configType *string, appID *string, orgID *string, system bool) ([]model.Config, error) {
+func (app *application) admGetConfigs(configType *string, appID *string, orgID *string, appIDClaim string, orgIDClaim string, system bool) ([]model.Config, error) {
 	configs, err := app.storage.FindConfigs(configType, appID, orgID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeConfig, nil, err)
@@ -210,7 +212,11 @@ func (app *application) admGetConfigs(configType *string, appID *string, orgID *
 	if !system {
 		allowedConfigs := make([]model.Config, 0)
 		for _, config := range configs {
-			if !config.System {
+			ok, err := app.checkConfigAccess(&config, appIDClaim, orgIDClaim, system)
+			if err != nil {
+				return nil, errors.WrapErrorAction(logutils.ActionValidate, "config access", nil, err)
+			}
+			if ok {
 				allowedConfigs = append(allowedConfigs, config)
 			}
 		}
@@ -220,21 +226,22 @@ func (app *application) admGetConfigs(configType *string, appID *string, orgID *
 	return configs, nil
 }
 
-func (app *application) admCreateConfig(config model.Config, system bool) error {
-	if !system && config.System {
-		return errors.ErrorData(logutils.StatusInvalid, "system claim", nil)
+func (app *application) admCreateConfig(config model.Config, appID string, orgID string, system bool) error {
+	_, err := app.checkConfigAccess(&config, appID, orgID, system)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionValidate, "config access", nil, err)
 	}
 
 	config.ID = uuid.NewString()
 	config.DateCreated = time.Now().UTC()
-	err := app.storage.InsertConfig(config)
+	err = app.storage.InsertConfig(config)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeConfig, nil, err)
 	}
 	return nil
 }
 
-func (app *application) admUpdateConfig(config model.Config, system bool) error {
+func (app *application) admUpdateConfig(config model.Config, appID string, orgID string, system bool) error {
 	oldConfig, err := app.storage.FindConfig(config.Type, config.AppID, config.OrgID)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeConfig, nil, err)
@@ -243,8 +250,12 @@ func (app *application) admUpdateConfig(config model.Config, system bool) error 
 		return errors.ErrorData(logutils.StatusMissing, model.TypeConfig, &logutils.FieldArgs{"type": config.Type, "app_id": config.AppID, "org_id": config.OrgID})
 	}
 
-	if !system && (config.System || oldConfig.System) {
+	if !system && oldConfig.System {
 		return errors.ErrorData(logutils.StatusInvalid, "system claim", nil)
+	}
+	_, err = app.checkConfigAccess(&config, appID, orgID, system)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionValidate, "config access", nil, err)
 	}
 
 	now := time.Now().UTC()
@@ -257,17 +268,18 @@ func (app *application) admUpdateConfig(config model.Config, system bool) error 
 	return nil
 }
 
-func (app *application) admDeleteConfig(id string, system bool) error {
+func (app *application) admDeleteConfig(id string, appID string, orgID string, system bool) error {
 	config, err := app.storage.FindConfigByID(id)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeConfig, nil, err)
 	}
-	if config == nil {
-		return errors.ErrorData(logutils.StatusMissing, model.TypeConfig, &logutils.FieldArgs{"id": id})
-	}
 
-	if !system && config.System {
-		return errors.ErrorData(logutils.StatusInvalid, "system claim", nil)
+	ok, err := app.checkConfigAccess(config, appID, orgID, system)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionValidate, "config access", nil, err)
+	}
+	if !ok {
+		return errors.ErrorAction(logutils.ActionDelete, model.TypeConfig, logutils.StringArgs("invalid claims"))
 	}
 
 	err = app.storage.DeleteConfig(id)
@@ -275,6 +287,57 @@ func (app *application) admDeleteConfig(id string, system bool) error {
 		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeConfig, nil, err)
 	}
 	return nil
+}
+
+func (app *application) checkConfigAccess(config *model.Config, appIDClaim string, orgIDClaim string, systemClaim bool) (bool, error) {
+	if config == nil {
+		return false, errors.ErrorData(logutils.StatusMissing, model.TypeConfig, nil)
+	}
+
+	claimsMatch := true
+	if !systemClaim {
+		// org admins: cannot manage system configs, can only manage configs for their orgID
+		if config.System {
+			return false, errors.ErrorData(logutils.StatusInvalid, "system claim", nil)
+		}
+		if config.OrgID != orgIDClaim {
+			claimsMatch = false
+		}
+	} else {
+		// system admins: configs access allowed for any orgID (can use "all" when using the system organization)
+		organization, err := app.storage.FindOrganization(orgIDClaim)
+		if err != nil {
+			return false, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, &logutils.FieldArgs{"id": orgIDClaim}, err)
+		}
+		if organization == nil {
+			return false, errors.ErrorData(logutils.StatusMissing, model.TypeOrganization, &logutils.FieldArgs{"id": orgIDClaim})
+		}
+		if config.OrgID != authutils.AllOrgs {
+			if config.OrgID != orgIDClaim {
+				claimsMatch = false
+			}
+		} else if !organization.System {
+			return false, errors.ErrorData(logutils.StatusInvalid, model.TypeConfig, &logutils.FieldArgs{"org_id": authutils.AllOrgs, "org.system": false})
+		}
+	}
+
+	// all admins (including system admins): configs access allowed for any appID (can use "all" when using an admin application)
+	application, err := app.storage.FindApplication(nil, appIDClaim)
+	if err != nil {
+		return false, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, &logutils.FieldArgs{"id": appIDClaim}, err)
+	}
+	if application == nil {
+		return false, errors.ErrorData(logutils.StatusMissing, model.TypeApplication, &logutils.FieldArgs{"id": appIDClaim})
+	}
+	if config.AppID != authutils.AllApps {
+		if config.AppID != appIDClaim {
+			claimsMatch = false
+		}
+	} else if !application.Admin {
+		return false, errors.ErrorData(logutils.StatusInvalid, model.TypeConfig, &logutils.FieldArgs{"app_id": authutils.AllApps, "app.admin": false})
+	}
+
+	return claimsMatch, nil
 }
 
 func (app *application) admGetApplications(orgID string) ([]model.Application, error) {

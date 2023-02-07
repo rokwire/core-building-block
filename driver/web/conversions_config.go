@@ -18,6 +18,8 @@ import (
 	"core-building-block/core/model"
 	Def "core-building-block/driver/web/docs/gen"
 	"core-building-block/utils"
+
+	"github.com/rokwire/core-auth-library-go/v2/authutils"
 )
 
 func configListToDef(items []model.Config) []Def.Config {
@@ -36,10 +38,16 @@ func configToDef(item model.Config) Def.Config {
 		dateUpdated = &formatted
 	}
 
-	return Def.Config{Id: &item.ID, Type: item.Type, AppId: item.AppID, OrgId: item.OrgID, System: item.System, Data: item.Data,
+	return Def.Config{Id: &item.ID, Type: item.Type, AppId: &item.AppID, OrgId: &item.OrgID, System: item.System, Data: item.Data,
 		DateCreated: &dateCreated, DateUpdated: dateUpdated}
 }
 
-func configFromDef(item Def.Config) model.Config {
-	return model.Config{Type: item.Type, AppID: item.AppId, OrgID: item.OrgId, System: item.System, Data: item.Data}
+func configFromDef(item Def.Config, appID string, orgID string) model.Config {
+	if item.AllApps != nil && *item.AllApps {
+		appID = authutils.AllApps
+	}
+	if item.AllOrgs != nil && *item.AllOrgs {
+		orgID = authutils.AllOrgs
+	}
+	return model.Config{Type: item.Type, AppID: appID, OrgID: orgID, System: item.System, Data: item.Data}
 }

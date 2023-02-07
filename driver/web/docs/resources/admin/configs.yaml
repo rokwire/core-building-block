@@ -17,22 +17,22 @@ get:
       explode: false
       schema:
         type: string
-    - name: app_id
+    - name: all_apps
       in: query
-      description: config app ID
+      description: whether to search for configs used across apps for claimed org
       required: false
       style: form
       explode: false
       schema:
-        type: string
-    - name: org_id
+        type: boolean
+    - name: all_orgs
       in: query
-      description: config org ID
+      description: whether to search for configs used across orgs for claimed app
       required: false
       style: form
       explode: false
       schema:
-        type: string
+        type: boolean
   responses:
       200:
         description: Success

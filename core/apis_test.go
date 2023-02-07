@@ -82,13 +82,15 @@ func TestAdmGetTest(t *testing.T) {
 func TestAdmCreateConfig(t *testing.T) {
 	anyConfig := mock.AnythingOfType("model.Config")
 	storage := genmocks.Storage{}
+	storage.On("FindOrganization", "system_org_id").Return(&model.Organization{ID: "system_org_id", System: true}, nil)
+	storage.On("FindApplication", nil, "admin_app_id").Return(&model.Application{ID: "admin_app_id", Admin: true}, nil)
 	storage.On("InsertConfig", anyConfig).Return(nil)
 
 	coreAPIs := buildTestCoreAPIs(&storage)
 
 	trueVal := true
 	config := model.Config{ID: model.ConfigIDEnv, Data: model.EnvConfigData{AllowLegacyRefresh: &trueVal}}
-	err := coreAPIs.Administration.AdmCreateConfig(config, true)
+	err := coreAPIs.Administration.AdmCreateConfig(config, "admin_app_id", "system_org_id", true)
 	if err != nil {
 		t.Error("we are not expecting error")
 		return
@@ -96,11 +98,13 @@ func TestAdmCreateConfig(t *testing.T) {
 
 	//second case - error
 	storage2 := genmocks.Storage{}
+	storage2.On("FindOrganization", "system_org_id").Return(&model.Organization{ID: "system_org_id", System: true}, nil)
+	storage2.On("FindApplication", nil, "admin_app_id").Return(&model.Application{ID: "admin_app_id", Admin: true}, nil)
 	storage2.On("InsertConfig", anyConfig).Return(errors.New("error occured"))
 
 	coreAPIs = buildTestCoreAPIs(&storage2)
 
-	err = coreAPIs.Administration.AdmCreateConfig(config, true)
+	err = coreAPIs.Administration.AdmCreateConfig(config, "admin_app_id", "system_org_id", true)
 	if err == nil {
 		t.Error("we are expecting error")
 		return

@@ -2,7 +2,9 @@ required:
   - id
   - type
   - app_id
-  - org_id
+  - all_apps
+  - app_id
+  - all_orgs
   - system
   - data
   - date_created
@@ -15,9 +17,17 @@ properties:
   type:
     type: string
   app_id:
+    readOnly: true
     type: string
+  all_apps:
+    writeOnly: true
+    type: boolean
   org_id:
+    readOnly: true
     type: string
+  all_orgs:
+    writeOnly: true
+    type: boolean
   system:
     type: boolean
   data:

@@ -331,24 +331,24 @@ type administrationImpl struct {
 	app *application
 }
 
-func (s *administrationImpl) AdmGetConfig(id string, system bool) (*model.Config, error) {
-	return s.app.admGetConfig(id, system)
+func (s *administrationImpl) AdmGetConfig(id string, appID string, orgID string, system bool) (*model.Config, error) {
+	return s.app.admGetConfig(id, appID, orgID, system)
 }
 
-func (s *administrationImpl) AdmGetConfigs(configType *string, appID *string, orgID *string, system bool) ([]model.Config, error) {
-	return s.app.admGetConfigs(configType, appID, orgID, system)
+func (s *administrationImpl) AdmGetConfigs(configType *string, appID *string, orgID *string, appIDClaim string, orgIDClaim string, system bool) ([]model.Config, error) {
+	return s.app.admGetConfigs(configType, appID, orgID, appIDClaim, orgIDClaim, system)
 }
 
-func (s *administrationImpl) AdmCreateConfig(config model.Config, system bool) error {
-	return s.app.admCreateConfig(config, system)
+func (s *administrationImpl) AdmCreateConfig(config model.Config, appID string, orgID string, system bool) error {
+	return s.app.admCreateConfig(config, appID, orgID, system)
 }
 
-func (s *administrationImpl) AdmUpdateConfig(config model.Config, system bool) error {
-	return s.app.admUpdateConfig(config, system)
+func (s *administrationImpl) AdmUpdateConfig(config model.Config, appID string, orgID string, system bool) error {
+	return s.app.admUpdateConfig(config, appID, orgID, system)
 }
 
-func (s *administrationImpl) AdmDeleteConfig(id string, system bool) error {
-	return s.app.admDeleteConfig(id, system)
+func (s *administrationImpl) AdmDeleteConfig(id string, appID string, orgID string, system bool) error {
+	return s.app.admDeleteConfig(id, appID, orgID, system)
 }
 
 func (s *administrationImpl) AdmGetTest() string {

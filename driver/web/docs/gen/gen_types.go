@@ -308,12 +308,14 @@ type AuthType_Params struct {
 
 // Config defines model for Config.
 type Config struct {
-	AppId       string      `json:"app_id"`
+	AllApps     *bool       `json:"all_apps,omitempty"`
+	AllOrgs     *bool       `json:"all_orgs,omitempty"`
+	AppId       *string     `json:"app_id,omitempty"`
 	Data        interface{} `json:"data"`
 	DateCreated *string     `json:"date_created,omitempty"`
 	DateUpdated *string     `json:"date_updated"`
 	Id          *string     `json:"id,omitempty"`
-	OrgId       string      `json:"org_id"`
+	OrgId       *string     `json:"org_id,omitempty"`
 	System      bool        `json:"system"`
 	Type        string      `json:"type"`
 }
@@ -1184,11 +1186,11 @@ type GetAdminConfigsParams struct {
 	// config type
 	Type *string `form:"type,omitempty" json:"type,omitempty"`
 
-	// config app ID
-	AppId *string `form:"app_id,omitempty" json:"app_id,omitempty"`
+	// whether to search for configs used across apps for claimed org
+	AllApps *bool `form:"all_apps,omitempty" json:"all_apps,omitempty"`
 
-	// config org ID
-	OrgId *string `form:"org_id,omitempty" json:"org_id,omitempty"`
+	// whether to search for configs used across orgs for claimed app
+	AllOrgs *bool `form:"all_orgs,omitempty" json:"all_orgs,omitempty"`
 }
 
 // PostAdminConfigsJSONBody defines parameters for PostAdminConfigs.

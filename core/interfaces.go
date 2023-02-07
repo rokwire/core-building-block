@@ -46,11 +46,11 @@ type Administration interface {
 	AdmGetTest() string
 	AdmGetTestModel() string
 
-	AdmGetConfig(id string, system bool) (*model.Config, error)
-	AdmGetConfigs(configType *string, appID *string, orgID *string, system bool) ([]model.Config, error)
-	AdmCreateConfig(config model.Config, system bool) error
-	AdmUpdateConfig(config model.Config, system bool) error
-	AdmDeleteConfig(id string, system bool) error
+	AdmGetConfig(id string, appID string, orgID string, system bool) (*model.Config, error)
+	AdmGetConfigs(configType *string, appID *string, orgID *string, appIDClaim string, orgIDClaim string, system bool) ([]model.Config, error)
+	AdmCreateConfig(config model.Config, appID string, orgID string, system bool) error
+	AdmUpdateConfig(config model.Config, appID string, orgID string, system bool) error
+	AdmDeleteConfig(id string, appID string, orgID string, system bool) error
 
 	AdmGetApplications(orgID string) ([]model.Application, error)
 

@@ -3118,7 +3118,7 @@ func (sa *Adapter) UpdateConfig(config model.Config) error {
 	}
 	_, err := sa.db.configs.UpdateOne(filter, update, nil)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeConfig, &logutils.FieldArgs{"id": config.ID}, err)
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeConfig, &logutils.FieldArgs{"type": config.Type, "app_id": config.AppID, "org_id": config.OrgID}, err)
 	}
 
 	return nil
