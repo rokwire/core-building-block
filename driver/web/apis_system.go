@@ -1069,7 +1069,7 @@ func (h SystemApisHandler) createAuthTypes(l *logs.Log, r *http.Request, claims 
 	ignoreMFA := requestData.IgnoreMfa
 	var params map[string]interface{}
 	if requestData.Params != nil {
-		params = requestData.Params.AdditionalProperties
+		params = *requestData.Params
 	}
 
 	_, err = h.coreAPIs.System.SysCreateAuthTypes(code, description, isExternal, isAnonymous, useCredentials, ignoreMFA, params)
@@ -1122,7 +1122,7 @@ func (h SystemApisHandler) updateAuthTypes(l *logs.Log, r *http.Request, claims 
 	ignoreMFA := requestData.IgnoreMfa
 	var params map[string]interface{}
 	if requestData.Params != nil {
-		params = requestData.Params.AdditionalProperties
+		params = *requestData.Params
 	}
 
 	err = h.coreAPIs.System.SysUpdateAuthTypes(ID, code, description, isExternal, isAnonymous, useCredentials, ignoreMFA, params)

@@ -246,7 +246,7 @@ func supportedAuthTypeFromDef(item *Def.SupportedAuthTypes) *model.AuthTypesSupp
 	if item.SupportedAuthTypes != nil {
 		for _, authType := range *item.SupportedAuthTypes {
 			if authType.AuthTypeId != nil && authType.Params != nil {
-				supportedAuthTypes = append(supportedAuthTypes, model.SupportedAuthType{AuthTypeID: *authType.AuthTypeId, Params: authType.Params.AdditionalProperties})
+				supportedAuthTypes = append(supportedAuthTypes, model.SupportedAuthType{AuthTypeID: *authType.AuthTypeId, Params: *authType.Params})
 			}
 		}
 	}
@@ -277,7 +277,7 @@ func supportedAuthTypeToDef(item *model.AuthTypesSupport) *Def.SupportedAuthType
 	}
 	supportedAuthTypes := []Def.SupportedAuthType{}
 	for _, authType := range item.SupportedAuthTypes {
-		params := Def.SupportedAuthType_Params{AdditionalProperties: authType.Params}
+		params := authType.Params
 		authTypeID := authType.AuthTypeID
 		supportedAuthTypes = append(supportedAuthTypes, Def.SupportedAuthType{AuthTypeId: &authTypeID, Params: &params})
 	}
@@ -335,13 +335,17 @@ func identityProviderSettingFromDef(item *Def.IdentityProviderSettings) *model.I
 	if item.UserSpecificFields != nil {
 		userSpecificFields = *item.UserSpecificFields
 	}
+	var externalIDFields map[string]string
+	if item.ExternalIdFields != nil {
+		externalIDFields = *item.ExternalIdFields
+	}
 	var roles map[string]string
 	if item.Roles != nil {
-		roles = item.Roles.AdditionalProperties
+		roles = *item.Roles
 	}
 	var groups map[string]string
 	if item.Groups != nil {
-		groups = item.Groups.AdditionalProperties
+		groups = *item.Groups
 	}
 	var alwaysSyncProfile bool
 	if item.AlwaysSyncProfile != nil {
@@ -349,7 +353,7 @@ func identityProviderSettingFromDef(item *Def.IdentityProviderSettings) *model.I
 	}
 
 	return &model.IdentityProviderSetting{IdentityProviderID: item.IdentityProviderId, UserIdentifierField: item.UserIdentifierField,
-		ExternalIDFields: item.ExternalIdFields.AdditionalProperties, FirstNameField: firstNameField, MiddleNameField: middleNameField,
+		ExternalIDFields: externalIDFields, FirstNameField: firstNameField, MiddleNameField: middleNameField,
 		LastNameField: lastNameField, EmailField: emailField, RolesField: rolesField, GroupsField: groupsField,
 		UserSpecificFields: userSpecificFields, Roles: roles, Groups: groups, AlwaysSyncProfile: alwaysSyncProfile}
 }
@@ -373,9 +377,9 @@ func identityProviderSettingToDef(item *model.IdentityProviderSetting) *Def.Iden
 		return nil
 	}
 
-	externalIDs := Def.IdentityProviderSettings_ExternalIdFields{AdditionalProperties: item.ExternalIDFields}
-	roles := Def.IdentityProviderSettings_Roles{AdditionalProperties: item.Roles}
-	groups := Def.IdentityProviderSettings_Groups{AdditionalProperties: item.Groups}
+	externalIDs := item.ExternalIDFields
+	roles := item.Roles
+	groups := item.Groups
 
 	firstNameField := item.FirstNameField
 	middleNameField := item.MiddleNameField

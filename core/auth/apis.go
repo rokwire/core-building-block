@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/lestrrat-go/jwx/jwk"
 	"github.com/rokwire/core-auth-library-go/v2/authorization"
 	"github.com/rokwire/core-auth-library-go/v2/authutils"
 	"github.com/rokwire/core-auth-library-go/v2/sigauth"
@@ -2020,7 +2021,7 @@ func (a *Auth) DeregisterService(serviceID string) error {
 }
 
 // GetAuthKeySet generates a JSON Web Key Set for auth service registration
-func (a *Auth) GetAuthKeySet() (*model.JSONWebKeySet, error) {
+func (a *Auth) GetAuthKeySet() (jwk.Set, error) {
 	authReg, err := a.ServiceRegManager.GetServiceReg("auth")
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeServiceReg, logutils.StringArgs("auth"), err)
@@ -2030,12 +2031,26 @@ func (a *Auth) GetAuthKeySet() (*model.JSONWebKeySet, error) {
 		return nil, errors.ErrorData(logutils.StatusMissing, model.TypePubKey, nil)
 	}
 
-	jwk, err := model.JSONWebKeyFromPubKey(authReg.PubKey)
-	if err != nil || jwk == nil {
+	webKey, err := jwk.New(authReg.PubKey.Key)
+	if err != nil || webKey == nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeJSONWebKey, nil, err)
 	}
+	err = webKey.Set(jwk.KeyUsageKey, "sig")
+	if err != nil {
+		return nil, errors.WrapErrorAction("setting", model.TypeJSONWebKey+" "+jwk.KeyUsageKey, logutils.StringArgs("sig"), err)
+	}
+	err = webKey.Set(jwk.KeyIDKey, authReg.PubKey.KeyID)
+	if err != nil {
+		return nil, errors.WrapErrorAction("setting", model.TypeJSONWebKey+" "+jwk.KeyIDKey, logutils.StringArgs(authReg.PubKey.KeyID), err)
+	}
+	err = webKey.Set(jwk.AlgorithmKey, authReg.PubKey.Alg)
+	if err != nil {
+		return nil, errors.WrapErrorAction("setting", model.TypeJSONWebKey+" "+jwk.AlgorithmKey, logutils.StringArgs(authReg.PubKey.Alg), err)
+	}
 
-	return &model.JSONWebKeySet{Keys: []model.JSONWebKey{*jwk}}, nil
+	keySet := jwk.NewSet()
+	keySet.Add(webKey)
+	return keySet, nil
 }
 
 // GetApplicationAPIKeys finds and returns the API keys for the provided app

@@ -21,7 +21,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/rokwire/core-auth-library-go/v2/authservice"
+	"github.com/rokwire/core-auth-library-go/v2/keys"
 	"github.com/rokwire/core-auth-library-go/v2/sigauth"
 	"github.com/rokwire/logging-library-go/v2/errors"
 	"github.com/rokwire/logging-library-go/v2/logutils"
@@ -69,7 +69,7 @@ func (s *signatureServiceAuthImpl) checkCredentials(r *sigauth.Request, _ interf
 			if err != nil {
 				continue
 			}
-			err = s.auth.SignatureAuth.CheckSignature(pubKey.Key, []byte(sigString), sigAuthHeader.Signature)
+			err = s.auth.SignatureAuth.CheckSignature(pubKey, []byte(sigString), sigAuthHeader.Signature)
 			if err == nil {
 				return accounts, nil
 			}
@@ -103,19 +103,22 @@ func (s *signatureServiceAuthImpl) addCredentials(creds *model.ServiceAccountCre
 	return displayParams, nil
 }
 
-func (s *signatureServiceAuthImpl) pubKeyFromCred(creds *model.ServiceAccountCredential) (*authservice.PubKey, error) {
+func (s *signatureServiceAuthImpl) pubKeyFromCred(creds *model.ServiceAccountCredential) (*keys.PubKey, error) {
+	pubKeyAlg, ok := creds.Params["alg"].(string)
+	if !ok {
+		return nil, errors.ErrorAction(logutils.ActionParse, "public key algorithm", &logutils.FieldArgs{"alg": creds.Params["alg"]})
+	}
 	pubKeyPem, ok := creds.Params["key_pem"].(string)
 	if !ok {
 		return nil, errors.ErrorAction(logutils.ActionParse, "public key pem", &logutils.FieldArgs{"key_pem": creds.Params["key_pem"]})
 	}
 
-	pubKeyPem = strings.ReplaceAll(pubKeyPem, `\n`, "\n")
-	pubKey := authservice.PubKey{KeyPem: pubKeyPem, Alg: "RS256"}
-	if err := pubKey.LoadKeyFromPem(); err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionLoad, "public key", &logutils.FieldArgs{"key_pem": creds.Params["key_pem"]}, err)
+	pubKey, err := keys.NewPubKey(pubKeyAlg, strings.ReplaceAll(pubKeyPem, `\n`, "\n"))
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionLoad, "public key", nil, err)
 	}
 
-	return &pubKey, nil
+	return pubKey, nil
 }
 
 // initSignatureServiceAuth initializes and registers a new signature service auth instance
