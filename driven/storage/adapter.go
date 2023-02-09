@@ -3489,7 +3489,7 @@ func (sa *Adapter) MigrateServiceRegs() error {
 		var results []model.ServiceRegistration
 		err = sa.db.serviceRegs.FindWithContext(context, filter, &results, nil)
 		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceReg, &logutils.FieldArgs{"core_host": sa.host, "service_id": "all"}, err)
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceReg, &logutils.FieldArgs{"service_id": "all"}, err)
 		}
 
 		if results != nil {
