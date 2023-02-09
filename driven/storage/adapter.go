@@ -40,6 +40,8 @@ import (
 type Adapter struct {
 	db *database
 
+	host string
+
 	logger *logs.Logger
 
 	cachedServiceRegs *syncmap.Map
@@ -158,28 +160,21 @@ func (sa *Adapter) cacheServiceRegs() error {
 	return nil
 }
 
-func (sa *Adapter) setCachedServiceRegs(serviceRegs *[]model.ServiceReg) {
+func (sa *Adapter) setCachedServiceRegs(serviceRegs *[]model.ServiceRegistration) {
 	sa.serviceRegsLock.Lock()
 	defer sa.serviceRegsLock.Unlock()
 
 	sa.cachedServiceRegs = &syncmap.Map{}
-	validate := validator.New()
-
 	for _, serviceReg := range *serviceRegs {
-		sa.validateAndCacheServiceReg(serviceReg, validate)
+		sa.cacheServiceReg(serviceReg)
 	}
 }
 
-func (sa *Adapter) validateAndCacheServiceReg(reg model.ServiceReg, validate *validator.Validate) {
-	err := validate.Struct(reg)
-	if err == nil {
-		sa.cachedServiceRegs.Store(reg.Registration.ServiceID, reg)
-	} else {
-		sa.logger.Errorf("failed to validate and cache service registration with registration.service_id %s: %s", reg.Registration.ServiceID, err.Error())
-	}
+func (sa *Adapter) cacheServiceReg(reg model.ServiceRegistration) {
+	sa.cachedServiceRegs.Store(reg.Registration.ServiceID, reg)
 }
 
-func (sa *Adapter) getCachedServiceReg(serviceID string) (*model.ServiceReg, error) {
+func (sa *Adapter) getCachedServiceReg(serviceID string) (*model.ServiceRegistration, error) {
 	sa.serviceRegsLock.RLock()
 	defer sa.serviceRegsLock.RUnlock()
 
@@ -187,7 +182,7 @@ func (sa *Adapter) getCachedServiceReg(serviceID string) (*model.ServiceReg, err
 
 	item, _ := sa.cachedServiceRegs.Load(serviceID)
 	if item != nil {
-		serviceReg, ok := item.(model.ServiceReg)
+		serviceReg, ok := item.(model.ServiceRegistration)
 		if !ok {
 			return nil, errors.ErrorAction(logutils.ActionCast, model.TypeServiceReg, errArgs)
 		}
@@ -196,11 +191,11 @@ func (sa *Adapter) getCachedServiceReg(serviceID string) (*model.ServiceReg, err
 	return nil, nil
 }
 
-func (sa *Adapter) getCachedServiceRegs(serviceIDs []string) []model.ServiceReg {
+func (sa *Adapter) getCachedServiceRegs(serviceIDs []string) []model.ServiceRegistration {
 	sa.serviceRegsLock.RLock()
 	defer sa.serviceRegsLock.RUnlock()
 
-	serviceRegList := make([]model.ServiceReg, 0)
+	serviceRegList := make([]model.ServiceRegistration, 0)
 	if !utils.Contains(serviceIDs, "all") {
 		for _, serviceID := range serviceIDs {
 			item, _ := sa.cachedServiceRegs.Load(serviceID)
@@ -222,14 +217,14 @@ func (sa *Adapter) getCachedServiceRegs(serviceIDs []string) []model.ServiceReg 
 	return serviceRegList
 }
 
-func (sa *Adapter) processCachedServiceReg(key, item interface{}) *model.ServiceReg {
+func (sa *Adapter) processCachedServiceReg(key, item interface{}) *model.ServiceRegistration {
 	errArgs := &logutils.FieldArgs{"registration.service_id": key}
 	if item == nil {
 		sa.logger.Warn(errors.ErrorData(logutils.StatusInvalid, model.TypeServiceReg, errArgs).Error())
 		return nil
 	}
 
-	serviceReg, ok := item.(model.ServiceReg)
+	serviceReg, ok := item.(model.ServiceRegistration)
 	if !ok {
 		sa.logger.Warn(errors.ErrorAction(logutils.ActionCast, model.TypeServiceReg, errArgs).Error())
 		return nil
@@ -3476,68 +3471,109 @@ func (sa *Adapter) UpdateAuthTypes(ID string, code string, description string, i
 
 // ============================== ServiceRegs ==============================
 
+// MigrateServiceRegs migrates all service registrations from the service_regs collection to the service_registrations collection
+// TODO: Remove this once all necessary migrations are complete
+func (sa *Adapter) MigrateServiceRegs() error {
+	transaction := func(context TransactionContext) error {
+		filter := bson.M{"core_host": sa.host}
+		count, err := sa.db.serviceRegistrations.CountDocumentsWithContext(context, filter)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceReg, &logutils.FieldArgs{"core_host": sa.host, "service_id": "all"}, err)
+		}
+
+		if count > 0 {
+			return nil
+		}
+
+		filter = bson.M{}
+		var results []model.ServiceRegistration
+		err = sa.db.serviceRegs.FindWithContext(context, filter, &results, nil)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceReg, &logutils.FieldArgs{"core_host": sa.host, "service_id": "all"}, err)
+		}
+
+		if results != nil {
+			var registrations []interface{}
+			for _, res := range results {
+				res.CoreHost = sa.host
+				registrations = append(registrations, res)
+			}
+
+			_, err := sa.db.serviceRegistrations.InsertManyWithContext(context, registrations, nil)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionInsert, model.TypeServiceReg, nil, err)
+			}
+		}
+		return nil
+	}
+	return sa.PerformTransaction(transaction)
+}
+
 // loadServiceRegs fetches all service registration records
-func (sa *Adapter) loadServiceRegs() ([]model.ServiceReg, error) {
-	filter := bson.M{}
-	var result []model.ServiceReg
-	err := sa.db.serviceRegs.Find(filter, &result, nil)
+func (sa *Adapter) loadServiceRegs() ([]model.ServiceRegistration, error) {
+	filter := bson.M{"core_host": sa.host}
+	var result []model.ServiceRegistration
+	err := sa.db.serviceRegistrations.Find(filter, &result, nil)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceReg, &logutils.FieldArgs{"service_id": "all"}, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceReg, &logutils.FieldArgs{"core_host": sa.host, "service_id": "all"}, err)
 	}
 
 	if result == nil {
-		result = []model.ServiceReg{}
+		result = []model.ServiceRegistration{}
 	}
 
 	return result, nil
 }
 
 // FindServiceRegs fetches the requested service registration records
-func (sa *Adapter) FindServiceRegs(serviceIDs []string) []model.ServiceReg {
+func (sa *Adapter) FindServiceRegs(serviceIDs []string) []model.ServiceRegistration {
 	return sa.getCachedServiceRegs(serviceIDs)
 }
 
 // FindServiceReg finds the service registration in storage
-func (sa *Adapter) FindServiceReg(serviceID string) (*model.ServiceReg, error) {
+func (sa *Adapter) FindServiceReg(serviceID string) (*model.ServiceRegistration, error) {
 	return sa.getCachedServiceReg(serviceID)
 }
 
 // InsertServiceReg inserts the service registration to storage
-func (sa *Adapter) InsertServiceReg(reg *model.ServiceReg) error {
-	_, err := sa.db.serviceRegs.InsertOne(reg)
+func (sa *Adapter) InsertServiceReg(reg *model.ServiceRegistration) error {
+	reg.CoreHost = sa.host
+	_, err := sa.db.serviceRegistrations.InsertOne(reg)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeServiceReg, &logutils.FieldArgs{"service_id": reg.Registration.ServiceID}, err)
+		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeServiceReg, &logutils.FieldArgs{"core_host": sa.host, "service_id": reg.Registration.ServiceID}, err)
 	}
 
 	return nil
 }
 
 // UpdateServiceReg updates the service registration in storage
-func (sa *Adapter) UpdateServiceReg(reg *model.ServiceReg) error {
-	filter := bson.M{"registration.service_id": reg.Registration.ServiceID}
-	err := sa.db.serviceRegs.ReplaceOne(filter, reg, nil)
+func (sa *Adapter) UpdateServiceReg(reg *model.ServiceRegistration) error {
+	reg.CoreHost = sa.host
+	filter := bson.M{"core_host": reg.CoreHost, "registration.service_id": reg.Registration.ServiceID}
+	err := sa.db.serviceRegistrations.ReplaceOne(filter, reg, nil)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeServiceReg, &logutils.FieldArgs{"service_id": reg.Registration.ServiceID}, err)
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeServiceReg, &logutils.FieldArgs{"core_host": reg.CoreHost, "service_id": reg.Registration.ServiceID}, err)
 	}
 
 	return nil
 }
 
 // SaveServiceReg saves the service registration to the storage
-func (sa *Adapter) SaveServiceReg(reg *model.ServiceReg, immediateCache bool) error {
+func (sa *Adapter) SaveServiceReg(reg *model.ServiceRegistration, immediateCache bool) error {
 	if reg == nil {
 		return nil
 	}
 
-	filter := bson.M{"registration.service_id": reg.Registration.ServiceID}
+	reg.CoreHost = sa.host
+	filter := bson.M{"core_host": reg.CoreHost, "registration.service_id": reg.Registration.ServiceID}
 	opts := options.Replace().SetUpsert(true)
-	err := sa.db.serviceRegs.ReplaceOne(filter, reg, opts)
+	err := sa.db.serviceRegistrations.ReplaceOne(filter, reg, opts)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionSave, model.TypeServiceReg, &logutils.FieldArgs{"service_id": reg.Registration.ServiceID}, err)
+		return errors.WrapErrorAction(logutils.ActionSave, model.TypeServiceReg, &logutils.FieldArgs{"core_host": reg.CoreHost, "service_id": reg.Registration.ServiceID}, err)
 	}
 
 	if immediateCache {
-		sa.validateAndCacheServiceReg(*reg, validator.New())
+		sa.cacheServiceReg(*reg)
 	}
 
 	return nil
@@ -3545,17 +3581,17 @@ func (sa *Adapter) SaveServiceReg(reg *model.ServiceReg, immediateCache bool) er
 
 // DeleteServiceReg deletes the service registration from storage
 func (sa *Adapter) DeleteServiceReg(serviceID string) error {
-	filter := bson.M{"registration.service_id": serviceID}
-	result, err := sa.db.serviceRegs.DeleteOne(filter, nil)
+	filter := bson.M{"core_host": sa.host, "registration.service_id": serviceID}
+	result, err := sa.db.serviceRegistrations.DeleteOne(filter, nil)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeServiceReg, &logutils.FieldArgs{"service_id": serviceID}, err)
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeServiceReg, &logutils.FieldArgs{"core_host": sa.host, "service_id": serviceID}, err)
 	}
 	if result == nil {
-		return errors.WrapErrorData(logutils.StatusInvalid, "delete result", &logutils.FieldArgs{"service_id": serviceID}, err)
+		return errors.WrapErrorData(logutils.StatusInvalid, "delete result", &logutils.FieldArgs{"core_host": sa.host, "service_id": serviceID}, err)
 	}
 	deletedCount := result.DeletedCount
 	if deletedCount == 0 {
-		return errors.WrapErrorData(logutils.StatusMissing, model.TypeServiceReg, &logutils.FieldArgs{"service_id": serviceID}, err)
+		return errors.WrapErrorData(logutils.StatusMissing, model.TypeServiceReg, &logutils.FieldArgs{"core_host": sa.host, "service_id": serviceID}, err)
 	}
 
 	return nil
@@ -3714,7 +3750,7 @@ func (sa *Adapter) abortTransaction(sessionContext mongo.SessionContext) {
 }
 
 // NewStorageAdapter creates a new storage adapter instance
-func NewStorageAdapter(mongoDBAuth string, mongoDBName string, mongoTimeout string, logger *logs.Logger) *Adapter {
+func NewStorageAdapter(host string, mongoDBAuth string, mongoDBName string, mongoTimeout string, logger *logs.Logger) *Adapter {
 	timeoutInt, err := strconv.Atoi(mongoTimeout)
 	if err != nil {
 		logger.Warn("Setting default Mongo timeout - 500")
@@ -3741,7 +3777,7 @@ func NewStorageAdapter(mongoDBAuth string, mongoDBName string, mongoTimeout stri
 	applicationConfigsLock := &sync.RWMutex{}
 
 	db := &database{mongoDBAuth: mongoDBAuth, mongoDBName: mongoDBName, mongoTimeout: timeout, logger: logger}
-	return &Adapter{db: db, logger: logger, cachedServiceRegs: cachedServiceRegs, serviceRegsLock: serviceRegsLock,
+	return &Adapter{db: db, logger: logger, host: host, cachedServiceRegs: cachedServiceRegs, serviceRegsLock: serviceRegsLock,
 		cachedOrganizations: cachedOrganizations, organizationsLock: organizationsLock,
 		cachedApplications: cachedApplications, applicationsLock: applicationsLock,
 		cachedAuthTypes: cachedAuthTypes, authTypesLock: authTypesLock,
@@ -3757,7 +3793,7 @@ func (sl *storageListener) OnAuthTypesUpdated() {
 	sl.adapter.cacheAuthTypes()
 }
 
-func (sl *storageListener) OnServiceRegsUpdated() {
+func (sl *storageListener) OnServiceRegistrationsUpdated() {
 	sl.adapter.cacheServiceRegs()
 }
 
@@ -3785,7 +3821,7 @@ type Listener interface {
 	OnAPIKeysUpdated()
 	OnAuthTypesUpdated()
 	OnIdentityProvidersUpdated()
-	OnServiceRegsUpdated()
+	OnServiceRegistrationsUpdated()
 	OnOrganizationsUpdated()
 	OnApplicationsUpdated()
 	OnApplicationsOrganizationsUpdated()
@@ -3804,8 +3840,8 @@ func (d *DefaultListenerImpl) OnAuthTypesUpdated() {}
 // OnIdentityProvidersUpdated notifies identity providers have been updated
 func (d *DefaultListenerImpl) OnIdentityProvidersUpdated() {}
 
-// OnServiceRegsUpdated notifies services regs have been updated
-func (d *DefaultListenerImpl) OnServiceRegsUpdated() {}
+// OnServiceRegistrationsUpdated notifies services registrations have been updated
+func (d *DefaultListenerImpl) OnServiceRegistrationsUpdated() {}
 
 // OnOrganizationsUpdated notifies organizations have been updated
 func (d *DefaultListenerImpl) OnOrganizationsUpdated() {}
