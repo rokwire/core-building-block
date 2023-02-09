@@ -59,10 +59,6 @@ const (
 	TypeServiceAuthorization logutils.MessageDataType = "service authorization"
 	//TypeScope scope type
 	TypeScope logutils.MessageDataType = "scope"
-	//TypeJSONWebKey JWK type
-	TypeJSONWebKey logutils.MessageDataType = "jwk"
-	//TypeJSONWebKeySet JWKS type
-	TypeJSONWebKeySet logutils.MessageDataType = "jwks"
 	//TypePubKey pub key type
 	TypePubKey logutils.MessageDataType = "pub key"
 	//TypeAPIKey api key type
