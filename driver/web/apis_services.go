@@ -109,21 +109,21 @@ func (h ServicesApisHandler) login(l *logs.Log, r *http.Request, claims *tokenau
 
 	if loginSession.State != "" {
 		//params
-		var paramsRes *Def.SharedResLoginMfa_Params
+		var paramsRes Def.SharedResLoginMfa_Params
 		if loginSession.Params != nil {
 			paramsBytes, err := json.Marshal(loginSession.Params)
 			if err != nil {
 				return l.HTTPResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("auth login response params"), nil, err, http.StatusInternalServerError, false)
 			}
 
-			err = json.Unmarshal(paramsBytes, paramsRes)
+			err = json.Unmarshal(paramsBytes, &paramsRes)
 			if err != nil {
 				return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth login response params"), nil, err, http.StatusInternalServerError, false)
 			}
 		}
 
 		mfaResp := mfaDataListToDef(mfaTypes)
-		responseData := &Def.SharedResLoginMfa{AccountId: loginSession.Identifier, Enrolled: mfaResp, Params: paramsRes,
+		responseData := &Def.SharedResLoginMfa{AccountId: loginSession.Identifier, Enrolled: mfaResp, Params: &paramsRes,
 			SessionId: loginSession.ID, State: loginSession.State}
 		respData, err := json.Marshal(responseData)
 		if err != nil {
@@ -186,14 +186,14 @@ func (h ServicesApisHandler) refresh(l *logs.Log, r *http.Request, claims *token
 	accessToken := loginSession.AccessToken
 	refreshToken := loginSession.CurrentRefreshToken()
 
-	var paramsRes *Def.SharedResRefresh_Params
+	var paramsRes Def.SharedResRefresh_Params
 	if loginSession.Params != nil {
 		paramsBytes, err := json.Marshal(loginSession.Params)
 		if err != nil {
 			return l.HTTPResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("auth refresh response params"), nil, err, http.StatusInternalServerError, false)
 		}
 
-		err = json.Unmarshal(paramsBytes, paramsRes)
+		err = json.Unmarshal(paramsBytes, &paramsRes)
 		if err != nil {
 			return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth refresh response params"), nil, err, http.StatusInternalServerError, false)
 		}
@@ -201,7 +201,7 @@ func (h ServicesApisHandler) refresh(l *logs.Log, r *http.Request, claims *token
 
 	tokenType := Def.SharedResRokwireTokenTokenTypeBearer
 	rokwireToken := Def.SharedResRokwireToken{AccessToken: &accessToken, RefreshToken: &refreshToken, TokenType: &tokenType}
-	responseData := &Def.SharedResRefresh{Token: &rokwireToken, Params: paramsRes}
+	responseData := &Def.SharedResRefresh{Token: &rokwireToken, Params: &paramsRes}
 	respData, err := json.Marshal(responseData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("auth refresh response"), nil, err, http.StatusInternalServerError, false)
