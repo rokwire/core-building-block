@@ -30,8 +30,8 @@ const (
 	//TypeOrganizationConfig ...
 	TypeOrganizationConfig logutils.MessageDataType = "org config"
 
-	// ConfigIDEnv is the Config ID for EnvConfigData
-	ConfigIDEnv string = "env"
+	// ConfigTypeEnv is the Config Type for EnvConfigData
+	ConfigTypeEnv string = "env"
 )
 
 // Config contains generic configs

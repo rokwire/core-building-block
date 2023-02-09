@@ -299,7 +299,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, nil, err).AddTag(sessionIDRateLimitTag)
 		}
 	} else {
-		config, err := a.storage.FindConfig(model.ConfigIDEnv, authutils.AllApps, authutils.AllOrgs)
+		config, err := a.storage.FindConfig(model.ConfigTypeEnv, authutils.AllApps, authutils.AllOrgs)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeConfig, nil, err)
 		}

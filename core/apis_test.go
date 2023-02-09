@@ -89,7 +89,7 @@ func TestAdmCreateConfig(t *testing.T) {
 	coreAPIs := buildTestCoreAPIs(&storage)
 
 	trueVal := true
-	config := model.Config{ID: model.ConfigIDEnv, Data: model.EnvConfigData{AllowLegacyRefresh: &trueVal}}
+	config := model.Config{ID: model.ConfigTypeEnv, Type: model.ConfigTypeEnv, Data: model.EnvConfigData{AllowLegacyRefresh: &trueVal}}
 	err := coreAPIs.Administration.AdmCreateConfig(config, "admin_app_id", "system_org_id", true)
 	if err != nil {
 		t.Error("we are not expecting error")
