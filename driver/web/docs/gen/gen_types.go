@@ -162,23 +162,24 @@ type APIKey struct {
 
 // Account defines model for Account.
 type Account struct {
-	Anonymous               *bool                    `json:"anonymous,omitempty"`
-	AppOrg                  *ApplicationOrganization `json:"app_org"`
-	AuthTypes               *[]AccountAuthType       `json:"auth_types,omitempty"`
-	Devices                 *[]Device                `json:"devices,omitempty"`
-	ExternalIds             *map[string]interface{}  `json:"external_ids"`
-	Groups                  *[]AppOrgGroup           `json:"groups,omitempty"`
-	Id                      *string                  `json:"id,omitempty"`
-	LastAccessTokenDate     *string                  `json:"last_access_token_date,omitempty"`
-	LastLoginDate           *string                  `json:"last_login_date,omitempty"`
-	MostRecentClientVersion *string                  `json:"most_recent_client_version,omitempty"`
-	Permissions             *[]Permission            `json:"permissions,omitempty"`
-	Preferences             *map[string]interface{}  `json:"preferences"`
-	Profile                 *Profile                 `json:"profile,omitempty"`
-	Roles                   *[]AppOrgRole            `json:"roles,omitempty"`
-	System                  *bool                    `json:"system,omitempty"`
-	SystemConfigs           *map[string]interface{}  `json:"system_configs"`
-	Username                *string                  `json:"username,omitempty"`
+	Anonymous               *bool                   `json:"anonymous,omitempty"`
+	AppId                   *string                 `json:"app_id,omitempty"`
+	AuthTypes               *[]AccountAuthType      `json:"auth_types,omitempty"`
+	Devices                 *[]Device               `json:"devices,omitempty"`
+	ExternalIds             *map[string]interface{} `json:"external_ids"`
+	Groups                  *[]AppOrgGroup          `json:"groups,omitempty"`
+	Id                      *string                 `json:"id,omitempty"`
+	LastAccessTokenDate     *string                 `json:"last_access_token_date,omitempty"`
+	LastLoginDate           *string                 `json:"last_login_date,omitempty"`
+	MostRecentClientVersion *string                 `json:"most_recent_client_version,omitempty"`
+	OrgId                   *string                 `json:"org_id,omitempty"`
+	Permissions             *[]Permission           `json:"permissions,omitempty"`
+	Preferences             *map[string]interface{} `json:"preferences"`
+	Profile                 *Profile                `json:"profile,omitempty"`
+	Roles                   *[]AppOrgRole           `json:"roles,omitempty"`
+	System                  *bool                   `json:"system,omitempty"`
+	SystemConfigs           *map[string]interface{} `json:"system_configs"`
+	Username                *string                 `json:"username,omitempty"`
 }
 
 // AccountAuthType defines model for AccountAuthType.

@@ -270,7 +270,7 @@ func (a *Auth) CanLink(authenticationType string, userIdentifier string, apiKey 
 //			Access token (string): Signed ROKWIRE access token to be used to authorize future requests
 //			Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
 //			Params (interface{}): authType-specific set of parameters passed back to client
-func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string, l *logs.Log) (_ *model.LoginSession, refreshErr error) {
+func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string, l *logs.Log) (*model.LoginSession, error) {
 	var loginSession *model.LoginSession
 	var sessionID string
 	var err error
@@ -278,27 +278,32 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 	refreshTokenParts := strings.Split(refreshToken, ":")
 	if len(refreshTokenParts) > 1 {
 		sessionID = refreshTokenParts[0]
-		if a.sessionIDLimitReached(sessionID) {
-			//remove the session
-			err = a.deleteLoginSession(nil, model.LoginSession{ID: sessionID}, l)
-			if err != nil {
-				return nil, errors.WrapErrorAction("error deleting expired session", "", nil, err).AddTag(sessionIDRateLimitTag)
+
+		defer a.incrementCachedSessionIDCount(sessionID)
+
+		count := a.getCachedSessionIDCount(sessionID)
+		if count >= sessionIDRateLimit { //Rate limit use of a single login session. TODO: Use IP address to prevent spamming invalid random session IDs?
+			l.Warnf("session id (%s) use limit (%d) reached: count=%d", sessionID, sessionIDRateLimit, count)
+
+			// Perform cleanup on exact limit reach, then blacklist session ID to avoid unnecessary DB calls
+			if count == sessionIDRateLimit {
+				//remove the session
+				l.Infof("cleaning up overused session id...")
+				err = a.deleteLoginSession(nil, model.LoginSession{ID: sessionID}, l)
+				if err != nil {
+					l.Error(errors.WrapErrorAction(logutils.ActionDelete, "overused session", nil, err).Error())
+				}
 			}
 
 			return nil, nil
 		}
-		defer func() {
-			if taggedErr, ok := refreshErr.(*errors.Error); ok && taggedErr.HasTag(sessionIDRateLimitTag) {
-				a.incrementCachedSessionIDCount(sessionID)
-			}
-		}()
 
 		refreshToken = a.hashAndEncodeToken(refreshTokenParts[1])
 		loginSession, err = a.storage.FindLoginSessionByID(sessionID)
 		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, nil, err).AddTag(sessionIDRateLimitTag)
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, nil, err)
 		}
-	} else {
+	} else { //TODO: Remove this else once most sessions have been updated
 		config, err := a.storage.FindConfig(model.ConfigTypeEnv, authutils.AllApps, authutils.AllOrgs)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeConfig, nil, err)
@@ -312,19 +317,16 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 			}
 		}
 		if (envData == nil) || (envData.AllowLegacyRefresh != nil && *envData.AllowLegacyRefresh) {
-			refreshToken = a.hashAndEncodeToken(refreshToken)
+			// refreshToken = a.hashAndEncodeToken(refreshToken)
 			loginSession, err = a.storage.FindLoginSession(refreshToken)
 			if err != nil {
-				l.Infof("error finding session by refresh token - %s", refreshToken)
-				return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, nil, err).AddTag(sessionIDRateLimitTag)
+				l.Infof("error finding session by refresh token - %s", utils.GetLogValue(refreshToken, 10))
+				return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, nil, err)
 			}
 		}
 	}
 	if loginSession == nil {
-		l.Infof("there is no a session for refresh token - %s", utils.GetLogValue(refreshToken, 10))
-		if sessionID != "" {
-			a.incrementCachedSessionIDCount(sessionID)
-		}
+		l.Infof("there is no session for session ID: %s, refresh token: %s", sessionID, utils.GetLogValue(refreshToken, 10))
 		return nil, nil
 	}
 	l.SetContext("account_id", loginSession.Identifier)
@@ -336,7 +338,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 		//remove the session
 		err = a.deleteLoginSession(nil, *loginSession, l)
 		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionDelete, "expired login session", nil, err).AddTag(sessionIDRateLimitTag)
+			return nil, errors.WrapErrorAction(logutils.ActionDelete, "expired login session", nil, err)
 		}
 
 		//return nul
@@ -355,7 +357,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 		//remove the session
 		err = a.deleteLoginSession(nil, *loginSession, l)
 		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, logutils.StringArgs("previous refresh token"), err).AddTag(sessionIDRateLimitTag)
+			return nil, errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, logutils.StringArgs("previous refresh token"), err)
 		}
 
 		return nil, nil
@@ -364,7 +366,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 	//TODO: Ideally we would not make many database calls before validating the API key. Currently needed to get app ID
 	err = a.validateAPIKey(apiKey, loginSession.AppOrg.Application.ID)
 	if err != nil {
-		return nil, errors.WrapErrorData(logutils.StatusInvalid, model.TypeAPIKey, nil, err).AddTag(sessionIDRateLimitTag)
+		return nil, errors.WrapErrorData(logutils.StatusInvalid, model.TypeAPIKey, nil, err)
 	}
 
 	///now:

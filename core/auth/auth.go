@@ -64,9 +64,8 @@ const (
 	sessionDeletePeriod int = 24 // hours
 	maxSessionsDelete   int = 250
 
-	sessionIDRateLimit    int    = 5
-	sessionIDRatePeriod   int    = 5 // minutes
-	sessionIDRateLimitTag string = "rate-limit"
+	sessionIDRateLimit  int = 5
+	sessionIDRatePeriod int = 5 // minutes
 
 	loginStateLength   int = 128
 	loginStateDuration int = 5 // minutes
@@ -2548,10 +2547,13 @@ func (a *Auth) clearSessionIDCache() {
 	a.sessionIDs = &sync.Map{}
 }
 
-func (a *Auth) sessionIDLimitReached(id string) bool {
+func (a *Auth) getCachedSessionIDCount(id string) int {
 	count, _ := a.sessionIDs.Load(id)
 	idCount, ok := count.(int)
-	return ok && (idCount >= sessionIDRateLimit)
+	if !ok {
+		return 0
+	}
+	return idCount
 }
 
 func (a *Auth) incrementCachedSessionIDCount(id string) {

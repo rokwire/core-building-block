@@ -6119,8 +6119,10 @@ components:
         id:
           readOnly: true
           type: string
-        app_org:
-          $ref: '#/components/schemas/ApplicationOrganization'
+        app_id:
+          type: string
+        org_id:
+          type: string
         username:
           type: string
         profile:
