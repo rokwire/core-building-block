@@ -90,9 +90,13 @@ func TestAdmCreateConfig(t *testing.T) {
 
 	trueVal := true
 	config := model.Config{ID: model.ConfigTypeEnv, Type: model.ConfigTypeEnv, Data: model.EnvConfigData{AllowLegacyRefresh: &trueVal}}
-	err := coreAPIs.Administration.AdmCreateConfig(config, "admin_app_id", "system_org_id", true)
+	newConfig, err := coreAPIs.Administration.AdmCreateConfig(config, "admin_app_id", "system_org_id", true)
 	if err != nil {
 		t.Error("we are not expecting error")
+		return
+	}
+	if newConfig == nil || newConfig.ID == "" {
+		t.Error("config must be returned with valid id")
 		return
 	}
 
@@ -104,11 +108,16 @@ func TestAdmCreateConfig(t *testing.T) {
 
 	coreAPIs = buildTestCoreAPIs(&storage2)
 
-	err = coreAPIs.Administration.AdmCreateConfig(config, "admin_app_id", "system_org_id", true)
+	newConfig, err = coreAPIs.Administration.AdmCreateConfig(config, "admin_app_id", "system_org_id", true)
 	if err == nil {
 		t.Error("we are expecting error")
 		return
 	}
+	if newConfig == nil || newConfig.ID == "" {
+		t.Error("config must be returned with valid id")
+		return
+	}
+
 	errText := err.Error()
 	assert.Equal(t, errText, "core-building-block/core.(*application).admCreateConfig() error inserting config: error occured", "error is different: "+err.Error())
 }
