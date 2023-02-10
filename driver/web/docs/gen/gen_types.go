@@ -556,6 +556,7 @@ type ServiceReg struct {
 	Scopes           *[]ServiceScope `json:"scopes"`
 	ServiceAccountId *string         `json:"service_account_id,omitempty"`
 	ServiceId        string          `json:"service_id"`
+	VersionPath      string          `json:"version_path"`
 }
 
 // ServiceScope defines model for ServiceScope.
@@ -1167,6 +1168,12 @@ type PostAdminAuthRefreshJSONBody = SharedReqRefresh
 // PostAdminAuthVerifyMfaJSONBody defines parameters for PostAdminAuthVerifyMfa.
 type PostAdminAuthVerifyMfaJSONBody = SharedReqMfa
 
+// GetAdminServiceRegsParams defines parameters for GetAdminServiceRegs.
+type GetAdminServiceRegsParams struct {
+	// A comma-separated list of service IDs to return registrations for
+	Ids string `form:"ids" json:"ids"`
+}
+
 // PostBbsAccessTokenJSONBody defines parameters for PostBbsAccessToken.
 type PostBbsAccessTokenJSONBody = ServicesReqServiceAccountsAccessToken
 
@@ -1522,12 +1529,6 @@ type PostSystemServiceAccountsIdCredsJSONBody = ServiceAccountCredential
 type DeleteSystemServiceRegsParams struct {
 	// The service ID of the registration to delete
 	Id string `form:"id" json:"id"`
-}
-
-// GetSystemServiceRegsParams defines parameters for GetSystemServiceRegs.
-type GetSystemServiceRegsParams struct {
-	// A comma-separated list of service IDs to return registrations for
-	Ids string `form:"ids" json:"ids"`
 }
 
 // PostSystemServiceRegsJSONBody defines parameters for PostSystemServiceRegs.

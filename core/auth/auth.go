@@ -2294,16 +2294,16 @@ func (a *Auth) storeReg() error {
 	key := authservice.PubKey{KeyPem: pem, Alg: authKeyAlg}
 
 	// Setup "auth" registration for token validation
-	authReg := model.ServiceReg{Registration: authservice.ServiceReg{ServiceID: authServiceID, Host: a.host, PubKey: &key},
-		Name: "ROKWIRE Auth Service", Description: "The Auth Service is a subsystem of the Core Building Block that manages authentication and authorization.", FirstParty: true}
+	authReg := model.ServiceReg{Registration: authservice.ServiceReg{ServiceID: authServiceID, Host: a.host, PubKey: &key}, Name: "ROKWIRE Auth Service",
+		Description: "The Auth Service is a subsystem of the Core Building Block that manages authentication and authorization.", VersionPath: "/version", FirstParty: true}
 	err = a.storage.SaveServiceReg(&authReg, true)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionSave, model.TypeServiceReg, logutils.StringArgs(authServiceID), err)
 	}
 
 	// Setup core registration for signature validation
-	coreReg := model.ServiceReg{Registration: authservice.ServiceReg{ServiceID: a.serviceID, Host: a.host, PubKey: &key},
-		Name: "ROKWIRE Core Building Block", Description: "The Core Building Block manages user, auth, and organization data for the ROKWIRE platform.", FirstParty: true}
+	coreReg := model.ServiceReg{Registration: authservice.ServiceReg{ServiceID: a.serviceID, Host: a.host, PubKey: &key}, Name: "ROKWIRE Core Building Block",
+		Description: "The Core Building Block manages user, auth, and organization data for the ROKWIRE platform.", VersionPath: "/version", FirstParty: true}
 	err = a.storage.SaveServiceReg(&coreReg, true)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionSave, model.TypeServiceReg, logutils.StringArgs(a.serviceID), err)

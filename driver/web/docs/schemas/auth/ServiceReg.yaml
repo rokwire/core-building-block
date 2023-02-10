@@ -3,6 +3,7 @@ required:
   - host
   - name
   - description
+  - version_path
   - first_party
 type: object
 description: Full service registration record
@@ -22,6 +23,8 @@ properties:
   info_url:
     type: string
   logo_url:
+    type: string
+  version_path:
     type: string
   scopes:
     type: array

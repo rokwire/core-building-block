@@ -159,6 +159,8 @@ func (we Adapter) Start() {
 	adminSubrouter.HandleFunc("/account/mfa", we.wrapFunc(we.adminApisHandler.removeMFAType, we.auth.admin.Authenticated)).Methods("DELETE")
 	adminSubrouter.HandleFunc("/account/username", we.wrapFunc(we.adminApisHandler.updateAccountUsername, we.auth.admin.User)).Methods("PUT")
 
+	adminSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.adminApisHandler.getServiceRegistrations, nil)).Methods("GET")
+
 	adminSubrouter.HandleFunc("/app-configs", we.wrapFunc(we.adminApisHandler.getAppConfigs, nil)).Methods("POST") //Requires API key in request
 	adminSubrouter.HandleFunc("/app-configs/organization", we.wrapFunc(we.adminApisHandler.getAppConfigsForOrganization, we.auth.admin.User)).Methods("POST")
 
@@ -260,7 +262,6 @@ func (we Adapter) Start() {
 	systemSubrouter.HandleFunc("/application/configs/{id}", we.wrapFunc(we.systemApisHandler.updateApplicationConfig, we.auth.system.Permissions)).Methods("PUT")
 	systemSubrouter.HandleFunc("/application/configs/{id}", we.wrapFunc(we.systemApisHandler.deleteApplicationConfig, we.auth.system.Permissions)).Methods("DELETE")
 
-	systemSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.systemApisHandler.getServiceRegistrations, we.auth.system.Permissions)).Methods("GET")
 	systemSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.systemApisHandler.registerService, we.auth.system.Permissions)).Methods("POST")
 	systemSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.systemApisHandler.updateServiceRegistration, we.auth.system.Permissions)).Methods("PUT")
 	systemSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.systemApisHandler.deregisterService, we.auth.system.Permissions)).Methods("DELETE")
