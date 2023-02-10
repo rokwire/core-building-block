@@ -108,13 +108,9 @@ func TestAdmCreateConfig(t *testing.T) {
 
 	coreAPIs = buildTestCoreAPIs(&storage2)
 
-	newConfig, err = coreAPIs.Administration.AdmCreateConfig(config, "admin_app_id", "system_org_id", true)
+	_, err = coreAPIs.Administration.AdmCreateConfig(config, "admin_app_id", "system_org_id", true)
 	if err == nil {
 		t.Error("we are expecting error")
-		return
-	}
-	if newConfig == nil || newConfig.ID == "" {
-		t.Error("config must be returned with valid id")
 		return
 	}
 
