@@ -317,7 +317,6 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 			}
 		}
 		if (envData == nil) || (envData.AllowLegacyRefresh != nil && *envData.AllowLegacyRefresh) {
-			// refreshToken = a.hashAndEncodeToken(refreshToken)
 			loginSession, err = a.storage.FindLoginSession(refreshToken)
 			if err != nil {
 				l.Infof("error finding session by refresh token - %s", utils.GetLogValue(refreshToken, 10))

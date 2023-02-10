@@ -356,12 +356,17 @@ func (h AdminApisHandler) createConfig(l *logs.Log, r *http.Request, claims *tok
 	}
 
 	config := configFromDef(requestData, claims.AppID, claims.OrgID)
-	err = h.coreAPIs.Administration.AdmCreateConfig(config, claims.AppID, claims.OrgID, claims.System)
-	if err != nil {
+	newConfig, err := h.coreAPIs.Administration.AdmCreateConfig(config, claims.AppID, claims.OrgID, claims.System)
+	if err != nil || newConfig == nil {
 		return l.HTTPResponseErrorAction(logutils.ActionCreate, model.TypeConfig, nil, err, http.StatusInternalServerError, true)
 	}
 
-	return l.HTTPResponseSuccess()
+	data, err := json.Marshal(configToDef(*newConfig))
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeConfig, nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HTTPResponseSuccessJSON(data)
 }
 
 // updateConfig updates a config by id

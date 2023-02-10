@@ -2001,10 +2001,9 @@ paths:
         '200':
           description: Success
           content:
-            text/plain:
+            application/json:
               schema:
-                type: string
-                example: Success
+                $ref: '#/components/schemas/Config'
         '400':
           description: Bad request
         '401':

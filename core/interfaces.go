@@ -48,7 +48,7 @@ type Administration interface {
 
 	AdmGetConfig(id string, appID string, orgID string, system bool) (*model.Config, error)
 	AdmGetConfigs(configType *string, appID string, orgID string, system bool) ([]model.Config, error)
-	AdmCreateConfig(config model.Config, appID string, orgID string, system bool) error
+	AdmCreateConfig(config model.Config, appID string, orgID string, system bool) (*model.Config, error)
 	AdmUpdateConfig(config model.Config, appID string, orgID string, system bool) error
 	AdmDeleteConfig(id string, appID string, orgID string, system bool) error
 

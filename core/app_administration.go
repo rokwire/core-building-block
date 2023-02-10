@@ -223,19 +223,19 @@ func (app *application) admGetConfigs(configType *string, appID string, orgID st
 	return configs, nil
 }
 
-func (app *application) admCreateConfig(config model.Config, appID string, orgID string, system bool) error {
+func (app *application) admCreateConfig(config model.Config, appID string, orgID string, system bool) (*model.Config, error) {
 	_, err := app.checkConfigAccess(&config, appID, orgID, system)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionValidate, "config access", nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionValidate, "config access", nil, err)
 	}
 
 	config.ID = uuid.NewString()
 	config.DateCreated = time.Now().UTC()
 	err = app.storage.InsertConfig(config)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeConfig, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeConfig, nil, err)
 	}
-	return nil
+	return &config, nil
 }
 
 func (app *application) admUpdateConfig(config model.Config, appID string, orgID string, system bool) error {

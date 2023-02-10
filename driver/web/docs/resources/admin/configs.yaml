@@ -80,10 +80,9 @@ post:
       200:
         description: Success
         content:
-          text/plain:
+          application/json:
             schema:
-              type: string
-              example: Success
+              $ref: "../../schemas/config/Config.yaml"
       400:
         description: Bad request
       401:
