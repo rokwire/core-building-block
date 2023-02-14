@@ -1,7 +1,5 @@
-
 {
     "app_secret": {
-        "ROKWIRE_HEALTH_REWARDS_INTERNAL_API_KEY": "<rewards_api_key>",
         "ROKWIRE_CORE_MONGO_AUTH": "<mongo_url>",
         "ROKWIRE_CORE_AUTH_TWILIO_TOKEN": "",
         "ROKWIRE_CORE_SMTP_PASSWORD": "",
@@ -14,7 +12,6 @@
         "ROKWIRE_CORE_LOG_LEVEL": "",
         "ROKWIRE_CORE_ENVIRONMENT": "<env>",
         "ROKWIRE_CORE_PORT": "",
-        "ROKWIRE_CORE_SERVICE_ID": "core",
         "ROKWIRE_CORE_HOST": "<host>",
         "ROKWIRE_CORE_MONGO_DATABASE": "<core_db>",
         "ROKWIRE_HEALTH_MONGO_TIMEOUT": "",

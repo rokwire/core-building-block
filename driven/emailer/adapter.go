@@ -19,8 +19,8 @@ import (
 
 	"gopkg.in/gomail.v2"
 
-	"github.com/rokwire/logging-library-go/errors"
-	"github.com/rokwire/logging-library-go/logutils"
+	"github.com/rokwire/logging-library-go/v2/errors"
+	"github.com/rokwire/logging-library-go/v2/logutils"
 )
 
 const (
@@ -40,10 +40,10 @@ type Adapter struct {
 // Send is used to send verification and password reset emails using Smtp connection
 func (a *Adapter) Send(toEmail string, subject string, body string, attachmentFilename *string) error {
 	if a.emailDialer == nil {
-		return errors.New("email dialer is nil")
+		return errors.ErrorData(logutils.StatusMissing, "email dialer", nil)
 	}
 	if toEmail == "" {
-		return errors.New("missing email addresses")
+		return errors.ErrorData(logutils.StatusMissing, "email addresses", nil)
 	}
 
 	emails := strings.Split(toEmail, ",")

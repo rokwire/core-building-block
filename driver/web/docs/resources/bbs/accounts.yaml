@@ -51,20 +51,19 @@ post:
         examples:
           single_value:
             summary: Multiple single-value search parameters
-            value: |
-              {
-                "profile.first_name": "Example",
-                "preferences.privacy_level": 4,
-                "external_ids.uin": "123456789"
-              }
+            value:
+              profile.first_name: Example
+              preferences.privacy_level: 4
+              external_ids.uin: "123456789"
           multiple_value:
             summary: Some single-value, some multi-value search parameters
-            value: |
-              {
-                "profile.first_name": "Example",
-                "preferences.privacy_level": [3, 4, 5],
-                "external_ids.uin": "123456789"
-              }
+            value:
+              profile.first_name: Example
+              preferences.privacy_level:
+                - 3
+                - 4
+                - 5
+              external_ids.uin: "123456789"
     required: true
   responses:
     200:
