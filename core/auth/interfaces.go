@@ -22,7 +22,7 @@ import (
 	"github.com/rokwire/core-auth-library-go/v2/authorization"
 	"github.com/rokwire/core-auth-library-go/v2/sigauth"
 	"github.com/rokwire/core-auth-library-go/v2/tokenauth"
-	"github.com/rokwire/logging-library-go/logs"
+	"github.com/rokwire/logging-library-go/v2/logs"
 )
 
 // authType is the interface for authentication for auth types which are not external for the system(the users do not come from external system)
@@ -360,7 +360,7 @@ type APIs interface {
 	//		Access token (string): Signed scoped access token to be used to authorize requests to the specified service
 	//		Approved Scopes ([]authorization.Scope): The approved scopes included in the provided token
 	//		Service reg (*model.ServiceReg): The service registration record for the requested service
-	AuthorizeService(claims tokenauth.Claims, serviceID string, approvedScopes []authorization.Scope, l *logs.Log) (string, []authorization.Scope, *model.ServiceReg, error)
+	AuthorizeService(claims tokenauth.Claims, serviceID string, approvedScopes []authorization.Scope, l *logs.Log) (string, []authorization.Scope, *model.ServiceRegistration, error)
 
 	//LinkAccountAuthType links new credentials to an existing account.
 	//The authentication method must be one of the supported for the application.
@@ -419,13 +419,13 @@ type APIs interface {
 	GetAuthKeySet() (*model.JSONWebKeySet, error)
 
 	//GetServiceRegistrations retrieves all service registrations
-	GetServiceRegistrations(serviceIDs []string) []model.ServiceReg
+	GetServiceRegistrations(serviceIDs []string) []model.ServiceRegistration
 
 	//RegisterService creates a new service registration
-	RegisterService(reg *model.ServiceReg) error
+	RegisterService(reg *model.ServiceRegistration) error
 
 	//UpdateServiceRegistration updates an existing service registration
-	UpdateServiceRegistration(reg *model.ServiceReg) error
+	UpdateServiceRegistration(reg *model.ServiceRegistration) error
 
 	//DeregisterService deletes an existing service registration
 	DeregisterService(serviceID string) error
@@ -530,12 +530,13 @@ type Storage interface {
 	DeleteMFAType(context storage.TransactionContext, accountID string, identifier string, mfaType string) error
 
 	//ServiceRegs
-	FindServiceRegs(serviceIDs []string) []model.ServiceReg
-	FindServiceReg(serviceID string) (*model.ServiceReg, error)
-	InsertServiceReg(reg *model.ServiceReg) error
-	UpdateServiceReg(reg *model.ServiceReg) error
-	SaveServiceReg(reg *model.ServiceReg) error
+	FindServiceRegs(serviceIDs []string) []model.ServiceRegistration
+	FindServiceReg(serviceID string) (*model.ServiceRegistration, error)
+	InsertServiceReg(reg *model.ServiceRegistration) error
+	UpdateServiceReg(reg *model.ServiceRegistration) error
+	SaveServiceReg(reg *model.ServiceRegistration, immediateCache bool) error
 	DeleteServiceReg(serviceID string) error
+	MigrateServiceRegs() error
 
 	//IdentityProviders
 	LoadIdentityProviders() ([]model.IdentityProvider, error)

@@ -13,7 +13,7 @@ post:
     content:
       application/json:
         schema:
-          $ref: "../../schemas/apis/system/permissions/request/Request.yaml"
+          $ref: "../../schemas/application/Permission.yaml"
     required: true
   responses:
     200:
@@ -44,7 +44,7 @@ put:
     content:
       application/json:
         schema:
-          $ref: "../../schemas/apis/system/permissions/request/Request.yaml"
+          $ref: "../../schemas/application/Permission.yaml"
     required: true
   responses:
     200:

@@ -22,11 +22,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/rokwire/logging-library-go/errors"
+	"github.com/rokwire/logging-library-go/v2/errors"
 
 	"github.com/rokwire/core-auth-library-go/v2/authorization"
 	"github.com/rokwire/core-auth-library-go/v2/authservice"
-	"github.com/rokwire/logging-library-go/logutils"
+	"github.com/rokwire/logging-library-go/v2/logutils"
 )
 
 const (
@@ -303,9 +303,10 @@ type AuthRefresh struct {
 	DateUpdated *time.Time `bson:"date_updated"`
 }
 
-// ServiceReg represents a service registration entity
-type ServiceReg struct {
+// ServiceRegistration represents a service registration entity
+type ServiceRegistration struct {
 	Registration authservice.ServiceReg `json:"registration" bson:"registration"`
+	CoreHost     string                 `json:"core_host" bson:"core_host"`
 	Name         string                 `json:"name" bson:"name"`
 	Description  string                 `json:"description" bson:"description"`
 	InfoURL      string                 `json:"info_url" bson:"info_url"`

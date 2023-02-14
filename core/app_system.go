@@ -20,8 +20,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/rokwire/logging-library-go/errors"
-	"github.com/rokwire/logging-library-go/logutils"
+	"github.com/rokwire/logging-library-go/v2/errors"
+	"github.com/rokwire/logging-library-go/v2/logutils"
 )
 
 func (app *application) sysCreateGlobalConfig(setting string) (*model.GlobalConfig, error) {
@@ -30,7 +30,7 @@ func (app *application) sysCreateGlobalConfig(setting string) (*model.GlobalConf
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeGlobalConfig, nil, err)
 	}
 	if gc != nil {
-		return nil, errors.New("global config already exists")
+		return nil, errors.ErrorData("existing", model.TypeGlobalConfig, nil)
 	}
 
 	gc = &model.GlobalConfig{Setting: setting}
@@ -124,11 +124,8 @@ func (app *application) sysUpdateApplicationOrganization(appOrg model.Applicatio
 func (app *application) sysCreateOrganization(name string, requestType string, organizationDomains []string) (*model.Organization, error) {
 	now := time.Now()
 
-	orgConfigID, _ := uuid.NewUUID()
-	orgConfig := model.OrganizationConfig{ID: orgConfigID.String(), Domains: organizationDomains, DateCreated: now}
-
-	organizationID, _ := uuid.NewUUID()
-	organization := model.Organization{ID: organizationID.String(), Name: name, Type: requestType, Config: orgConfig, DateCreated: now}
+	orgConfig := model.OrganizationConfig{ID: uuid.NewString(), Domains: organizationDomains, DateCreated: now}
+	organization := model.Organization{ID: uuid.NewString(), Name: name, Type: requestType, Config: orgConfig, DateCreated: now}
 
 	insertedOrg, err := app.storage.InsertOrganization(nil, organization)
 	if err != nil {
@@ -334,6 +331,9 @@ func (app *application) sysGetAppConfigs(appTypeID string, orgID *string, versio
 		appOrg, err := app.storage.FindApplicationOrganization(appID, *orgID)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": appID, "org_id": *orgID}, err)
+		}
+		if appOrg == nil {
+			return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": appID, "org_id": *orgID})
 		}
 		appOrgID = &appOrg.ID
 	}

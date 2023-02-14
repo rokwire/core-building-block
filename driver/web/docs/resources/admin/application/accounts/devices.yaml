@@ -25,7 +25,7 @@ get:
           schema:
             type: array
             items:
-              $ref: "../../../../schemas/user/DeviceFields.yaml"
+              $ref: "../../../../schemas/user/Device.yaml"
     400:
       description: Bad request
     401:

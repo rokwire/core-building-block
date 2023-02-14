@@ -14,7 +14,7 @@ get:
       content:
         application/json:
           schema:
-            $ref: "../../../schemas/user/ProfileFields.yaml"
+            $ref: "../../../schemas/user/Profile.yaml"
     400:
       description: Bad request
     401:
@@ -36,7 +36,7 @@ put:
     content:
       application/json:
         schema:
-          $ref: "../../../schemas/apis/shared/requests/Profile.yaml"
+          $ref: "../../../schemas/user/Profile.yaml"
     required: true
   responses:
     200:

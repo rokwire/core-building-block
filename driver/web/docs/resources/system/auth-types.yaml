@@ -16,7 +16,7 @@
             schema:
               type: array
               items:
-                $ref: "../../schemas/auth/AuthTypeFields.yaml"
+                $ref: "../../schemas/auth/AuthType.yaml"
       400:
         description: Bad request
       401:
@@ -38,7 +38,7 @@
     content:
       application/json:
         schema:
-         $ref: "../../schemas/apis/system/auth-types/request/Request.yaml"
+         $ref: "../../schemas/auth/AuthType.yaml"
     required: true
   responses:
     200:
