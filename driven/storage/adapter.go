@@ -42,6 +42,7 @@ type Adapter struct {
 	db *database
 
 	context mongo.SessionContext
+	host    string
 
 	logger *logs.Logger
 
@@ -167,24 +168,21 @@ func (sa *Adapter) cacheServiceRegs() error {
 	return nil
 }
 
-func (sa *Adapter) setCachedServiceRegs(serviceRegs *[]model.ServiceReg) {
+func (sa *Adapter) setCachedServiceRegs(serviceRegs *[]model.ServiceRegistration) {
 	sa.serviceRegsLock.Lock()
 	defer sa.serviceRegsLock.Unlock()
 
 	sa.cachedServiceRegs = &syncmap.Map{}
-	validate := validator.New()
-
 	for _, serviceReg := range *serviceRegs {
-		err := validate.Struct(serviceReg)
-		if err == nil {
-			sa.cachedServiceRegs.Store(serviceReg.Registration.ServiceID, serviceReg)
-		} else {
-			sa.logger.Errorf("failed to validate and cache service registration with registration.service_id %s: %s", serviceReg.Registration.ServiceID, err.Error())
-		}
+		sa.cacheServiceReg(serviceReg)
 	}
 }
 
-func (sa *Adapter) getCachedServiceReg(serviceID string) (*model.ServiceReg, error) {
+func (sa *Adapter) cacheServiceReg(reg model.ServiceRegistration) {
+	sa.cachedServiceRegs.Store(reg.Registration.ServiceID, reg)
+}
+
+func (sa *Adapter) getCachedServiceReg(serviceID string) (*model.ServiceRegistration, error) {
 	sa.serviceRegsLock.RLock()
 	defer sa.serviceRegsLock.RUnlock()
 
@@ -192,7 +190,7 @@ func (sa *Adapter) getCachedServiceReg(serviceID string) (*model.ServiceReg, err
 
 	item, _ := sa.cachedServiceRegs.Load(serviceID)
 	if item != nil {
-		serviceReg, ok := item.(model.ServiceReg)
+		serviceReg, ok := item.(model.ServiceRegistration)
 		if !ok {
 			return nil, errors.ErrorAction(logutils.ActionCast, model.TypeServiceReg, errArgs)
 		}
@@ -201,11 +199,11 @@ func (sa *Adapter) getCachedServiceReg(serviceID string) (*model.ServiceReg, err
 	return nil, nil
 }
 
-func (sa *Adapter) getCachedServiceRegs(serviceIDs []string) []model.ServiceReg {
+func (sa *Adapter) getCachedServiceRegs(serviceIDs []string) []model.ServiceRegistration {
 	sa.serviceRegsLock.RLock()
 	defer sa.serviceRegsLock.RUnlock()
 
-	serviceRegList := make([]model.ServiceReg, 0)
+	serviceRegList := make([]model.ServiceRegistration, 0)
 	if !utils.Contains(serviceIDs, "all") {
 		for _, serviceID := range serviceIDs {
 			item, _ := sa.cachedServiceRegs.Load(serviceID)
@@ -227,14 +225,14 @@ func (sa *Adapter) getCachedServiceRegs(serviceIDs []string) []model.ServiceReg 
 	return serviceRegList
 }
 
-func (sa *Adapter) processCachedServiceReg(key, item interface{}) *model.ServiceReg {
+func (sa *Adapter) processCachedServiceReg(key, item interface{}) *model.ServiceRegistration {
 	errArgs := &logutils.FieldArgs{"registration.service_id": key}
 	if item == nil {
 		sa.logger.Warn(errors.ErrorData(logutils.StatusInvalid, model.TypeServiceReg, errArgs).Error())
 		return nil
 	}
 
-	serviceReg, ok := item.(model.ServiceReg)
+	serviceReg, ok := item.(model.ServiceRegistration)
 	if !ok {
 		sa.logger.Warn(errors.ErrorAction(logutils.ActionCast, model.TypeServiceReg, errArgs).Error())
 		return nil
@@ -715,9 +713,6 @@ func (sa *Adapter) loadAuthTypes() ([]model.AuthType, error) {
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthType, nil, err)
 	}
-	if len(result) == 0 {
-		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeAuthType, nil, err)
-	}
 
 	return result, nil
 }
@@ -986,7 +981,7 @@ func (sa *Adapter) deleteLoginSessions(key string, value string, checkDeletedCou
 		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, &logutils.FieldArgs{key: value}, err)
 	}
 	if checkDeletedCount && res.DeletedCount < 1 {
-		return errors.ErrorAction(logutils.ActionDelete, model.TypeLoginSession, logutils.StringArgs("unexpected deleted count"))
+		return errors.ErrorAction(logutils.ActionDelete, model.TypeLoginSession, &logutils.FieldArgs{key: value, "deleted": res.DeletedCount})
 	}
 	return nil
 }
@@ -1655,10 +1650,10 @@ func (sa *Adapter) InsertAccountPermissions(accountID string, permissions []mode
 
 	res, err := sa.db.accounts.UpdateOneWithContext(sa.context, filter, update, nil)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, nil, err)
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"id": accountID}, err)
 	}
 	if res.ModifiedCount != 1 {
-		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"id": accountID, "modified": res.ModifiedCount, "expected": 1})
 	}
 
 	return nil
@@ -1702,10 +1697,10 @@ func (sa *Adapter) DeleteAccountPermissions(accountID string, permissionNames []
 
 	res, err := sa.db.accounts.UpdateOneWithContext(sa.context, filter, update, nil)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, nil, err)
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"id": accountID}, err)
 	}
 	if res.ModifiedCount != 1 {
-		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"id": accountID, "modified": res.ModifiedCount, "expected": 1})
 	}
 	return nil
 }
@@ -1748,10 +1743,10 @@ func (sa *Adapter) InsertAccountRoles(accountID string, appOrgID string, roles [
 
 	res, err := sa.db.accounts.UpdateOneWithContext(sa.context, filter, update, nil)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, nil, err)
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"id": accountID}, err)
 	}
 	if res.ModifiedCount != 1 {
-		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"id": accountID, "modified": res.ModifiedCount, "expected": 1})
 	}
 
 	return nil
@@ -1856,7 +1851,7 @@ func (sa *Adapter) UpdateAccountRoles(accountID string, roles []model.AccountRol
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"id": accountID}, err)
 	}
 	if res.ModifiedCount != 1 {
-		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"id": accountID, "modified": res.ModifiedCount, "expected": 1})
 	}
 
 	return nil
@@ -1882,7 +1877,7 @@ func (sa *Adapter) DeleteAccountRoles(accountID string, roleIDs []string) error 
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"id": accountID}, err)
 	}
 	if res.ModifiedCount != 1 {
-		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"id": accountID, "modified": res.ModifiedCount, "expected": 1})
 	}
 	return nil
 }
@@ -2409,7 +2404,7 @@ func (sa *Adapter) FindAppOrgRolesByIDs(ids []string, appOrgID string) ([]model.
 func (sa *Adapter) FindAppOrgRole(id string, appOrgID string) (*model.AppOrgRole, error) {
 	filter := bson.D{primitive.E{Key: "_id", Value: id}, primitive.E{Key: "app_org_id", Value: appOrgID}}
 	var rolesResult []appOrgRole
-	err := sa.db.applicationsOrganizationsRoles.Find(filter, &rolesResult, nil)
+	err := sa.db.applicationsOrganizationsRoles.FindWithContext(sa.context, filter, &rolesResult, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -2434,16 +2429,8 @@ func (sa *Adapter) FindAppOrgRole(id string, appOrgID string) (*model.AppOrgRole
 
 // InsertAppOrgRole inserts a new application organization role
 func (sa *Adapter) InsertAppOrgRole(item model.AppOrgRole) error {
-	appOrg, err := sa.getCachedApplicationOrganizationByKey(item.AppOrg.ID)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_org_id": item.AppOrg.ID}, err)
-	}
-	if appOrg == nil {
-		return errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_org_id": item.AppOrg.ID})
-	}
-
 	role := appOrgRoleToStorage(item)
-	_, err = sa.db.applicationsOrganizationsRoles.InsertOneWithContext(sa.context, role)
+	_, err := sa.db.applicationsOrganizationsRoles.InsertOneWithContext(sa.context, role)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAppOrgRole, nil, err)
 	}
@@ -2452,10 +2439,71 @@ func (sa *Adapter) InsertAppOrgRole(item model.AppOrgRole) error {
 
 // UpdateAppOrgRole updates application organization role
 func (sa *Adapter) UpdateAppOrgRole(item model.AppOrgRole) error {
-	//TODO
-	//This will be slow operation as we keep a copy of the entity in the users collection without index.
-	//Maybe we need to up the transaction timeout for this operation because of this.
-	return errors.New(logutils.Unimplemented)
+	if sa.context == nil {
+		transaction := func(storage interfaces.Storage) error {
+			return storage.UpdateAppOrgRole(item)
+		}
+		return sa.PerformTransaction(transaction)
+	}
+
+	return sa.updateAppOrgRole(item)
+}
+
+func (sa *Adapter) updateAppOrgRole(item model.AppOrgRole) error {
+	// update role
+	roleFilter := bson.D{primitive.E{Key: "_id", Value: item.ID}}
+	roleUpdate := bson.D{
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "name", Value: item.Name},
+			primitive.E{Key: "description", Value: item.Description},
+			primitive.E{Key: "permissions", Value: item.Permissions},
+			primitive.E{Key: "system", Value: item.System},
+			primitive.E{Key: "date_updated", Value: item.DateUpdated},
+		}},
+	}
+
+	res, err := sa.db.applicationsOrganizationsRoles.UpdateOneWithContext(sa.context, roleFilter, roleUpdate, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAppOrgRole, &logutils.FieldArgs{"id": item.ID}, err)
+	}
+	if res.ModifiedCount != 1 {
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAppOrgRole, &logutils.FieldArgs{"id": item.ID, "modified": res.ModifiedCount, "expected": 1})
+	}
+
+	// update all groups that have the role in all collections
+	key := "roles._id"
+	groups, err := sa.findAppOrgGroups(&key, item.ID, item.AppOrg.ID)
+	for _, g := range groups {
+		for ridx, r := range g.Roles {
+			if r.ID == item.ID {
+				g.Roles[ridx] = item
+				err = sa.UpdateAppOrgGroup(g)
+				break
+			}
+		}
+	}
+
+	// update all accounts that have the role
+	accountsFilter := bson.D{primitive.E{Key: "roles.role._id", Value: item.ID}}
+	accountsUpdate := bson.D{
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "roles.$.role.name", Value: item.Name},
+			primitive.E{Key: "roles.$.role.description", Value: item.Description},
+			primitive.E{Key: "roles.$.role.permissions", Value: item.Permissions},
+			primitive.E{Key: "roles.$.role.system", Value: item.System},
+			primitive.E{Key: "roles.$.role.date_updated", Value: item.DateUpdated},
+		}},
+	}
+
+	res, err = sa.db.accounts.UpdateManyWithContext(sa.context, accountsFilter, accountsUpdate, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"roles.role._id": item.ID}, err)
+	}
+	if res.ModifiedCount != res.MatchedCount {
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"roles.role._id": item.ID, "modified": res.ModifiedCount, "expected": res.MatchedCount})
+	}
+
+	return nil
 }
 
 // DeleteAppOrgRole deletes application organization role
@@ -2500,24 +2548,7 @@ func (sa *Adapter) InsertAppOrgRolePermissions(roleID string, permissions []mode
 
 // FindAppOrgGroups finds all application organization groups for the provided AppOrg ID
 func (sa *Adapter) FindAppOrgGroups(appOrgID string) ([]model.AppOrgGroup, error) {
-	filter := bson.D{primitive.E{Key: "app_org_id", Value: appOrgID}}
-	var groupsResult []appOrgGroup
-	err := sa.db.applicationsOrganizationsGroups.Find(filter, &groupsResult, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	appOrg, err := sa.getCachedApplicationOrganizationByKey(appOrgID)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_org_id": appOrgID}, err)
-	}
-	if appOrg == nil {
-		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_org_id": appOrgID})
-	}
-
-	result := appOrgGroupsFromStorage(groupsResult, *appOrg)
-
-	return result, nil
+	return sa.findAppOrgGroups(nil, "", appOrgID)
 }
 
 // FindAppOrgGroupsByIDs finds a set of application organization groups for the provided IDs
@@ -2573,6 +2604,27 @@ func (sa *Adapter) FindAppOrgGroup(id string, appOrgID string) (*model.AppOrgGro
 	return &result, nil
 }
 
+func (sa *Adapter) findAppOrgGroups(key *string, id string, appOrgID string) ([]model.AppOrgGroup, error) {
+	filter := bson.D{primitive.E{Key: "app_org_id", Value: appOrgID}}
+	if key != nil {
+		filter = append(filter, primitive.E{Key: *key, Value: id})
+	}
+	var groupsResult []appOrgGroup
+	err := sa.db.applicationsOrganizationsGroups.FindWithContext(sa.context, filter, &groupsResult, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	appOrg, err := sa.getCachedApplicationOrganizationByKey(appOrgID)
+	if err != nil {
+		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeOrganization, &logutils.FieldArgs{"app_org_id": appOrg}, err)
+	}
+
+	result := appOrgGroupsFromStorage(groupsResult, *appOrg)
+
+	return result, nil
+}
+
 // InsertAppOrgGroup inserts a new application organization group
 func (sa *Adapter) InsertAppOrgGroup(item model.AppOrgGroup) error {
 	group := appOrgGroupToStorage(item)
@@ -2587,9 +2639,16 @@ func (sa *Adapter) InsertAppOrgGroup(item model.AppOrgGroup) error {
 // UpdateAppOrgGroup updates application organization group
 func (sa *Adapter) UpdateAppOrgGroup(item model.AppOrgGroup) error {
 	if sa.context == nil {
-		return errors.ErrorData(logutils.StatusMissing, "transaction context", nil)
+		transaction := func(storage interfaces.Storage) error {
+			return storage.UpdateAppOrgGroup(item)
+		}
+		return sa.PerformTransaction(transaction)
 	}
 
+	return sa.updateAppOrgGroup(item)
+}
+
+func (sa *Adapter) updateAppOrgGroup(item model.AppOrgGroup) error {
 	roles := appOrgRolesToStorage(item.Roles)
 
 	// update group
@@ -3342,60 +3401,109 @@ func (sa *Adapter) UpdateAuthTypes(ID string, code string, description string, i
 
 // ============================== ServiceRegs ==============================
 
+// MigrateServiceRegs migrates all service registrations from the service_regs collection to the service_registrations collection
+// TODO: Remove this once all necessary migrations are complete
+func (sa *Adapter) MigrateServiceRegs() error {
+	transaction := func(storage interfaces.Storage) error {
+		filter := bson.M{"core_host": sa.host}
+		count, err := sa.db.serviceRegistrations.CountDocumentsWithContext(sa.context, filter)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceReg, &logutils.FieldArgs{"core_host": sa.host, "service_id": "all"}, err)
+		}
+
+		if count > 0 {
+			return nil
+		}
+
+		filter = bson.M{}
+		var results []model.ServiceRegistration
+		err = sa.db.serviceRegs.FindWithContext(sa.context, filter, &results, nil)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceReg, &logutils.FieldArgs{"service_id": "all"}, err)
+		}
+
+		if results != nil {
+			var registrations []interface{}
+			for _, res := range results {
+				res.CoreHost = sa.host
+				registrations = append(registrations, res)
+			}
+
+			_, err := sa.db.serviceRegistrations.InsertManyWithContext(sa.context, registrations, nil)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionInsert, model.TypeServiceReg, nil, err)
+			}
+		}
+		return nil
+	}
+	return sa.PerformTransaction(transaction)
+}
+
 // loadServiceRegs fetches all service registration records
-func (sa *Adapter) loadServiceRegs() ([]model.ServiceReg, error) {
-	filter := bson.M{}
-	var result []model.ServiceReg
-	err := sa.db.serviceRegs.Find(filter, &result, nil)
+func (sa *Adapter) loadServiceRegs() ([]model.ServiceRegistration, error) {
+	filter := bson.M{"core_host": sa.host}
+	var result []model.ServiceRegistration
+	err := sa.db.serviceRegistrations.Find(filter, &result, nil)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceReg, &logutils.FieldArgs{"service_id": "all"}, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceReg, &logutils.FieldArgs{"core_host": sa.host, "service_id": "all"}, err)
 	}
 
 	if result == nil {
-		result = []model.ServiceReg{}
+		result = []model.ServiceRegistration{}
 	}
 
 	return result, nil
 }
 
 // FindServiceRegs fetches the requested service registration records
-func (sa *Adapter) FindServiceRegs(serviceIDs []string) []model.ServiceReg {
+func (sa *Adapter) FindServiceRegs(serviceIDs []string) []model.ServiceRegistration {
 	return sa.getCachedServiceRegs(serviceIDs)
 }
 
 // FindServiceReg finds the service registration in storage
-func (sa *Adapter) FindServiceReg(serviceID string) (*model.ServiceReg, error) {
+func (sa *Adapter) FindServiceReg(serviceID string) (*model.ServiceRegistration, error) {
 	return sa.getCachedServiceReg(serviceID)
 }
 
 // InsertServiceReg inserts the service registration to storage
-func (sa *Adapter) InsertServiceReg(reg *model.ServiceReg) error {
-	_, err := sa.db.serviceRegs.InsertOne(reg)
+func (sa *Adapter) InsertServiceReg(reg *model.ServiceRegistration) error {
+	reg.CoreHost = sa.host
+	_, err := sa.db.serviceRegistrations.InsertOne(reg)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeServiceReg, &logutils.FieldArgs{"service_id": reg.Registration.ServiceID}, err)
+		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeServiceReg, &logutils.FieldArgs{"core_host": sa.host, "service_id": reg.Registration.ServiceID}, err)
 	}
 
 	return nil
 }
 
 // UpdateServiceReg updates the service registration in storage
-func (sa *Adapter) UpdateServiceReg(reg *model.ServiceReg) error {
-	filter := bson.M{"registration.service_id": reg.Registration.ServiceID}
-	err := sa.db.serviceRegs.ReplaceOne(filter, reg, nil)
+func (sa *Adapter) UpdateServiceReg(reg *model.ServiceRegistration) error {
+	reg.CoreHost = sa.host
+	filter := bson.M{"core_host": reg.CoreHost, "registration.service_id": reg.Registration.ServiceID}
+	err := sa.db.serviceRegistrations.ReplaceOne(filter, reg, nil)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeServiceReg, &logutils.FieldArgs{"service_id": reg.Registration.ServiceID}, err)
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeServiceReg, &logutils.FieldArgs{"core_host": reg.CoreHost, "service_id": reg.Registration.ServiceID}, err)
 	}
 
 	return nil
 }
 
 // SaveServiceReg saves the service registration to the storage
-func (sa *Adapter) SaveServiceReg(reg *model.ServiceReg) error {
-	filter := bson.M{"registration.service_id": reg.Registration.ServiceID}
+func (sa *Adapter) SaveServiceReg(reg *model.ServiceRegistration, immediateCache bool) error {
+	if reg == nil {
+		return nil
+	}
+
+	reg.CoreHost = sa.host
+	filter := bson.M{"core_host": reg.CoreHost, "registration.service_id": reg.Registration.ServiceID}
 	opts := options.Replace().SetUpsert(true)
-	err := sa.db.serviceRegs.ReplaceOne(filter, reg, opts)
+	err := sa.db.serviceRegistrations.ReplaceOne(filter, reg, opts)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionSave, model.TypeServiceReg, &logutils.FieldArgs{"service_id": reg.Registration.ServiceID}, err)
+		return errors.WrapErrorAction(logutils.ActionSave, model.TypeServiceReg, &logutils.FieldArgs{"core_host": reg.CoreHost, "service_id": reg.Registration.ServiceID}, err)
+	}
+
+	if immediateCache {
+		sa.cacheServiceReg(*reg)
 	}
 
 	return nil
@@ -3403,17 +3511,17 @@ func (sa *Adapter) SaveServiceReg(reg *model.ServiceReg) error {
 
 // DeleteServiceReg deletes the service registration from storage
 func (sa *Adapter) DeleteServiceReg(serviceID string) error {
-	filter := bson.M{"registration.service_id": serviceID}
-	result, err := sa.db.serviceRegs.DeleteOne(filter, nil)
+	filter := bson.M{"core_host": sa.host, "registration.service_id": serviceID}
+	result, err := sa.db.serviceRegistrations.DeleteOne(filter, nil)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeServiceReg, &logutils.FieldArgs{"service_id": serviceID}, err)
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeServiceReg, &logutils.FieldArgs{"core_host": sa.host, "service_id": serviceID}, err)
 	}
 	if result == nil {
-		return errors.WrapErrorData(logutils.StatusInvalid, "delete result", &logutils.FieldArgs{"service_id": serviceID}, err)
+		return errors.WrapErrorData(logutils.StatusInvalid, "delete result", &logutils.FieldArgs{"core_host": sa.host, "service_id": serviceID}, err)
 	}
 	deletedCount := result.DeletedCount
 	if deletedCount == 0 {
-		return errors.WrapErrorData(logutils.StatusMissing, model.TypeServiceReg, &logutils.FieldArgs{"service_id": serviceID}, err)
+		return errors.WrapErrorData(logutils.StatusMissing, model.TypeServiceReg, &logutils.FieldArgs{"core_host": sa.host, "service_id": serviceID}, err)
 	}
 
 	return nil
@@ -3578,7 +3686,7 @@ func (sa *Adapter) withContext(context mongo.SessionContext) *Adapter {
 }
 
 // NewStorageAdapter creates a new storage adapter instance
-func NewStorageAdapter(mongoDBAuth string, mongoDBName string, mongoTimeout string, logger *logs.Logger) *Adapter {
+func NewStorageAdapter(host string, mongoDBAuth string, mongoDBName string, mongoTimeout string, logger *logs.Logger) *Adapter {
 	timeoutInt, err := strconv.Atoi(mongoTimeout)
 	if err != nil {
 		logger.Warn("Setting default Mongo timeout - 500")
@@ -3605,7 +3713,7 @@ func NewStorageAdapter(mongoDBAuth string, mongoDBName string, mongoTimeout stri
 	applicationConfigsLock := &sync.RWMutex{}
 
 	db := &database{mongoDBAuth: mongoDBAuth, mongoDBName: mongoDBName, mongoTimeout: timeout, logger: logger}
-	return &Adapter{db: db, logger: logger, cachedServiceRegs: cachedServiceRegs, serviceRegsLock: serviceRegsLock,
+	return &Adapter{db: db, logger: logger, host: host, cachedServiceRegs: cachedServiceRegs, serviceRegsLock: serviceRegsLock,
 		cachedOrganizations: cachedOrganizations, organizationsLock: organizationsLock,
 		cachedApplications: cachedApplications, applicationsLock: applicationsLock,
 		cachedAuthTypes: cachedAuthTypes, authTypesLock: authTypesLock,
@@ -3621,7 +3729,7 @@ func (sl *storageListener) OnAuthTypesUpdated() {
 	sl.adapter.cacheAuthTypes()
 }
 
-func (sl *storageListener) OnServiceRegsUpdated() {
+func (sl *storageListener) OnServiceRegistrationsUpdated() {
 	sl.adapter.cacheServiceRegs()
 }
 

@@ -138,7 +138,7 @@ func (c *APIs) storeSystemData() error {
 
 			newDocuments["application_organization"] = uuid.NewString()
 			newSystemAdminAppOrg := model.ApplicationOrganization{ID: newDocuments["application_organization"], Application: *systemAdminApp, Organization: *systemOrg,
-				SupportedAuthTypes: supportedAuthTypes, DateCreated: time.Now().UTC()}
+				SupportedAuthTypes: supportedAuthTypes, ServicesIDs: []string{model.ServiceIDCore}, DateCreated: time.Now().UTC()}
 			_, err = storage.InsertApplicationOrganization(newSystemAdminAppOrg)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionSave, model.TypeApplicationOrganization, nil, err)
@@ -189,7 +189,7 @@ func (c *APIs) storeSystemData() error {
 					}
 				}
 				if !found {
-					newPermission := model.Permission{ID: uuid.NewString(), Name: name, Description: desc, ServiceID: "core",
+					newPermission := model.Permission{ID: uuid.NewString(), Name: name, Description: desc, ServiceID: model.ServiceIDCore,
 						Assigners: []string{model.PermissionAllSystemCore}, DateCreated: time.Now().UTC()}
 					insert = append(insert, newPermission)
 				}
@@ -339,6 +339,10 @@ func (s *administrationImpl) AdmGetTestModel() string {
 	return s.app.admGetTestModel()
 }
 
+func (s *administrationImpl) AdmGetAppConfig(appTypeIdentifier string, orgID *string, versionNumbers model.VersionNumbers, apiKey *string) (*model.ApplicationConfig, error) {
+	return s.app.adminGetAppConfig(appTypeIdentifier, orgID, versionNumbers, apiKey)
+}
+
 func (s *administrationImpl) AdmGetApplications(orgID string) ([]model.Application, error) {
 	return s.app.admGetApplications(orgID)
 }
@@ -367,8 +371,8 @@ func (s *administrationImpl) AdmRemoveAccountsFromGroup(appID string, orgID stri
 	return s.app.admRemoveAccountsFromGroup(appID, orgID, groupID, accountIDs, assignerPermissions, l)
 }
 
-func (s *administrationImpl) AdmCreateAppOrgRole(name string, description string, permissionNames []string, appID string, orgID string, assignerPermissions []string, system bool, l *logs.Log) (*model.AppOrgRole, error) {
-	return s.app.admCreateAppOrgRole(name, description, permissionNames, appID, orgID, assignerPermissions, system, l)
+func (s *administrationImpl) AdmCreateAppOrgRole(name string, description string, system bool, permissionNames []string, appID string, orgID string, assignerPermissions []string, systemClaim bool, l *logs.Log) (*model.AppOrgRole, error) {
+	return s.app.admCreateAppOrgRole(name, description, system, permissionNames, appID, orgID, assignerPermissions, systemClaim, l)
 }
 
 func (s *administrationImpl) AdmGetAppOrgRoles(appID string, orgID string) ([]model.AppOrgRole, error) {
@@ -377,6 +381,10 @@ func (s *administrationImpl) AdmGetAppOrgRoles(appID string, orgID string) ([]mo
 
 func (s *administrationImpl) AdmDeleteAppOrgRole(ID string, appID string, orgID string, assignerPermissions []string, system bool, l *logs.Log) error {
 	return s.app.admDeleteAppOrgRole(ID, appID, orgID, assignerPermissions, system, l)
+}
+
+func (s *administrationImpl) AdmUpdateAppOrgRole(ID string, name string, description string, system bool, permissionNames []string, appID string, orgID string, assignerPermissions []string, systemClaim bool, l *logs.Log) (*model.AppOrgRole, error) {
+	return s.app.admUpdateAppOrgRole(ID, name, description, system, permissionNames, appID, orgID, assignerPermissions, systemClaim, l)
 }
 
 func (s *administrationImpl) AdmGrantPermissionsToRole(appID string, orgID string, roleID string, permissionNames []string, assignerPermissions []string, system bool, l *logs.Log) error {

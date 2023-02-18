@@ -130,9 +130,15 @@ func (we Adapter) Start() {
 	servicesSubRouter.HandleFunc("/account/profile", we.wrapFunc(we.servicesApisHandler.updateProfile, we.auth.services.User)).Methods("PUT")
 	servicesSubRouter.HandleFunc("/account/system-configs", we.wrapFunc(we.servicesApisHandler.getAccountSystemConfigs, we.auth.services.Standard)).Methods("GET")
 	servicesSubRouter.HandleFunc("/account/username", we.wrapFunc(we.servicesApisHandler.updateAccountUsername, we.auth.services.User)).Methods("PUT")
-	servicesSubRouter.HandleFunc("/test", we.wrapFunc(we.servicesApisHandler.getTest, nil)).Methods("GET")                               //Public
+	servicesSubRouter.HandleFunc("/test", we.wrapFunc(we.servicesApisHandler.getTest, nil)).Methods("GET")                       //Public
+	servicesSubRouter.HandleFunc("/app-configs", we.wrapFunc(we.servicesApisHandler.getApplicationConfigs, nil)).Methods("POST") //Requires API key in request
+	servicesSubRouter.HandleFunc("/app-configs/organization", we.wrapFunc(we.servicesApisHandler.getApplicationOrgConfigs, we.auth.services.Standard)).Methods("POST")
+
+	// DEPRECATED
 	servicesSubRouter.HandleFunc("/application/configs", we.wrapFunc(we.servicesApisHandler.getApplicationConfigs, nil)).Methods("POST") //Requires API key in request
 	servicesSubRouter.HandleFunc("/application/organization/configs", we.wrapFunc(we.servicesApisHandler.getApplicationOrgConfigs, we.auth.services.Standard)).Methods("POST")
+	///
+
 	///
 
 	///admin ///
@@ -153,6 +159,9 @@ func (we Adapter) Start() {
 	adminSubrouter.HandleFunc("/account/mfa", we.wrapFunc(we.adminApisHandler.removeMFAType, we.auth.admin.Authenticated)).Methods("DELETE")
 	adminSubrouter.HandleFunc("/account/username", we.wrapFunc(we.adminApisHandler.updateAccountUsername, we.auth.admin.User)).Methods("PUT")
 
+	adminSubrouter.HandleFunc("/app-configs", we.wrapFunc(we.adminApisHandler.getAppConfigs, nil)).Methods("POST") //Requires API key in request
+	adminSubrouter.HandleFunc("/app-configs/organization", we.wrapFunc(we.adminApisHandler.getAppConfigsForOrganization, we.auth.admin.User)).Methods("POST")
+
 	adminSubrouter.HandleFunc("/organization/applications", we.wrapFunc(we.adminApisHandler.getApplications, we.auth.admin.User)).Methods("GET")
 
 	adminSubrouter.HandleFunc("/application/login-sessions", we.wrapFunc(we.adminApisHandler.getApplicationLoginSessions, we.auth.admin.Permissions)).Methods("GET")
@@ -168,6 +177,7 @@ func (we Adapter) Start() {
 	adminSubrouter.HandleFunc("/application/roles", we.wrapFunc(we.adminApisHandler.getApplicationRoles, we.auth.admin.Permissions)).Methods("GET")
 	adminSubrouter.HandleFunc("/application/roles", we.wrapFunc(we.adminApisHandler.createApplicationRole, we.auth.admin.Permissions)).Methods("POST")
 	adminSubrouter.HandleFunc("/application/roles/{id}", we.wrapFunc(we.adminApisHandler.deleteApplicationRole, we.auth.admin.Permissions)).Methods("DELETE")
+	adminSubrouter.HandleFunc("/application/roles/{id}", we.wrapFunc(we.adminApisHandler.updateApplicationRole, we.auth.admin.Permissions)).Methods("PUT")
 	adminSubrouter.HandleFunc("/application/roles/{id}/permissions", we.wrapFunc(we.adminApisHandler.grantPermissionsToRole, we.auth.admin.Permissions)).Methods("PUT")
 
 	adminSubrouter.HandleFunc("/application/permissions", we.wrapFunc(we.adminApisHandler.getApplicationPermissions, we.auth.admin.Permissions)).Methods("GET")
@@ -524,7 +534,7 @@ func NewWebAdapter(env string, serviceID string, serviceRegManager *authservice.
 	if err != nil {
 		logger.Fatalf("error loading docs yaml - %s", err.Error())
 	}
-	err = doc.Validate(loader.Context)
+	err = doc.Validate(loader.Context, openapi3.EnableExamplesValidation())
 	if err != nil {
 		logger.Fatalf("error on openapi3 validate - %s", err.Error())
 	}

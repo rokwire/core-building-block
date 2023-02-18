@@ -865,7 +865,7 @@ func (h ServicesApisHandler) getApplicationConfigs(l *logs.Log, r *http.Request,
 		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.ServicesReqApplicationConfigs
+	var requestData Def.SharedReqAppConfigs
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("application config request"), nil, err, http.StatusBadRequest, true)
@@ -897,7 +897,7 @@ func (h ServicesApisHandler) getApplicationOrgConfigs(l *logs.Log, r *http.Reque
 		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.ServicesReqApplicationOrgConfigs
+	var requestData Def.SharedReqAppConfigsOrg
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("application org config request"), nil, err, http.StatusBadRequest, true)

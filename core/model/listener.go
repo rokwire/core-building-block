@@ -26,8 +26,8 @@ func (d *DefaultStorageListener) OnAuthTypesUpdated() {}
 // OnIdentityProvidersUpdated notifies identity providers have been updated
 func (d *DefaultStorageListener) OnIdentityProvidersUpdated() {}
 
-// OnServiceRegsUpdated notifies services regs have been updated
-func (d *DefaultStorageListener) OnServiceRegsUpdated() {}
+// OnServiceRegistrationsUpdated notifies services regs have been updated
+func (d *DefaultStorageListener) OnServiceRegistrationsUpdated() {}
 
 // OnOrganizationsUpdated notifies organizations have been updated
 func (d *DefaultStorageListener) OnOrganizationsUpdated() {}

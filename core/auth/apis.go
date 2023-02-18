@@ -86,9 +86,9 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 
 	if appOrg.Application.Admin != admin {
 		if admin {
-			return nil, nil, nil, errors.New("use services login endpoint")
+			return nil, nil, nil, errors.ErrorData(logutils.StatusInvalid, model.TypeApplication, logutils.StringArgs("use services login endpoint"))
 		}
-		return nil, nil, nil, errors.New("use admin login endpoint")
+		return nil, nil, nil, errors.ErrorData(logutils.StatusInvalid, model.TypeApplication, logutils.StringArgs("use admin login endpoint"))
 	}
 
 	//TODO: Ideally we would not make many database calls before validating the API key. Currently needed to get app ID
@@ -486,7 +486,7 @@ func (a *Auth) LoginMFA(apiKey string, accountID string, sessionID string, ident
 		if loginSession.MfaAttempts >= maxMfaAttempts {
 			a.deleteLoginSession(storage, *loginSession, l)
 			message = fmt.Sprintf("max mfa attempts reached: %d", maxMfaAttempts)
-			return errors.New(message)
+			return errors.ErrorData(logutils.StatusInvalid, model.TypeLoginSession, logutils.StringArgs(message))
 		}
 
 		//2. check api key
@@ -833,7 +833,7 @@ func (a *Auth) VerifyCredential(id string, verification string, l *logs.Log) err
 	}
 
 	if credential.Verified {
-		return errors.New("credential has already been verified")
+		return errors.ErrorAction(logutils.ActionVerify, model.TypeCredential, logutils.StringArgs("already verified"))
 	}
 
 	//get the auth type
@@ -977,7 +977,7 @@ func (a *Auth) ForgotCredential(authenticationType string, appTypeIdentifier str
 
 	//do not allow for admins
 	if appOrg.Application.Admin {
-		return errors.New("contact a system admin to reset credentials")
+		return errors.ErrorData(logutils.StatusDisabled, "admin credential reset", logutils.StringArgs("contact a system admin to reset credentials"))
 	}
 
 	//check for api key
@@ -1572,7 +1572,7 @@ func (a *Auth) RemoveServiceAccountCredential(accountID string, credID string) e
 //		Access token (string): Signed scoped access token to be used to authorize requests to the specified service
 //		Approved Scopes ([]authorization.Scope): The approved scopes included in the provided token
 //		Service reg (*model.ServiceReg): The service registration record for the requested service
-func (a *Auth) AuthorizeService(claims tokenauth.Claims, serviceID string, approvedScopes []authorization.Scope, l *logs.Log) (string, []authorization.Scope, *model.ServiceReg, error) {
+func (a *Auth) AuthorizeService(claims tokenauth.Claims, serviceID string, approvedScopes []authorization.Scope, l *logs.Log) (string, []authorization.Scope, *model.ServiceRegistration, error) {
 	var authorization model.ServiceAuthorization
 	if approvedScopes != nil {
 		//If approved scopes are being updated, save update and return token with updated scopes
@@ -1973,26 +1973,26 @@ func (a *Auth) CheckGroups(storage interfaces.Storage, appOrg *model.Application
 }
 
 // GetServiceRegistrations retrieves all service registrations
-func (a *Auth) GetServiceRegistrations(serviceIDs []string) []model.ServiceReg {
+func (a *Auth) GetServiceRegistrations(serviceIDs []string) []model.ServiceRegistration {
 	return a.storage.FindServiceRegs(serviceIDs)
 }
 
 // RegisterService creates a new service registration
-func (a *Auth) RegisterService(reg *model.ServiceReg) error {
+func (a *Auth) RegisterService(reg *model.ServiceRegistration) error {
 	if reg != nil && !reg.FirstParty && strings.Contains(strings.ToUpper(reg.Name), rokwireKeyword) {
-		return errors.Newf("the name of a third-party service may not contain \"%s\"", rokwireKeyword)
+		return errors.ErrorData(logutils.StatusInvalid, "third-party service name", logutils.StringArgs(fmt.Sprintf("may not contain \"%s\"", rokwireKeyword)))
 	}
 	return a.storage.InsertServiceReg(reg)
 }
 
 // UpdateServiceRegistration updates an existing service registration
-func (a *Auth) UpdateServiceRegistration(reg *model.ServiceReg) error {
+func (a *Auth) UpdateServiceRegistration(reg *model.ServiceRegistration) error {
 	if reg != nil {
 		if reg.Registration.ServiceID == authServiceID || reg.Registration.ServiceID == a.serviceID {
-			return errors.Newf("modifying service registration not allowed for service id %v", reg.Registration.ServiceID)
+			return errors.ErrorAction(logutils.ActionUpdate, model.TypeServiceReg, logutils.StringArgs(reg.Registration.ServiceID)).SetStatus(utils.ErrorStatusNotAllowed)
 		}
 		if !reg.FirstParty && strings.Contains(strings.ToUpper(reg.Name), rokwireKeyword) {
-			return errors.Newf("the name of a third-party service may not contain \"%s\"", rokwireKeyword)
+			return errors.ErrorData(logutils.StatusInvalid, "third-party service name", logutils.StringArgs(fmt.Sprintf("may not contain \"%s\"", rokwireKeyword)))
 		}
 	}
 	return a.storage.UpdateServiceReg(reg)
@@ -2001,7 +2001,7 @@ func (a *Auth) UpdateServiceRegistration(reg *model.ServiceReg) error {
 // DeregisterService deletes an existing service registration
 func (a *Auth) DeregisterService(serviceID string) error {
 	if serviceID == authServiceID || serviceID == a.serviceID {
-		return errors.Newf("deregistering service not allowed for service id %v", serviceID)
+		return errors.ErrorAction(logutils.ActionDeregister, model.TypeServiceReg, logutils.StringArgs(serviceID))
 	}
 	return a.storage.DeleteServiceReg(serviceID)
 }

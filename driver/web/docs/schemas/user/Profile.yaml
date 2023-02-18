@@ -7,13 +7,10 @@ properties:
     type: string
   photo_url:
     type: string
-    nullable: true
   first_name:
     type: string
-    nullable: true
   last_name:
     type: string
-    nullable: true
   email:
     type: string
     nullable: true

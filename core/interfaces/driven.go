@@ -125,11 +125,12 @@ type Storage interface {
 	DeleteMFAType(accountID string, identifier string, mfaType string) error
 
 	//ServiceRegs
-	FindServiceRegs(serviceIDs []string) []model.ServiceReg
-	FindServiceReg(serviceID string) (*model.ServiceReg, error)
-	InsertServiceReg(reg *model.ServiceReg) error
-	UpdateServiceReg(reg *model.ServiceReg) error
-	SaveServiceReg(reg *model.ServiceReg) error
+	MigrateServiceRegs() error
+	FindServiceRegs(serviceIDs []string) []model.ServiceRegistration
+	FindServiceReg(serviceID string) (*model.ServiceRegistration, error)
+	InsertServiceReg(reg *model.ServiceRegistration) error
+	UpdateServiceReg(reg *model.ServiceRegistration) error
+	SaveServiceReg(reg *model.ServiceRegistration, immediateCache bool) error
 	DeleteServiceReg(serviceID string) error
 
 	//AuthTypes
@@ -228,7 +229,7 @@ type StorageListener interface {
 	OnAPIKeysUpdated()
 	OnAuthTypesUpdated()
 	OnIdentityProvidersUpdated()
-	OnServiceRegsUpdated()
+	OnServiceRegistrationsUpdated()
 	OnOrganizationsUpdated()
 	OnApplicationsUpdated()
 	OnApplicationsOrganizationsUpdated()

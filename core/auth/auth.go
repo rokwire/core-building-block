@@ -946,7 +946,7 @@ func (a *Auth) getAccount(authenticationType string, userIdentifier string, apiK
 
 	//do not allow for admins
 	if appOrg.Application.Admin {
-		return nil, "", errors.New("not allowed for admins")
+		return nil, "", errors.ErrorData(logutils.StatusInvalid, model.TypeApplication, logutils.StringArgs("not allowed for admins"))
 	}
 
 	//TODO: Ideally we would not make many database calls before validating the API key. Currently needed to get app ID
@@ -2325,6 +2325,11 @@ func (a *Auth) setLogContext(account *model.Account, l *logs.Log) {
 
 // storeReg stores the service registration record
 func (a *Auth) storeReg() error {
+	err := a.storage.MigrateServiceRegs()
+	if err != nil {
+		return errors.WrapErrorAction("migrating", model.TypeServiceReg, nil, err)
+	}
+
 	pem, err := authutils.GetPubKeyPem(&a.authPrivKey.PublicKey)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionEncode, model.TypePubKey, logutils.StringArgs("auth"), err)
@@ -2333,17 +2338,17 @@ func (a *Auth) storeReg() error {
 	key := authservice.PubKey{KeyPem: pem, Alg: authKeyAlg}
 
 	// Setup "auth" registration for token validation
-	authReg := model.ServiceReg{Registration: authservice.ServiceReg{ServiceID: authServiceID, Host: a.host, PubKey: &key},
+	authReg := model.ServiceRegistration{Registration: authservice.ServiceReg{ServiceID: authServiceID, Host: a.host, PubKey: &key}, CoreHost: a.host,
 		Name: "ROKWIRE Auth Service", Description: "The Auth Service is a subsystem of the Core Building Block that manages authentication and authorization.", FirstParty: true}
-	err = a.storage.SaveServiceReg(&authReg)
+	err = a.storage.SaveServiceReg(&authReg, true)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionSave, model.TypeServiceReg, logutils.StringArgs(authServiceID), err)
 	}
 
 	// Setup core registration for signature validation
-	coreReg := model.ServiceReg{Registration: authservice.ServiceReg{ServiceID: a.serviceID, Host: a.host, PubKey: &key},
+	coreReg := model.ServiceRegistration{Registration: authservice.ServiceReg{ServiceID: a.serviceID, Host: a.host, PubKey: &key}, CoreHost: a.host,
 		Name: "ROKWIRE Core Building Block", Description: "The Core Building Block manages user, auth, and organization data for the ROKWIRE platform.", FirstParty: true}
-	err = a.storage.SaveServiceReg(&coreReg)
+	err = a.storage.SaveServiceReg(&coreReg, true)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionSave, model.TypeServiceReg, logutils.StringArgs(a.serviceID), err)
 	}
@@ -2631,7 +2636,7 @@ func (al *StorageListener) OnAPIKeysUpdated() {
 	al.auth.cacheAPIKeys()
 }
 
-// OnServiceRegsUpdated notifies that a service registration has been updated
-func (al *StorageListener) OnServiceRegsUpdated() {
+// OnServiceRegistrationsUpdated notifies that a service registration has been updated
+func (al *StorageListener) OnServiceRegistrationsUpdated() {
 	al.auth.ServiceRegManager.LoadServices()
 }

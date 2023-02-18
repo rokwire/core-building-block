@@ -28,23 +28,29 @@ import (
 
 // LoginSession
 func loginSessionToDef(item model.LoginSession) Def.LoginSession {
-	var accountAuthType *Def.AccountAuthType
+	var accountAuthTypeID *string
+	var accountAuthTypeIdentifier *string
 	if item.AccountAuthType != nil {
-		aatValue := accountAuthTypeToDef(*item.AccountAuthType)
-		accountAuthType = &aatValue
+		accountAuthTypeID = &item.AccountAuthType.ID
+		accountAuthTypeIdentifier = &item.AccountAuthType.Identifier
 	}
 	var deviceID *string
 	if item.Device != nil {
 		deviceID = &item.Device.ID
 	}
 
+	appOrgID := item.AppOrg.ID
+	appTypeID := item.AppType.ID
+	appTypeIdentifier := item.AppType.Identifier
+	authTypeCode := item.AuthType.Code
 	refreshTokensCount := len(item.RefreshTokens)
 	stateExpires := utils.FormatTime(item.StateExpires)
 	dateRefreshed := utils.FormatTime(item.DateRefreshed)
 	dateUpdated := utils.FormatTime(item.DateUpdated)
 	dateCreated := utils.FormatTime(&item.DateCreated)
-	return Def.LoginSession{Id: &item.ID, Anonymous: &item.Anonymous, AccountAuthType: accountAuthType, AppOrg: appOrgToDef(&item.AppOrg),
-		AppType: applicationTypeToDef(&item.AppType), DeviceId: deviceID, Identifier: &item.Identifier, IpAddress: &item.IPAddress,
+	return Def.LoginSession{Id: &item.ID, Anonymous: &item.Anonymous, AuthTypeCode: &authTypeCode, AppOrgId: &appOrgID,
+		AccountAuthTypeId: accountAuthTypeID, AccountAuthTypeIdentifier: accountAuthTypeIdentifier, AppTypeId: &appTypeID,
+		AppTypeIdentifier: &appTypeIdentifier, DeviceId: deviceID, Identifier: &item.Identifier, IpAddress: &item.IPAddress,
 		RefreshTokensCount: &refreshTokensCount, State: &item.State, MfaAttempts: &item.MfaAttempts, StateExpires: &stateExpires,
 		DateRefreshed: &dateRefreshed, DateUpdated: &dateUpdated, DateCreated: &dateCreated,
 	}
@@ -206,7 +212,7 @@ func appOrgPairListToDef(items []model.AppOrgPair) []Def.AppOrgPair {
 	return out
 }
 
-func serviceRegFromDef(item *Def.ServiceReg) (*model.ServiceReg, error) {
+func serviceRegFromDef(item *Def.ServiceReg) (*model.ServiceRegistration, error) {
 	if item == nil {
 		return nil, nil
 	}
@@ -220,11 +226,11 @@ func serviceRegFromDef(item *Def.ServiceReg) (*model.ServiceReg, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &model.ServiceReg{Registration: authservice.ServiceReg{ServiceID: item.ServiceId, ServiceAccountID: serviceAccountID, Host: item.Host, PubKey: pubKey},
+	return &model.ServiceRegistration{Registration: authservice.ServiceReg{ServiceID: item.ServiceId, ServiceAccountID: serviceAccountID, Host: item.Host, PubKey: pubKey},
 		Name: item.Name, Description: item.Description, InfoURL: defString(item.InfoUrl), LogoURL: defString(item.LogoUrl), Scopes: scopes, FirstParty: item.FirstParty}, nil
 }
 
-func serviceRegToDef(item *model.ServiceReg) *Def.ServiceReg {
+func serviceRegToDef(item *model.ServiceRegistration) *Def.ServiceReg {
 	if item == nil {
 		return nil
 	}
@@ -241,7 +247,7 @@ func serviceRegToDef(item *model.ServiceReg) *Def.ServiceReg {
 		Scopes: &scopes, FirstParty: item.FirstParty}
 }
 
-func serviceRegListToDef(items []model.ServiceReg) []Def.ServiceReg {
+func serviceRegListToDef(items []model.ServiceRegistration) []Def.ServiceReg {
 	out := make([]Def.ServiceReg, len(items))
 	for i, item := range items {
 		defItem := serviceRegToDef(&item)
@@ -268,7 +274,7 @@ func authServiceRegToDef(item *authservice.ServiceReg) *Def.AuthServiceReg {
 	return &Def.AuthServiceReg{ServiceId: item.ServiceID, ServiceAccountId: serviceAccountID, Host: item.Host, PubKey: pubKey}
 }
 
-func authServiceRegListToDef(items []model.ServiceReg) []Def.AuthServiceReg {
+func authServiceRegListToDef(items []model.ServiceRegistration) []Def.AuthServiceReg {
 	out := make([]Def.AuthServiceReg, len(items))
 	for i, item := range items {
 		defItem := authServiceRegToDef(&item.Registration)

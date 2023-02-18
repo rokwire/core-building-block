@@ -276,7 +276,7 @@ type Auth interface {
 	//		Access token (string): Signed scoped access token to be used to authorize requests to the specified service
 	//		Approved Scopes ([]authorization.Scope): The approved scopes included in the provided token
 	//		Service reg (*model.ServiceReg): The service registration record for the requested service
-	AuthorizeService(claims tokenauth.Claims, serviceID string, approvedScopes []authorization.Scope, l *logs.Log) (string, []authorization.Scope, *model.ServiceReg, error)
+	AuthorizeService(claims tokenauth.Claims, serviceID string, approvedScopes []authorization.Scope, l *logs.Log) (string, []authorization.Scope, *model.ServiceRegistration, error)
 
 	//LinkAccountAuthType links new credentials to an existing account.
 	//The authentication method must be one of the supported for the application.
@@ -335,13 +335,13 @@ type Auth interface {
 	GetAuthKeySet() (*model.JSONWebKeySet, error)
 
 	//GetServiceRegistrations retrieves all service registrations
-	GetServiceRegistrations(serviceIDs []string) []model.ServiceReg
+	GetServiceRegistrations(serviceIDs []string) []model.ServiceRegistration
 
 	//RegisterService creates a new service registration
-	RegisterService(reg *model.ServiceReg) error
+	RegisterService(reg *model.ServiceRegistration) error
 
 	//UpdateServiceRegistration updates an existing service registration
-	UpdateServiceRegistration(reg *model.ServiceReg) error
+	UpdateServiceRegistration(reg *model.ServiceRegistration) error
 
 	//DeregisterService deletes an existing service registration
 	DeregisterService(serviceID string) error

@@ -18,5 +18,3 @@ properties:
     type: boolean
   unverified:
     type: boolean
-  credential:
-    $ref: "../auth/Credential.yaml"

@@ -124,7 +124,7 @@ func (a *Adapter) GetProfileBBData(queryParams map[string]string, l *logs.Log) (
 		return nil, nil, nil
 	}
 	if a.host == "" || a.apiKey == "" {
-		return nil, nil, errors.New("Profile BB adapter is not configured")
+		return nil, nil, errors.ErrorData(logutils.StatusInvalid, "profile BB adapter", logutils.StringArgs("not configured"))
 	}
 
 	query := url.Values{}
