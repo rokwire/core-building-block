@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/rokwire/core-auth-library-go/v2/tokenauth"
 	"github.com/rokwire/logging-library-go/v2/errors"
 	"github.com/rokwire/logging-library-go/v2/logs"
 	"github.com/rokwire/logging-library-go/v2/logutils"
@@ -331,24 +332,24 @@ type administrationImpl struct {
 	app *application
 }
 
-func (s *administrationImpl) AdmGetConfig(id string, appID string, orgID string, system bool) (*model.Config, error) {
-	return s.app.admGetConfig(id, appID, orgID, system)
+func (s *administrationImpl) AdmGetConfig(id string, claims *tokenauth.Claims) (*model.Config, error) {
+	return s.app.admGetConfig(id, claims)
 }
 
-func (s *administrationImpl) AdmGetConfigs(configType *string, appID string, orgID string, system bool) ([]model.Config, error) {
-	return s.app.admGetConfigs(configType, appID, orgID, system)
+func (s *administrationImpl) AdmGetConfigs(configType *string, claims *tokenauth.Claims) ([]model.Config, error) {
+	return s.app.admGetConfigs(configType, claims)
 }
 
-func (s *administrationImpl) AdmCreateConfig(config model.Config, appID string, orgID string, system bool) (*model.Config, error) {
-	return s.app.admCreateConfig(config, appID, orgID, system)
+func (s *administrationImpl) AdmCreateConfig(config model.Config, claims *tokenauth.Claims) (*model.Config, error) {
+	return s.app.admCreateConfig(config, claims)
 }
 
-func (s *administrationImpl) AdmUpdateConfig(config model.Config, appID string, orgID string, system bool) error {
-	return s.app.admUpdateConfig(config, appID, orgID, system)
+func (s *administrationImpl) AdmUpdateConfig(config model.Config, claims *tokenauth.Claims) error {
+	return s.app.admUpdateConfig(config, claims)
 }
 
-func (s *administrationImpl) AdmDeleteConfig(id string, appID string, orgID string, system bool) error {
-	return s.app.admDeleteConfig(id, appID, orgID, system)
+func (s *administrationImpl) AdmDeleteConfig(id string, claims *tokenauth.Claims) error {
+	return s.app.admDeleteConfig(id, claims)
 }
 
 func (s *administrationImpl) AdmGetTest() string {

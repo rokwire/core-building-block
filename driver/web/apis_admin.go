@@ -310,7 +310,7 @@ func (h AdminApisHandler) getConfig(l *logs.Log, r *http.Request, claims *tokena
 		return l.HTTPResponseErrorData(logutils.StatusMissing, logutils.TypePathParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
 	}
 
-	config, err := h.coreAPIs.Administration.AdmGetConfig(id, claims.AppID, claims.OrgID, claims.System)
+	config, err := h.coreAPIs.Administration.AdmGetConfig(id, claims)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionGet, model.TypeConfig, nil, err, http.StatusInternalServerError, true)
 	}
@@ -334,7 +334,7 @@ func (h AdminApisHandler) getConfigs(l *logs.Log, r *http.Request, claims *token
 		configType = &typeParam
 	}
 
-	configs, err := h.coreAPIs.Administration.AdmGetConfigs(configType, claims.AppID, claims.OrgID, claims.System)
+	configs, err := h.coreAPIs.Administration.AdmGetConfigs(configType, claims)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionGet, model.TypeConfig, nil, err, http.StatusInternalServerError, true)
 	}
@@ -356,7 +356,7 @@ func (h AdminApisHandler) createConfig(l *logs.Log, r *http.Request, claims *tok
 	}
 
 	config := configFromDef(requestData, claims.AppID, claims.OrgID)
-	newConfig, err := h.coreAPIs.Administration.AdmCreateConfig(config, claims.AppID, claims.OrgID, claims.System)
+	newConfig, err := h.coreAPIs.Administration.AdmCreateConfig(config, claims)
 	if err != nil || newConfig == nil {
 		return l.HTTPResponseErrorAction(logutils.ActionCreate, model.TypeConfig, nil, err, http.StatusInternalServerError, true)
 	}
@@ -385,7 +385,7 @@ func (h AdminApisHandler) updateConfig(l *logs.Log, r *http.Request, claims *tok
 
 	config := configFromDef(requestData, claims.AppID, claims.OrgID)
 	config.ID = id
-	err = h.coreAPIs.Administration.AdmUpdateConfig(config, claims.AppID, claims.OrgID, claims.System)
+	err = h.coreAPIs.Administration.AdmUpdateConfig(config, claims)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUpdate, model.TypeConfig, nil, err, http.StatusInternalServerError, true)
 	}
@@ -401,7 +401,7 @@ func (h AdminApisHandler) deleteConfig(l *logs.Log, r *http.Request, claims *tok
 		return l.HTTPResponseErrorData(logutils.StatusMissing, logutils.TypePathParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
 	}
 
-	err := h.coreAPIs.Administration.AdmDeleteConfig(id, claims.AppID, claims.OrgID, claims.System)
+	err := h.coreAPIs.Administration.AdmDeleteConfig(id, claims)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionDelete, model.TypeConfig, nil, err, http.StatusInternalServerError, true)
 	}

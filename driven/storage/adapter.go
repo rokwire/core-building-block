@@ -733,7 +733,13 @@ func (sa *Adapter) setCachedConfigs(configs []model.Config) {
 	sa.cachedConfigs = &syncmap.Map{}
 
 	for _, config := range configs {
-		err := parseConfigsData(&config)
+		var err error
+		switch config.Type {
+		case model.ConfigTypeEnv:
+			err = parseConfigsData[model.EnvConfigData](&config)
+		default:
+			err = parseConfigsData[map[string]interface{}](&config)
+		}
 		if err != nil {
 			sa.db.logger.Warn(err.Error())
 		}
@@ -742,26 +748,19 @@ func (sa *Adapter) setCachedConfigs(configs []model.Config) {
 	}
 }
 
-func parseConfigsData(config *model.Config) error {
+func parseConfigsData[T model.ConfigData](config *model.Config) error {
 	bsonBytes, err := bson.Marshal(config.Data)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUnmarshal, model.TypeConfig, nil, err)
 	}
-	if config.Type == model.ConfigTypeEnv {
-		var envData model.EnvConfigData
-		err = bson.Unmarshal(bsonBytes, &envData)
-		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionUnmarshal, model.TypeEnvConfigData, nil, err)
-		}
-		config.Data = envData
-	} else {
-		var mapData map[string]interface{}
-		err = bson.Unmarshal(bsonBytes, &mapData)
-		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionUnmarshal, model.TypeConfig, nil, err)
-		}
-		config.Data = mapData
+
+	var data T
+	err = bson.Unmarshal(bsonBytes, &data)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUnmarshal, model.TypeConfigData, &logutils.FieldArgs{"type": config.Type}, err)
 	}
+
+	config.Data = data
 	return nil
 }
 

@@ -311,7 +311,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 
 		var envData *model.EnvConfigData
 		if config != nil {
-			envData, err = config.DataAsEnvConfig()
+			envData, err = model.GetConfigData[model.EnvConfigData](*config)
 			if err != nil {
 				return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeEnvConfigData, nil, err)
 			}

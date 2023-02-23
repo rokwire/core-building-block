@@ -18,6 +18,7 @@ import (
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
 
+	"github.com/rokwire/core-auth-library-go/v2/tokenauth"
 	"github.com/rokwire/logging-library-go/v2/logs"
 )
 
@@ -46,11 +47,11 @@ type Administration interface {
 	AdmGetTest() string
 	AdmGetTestModel() string
 
-	AdmGetConfig(id string, appID string, orgID string, system bool) (*model.Config, error)
-	AdmGetConfigs(configType *string, appID string, orgID string, system bool) ([]model.Config, error)
-	AdmCreateConfig(config model.Config, appID string, orgID string, system bool) (*model.Config, error)
-	AdmUpdateConfig(config model.Config, appID string, orgID string, system bool) error
-	AdmDeleteConfig(id string, appID string, orgID string, system bool) error
+	AdmGetConfig(id string, claims *tokenauth.Claims) (*model.Config, error)
+	AdmGetConfigs(configType *string, claims *tokenauth.Claims) ([]model.Config, error)
+	AdmCreateConfig(config model.Config, claims *tokenauth.Claims) (*model.Config, error)
+	AdmUpdateConfig(config model.Config, claims *tokenauth.Claims) error
+	AdmDeleteConfig(id string, claims *tokenauth.Claims) error
 
 	AdmGetApplications(orgID string) ([]model.Application, error)
 
