@@ -44,6 +44,7 @@ type database struct {
 	loginsSessions                  *collectionWrapper
 	configs                         *collectionWrapper
 	serviceRegs                     *collectionWrapper
+	serviceRegistrations            *collectionWrapper
 	serviceAccounts                 *collectionWrapper
 	serviceAuthorizations           *collectionWrapper
 	organizations                   *collectionWrapper
@@ -112,6 +113,12 @@ func (m *database) start() error {
 
 	serviceRegs := &collectionWrapper{database: m, coll: db.Collection("service_regs")}
 	err = m.applyServiceRegsChecks(serviceRegs)
+	if err != nil {
+		return err
+	}
+
+	serviceRegistrations := &collectionWrapper{database: m, coll: db.Collection("service_registrations")}
+	err = m.applyServiceRegistrationsChecks(serviceRegistrations)
 	if err != nil {
 		return err
 	}
@@ -201,6 +208,7 @@ func (m *database) start() error {
 	m.configs = configs
 	m.apiKeys = apiKeys
 	m.serviceRegs = serviceRegs
+	m.serviceRegistrations = serviceRegistrations
 	m.serviceAccounts = serviceAccounts
 	m.serviceAuthorizations = serviceAuthorizations
 	m.organizations = organizations
@@ -214,7 +222,7 @@ func (m *database) start() error {
 	go m.apiKeys.Watch(nil, m.logger)
 	go m.authTypes.Watch(nil, m.logger)
 	go m.identityProviders.Watch(nil, m.logger)
-	go m.serviceRegs.Watch(nil, m.logger)
+	go m.serviceRegistrations.Watch(nil, m.logger)
 	go m.organizations.Watch(nil, m.logger)
 	go m.applications.Watch(nil, m.logger)
 	go m.applicationsOrganizations.Watch(nil, m.logger)
@@ -356,6 +364,19 @@ func (m *database) applyServiceRegsChecks(serviceRegs *collectionWrapper) error 
 	}
 
 	m.logger.Info("service regs checks passed")
+	return nil
+}
+
+func (m *database) applyServiceRegistrationsChecks(serviceRegistrations *collectionWrapper) error {
+	m.logger.Info("apply service registrations checks.....")
+
+	//add core_host, service_id index - unique
+	err := serviceRegistrations.AddIndex(bson.D{primitive.E{Key: "core_host", Value: 1}, primitive.E{Key: "registration.service_id", Value: 1}}, true)
+	if err != nil {
+		return err
+	}
+
+	m.logger.Info("service registrations checks passed")
 	return nil
 }
 
@@ -564,11 +585,11 @@ func (m *database) onDataChanged(changeDoc map[string]interface{}) {
 		for _, listener := range m.listeners {
 			go listener.OnIdentityProvidersUpdated()
 		}
-	case "service_regs":
-		m.logger.Info("service_regs collection changed")
+	case "service_registrations":
+		m.logger.Info("service_registrations collection changed")
 
 		for _, listener := range m.listeners {
-			go listener.OnServiceRegsUpdated()
+			go listener.OnServiceRegistrationsUpdated()
 		}
 	case "organizations":
 		m.logger.Info("organizations collection changed")

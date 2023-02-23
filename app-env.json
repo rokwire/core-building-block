@@ -1,0 +1,36 @@
+{
+    "app_secret": {
+        "ROKWIRE_CORE_MONGO_AUTH": "<mongo_url>",
+        "ROKWIRE_CORE_AUTH_TWILIO_TOKEN": "",
+        "ROKWIRE_CORE_SMTP_PASSWORD": "",
+        "ROKWIRE_CORE_AUTH_PRIV_KEY": "<auth_priv_key>",
+        "ROKWIRE_CORE_PROFILE_BB_API_KEY": "",
+        "ROKWIRE_CORE_SYSTEM_API_KEY": "",
+        "ROKWIRE_CORE_SYSTEM_ACCOUNT_PASSWORD": ""
+    },
+    "app_config":{
+        "ROKWIRE_CORE_LOG_LEVEL": "",
+        "ROKWIRE_CORE_ENVIRONMENT": "<env>",
+        "ROKWIRE_CORE_PORT": "",
+        "ROKWIRE_CORE_HOST": "<host>",
+        "ROKWIRE_CORE_MONGO_DATABASE": "<core_db>",
+        "ROKWIRE_HEALTH_MONGO_TIMEOUT": "",
+        "ROKWIRE_CORE_AUTH_TWILIO_ACCOUNT_SID": "",
+        "ROKWIRE_CORE_AUTH_TWILIO_SERVICE_SID": "",
+        "ROKWIRE_CORE_SMTP_HOST": "",
+        "ROKWIRE_CORE_SMTP_PORT": "",
+        "ROKWIRE_CORE_SMTP_USER": "",
+        "ROKWIRE_CORE_SMTP_EMAIL_FROM": "",
+        "ROKWIRE_CORE_MIN_TOKEN_EXP": "",
+        "ROKWIRE_CORE_MAX_TOKEN_EXP": "",
+        "ROKWIRE_CORE_MIGRATE_PROFILES": "",
+        "ROKWIRE_CORE_PROFILE_BB_HOST": "",
+        "ROKWIRE_CORE_SYSTEM_APP_TYPE_IDENTIFIER": "",
+        "ROKWIRE_CORE_SYSTEM_APP_TYPE_NAME": "System Admin App",
+        "ROKWIRE_CORE_SYSTEM_ACCOUNT_EMAIL": "",
+        "ROKWIRE_CORE_BASE_SERVER_URL": "<env-base-url>",
+        "ROKWIRE_CORE_PRODUCTION_SERVER_URL": "",
+        "ROKWIRE_CORE_TEST_SERVER_URL": "",
+        "ROKWIRE_CORE_DEVELOPMENT_SERVER_URL": ""
+    }
+}
