@@ -11,7 +11,7 @@
     "app_config":{
         "ROKWIRE_CORE_LOG_LEVEL": "",
         "ROKWIRE_CORE_ENVIRONMENT": "<env>",
-        "ROKWIRE_CORE_PORT": "",
+        "ROKWIRE_CORE_PORT": "5000",
         "ROKWIRE_CORE_HOST": "<host>",
         "ROKWIRE_CORE_MONGO_DATABASE": "<core_db>",
         "ROKWIRE_HEALTH_MONGO_TIMEOUT": "",
