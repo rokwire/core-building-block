@@ -212,7 +212,7 @@ func appOrgPairListToDef(items []model.AppOrgPair) []Def.AppOrgPair {
 	return out
 }
 
-func serviceRegFromDef(item *Def.ServiceReg) (*model.ServiceReg, error) {
+func serviceRegFromDef(item *Def.ServiceReg) (*model.ServiceRegistration, error) {
 	if item == nil {
 		return nil, nil
 	}
@@ -226,11 +226,11 @@ func serviceRegFromDef(item *Def.ServiceReg) (*model.ServiceReg, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &model.ServiceReg{Registration: authservice.ServiceReg{ServiceID: item.ServiceId, ServiceAccountID: serviceAccountID, Host: item.Host, PubKey: pubKey},
+	return &model.ServiceRegistration{Registration: authservice.ServiceReg{ServiceID: item.ServiceId, ServiceAccountID: serviceAccountID, Host: item.Host, PubKey: pubKey},
 		Name: item.Name, Description: item.Description, InfoURL: defString(item.InfoUrl), LogoURL: defString(item.LogoUrl), Scopes: scopes, FirstParty: item.FirstParty}, nil
 }
 
-func serviceRegToDef(item *model.ServiceReg) *Def.ServiceReg {
+func serviceRegToDef(item *model.ServiceRegistration) *Def.ServiceReg {
 	if item == nil {
 		return nil
 	}
@@ -247,7 +247,7 @@ func serviceRegToDef(item *model.ServiceReg) *Def.ServiceReg {
 		Scopes: &scopes, FirstParty: item.FirstParty}
 }
 
-func serviceRegListToDef(items []model.ServiceReg) []Def.ServiceReg {
+func serviceRegListToDef(items []model.ServiceRegistration) []Def.ServiceReg {
 	out := make([]Def.ServiceReg, len(items))
 	for i, item := range items {
 		defItem := serviceRegToDef(&item)
@@ -274,7 +274,7 @@ func authServiceRegToDef(item *authservice.ServiceReg) *Def.AuthServiceReg {
 	return &Def.AuthServiceReg{ServiceId: item.ServiceID, ServiceAccountId: serviceAccountID, Host: item.Host, PubKey: pubKey}
 }
 
-func authServiceRegListToDef(items []model.ServiceReg) []Def.AuthServiceReg {
+func authServiceRegListToDef(items []model.ServiceRegistration) []Def.AuthServiceReg {
 	out := make([]Def.AuthServiceReg, len(items))
 	for i, item := range items {
 		defItem := authServiceRegToDef(&item.Registration)

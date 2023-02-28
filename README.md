@@ -33,7 +33,6 @@ Name|Format|Required|Description
 ROKWIRE_CORE_LOG_LEVEL | < string > | no | Logging level to be printed to the console. Options are Info, Debug, Warn, and Error. Defaults to Info.
 ROKWIRE_CORE_ENVIRONMENT | < string > | yes | Environment in which this application is being run.
 ROKWIRE_CORE_PORT | < int > | no | Port to be used by this application. Defaults to 80.
-ROKWIRE_CORE_SERVICE_ID | < string > | yes | Service ID to be used by the Core BB eg. "core".
 ROKWIRE_CORE_HOST | < string > | yes | URL where this application is being hosted.
 ROKWIRE_CORE_MONGO_AUTH | <mongodb://USER:PASSWORD@HOST:PORT/DATABASE NAME> | yes | MongoDB authentication string. The user must have read/write privileges.
 ROKWIRE_CORE_MONGO_DATABASE | < string > | yes | MongoDB database name.

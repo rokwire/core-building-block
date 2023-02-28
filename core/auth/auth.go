@@ -2288,6 +2288,11 @@ func (a *Auth) setLogContext(account *model.Account, l *logs.Log) {
 
 // storeReg stores the service registration record
 func (a *Auth) storeReg() error {
+	err := a.storage.MigrateServiceRegs()
+	if err != nil {
+		return errors.WrapErrorAction("migrating", model.TypeServiceReg, nil, err)
+	}
+
 	pem, err := authutils.GetPubKeyPem(&a.authPrivKey.PublicKey)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionEncode, model.TypePubKey, logutils.StringArgs("auth"), err)
@@ -2296,7 +2301,7 @@ func (a *Auth) storeReg() error {
 	key := authservice.PubKey{KeyPem: pem, Alg: authKeyAlg}
 
 	// Setup "auth" registration for token validation
-	authReg := model.ServiceReg{Registration: authservice.ServiceReg{ServiceID: authServiceID, Host: a.host, PubKey: &key},
+	authReg := model.ServiceRegistration{Registration: authservice.ServiceReg{ServiceID: authServiceID, Host: a.host, PubKey: &key}, CoreHost: a.host,
 		Name: "ROKWIRE Auth Service", Description: "The Auth Service is a subsystem of the Core Building Block that manages authentication and authorization.", FirstParty: true}
 	err = a.storage.SaveServiceReg(&authReg, true)
 	if err != nil {
@@ -2304,7 +2309,7 @@ func (a *Auth) storeReg() error {
 	}
 
 	// Setup core registration for signature validation
-	coreReg := model.ServiceReg{Registration: authservice.ServiceReg{ServiceID: a.serviceID, Host: a.host, PubKey: &key},
+	coreReg := model.ServiceRegistration{Registration: authservice.ServiceReg{ServiceID: a.serviceID, Host: a.host, PubKey: &key}, CoreHost: a.host,
 		Name: "ROKWIRE Core Building Block", Description: "The Core Building Block manages user, auth, and organization data for the ROKWIRE platform.", FirstParty: true}
 	err = a.storage.SaveServiceReg(&coreReg, true)
 	if err != nil {
@@ -2567,7 +2572,7 @@ func (al *StorageListener) OnAPIKeysUpdated() {
 	al.auth.cacheAPIKeys()
 }
 
-// OnServiceRegsUpdated notifies that a service registration has been updated
-func (al *StorageListener) OnServiceRegsUpdated() {
+// OnServiceRegistrationsUpdated notifies that a service registration has been updated
+func (al *StorageListener) OnServiceRegistrationsUpdated() {
 	al.auth.ServiceRegManager.LoadServices()
 }

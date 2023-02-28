@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Added
 - Enable CORS [#632](https://github.com/rokwire/core-building-block/issues/632)
+### Changed
+- Prepare for deployment in OpenShift [#638](https://github.com/rokwire/core-building-block/issues/638)
 
 ## [1.30.0] - 2023-02-03
 ### Added
