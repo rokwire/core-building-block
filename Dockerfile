@@ -1,4 +1,4 @@
-FROM golang:1.20.1-buster as builder
+FROM golang:1.20-bullseye as builder
 
 ENV CGO_ENABLED=0
 
