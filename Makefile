@@ -76,7 +76,7 @@ checkfmt: ; $(info $(M) Checking formatting…) @ ## Run gofmt to cehck formatti
 	 done ; exit $$ret
 
 .PHONY: fixfmt
-fixfmt: ; $(info $(M) Fixings formatting…) @ ## Run gofmt to fix formatting on all source files
+fixfmt: ; $(info $(M) Fixing formatting…) @ ## Run gofmt to fix formatting on all source files
 	@ret=0 && for d in $$($(GO) list -f '{{.Dir}}' ./...); do \
 		$(GOFMT) -l -w $$d/*.go || ret=$$? ; \
 	 done ; exit $$ret
