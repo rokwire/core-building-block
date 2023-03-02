@@ -4,15 +4,14 @@ BASE     = $(CURDIR)
 MODULE = $(shell cd $(BASE) && $(GO) list -m)
 PKGS     = $(or $(PKG),$(shell cd $(BASE) && $(GO) list ./...))
 BUILDS   = $(or $(BUILD),$(shell cd $(BASE) && $(GO) list -f "{{if eq .Name \"main\"}}{{.ImportPath}}{{end}}" ./...))
-GIT_VERSION=$(shell git describe --match "v*" 2> /dev/null || cat $(CURDIR)/.version 2> /dev/null || echo v0.0-0-)
+GIT_VERSION=$(shell git describe --tags --match "v*" 2> /dev/null || cat $(CURDIR)/.version 2> /dev/null || echo v0.0-0-)
 BASE_VERSION=$(shell echo $(GIT_VERSION) | cut -f1 -d'-')
 MAJOR_VERSION=$(shell echo $(BASE_VERSION) | cut -f1 -d'.' | cut -f2 -d'v')
 MINOR_VERSION=$(shell echo $(BASE_VERSION) | cut -f2 -d'.')
-BUILD_VERSION=$(shell echo $(BASE_VERSION) | cut -f3 -d'.' || echo 0)
-BUILD_OFFSET=$(shell echo $(GIT_VERSION) | cut -s -f2 -d'-' )
-CODE_OFFSET=$(shell [ -z "$(BUILD_OFFSET)" ] && echo "0" || echo "$(BUILD_OFFSET)")
-BUILD_NUMBER=$(shell echo $$(( $(BUILD_VERSION) + $(CODE_OFFSET) )))
-VERSION ?= ${MAJOR_VERSION}.${MINOR_VERSION}.${BUILD_NUMBER}
+PATCH_VERSION=$(shell echo $(BASE_VERSION) | cut -f3 -d'.' || echo 0)
+COMMIT_OFFSET=$(shell echo $(GIT_VERSION) | cut -s -f2 -d'-')
+# COMMIT_HASH=$(shell echo $(GIT_VERSION) | cut -s -f3 -d'-')
+VERSION=${MAJOR_VERSION}.${MINOR_VERSION}.${PATCH_VERSION}$(if $(COMMIT_OFFSET),+$(COMMIT_OFFSET),)
 
 export -n GOBIN
 
@@ -77,7 +76,7 @@ checkfmt: ; $(info $(M) Checking formatting…) @ ## Run gofmt to cehck formatti
 	 done ; exit $$ret
 
 .PHONY: fixfmt
-fixfmt: ; $(info $(M) Fixing formatting…) @ ## Run gofmt to fix formatting on all source files
+fixfmt: ; $(info $(M) Fixings formatting…) @ ## Run gofmt to fix formatting on all source files
 	@ret=0 && for d in $$($(GO) list -f '{{.Dir}}' ./...); do \
 		$(GOFMT) -l -w $$d/*.go || ret=$$? ; \
 	 done ; exit $$ret
@@ -129,10 +128,9 @@ log-variables: ; $(info $(M) Log info…) @ ## Log the variables values
 	@echo "BASE_VERSION:"$(BASE_VERSION)
 	@echo "MAJOR_VERSION:"$(MAJOR_VERSION)
 	@echo "MINOR_VERSION:"$(MINOR_VERSION)
-	@echo "BUILD_VERSION:"$(BUILD_VERSION)
-	@echo "BUILD_OFFSET:"$(BUILD_OFFSET)
-	@echo "CODE_OFFSET:"$(CODE_OFFSET)
-	@echo "BUILD_NUMBER:"$(BUILD_NUMBER)
+	@echo "PATCH_VERSION:"$(PATCH_VERSION)
+	@echo "COMMIT_OFFSET:"$(COMMIT_OFFSET)
+	@echo "COMMIT_HASH:"$(COMMIT_HASH)
 	@echo "VERSION:"$(VERSION)
 
 # Tools
