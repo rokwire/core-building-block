@@ -3,7 +3,7 @@ required:
   - type
   - app_id
   - all_apps
-  - app_id
+  - org_id
   - all_orgs
   - system
   - data
