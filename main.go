@@ -56,6 +56,8 @@ func main() {
 		logger.SetLevel(*logLevel)
 	}
 
+	logger.Infof("Version: %s", Version)
+
 	err := utils.SetRandomSeed()
 	if err != nil {
 		logger.Error(err.Error())
