@@ -475,7 +475,7 @@ func (we Adapter) validateRequest(req *http.Request) (*openapi3filter.RequestVal
 	dummyAuthFunc := func(c context.Context, input *openapi3filter.AuthenticationInput) error {
 		return nil
 	}
-	options := &openapi3filter.Options{AuthenticationFunc: dummyAuthFunc}
+	options := &openapi3filter.Options{AuthenticationFunc: dummyAuthFunc, ExcludeReadOnlyValidations: true}
 	requestValidationInput := &openapi3filter.RequestValidationInput{
 		Request:    req,
 		PathParams: pathParams,
