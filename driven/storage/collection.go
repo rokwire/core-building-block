@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/rokwire/logging-library-go/logs"
+	"github.com/rokwire/logging-library-go/v2/logs"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -276,7 +276,14 @@ func (collWrapper *collectionWrapper) FindOneAndUpdateWithContext(ctx context.Co
 }
 
 func (collWrapper *collectionWrapper) CountDocuments(filter interface{}) (int64, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), collWrapper.database.mongoTimeout)
+	return collWrapper.CountDocumentsWithContext(context.Background(), filter)
+}
+
+func (collWrapper *collectionWrapper) CountDocumentsWithContext(ctx context.Context, filter interface{}) (int64, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	ctx, cancel := context.WithTimeout(ctx, collWrapper.database.mongoTimeout)
 	defer cancel()
 
 	if filter == nil {

@@ -31,9 +31,9 @@ import (
 
 	"github.com/coreos/go-oidc"
 	"github.com/rokwire/core-auth-library-go/v2/authutils"
-	"github.com/rokwire/logging-library-go/errors"
-	"github.com/rokwire/logging-library-go/logs"
-	"github.com/rokwire/logging-library-go/logutils"
+	"github.com/rokwire/logging-library-go/v2/errors"
+	"github.com/rokwire/logging-library-go/v2/logs"
+	"github.com/rokwire/logging-library-go/v2/logutils"
 )
 
 const (
@@ -183,7 +183,7 @@ func (a *oidcAuthImpl) getLoginURL(appType model.ApplicationType, appOrg model.A
 	if oidcConfig.UsePKCE {
 		codeChallenge, codeVerifier, err := generatePkceChallenge()
 		if err != nil {
-			return "", nil, errors.WrapErrorAction("generating", "pkce challenge", nil, err)
+			return "", nil, errors.WrapErrorAction(logutils.ActionGenerate, "pkce challenge", nil, err)
 		}
 		bodyData["code_challenge_method"] = "S256"
 		bodyData["code_challenge"] = codeChallenge
@@ -248,8 +248,7 @@ func (a *oidcAuthImpl) newToken(code string, appType model.ApplicationType, appO
 func (a *oidcAuthImpl) refreshToken(appType model.ApplicationType, appOrg model.ApplicationOrganization,
 	params *oidcRefreshParams, oidcConfig *oidcAuthConfig, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error) {
 	if !oidcConfig.UseRefresh {
-		return nil, nil, errors.Newf("refresh tokens not enabled for org_id=%s, app_id=%s",
-			appOrg.Organization.ID, appOrg.Application.ID)
+		return nil, nil, errors.ErrorData(logutils.StatusDisabled, "refresh tokens", &logutils.FieldArgs{"app_id": appOrg.Application.ID, "org_id": appOrg.Organization.ID})
 	}
 
 	bodyData := map[string]string{
@@ -291,7 +290,7 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 
 	userClaimsSub, _ := userClaims["sub"].(string)
 	if userClaimsSub != sub {
-		return nil, nil, errors.Newf("mismatching user info sub %s and id token sub %s", userClaimsSub, sub)
+		return nil, nil, errors.ErrorData("mismatched", "sub fields", &logutils.FieldArgs{"user info": userClaimsSub, "id token": sub})
 	}
 
 	identityProviderSetting, err := appOrg.GetIdentityProviderSetting(a.authType)
@@ -491,12 +490,12 @@ func (a *oidcAuthImpl) getOidcAuthConfig(appOrg model.ApplicationOrganization, a
 func generatePkceChallenge() (string, string, error) {
 	codeVerifier, err := utils.GenerateRandomString(50)
 	if err != nil {
-		return "", "", errors.WrapErrorAction("generating", "code verifier", nil, err)
+		return "", "", errors.WrapErrorAction(logutils.ActionGenerate, "code verifier", nil, err)
 	}
 
 	codeChallengeBytes, err := authutils.HashSha256([]byte(codeVerifier))
 	if err != nil {
-		return "", "", errors.WrapErrorAction("hashing", "code verifier", nil, err)
+		return "", "", errors.WrapErrorAction(logutils.ActionCompute, "code verifier hash", nil, err)
 	}
 	codeChallenge := base64.URLEncoding.EncodeToString(codeChallengeBytes)
 
@@ -509,7 +508,7 @@ func initOidcAuth(auth *Auth) (*oidcAuthImpl, error) {
 
 	err := auth.registerAuthType(oidc.authType, oidc)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionRegister, typeAuthType, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionRegister, typeExternalAuthType, nil, err)
 	}
 
 	return oidc, nil

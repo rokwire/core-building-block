@@ -20,12 +20,12 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/rokwire/logging-library-go/logs"
-	"github.com/rokwire/logging-library-go/logutils"
+	"github.com/rokwire/logging-library-go/v2/logs"
+	"github.com/rokwire/logging-library-go/v2/logutils"
 )
 
 // Helper for authLogin and authLoginMFA
-func authBuildLoginResponse(loginSession *model.LoginSession, r *http.Request, l *logs.Log) logs.HttpResponse {
+func authBuildLoginResponse(loginSession *model.LoginSession, r *http.Request, l *logs.Log) logs.HTTPResponse {
 	//token
 	accessToken := loginSession.AccessToken
 	refreshToken := loginSession.CurrentRefreshToken()
@@ -34,8 +34,8 @@ func authBuildLoginResponse(loginSession *model.LoginSession, r *http.Request, l
 	rokwireToken := Def.SharedResRokwireToken{AccessToken: &accessToken, RefreshToken: &refreshToken, TokenType: &tokenType}
 
 	//account
-	var accountData *Def.SharedResAccount
-	if !loginSession.Anonymous {
+	var accountData *Def.Account
+	if loginSession.AccountAuthType != nil {
 		account := loginSession.AccountAuthType.Account
 		checkAccountAuthTypeCodes(&account, r)
 		accountData = accountToDef(account)
@@ -50,8 +50,8 @@ func authBuildLoginResponse(loginSession *model.LoginSession, r *http.Request, l
 	responseData := &Def.SharedResLogin{Token: &rokwireToken, Account: accountData, Params: &paramsRes}
 	respData, err := json.Marshal(responseData)
 	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("auth login response"), nil, err, http.StatusInternalServerError, false)
+		return l.HTTPResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("auth login response"), nil, err, http.StatusInternalServerError, false)
 	}
 
-	return l.HttpResponseSuccessJSON(respData)
+	return l.HTTPResponseSuccessJSON(respData)
 }

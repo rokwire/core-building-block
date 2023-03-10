@@ -18,7 +18,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/rokwire/logging-library-go/logs"
+	"github.com/rokwire/logging-library-go/v2/logs"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -42,6 +42,7 @@ type database struct {
 	loginsSessions                  *collectionWrapper
 	globalConfig                    *collectionWrapper
 	serviceRegs                     *collectionWrapper
+	serviceRegistrations            *collectionWrapper
 	serviceAccounts                 *collectionWrapper
 	serviceAuthorizations           *collectionWrapper
 	organizations                   *collectionWrapper
@@ -98,6 +99,12 @@ func (m *database) start() error {
 
 	serviceRegs := &collectionWrapper{database: m, coll: db.Collection("service_regs")}
 	err = m.applyServiceRegsChecks(serviceRegs)
+	if err != nil {
+		return err
+	}
+
+	serviceRegistrations := &collectionWrapper{database: m, coll: db.Collection("service_registrations")}
+	err = m.applyServiceRegistrationsChecks(serviceRegistrations)
 	if err != nil {
 		return err
 	}
@@ -185,6 +192,7 @@ func (m *database) start() error {
 	m.globalConfig = globalConfig
 	m.apiKeys = apiKeys
 	m.serviceRegs = serviceRegs
+	m.serviceRegistrations = serviceRegistrations
 	m.serviceAccounts = serviceAccounts
 	m.serviceAuthorizations = serviceAuthorizations
 	m.organizations = organizations
@@ -196,7 +204,7 @@ func (m *database) start() error {
 	m.permissions = permissions
 
 	go m.apiKeys.Watch(nil, m.logger)
-	go m.serviceRegs.Watch(nil, m.logger)
+	go m.serviceRegistrations.Watch(nil, m.logger)
 	go m.organizations.Watch(nil, m.logger)
 	go m.applications.Watch(nil, m.logger)
 	go m.applicationsOrganizations.Watch(nil, m.logger)
@@ -209,15 +217,17 @@ func (m *database) start() error {
 
 func (m *database) applyAccountsChecks(accounts *collectionWrapper) error {
 	m.logger.Info("apply accounts checks.....")
+	//TODO: drop unused indexes?
 
 	//add compound unique index - identifier + auth_type_code + app_org_id
-	err := accounts.AddIndex(bson.D{primitive.E{Key: "auth_types.identifier", Value: 1}, primitive.E{Key: "auth_types.auth_type_code", Value: 1}, primitive.E{Key: "app_org_id", Value: 1}}, true)
+	// Can't be unique because of anonymous accounts
+	err := accounts.AddIndex(bson.D{primitive.E{Key: "auth_types.identifier", Value: 1}, primitive.E{Key: "auth_types.auth_type_code", Value: 1}, primitive.E{Key: "app_org_id", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
 
-	//add app_org index
-	err = accounts.AddIndex(bson.D{primitive.E{Key: "app_org_id", Value: 1}}, false)
+	//add compound index - app_org_id + username
+	err = accounts.AddIndex(bson.D{primitive.E{Key: "app_org_id", Value: 1}, primitive.E{Key: "username", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
@@ -311,6 +321,19 @@ func (m *database) applyServiceRegsChecks(serviceRegs *collectionWrapper) error 
 	}
 
 	m.logger.Info("service regs checks passed")
+	return nil
+}
+
+func (m *database) applyServiceRegistrationsChecks(serviceRegistrations *collectionWrapper) error {
+	m.logger.Info("apply service registrations checks.....")
+
+	//add core_host, service_id index - unique
+	err := serviceRegistrations.AddIndex(bson.D{primitive.E{Key: "core_host", Value: 1}, primitive.E{Key: "registration.service_id", Value: 1}}, true)
+	if err != nil {
+		return err
+	}
+
+	m.logger.Info("service registrations checks passed")
 	return nil
 }
 
@@ -478,14 +501,11 @@ func (m *database) applyPermissionsChecks(permissions *collectionWrapper) error 
 func (m *database) applyApplicationConfigsChecks(applicationConfigs *collectionWrapper) error {
 	m.logger.Info("apply applications configs checks.....")
 
-	//disable the problem index for now! Look at https://github.com/rokwire/core-building-block/issues/424
-	/*
-		//add appconfigs index
-		err := applicationConfigs.AddIndex(bson.D{primitive.E{Key: "app_type_id", Value: 1}, primitive.E{Key: "app_org_id", Value: 1}, primitive.E{Key: "version.version_numbers.major", Value: -1}, primitive.E{Key: "version.version_numbers.minor", Value: -1}, primitive.E{Key: "version.version_numbers.patch", Value: -1}}, true)
-		if err != nil {
-			return err
-		}
-	*/
+	//add appconfigs index
+	err := applicationConfigs.AddIndex(bson.D{primitive.E{Key: "app_type_id", Value: 1}, primitive.E{Key: "app_org_id", Value: 1}, primitive.E{Key: "version.version_numbers.major", Value: -1}, primitive.E{Key: "version.version_numbers.minor", Value: -1}, primitive.E{Key: "version.version_numbers.patch", Value: -1}}, true)
+	if err != nil {
+		return err
+	}
 
 	m.logger.Info("applications configs checks passed")
 	return nil
@@ -510,11 +530,11 @@ func (m *database) onDataChanged(changeDoc map[string]interface{}) {
 		for _, listener := range m.listeners {
 			go listener.OnAPIKeysUpdated()
 		}
-	case "service_regs":
-		m.logger.Info("service_regs collection changed")
+	case "service_registrations":
+		m.logger.Info("service_registrations collection changed")
 
 		for _, listener := range m.listeners {
-			go listener.OnServiceRegsUpdated()
+			go listener.OnServiceRegistrationsUpdated()
 		}
 	case "organizations":
 		m.logger.Info("organizations collection changed")

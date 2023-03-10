@@ -1,10 +1,26 @@
+required:
+  - id
+  - app_id
+  - org_id
 type: object
+nullable: true
 properties:
   id:
+    readOnly: true
     type: string
-  application:
-    $ref: "./Application.yaml"
-  organization:
-    $ref: "./Organization.yaml"
-  TODO:
+  app_id:
     type: string
+  org_id:
+    type: string
+  services_ids:
+    type: array
+    nullable: true
+    items:
+      type: string
+  auth_types:
+    type: object
+    nullable: true
+    additionalProperties:
+      $ref: "./SupportedAuthType.yaml"
+  login_session_settings:
+    $ref: "./LoginSessionSettings.yaml"

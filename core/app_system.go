@@ -20,8 +20,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/rokwire/logging-library-go/errors"
-	"github.com/rokwire/logging-library-go/logutils"
+	"github.com/rokwire/logging-library-go/v2/errors"
+	"github.com/rokwire/logging-library-go/v2/logutils"
 )
 
 func (app *application) sysCreateGlobalConfig(setting string) (*model.GlobalConfig, error) {
@@ -30,7 +30,7 @@ func (app *application) sysCreateGlobalConfig(setting string) (*model.GlobalConf
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeGlobalConfig, nil, err)
 	}
 	if gc != nil {
-		return nil, errors.New("global config already exists")
+		return nil, errors.ErrorData("existing", model.TypeGlobalConfig, nil)
 	}
 
 	gc = &model.GlobalConfig{Setting: setting}
@@ -78,14 +78,54 @@ func (app *application) sysUpdateGlobalConfig(setting string) error {
 	return app.storage.PerformTransaction(transaction)
 }
 
+func (app *application) sysGetApplicationOrganizations(appID *string, orgID *string) ([]model.ApplicationOrganization, error) {
+	return app.storage.FindApplicationOrganizations(appID, orgID)
+}
+
+func (app *application) sysGetApplicationOrganization(ID string) (*model.ApplicationOrganization, error) {
+	return app.storage.FindApplicationOrganizationByID(ID)
+}
+
+func (app *application) sysCreateApplicationOrganization(appOrg model.ApplicationOrganization, appID string, orgID string) error {
+	application, err := app.storage.FindApplication(nil, appID)
+	if err != nil || application == nil {
+		return errors.WrapErrorData(logutils.StatusInvalid, model.TypeApplication, nil, err)
+	}
+	appOrg.Application = *application
+
+	organization, err := app.storage.FindOrganization(orgID)
+	if err != nil || organization == nil {
+		return errors.WrapErrorData(logutils.StatusInvalid, model.TypeOrganization, nil, err)
+	}
+	appOrg.Organization = *organization
+
+	appOrgID, _ := uuid.NewUUID()
+	appOrg.ID = appOrgID.String()
+	appOrg.DateCreated = time.Now()
+
+	err = app.storage.InsertApplicationOrganization(nil, appOrg)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
+	}
+
+	return nil
+}
+
+func (app *application) sysUpdateApplicationOrganization(appOrg model.ApplicationOrganization) error {
+	err := app.storage.UpdateApplicationOrganization(nil, appOrg)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeApplicationOrganization, nil, err)
+	}
+
+	return err
+
+}
+
 func (app *application) sysCreateOrganization(name string, requestType string, organizationDomains []string) (*model.Organization, error) {
 	now := time.Now()
 
-	orgConfigID, _ := uuid.NewUUID()
-	orgConfig := model.OrganizationConfig{ID: orgConfigID.String(), Domains: organizationDomains, DateCreated: now}
-
-	organizationID, _ := uuid.NewUUID()
-	organization := model.Organization{ID: organizationID.String(), Name: name, Type: requestType, Config: orgConfig, DateCreated: now}
+	orgConfig := model.OrganizationConfig{ID: uuid.NewString(), Domains: organizationDomains, DateCreated: now}
+	organization := model.Organization{ID: uuid.NewString(), Name: name, Type: requestType, Config: orgConfig, DateCreated: now}
 
 	insertedOrg, err := app.storage.InsertOrganization(nil, organization)
 	if err != nil {
@@ -126,7 +166,7 @@ func (app *application) sysUpdateOrganization(ID string, name string, requestTyp
 }
 
 func (app *application) sysGetApplication(ID string) (*model.Application, error) {
-	appAdm, err := app.storage.FindApplication(ID)
+	appAdm, err := app.storage.FindApplication(nil, ID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplication, nil, err)
 	}
@@ -141,16 +181,78 @@ func (app *application) sysCreateApplication(name string, multiTenant bool, admi
 	now := time.Now()
 
 	// application
-
-	applicationID, _ := uuid.NewUUID()
-	application := model.Application{ID: applicationID.String(), Name: name, MultiTenant: multiTenant, Admin: admin, SharedIdentities: sharedIdentities,
+	for i, at := range appTypes {
+		appTypes[i].ID = uuid.NewString()
+		appTypes[i].DateCreated = now
+		for vidx := range at.Versions {
+			appTypes[i].Versions[vidx].ID = uuid.NewString()
+			appTypes[i].Versions[vidx].ApplicationType = model.ApplicationType{ID: appTypes[i].ID}
+			appTypes[i].Versions[vidx].DateCreated = now
+		}
+	}
+	application := model.Application{ID: uuid.NewString(), Name: name, MultiTenant: multiTenant, Admin: admin, SharedIdentities: sharedIdentities,
 		Types: appTypes, DateCreated: now}
 
 	insertedApplication, err := app.storage.InsertApplication(nil, application)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeApplication, nil, err)
 	}
 	return insertedApplication, nil
+}
+
+func (app *application) sysUpdateApplication(ID string, name string, multiTenant bool, admin bool, sharedIdentities bool, appTypes []model.ApplicationType) error {
+	transaction := func(context storage.TransactionContext) error {
+		//1. find application
+		application, err := app.storage.FindApplication(context, ID)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
+		}
+		if application == nil {
+			return errors.ErrorData(logutils.StatusMissing, model.TypeApplication, nil)
+		}
+
+		//2. update app type list
+		updated := false
+		now := time.Now().UTC()
+		for i, at := range appTypes {
+			existingAppType := application.FindApplicationType(at.Identifier)
+			if existingAppType != nil {
+				//unchanged app type identifier, so set existing ID
+				appTypes[i].ID = existingAppType.ID
+				appTypes[i].Versions = existingAppType.Versions
+				appTypes[i].DateCreated = existingAppType.DateCreated
+				if at.Name != existingAppType.Name {
+					appTypes[i].DateUpdated = &now
+					updated = true
+				}
+			} else {
+				//added app type identifier, so set new ID
+				appTypes[i].ID = uuid.NewString()
+				for vidx := range at.Versions {
+					appTypes[i].Versions[vidx].ID = uuid.NewString()
+					appTypes[i].Versions[vidx].ApplicationType = model.ApplicationType{ID: appTypes[i].ID}
+					appTypes[i].Versions[vidx].DateCreated = now
+				}
+				appTypes[i].DateCreated = now
+				updated = true
+			}
+		}
+
+		//3. update if app types or other application params were updated
+		updated = updated || (name != application.Name) || (multiTenant != application.MultiTenant) || (admin != application.Admin) || (sharedIdentities != application.SharedIdentities)
+		if updated {
+			updatedApp := model.Application{ID: application.ID, Name: name, MultiTenant: multiTenant, Admin: admin, SharedIdentities: sharedIdentities,
+				Types: appTypes, DateCreated: application.DateCreated, DateUpdated: &now}
+			err = app.storage.SaveApplication(context, updatedApp)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionSave, model.TypeApplication, nil, err)
+			}
+		}
+
+		return nil
+	}
+
+	return app.storage.PerformTransaction(transaction)
 }
 
 func (app *application) sysGetApplications() ([]model.Application, error) {
@@ -229,6 +331,9 @@ func (app *application) sysGetAppConfigs(appTypeID string, orgID *string, versio
 		appOrg, err := app.storage.FindApplicationOrganization(appID, *orgID)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": appID, "org_id": *orgID}, err)
+		}
+		if appOrg == nil {
+			return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": appID, "org_id": *orgID})
 		}
 		appOrgID = &appOrg.ID
 	}

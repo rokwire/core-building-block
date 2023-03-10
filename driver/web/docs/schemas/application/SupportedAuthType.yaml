@@ -1,0 +1,22 @@
+type: object
+properties:
+  configs:
+    type: object
+    nullable: true
+    additionalProperties:
+      type: object
+      properties:
+      anyOf:
+        - $ref: "./IdentityProviderSettings.yaml"
+        - $ref: "./AuthProvider.yaml"
+  app_type_configs:
+    type: object
+    nullable: true
+    additionalProperties:
+      type: object
+      properties:
+      anyOf:
+        - $ref: "./AuthConfigOidc.yaml"
+  alias:
+    type: string
+    nullable: true

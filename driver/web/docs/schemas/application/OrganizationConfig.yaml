@@ -1,4 +1,14 @@
+required:
+  - id
+  - domains
 type: object
 properties:
-  fields:
-    $ref: "./OrganizationConfigFields.yaml"
+  id:
+    readOnly: true
+    type: string
+    description: organization config id
+  domains:
+    type: array
+    description: organization domains
+    items:
+      type: string

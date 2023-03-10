@@ -18,8 +18,8 @@ import (
 	"encoding/json"
 
 	"github.com/google/uuid"
-	"github.com/rokwire/logging-library-go/errors"
-	"github.com/rokwire/logging-library-go/logutils"
+	"github.com/rokwire/logging-library-go/v2/errors"
+	"github.com/rokwire/logging-library-go/v2/logutils"
 )
 
 const (
@@ -67,7 +67,7 @@ func initAnonymousAuth(auth *Auth) (*anonymousAuthImpl, error) {
 
 	err := auth.registerAuthType(anonymous.authType, anonymous)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionRegister, typeAuthType, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionRegister, typeAnonymousAuthType, nil, err)
 	}
 
 	return anonymous, nil

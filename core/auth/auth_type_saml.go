@@ -17,9 +17,9 @@ package auth
 import (
 	"core-building-block/core/model"
 
-	"github.com/rokwire/logging-library-go/errors"
-	"github.com/rokwire/logging-library-go/logs"
-	"github.com/rokwire/logging-library-go/logutils"
+	"github.com/rokwire/logging-library-go/v2/errors"
+	"github.com/rokwire/logging-library-go/v2/logs"
+	"github.com/rokwire/logging-library-go/v2/logutils"
 )
 
 const (
@@ -41,8 +41,8 @@ func (a *samlAuthImpl) externalLogin(appType model.ApplicationType, appOrg model
 	return nil, nil, nil
 }
 
-func (a *samlAuthImpl) getLoginURL(appType model.ApplicationType, appOrg model.ApplicationOrganization, redirectURI string, l *logs.Log) (string, map[string]interface{}, error) {
-	return "", nil, errors.Newf("get login url operation invalid for auth_type=%s", a.authType)
+func (a *samlAuthImpl) getLoginURL(appType model.ApplicationType, redirectURI string, l *logs.Log) (string, map[string]interface{}, error) {
+	return "", nil, errors.ErrorData(logutils.StatusInvalid, "operation", logutils.StringArgs(a.authType))
 }
 
 func (a *samlAuthImpl) refresh(params map[string]interface{}, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error) {
@@ -55,7 +55,7 @@ func initSamlAuth(auth *Auth) (*samlAuthImpl, error) {
 
 	err := auth.registerAuthType(saml.authType, saml)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionRegister, typeAuthType, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionRegister, typeExternalAuthType, nil, err)
 	}
 
 	return saml, nil

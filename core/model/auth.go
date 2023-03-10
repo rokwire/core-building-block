@@ -22,19 +22,14 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/rokwire/logging-library-go/errors"
+	"github.com/rokwire/logging-library-go/v2/errors"
 
 	"github.com/rokwire/core-auth-library-go/v2/authorization"
 	"github.com/rokwire/core-auth-library-go/v2/authservice"
-	"github.com/rokwire/logging-library-go/logutils"
+	"github.com/rokwire/logging-library-go/v2/logutils"
 )
 
 const (
-	//AllApps indicates that all apps may be accessed
-	AllApps string = "all"
-	//AllOrgs indicates that all orgs may be accessed
-	AllOrgs string = "all"
-
 	//TypeLoginSession auth type type
 	TypeLoginSession logutils.MessageDataType = "login session"
 	//TypeUserAuth user auth type
@@ -51,6 +46,8 @@ const (
 	TypeServiceAccount logutils.MessageDataType = "service account"
 	//TypeServiceAccountCredential service account type
 	TypeServiceAccountCredential logutils.MessageDataType = "service account credential"
+	//TypeAppOrgPair app org pair
+	TypeAppOrgPair logutils.MessageDataType = "app org pair"
 	//TypeServiceReg service reg type
 	TypeServiceReg logutils.MessageDataType = "service reg"
 	//TypeServiceScope service scope type
@@ -85,7 +82,7 @@ type LoginSession struct {
 
 	Identifier      string //it is the account id(anonymous id for anonymous logins)
 	ExternalIDs     map[string]string
-	AccountAuthType *AccountAuthType //it is nil for anonymous logins
+	AccountAuthType *AccountAuthType //it may be nil for anonymous logins
 
 	Device *Device
 
@@ -267,9 +264,10 @@ type AuthRefresh struct {
 	DateUpdated *time.Time `bson:"date_updated"`
 }
 
-// ServiceReg represents a service registration entity
-type ServiceReg struct {
+// ServiceRegistration represents a service registration entity
+type ServiceRegistration struct {
 	Registration authservice.ServiceReg `json:"registration" bson:"registration"`
+	CoreHost     string                 `json:"core_host" bson:"core_host"`
 	Name         string                 `json:"name" bson:"name"`
 	Description  string                 `json:"description" bson:"description"`
 	InfoURL      string                 `json:"info_url" bson:"info_url"`
@@ -295,6 +293,7 @@ type ServiceAccount struct {
 	Organization *Organization
 
 	Permissions []Permission
+	Scopes      []authorization.Scope
 	FirstParty  bool
 
 	Credentials []ServiceAccountCredential
@@ -310,6 +309,15 @@ func (s ServiceAccount) GetPermissionNames() []string {
 		permissions[i] = permission.Name
 	}
 	return permissions
+}
+
+// GetScopeStrings returns all names of scopes granted to this account
+func (s ServiceAccount) GetScopeStrings() []string {
+	scopes := make([]string, len(s.Scopes))
+	for i, scope := range s.Scopes {
+		scopes[i] = scope.String()
+	}
+	return scopes
 }
 
 // AppOrgPair represents an appID, orgID pair entity

@@ -60,7 +60,7 @@ post:
     content:
       application/json:
         schema:
-          $ref: "../../schemas/apis/system/application-config/request/Request.yaml"
+          $ref: "../../schemas/application/ApplicationConfig.yaml"
         example:
           version: "1.0.1"
           app_type_id: "7e037f2d-b423-4b4d-a1bc-18507f81c6d1"

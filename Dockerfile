@@ -1,4 +1,4 @@
-FROM golang:1.18-buster as builder
+FROM golang:1.20-bullseye as builder
 
 ENV CGO_ENABLED=0
 
@@ -24,6 +24,7 @@ COPY --from=builder /core-app/driver/web/authorization_model.conf /driver/web/au
 
 COPY --from=builder /core-app/driver/web/authorization_services_policy.csv /driver/web/authorization_services_policy.csv
 COPY --from=builder /core-app/driver/web/authorization_admin_policy.csv /driver/web/authorization_admin_policy.csv
+COPY --from=builder /core-app/driver/web/authorization_enc_policy.csv /driver/web/authorization_enc_policy.csv
 COPY --from=builder /core-app/driver/web/authorization_bbs_policy.csv /driver/web/authorization_bbs_policy.csv
 COPY --from=builder /core-app/driver/web/authorization_tps_policy.csv /driver/web/authorization_tps_policy.csv
 COPY --from=builder /core-app/driver/web/authorization_system_policy.csv /driver/web/authorization_system_policy.csv
@@ -38,5 +39,4 @@ COPY --from=builder /etc/passwd /etc/passwd
 #we need timezone database
 COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo 
 
-EXPOSE 80
 ENTRYPOINT ["/core-building-block"]

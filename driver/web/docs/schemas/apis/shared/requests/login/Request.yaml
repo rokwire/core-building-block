@@ -34,9 +34,12 @@ properties:
       - $ref: "../ParamsOIDC.yaml"
       - $ref: "../ParamsNone.yaml"
   device:
-    $ref: "./Device.yaml"
+    $ref: "../../../../user/Device.yaml"
   profile:
-    $ref:  "../../requests/ProfileNullable.yaml"  
+    $ref:  "../../../../user/ProfileNullable.yaml"  
   preferences:
     type: object
+    nullable: true
+  username:
+    type: string
     nullable: true

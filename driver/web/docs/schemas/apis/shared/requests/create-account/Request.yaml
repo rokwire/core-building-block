@@ -24,4 +24,7 @@ properties:
     items:
       type: string
   profile:
-    $ref:  "../ProfileNullable.yaml"
+    $ref:  "../../../../user/ProfileNullable.yaml"
+  username:
+    type: string
+    nullable: true

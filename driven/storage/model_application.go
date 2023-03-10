@@ -38,6 +38,9 @@ type applicationType struct {
 	Identifier string    `bson:"identifier"`
 	Name       string    `bson:"name"`
 	Versions   []version `bson:"versions"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
 }
 
 type version struct {

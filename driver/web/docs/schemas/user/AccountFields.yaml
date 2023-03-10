@@ -1,9 +1,0 @@
-required:
-  - id
-  - has_permissions
-type: object
-properties:
-  id:
-    type: string
-  has_permissions:
-    type: boolean

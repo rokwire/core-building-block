@@ -1,0 +1,84 @@
+post:
+  tags:
+    - Third-Party Services
+  summary: Finds user accounts
+  description: |
+    Finds accounts for the given app_id and org_id (query or token)
+
+    **Auth:** Requires service access token with `get_accounts` or `all_accounts` permission
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: app_id
+      in: query
+      description: The application ID to use to filter accounts
+      required: false
+      style: form
+      explode: false
+      schema:
+        type: string
+    - name: org_id
+      in: query
+      description: The organization ID to use to filter accounts
+      required: false
+      style: form
+      explode: false
+      schema:
+        type: string
+    - name: limit
+      in: query
+      description: The maximum number of accounts to return
+      required: false
+      style: form
+      explode: false
+      schema:
+        type: integer
+    - name: offset
+      in: query
+      description: The index of the first account to return
+      required: false
+      style: form
+      explode: false
+      schema:
+        type: integer
+  requestBody:
+    description: |
+      Service account credentials
+    content:
+      application/json:
+        schema:
+          type: object
+        examples:
+          single_value:
+            summary: Multiple single-value search parameters
+            value:
+              profile.first_name: Example
+              preferences.privacy_level: 4
+              external_ids.uin: "123456789"
+          multiple_value:
+            summary: Some single-value, some multi-value search parameters
+            value:
+              profile.first_name: Example
+              preferences.privacy_level:
+                - 3
+                - 4
+                - 5
+              external_ids.uin: "123456789"
+    required: true
+  responses:
+    200:
+      description: Success
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              type: object
+    400:
+      description: Bad request
+    401:
+      description: Unauthorized
+    403:
+      description: Forbidden
+    500:
+      description: Internal error

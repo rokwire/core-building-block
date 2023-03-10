@@ -28,10 +28,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/rokwire/logging-library-go/logs"
-	"github.com/rokwire/logging-library-go/logutils"
+	"github.com/rokwire/logging-library-go/v2/logs"
+	"github.com/rokwire/logging-library-go/v2/logutils"
 
-	"github.com/rokwire/logging-library-go/errors"
+	"github.com/rokwire/logging-library-go/v2/errors"
 )
 
 const (
@@ -49,6 +49,8 @@ const (
 	ErrorStatusSharedCredentialUnverified string = "shared-credential-unverified"
 	//ErrorStatusNotAllowed ...
 	ErrorStatusNotAllowed string = "not-allowed"
+	//ErrorStatusUsernameTaken ...
+	ErrorStatusUsernameTaken string = "username-taken"
 
 	//Character sets for password generation
 	upper   string = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -62,7 +64,7 @@ func SetRandomSeed() error {
 	seed := make([]byte, 8)
 	_, err := crand.Read(seed)
 	if err != nil {
-		return errors.WrapErrorAction("generating", "math/rand seed", nil, err)
+		return errors.WrapErrorAction(logutils.ActionGenerate, "math/rand seed", nil, err)
 	}
 
 	rand.Seed(int64(binary.LittleEndian.Uint64(seed)))
@@ -108,7 +110,7 @@ func GenerateRandomPassword(s int) string {
 func ConvertToJSON(data interface{}) ([]byte, error) {
 	dataJSON, err := json.Marshal(data)
 	if err != nil {
-		return nil, errors.WrapErrorAction("error converting map to json", "", nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionMarshal, "map to json", nil, err)
 	}
 	return dataJSON, nil
 }
@@ -140,6 +142,7 @@ func GetIP(l *logs.Log, r *http.Request) string {
 	if IPAddress == "" {
 		IPAddress = r.RemoteAddr
 	}
+	l.AddContext("ip_address", IPAddress)
 	return IPAddress
 }
 
@@ -211,9 +214,19 @@ func GetSuffix(s string, sep string) (string, error) {
 	return s, nil
 }
 
-// StringOrNil returns a pointer to the input string, but returns nil if input is empty
-func StringOrNil(v string) *string {
-	if v == "" {
+// StringPrefixes returns a list of all prefixes of s delimited by sep, including s itself
+func StringPrefixes(s string, sep string) []string {
+	subStrings := strings.Split(s, sep)
+	prefixes := make([]string, len(subStrings))
+	for i := 1; i <= len(subStrings); i++ {
+		prefixes[i-1] = strings.Join(subStrings[0:i], sep)
+	}
+	return prefixes
+}
+
+// StringOrNil returns a pointer to the input string, but returns nil if input matches nilVal
+func StringOrNil(v string, nilVal string) *string {
+	if v == nilVal {
 		return nil
 	}
 	return &v

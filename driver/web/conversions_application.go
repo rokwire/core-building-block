@@ -20,19 +20,55 @@ import (
 	"core-building-block/utils"
 )
 
-//Application
-//TODO
-/*
-func applicationToDef(item *model.Application) *Def.Application {
+// Application
+func applicationToDef(item model.Application) Def.Application {
+	types := applicationTypeListToDef(item.Types)
+
+	return Def.Application{Id: &item.ID, Name: item.Name, MultiTenant: item.MultiTenant, Admin: item.Admin,
+		SharedIdentities: item.SharedIdentities, Types: &types}
+}
+
+func applicationsToDef(item []model.Application) []Def.Application {
+	result := make([]Def.Application, len(item))
+	for i, item := range item {
+		result[i] = applicationToDef(item)
+	}
+	return result
+}
+
+// Application Type
+func applicationTypeListFromDef(items []Def.ApplicationType) []model.ApplicationType {
+	result := make([]model.ApplicationType, len(items))
+	for i, item := range items {
+		result[i] = *applicationTypeFromDef(&item)
+	}
+	return result
+}
+
+func applicationTypeFromDef(item *Def.ApplicationType) *model.ApplicationType {
 	if item == nil {
 		return nil
 	}
 
-	fields := Def.ApplicationFields{Id: item.ID, Name: item.Name, MultiTenant: &item.MultiTenant,
-		RequiresOwnUsers: &item.RequiresOwnUsers}
-	types := applicationTypeListToDef(item.Types)
+	id := ""
+	if item.Id != nil {
+		id = *item.Id
+	}
+	name := ""
+	if item.Name != nil {
+		name = *item.Name
+	}
+	versions := make([]model.Version, 0)
+	if item.Versions != nil {
+		for _, v := range *item.Versions {
+			versionNumbers := model.VersionNumbersFromString(v)
+			if versionNumbers != nil {
+				versions = append(versions, model.Version{VersionNumbers: *versionNumbers, ApplicationType: model.ApplicationType{ID: id}})
+			}
+		}
+	}
 
-	return &Def.Application{Fields: &fields, Types: &types}
+	return &model.ApplicationType{ID: id, Identifier: item.Identifier, Name: name, Versions: versions}
 }
 
 func applicationTypeListToDef(items []model.ApplicationType) []Def.ApplicationType {
@@ -50,28 +86,20 @@ func applicationTypeToDef(item *model.ApplicationType) *Def.ApplicationType {
 
 	var name *string
 	if len(item.Name) > 0 {
-		name = &item.Name
+		nameStr := item.Name
+		name = &nameStr
 	}
 	var versions *[]string
-	if len(item.Versions) > 0 {
-		versions = &item.Versions
+	if item.Versions != nil {
+		versionList := make([]string, len(item.Versions))
+		for i, v := range item.Versions {
+			versionList[i] = v.VersionNumbers.String()
+		}
+		versions = &versionList
 	}
 
-	return &Def.ApplicationType{Fields: &Def.ApplicationTypeFields{Id: item.ID, Identifier: item.Identifier, Name: name, Versions: versions}}
-} */
-
-func applicationToDef(item model.Application) Def.ApplicationFields {
-
-	return Def.ApplicationFields{Id: item.ID, Name: item.Name, MultiTenant: &item.MultiTenant,
-		SharedIdentities: &item.SharedIdentities}
-}
-
-func applicationsToDef(item []model.Application) []Def.ApplicationFields {
-	result := make([]Def.ApplicationFields, len(item))
-	for i, item := range item {
-		result[i] = applicationToDef(item)
-	}
-	return result
+	id := item.ID
+	return &Def.ApplicationType{Id: &id, Identifier: item.Identifier, Name: name, Versions: versions}
 }
 
 // ApplicationPermission
@@ -89,8 +117,9 @@ func applicationPermissionToDef(item model.Permission) Def.Permission {
 		formatted := utils.FormatTime(item.DateUpdated)
 		dateUpdated = &formatted
 	}
-
-	return Def.Permission{Id: item.ID, Name: item.Name, Description: &item.Description, ServiceId: &item.ServiceID, Assigners: &assigners, DateCreated: &dateCreated, DateUpdated: dateUpdated}
+	description := item.Description
+	serviceID := item.ServiceID
+	return Def.Permission{Id: &item.ID, Name: item.Name, Description: &description, ServiceId: &serviceID, Assigners: &assigners, DateCreated: &dateCreated, DateUpdated: dateUpdated}
 }
 
 func applicationPermissionsToDef(items []model.Permission) []Def.Permission {
@@ -99,6 +128,138 @@ func applicationPermissionsToDef(items []model.Permission) []Def.Permission {
 		result[i] = applicationPermissionToDef(item)
 	}
 	return result
+}
+
+// AppOrg
+func appOrgFromDef(item *Def.ApplicationOrganization) *model.ApplicationOrganization {
+	if item == nil {
+		return nil
+	}
+	var id string
+	if item.Id != nil {
+		id = *item.Id
+	}
+	var serviceIds []string
+	if item.ServicesIds != nil {
+		serviceIds = *item.ServicesIds
+	}
+
+	authTypes := supportedAuthTypesFromDef(item.AuthTypes.AdditionalProperties)
+	loginsSessionsSetting := loginSessionSettingsFromDef(item.LoginSessionSettings)
+
+	return &model.ApplicationOrganization{ID: id, ServicesIDs: serviceIds, AuthTypes: authTypes, LoginsSessionsSetting: *loginsSessionsSetting}
+}
+
+func appOrgToDef(item *model.ApplicationOrganization) *Def.ApplicationOrganization {
+	if item == nil {
+		return nil
+	}
+
+	authTypes := Def.ApplicationOrganization_AuthTypes{AdditionalProperties: supportedAuthTypesToDef(item.AuthTypes)}
+	loginsSessionsSetting := loginSessionSettingsToDef(item.LoginsSessionsSetting)
+	id := item.ID
+	serviceIDs := item.ServicesIDs
+	return &Def.ApplicationOrganization{Id: &id, AppId: item.Application.ID, OrgId: item.Organization.ID, ServicesIds: &serviceIDs,
+		AuthTypes: &authTypes, LoginSessionSettings: &loginsSessionsSetting}
+}
+
+func appOrgsToDef(items []model.ApplicationOrganization) []Def.ApplicationOrganization {
+	if items == nil {
+		return nil
+	}
+	out := make([]Def.ApplicationOrganization, len(items))
+	for i, item := range items {
+		defItem := appOrgToDef(&item)
+		if defItem != nil {
+			out[i] = *defItem
+		} else {
+			out[i] = Def.ApplicationOrganization{}
+		}
+	}
+
+	return out
+}
+
+func loginSessionSettingsFromDef(item *Def.LoginSessionSettings) *model.LoginsSessionsSetting {
+	if item == nil {
+		return nil
+	}
+
+	var maxConcurrentSessions int
+	if item.MaxConcurrentSessions != nil {
+		maxConcurrentSessions = *item.MaxConcurrentSessions
+	}
+	inactivityExpirePolicy := model.InactivityExpirePolicy{}
+	if item.InactivityExpirePolicy != nil {
+		inactivityExpirePolicy = model.InactivityExpirePolicy{Active: item.InactivityExpirePolicy.Active, InactivityPeriod: item.InactivityExpirePolicy.InactivityPeriod}
+	}
+	tslExpirePolicy := model.TSLExpirePolicy{}
+	if item.TimeSinceLoginExpirePolicy != nil {
+		tslExpirePolicy = model.TSLExpirePolicy{Active: item.TimeSinceLoginExpirePolicy.Active, TimeSinceLoginPeriod: item.TimeSinceLoginExpirePolicy.TimeSinceLoginPeriod}
+	}
+	yearlyExpirePolicy := model.YearlyExpirePolicy{}
+	if item.YearlyExpirePolicy != nil {
+		yearlyExpirePolicy = model.YearlyExpirePolicy{Active: item.YearlyExpirePolicy.Active, Day: item.YearlyExpirePolicy.Day, Month: item.YearlyExpirePolicy.Month,
+			Hour: item.YearlyExpirePolicy.Hour, Min: item.YearlyExpirePolicy.Min}
+	}
+
+	return &model.LoginsSessionsSetting{MaxConcurrentSessions: maxConcurrentSessions, InactivityExpirePolicy: inactivityExpirePolicy,
+		TSLExpirePolicy: tslExpirePolicy, YearlyExpirePolicy: yearlyExpirePolicy}
+}
+
+func loginSessionSettingsToDef(item model.LoginsSessionsSetting) Def.LoginSessionSettings {
+	inactivityExpirePolicy := Def.InactiveExpirePolicy{Active: item.InactivityExpirePolicy.Active, InactivityPeriod: item.InactivityExpirePolicy.InactivityPeriod}
+	tslExpirePolicy := Def.TSLExpirePolicy{Active: item.TSLExpirePolicy.Active, TimeSinceLoginPeriod: item.TSLExpirePolicy.TimeSinceLoginPeriod}
+	yearlyExpirePolicy := Def.YearlyExpirePolicy{Active: item.YearlyExpirePolicy.Active, Day: item.YearlyExpirePolicy.Day, Month: item.YearlyExpirePolicy.Month,
+		Hour: item.YearlyExpirePolicy.Hour, Min: item.YearlyExpirePolicy.Min}
+
+	maxConcurrentSessions := item.MaxConcurrentSessions
+	return Def.LoginSessionSettings{MaxConcurrentSessions: &maxConcurrentSessions, InactivityExpirePolicy: &inactivityExpirePolicy,
+		TimeSinceLoginExpirePolicy: &tslExpirePolicy, YearlyExpirePolicy: &yearlyExpirePolicy}
+}
+
+func supportedAuthTypesFromDef(items map[string]Def.SupportedAuthType) map[string]model.SupportedAuthType {
+	if items == nil {
+		return nil
+	}
+
+	out := make(map[string]model.SupportedAuthType)
+	for code, authType := range items {
+		out[code] = supportedAuthTypeFromDef(authType)
+	}
+	return out
+}
+
+func supportedAuthTypeFromDef(item Def.SupportedAuthType) model.SupportedAuthType {
+	var configs map[string]interface{}
+	if item.Configs != nil {
+		configs = item.Configs.AdditionalProperties
+	}
+	var appTypeConfigs map[string]interface{}
+	if item.AppTypeConfigs != nil {
+		appTypeConfigs = item.AppTypeConfigs.AdditionalProperties
+	}
+
+	return model.SupportedAuthType{Configs: configs, AppTypeConfigs: appTypeConfigs, Alias: item.Alias}
+}
+
+func supportedAuthTypesToDef(items map[string]model.SupportedAuthType) map[string]Def.SupportedAuthType {
+	if items == nil {
+		return nil
+	}
+
+	out := make(map[string]Def.SupportedAuthType)
+	for code, authType := range items {
+		out[code] = supportedAuthTypeToDef(authType)
+	}
+	return out
+}
+
+func supportedAuthTypeToDef(item model.SupportedAuthType) Def.SupportedAuthType {
+	configs := Def.SupportedAuthType_Configs{AdditionalProperties: item.Configs}
+	appTypeConfigs := Def.SupportedAuthType_AppTypeConfigs{AdditionalProperties: item.AppTypeConfigs}
+
+	return Def.SupportedAuthType{Configs: &configs, AppTypeConfigs: &appTypeConfigs, Alias: item.Alias}
 }
 
 // AppOrgRole
@@ -112,8 +273,10 @@ func appOrgRoleToDef(item model.AppOrgRole) Def.AppOrgRole {
 		formatted := utils.FormatTime(item.DateUpdated)
 		dateUpdated = &formatted
 	}
-
-	return Def.AppOrgRole{Id: item.ID, Name: item.Name, Description: &item.Description, System: &item.System, DateCreated: &dateCreated, DateUpdated: dateUpdated, Permissions: &permissions}
+	id := item.ID
+	description := item.Description
+	system := item.System
+	return Def.AppOrgRole{Id: &id, Name: item.Name, Description: &description, System: &system, DateCreated: &dateCreated, DateUpdated: dateUpdated, Permissions: &permissions}
 }
 
 func appOrgRolesToDef(items []model.AppOrgRole) []Def.AppOrgRole {
@@ -137,7 +300,7 @@ func appOrgGroupToDef(item model.AppOrgGroup) Def.AppOrgGroup {
 		dateUpdated = &formatted
 	}
 
-	return Def.AppOrgGroup{Id: item.ID, Name: item.Name, Description: &item.Description, System: &item.System, DateCreated: &dateCreated, DateUpdated: dateUpdated, Permissions: &permissions, Roles: &roles}
+	return Def.AppOrgGroup{Id: &item.ID, Name: item.Name, Description: &item.Description, System: &item.System, DateCreated: &dateCreated, DateUpdated: dateUpdated, Permissions: &permissions, Roles: &roles}
 }
 
 func appOrgGroupsToDef(items []model.AppOrgGroup) []Def.AppOrgGroup {
@@ -153,11 +316,10 @@ func organizationToDef(item *model.Organization) *Def.Organization {
 	if item == nil {
 		return nil
 	}
-
-	fields := Def.OrganizationFields{Id: item.ID, Name: item.Name, Type: Def.OrganizationFieldsType(item.Type)}
+	id := item.ID
 	config := item.Config
 
-	return &Def.Organization{Config: organizationConfigToDef(&config), Fields: &fields}
+	return &Def.Organization{Id: &id, Name: item.Name, Type: Def.OrganizationType(item.Type), Config: organizationConfigToDef(&config)}
 }
 
 func organizationsToDef(items []model.Organization) []Def.Organization {
@@ -168,7 +330,7 @@ func organizationsToDef(items []model.Organization) []Def.Organization {
 	return result
 }
 
-func organizationConfigToDef(item *model.OrganizationConfig) *Def.OrganizationConfigFields {
+func organizationConfigToDef(item *model.OrganizationConfig) *Def.OrganizationConfig {
 	if item == nil {
 		return nil
 	}
@@ -177,19 +339,16 @@ func organizationConfigToDef(item *model.OrganizationConfig) *Def.OrganizationCo
 	if len(item.ID) > 0 {
 		id = &item.ID
 	}
-	var domains *[]string
-	if len(item.Domains) > 0 {
-		domains = &item.Domains
-	}
 
-	return &Def.OrganizationConfigFields{Id: id, Domains: domains}
+	return &Def.OrganizationConfig{Id: id, Domains: item.Domains}
 }
 
 // App Config
 func appConfigToDef(item model.ApplicationConfig) Def.ApplicationConfig {
-	defConfig := Def.ApplicationConfig{Id: item.ID, AppTypeId: item.ApplicationType.ID, Version: item.Version.VersionNumbers.String(), Data: item.Data}
+	defConfig := Def.ApplicationConfig{Id: &item.ID, AppTypeId: item.ApplicationType.ID, Version: item.Version.VersionNumbers.String(), Data: item.Data}
 	if item.AppOrg != nil {
-		defConfig.OrgId = &item.AppOrg.Organization.ID
+		orgID := item.AppOrg.Organization.ID
+		defConfig.OrgId = &orgID
 	}
 
 	return defConfig
