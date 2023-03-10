@@ -31,6 +31,8 @@ SupportedAuthType:
   $ref: "./application/SupportedAuthType.yaml"
 LoginSessionSettings:
   $ref: "./application/LoginSessionSettings.yaml"
+AppAuthLoginSessionSettings:
+  $ref: "./application/AppAuthLoginSessionSettings.yaml"
 YearlyExpirePolicy:
   $ref: "./application/YearlyExpirePolicy.yaml"
 InactiveExpirePolicy:

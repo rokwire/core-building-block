@@ -212,6 +212,16 @@ type AdminToken struct {
 	Token string `json:"token"`
 }
 
+// AppAuthLoginSessionSettings defines model for AppAuthLoginSessionSettings.
+type AppAuthLoginSessionSettings struct {
+	AppTypeId                  *string               `json:"app_type_id"`
+	AuthTypeCode               *string               `json:"auth_type_code"`
+	InactivityExpirePolicy     *InactiveExpirePolicy `json:"inactivity_expire_policy,omitempty"`
+	MaxConcurrentSessions      *int                  `json:"max_concurrent_sessions,omitempty"`
+	TimeSinceLoginExpirePolicy *TSLExpirePolicy      `json:"time_since_login_expire_policy,omitempty"`
+	YearlyExpirePolicy         *YearlyExpirePolicy   `json:"yearly_expire_policy,omitempty"`
+}
+
 // AppOrgGroup defines model for AppOrgGroup.
 type AppOrgGroup struct {
 	Application *Application  `json:"application,omitempty"`
@@ -439,10 +449,8 @@ type LoginSession struct {
 
 // LoginSessionSettings defines model for LoginSessionSettings.
 type LoginSessionSettings struct {
-	InactivityExpirePolicy     *InactiveExpirePolicy `json:"inactivity_expire_policy,omitempty"`
-	MaxConcurrentSessions      *int                  `json:"max_concurrent_sessions,omitempty"`
-	TimeSinceLoginExpirePolicy *TSLExpirePolicy      `json:"time_since_login_expire_policy,omitempty"`
-	YearlyExpirePolicy         *YearlyExpirePolicy   `json:"yearly_expire_policy,omitempty"`
+	Default   *AppAuthLoginSessionSettings   `json:"default,omitempty"`
+	Overrides *[]AppAuthLoginSessionSettings `json:"overrides,omitempty"`
 }
 
 // OpenID Connect Discovery Metadata

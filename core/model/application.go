@@ -336,8 +336,8 @@ type ApplicationOrganization struct {
 
 	ServicesIDs []string //which services are used for this app/org
 
-	AuthTypes             map[string]SupportedAuthType //supported auth types for this organization in this application
-	LoginsSessionsSetting LoginsSessionsSetting
+	AuthTypes            map[string]SupportedAuthType //supported auth types for this organization in this application
+	LoginSessionSettings LoginSessionSettings
 
 	DateCreated time.Time
 	DateUpdated *time.Time
@@ -430,8 +430,29 @@ type IdentityProviderSetting struct {
 	Groups map[string]string `json:"groups" bson:"groups"` //map[identity_provider_group]app_group_id
 }
 
-// LoginsSessionsSetting represents logins sessions setting for an organization in an application
-type LoginsSessionsSetting struct {
+// LoginSessionSettings represents a wrapper for default login session settings and any overrides
+type LoginSessionSettings struct {
+	Default   AppAuthLoginSessionSettings   `bson:"default"`
+	Overrides []AppAuthLoginSessionSettings `bson:"overrides"`
+}
+
+// GetAppAuthSettings gets the login session settings for the provided app type and auth type
+func (l *LoginSessionSettings) GetAppAuthSettings(appTypeID string, authTypeCode string) AppAuthLoginSessionSettings {
+	loginSessionSettings := l.Default
+	for _, settings := range l.Overrides {
+		if (settings.AppTypeID == nil || *settings.AppTypeID == appTypeID) || (settings.AuthTypeCode == nil || *settings.AuthTypeCode == authTypeCode) {
+			loginSessionSettings = settings
+		}
+	}
+
+	return loginSessionSettings
+}
+
+// AppAuthLoginSessionSettings represents login session settings for an app type and auth type
+type AppAuthLoginSessionSettings struct {
+	AppTypeID    *string `bson:"app_type_id,omitempty"`
+	AuthTypeCode *string `bson:"auth_type_code,omitempty"`
+
 	MaxConcurrentSessions int `bson:"max_concurrent_sessions"`
 
 	InactivityExpirePolicy InactivityExpirePolicy `bson:"inactivity_expire_policy"`

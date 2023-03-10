@@ -145,9 +145,27 @@ func appOrgFromDef(item *Def.ApplicationOrganization) *model.ApplicationOrganiza
 	}
 
 	authTypes := supportedAuthTypesFromDef(item.AuthTypes.AdditionalProperties)
-	loginsSessionsSetting := loginSessionSettingsFromDef(item.LoginSessionSettings)
 
-	return &model.ApplicationOrganization{ID: id, ServicesIDs: serviceIds, AuthTypes: authTypes, LoginsSessionsSetting: *loginsSessionsSetting}
+	loginSessionSettings := model.LoginSessionSettings{}
+	if item.LoginSessionSettings != nil {
+		var defaultSettings model.AppAuthLoginSessionSettings
+		defaultSettingsVal := loginSessionSettingsFromDef(item.LoginSessionSettings.Default)
+		if defaultSettingsVal != nil {
+			defaultSettings = *defaultSettingsVal
+		}
+
+		var overrideSettings []model.AppAuthLoginSessionSettings
+		if item.LoginSessionSettings.Overrides != nil {
+			overrideSettings = loginSessionSettingsListFromDef(*item.LoginSessionSettings.Overrides)
+		}
+
+		loginSessionSettings = model.LoginSessionSettings{
+			Default:   defaultSettings,
+			Overrides: overrideSettings,
+		}
+	}
+
+	return &model.ApplicationOrganization{ID: id, ServicesIDs: serviceIds, AuthTypes: authTypes, LoginSessionSettings: loginSessionSettings}
 }
 
 func appOrgToDef(item *model.ApplicationOrganization) *Def.ApplicationOrganization {
@@ -156,11 +174,19 @@ func appOrgToDef(item *model.ApplicationOrganization) *Def.ApplicationOrganizati
 	}
 
 	authTypes := Def.ApplicationOrganization_AuthTypes{AdditionalProperties: supportedAuthTypesToDef(item.AuthTypes)}
-	loginsSessionsSetting := loginSessionSettingsToDef(item.LoginsSessionsSetting)
+
+	defaultSettingsVal := item.LoginSessionSettings.Default
+	defaultSettings := loginSessionSettingsToDef(&defaultSettingsVal)
+	overrideSettings := loginSessionSettingsListToDef(item.LoginSessionSettings.Overrides)
+	loginSessionSettings := Def.LoginSessionSettings{
+		Default:   defaultSettings,
+		Overrides: &overrideSettings,
+	}
+
 	id := item.ID
 	serviceIDs := item.ServicesIDs
 	return &Def.ApplicationOrganization{Id: &id, AppId: item.Application.ID, OrgId: item.Organization.ID, ServicesIds: &serviceIDs,
-		AuthTypes: &authTypes, LoginSessionSettings: &loginsSessionsSetting}
+		AuthTypes: &authTypes, LoginSessionSettings: &loginSessionSettings}
 }
 
 func appOrgsToDef(items []model.ApplicationOrganization) []Def.ApplicationOrganization {
@@ -180,7 +206,21 @@ func appOrgsToDef(items []model.ApplicationOrganization) []Def.ApplicationOrgani
 	return out
 }
 
-func loginSessionSettingsFromDef(item *Def.LoginSessionSettings) *model.LoginsSessionsSetting {
+func loginSessionSettingsListFromDef(items []Def.AppAuthLoginSessionSettings) []model.AppAuthLoginSessionSettings {
+	out := make([]model.AppAuthLoginSessionSettings, len(items))
+	for i, item := range items {
+		defItem := loginSessionSettingsFromDef(&item)
+		if defItem != nil {
+			out[i] = *defItem
+		} else {
+			out[i] = model.AppAuthLoginSessionSettings{}
+		}
+	}
+
+	return out
+}
+
+func loginSessionSettingsFromDef(item *Def.AppAuthLoginSessionSettings) *model.AppAuthLoginSessionSettings {
 	if item == nil {
 		return nil
 	}
@@ -203,18 +243,36 @@ func loginSessionSettingsFromDef(item *Def.LoginSessionSettings) *model.LoginsSe
 			Hour: item.YearlyExpirePolicy.Hour, Min: item.YearlyExpirePolicy.Min}
 	}
 
-	return &model.LoginsSessionsSetting{MaxConcurrentSessions: maxConcurrentSessions, InactivityExpirePolicy: inactivityExpirePolicy,
+	return &model.AppAuthLoginSessionSettings{MaxConcurrentSessions: maxConcurrentSessions, InactivityExpirePolicy: inactivityExpirePolicy,
 		TSLExpirePolicy: tslExpirePolicy, YearlyExpirePolicy: yearlyExpirePolicy}
 }
 
-func loginSessionSettingsToDef(item model.LoginsSessionsSetting) Def.LoginSessionSettings {
+func loginSessionSettingsListToDef(items []model.AppAuthLoginSessionSettings) []Def.AppAuthLoginSessionSettings {
+	out := make([]Def.AppAuthLoginSessionSettings, len(items))
+	for i, item := range items {
+		defItem := loginSessionSettingsToDef(&item)
+		if defItem != nil {
+			out[i] = *defItem
+		} else {
+			out[i] = Def.AppAuthLoginSessionSettings{}
+		}
+	}
+
+	return out
+}
+
+func loginSessionSettingsToDef(item *model.AppAuthLoginSessionSettings) *Def.AppAuthLoginSessionSettings {
+	if item == nil {
+		return nil
+	}
+
 	inactivityExpirePolicy := Def.InactiveExpirePolicy{Active: item.InactivityExpirePolicy.Active, InactivityPeriod: item.InactivityExpirePolicy.InactivityPeriod}
 	tslExpirePolicy := Def.TSLExpirePolicy{Active: item.TSLExpirePolicy.Active, TimeSinceLoginPeriod: item.TSLExpirePolicy.TimeSinceLoginPeriod}
 	yearlyExpirePolicy := Def.YearlyExpirePolicy{Active: item.YearlyExpirePolicy.Active, Day: item.YearlyExpirePolicy.Day, Month: item.YearlyExpirePolicy.Month,
 		Hour: item.YearlyExpirePolicy.Hour, Min: item.YearlyExpirePolicy.Min}
 
 	maxConcurrentSessions := item.MaxConcurrentSessions
-	return Def.LoginSessionSettings{MaxConcurrentSessions: &maxConcurrentSessions, InactivityExpirePolicy: &inactivityExpirePolicy,
+	return &Def.AppAuthLoginSessionSettings{MaxConcurrentSessions: &maxConcurrentSessions, InactivityExpirePolicy: &inactivityExpirePolicy,
 		TimeSinceLoginExpirePolicy: &tslExpirePolicy, YearlyExpirePolicy: &yearlyExpirePolicy}
 }
 

@@ -3206,7 +3206,7 @@ func (sa *Adapter) UpdateApplicationOrganization(context TransactionContext, app
 	update := bson.D{primitive.E{Key: "date_updated", Value: now},
 		primitive.E{Key: "services_ids", Value: appOrg.ServicesIDs},
 		primitive.E{Key: "auth_types", Value: appOrg.AuthTypes},
-		primitive.E{Key: "logins_sessions_settings", Value: appOrg.LoginsSessionsSetting},
+		primitive.E{Key: "logins_sessions_settings", Value: appOrg.LoginSessionSettings},
 	}
 
 	updateAppOrg := bson.D{

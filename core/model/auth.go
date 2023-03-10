@@ -103,11 +103,11 @@ type LoginSession struct {
 
 // IsExpired says if the sessions is expired
 func (ls LoginSession) IsExpired() bool {
-	loginsSessionsSetting := ls.AppOrg.LoginsSessionsSetting
+	loginSessionSettings := ls.AppOrg.LoginSessionSettings.GetAppAuthSettings(ls.AppType.ID, ls.AuthTypeCode)
 
-	inactivityExpirePolicy := loginsSessionsSetting.InactivityExpirePolicy
-	tslExpirePolicy := loginsSessionsSetting.TSLExpirePolicy
-	yearlyExpirePolicy := loginsSessionsSetting.YearlyExpirePolicy
+	inactivityExpirePolicy := loginSessionSettings.InactivityExpirePolicy
+	tslExpirePolicy := loginSessionSettings.TSLExpirePolicy
+	yearlyExpirePolicy := loginSessionSettings.YearlyExpirePolicy
 
 	inactivityActive := inactivityExpirePolicy.Active
 	tslActive := tslExpirePolicy.Active

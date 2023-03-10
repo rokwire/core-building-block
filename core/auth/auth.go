@@ -1043,7 +1043,7 @@ func (a *Auth) applyLogin(anonymous bool, sub string, authTypeCode string, appOr
 		}
 
 		//2. check session limit against number of active sessions
-		sessionLimit := appOrg.LoginsSessionsSetting.MaxConcurrentSessions
+		sessionLimit := appOrg.LoginSessionSettings.GetAppAuthSettings(appType.ID, authTypeCode).MaxConcurrentSessions
 		if sessionLimit > 0 {
 			loginSessions, err := a.storage.FindLoginSessions(context, loginSession.Identifier)
 			if err != nil {
