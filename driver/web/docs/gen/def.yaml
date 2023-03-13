@@ -5520,18 +5520,13 @@ components:
         configs:
           type: object
           nullable: true
-          additionalProperties:
-            type: object
-            properties: null
-            anyOf:
-              - $ref: '#/components/schemas/IdentityProviderSettings'
-              - $ref: '#/components/schemas/AuthProvider'
+          anyOf:
+            - $ref: '#/components/schemas/IdentityProviderSettings'
+            - $ref: '#/components/schemas/AuthProvider'
         app_type_configs:
           type: object
           nullable: true
           additionalProperties:
-            type: object
-            properties: null
             anyOf:
               - $ref: '#/components/schemas/AuthConfigOidc'
         alias:

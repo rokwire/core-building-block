@@ -114,7 +114,7 @@ type System interface {
 
 	SysGetApplicationOrganization(ID string) (*model.ApplicationOrganization, error)
 	SysGetApplicationOrganizations(appID *string, orgID *string) ([]model.ApplicationOrganization, error)
-	SysCreateApplicationOrganization(appID string, orgID string, appOrg model.ApplicationOrganization) error
+	SysCreateApplicationOrganization(appOrg model.ApplicationOrganization) error
 	SysUpdateApplicationOrganization(updateAppOrg model.ApplicationOrganization) error
 
 	SysCreateOrganization(name string, requestType string, organizationDomains []string) (*model.Organization, error)

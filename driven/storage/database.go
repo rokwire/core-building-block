@@ -217,7 +217,8 @@ func (m *database) start() error {
 
 func (m *database) applyAccountsChecks(accounts *collectionWrapper) error {
 	m.logger.Info("apply accounts checks.....")
-	//TODO: drop unused indexes?
+
+	accounts.DropIndex("auth_types.identifier_1_auth_types.auth_type_id_1_app_org_id_1")
 
 	//add compound unique index - identifier + auth_type_code + app_org_id
 	// Can't be unique because of anonymous accounts

@@ -165,7 +165,8 @@ func appOrgFromDef(item *Def.ApplicationOrganization) *model.ApplicationOrganiza
 		}
 	}
 
-	return &model.ApplicationOrganization{ID: id, ServicesIDs: serviceIds, AuthTypes: authTypes, LoginSessionSettings: loginSessionSettings}
+	return &model.ApplicationOrganization{ID: id, Application: model.Application{ID: item.AppId}, Organization: model.Organization{ID: item.OrgId},
+		ServicesIDs: serviceIds, AuthTypes: authTypes, LoginSessionSettings: loginSessionSettings}
 }
 
 func appOrgToDef(item *model.ApplicationOrganization) *Def.ApplicationOrganization {
@@ -225,6 +226,17 @@ func loginSessionSettingsFromDef(item *Def.AppAuthLoginSessionSettings) *model.A
 		return nil
 	}
 
+	var appTypeID *string
+	if item.AppTypeId != nil {
+		appTypeIDVal := *item.AppTypeId
+		appTypeID = &appTypeIDVal
+	}
+	var authTypeCode *string
+	if item.AuthTypeCode != nil {
+		authTypeCodeVal := *item.AuthTypeCode
+		authTypeCode = &authTypeCodeVal
+	}
+
 	var maxConcurrentSessions int
 	if item.MaxConcurrentSessions != nil {
 		maxConcurrentSessions = *item.MaxConcurrentSessions
@@ -243,8 +255,8 @@ func loginSessionSettingsFromDef(item *Def.AppAuthLoginSessionSettings) *model.A
 			Hour: item.YearlyExpirePolicy.Hour, Min: item.YearlyExpirePolicy.Min}
 	}
 
-	return &model.AppAuthLoginSessionSettings{MaxConcurrentSessions: maxConcurrentSessions, InactivityExpirePolicy: inactivityExpirePolicy,
-		TSLExpirePolicy: tslExpirePolicy, YearlyExpirePolicy: yearlyExpirePolicy}
+	return &model.AppAuthLoginSessionSettings{AppTypeID: appTypeID, AuthTypeCode: authTypeCode, MaxConcurrentSessions: maxConcurrentSessions,
+		InactivityExpirePolicy: inactivityExpirePolicy, TSLExpirePolicy: tslExpirePolicy, YearlyExpirePolicy: yearlyExpirePolicy}
 }
 
 func loginSessionSettingsListToDef(items []model.AppAuthLoginSessionSettings) []Def.AppAuthLoginSessionSettings {
@@ -266,14 +278,25 @@ func loginSessionSettingsToDef(item *model.AppAuthLoginSessionSettings) *Def.App
 		return nil
 	}
 
+	var appTypeID *string
+	if item.AppTypeID != nil {
+		appTypeIDVal := *item.AppTypeID
+		appTypeID = &appTypeIDVal
+	}
+	var authTypeCode *string
+	if item.AuthTypeCode != nil {
+		authTypeCodeVal := *item.AuthTypeCode
+		authTypeCode = &authTypeCodeVal
+	}
+
 	inactivityExpirePolicy := Def.InactiveExpirePolicy{Active: item.InactivityExpirePolicy.Active, InactivityPeriod: item.InactivityExpirePolicy.InactivityPeriod}
 	tslExpirePolicy := Def.TSLExpirePolicy{Active: item.TSLExpirePolicy.Active, TimeSinceLoginPeriod: item.TSLExpirePolicy.TimeSinceLoginPeriod}
 	yearlyExpirePolicy := Def.YearlyExpirePolicy{Active: item.YearlyExpirePolicy.Active, Day: item.YearlyExpirePolicy.Day, Month: item.YearlyExpirePolicy.Month,
 		Hour: item.YearlyExpirePolicy.Hour, Min: item.YearlyExpirePolicy.Min}
 
 	maxConcurrentSessions := item.MaxConcurrentSessions
-	return &Def.AppAuthLoginSessionSettings{MaxConcurrentSessions: &maxConcurrentSessions, InactivityExpirePolicy: &inactivityExpirePolicy,
-		TimeSinceLoginExpirePolicy: &tslExpirePolicy, YearlyExpirePolicy: &yearlyExpirePolicy}
+	return &Def.AppAuthLoginSessionSettings{AppTypeId: appTypeID, AuthTypeCode: authTypeCode, MaxConcurrentSessions: &maxConcurrentSessions,
+		InactivityExpirePolicy: &inactivityExpirePolicy, TimeSinceLoginExpirePolicy: &tslExpirePolicy, YearlyExpirePolicy: &yearlyExpirePolicy}
 }
 
 func supportedAuthTypesFromDef(items map[string]Def.SupportedAuthType) map[string]model.SupportedAuthType {
@@ -291,7 +314,7 @@ func supportedAuthTypesFromDef(items map[string]Def.SupportedAuthType) map[strin
 func supportedAuthTypeFromDef(item Def.SupportedAuthType) model.SupportedAuthType {
 	var configs map[string]interface{}
 	if item.Configs != nil {
-		configs = item.Configs.AdditionalProperties
+		configs, _ = (*item.Configs).(map[string]interface{})
 	}
 	var appTypeConfigs map[string]interface{}
 	if item.AppTypeConfigs != nil {
@@ -314,7 +337,8 @@ func supportedAuthTypesToDef(items map[string]model.SupportedAuthType) map[strin
 }
 
 func supportedAuthTypeToDef(item model.SupportedAuthType) Def.SupportedAuthType {
-	configs := Def.SupportedAuthType_Configs{AdditionalProperties: item.Configs}
+	var configs interface{} = item.Configs
+
 	appTypeConfigs := Def.SupportedAuthType_AppTypeConfigs{AdditionalProperties: item.AppTypeConfigs}
 
 	return Def.SupportedAuthType{Configs: &configs, AppTypeConfigs: &appTypeConfigs, Alias: item.Alias}

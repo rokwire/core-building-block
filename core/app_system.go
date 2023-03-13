@@ -86,14 +86,34 @@ func (app *application) sysGetApplicationOrganization(ID string) (*model.Applica
 	return app.storage.FindApplicationOrganizationByID(ID)
 }
 
-func (app *application) sysCreateApplicationOrganization(appOrg model.ApplicationOrganization, appID string, orgID string) error {
-	application, err := app.storage.FindApplication(nil, appID)
+func (app *application) sysCreateApplicationOrganization(appOrg model.ApplicationOrganization) error {
+	application, err := app.storage.FindApplication(nil, appOrg.Application.ID)
 	if err != nil || application == nil {
 		return errors.WrapErrorData(logutils.StatusInvalid, model.TypeApplication, nil, err)
 	}
 	appOrg.Application = *application
 
-	organization, err := app.storage.FindOrganization(orgID)
+	// validate app type IDs
+	for _, authType := range appOrg.AuthTypes {
+		for appTypeID := range authType.AppTypeConfigs {
+			if application.FindApplicationType(appTypeID) == nil {
+				return errors.ErrorData(logutils.StatusInvalid, model.TypeApplicationType, &logutils.FieldArgs{"id": appTypeID})
+			}
+		}
+	}
+	// validate login session settings app type IDs and auth type codes
+	for _, lsSettings := range appOrg.LoginSessionSettings.Overrides {
+		if lsSettings.AppTypeID != nil && application.FindApplicationType(*lsSettings.AppTypeID) == nil {
+			return errors.ErrorData(logutils.StatusInvalid, "login session settings application type", &logutils.FieldArgs{"id": *lsSettings.AppTypeID})
+		}
+
+		_, authTypeExists := appOrg.AuthTypes[*lsSettings.AuthTypeCode]
+		if lsSettings.AuthTypeCode != nil && !authTypeExists {
+			return errors.ErrorData(logutils.StatusInvalid, "login session settings auth type", &logutils.FieldArgs{"code": *lsSettings.AuthTypeCode})
+		}
+	}
+
+	organization, err := app.storage.FindOrganization(appOrg.Organization.ID)
 	if err != nil || organization == nil {
 		return errors.WrapErrorData(logutils.StatusInvalid, model.TypeOrganization, nil, err)
 	}
@@ -112,7 +132,33 @@ func (app *application) sysCreateApplicationOrganization(appOrg model.Applicatio
 }
 
 func (app *application) sysUpdateApplicationOrganization(appOrg model.ApplicationOrganization) error {
-	err := app.storage.UpdateApplicationOrganization(nil, appOrg)
+	application, err := app.storage.FindApplication(nil, appOrg.Application.ID)
+	if err != nil || application == nil {
+		return errors.WrapErrorData(logutils.StatusInvalid, model.TypeApplication, nil, err)
+	}
+
+	// validate app type IDs
+	for _, authType := range appOrg.AuthTypes {
+		for appTypeID := range authType.AppTypeConfigs {
+			if application.FindApplicationType(appTypeID) == nil {
+				return errors.ErrorData(logutils.StatusInvalid, model.TypeApplicationType, &logutils.FieldArgs{"id": appTypeID})
+			}
+		}
+	}
+	// validate login session settings app type IDs and auth type codes
+	for _, lsSettings := range appOrg.LoginSessionSettings.Overrides {
+		if lsSettings.AppTypeID != nil && application.FindApplicationType(*lsSettings.AppTypeID) == nil {
+			return errors.ErrorData(logutils.StatusInvalid, "login session settings application type", &logutils.FieldArgs{"id": *lsSettings.AppTypeID})
+		}
+
+		if lsSettings.AuthTypeCode != nil {
+			if _, authTypeExists := appOrg.AuthTypes[*lsSettings.AuthTypeCode]; !authTypeExists {
+				return errors.ErrorData(logutils.StatusInvalid, "login session settings auth type", &logutils.FieldArgs{"code": *lsSettings.AuthTypeCode})
+			}
+		}
+	}
+
+	err = app.storage.UpdateApplicationOrganization(nil, appOrg)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeApplicationOrganization, nil, err)
 	}

@@ -905,6 +905,8 @@ func (sa *Adapter) DeleteMFAExpiredSessions() error {
 // - i.e. we do not apply any relations
 // - this partly filled is enough for some cases(expiration policy checks for example) but in the same time it give very good performace
 func (sa *Adapter) FindSessionsLazy(appID string, orgID string) ([]model.LoginSession, error) {
+	//TODO: set up aggregation pipeline to find login sessions?
+	// need to filter by dates determined by expiration policies, which depend on login session app type ID and auth type code
 	filter := bson.D{primitive.E{Key: "app_id", Value: appID}, primitive.E{Key: "org_id", Value: orgID}}
 
 	var loginSessions []loginSession
@@ -3661,6 +3663,8 @@ func (sa *Adapter) applyDataChanges() error {
 		if res.ModifiedCount != res.MatchedCount {
 			return errors.ErrorAction(logutils.ActionUpdate, model.TypeCredential, &logutils.FieldArgs{"auth_type_code": "email", "modified": res.ModifiedCount, "expected": res.MatchedCount})
 		}
+
+		//TODO: update app orgs
 
 		return nil
 	}

@@ -185,7 +185,7 @@ func (h SystemApisHandler) createApplicationOrganization(l *logs.Log, r *http.Re
 
 	//TODO: Fix missing supported auth types, expire policies,
 	appOrg := appOrgFromDef(&requestData)
-	err = h.coreAPIs.System.SysCreateApplicationOrganization(requestData.AppId, requestData.OrgId, *appOrg)
+	err = h.coreAPIs.System.SysCreateApplicationOrganization(*appOrg)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionCreate, model.TypeApplicationOrganization, nil, err, http.StatusInternalServerError, true)
 	}

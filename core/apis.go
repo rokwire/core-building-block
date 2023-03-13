@@ -513,8 +513,8 @@ func (s *systemImpl) SysGetApplicationOrganization(ID string) (*model.Applicatio
 	return s.app.sysGetApplicationOrganization(ID)
 }
 
-func (s *systemImpl) SysCreateApplicationOrganization(appID string, orgID string, appOrg model.ApplicationOrganization) error {
-	return s.app.sysCreateApplicationOrganization(appOrg, appID, orgID)
+func (s *systemImpl) SysCreateApplicationOrganization(appOrg model.ApplicationOrganization) error {
+	return s.app.sysCreateApplicationOrganization(appOrg)
 }
 
 func (s *systemImpl) SysUpdateApplicationOrganization(appOrg model.ApplicationOrganization) error {
