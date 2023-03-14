@@ -26,9 +26,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/golang-jwt/jwt"
-
-	"github.com/rokwire/core-auth-library-go/v2/envloader"
+	"github.com/rokwire/core-auth-library-go/v3/envloader"
+	"github.com/rokwire/core-auth-library-go/v3/keys"
 	"github.com/rokwire/logging-library-go/v2/logs"
 )
 
@@ -99,22 +98,21 @@ func main() {
 
 	emailer := emailer.NewEmailerAdapter(smtpHost, smtpPortNum, smtpUser, smtpPassword, smtpFrom)
 
-	var authPrivKeyPem []byte
+	var authPrivKeyPem string
 	authPrivKeyPemString := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_PRIV_KEY", false, true)
 	if authPrivKeyPemString != "" {
-
 		//make it to be a single line - AWS environemnt variable issue
 		authPrivKeyPemString = strings.Replace(authPrivKeyPemString, `\n`, "\n", -1)
-
-		authPrivKeyPem = []byte(authPrivKeyPemString)
 	} else {
 		authPrivateKeyPath := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_PRIV_KEY_PATH", true, false)
-		authPrivKeyPem, err = ioutil.ReadFile(authPrivateKeyPath)
+		authPrivKeyPemBytes, err := ioutil.ReadFile(authPrivateKeyPath)
 		if err != nil {
 			logger.Fatalf("Could not find auth priv key file: %v", err)
 		}
+
+		authPrivKeyPem = string(authPrivKeyPemBytes)
 	}
-	authPrivKey, err := jwt.ParseRSAPrivateKeyFromPEM(authPrivKeyPem)
+	authPrivKey, err := keys.NewPrivKey(keys.PS256, authPrivKeyPem)
 	if err != nil {
 		logger.Fatalf("Failed to parse auth priv key: %v", err)
 	}

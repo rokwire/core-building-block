@@ -26,7 +26,7 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
-	"github.com/rokwire/core-auth-library-go/v2/tokenauth"
+	"github.com/rokwire/core-auth-library-go/v3/tokenauth"
 	"github.com/rokwire/logging-library-go/v2/errors"
 	"github.com/rokwire/logging-library-go/v2/logs"
 	"github.com/rokwire/logging-library-go/v2/logutils"
@@ -129,9 +129,17 @@ func (h AdminApisHandler) login(l *logs.Log, r *http.Request, claims *tokenauth.
 
 	if loginSession.State != "" {
 		//params
-		var paramsRes interface{}
+		var paramsRes Def.SharedResLoginMfa_Params
 		if loginSession.Params != nil {
-			paramsRes = loginSession.Params
+			paramsBytes, err := json.Marshal(loginSession.Params)
+			if err != nil {
+				return l.HTTPResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("auth login response params"), nil, err, http.StatusInternalServerError, false)
+			}
+
+			err = json.Unmarshal(paramsBytes, &paramsRes)
+			if err != nil {
+				return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth login response params"), nil, err, http.StatusInternalServerError, false)
+			}
 		}
 
 		mfaResp := mfaDataListToDef(mfaTypes)
@@ -223,9 +231,18 @@ func (h AdminApisHandler) refresh(l *logs.Log, r *http.Request, claims *tokenaut
 
 	accessToken := loginSession.AccessToken
 	refreshToken := loginSession.CurrentRefreshToken()
-	var paramsRes interface{}
+
+	var paramsRes Def.SharedResRefresh_Params
 	if loginSession.Params != nil {
-		paramsRes = loginSession.Params
+		paramsBytes, err := json.Marshal(loginSession.Params)
+		if err != nil {
+			return l.HTTPResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("auth refresh response params"), nil, err, http.StatusInternalServerError, false)
+		}
+
+		err = json.Unmarshal(paramsBytes, &paramsRes)
+		if err != nil {
+			return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth refresh response params"), nil, err, http.StatusInternalServerError, false)
+		}
 	}
 
 	tokenType := Def.SharedResRokwireTokenTokenTypeBearer

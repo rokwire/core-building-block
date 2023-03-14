@@ -41,9 +41,17 @@ func authBuildLoginResponse(l *logs.Log, loginSession *model.LoginSession) logs.
 	}
 
 	//params
-	var paramsRes interface{}
+	var paramsRes Def.SharedResLogin_Params
 	if loginSession.Params != nil {
-		paramsRes = loginSession.Params
+		paramsBytes, err := json.Marshal(loginSession.Params)
+		if err != nil {
+			return l.HTTPResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("auth login response params"), nil, err, http.StatusInternalServerError, false)
+		}
+
+		err = json.Unmarshal(paramsBytes, &paramsRes)
+		if err != nil {
+			return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth login response params"), nil, err, http.StatusInternalServerError, false)
+		}
 	}
 
 	responseData := &Def.SharedResLogin{Token: &rokwireToken, Account: accountData, Params: &paramsRes}

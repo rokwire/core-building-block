@@ -8,7 +8,7 @@ properties:
   enrolled:
     type: array
     items:
-      $ref: "../../../shared/responses/mfa/Response.yaml"
+      $ref: "../mfa/Response.yaml"
   account_id:
     type: string
   session_id:
@@ -19,6 +19,6 @@ properties:
     type: object
     nullable: true
     anyOf:
-      - $ref: "../../../shared/responses/ParamsOIDC.yaml"
-      - $ref: "../../../shared/responses/ParamsAPIKey.yaml"
-      - $ref: "../../../shared/responses/ParamsNone.yaml"  
+      - $ref: "../ParamsOIDC.yaml"
+      - $ref: "../ParamsAPIKey.yaml"
+      - $ref: "../ParamsNone.yaml"  
