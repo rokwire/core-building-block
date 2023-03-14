@@ -22,7 +22,7 @@ import (
 	"core-building-block/driven/storage"
 	"core-building-block/driver/web"
 	"core-building-block/utils"
-	"io/ioutil"
+	"os"
 	"strconv"
 	"strings"
 
@@ -105,7 +105,7 @@ func main() {
 		authPrivKeyPemString = strings.Replace(authPrivKeyPemString, `\n`, "\n", -1)
 	} else {
 		authPrivateKeyPath := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_PRIV_KEY_PATH", true, false)
-		authPrivKeyPemBytes, err := ioutil.ReadFile(authPrivateKeyPath)
+		authPrivKeyPemBytes, err := os.ReadFile(authPrivateKeyPath)
 		if err != nil {
 			logger.Fatalf("Could not find auth priv key file: %v", err)
 		}
