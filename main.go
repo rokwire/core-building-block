@@ -102,7 +102,7 @@ func main() {
 	authPrivKeyPemString := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_PRIV_KEY", false, true)
 	if authPrivKeyPemString != "" {
 		//make it to be a single line - AWS environemnt variable issue
-		authPrivKeyPemString = strings.Replace(authPrivKeyPemString, `\n`, "\n", -1)
+		authPrivKeyPem = strings.ReplaceAll(authPrivKeyPemString, `\n`, "\n")
 	} else {
 		authPrivateKeyPath := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_PRIV_KEY_PATH", true, false)
 		authPrivKeyPemBytes, err := os.ReadFile(authPrivateKeyPath)
