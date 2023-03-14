@@ -42,20 +42,20 @@ To make a dev release:
 3. Update [SECURITY.md](SECURITY.md) to reflect the latest supported and unsupported versions.
 4. Update the latest version in any docs or source code as needed. 
 5. Make any changes needed to document [breaking changes](#breaking-changes) and [deprecations](#deprecations).
-6. Commit all changes to the `develop` branch
-7. Create a new tag from the `develop` branch called `vX.X.X` (eg. `v1.1.7`)
-8. Push changes to `develop` branch and create remote tag atomically using `git push --atomic origin develop vX.X.X` (eg. `git push --atomic origin develop v1.1.7`)
-> **NOTE:** Pushing to `develop` and creating the new tag atomically will ensure that the deployment pipeline correctly uses the new tag to set the version on the build it generates.
+6. Commit all changes to the `develop` branch with the commit message `Release vX.X.X` (eg. `Release v1.1.7).
+7. Create a new tag from the `develop` branch called `vX.X.X` (eg. `v1.1.7`).
+8. Push changes to `develop` branch and create remote tag atomically using `git push --atomic origin develop vX.X.X` (eg. `git push --atomic origin develop v1.1.7`).
+> **NOTE:** Pushing to `develop` will automatically trigger a deployment to the `dev` environment. Pushing and creating the new tag atomically will ensure that the deployment pipeline correctly uses the new tag to set the version on the build it generates.
 
 ### Production Releases
 When you are ready to move a release to the production environment:
 
-1. Make a pull request from `develop` into `main` named `Release vX.X.X` (eg. `Release v1.1.7`)
+1. Make a pull request from `develop` into `main` named `Release vX.X.X` (eg. `Release v1.1.7`).
 2. Review the changes included in the update to ensure they are all production ready.
 3. Checkout the `main` branch and `git pull` to ensure you have the latest updates locally.
 4. Run `git merge --ff-only origin/develop`. If this merge fails, merge any changes from `main` back into `develop` then restart from Step 3.
-> NOTE: While this is slightly cumbersome, GitHub does not currently support fast-forward merge through the pull request user interface. We want to use fast-forward merging to preserve the linear history from develop without introducing a new merge commit (like `Create a merge commit`), or rebasing and changing commit hashes unnecessarily (like `Rebase and merge`). This will ensure that the exact same commit hash is used to build for staging and production that was used to build for develop.
-5. Run `git push`
+> **NOTE:** While this is slightly cumbersome, GitHub does not currently support fast-forward merge through the pull request user interface. We want to use fast-forward merging to preserve the linear history from develop without introducing a new merge commit (like `Create a merge commit`), or rebasing and changing commit hashes unnecessarily (like `Rebase and merge`). This will ensure that the exact same commit hash is used to build for staging and production that was used to build for develop.
+5. Run `git push`.
 6. **RECOMMENDED** - Publish a new [GitHub Release](https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository#creating-a-release) from this tag with the title `vX.X.X` (eg. `v1.1.7`). Include the contents from the [CHANGELOG](CHANGELOG.md) for this latest version in the release notes, as well as a link to the whole [CHANGELOG](CHANGELOG.md) on the `main` branch. For libraries this is highly recommended.
 
 Pushing to the `main` branch will automatically trigger a deployment to the `stage` environment. Once the release has been tested appropriately, the production pipeline can be manually triggered to deploy the same Docker image in the `stage` environment to the `prod` environment.
