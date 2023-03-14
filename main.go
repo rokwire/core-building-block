@@ -98,6 +98,13 @@ func main() {
 
 	emailer := emailer.NewEmailerAdapter(smtpHost, smtpPortNum, smtpUser, smtpPassword, smtpFrom)
 
+	supportLegacySigsStr := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SUPPORT_LEGACY_SIGNATURES", false, false)
+	supportLegacySigs, err := strconv.ParseBool(supportLegacySigsStr)
+	if err != nil {
+		logger.Infof("Error parsing legacy signature support, applying defaults: %v", err)
+		supportLegacySigs = true
+	}
+
 	var authPrivKeyPem string
 	authPrivKeyPemString := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_PRIV_KEY", false, true)
 	if authPrivKeyPemString != "" {
@@ -112,7 +119,12 @@ func main() {
 
 		authPrivKeyPem = string(authPrivKeyPemBytes)
 	}
-	authPrivKey, err := keys.NewPrivKey(keys.PS256, authPrivKeyPem)
+
+	alg := keys.PS256
+	if supportLegacySigs {
+		alg = keys.RS256
+	}
+	authPrivKey, err := keys.NewPrivKey(alg, authPrivKeyPem)
 	if err != nil {
 		logger.Fatalf("Failed to parse auth priv key: %v", err)
 	}
@@ -133,13 +145,6 @@ func main() {
 		maxTokenExp = &maxTokenExpVal
 	} else {
 		logger.Infof("Error parsing max token exp, applying defaults: %v", err)
-	}
-
-	supportLegacySigsStr := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SUPPORT_LEGACY_SIGNATURES", false, false)
-	supportLegacySigs, err := strconv.ParseBool(supportLegacySigsStr)
-	if err != nil {
-		logger.Infof("Error parsing legacy signature support, applying defaults: %v", err)
-		supportLegacySigs = true
 	}
 
 	//profile bb adapter
