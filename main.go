@@ -26,8 +26,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/rokwire/core-auth-library-go/v2/envloader"
-	"github.com/rokwire/core-auth-library-go/v2/keys"
+	"github.com/rokwire/core-auth-library-go/v3/envloader"
+	"github.com/rokwire/core-auth-library-go/v3/keys"
 	"github.com/rokwire/logging-library-go/v2/logs"
 )
 

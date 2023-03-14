@@ -19,8 +19,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/rokwire/core-auth-library-go/v2/authorization"
-	"github.com/rokwire/core-auth-library-go/v2/authservice"
+	"github.com/rokwire/core-auth-library-go/v3/authorization"
+	"github.com/rokwire/core-auth-library-go/v3/authservice"
 	"github.com/rokwire/logging-library-go/v2/logutils"
 )
 
@@ -59,6 +59,10 @@ const (
 	TypeServiceAuthorization logutils.MessageDataType = "service authorization"
 	//TypeScope scope type
 	TypeScope logutils.MessageDataType = "scope"
+	//TypeJSONWebKey JWK type
+	TypeJSONWebKey logutils.MessageDataType = "jwk"
+	//TypeJSONWebKeySet JWKS type
+	TypeJSONWebKeySet logutils.MessageDataType = "jwks"
 	//TypePubKey pub key type
 	TypePubKey logutils.MessageDataType = "pub key"
 	//TypeAPIKey api key type

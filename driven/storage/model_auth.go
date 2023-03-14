@@ -18,7 +18,7 @@ import (
 	"core-building-block/core/model"
 	"time"
 
-	"github.com/rokwire/core-auth-library-go/v2/authorization"
+	"github.com/rokwire/core-auth-library-go/v3/authorization"
 )
 
 type loginSession struct {
