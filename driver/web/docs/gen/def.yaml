@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Rokwire Core Building Block API
   description: Core Building Block API Documentation
-  version: 1.31.0
+  version: 1.31.1
 servers:
   - url: 'https://api.rokwire.illinois.edu/core'
     description: Production server
@@ -5793,40 +5793,80 @@ components:
         key:
           type: string
     JWK:
-      required:
-        - kty
-        - use
-        - alg
-        - kid
-        - 'n'
-        - e
       type: object
-      description: JSON Web Key (JWK)
+      allOf:
+        - $ref: '#/components/schemas/JWKParamsEC'
+        - $ref: '#/components/schemas/JWKParamsOKP'
+        - $ref: '#/components/schemas/JWKParamsRSA'
+        - required:
+            - kty
+            - use
+            - alg
+            - kid
+          description: JSON Web Key (JWK)
+          properties:
+            kty:
+              type: string
+              description: The "kty" (key type) parameter identifies the cryptographic algorithm family used with the key
+              enum:
+                - RSA
+                - EC
+                - OKP
+            use:
+              type: string
+              description: The "use" (public key use) parameter identifies the intended use of the public key
+              enum:
+                - sig
+            alg:
+              type: string
+              description: The "alg" (algorithm) parameter identifies the algorithm intended for use with the key
+              enum:
+                - RS256
+                - RS384
+                - RS512
+                - PS256
+                - PS384
+                - PS512
+                - ES256
+                - ES384
+                - ES512
+                - OKP
+            kid:
+              type: string
+              description: The "kid" (key ID) parameter is used to match a specific key
+    JWKParamsRSA:
+      type: object
+      description: JSON Web Key RSA parameters
       properties:
-        kty:
-          type: string
-          description: The "kty" (key type) parameter identifies the cryptographic algorithm family used with the key
-          enum:
-            - RSA
-        use:
-          type: string
-          description: The "use" (public key use) parameter identifies the intended use of the public key
-          enum:
-            - sig
-        alg:
-          type: string
-          description: The "alg" (algorithm) parameter identifies the algorithm intended for use with the key
-          enum:
-            - RS256
-        kid:
-          type: string
-          description: The "kid" (key ID) parameter is used to match a specific key
         'n':
           type: string
-          description: The modulus (2048 bit) of the key - Base64URL encoded.
+          description: The modulus of the key - Base64URL encoded
         e:
           type: string
           description: The exponent of the key - Base64URL encoded
+    JWKParamsEC:
+      type: object
+      description: JSON Web Key EC parameters
+      properties:
+        crv:
+          type: string
+          description: The curve used with the key
+        x:
+          type: string
+          description: x coordinate of the key - Base64URL encoded
+        'y':
+          type: string
+          description: y coordinate of the key - Base64URL encoded
+    JWKParamsOKP:
+      type: object
+      description: JSON Web Key OKP parameters
+      properties:
+        crv:
+          type: string
+          description: The curve used with the key
+        x:
+          type: string
+          description: x coordinate of the key - Base64URL encoded
     JWKS:
       required:
         - keys
@@ -6395,30 +6435,9 @@ components:
           type: object
           nullable: true
           anyOf:
-            - type: object
-              description: Auth login response params for auth_type="oidc" (or variants)
-              properties:
-                oidc_token:
-                  type: object
-                  properties:
-                    id_token:
-                      type: string
-                    access_token:
-                      type: string
-                    refresh_token:
-                      type: string
-                    token_type:
-                      type: string
-                redirect_uri:
-                  type: string
-            - type: object
-              description: Auth login response params for auth_type="anonymous"
-              properties:
-                anonymous_id:
-                  type: string
-            - type: object
-              description: Auth login response params for unlisted auth_types (None)
-              nullable: true
+            - $ref: '#/components/schemas/_shared_res_ParamsOIDC'
+            - $ref: '#/components/schemas/_shared_res_ParamsAPIKey'
+            - $ref: '#/components/schemas/_shared_res_ParamsNone'
         message:
           type: string
     _shared_res_Login_Mfa:
@@ -6443,9 +6462,9 @@ components:
           type: object
           nullable: true
           anyOf:
-            - $ref: '#/components/schemas/_shared_res_Login/properties/params/anyOf/0'
-            - $ref: '#/components/schemas/_shared_res_Login/properties/params/anyOf/1'
-            - $ref: '#/components/schemas/_shared_res_Login/properties/params/anyOf/2'
+            - $ref: '#/components/schemas/_shared_res_ParamsOIDC'
+            - $ref: '#/components/schemas/_shared_res_ParamsAPIKey'
+            - $ref: '#/components/schemas/_shared_res_ParamsNone'
     _shared_res_LoginUrl:
       required:
         - login_url
@@ -6465,9 +6484,9 @@ components:
           type: object
           nullable: true
           anyOf:
-            - $ref: '#/components/schemas/_shared_res_Login/properties/params/anyOf/0'
-            - $ref: '#/components/schemas/_shared_res_Login/properties/params/anyOf/1'
-            - $ref: '#/components/schemas/_shared_res_Login/properties/params/anyOf/2'
+            - $ref: '#/components/schemas/_shared_res_ParamsOIDC'
+            - $ref: '#/components/schemas/_shared_res_ParamsAPIKey'
+            - $ref: '#/components/schemas/_shared_res_ParamsNone'
     _shared_res_Mfa:
       type: object
       properties:
@@ -6479,6 +6498,33 @@ components:
           type: object
     _shared_res_AccountCheck:
       type: boolean
+    _shared_res_ParamsAPIKey:
+      type: object
+      description: Auth login response params for auth_type="anonymous"
+      properties:
+        anonymous_id:
+          type: string
+    _shared_res_ParamsOIDC:
+      type: object
+      description: Auth login response params for auth_type="oidc" (or variants)
+      properties:
+        oidc_token:
+          type: object
+          properties:
+            id_token:
+              type: string
+            access_token:
+              type: string
+            refresh_token:
+              type: string
+            token_type:
+              type: string
+        redirect_uri:
+          type: string
+    _shared_res_ParamsNone:
+      type: object
+      description: Auth login response params for unlisted auth_types (None)
+      nullable: true
     _shared_res_RokwireToken:
       type: object
       properties:

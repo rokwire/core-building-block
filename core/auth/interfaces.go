@@ -19,9 +19,10 @@ import (
 	"core-building-block/driven/storage"
 	"time"
 
-	"github.com/rokwire/core-auth-library-go/v2/authorization"
-	"github.com/rokwire/core-auth-library-go/v2/sigauth"
-	"github.com/rokwire/core-auth-library-go/v2/tokenauth"
+	"github.com/lestrrat-go/jwx/jwk"
+	"github.com/rokwire/core-auth-library-go/v3/authorization"
+	"github.com/rokwire/core-auth-library-go/v3/sigauth"
+	"github.com/rokwire/core-auth-library-go/v3/tokenauth"
 	"github.com/rokwire/logging-library-go/v2/logs"
 )
 
@@ -426,7 +427,7 @@ type APIs interface {
 	GetAdminToken(claims tokenauth.Claims, appID string, orgID string, l *logs.Log) (string, error)
 
 	//GetAuthKeySet generates a JSON Web Key Set for auth service registration
-	GetAuthKeySet() (*model.JSONWebKeySet, error)
+	GetAuthKeySet() (jwk.Set, error)
 
 	//GetServiceRegistrations retrieves all service registrations
 	GetServiceRegistrations(serviceIDs []string) []model.ServiceRegistration

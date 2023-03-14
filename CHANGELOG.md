@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Auth types/identity provider settings cannot be configured per organization [#581](https://github.com/rokwire/core-building-block/issues/581)
 
+## [1.31.1] - 2023-03-14
+### Changed
+- Upgrade to auth library v3 [#645](https://github.com/rokwire/core-building-block/issues/645)
+
 ## [1.31.0] - 2023-03-02
 ### Changed
 - Prepare for deployment in OpenShift [#638](https://github.com/rokwire/core-building-block/issues/638)
@@ -371,7 +375,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Users authentication polish [#155](https://github.com/rokwire/core-building-block/issues/155)
 - Optimise the Mongo DB collections indexes usage [#146](https://github.com/rokwire/core-building-block/issues/146)
 
-[Unreleased]: https://github.com/rokwire/core-building-block/compare/v1.31.0...HEAD
+[Unreleased]: https://github.com/rokwire/core-building-block/compare/v1.31.1...HEAD
+[1.31.1]: https://github.com/rokwire/core-building-block/compare/v1.31.0...v1.31.1
 [1.31.0]: https://github.com/rokwire/core-building-block/compare/v1.30.0...v1.31.0
 [1.30.0]: https://github.com/rokwire/core-building-block/compare/v1.29.0...v1.30.0
 [1.29.0]: https://github.com/rokwire/core-building-block/compare/v1.28.0...v1.29.0

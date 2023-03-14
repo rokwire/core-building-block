@@ -114,6 +114,38 @@ func ConvertToJSON(data interface{}) ([]byte, error) {
 	return dataJSON, nil
 }
 
+// Convert converts the provided data val into the provided type T (assuming val can be json unmarshalled and marshalled properly)
+func Convert[T any, F any](val F) (*T, error) {
+	if IsNil(val) {
+		return nil, nil
+	}
+
+	bytes, err := json.Marshal(val)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionMarshal, "value", nil, err)
+	}
+
+	var out T
+	err = json.Unmarshal(bytes, &out)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, "value", nil, err)
+	}
+
+	return &out, nil
+}
+
+// IsNil determines whether the given data is nil
+func IsNil(i interface{}) bool {
+	if i == nil {
+		return true
+	}
+	switch reflect.TypeOf(i).Kind() {
+	case reflect.Ptr, reflect.Map, reflect.Array, reflect.Chan, reflect.Slice:
+		return reflect.ValueOf(i).IsNil()
+	}
+	return false
+}
+
 // DeepEqual checks whether a and b are “deeply equal,”
 func DeepEqual(a, b interface{}) bool {
 	return reflect.DeepEqual(a, b)

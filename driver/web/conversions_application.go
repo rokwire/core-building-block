@@ -144,7 +144,7 @@ func appOrgFromDef(item *Def.ApplicationOrganization) *model.ApplicationOrganiza
 		serviceIds = *item.ServicesIds
 	}
 
-	authTypes := supportedAuthTypesFromDef(item.AuthTypes.AdditionalProperties)
+	authTypes := supportedAuthTypesFromDef(item.AuthTypes)
 
 	loginSessionSettings := model.LoginSessionSettings{}
 	if item.LoginSessionSettings != nil {
@@ -174,7 +174,7 @@ func appOrgToDef(item *model.ApplicationOrganization) *Def.ApplicationOrganizati
 		return nil
 	}
 
-	authTypes := Def.ApplicationOrganization_AuthTypes{AdditionalProperties: supportedAuthTypesToDef(item.AuthTypes)}
+	authTypes := supportedAuthTypesToDef(item.AuthTypes)
 
 	defaultSettingsVal := item.LoginSessionSettings.Default
 	defaultSettings := loginSessionSettingsToDef(&defaultSettingsVal)
@@ -299,29 +299,34 @@ func loginSessionSettingsToDef(item *model.AppAuthLoginSessionSettings) *Def.App
 		InactivityExpirePolicy: &inactivityExpirePolicy, TimeSinceLoginExpirePolicy: &tslExpirePolicy, YearlyExpirePolicy: &yearlyExpirePolicy}
 }
 
-func supportedAuthTypesFromDef(items map[string]Def.SupportedAuthType) map[string]model.SupportedAuthType {
+func supportedAuthTypesFromDef(items *map[string]Def.SupportedAuthType) map[string]model.SupportedAuthType {
 	if items == nil {
 		return nil
 	}
 
 	out := make(map[string]model.SupportedAuthType)
-	for code, authType := range items {
+	for code, authType := range *items {
 		out[code] = supportedAuthTypeFromDef(authType)
 	}
 	return out
 }
 
 func supportedAuthTypeFromDef(item Def.SupportedAuthType) model.SupportedAuthType {
-	var configs map[string]interface{}
-	if item.Configs != nil {
-		configs, _ = (*item.Configs).(map[string]interface{})
-	}
-	var appTypeConfigs map[string]interface{}
-	if item.AppTypeConfigs != nil {
-		appTypeConfigs = item.AppTypeConfigs.AdditionalProperties
+	// configs
+	var configsVal map[string]interface{}
+	configs, _ := utils.Convert[map[string]interface{}](item.Configs)
+	if configs != nil {
+		configsVal = *configs
 	}
 
-	return model.SupportedAuthType{Configs: configs, AppTypeConfigs: appTypeConfigs, Alias: item.Alias}
+	// app type configs
+	var appTypeConfigsVal map[string]interface{}
+	appTypeConfigs, _ := utils.Convert[map[string]interface{}](item.AppTypeConfigs)
+	if appTypeConfigs != nil {
+		appTypeConfigsVal = *appTypeConfigs
+	}
+
+	return model.SupportedAuthType{Configs: configsVal, AppTypeConfigs: appTypeConfigsVal, Alias: item.Alias}
 }
 
 func supportedAuthTypesToDef(items map[string]model.SupportedAuthType) map[string]Def.SupportedAuthType {
@@ -337,11 +342,10 @@ func supportedAuthTypesToDef(items map[string]model.SupportedAuthType) map[strin
 }
 
 func supportedAuthTypeToDef(item model.SupportedAuthType) Def.SupportedAuthType {
-	var configs interface{} = item.Configs
+	configs, _ := utils.Convert[Def.SupportedAuthType_Configs](item.Configs)
+	appTypeConfigs, _ := utils.Convert[map[string]Def.SupportedAuthType_AppTypeConfigs_AdditionalProperties](item.AppTypeConfigs)
 
-	appTypeConfigs := Def.SupportedAuthType_AppTypeConfigs{AdditionalProperties: item.AppTypeConfigs}
-
-	return Def.SupportedAuthType{Configs: &configs, AppTypeConfigs: &appTypeConfigs, Alias: item.Alias}
+	return Def.SupportedAuthType{Configs: configs, AppTypeConfigs: appTypeConfigs, Alias: item.Alias}
 }
 
 // AppOrgRole

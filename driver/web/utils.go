@@ -17,6 +17,7 @@ package web
 import (
 	"core-building-block/core/model"
 	Def "core-building-block/driver/web/docs/gen"
+	"core-building-block/utils"
 	"encoding/json"
 	"net/http"
 
@@ -42,12 +43,12 @@ func authBuildLoginResponse(loginSession *model.LoginSession, r *http.Request, l
 	}
 
 	//params
-	var paramsRes interface{}
-	if loginSession.Params != nil {
-		paramsRes = loginSession.Params
+	paramsRes, err := utils.Convert[Def.SharedResLogin_Params](loginSession.Params)
+	if err != nil {
+		return l.HTTPResponseErrorAction("converting", logutils.MessageDataType("auth login response params"), nil, err, http.StatusInternalServerError, false)
 	}
 
-	responseData := &Def.SharedResLogin{Token: &rokwireToken, Account: accountData, Params: &paramsRes}
+	responseData := &Def.SharedResLogin{Token: &rokwireToken, Account: accountData, Params: paramsRes}
 	respData, err := json.Marshal(responseData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("auth login response"), nil, err, http.StatusInternalServerError, false)

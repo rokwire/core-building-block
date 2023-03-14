@@ -92,7 +92,7 @@ type applicationOrganization struct {
 	DateUpdated *time.Time `bson:"date_updated"`
 
 	// DEPRECATED
-	IdentityProviderSettings model.IdentityProviderSetting `bson:"identity_providers_settings,omitempty"`
+	IdentityProviderSettings []model.IdentityProviderSetting `bson:"identity_providers_settings,omitempty"`
 	// DEPRECATED
 	SupportedAuthTypes []authTypesSupport `bson:"supported_auth_types,omitempty"`
 	// DEPRECATED

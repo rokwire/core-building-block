@@ -25,8 +25,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/rokwire/core-auth-library-go/v2/authorization"
-	"github.com/rokwire/core-auth-library-go/v2/tokenauth"
+	"github.com/rokwire/core-auth-library-go/v3/authorization"
+	"github.com/rokwire/core-auth-library-go/v3/tokenauth"
 	"github.com/rokwire/logging-library-go/v2/errors"
 	"github.com/rokwire/logging-library-go/v2/logs"
 	"github.com/rokwire/logging-library-go/v2/logutils"
@@ -108,14 +108,13 @@ func (h ServicesApisHandler) login(l *logs.Log, r *http.Request, claims *tokenau
 	}
 
 	if loginSession.State != "" {
-		//params
-		var paramsRes interface{}
-		if loginSession.Params != nil {
-			paramsRes = loginSession.Params
+		paramsRes, err := utils.Convert[Def.SharedResLoginMfa_Params](loginSession.Params)
+		if err != nil {
+			return l.HTTPResponseErrorAction("converting", logutils.MessageDataType("auth login response params"), nil, err, http.StatusInternalServerError, false)
 		}
 
 		mfaResp := mfaDataListToDef(mfaTypes)
-		responseData := &Def.SharedResLoginMfa{AccountId: loginSession.Identifier, Enrolled: mfaResp, Params: &paramsRes,
+		responseData := &Def.SharedResLoginMfa{AccountId: loginSession.Identifier, Enrolled: mfaResp, Params: paramsRes,
 			SessionId: loginSession.ID, State: loginSession.State}
 		respData, err := json.Marshal(responseData)
 		if err != nil {
@@ -177,14 +176,15 @@ func (h ServicesApisHandler) refresh(l *logs.Log, r *http.Request, claims *token
 
 	accessToken := loginSession.AccessToken
 	refreshToken := loginSession.CurrentRefreshToken()
-	var paramsRes interface{}
-	if loginSession.Params != nil {
-		paramsRes = loginSession.Params
+
+	paramsRes, err := utils.Convert[Def.SharedResRefresh_Params](loginSession.Params)
+	if err != nil {
+		return l.HTTPResponseErrorAction("converting", logutils.MessageDataType("auth refresh response params"), nil, err, http.StatusInternalServerError, false)
 	}
 
 	tokenType := Def.SharedResRokwireTokenTokenTypeBearer
 	rokwireToken := Def.SharedResRokwireToken{AccessToken: &accessToken, RefreshToken: &refreshToken, TokenType: &tokenType}
-	responseData := &Def.SharedResRefresh{Token: &rokwireToken, Params: &paramsRes}
+	responseData := &Def.SharedResRefresh{Token: &rokwireToken, Params: paramsRes}
 	respData, err := json.Marshal(responseData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("auth refresh response"), nil, err, http.StatusInternalServerError, false)
