@@ -408,10 +408,7 @@ func (h AdminApisHandler) getApplicationAccounts(l *logs.Log, r *http.Request, c
 	var authType *string
 	authTypeParam := r.URL.Query().Get("auth-type")
 	if len(authTypeParam) > 0 {
-		authTypeParam, err := utils.GetSuffix(authTypeParam, "_")
-		if err != nil {
-			return l.HTTPResponseErrorAction(logutils.ActionGet, "auth type", nil, err, http.StatusInternalServerError, false)
-		}
+		authTypeParam = utils.GetSuffix(authTypeParam, "_")
 		authType = &authTypeParam
 	}
 	//auth type identifier

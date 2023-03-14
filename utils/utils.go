@@ -24,7 +24,6 @@ import (
 	"math/rand"
 	"net/http"
 	"reflect"
-	"regexp"
 	"strings"
 	"time"
 
@@ -200,18 +199,12 @@ func StringListDiff(new []string, old []string) ([]string, []string, []string) {
 }
 
 // GetSuffix returns the suffix of s, which is separated by sep
-func GetSuffix(s string, sep string) (string, error) {
-	re := fmt.Sprintf("[a-z]%s[a-z]", sep)
-	match, err := regexp.Match(re, []byte(s))
-	if err != nil {
-		return "", errors.WrapErrorAction("matching", "regular expression", logutils.StringArgs(re), err)
+func GetSuffix(s string, sep string) string {
+	split := strings.Split(s, sep)
+	if len(split) == 0 {
+		return s
 	}
-
-	if match {
-		split := strings.Split(s, sep)
-		return split[len(split)-1], nil
-	}
-	return s, nil
+	return split[len(split)-1]
 }
 
 // StringPrefixes returns a list of all prefixes of s delimited by sep, including s itself

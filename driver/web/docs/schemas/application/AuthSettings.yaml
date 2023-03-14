@@ -1,6 +1,6 @@
 type: object
-required:
-  - provider
 properties:
   provider:
+    type: string
+  ignore_mfa:
     type: string

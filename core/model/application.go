@@ -412,7 +412,7 @@ func (ao ApplicationOrganization) IsAuthTypeSupported(authType string) bool {
 //	 	for the UIUC application the Illinois group "urn:mace:uiuc.edu:urbana:authman:app-rokwire-service-policy-rokwire groups access" is mapped to an application group called "groups access"
 //	 	for the Safer Illinois application the Illinois group "urn:mace:uiuc.edu:urbana:authman:app-rokwire-service-policy-rokwire health test verify" is mapped to an application group called "tests verifiers"
 type IdentityProviderSetting struct {
-	UserIdentifierField string            `json:"user_identifier_field" bson:"user_identifier_field"`
+	UserIdentifierField string            `json:"user_identifier_field" bson:"user_identifier_field" validate:"required"`
 	ExternalIDFields    map[string]string `json:"external_id_fields" bson:"external_id_fields"`
 
 	FirstNameField  string `json:"first_name_field" bson:"first_name_field"`

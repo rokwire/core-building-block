@@ -358,12 +358,8 @@ func (aat *AccountAuthType) Equals(other AccountAuthType) bool {
 	if aat.Account.ID != other.Account.ID {
 		return false
 	}
-	if aatCode, err := utils.GetSuffix(aat.AuthTypeCode, "_"); err == nil {
-		if otherCode, err := utils.GetSuffix(other.AuthTypeCode, "_"); err == nil {
-			if aatCode != otherCode {
-				return false
-			}
-		}
+	if utils.GetSuffix(aat.AuthTypeCode, "_") != utils.GetSuffix(other.AuthTypeCode, "_") {
+		return false
 	}
 	if aat.Active != other.Active {
 		return false

@@ -1911,10 +1911,7 @@ func (a *Auth) validateAuthType(authTypeCode string, appTypeIdentifier string, o
 
 func (a *Auth) validateAppOrgAuthType(authTypeCode string, appID string, orgID string) (*model.ApplicationOrganization, string, error) {
 	//remove any organizational/provider identifier from auth type code
-	updatedCode, err := utils.GetSuffix(authTypeCode, "_")
-	if err != nil {
-		return nil, authTypeCode, errors.WrapErrorAction(logutils.ActionGet, typeAuthType, logutils.StringArgs(authTypeCode), err)
-	}
+	updatedCode := utils.GetSuffix(authTypeCode, "_")
 
 	appOrg, err := a.storage.FindApplicationOrganization(appID, orgID)
 	if err != nil {

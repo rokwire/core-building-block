@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -68,13 +69,6 @@ func (sa *Adapter) Start() error {
 		return errors.WrapErrorAction(logutils.ActionInitialize, "storage adapter", nil, err)
 	}
 
-	//used for very specific (likely one-time) operations
-	//update or comment out this call after a set of updates is no longer necessary
-	err = sa.applyDataChanges()
-	if err != nil {
-		sa.logger.Warnf("error applying data changes: %v", err)
-	}
-
 	//register storage listener
 	sl := storageListener{adapter: sa}
 	sa.RegisterStorageListener(&sl)
@@ -95,6 +89,12 @@ func (sa *Adapter) Start() error {
 	err = sa.cacheApplications()
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionCache, model.TypeApplication, nil, err)
+	}
+
+	//update or comment out this call after auth type migration is done
+	err = sa.migrateAuthTypes()
+	if err != nil {
+		return errors.WrapErrorAction("migrating", "auth types", nil, err)
 	}
 
 	//cache the application organization
@@ -905,8 +905,6 @@ func (sa *Adapter) DeleteMFAExpiredSessions() error {
 // - i.e. we do not apply any relations
 // - this partly filled is enough for some cases(expiration policy checks for example) but in the same time it give very good performace
 func (sa *Adapter) FindSessionsLazy(appID string, orgID string) ([]model.LoginSession, error) {
-	//TODO: set up aggregation pipeline to find login sessions?
-	// need to filter by dates determined by expiration policies, which depend on login session app type ID and auth type code
 	filter := bson.D{primitive.E{Key: "app_id", Value: appID}, primitive.E{Key: "org_id", Value: orgID}}
 
 	var loginSessions []loginSession
@@ -3208,7 +3206,7 @@ func (sa *Adapter) UpdateApplicationOrganization(context TransactionContext, app
 	update := bson.D{primitive.E{Key: "date_updated", Value: now},
 		primitive.E{Key: "services_ids", Value: appOrg.ServicesIDs},
 		primitive.E{Key: "auth_types", Value: appOrg.AuthTypes},
-		primitive.E{Key: "logins_sessions_settings", Value: appOrg.LoginSessionSettings},
+		primitive.E{Key: "login_session_settings", Value: appOrg.LoginSessionSettings},
 	}
 
 	updateAppOrg := bson.D{
@@ -3553,12 +3551,30 @@ func (sa *Adapter) abortTransaction(sessionContext mongo.SessionContext) {
 	}
 }
 
-// applyDataChanges should be used to make any necessary updates to existing data when the building block is deployed
-func (sa *Adapter) applyDataChanges() error {
+func (sa *Adapter) migrateAuthTypes() error {
 	transaction := func(context TransactionContext) error {
+		//1. get current auth types and identity providers (if there are none, migration is already done)
+		var authTypes []authType
+		var idProviders []identityProvider
+
+		sa.db.authTypes.FindWithContext(context, bson.M{}, &authTypes, nil)
+		sa.db.identityProviders.FindWithContext(context, bson.M{}, idProviders, nil)
+		if len(authTypes) == 0 && len(idProviders) == 0 {
+			return nil
+		}
+
+		authTypeMap := make(map[string]authType)
+		for _, authType := range authTypes {
+			authTypeMap[authType.ID] = authType
+		}
+		idProviderMap := make(map[string]identityProvider)
+		for _, idProvider := range idProviders {
+			idProviderMap[idProvider.ID] = idProvider
+		}
+
 		now := time.Now().UTC()
 
-		//1. update auth type codes (illinois_oidc)
+		//2. update auth type codes (illinois_oidc)
 		aatFilter := bson.D{primitive.E{Key: "auth_types.auth_type_code", Value: "illinois_oidc"}}
 		aatUpdate := bson.D{
 			primitive.E{Key: "$set", Value: bson.D{
@@ -3593,7 +3609,7 @@ func (sa *Adapter) applyDataChanges() error {
 			return errors.ErrorAction(logutils.ActionUpdate, model.TypeLoginSession, &logutils.FieldArgs{"auth_type_code": "illinois_oidc", "modified": res.ModifiedCount, "expected": res.MatchedCount})
 		}
 
-		//2. update auth type codes (twilio_phone)
+		//3. update auth type codes (twilio_phone)
 		aatFilter = bson.D{primitive.E{Key: "auth_types.auth_type_code", Value: "twilio_phone"}}
 		aatUpdate = bson.D{
 			primitive.E{Key: "$set", Value: bson.D{
@@ -3628,7 +3644,7 @@ func (sa *Adapter) applyDataChanges() error {
 			return errors.ErrorAction(logutils.ActionUpdate, model.TypeLoginSession, &logutils.FieldArgs{"auth_type_code": "twilio_phone", "modified": res.ModifiedCount, "expected": res.MatchedCount})
 		}
 
-		//3. remove auth type ids
+		//4. remove auth type ids
 		aatFilter = bson.D{primitive.E{Key: "auth_types.auth_type_id", Value: bson.M{"$exists": true}}}
 		aatUpdate = bson.D{
 			primitive.E{Key: "$unset", Value: bson.D{
@@ -3664,7 +3680,76 @@ func (sa *Adapter) applyDataChanges() error {
 			return errors.ErrorAction(logutils.ActionUpdate, model.TypeCredential, &logutils.FieldArgs{"auth_type_code": "email", "modified": res.ModifiedCount, "expected": res.MatchedCount})
 		}
 
-		//TODO: update app orgs
+		//5. update app orgs
+		var appOrgs []applicationOrganization
+		err = sa.db.applicationsOrganizations.Find(bson.M{}, &appOrgs, nil)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionLoad, model.TypeApplicationOrganization, nil, err)
+		}
+		for _, appOrg := range appOrgs {
+			// legacy login session settings are the new default settings, no overrides unless updated by system admin
+			appOrg.LoginSessionSettings = model.LoginSessionSettings{Default: appOrg.LegacyLoginSessionSettings}
+
+			appTypeIDs := make([]string, 0)
+			for _, supportedAppType := range appOrg.SupportedAuthTypes {
+				appTypeIDs = append(appTypeIDs, supportedAppType.AppTypeID)
+				for _, supportedAuthType := range supportedAppType.SupportedAuthTypes {
+					authType := authTypeMap[supportedAuthType.AuthTypeID]
+					authTypeCode := authType.Code
+					authTypeSuffix := utils.GetSuffix(authTypeCode, "_")
+
+					// set alias if suffix matches phone, oidc, or oauth2
+					var alias *string
+					if authTypeSuffix == "phone" || authTypeSuffix == "oidc" || authTypeSuffix == "oauth2" {
+						alias = &authTypeCode
+					}
+
+					var appTypeConfigs map[string]interface{}
+					configs := map[string]interface{}{"ignore_mfa": authType.IgnoreMFA}
+					if authTypeSuffix == "phone" {
+						configs["provider"] = strings.TrimSuffix(authTypeCode, "_"+authTypeSuffix)
+					}
+					if authTypeSuffix == "oidc" || authTypeSuffix == "oauth2" {
+						//TODO: add appOrg.IdentityProviderSettings to configs as key, value pairs
+
+						// populate appTypeConfigs if auth type uses identity provider
+						if identityProviderID, _ := authType.Params["identity_provider"].(string); identityProviderID != "" {
+							for _, appTypeID := range appTypeIDs {
+								for _, idProviderConfig := range idProviderMap[identityProviderID].Configs {
+									if appTypeID == idProviderConfig.AppTypeID {
+										appTypeConfigs[appTypeID] = idProviderConfig.Config
+										break
+									}
+								}
+							}
+						}
+					}
+					appOrg.AuthTypes[authTypeSuffix] = model.SupportedAuthType{Alias: alias, Configs: configs, AppTypeConfigs: appTypeConfigs}
+				}
+			}
+
+			filter := bson.M{"_id": appOrg.ID}
+			updateAppOrg := bson.D{
+				// primitive.E{Key: "$unset", Value: bson.D{
+				// 	primitive.E{Key: "identity_providers_settings", Value: ""},
+				// 	primitive.E{Key: "supported_auth_types", Value: ""},
+				// 	primitive.E{Key: "logins_sessions_settings", Value: ""},
+				// }},
+				primitive.E{Key: "$set", Value: bson.D{
+					primitive.E{Key: "date_updated", Value: now},
+					primitive.E{Key: "auth_types", Value: appOrg.AuthTypes},
+					primitive.E{Key: "login_session_settings", Value: appOrg.LoginSessionSettings},
+				}},
+			}
+
+			res, err := sa.db.applicationsOrganizations.UpdateOneWithContext(context, filter, updateAppOrg, nil)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeApplicationOrganization, nil, err)
+			}
+			if res.ModifiedCount != 1 {
+				return errors.ErrorAction(logutils.ActionUpdate, model.TypeApplicationOrganization, &logutils.FieldArgs{"id": appOrg.ID, "modified": res.ModifiedCount, "expected": 1})
+			}
+		}
 
 		return nil
 	}

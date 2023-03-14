@@ -324,17 +324,18 @@ type AuthConfigOidc_Populations struct {
 	AdditionalProperties map[string]string `json:"-"`
 }
 
-// AuthProvider defines model for AuthProvider.
-type AuthProvider struct {
-	Provider string `json:"provider"`
-}
-
 // Service registration record used for auth
 type AuthServiceReg struct {
 	Host             string  `json:"host"`
 	PubKey           *PubKey `json:"pub_key,omitempty"`
 	ServiceAccountId *string `json:"service_account_id,omitempty"`
 	ServiceId        string  `json:"service_id"`
+}
+
+// AuthSettings defines model for AuthSettings.
+type AuthSettings struct {
+	IgnoreMfa *string `json:"ignore_mfa,omitempty"`
+	Provider  *string `json:"provider,omitempty"`
 }
 
 // Device defines model for Device.

@@ -5470,12 +5470,12 @@ components:
           type: object
           additionalProperties:
             type: string
-    AuthProvider:
+    AuthSettings:
       type: object
-      required:
-        - provider
       properties:
         provider:
+          type: string
+        ignore_mfa:
           type: string
     IdentityProviderSettings:
       required:
@@ -5522,7 +5522,7 @@ components:
           nullable: true
           anyOf:
             - $ref: '#/components/schemas/IdentityProviderSettings'
-            - $ref: '#/components/schemas/AuthProvider'
+            - $ref: '#/components/schemas/AuthSettings'
         app_type_configs:
           type: object
           nullable: true

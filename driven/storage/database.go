@@ -53,6 +53,10 @@ type database struct {
 	applicationConfigs              *collectionWrapper
 	permissions                     *collectionWrapper
 
+	// DEPRECATED
+	authTypes         *collectionWrapper
+	identityProviders *collectionWrapper
+
 	listeners []Listener
 }
 
@@ -78,6 +82,9 @@ func (m *database) start() error {
 
 	//apply checks
 	db := client.Database(m.mongoDBName)
+
+	authTypes := &collectionWrapper{database: m, coll: db.Collection("auth_types")}
+	identityProviders := &collectionWrapper{database: m, coll: db.Collection("identity_providers")}
 
 	accounts := &collectionWrapper{database: m, coll: db.Collection("accounts")}
 	err = m.applyAccountsChecks(accounts)
@@ -202,6 +209,9 @@ func (m *database) start() error {
 	m.applicationsOrganizationsGroups = applicationsOrganizationsGroups
 	m.applicationsOrganizationsRoles = applicationsOrganizationsRoles
 	m.permissions = permissions
+
+	m.authTypes = authTypes
+	m.identityProviders = identityProviders
 
 	go m.apiKeys.Watch(nil, m.logger)
 	go m.serviceRegistrations.Watch(nil, m.logger)

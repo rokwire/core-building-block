@@ -352,14 +352,8 @@ func (h ServicesApisHandler) unlinkAccountAuthType(l *logs.Log, r *http.Request,
 	}
 
 	//remove any organizational/provider identifier from auth type code
-	claimsCode, err := utils.GetSuffix(claims.AuthType, "_")
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionGet, "auth type", logutils.StringArgs(claims.AuthType), err, http.StatusInternalServerError, false)
-	}
-	requestCode, err := utils.GetSuffix(string(requestData.AuthType), "_")
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionGet, "auth type", logutils.StringArgs(string(requestData.AuthType)), err, http.StatusInternalServerError, false)
-	}
+	claimsCode := utils.GetSuffix(claims.AuthType, "_")
+	requestCode := utils.GetSuffix(string(requestData.AuthType), "_")
 	if requestCode == claimsCode && requestData.Identifier == claims.UID {
 		return l.HTTPResponseError("May not unlink account auth type currently in use", nil, http.StatusBadRequest, false)
 	}
@@ -784,10 +778,7 @@ func (h ServicesApisHandler) getAccounts(l *logs.Log, r *http.Request, claims *t
 	var authType *string
 	authTypeParam := r.URL.Query().Get("auth-type")
 	if len(authTypeParam) > 0 {
-		authTypeParam, err := utils.GetSuffix(authTypeParam, "_")
-		if err != nil {
-			return l.HTTPResponseErrorAction(logutils.ActionGet, "auth type", nil, err, http.StatusInternalServerError, false)
-		}
+		authTypeParam = utils.GetSuffix(authTypeParam, "_")
 		authType = &authTypeParam
 	}
 	//auth type identifier

@@ -23,8 +23,8 @@ ApplicationConfig:
   $ref: "./application/ApplicationConfig.yaml"
 AuthConfigOidc:
   $ref: "./application/AuthConfigOidc.yaml"
-AuthProvider:
-  $ref: "./application/AuthProvider.yaml"
+AuthSettings:
+  $ref: "./application/AuthSettings.yaml"
 IdentityProviderSettings:
   $ref: "./application/IdentityProviderSettings.yaml"
 SupportedAuthType:
