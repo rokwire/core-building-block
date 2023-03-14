@@ -38,4 +38,4 @@ COPY --from=builder /app/vendor/github.com/rokwire/core-auth-library-go/v3/autho
 
 COPY --from=builder /etc/passwd /etc/passwd
 
-ENTRYPOINT ["/application"]
+ENTRYPOINT ["/core-building-block"]
