@@ -85,8 +85,8 @@ type applicationOrganization struct {
 
 	ServicesIDs []string `bson:"services_ids"`
 
-	AuthTypes            map[string]model.SupportedAuthType `bson:"auth_types"`
-	LoginSessionSettings model.LoginSessionSettings         `bson:"login_session_settings"`
+	AuthTypes            map[string]model.SupportedAuthType    `bson:"auth_types"`
+	LoginSessionSettings model.ApplicationOrganizationSettings `bson:"login_session_settings"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
@@ -96,7 +96,7 @@ type applicationOrganization struct {
 	// DEPRECATED
 	SupportedAuthTypes []authTypesSupport `bson:"supported_auth_types,omitempty"`
 	// DEPRECATED
-	LegacyLoginSessionSettings model.AppAuthLoginSessionSettings `bson:"logins_sessions_settings,omitempty"`
+	LegacyLoginSessionSettings model.LoginSessionSettings `bson:"logins_sessions_settings,omitempty"`
 }
 
 type appOrgGroup struct {

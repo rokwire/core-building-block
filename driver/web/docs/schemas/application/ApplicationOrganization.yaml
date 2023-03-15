@@ -23,4 +23,4 @@ properties:
     additionalProperties:
       $ref: "./SupportedAuthType.yaml"
   login_session_settings:
-    $ref: "./LoginSessionSettings.yaml"
+    $ref: "./ApplicationOrganizationSettings.yaml"

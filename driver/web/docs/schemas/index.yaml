@@ -21,18 +21,18 @@ OrganizationConfig:
   $ref: "./application/OrganizationConfig.yaml"
 ApplicationConfig:
   $ref: "./application/ApplicationConfig.yaml"
-AuthConfigOidc:
-  $ref: "./application/AuthConfigOidc.yaml"
+SupportedAuthType:
+  $ref: "./application/SupportedAuthType.yaml"
 AuthSettings:
   $ref: "./application/AuthSettings.yaml"
 IdentityProviderSettings:
   $ref: "./application/IdentityProviderSettings.yaml"
-SupportedAuthType:
-  $ref: "./application/SupportedAuthType.yaml"
+ApplicationOrganizationSettings:
+  $ref: "./application/ApplicationOrganizationSettings.yaml"
+AuthConfigOidc:
+  $ref: "./application/AuthConfigOidc.yaml"
 LoginSessionSettings:
   $ref: "./application/LoginSessionSettings.yaml"
-AppAuthLoginSessionSettings:
-  $ref: "./application/AppAuthLoginSessionSettings.yaml"
 YearlyExpirePolicy:
   $ref: "./application/YearlyExpirePolicy.yaml"
 InactiveExpirePolicy:

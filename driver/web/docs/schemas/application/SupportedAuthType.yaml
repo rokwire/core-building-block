@@ -10,8 +10,7 @@ properties:
     type: object
     nullable: true
     additionalProperties:
-      anyOf:
-        - $ref: "./AuthConfigOidc.yaml"
+      $ref: "./ApplicationOrganizationSettings.yaml"
   alias:
     type: string
     nullable: true

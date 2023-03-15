@@ -5298,7 +5298,7 @@ components:
           additionalProperties:
             $ref: '#/components/schemas/SupportedAuthType'
         login_session_settings:
-          $ref: '#/components/schemas/LoginSessionSettings'
+          $ref: '#/components/schemas/ApplicationOrganizationSettings'
     Permission:
       required:
         - id
@@ -5433,43 +5433,23 @@ components:
           description: conforms major.minor.patch format
         data:
           type: object
-    AuthConfigOidc:
-      required:
-        - host
-        - client_id
-        - claims
+    SupportedAuthType:
       type: object
       properties:
-        host:
-          type: string
-        authorize_url:
-          type: string
-        token_url:
-          type: string
-        userinfo_url:
-          type: string
-        scopes:
-          type: string
-        use_refresh:
-          type: boolean
-        use_pkce:
-          type: boolean
-        client_id:
-          type: string
-        client_secret:
-          type: string
-        authorize_claims:
-          type: string
-        claims:
+        configs:
           type: object
-          additionalProperties:
-            type: string
-        required_populations:
-          type: string
-        populations:
+          nullable: true
+          anyOf:
+            - $ref: '#/components/schemas/IdentityProviderSettings'
+            - $ref: '#/components/schemas/AuthSettings'
+        app_type_configs:
           type: object
+          nullable: true
           additionalProperties:
-            type: string
+            $ref: '#/components/schemas/ApplicationOrganizationSettings'
+        alias:
+          type: string
+          nullable: true
     AuthSettings:
       type: object
       properties:
@@ -5514,34 +5494,60 @@ components:
             type: string
         always_sync_profile:
           type: boolean
-    SupportedAuthType:
-      type: object
-      properties:
-        configs:
-          type: object
-          nullable: true
-          anyOf:
-            - $ref: '#/components/schemas/IdentityProviderSettings'
-            - $ref: '#/components/schemas/AuthSettings'
-        app_type_configs:
-          type: object
-          nullable: true
-          additionalProperties:
-            anyOf:
-              - $ref: '#/components/schemas/AuthConfigOidc'
-        alias:
-          type: string
-          nullable: true
-    LoginSessionSettings:
+    ApplicationOrganizationSettings:
       type: object
       properties:
         default:
-          $ref: '#/components/schemas/AppAuthLoginSessionSettings'
+          oneOf:
+            - $ref: '#/components/schemas/LoginSessionSettings'
+            - $ref: '#/components/schemas/AuthConfigOidc'
         overrides:
           type: array
           items:
-            $ref: '#/components/schemas/AppAuthLoginSessionSettings'
-    AppAuthLoginSessionSettings:
+            oneOf:
+              - $ref: '#/components/schemas/LoginSessionSettings'
+              - $ref: '#/components/schemas/AuthConfigOidc'
+    AuthConfigOidc:
+      required:
+        - host
+        - client_id
+        - claims
+      type: object
+      properties:
+        app_type_id:
+          type: string
+          nullable: true
+        host:
+          type: string
+        authorize_url:
+          type: string
+        token_url:
+          type: string
+        userinfo_url:
+          type: string
+        scopes:
+          type: string
+        use_refresh:
+          type: boolean
+        use_pkce:
+          type: boolean
+        client_id:
+          type: string
+        client_secret:
+          type: string
+        authorize_claims:
+          type: string
+        claims:
+          type: object
+          additionalProperties:
+            type: string
+        required_populations:
+          type: string
+        populations:
+          type: object
+          additionalProperties:
+            type: string
+    LoginSessionSettings:
       type: object
       properties:
         app_type_id:

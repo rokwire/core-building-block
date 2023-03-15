@@ -17,6 +17,7 @@ package core
 import (
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
+	"core-building-block/utils"
 	"time"
 
 	"github.com/google/uuid"
@@ -95,21 +96,24 @@ func (app *application) sysCreateApplicationOrganization(appOrg model.Applicatio
 
 	// validate app type IDs
 	for _, authType := range appOrg.AuthTypes {
-		for appTypeID := range authType.AppTypeConfigs {
-			if application.FindApplicationType(appTypeID) == nil {
-				return errors.ErrorData(logutils.StatusInvalid, model.TypeApplicationType, &logutils.FieldArgs{"id": appTypeID})
+		for _, config := range authType.AppTypeConfigs.Overrides {
+			if appTypeID := config.GetAppTypeID(); appTypeID == nil || application.FindApplicationType(*appTypeID) == nil {
+				return errors.ErrorData(logutils.StatusInvalid, model.TypeApplicationType, &logutils.FieldArgs{"id": utils.GetPrintableString(appTypeID, "")})
 			}
 		}
 	}
 	// validate login session settings app type IDs and auth type codes
 	for _, lsSettings := range appOrg.LoginSessionSettings.Overrides {
-		if lsSettings.AppTypeID != nil && application.FindApplicationType(*lsSettings.AppTypeID) == nil {
-			return errors.ErrorData(logutils.StatusInvalid, "login session settings application type", &logutils.FieldArgs{"id": *lsSettings.AppTypeID})
+		appTypeID := lsSettings.GetAppTypeID()
+		if appTypeID != nil && application.FindApplicationType(*appTypeID) == nil {
+			return errors.ErrorData(logutils.StatusInvalid, "login session settings application type", &logutils.FieldArgs{"id": *appTypeID})
 		}
 
-		_, authTypeExists := appOrg.AuthTypes[*lsSettings.AuthTypeCode]
-		if lsSettings.AuthTypeCode != nil && !authTypeExists {
-			return errors.ErrorData(logutils.StatusInvalid, "login session settings auth type", &logutils.FieldArgs{"code": *lsSettings.AuthTypeCode})
+		authTypeCode := lsSettings.GetAuthTypeCode()
+		if authTypeCode != nil {
+			if _, authTypeExists := appOrg.AuthTypes[*authTypeCode]; !authTypeExists {
+				return errors.ErrorData(logutils.StatusInvalid, "login session settings auth type", &logutils.FieldArgs{"code": *authTypeCode})
+			}
 		}
 	}
 
@@ -139,21 +143,23 @@ func (app *application) sysUpdateApplicationOrganization(appOrg model.Applicatio
 
 	// validate app type IDs
 	for _, authType := range appOrg.AuthTypes {
-		for appTypeID := range authType.AppTypeConfigs {
-			if application.FindApplicationType(appTypeID) == nil {
-				return errors.ErrorData(logutils.StatusInvalid, model.TypeApplicationType, &logutils.FieldArgs{"id": appTypeID})
+		for _, config := range authType.AppTypeConfigs.Overrides {
+			if appTypeID := config.GetAppTypeID(); appTypeID == nil || application.FindApplicationType(*appTypeID) == nil {
+				return errors.ErrorData(logutils.StatusInvalid, model.TypeApplicationType, &logutils.FieldArgs{"id": utils.GetPrintableString(appTypeID, "")})
 			}
 		}
 	}
 	// validate login session settings app type IDs and auth type codes
 	for _, lsSettings := range appOrg.LoginSessionSettings.Overrides {
-		if lsSettings.AppTypeID != nil && application.FindApplicationType(*lsSettings.AppTypeID) == nil {
-			return errors.ErrorData(logutils.StatusInvalid, "login session settings application type", &logutils.FieldArgs{"id": *lsSettings.AppTypeID})
+		appTypeID := lsSettings.GetAppTypeID()
+		if appTypeID != nil && application.FindApplicationType(*appTypeID) == nil {
+			return errors.ErrorData(logutils.StatusInvalid, "login session settings application type", &logutils.FieldArgs{"id": *appTypeID})
 		}
 
-		if lsSettings.AuthTypeCode != nil {
-			if _, authTypeExists := appOrg.AuthTypes[*lsSettings.AuthTypeCode]; !authTypeExists {
-				return errors.ErrorData(logutils.StatusInvalid, "login session settings auth type", &logutils.FieldArgs{"code": *lsSettings.AuthTypeCode})
+		authTypeCode := lsSettings.GetAuthTypeCode()
+		if authTypeCode != nil {
+			if _, authTypeExists := appOrg.AuthTypes[*authTypeCode]; !authTypeExists {
+				return errors.ErrorData(logutils.StatusInvalid, "login session settings auth type", &logutils.FieldArgs{"code": *authTypeCode})
 			}
 		}
 	}

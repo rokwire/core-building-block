@@ -15,7 +15,7 @@
 package model
 
 import (
-	"encoding/json"
+	"core-building-block/utils"
 	"fmt"
 	"strconv"
 	"strings"
@@ -48,6 +48,8 @@ const (
 	TypeAuthTypeConfig logutils.MessageDataType = "auth type config"
 	//TypeApplicationTypeAuthConfig ...
 	TypeApplicationTypeAuthConfig logutils.MessageDataType = "application type auth config"
+	//TypeLoginSessionSettings ...
+	TypeLoginSessionSettings logutils.MessageDataType = "login session settings"
 	//TypeIdentityProviderSetting ...
 	TypeIdentityProviderSetting logutils.MessageDataType = "identity provider setting"
 	//TypeApplicationTypeVersionList ...
@@ -337,7 +339,7 @@ type ApplicationOrganization struct {
 	ServicesIDs []string //which services are used for this app/org
 
 	AuthTypes            map[string]SupportedAuthType //supported auth types for this organization in this application
-	LoginSessionSettings LoginSessionSettings
+	LoginSessionSettings ApplicationOrganizationSettings
 
 	DateCreated time.Time
 	DateUpdated *time.Time
@@ -361,15 +363,9 @@ func (ao ApplicationOrganization) GetIdentityProviderSetting(authType string) (*
 		return nil, errors.ErrorData(logutils.StatusMissing, TypeAuthTypeConfig, errFields)
 	}
 
-	configBytes, err := json.Marshal(authTypeConfig)
+	idpSettings, err := utils.Convert[IdentityProviderSetting](authTypeConfig)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionMarshal, TypeAuthTypeConfig, errFields, err)
-	}
-
-	var idpSettings IdentityProviderSetting
-	err = json.Unmarshal(configBytes, &idpSettings)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, TypeAuthTypeConfig, errFields, err)
+		return nil, errors.WrapErrorAction(logutils.ActionCast, TypeIdentityProviderSetting, nil, err)
 	}
 
 	validate := validator.New()
@@ -378,7 +374,7 @@ func (ao ApplicationOrganization) GetIdentityProviderSetting(authType string) (*
 		return nil, errors.WrapErrorAction(logutils.ActionValidate, TypeIdentityProviderSetting, errFields, err)
 	}
 
-	return &idpSettings, nil
+	return idpSettings, nil
 }
 
 // GetAppTypeAuthConfig finds the app type auth configuration for the given auth type and app type ID
@@ -388,11 +384,18 @@ func (ao ApplicationOrganization) GetAppTypeAuthConfig(authType string, appTypeI
 		return nil
 	}
 
-	appTypeConfig, exists := supportedType.AppTypeConfigs[appTypeID]
-	if !exists {
-		return nil
+	return supportedType.AppTypeConfigs.GetSetting(appTypeID, "")
+}
+
+// GetLoginSessionSettings finds the login session settings for the given auth type and app type ID
+func (ao ApplicationOrganization) GetLoginSessionSettings(authType string, appTypeID string) (*LoginSessionSettings, error) {
+	settings := ao.LoginSessionSettings.GetSetting(appTypeID, authType)
+	loginSessionSettings, err := utils.Convert[LoginSessionSettings](settings)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionCast, TypeLoginSessionSettings, nil, err)
 	}
-	return appTypeConfig
+
+	return loginSessionSettings, nil
 }
 
 // IsAuthTypeSupported checks if an auth type is supported for application type
@@ -430,26 +433,52 @@ type IdentityProviderSetting struct {
 	Groups map[string]string `json:"groups" bson:"groups"` //map[identity_provider_group]app_group_id
 }
 
-// LoginSessionSettings represents a wrapper for default login session settings and any overrides
-type LoginSessionSettings struct {
-	Default   AppAuthLoginSessionSettings   `bson:"default"`
-	Overrides []AppAuthLoginSessionSettings `bson:"overrides"`
+// SupportedAuthType represents a supported auth type for an application organization with configs
+type SupportedAuthType struct {
+	Configs        map[string]interface{}           `bson:"configs,omitempty"`
+	AppTypeConfigs *ApplicationOrganizationSettings `bson:"app_type_configs,omitempty"`
+	Alias          *string                          `bson:"alias,omitempty"`
 }
 
-// GetAppAuthSettings gets the login session settings for the provided app type and auth type
-func (l *LoginSessionSettings) GetAppAuthSettings(appTypeID string, authTypeCode string) AppAuthLoginSessionSettings {
-	loginSessionSettings := l.Default
-	for _, settings := range l.Overrides {
-		if (settings.AppTypeID == nil || *settings.AppTypeID == appTypeID) || (settings.AuthTypeCode == nil || *settings.AuthTypeCode == authTypeCode) {
-			loginSessionSettings = settings
+type ApplicationOrganizationSettings struct {
+	Default   AppAuthSetting   `bson:"default"`
+	Overrides []AppAuthSetting `bson:"overrides"`
+}
+
+type AppAuthSetting interface {
+	GetAppTypeID() *string
+	GetAuthTypeCode() *string
+}
+
+// GetSetting gets the setting for the provided app type and auth type
+func (a *ApplicationOrganizationSettings) GetSetting(appTypeID string, authTypeCode string) interface{} {
+	for _, settings := range a.Overrides {
+		settingAppTypeID := settings.GetAppTypeID()
+		settingAuthTypeCode := settings.GetAuthTypeCode()
+		if (settingAppTypeID == nil || *settingAppTypeID == appTypeID) || (settingAuthTypeCode == nil || *settingAuthTypeCode == authTypeCode) {
+			return settings
 		}
 	}
 
-	return loginSessionSettings
+	return a.Default
 }
 
-// AppAuthLoginSessionSettings represents login session settings for an app type and auth type
-type AppAuthLoginSessionSettings struct {
+type IdentityProviderConfig map[string]interface{}
+
+func (i IdentityProviderConfig) GetAppTypeID() *string {
+	appTypeID, ok := i["app_type_id"].(string)
+	if !ok || appTypeID == "" {
+		return nil
+	}
+	return &appTypeID
+}
+
+func (i IdentityProviderConfig) GetAuthTypeCode() *string {
+	return nil
+}
+
+// LoginSessionSettings represents login session settings for an app type and auth type
+type LoginSessionSettings struct {
 	AppTypeID    *string `bson:"app_type_id,omitempty"`
 	AuthTypeCode *string `bson:"auth_type_code,omitempty"`
 
@@ -458,6 +487,14 @@ type AppAuthLoginSessionSettings struct {
 	InactivityExpirePolicy InactivityExpirePolicy `bson:"inactivity_expire_policy"`
 	TSLExpirePolicy        TSLExpirePolicy        `bson:"time_since_login_expire_policy"`
 	YearlyExpirePolicy     YearlyExpirePolicy     `bson:"yearly_expire_policy"`
+}
+
+func (l LoginSessionSettings) GetAppTypeID() *string {
+	return l.AppTypeID
+}
+
+func (l LoginSessionSettings) GetAuthTypeCode() *string {
+	return l.AuthTypeCode
 }
 
 // InactivityExpirePolicy represents expires policy based on inactivity
@@ -502,13 +539,6 @@ func (at ApplicationType) FindVersion(version string) *Version {
 		}
 	}
 	return nil
-}
-
-// SupportedAuthType represents a supported auth type for an application organization with configs
-type SupportedAuthType struct {
-	Configs        map[string]interface{} `bson:"configs,omitempty"`
-	AppTypeConfigs map[string]interface{} `bson:"app_type_configs,omitempty"`
-	Alias          *string                `bson:"alias,omitempty"`
 }
 
 // ApplicationConfig represents app configs

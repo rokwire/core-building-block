@@ -1,8 +1,16 @@
 type: object
 properties:
-  default:
-    $ref: "./AppAuthLoginSessionSettings.yaml"
-  overrides:
-    type: array
-    items:
-      $ref: "./AppAuthLoginSessionSettings.yaml"
+  app_type_id:
+    type: string
+    nullable: true
+  auth_type_code:
+    type: string
+    nullable: true
+  max_concurrent_sessions:
+    type: integer
+  inactivity_expire_policy:
+    $ref: "./InactiveExpirePolicy.yaml"
+  time_since_login_expire_policy:
+    $ref: "./TSLExpirePolicy.yaml"
+  yearly_expire_policy:
+    $ref: "./YearlyExpirePolicy.yaml"

@@ -3694,7 +3694,7 @@ func (sa *Adapter) migrateAuthTypes() error {
 		}
 		for _, appOrg := range appOrgs {
 			// legacy login session settings are the new default settings, no overrides unless updated by system admin
-			appOrg.LoginSessionSettings = model.LoginSessionSettings{Default: appOrg.LegacyLoginSessionSettings}
+			appOrg.LoginSessionSettings = model.ApplicationOrganizationSettings{Default: appOrg.LegacyLoginSessionSettings}
 			appOrg.AuthTypes = make(map[string]model.SupportedAuthType)
 
 			appTypeIDs := make([]string, 0)

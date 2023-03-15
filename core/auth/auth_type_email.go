@@ -254,16 +254,11 @@ func (a *emailAuthImpl) sendPasswordResetEmail(credentialID string, resetCode st
 }
 
 func (a *emailAuthImpl) verifyCredential(credential *model.Credential, verification string, l *logs.Log) (map[string]interface{}, error) {
-	credBytes, err := json.Marshal(credential.Value)
+	creds, err := utils.Convert[emailCreds](credential.Value)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionMarshal, typeEmailCreds, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionCast, typeEmailCreds, nil, err)
 	}
 
-	var creds *emailCreds
-	err = json.Unmarshal(credBytes, &creds)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeEmailCreds, nil, err)
-	}
 	err = a.compareCode(creds.VerificationCode, verification, creds.VerificationExpiry, l)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeAuthCred, &logutils.FieldArgs{"verification_code": verification}, err)
@@ -392,16 +387,11 @@ func (a *emailAuthImpl) resetCredential(credential *model.Credential, resetCode 
 		return nil, errors.ErrorData(logutils.StatusInvalid, "mismatching password fields", nil)
 	}
 
-	credBytes, err := json.Marshal(credential.Value)
+	creds, err := utils.Convert[emailCreds](credential.Value)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionMarshal, typeEmailCreds, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionCast, typeEmailCreds, nil, err)
 	}
 
-	var creds *emailCreds
-	err = json.Unmarshal(credBytes, &creds)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeEmailCreds, nil, err)
-	}
 	//reset password from link
 	if resetCode != nil {
 		if creds.ResetExpiry.Before(time.Now()) {
@@ -470,29 +460,19 @@ func (a *emailAuthImpl) getUserIdentifier(creds string) (string, error) {
 }
 
 func emailCredsToMap(creds *emailCreds) (map[string]interface{}, error) {
-	credBytes, err := json.Marshal(creds)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionMarshal, typeEmailCreds, nil, err)
+	credsMap, err := utils.Convert[map[string]interface{}](creds)
+	if err != nil || credsMap == nil {
+		return nil, errors.WrapErrorAction(logutils.ActionCast, "map from email creds", nil, err)
 	}
-	var credsMap map[string]interface{}
-	err = json.Unmarshal(credBytes, &credsMap)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, "map from email creds", nil, err)
-	}
-	return credsMap, nil
+	return *credsMap, nil
 }
 
 func mapToEmailCreds(credsMap map[string]interface{}) (*emailCreds, error) {
-	credBytes, err := json.Marshal(credsMap)
+	creds, err := utils.Convert[emailCreds](credsMap)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionMarshal, typeEmailCreds, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionCast, typeEmailCreds, nil, err)
 	}
-	var creds emailCreds
-	err = json.Unmarshal(credBytes, &creds)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeEmailCreds, nil, err)
-	}
-	return &creds, nil
+	return creds, nil
 }
 
 // initEmailAuth initializes and registers a new email auth instance

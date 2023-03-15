@@ -1,0 +1,12 @@
+type: object
+properties:
+  default:
+    oneOf:
+      - $ref: "./LoginSessionSettings.yaml"
+      - $ref: "./AuthConfigOidc.yaml"
+  overrides:
+    type: array
+    items:
+      oneOf:
+        - $ref: "./LoginSessionSettings.yaml"
+        - $ref: "./AuthConfigOidc.yaml"

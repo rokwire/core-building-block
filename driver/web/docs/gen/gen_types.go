@@ -219,16 +219,6 @@ type AdminToken struct {
 	Token string `json:"token"`
 }
 
-// AppAuthLoginSessionSettings defines model for AppAuthLoginSessionSettings.
-type AppAuthLoginSessionSettings struct {
-	AppTypeId                  *string               `json:"app_type_id"`
-	AuthTypeCode               *string               `json:"auth_type_code"`
-	InactivityExpirePolicy     *InactiveExpirePolicy `json:"inactivity_expire_policy,omitempty"`
-	MaxConcurrentSessions      *int                  `json:"max_concurrent_sessions,omitempty"`
-	TimeSinceLoginExpirePolicy *TSLExpirePolicy      `json:"time_since_login_expire_policy,omitempty"`
-	YearlyExpirePolicy         *YearlyExpirePolicy   `json:"yearly_expire_policy,omitempty"`
-}
-
 // AppOrgGroup defines model for AppOrgGroup.
 type AppOrgGroup struct {
 	Application *Application  `json:"application,omitempty"`
@@ -283,12 +273,28 @@ type ApplicationConfig struct {
 
 // ApplicationOrganization defines model for ApplicationOrganization.
 type ApplicationOrganization struct {
-	AppId                string                        `json:"app_id"`
-	AuthTypes            *map[string]SupportedAuthType `json:"auth_types"`
-	Id                   *string                       `json:"id,omitempty"`
-	LoginSessionSettings *LoginSessionSettings         `json:"login_session_settings,omitempty"`
-	OrgId                string                        `json:"org_id"`
-	ServicesIds          *[]string                     `json:"services_ids"`
+	AppId                string                           `json:"app_id"`
+	AuthTypes            *map[string]SupportedAuthType    `json:"auth_types"`
+	Id                   *string                          `json:"id,omitempty"`
+	LoginSessionSettings *ApplicationOrganizationSettings `json:"login_session_settings,omitempty"`
+	OrgId                string                           `json:"org_id"`
+	ServicesIds          *[]string                        `json:"services_ids"`
+}
+
+// ApplicationOrganizationSettings defines model for ApplicationOrganizationSettings.
+type ApplicationOrganizationSettings struct {
+	Default   *ApplicationOrganizationSettings_Default          `json:"default,omitempty"`
+	Overrides *[]ApplicationOrganizationSettings_Overrides_Item `json:"overrides,omitempty"`
+}
+
+// ApplicationOrganizationSettings_Default defines model for ApplicationOrganizationSettings.Default.
+type ApplicationOrganizationSettings_Default struct {
+	union json.RawMessage
+}
+
+// ApplicationOrganizationSettings_Overrides_Item defines model for ApplicationOrganizationSettings.overrides.Item.
+type ApplicationOrganizationSettings_Overrides_Item struct {
+	union json.RawMessage
 }
 
 // ApplicationType defines model for ApplicationType.
@@ -301,6 +307,7 @@ type ApplicationType struct {
 
 // AuthConfigOidc defines model for AuthConfigOidc.
 type AuthConfigOidc struct {
+	AppTypeId           *string            `json:"app_type_id"`
 	AuthorizeClaims     *string            `json:"authorize_claims,omitempty"`
 	AuthorizeUrl        *string            `json:"authorize_url,omitempty"`
 	Claims              map[string]string  `json:"claims"`
@@ -466,8 +473,12 @@ type LoginSession struct {
 
 // LoginSessionSettings defines model for LoginSessionSettings.
 type LoginSessionSettings struct {
-	Default   *AppAuthLoginSessionSettings   `json:"default,omitempty"`
-	Overrides *[]AppAuthLoginSessionSettings `json:"overrides,omitempty"`
+	AppTypeId                  *string               `json:"app_type_id"`
+	AuthTypeCode               *string               `json:"auth_type_code"`
+	InactivityExpirePolicy     *InactiveExpirePolicy `json:"inactivity_expire_policy,omitempty"`
+	MaxConcurrentSessions      *int                  `json:"max_concurrent_sessions,omitempty"`
+	TimeSinceLoginExpirePolicy *TSLExpirePolicy      `json:"time_since_login_expire_policy,omitempty"`
+	YearlyExpirePolicy         *YearlyExpirePolicy   `json:"yearly_expire_policy,omitempty"`
 }
 
 // OIDCDiscovery OpenID Connect Discovery Metadata
@@ -613,14 +624,9 @@ type ServiceScope struct {
 
 // SupportedAuthType defines model for SupportedAuthType.
 type SupportedAuthType struct {
-	Alias          *string                                                           `json:"alias"`
-	AppTypeConfigs *map[string]SupportedAuthType_AppTypeConfigs_AdditionalProperties `json:"app_type_configs"`
-	Configs        *SupportedAuthType_Configs                                        `json:"configs"`
-}
-
-// SupportedAuthType_AppTypeConfigs_AdditionalProperties defines model for SupportedAuthType.app_type_configs.AdditionalProperties.
-type SupportedAuthType_AppTypeConfigs_AdditionalProperties struct {
-	union json.RawMessage
+	Alias          *string                                     `json:"alias"`
+	AppTypeConfigs *map[string]ApplicationOrganizationSettings `json:"app_type_configs"`
+	Configs        *SupportedAuthType_Configs                  `json:"configs"`
 }
 
 // SupportedAuthType_Configs defines model for SupportedAuthType.Configs.
@@ -1723,22 +1729,22 @@ type PostTpsAccountsCountJSONRequestBody = PostTpsAccountsCountJSONBody
 // PostTpsServiceAccountIdJSONRequestBody defines body for PostTpsServiceAccountId for application/json ContentType.
 type PostTpsServiceAccountIdJSONRequestBody = ServicesReqServiceAccountsParams
 
-// AsAuthConfigOidc returns the union data inside the SupportedAuthType_AppTypeConfigs_AdditionalProperties as a AuthConfigOidc
-func (t SupportedAuthType_AppTypeConfigs_AdditionalProperties) AsAuthConfigOidc() (AuthConfigOidc, error) {
-	var body AuthConfigOidc
+// AsLoginSessionSettings returns the union data inside the ApplicationOrganizationSettings_Default as a LoginSessionSettings
+func (t ApplicationOrganizationSettings_Default) AsLoginSessionSettings() (LoginSessionSettings, error) {
+	var body LoginSessionSettings
 	err := json.Unmarshal(t.union, &body)
 	return body, err
 }
 
-// FromAuthConfigOidc overwrites any union data inside the SupportedAuthType_AppTypeConfigs_AdditionalProperties as the provided AuthConfigOidc
-func (t *SupportedAuthType_AppTypeConfigs_AdditionalProperties) FromAuthConfigOidc(v AuthConfigOidc) error {
+// FromLoginSessionSettings overwrites any union data inside the ApplicationOrganizationSettings_Default as the provided LoginSessionSettings
+func (t *ApplicationOrganizationSettings_Default) FromLoginSessionSettings(v LoginSessionSettings) error {
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
 }
 
-// MergeAuthConfigOidc performs a merge with any union data inside the SupportedAuthType_AppTypeConfigs_AdditionalProperties, using the provided AuthConfigOidc
-func (t *SupportedAuthType_AppTypeConfigs_AdditionalProperties) MergeAuthConfigOidc(v AuthConfigOidc) error {
+// MergeLoginSessionSettings performs a merge with any union data inside the ApplicationOrganizationSettings_Default, using the provided LoginSessionSettings
+func (t *ApplicationOrganizationSettings_Default) MergeLoginSessionSettings(v LoginSessionSettings) error {
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -1749,12 +1755,100 @@ func (t *SupportedAuthType_AppTypeConfigs_AdditionalProperties) MergeAuthConfigO
 	return err
 }
 
-func (t SupportedAuthType_AppTypeConfigs_AdditionalProperties) MarshalJSON() ([]byte, error) {
+// AsAuthConfigOidc returns the union data inside the ApplicationOrganizationSettings_Default as a AuthConfigOidc
+func (t ApplicationOrganizationSettings_Default) AsAuthConfigOidc() (AuthConfigOidc, error) {
+	var body AuthConfigOidc
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromAuthConfigOidc overwrites any union data inside the ApplicationOrganizationSettings_Default as the provided AuthConfigOidc
+func (t *ApplicationOrganizationSettings_Default) FromAuthConfigOidc(v AuthConfigOidc) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeAuthConfigOidc performs a merge with any union data inside the ApplicationOrganizationSettings_Default, using the provided AuthConfigOidc
+func (t *ApplicationOrganizationSettings_Default) MergeAuthConfigOidc(v AuthConfigOidc) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(b, t.union)
+	t.union = merged
+	return err
+}
+
+func (t ApplicationOrganizationSettings_Default) MarshalJSON() ([]byte, error) {
 	b, err := t.union.MarshalJSON()
 	return b, err
 }
 
-func (t *SupportedAuthType_AppTypeConfigs_AdditionalProperties) UnmarshalJSON(b []byte) error {
+func (t *ApplicationOrganizationSettings_Default) UnmarshalJSON(b []byte) error {
+	err := t.union.UnmarshalJSON(b)
+	return err
+}
+
+// AsLoginSessionSettings returns the union data inside the ApplicationOrganizationSettings_Overrides_Item as a LoginSessionSettings
+func (t ApplicationOrganizationSettings_Overrides_Item) AsLoginSessionSettings() (LoginSessionSettings, error) {
+	var body LoginSessionSettings
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromLoginSessionSettings overwrites any union data inside the ApplicationOrganizationSettings_Overrides_Item as the provided LoginSessionSettings
+func (t *ApplicationOrganizationSettings_Overrides_Item) FromLoginSessionSettings(v LoginSessionSettings) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeLoginSessionSettings performs a merge with any union data inside the ApplicationOrganizationSettings_Overrides_Item, using the provided LoginSessionSettings
+func (t *ApplicationOrganizationSettings_Overrides_Item) MergeLoginSessionSettings(v LoginSessionSettings) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(b, t.union)
+	t.union = merged
+	return err
+}
+
+// AsAuthConfigOidc returns the union data inside the ApplicationOrganizationSettings_Overrides_Item as a AuthConfigOidc
+func (t ApplicationOrganizationSettings_Overrides_Item) AsAuthConfigOidc() (AuthConfigOidc, error) {
+	var body AuthConfigOidc
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromAuthConfigOidc overwrites any union data inside the ApplicationOrganizationSettings_Overrides_Item as the provided AuthConfigOidc
+func (t *ApplicationOrganizationSettings_Overrides_Item) FromAuthConfigOidc(v AuthConfigOidc) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeAuthConfigOidc performs a merge with any union data inside the ApplicationOrganizationSettings_Overrides_Item, using the provided AuthConfigOidc
+func (t *ApplicationOrganizationSettings_Overrides_Item) MergeAuthConfigOidc(v AuthConfigOidc) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(b, t.union)
+	t.union = merged
+	return err
+}
+
+func (t ApplicationOrganizationSettings_Overrides_Item) MarshalJSON() ([]byte, error) {
+	b, err := t.union.MarshalJSON()
+	return b, err
+}
+
+func (t *ApplicationOrganizationSettings_Overrides_Item) UnmarshalJSON(b []byte) error {
 	err := t.union.UnmarshalJSON(b)
 	return err
 }
