@@ -4404,6 +4404,7 @@ paths:
                   type: signature
                   params:
                     key_pem: public_key_pem
+                    alg: PS256
         required: true
       responses:
         '200':

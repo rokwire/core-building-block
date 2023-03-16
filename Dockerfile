@@ -2,7 +2,7 @@ FROM golang:1.20-alpine as builder
 
 ENV CGO_ENABLED=0
 
-RUN apk add --no-cache --update make
+RUN apk add --no-cache --update make git
 
 RUN mkdir /app
 WORKDIR /app
@@ -38,4 +38,4 @@ COPY --from=builder /app/vendor/github.com/rokwire/core-auth-library-go/v3/autho
 
 COPY --from=builder /etc/passwd /etc/passwd
 
-ENTRYPOINT ["/application"]
+ENTRYPOINT ["/core-building-block"]
