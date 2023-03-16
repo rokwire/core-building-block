@@ -46,7 +46,7 @@ func loginSessionToDef(item model.LoginSession) Def.LoginSession {
 	appOrgID := item.AppOrg.ID
 	appTypeID := item.AppType.ID
 	appTypeIdentifier := item.AppType.Identifier
-	authTypeCode := item.AuthType.Code
+	authTypeCode := item.AccountAuthType.AuthTypeCode
 	refreshTokensCount := len(item.RefreshTokens)
 	stateExpires := utils.FormatTime(item.StateExpires)
 	dateRefreshed := utils.FormatTime(item.DateRefreshed)
@@ -399,35 +399,4 @@ func jsonWebKeySetDef(set jwk.Set) *Def.JWKS {
 		out[item.Index] = Def.JWK{}
 	}
 	return &Def.JWKS{Keys: out}
-}
-
-// AuthType
-func authTypeToDef(item *model.AuthType) *Def.AuthType {
-	if item == nil {
-		return nil
-	}
-
-	var id *string
-	idVal := item.ID
-	if idVal != "" {
-		id = &idVal
-	}
-
-	params := item.Params
-	return &Def.AuthType{Id: id, Code: item.Code, Description: item.Description,
-		IsExternal: item.IsExternal, IsAnonymous: item.IsAnonymous, UseCredentials: item.UseCredentials,
-		IgnoreMfa: item.IgnoreMFA, Params: &params}
-}
-
-func authTypesToDef(items []model.AuthType) []Def.AuthType {
-	result := make([]Def.AuthType, len(items))
-	for i, item := range items {
-		authType := authTypeToDef(&item)
-		if authType != nil {
-			result[i] = *authType
-		} else {
-			result[i] = Def.AuthType{}
-		}
-	}
-	return result
 }

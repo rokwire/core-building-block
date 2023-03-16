@@ -1,7 +1,13 @@
 type: object
 properties:
-  auth_type_id:
-    type: string
-  params:
+  configs:
     type: object
-    additionalProperties: true
+    nullable: true
+    anyOf:
+      - $ref: "./IdentityProviderSettings.yaml"
+      - $ref: "../auth/AuthSettings.yaml"
+  app_type_configs:
+    $ref: "./ApplicationOrganizationSettings.yaml"
+  alias:
+    type: string
+    nullable: true

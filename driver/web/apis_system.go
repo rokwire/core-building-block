@@ -185,9 +185,9 @@ func (h SystemApisHandler) createApplicationOrganization(l *logs.Log, r *http.Re
 
 	//TODO: Fix missing supported auth types, expire policies,
 	appOrg := appOrgFromDef(&requestData)
-	_, err = h.coreAPIs.System.SysCreateApplicationOrganization(requestData.AppId, requestData.OrgId, *appOrg)
+	err = h.coreAPIs.System.SysCreateApplicationOrganization(*appOrg)
 	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionUpdate, model.TypeApplicationOrganization, nil, err, http.StatusInternalServerError, true)
+		return l.HTTPResponseErrorAction(logutils.ActionCreate, model.TypeApplicationOrganization, nil, err, http.StatusInternalServerError, true)
 	}
 
 	return l.HTTPResponseSuccess()
@@ -1042,92 +1042,6 @@ func (h SystemApisHandler) deleteApplicationConfig(l *logs.Log, r *http.Request,
 	err := h.coreAPIs.System.SysDeleteAppConfig(ID)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUpdate, model.TypeApplicationConfig, nil, err, http.StatusInternalServerError, true)
-	}
-
-	return l.HTTPResponseSuccess()
-}
-
-// createAuthTypes creates auth-type
-func (h SystemApisHandler) createAuthTypes(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
-
-	var requestData Def.AuthType
-	err = json.Unmarshal(data, &requestData)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, model.TypeOrganization, nil, err, http.StatusBadRequest, true)
-	}
-
-	code := requestData.Code
-	description := requestData.Description
-	isExternal := requestData.IsExternal
-	isAnonymous := requestData.IsAnonymous
-	useCredentials := requestData.UseCredentials
-	ignoreMFA := requestData.IgnoreMfa
-	var params map[string]interface{}
-	if requestData.Params != nil {
-		params = *requestData.Params
-	}
-
-	_, err = h.coreAPIs.System.SysCreateAuthTypes(code, description, isExternal, isAnonymous, useCredentials, ignoreMFA, params)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionCreate, model.TypeAuthType, nil, err, http.StatusInternalServerError, true)
-	}
-
-	return l.HTTPResponseSuccess()
-}
-
-// getAuthTypes gets auth-types
-func (h SystemApisHandler) getAuthTypes(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	authTypes, err := h.coreAPIs.System.SysGetAuthTypes()
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionGet, model.TypeOrganization, nil, err, http.StatusInternalServerError, true)
-	}
-
-	response := authTypesToDef(authTypes)
-
-	data, err := json.Marshal(response)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeOrganization, nil, err, http.StatusInternalServerError, false)
-	}
-	return l.HTTPResponseSuccessJSON(data)
-}
-
-// updateAuthTypes updates auth type
-func (h SystemApisHandler) updateAuthTypes(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	rParams := mux.Vars(r)
-	ID := rParams["id"]
-	if len(ID) <= 0 {
-		return l.HTTPResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
-	}
-
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HTTPResponseErrorData(logutils.StatusInvalid, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
-	var requestData Def.AuthType
-	err = json.Unmarshal(data, &requestData)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, model.TypeOrganization, nil, err, http.StatusBadRequest, true)
-	}
-
-	code := requestData.Code
-	description := requestData.Description
-	isExternal := requestData.IsExternal
-	isAnonymous := requestData.IsAnonymous
-	useCredentials := requestData.UseCredentials
-	ignoreMFA := requestData.IgnoreMfa
-	var params map[string]interface{}
-	if requestData.Params != nil {
-		params = *requestData.Params
-	}
-
-	err = h.coreAPIs.System.SysUpdateAuthTypes(ID, code, description, isExternal, isAnonymous, useCredentials, ignoreMFA, params)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionUpdate, model.TypeAuthType, nil, err, http.StatusInternalServerError, true)
 	}
 
 	return l.HTTPResponseSuccess()

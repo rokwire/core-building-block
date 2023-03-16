@@ -21,12 +21,12 @@ OrganizationConfig:
   $ref: "./application/OrganizationConfig.yaml"
 ApplicationConfig:
   $ref: "./application/ApplicationConfig.yaml"
-IdentityProviderSettings:
-  $ref: "./application/IdentityProviderSettings.yaml"
-SupportedAuthTypes:
-  $ref: "./application/SupportedAuthTypes.yaml"
 SupportedAuthType:
   $ref: "./application/SupportedAuthType.yaml"
+IdentityProviderSettings:
+  $ref: "./application/IdentityProviderSettings.yaml"
+ApplicationOrganizationSettings:
+  $ref: "./application/ApplicationOrganizationSettings.yaml"
 LoginSessionSettings:
   $ref: "./application/LoginSessionSettings.yaml"
 YearlyExpirePolicy:
@@ -39,8 +39,6 @@ TSLExpirePolicy:
 # auth
 LoginSession:
   $ref: "./auth/LoginSession.yaml"
-AuthType:
-  $ref: "./auth/AuthType.yaml"
 ServiceAccount:
   $ref: "./auth/ServiceAccount.yaml"
 AppOrgPair:
@@ -72,6 +70,13 @@ JWKS:
   $ref: "./auth/JWKS.yaml"
 OIDCDiscovery:
   $ref: "./auth/OIDCDiscovery.yaml"
+
+AuthSettings:
+  $ref: "./auth/AuthSettings.yaml"
+AuthConfigOidc:
+  $ref: "./auth/AuthConfigOidc.yaml"
+AuthConfigOAuth2:
+  $ref: "./auth/AuthConfigOAuth2.yaml"
 
 # user
 Account:
@@ -112,8 +117,8 @@ _shared_req_AccountCheck:
   $ref: "./apis/shared/requests/AccountCheck.yaml"
 _shared_req_CredsEmail:
   $ref: "./apis/shared/requests/CredsEmail.yaml"
-_shared_req_CredsTwilioPhone:
-  $ref: "./apis/shared/requests/CredsTwilioPhone.yaml"
+_shared_req_CredsPhone:
+  $ref: "./apis/shared/requests/CredsPhone.yaml"
 _shared_req_CredsOIDC:
   $ref: "./apis/shared/requests/CredsOIDC.yaml"
 _shared_req_CredsAPIKey:

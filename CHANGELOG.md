@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+### Fixed
+- Auth types/identity provider settings cannot be configured per organization [#581](https://github.com/rokwire/core-building-block/issues/581)
+
 ## [1.31.1] - 2023-03-14
 ### Changed
 - Upgrade to auth library v3 [#645](https://github.com/rokwire/core-building-block/issues/645)

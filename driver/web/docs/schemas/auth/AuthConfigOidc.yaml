@@ -1,0 +1,41 @@
+required:
+  - host
+  - client_id
+  - claims
+type: object
+properties:
+  app_type_id:
+    type: string
+    nullable: true
+  host:
+    type: string
+  authorize_url:
+    type: string
+  token_url:
+    type: string
+  userinfo_url:
+    type: string
+  scopes:
+    type: string
+  use_refresh:
+    type: boolean
+  use_pkce:
+    type: boolean
+  use_state:
+    type: boolean
+  client_id:
+    type: string
+  client_secret:
+    type: string
+  authorize_claims:
+    type: string
+  claims:
+    type: object
+    additionalProperties:
+      type: string
+  required_populations:
+    type: string
+  populations:
+    type: object
+    additionalProperties:
+      type: string

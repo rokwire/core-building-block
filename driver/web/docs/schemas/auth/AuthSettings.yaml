@@ -1,0 +1,8 @@
+type: object
+properties:
+  provider:
+    type: string
+    nullable: true
+  ignore_mfa:
+    type: boolean
+    nullable: true

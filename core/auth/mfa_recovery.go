@@ -18,7 +18,6 @@ import (
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
 	"core-building-block/utils"
-	"encoding/json"
 	"time"
 
 	"github.com/google/uuid"
@@ -45,15 +44,11 @@ func (m *recoveryMfaImpl) verify(context storage.TransactionContext, mfa *model.
 		return nil, errors.ErrorData(logutils.StatusMissing, "mfa params", nil)
 	}
 
-	var codes []string
-	data, err := json.Marshal(mfa.Params["codes"])
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionMarshal, "stored recovery codes", nil, err)
+	codesVal, err := utils.Convert[[]string](mfa.Params["codes"])
+	if err != nil || codesVal == nil {
+		return nil, errors.WrapErrorAction(logutils.ActionCast, "recovery codes", nil, err)
 	}
-	err = json.Unmarshal(data, &codes)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, "stored recovery codes", nil, err)
-	}
+	codes := *codesVal
 
 	if len(codes) == 0 {
 		message := "no valid codes"

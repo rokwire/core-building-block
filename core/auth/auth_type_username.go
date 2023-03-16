@@ -32,11 +32,15 @@ type usernameAuthImpl struct {
 	authType string
 }
 
-func (a *usernameAuthImpl) signUp(authType model.AuthType, appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error) {
+func (a *usernameAuthImpl) code() string {
+	return a.authType
+}
+
+func (a *usernameAuthImpl) signUp(appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error) {
 	return "", nil, nil
 }
 
-func (a *usernameAuthImpl) signUpAdmin(authType model.AuthType, appOrg model.ApplicationOrganization, identifier string, password string, newCredentialID string) (map[string]interface{}, map[string]interface{}, error) {
+func (a *usernameAuthImpl) signUpAdmin(appOrg model.ApplicationOrganization, identifier string, password string, newCredentialID string) (map[string]interface{}, map[string]interface{}, error) {
 	return nil, nil, nil
 }
 
@@ -48,7 +52,7 @@ func (a *usernameAuthImpl) verifyCredential(credential *model.Credential, verifi
 	return nil, errors.New(logutils.Unimplemented)
 }
 
-func (a *usernameAuthImpl) sendVerifyCredential(credential *model.Credential, appName string, l *logs.Log) error {
+func (a *usernameAuthImpl) sendVerifyCredential(appOrg model.ApplicationOrganization, credential *model.Credential, l *logs.Log) error {
 	return nil
 }
 
@@ -56,8 +60,8 @@ func (a *usernameAuthImpl) restartCredentialVerification(credential *model.Crede
 	return nil
 }
 
-func (a *usernameAuthImpl) isCredentialVerified(credential *model.Credential, l *logs.Log) (*bool, *bool, error) {
-	return nil, nil, nil
+func (a *usernameAuthImpl) isCredentialVerified(appOrg model.ApplicationOrganization, credential *model.Credential, l *logs.Log) (bool, *bool, error) {
+	return true, nil, nil
 }
 
 func (a *usernameAuthImpl) checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, error) {
@@ -78,7 +82,7 @@ func initUsernameAuth(auth *Auth) (*usernameAuthImpl, error) {
 
 	err := auth.registerAuthType(username.authType, username)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAuthType, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionRegister, typeInternalAuthType, nil, err)
 	}
 
 	return username, nil

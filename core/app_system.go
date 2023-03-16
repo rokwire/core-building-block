@@ -17,6 +17,7 @@ package core
 import (
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
+	"core-building-block/utils"
 	"time"
 
 	"github.com/google/uuid"
@@ -86,33 +87,88 @@ func (app *application) sysGetApplicationOrganization(ID string) (*model.Applica
 	return app.storage.FindApplicationOrganizationByID(ID)
 }
 
-func (app *application) sysCreateApplicationOrganization(appOrg model.ApplicationOrganization, appID string, orgID string) (*model.ApplicationOrganization, error) {
-	application, err := app.storage.FindApplication(nil, appID)
+func (app *application) sysCreateApplicationOrganization(appOrg model.ApplicationOrganization) error {
+	application, err := app.storage.FindApplication(nil, appOrg.Application.ID)
 	if err != nil || application == nil {
-		return nil, errors.WrapErrorData(logutils.StatusInvalid, model.TypeApplication, nil, err)
+		return errors.WrapErrorData(logutils.StatusInvalid, model.TypeApplication, nil, err)
 	}
 	appOrg.Application = *application
 
-	organizaiton, err := app.storage.FindOrganization(orgID)
-	if err != nil || organizaiton == nil {
-		return nil, errors.WrapErrorData(logutils.StatusInvalid, model.TypeOrganization, nil, err)
+	// validate app type IDs
+	for _, authType := range appOrg.AuthTypes {
+		if authType.AppTypeConfigs != nil {
+			for _, config := range authType.AppTypeConfigs.Overrides {
+				if appTypeID := config.GetAppTypeID(); appTypeID == nil || application.FindApplicationType(*appTypeID) == nil {
+					return errors.ErrorData(logutils.StatusInvalid, model.TypeApplicationType, &logutils.FieldArgs{"id": utils.GetPrintableString(appTypeID, "")})
+				}
+			}
+		}
 	}
-	appOrg.Organization = *organizaiton
+	// validate login session settings app type IDs and auth type codes
+	for _, lsSettings := range appOrg.LoginSessionSettings.Overrides {
+		appTypeID := lsSettings.GetAppTypeID()
+		if appTypeID != nil && application.FindApplicationType(*appTypeID) == nil {
+			return errors.ErrorData(logutils.StatusInvalid, "login session settings application type", &logutils.FieldArgs{"id": *appTypeID})
+		}
+
+		authTypeCode := lsSettings.GetAuthTypeCode()
+		if authTypeCode != nil {
+			if _, authTypeExists := appOrg.AuthTypes[*authTypeCode]; !authTypeExists {
+				return errors.ErrorData(logutils.StatusInvalid, "login session settings auth type", &logutils.FieldArgs{"code": *authTypeCode})
+			}
+		}
+	}
+
+	organization, err := app.storage.FindOrganization(appOrg.Organization.ID)
+	if err != nil || organization == nil {
+		return errors.WrapErrorData(logutils.StatusInvalid, model.TypeOrganization, nil, err)
+	}
+	appOrg.Organization = *organization
 
 	appOrgID, _ := uuid.NewUUID()
 	appOrg.ID = appOrgID.String()
 	appOrg.DateCreated = time.Now()
 
-	insertedAppOrg, err := app.storage.InsertApplicationOrganization(nil, appOrg)
+	err = app.storage.InsertApplicationOrganization(nil, appOrg)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
 	}
 
-	return insertedAppOrg, nil
+	return nil
 }
 
 func (app *application) sysUpdateApplicationOrganization(appOrg model.ApplicationOrganization) error {
-	err := app.storage.UpdateApplicationOrganization(nil, appOrg)
+	application, err := app.storage.FindApplication(nil, appOrg.Application.ID)
+	if err != nil || application == nil {
+		return errors.WrapErrorData(logutils.StatusInvalid, model.TypeApplication, nil, err)
+	}
+
+	// validate app type IDs
+	for _, authType := range appOrg.AuthTypes {
+		if authType.AppTypeConfigs != nil {
+			for _, config := range authType.AppTypeConfigs.Overrides {
+				if appTypeID := config.GetAppTypeID(); appTypeID == nil || application.FindApplicationType(*appTypeID) == nil {
+					return errors.ErrorData(logutils.StatusInvalid, model.TypeApplicationType, &logutils.FieldArgs{"id": utils.GetPrintableString(appTypeID, "")})
+				}
+			}
+		}
+	}
+	// validate login session settings app type IDs and auth type codes
+	for _, lsSettings := range appOrg.LoginSessionSettings.Overrides {
+		appTypeID := lsSettings.GetAppTypeID()
+		if appTypeID != nil && application.FindApplicationType(*appTypeID) == nil {
+			return errors.ErrorData(logutils.StatusInvalid, "login session settings application type", &logutils.FieldArgs{"id": *appTypeID})
+		}
+
+		authTypeCode := lsSettings.GetAuthTypeCode()
+		if authTypeCode != nil {
+			if _, authTypeExists := appOrg.AuthTypes[*authTypeCode]; !authTypeExists {
+				return errors.ErrorData(logutils.StatusInvalid, "login session settings auth type", &logutils.FieldArgs{"code": *authTypeCode})
+			}
+		}
+	}
+
+	err = app.storage.UpdateApplicationOrganization(nil, appOrg)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeApplicationOrganization, nil, err)
 	}
@@ -437,38 +493,4 @@ func (app *application) sysDeleteAppConfig(id string) error {
 	}
 
 	return nil
-}
-
-func (app *application) sysCreateAuthTypes(code string, description string, isExternal bool,
-	isAnonymous bool, useCredentials bool, ignoreMFA bool, params map[string]interface{}) (*model.AuthType, error) {
-
-	authTypeID, _ := uuid.NewUUID()
-	authType := model.AuthType{ID: authTypeID.String(), Code: code, Description: description,
-		IsExternal: isExternal, IsAnonymous: isAnonymous, UseCredentials: useCredentials,
-		IgnoreMFA: ignoreMFA, Params: params}
-
-	insertedAuthType, err := app.storage.InsertAuthType(nil, authType)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthType, nil, err)
-	}
-	return insertedAuthType, nil
-}
-
-func (app *application) sysGetAuthTypes() ([]model.AuthType, error) {
-	getAuthTypes, err := app.storage.FindAuthTypes()
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeAuthType, nil, err)
-	}
-
-	return getAuthTypes, nil
-}
-
-func (app *application) SysUpdateAuthTypes(ID string, code string, description string, isExternal bool, isAnonymous bool, useCredentials bool, ignoreMFA bool, params map[string]interface{}) error {
-	err := app.storage.UpdateAuthTypes(ID, code, description, isExternal, isAnonymous, useCredentials, ignoreMFA, params)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAuthType, nil, err)
-	}
-
-	return err
-
 }

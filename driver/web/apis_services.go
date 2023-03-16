@@ -108,7 +108,7 @@ func (h ServicesApisHandler) login(l *logs.Log, r *http.Request, claims *tokenau
 	}
 
 	if loginSession.State != "" {
-		paramsRes, err := convert[Def.SharedResLoginMfa_Params](loginSession.Params)
+		paramsRes, err := utils.Convert[Def.SharedResLoginMfa_Params](loginSession.Params)
 		if err != nil {
 			return l.HTTPResponseErrorAction("converting", logutils.MessageDataType("auth login response params"), nil, err, http.StatusInternalServerError, false)
 		}
@@ -123,7 +123,7 @@ func (h ServicesApisHandler) login(l *logs.Log, r *http.Request, claims *tokenau
 		return l.HTTPResponseSuccessJSON(respData)
 	}
 
-	return authBuildLoginResponse(l, loginSession)
+	return authBuildLoginResponse(loginSession, r, l)
 }
 
 func (h ServicesApisHandler) loginMFA(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
@@ -147,7 +147,7 @@ func (h ServicesApisHandler) loginMFA(l *logs.Log, r *http.Request, claims *toke
 		return l.HTTPResponseError("Error logging in", err, http.StatusInternalServerError, true)
 	}
 
-	return authBuildLoginResponse(l, loginSession)
+	return authBuildLoginResponse(loginSession, r, l)
 }
 
 func (h ServicesApisHandler) refresh(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
@@ -177,7 +177,7 @@ func (h ServicesApisHandler) refresh(l *logs.Log, r *http.Request, claims *token
 	accessToken := loginSession.AccessToken
 	refreshToken := loginSession.CurrentRefreshToken()
 
-	paramsRes, err := convert[Def.SharedResRefresh_Params](loginSession.Params)
+	paramsRes, err := utils.Convert[Def.SharedResRefresh_Params](loginSession.Params)
 	if err != nil {
 		return l.HTTPResponseErrorAction("converting", logutils.MessageDataType("auth refresh response params"), nil, err, http.StatusInternalServerError, false)
 	}
@@ -325,6 +325,7 @@ func (h ServicesApisHandler) linkAccountAuthType(l *logs.Log, r *http.Request, c
 
 	authTypes := make([]Def.AccountAuthType, 0)
 	if account != nil {
+		checkAccountAuthTypeCodes(account, r)
 		account.SortAccountAuthTypes(claims.UID)
 		authTypes = accountAuthTypesToDef(account.AuthTypes)
 	}
@@ -350,17 +351,21 @@ func (h ServicesApisHandler) unlinkAccountAuthType(l *logs.Log, r *http.Request,
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("account auth type unlink request"), nil, err, http.StatusBadRequest, true)
 	}
 
-	if string(requestData.AuthType) == claims.AuthType && requestData.Identifier == claims.UID {
+	//remove any organizational/provider identifier from auth type code
+	claimsCode := utils.GetSuffix(claims.AuthType, "_")
+	requestCode := utils.GetSuffix(string(requestData.AuthType), "_")
+	if requestCode == claimsCode && requestData.Identifier == claims.UID {
 		return l.HTTPResponseError("May not unlink account auth type currently in use", nil, http.StatusBadRequest, false)
 	}
 
-	account, err := h.coreAPIs.Auth.UnlinkAccountAuthType(claims.Subject, string(requestData.AuthType), requestData.AppTypeIdentifier, requestData.Identifier, l)
+	account, err := h.coreAPIs.Auth.UnlinkAccountAuthType(claims.Subject, requestCode, requestData.AppTypeIdentifier, requestData.Identifier, l)
 	if err != nil {
 		return l.HTTPResponseError("Error unlinking account auth type", err, http.StatusInternalServerError, true)
 	}
 
 	authTypes := make([]Def.AccountAuthType, 0)
 	if account != nil {
+		checkAccountAuthTypeCodes(account, r)
 		account.SortAccountAuthTypes(claims.UID)
 		authTypes = accountAuthTypesToDef(account.AuthTypes)
 	}
@@ -500,6 +505,7 @@ func (h ServicesApisHandler) createAdminAccount(l *logs.Log, r *http.Request, cl
 		return l.HTTPResponseErrorAction(logutils.ActionCreate, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}
 
+	checkAccountAuthTypeCodes(account, r)
 	respData := partialAccountToDef(*account, params)
 
 	data, err = json.Marshal(respData)
@@ -541,6 +547,7 @@ func (h ServicesApisHandler) updateAdminAccount(l *logs.Log, r *http.Request, cl
 		return l.HTTPResponseErrorAction(logutils.ActionUpdate, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}
 
+	checkAccountAuthTypeCodes(account, r)
 	respData := partialAccountToDef(*account, params)
 
 	data, err = json.Marshal(respData)
@@ -771,6 +778,7 @@ func (h ServicesApisHandler) getAccounts(l *logs.Log, r *http.Request, claims *t
 	var authType *string
 	authTypeParam := r.URL.Query().Get("auth-type")
 	if len(authTypeParam) > 0 {
+		authTypeParam = utils.GetSuffix(authTypeParam, "_")
 		authType = &authTypeParam
 	}
 	//auth type identifier
@@ -824,7 +832,8 @@ func (h ServicesApisHandler) getAccounts(l *logs.Log, r *http.Request, claims *t
 		return l.HTTPResponseErrorAction("error finding accounts", model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}
 
-	response := partialAccountsToDef(accounts)
+	checkedAccounts := checkAccountListAuthTypeCodes(accounts, r)
+	response := partialAccountsToDef(checkedAccounts)
 
 	data, err := json.Marshal(response)
 	if err != nil {
@@ -846,7 +855,6 @@ func (h ServicesApisHandler) verifyCredential(l *logs.Log, r *http.Request, clai
 	if id == "" {
 		return l.HTTPResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
 	}
-
 	code := r.URL.Query().Get("code")
 	if code == "" {
 		return l.HTTPResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("code"), nil, http.StatusBadRequest, false)

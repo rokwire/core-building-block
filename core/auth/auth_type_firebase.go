@@ -33,11 +33,15 @@ type firebaseAuthImpl struct {
 	authType string
 }
 
-func (a *firebaseAuthImpl) signUp(authType model.AuthType, appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error) {
+func (a *firebaseAuthImpl) code() string {
+	return a.authType
+}
+
+func (a *firebaseAuthImpl) signUp(appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error) {
 	return "", nil, nil
 }
 
-func (a *firebaseAuthImpl) signUpAdmin(authType model.AuthType, appOrg model.ApplicationOrganization, identifier string, password string, newCredentialID string) (map[string]interface{}, map[string]interface{}, error) {
+func (a *firebaseAuthImpl) signUpAdmin(appOrg model.ApplicationOrganization, identifier string, password string, newCredentialID string) (map[string]interface{}, map[string]interface{}, error) {
 	return nil, nil, nil
 }
 
@@ -49,7 +53,7 @@ func (a *firebaseAuthImpl) verifyCredential(credential *model.Credential, verifi
 	return nil, errors.New(logutils.Unimplemented)
 }
 
-func (a *firebaseAuthImpl) sendVerifyCredential(credential *model.Credential, appName string, l *logs.Log) error {
+func (a *firebaseAuthImpl) sendVerifyCredential(appOrg model.ApplicationOrganization, credential *model.Credential, l *logs.Log) error {
 	return nil
 }
 
@@ -57,8 +61,8 @@ func (a *firebaseAuthImpl) restartCredentialVerification(credential *model.Crede
 	return nil
 }
 
-func (a *firebaseAuthImpl) isCredentialVerified(credential *model.Credential, l *logs.Log) (*bool, *bool, error) {
-	return nil, nil, nil
+func (a *firebaseAuthImpl) isCredentialVerified(appOrg model.ApplicationOrganization, credential *model.Credential, l *logs.Log) (bool, *bool, error) {
+	return true, nil, nil
 }
 
 func (a *firebaseAuthImpl) checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, error) {
@@ -79,7 +83,7 @@ func initFirebaseAuth(auth *Auth) (*firebaseAuthImpl, error) {
 
 	err := auth.registerAuthType(firebase.authType, firebase)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAuthType, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionRegister, typeInternalAuthType, nil, err)
 	}
 
 	return firebase, nil

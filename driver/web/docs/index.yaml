@@ -207,10 +207,6 @@ paths:
     $ref: "./resources/system/application-configsId.yaml"
   /system/api-keys:
     $ref: "./resources/system/api-keys.yaml"
-  /system/auth-types:
-    $ref: "./resources/system/auth-types.yaml"
-  /system/auth-types/{id}:
-    $ref: "./resources/system/auth-typesID.yaml"
   /system/app-orgs/{id}:
     $ref: "./resources/system/application-organizationsId.yaml"
   /system/app-orgs:

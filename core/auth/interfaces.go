@@ -26,19 +26,27 @@ import (
 	"github.com/rokwire/logging-library-go/v2/logs"
 )
 
-// authType is the interface for authentication for auth types which are not external for the system(the users do not come from external system)
+// authType is the interface for basic auth type information
 type authType interface {
+	//code returns the auth type's identifier code
+	code() string
+}
+
+// internalAuthType is the interface for authentication for auth types which are not external for the system(the users do not come from external system)
+type internalAuthType interface {
+	authType
+
 	//signUp applies sign up operation
 	// Returns:
 	//	message (string): Success message if verification is required. If verification is not required, return ""
 	//	credentialValue (map): Credential value
-	signUp(authType model.AuthType, appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error)
+	signUp(appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error)
 
 	//signUpAdmin signs up a new admin user
 	// Returns:
 	//	password (string): newly generated password
 	//	credentialValue (map): Credential value
-	signUpAdmin(authType model.AuthType, appOrg model.ApplicationOrganization, identifier string, password string, newCredentialID string) (map[string]interface{}, map[string]interface{}, error)
+	signUpAdmin(appOrg model.ApplicationOrganization, identifier string, password string, newCredentialID string) (map[string]interface{}, map[string]interface{}, error)
 
 	//verifies credential (checks the verification code generated on email signup for email auth type)
 	// Returns:
@@ -46,7 +54,7 @@ type authType interface {
 	verifyCredential(credential *model.Credential, verification string, l *logs.Log) (map[string]interface{}, error)
 
 	//sends the verification code to the identifier
-	sendVerifyCredential(credential *model.Credential, appName string, l *logs.Log) error
+	sendVerifyCredential(appOrg model.ApplicationOrganization, credential *model.Credential, l *logs.Log) error
 
 	//restarts the credential verification
 	restartCredentialVerification(credential *model.Credential, appName string, l *logs.Log) error
@@ -68,25 +76,27 @@ type authType interface {
 	// Returns:
 	//	verified (bool): is credential verified
 	//	expired (bool): is credential verification expired
-	isCredentialVerified(credential *model.Credential, l *logs.Log) (*bool, *bool, error)
+	isCredentialVerified(appOrg model.ApplicationOrganization, credential *model.Credential, l *logs.Log) (bool, *bool, error)
 
 	//checkCredentials checks if the account credentials are valid for the account auth type
 	checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, error)
 }
 
 // externalAuthType is the interface for authentication for auth types which are external for the system(the users comes from external system).
-// these are the different identity providers - illinois_oidc etc
+// these are the different identity providers - oidc etc
 type externalAuthType interface {
+	authType
 	//getLoginUrl retrieves and pre-formats a login url and params for the SSO provider
-	getLoginURL(authType model.AuthType, appType model.ApplicationType, redirectURI string, l *logs.Log) (string, map[string]interface{}, error)
+	getLoginURL(appType model.ApplicationType, appOrg model.ApplicationOrganization, redirectURI string, l *logs.Log) (string, map[string]interface{}, error)
 	//externalLogin logins in the external system and provides the authenticated user
-	externalLogin(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error)
+	externalLogin(appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error)
 	//refresh refreshes tokens
-	refresh(params map[string]interface{}, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error)
+	refresh(params map[string]interface{}, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error)
 }
 
 // anonymousAuthType is the interface for authentication for auth types which are anonymous
 type anonymousAuthType interface {
+	authType
 	//checkCredentials checks the credentials for the provided app and organization
 	//	Returns anonymous profile identifier
 	checkCredentials(creds string) (string, map[string]interface{}, error)
@@ -123,15 +133,15 @@ type APIs interface {
 	//		deviceType (string): "mobile" or "web" or "desktop" etc
 	//		deviceOS (*string): Device OS
 	//		deviceID (string): Device ID
-	//		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
+	//		authTypeCode (string): Name of the authentication method for provided creds (eg. "email", "username", "oidc")
 	//		creds (string): Credentials/JSON encoded credential structure defined for the specified auth type
 	//		apiKey (string): API key to validate the specified app
-	//		appTypeIdentifier (string): identifier of the app type/client that the user is logging in from
 	//		orgID (string): ID of the organization that the user is logging in
 	//		params (string): JSON encoded params defined by specified auth type
 	//      clientVersion(*string): Most recent client version
 	//		profile (Profile): Account profile
 	//		preferences (map): Account preferences
+	//		username (string): Account username
 	//		admin (bool): Is this an admin login?
 	//		l (*logs.Log): Log object pointer for request
 	//	Returns:
@@ -143,7 +153,7 @@ type APIs interface {
 	//			Params (interface{}): authType-specific set of parameters passed back to client
 	//			State (string): login state used if account is enrolled in MFA
 	//		MFA types ([]model.MFAType): list of MFA types account is enrolled in
-	Login(ipAddress string, deviceType string, deviceOS *string, deviceID string, authenticationType string, creds string, apiKey string,
+	Login(ipAddress string, deviceType string, deviceOS *string, deviceID string, authTypeCode string, creds string, apiKey string,
 		appTypeIdentifier string, orgID string, params string, clientVersion *string, profile model.Profile, preferences map[string]interface{},
 		username string, admin bool, l *logs.Log) (*string, *model.LoginSession, []model.MFAType, error)
 
@@ -155,38 +165,38 @@ type APIs interface {
 	//AccountExists checks if a user is already registered
 	//The authentication method must be one of the supported for the application.
 	//	Input:
-	//		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
+	//		authTypeCode (string): Name of the authentication method for provided creds (eg. "email", "username", "oidc")
 	//		userIdentifier (string): User identifier for the specified auth type
 	//		apiKey (string): API key to validate the specified app
 	//		appTypeIdentifier (string): identifier of the app type/client that the user is logging in from
 	//		orgID (string): ID of the organization that the user is logging in
 	//	Returns:
 	//		accountExisted (bool): valid when error is nil
-	AccountExists(authenticationType string, userIdentifier string, apiKey string, appTypeIdentifier string, orgID string) (bool, error)
+	AccountExists(authTypeCode string, userIdentifier string, apiKey string, appTypeIdentifier string, orgID string) (bool, error)
 
 	//CanSignIn checks if a user can sign in
 	//The authentication method must be one of the supported for the application.
 	//	Input:
-	//		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
+	//		authTypeCode (string): Name of the authentication method for provided creds (eg. "email", "username", "oidc")
 	//		userIdentifier (string): User identifier for the specified auth type
 	//		apiKey (string): API key to validate the specified app
 	//		appTypeIdentifier (string): identifier of the app type/client being used
 	//		orgID (string): ID of the organization being used
 	//	Returns:
 	//		canSignIn (bool): valid when error is nil
-	CanSignIn(authenticationType string, userIdentifier string, apiKey string, appTypeIdentifier string, orgID string) (bool, error)
+	CanSignIn(authTypeCode string, userIdentifier string, apiKey string, appTypeIdentifier string, orgID string) (bool, error)
 
 	//CanLink checks if a user can link a new auth type
 	//The authentication method must be one of the supported for the application.
 	//	Input:
-	//		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
+	//		authTypeCode (string): Name of the authentication method for provided creds (eg. "email", "username", "oidc")
 	//		userIdentifier (string): User identifier for the specified auth type
 	//		apiKey (string): API key to validate the specified app
 	//		appTypeIdentifier (string): identifier of the app type/client being used
 	//		orgID (string): ID of the organization being used
 	//	Returns:
 	//		canLink (bool): valid when error is nil
-	CanLink(authenticationType string, userIdentifier string, apiKey string, appTypeIdentifier string, orgID string) (bool, error)
+	CanLink(authTypeCode string, userIdentifier string, apiKey string, appTypeIdentifier string, orgID string) (bool, error)
 
 	//Refresh refreshes an access token using a refresh token
 	//	Input:
@@ -203,7 +213,7 @@ type APIs interface {
 
 	//GetLoginURL returns a pre-formatted login url for SSO providers
 	//	Input:
-	//		authType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
+	//		authTypeCode (string): Name of the authentication method for provided creds (eg. "email", "username", "oidc")
 	//		appTypeIdentifier (string): Identifier of the app type/client that the user is logging in from
 	//		orgID (string): ID of the organization that the user is logging in
 	//		redirectURI (string): Registered redirect URI where client will receive response
@@ -212,7 +222,7 @@ type APIs interface {
 	//	Returns:
 	//		Login URL (string): SSO provider login URL to be launched in a browser
 	//		Params (map[string]interface{}): Params to be sent in subsequent request (if necessary)
-	GetLoginURL(authType string, appTypeIdentifier string, orgID string, redirectURI string, apiKey string, l *logs.Log) (string, map[string]interface{}, error)
+	GetLoginURL(authTypeCode string, appTypeIdentifier string, orgID string, redirectURI string, apiKey string, l *logs.Log) (string, map[string]interface{}, error)
 
 	//LoginMFA verifies a code sent by a user as a final login step for enrolled accounts.
 	//The MFA type must be one of the supported for the application.
@@ -234,11 +244,11 @@ type APIs interface {
 	LoginMFA(apiKey string, accountID string, sessionID string, identifier string, mfaType string, mfaCode string, state string, l *logs.Log) (*string, *model.LoginSession, error)
 
 	//CreateAdminAccount creates an account for a new admin user
-	CreateAdminAccount(authenticationType string, appID string, orgID string, identifier string, profile model.Profile, username string, permissions []string,
+	CreateAdminAccount(authTypeCode string, appID string, orgID string, identifier string, profile model.Profile, username string, permissions []string,
 		roleIDs []string, groupIDs []string, creatorPermissions []string, clientVersion *string, l *logs.Log) (*model.Account, map[string]interface{}, error)
 
 	//UpdateAdminAccount updates an existing user's account with new permissions, roles, and groups
-	UpdateAdminAccount(authenticationType string, appID string, orgID string, identifier string, permissions []string, roleIDs []string,
+	UpdateAdminAccount(authTypeCode string, appID string, orgID string, identifier string, permissions []string, roleIDs []string,
 		groupIDs []string, updaterPermissions []string, l *logs.Log) (*model.Account, map[string]interface{}, error)
 
 	//CreateAnonymousAccount creates a new anonymous account
@@ -249,7 +259,7 @@ type APIs interface {
 	VerifyCredential(id string, verification string, l *logs.Log) error
 
 	//SendVerifyCredential sends verification code to identifier
-	SendVerifyCredential(authenticationType string, appTypeIdentifier string, orgID string, apiKey string, identifier string, l *logs.Log) error
+	SendVerifyCredential(authTypeCode string, appTypeIdentifier string, orgID string, apiKey string, identifier string, l *logs.Log) error
 
 	//UpdateCredential updates the credential object with the new value
 	//	Input:
@@ -262,14 +272,14 @@ type APIs interface {
 
 	//ForgotCredential initiate forgot credential process (generates a reset link and sends to the given identifier for email auth type)
 	//	Input:
-	//		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
+	//		authTypeCode (string): Name of the authentication method for provided creds (eg. "email", "username", "oidc")
 	//		identifier: identifier of the account auth type
 	//		appTypeIdentifier (string): Identifier of the app type/client that the user is logging in from
 	//		orgID (string): ID of the organization that the user is logging in
 	//		apiKey (string): API key to validate the specified app
 	//	Returns:
 	//		error: if any
-	ForgotCredential(authenticationType string, appTypeIdentifier string, orgID string, apiKey string, identifier string, l *logs.Log) error
+	ForgotCredential(authTypeCode string, appTypeIdentifier string, orgID string, apiKey string, identifier string, l *logs.Log) error
 
 	//ResetForgotCredential resets forgot credential
 	//	Input:
@@ -367,7 +377,7 @@ type APIs interface {
 	//The authentication method must be one of the supported for the application.
 	//	Input:
 	//		accountID (string): ID of the account to link the creds to
-	//		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
+	//		authTypeCode (string): Name of the authentication method for provided creds (eg. "email", "username", "oidc")
 	//		appTypeIdentifier (string): identifier of the app type/client that the user is logging in from
 	//		creds (string): Credentials/JSON encoded credential structure defined for the specified auth type
 	//		params (string): JSON encoded params defined by specified auth type
@@ -375,22 +385,22 @@ type APIs interface {
 	//	Returns:
 	//		message (*string): response message
 	//		account (*model.Account): account data after the operation
-	LinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, creds string, params string, l *logs.Log) (*string, *model.Account, error)
+	LinkAccountAuthType(accountID string, authTypeCode string, appTypeIdentifier string, creds string, params string, l *logs.Log) (*string, *model.Account, error)
 
 	//UnlinkAccountAuthType unlinks credentials from an existing account.
 	//The authentication method must be one of the supported for the application.
 	//	Input:
 	//		accountID (string): ID of the account to unlink creds from
-	//		authenticationType (string): Name of the authentication method of account auth type to unlink
+	//		authTypeCode (string): Name of the authentication method of account auth type to unlink
 	//		appTypeIdentifier (string): Identifier of the app type/client that the user is logging in from
 	//		identifier (string): Identifier of account auth type to unlink
 	//		l (*logs.Log): Log object pointer for request
 	//	Returns:
 	//		account (*model.Account): account data after the operation
-	UnlinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, identifier string, l *logs.Log) (*model.Account, error)
+	UnlinkAccountAuthType(accountID string, authTypeCode string, appTypeIdentifier string, identifier string, l *logs.Log) (*model.Account, error)
 
 	//InitializeSystemAccount initializes the first system account
-	InitializeSystemAccount(context storage.TransactionContext, authType model.AuthType, appOrg model.ApplicationOrganization, allSystemPermission string, email string, password string, clientVersion string, l *logs.Log) (string, error)
+	InitializeSystemAccount(context storage.TransactionContext, appOrg model.ApplicationOrganization, allSystemPermission string, email string, password string, clientVersion string, l *logs.Log) (string, error)
 
 	//GrantAccountPermissions grants new permissions to an account after validating the assigner has required permissions
 	GrantAccountPermissions(context storage.TransactionContext, account *model.Account, permissionNames []string, assignerPermissions []string) error
@@ -456,9 +466,6 @@ type Storage interface {
 
 	PerformTransaction(func(context storage.TransactionContext) error) error
 
-	//AuthTypes
-	FindAuthType(codeOrID string) (*model.AuthType, error)
-
 	//LoginsSessions
 	InsertLoginSession(context storage.TransactionContext, session model.LoginSession) error
 	FindLoginSessions(context storage.TransactionContext, identifier string) ([]model.LoginSession, error)
@@ -476,7 +483,7 @@ type Storage interface {
 	///
 
 	//Accounts
-	FindAccount(context storage.TransactionContext, appOrgID string, authTypeID string, accountAuthTypeIdentifier string) (*model.Account, error)
+	FindAccount(context storage.TransactionContext, appOrgID string, authTypeCode string, accountAuthTypeIdentifier string) (*model.Account, error)
 	FindAccountByID(context storage.TransactionContext, id string) (*model.Account, error)
 	FindAccountsByUsername(context storage.TransactionContext, appOrg *model.ApplicationOrganization, username string) ([]model.Account, error)
 	InsertAccount(context storage.TransactionContext, account model.Account) (*model.Account, error)
@@ -486,7 +493,7 @@ type Storage interface {
 
 	//Profiles
 	UpdateProfile(context storage.TransactionContext, profile model.Profile) error
-	FindProfiles(appID string, authTypeID string, accountAuthTypeIdentifier string) ([]model.Profile, error)
+	FindProfiles(appID string, authTypeCode string, accountAuthTypeIdentifier string) ([]model.Profile, error)
 
 	//ServiceAccounts
 	FindServiceAccount(context storage.TransactionContext, accountID string, appID string, orgID string) (*model.ServiceAccount, error)
@@ -538,9 +545,6 @@ type Storage interface {
 	SaveServiceReg(reg *model.ServiceRegistration, immediateCache bool) error
 	DeleteServiceReg(serviceID string) error
 	MigrateServiceRegs() error
-
-	//IdentityProviders
-	LoadIdentityProviders() ([]model.IdentityProvider, error)
 
 	//ServiceAuthorizations
 	FindServiceAuthorization(userID string, orgID string) (*model.ServiceAuthorization, error)

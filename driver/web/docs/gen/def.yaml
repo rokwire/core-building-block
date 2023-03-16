@@ -91,7 +91,7 @@ paths:
               phone:
                 summary: Phone - sign in OR sign up
                 value:
-                  auth_type: twilio_phone
+                  auth_type: phone
                   app_type_identifier: edu.illinois.rokwire
                   org_id: 0a2eff20-e2cd-11eb-af68-60f81db5ecc0
                   api_key: 95a463e3-2ce8-450b-ba75-d8506b874738
@@ -116,10 +116,10 @@ paths:
                     type: mobile
                     device_id: '5555'
                     os: Android
-              illinois_oidc:
-                summary: Illinois OIDC login
+              oidc:
+                summary: OIDC login
                 value:
-                  auth_type: illinois_oidc
+                  auth_type: oidc
                   app_type_identifier: edu.illinois.rokwire
                   org_id: 0a2eff20-e2cd-11eb-af68-60f81db5ecc0
                   api_key: 95a463e3-2ce8-450b-ba75-d8506b874738
@@ -636,16 +636,16 @@ paths:
               phone:
                 summary: Phone
                 value:
-                  auth_type: twilio_phone
+                  auth_type: phone
                   app_type_identifier: edu.illinois.rokwire
                   org_id: 0a2eff20-e2cd-11eb-af68-60f81db5ecc0
                   api_key: 95a463e3-2ce8-450b-ba75-d8506b874738
                   creds:
                     phone: '+12223334444'
-              illinois_oidc:
-                summary: Illinois OIDC
+              oidc:
+                summary: OIDC
                 value:
-                  auth_type: illinois_oidc
+                  auth_type: oidc
                   app_type_identifier: edu.illinois.rokwire
                   org_id: 0a2eff20-e2cd-11eb-af68-60f81db5ecc0
                   api_key: 95a463e3-2ce8-450b-ba75-d8506b874738
@@ -715,13 +715,13 @@ paths:
               phone:
                 summary: Phone
                 value:
-                  auth_type: twilio_phone
+                  auth_type: phone
                   app_type_identifier: edu.illinois.rokwire
                   identifier: '+12223334444'
-              illinois_oidc:
-                summary: Illinois OIDC
+              oidc:
+                summary: OIDC
                 value:
-                  auth_type: illinois_oidc
+                  auth_type: oidc
                   app_type_identifier: edu.illinois.rokwire
                   identifier: '123456789'
         required: true
@@ -1500,10 +1500,10 @@ paths:
                     type: mobile
                     device_id: '5555'
                     os: Android
-              illinois_oidc:
-                summary: Illinois OIDC
+              oidc:
+                summary: OIDC
                 value:
-                  auth_type: illinois_oidc
+                  auth_type: oidc
                   app_type_identifier: edu.illinois.rokwire
                   org_id: 0a2eff20-e2cd-11eb-af68-60f81db5ecc0
                   api_key: 95a463e3-2ce8-450b-ba75-d8506b874738
@@ -4984,103 +4984,6 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /system/auth-types:
-    get:
-      tags:
-        - System
-      summary: Get auth types
-      description: |
-        Gets auth types
-
-        **Auth:** Requires system access token with `get_auth-types`, `update_auth-types`, or `all_auth-types` permission
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/AuthType'
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal error
-    post:
-      tags:
-        - System
-      summary: Create auth type
-      description: |
-        Creates auth type
-
-        **Auth:** Requires system access token with `update_auth-types` or `all_auth-types` permission
-      security:
-        - bearerAuth: []
-      requestBody:
-        description: creates one auth-type
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AuthType'
-        required: true
-      responses:
-        '200':
-          description: Success
-          content:
-            text/plain:
-              schema:
-                type: string
-                example: Success
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal error
-  '/system/auth-types/{id}':
-    put:
-      tags:
-        - System
-      summary: Update auth type by ID
-      description: |
-        Updates auth type with the provided ID
-
-        **Auth:** Requires system access token with `update_auth-types` or `all_auth-types` permission
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          description: ID of the auth type that needs to be updated
-          required: true
-          schema:
-            type: string
-      requestBody:
-        description: update one auth type
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AuthType'
-        required: true
-      responses:
-        '200':
-          description: Success
-          content:
-            text/plain:
-              schema:
-                type: string
-                items:
-                  $ref: '#/components/schemas/AuthType'
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal error
   '/system/app-orgs/{id}':
     get:
       tags:
@@ -5390,18 +5293,13 @@ components:
           nullable: true
           items:
             type: string
-        identity_provider_settings:
-          type: array
+        auth_types:
+          type: object
           nullable: true
-          items:
-            $ref: '#/components/schemas/IdentityProviderSettings'
-        supported_auth_types:
-          type: array
-          nullable: true
-          items:
-            $ref: '#/components/schemas/SupportedAuthTypes'
+          additionalProperties:
+            $ref: '#/components/schemas/SupportedAuthType'
         login_session_settings:
-          $ref: '#/components/schemas/LoginSessionSettings'
+          $ref: '#/components/schemas/ApplicationOrganizationSettings'
     Permission:
       required:
         - id
@@ -5536,14 +5434,25 @@ components:
           description: conforms major.minor.patch format
         data:
           type: object
+    SupportedAuthType:
+      type: object
+      properties:
+        configs:
+          type: object
+          nullable: true
+          anyOf:
+            - $ref: '#/components/schemas/IdentityProviderSettings'
+            - $ref: '#/components/schemas/AuthSettings'
+        app_type_configs:
+          $ref: '#/components/schemas/ApplicationOrganizationSettings'
+        alias:
+          type: string
+          nullable: true
     IdentityProviderSettings:
       required:
-        - identity_provider_id
         - user_identifier_field
       type: object
       properties:
-        identity_provider_id:
-          type: string
         user_identifier_field:
           type: string
         external_id_fields:
@@ -5576,26 +5485,41 @@ components:
             type: string
         always_sync_profile:
           type: boolean
-    SupportedAuthTypes:
+    ApplicationOrganizationSettings:
+      required:
+        - default
+        - overrides
+      type: object
+      properties:
+        default:
+          oneOf:
+            - $ref: '#/components/schemas/LoginSessionSettings'
+            - anyOf:
+                - $ref: '#/components/schemas/AuthConfigOidc'
+                - $ref: '#/components/schemas/AuthConfigOAuth2'
+        overrides:
+          nullable: true
+          type: array
+          items:
+            oneOf:
+              - $ref: '#/components/schemas/LoginSessionSettings'
+              - anyOf:
+                  - $ref: '#/components/schemas/AuthConfigOidc'
+                  - $ref: '#/components/schemas/AuthConfigOAuth2'
+    LoginSessionSettings:
+      required:
+        - max_concurrent_sessions
+        - inactivity_expire_policy
+        - time_since_login_expire_policy
+        - yearly_expire_policy
       type: object
       properties:
         app_type_id:
           type: string
-        supported_auth_types:
-          type: array
-          items:
-            $ref: '#/components/schemas/SupportedAuthType'
-    SupportedAuthType:
-      type: object
-      properties:
-        auth_type_id:
+          nullable: true
+        auth_type_code:
           type: string
-        params:
-          type: object
-          additionalProperties: true
-    LoginSessionSettings:
-      type: object
-      properties:
+          nullable: true
         max_concurrent_sessions:
           type: integer
         inactivity_expire_policy:
@@ -5685,40 +5609,6 @@ components:
           nullable: true
         date_created:
           type: string
-    AuthType:
-      required:
-        - id
-        - code
-        - description
-        - is_external
-        - is_anonymous
-        - use_credentials
-        - ignore_mfa
-      type: object
-      properties:
-        id:
-          readOnly: true
-          type: string
-        code:
-          type: string
-          description: username or email or phone or illinois_oidc etc
-        description:
-          type: string
-        is_external:
-          type: boolean
-          description: says if the users source is external - identity providers
-        is_anonymous:
-          type: boolean
-          description: says if the auth type results in anonymous users
-        use_credentials:
-          type: boolean
-          description: says if the auth type uses credentials
-        ignore_mfa:
-          type: boolean
-          description: says if login using this auth type may bypass account MFA
-        params:
-          type: object
-          additionalProperties: true
     ServiceAccount:
       required:
         - app_id
@@ -5967,6 +5857,88 @@ components:
         issuer:
           type: string
         jwks_uri:
+          type: string
+    AuthSettings:
+      type: object
+      properties:
+        provider:
+          type: string
+          nullable: true
+        ignore_mfa:
+          type: boolean
+          nullable: true
+    AuthConfigOidc:
+      required:
+        - host
+        - client_id
+        - claims
+      type: object
+      properties:
+        app_type_id:
+          type: string
+          nullable: true
+        host:
+          type: string
+        authorize_url:
+          type: string
+        token_url:
+          type: string
+        userinfo_url:
+          type: string
+        scopes:
+          type: string
+        use_refresh:
+          type: boolean
+        use_pkce:
+          type: boolean
+        use_state:
+          type: boolean
+        client_id:
+          type: string
+        client_secret:
+          type: string
+        authorize_claims:
+          type: string
+        claims:
+          type: object
+          additionalProperties:
+            type: string
+        required_populations:
+          type: string
+        populations:
+          type: object
+          additionalProperties:
+            type: string
+    AuthConfigOAuth2:
+      required:
+        - host
+        - redirect_uri
+        - client_id
+        - client_secret
+      type: object
+      properties:
+        app_type_id:
+          type: string
+          nullable: true
+        host:
+          type: string
+        authorize_url:
+          type: string
+        token_url:
+          type: string
+        userinfo_url:
+          type: string
+        scopes:
+          type: string
+        allow_signup:
+          type: boolean
+        use_refresh:
+          type: boolean
+        use_state:
+          type: boolean
+        client_id:
+          type: string
+        client_secret:
           type: string
     Account:
       required:
@@ -6220,7 +6192,9 @@ components:
           type: string
           enum:
             - email
+            - phone
             - twilio_phone
+            - oidc
             - illinois_oidc
             - anonymous
         app_type_identifier:
@@ -6232,7 +6206,7 @@ components:
         creds:
           anyOf:
             - $ref: '#/components/schemas/_shared_req_CredsEmail'
-            - $ref: '#/components/schemas/_shared_req_CredsTwilioPhone'
+            - $ref: '#/components/schemas/_shared_req_CredsPhone'
             - $ref: '#/components/schemas/_shared_req_CredsOIDC'
             - $ref: '#/components/schemas/_shared_req_CredsAPIKey'
         params:
@@ -6293,6 +6267,7 @@ components:
         auth_type:
           type: string
           enum:
+            - oidc
             - illinois_oidc
         app_type_identifier:
           type: string
@@ -6338,6 +6313,7 @@ components:
           type: string
           enum:
             - email
+            - oidc
             - illinois_oidc
         identifier:
           type: string
@@ -6368,6 +6344,7 @@ components:
           type: string
           enum:
             - email
+            - oidc
             - illinois_oidc
         identifier:
           type: string
@@ -6397,7 +6374,9 @@ components:
           enum:
             - username
             - email
+            - phone
             - twilio_phone
+            - oidc
             - illinois_oidc
             - anonymous
         app_type_identifier:
@@ -6419,9 +6398,9 @@ components:
           type: string
         password:
           type: string
-    _shared_req_CredsTwilioPhone:
+    _shared_req_CredsPhone:
       type: object
-      description: Auth login creds for auth_type="twilio_phone"
+      description: Auth login creds for auth_type="phone"
       required:
         - phone
       properties:
@@ -6623,7 +6602,9 @@ components:
           type: string
           enum:
             - email
+            - phone
             - twilio_phone
+            - oidc
             - illinois_oidc
             - username
         app_type_identifier:
@@ -6631,7 +6612,7 @@ components:
         creds:
           anyOf:
             - $ref: '#/components/schemas/_shared_req_CredsEmail'
-            - $ref: '#/components/schemas/_shared_req_CredsTwilioPhone'
+            - $ref: '#/components/schemas/_shared_req_CredsPhone'
             - $ref: '#/components/schemas/_shared_req_CredsOIDC'
         params:
           type: object
@@ -6650,7 +6631,9 @@ components:
           type: string
           enum:
             - email
+            - phone
             - twilio_phone
+            - oidc
             - illinois_oidc
             - username
         app_type_identifier:

@@ -1,5 +1,16 @@
+required:
+  - max_concurrent_sessions
+  - inactivity_expire_policy
+  - time_since_login_expire_policy
+  - yearly_expire_policy
 type: object
 properties:
+  app_type_id:
+    type: string
+    nullable: true
+  auth_type_code:
+    type: string
+    nullable: true
   max_concurrent_sessions:
     type: integer
   inactivity_expire_policy:

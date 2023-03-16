@@ -27,14 +27,6 @@ import (
 const (
 	//TypeLoginSession auth type type
 	TypeLoginSession logutils.MessageDataType = "login session"
-	//TypeAuthType auth type type
-	TypeAuthType logutils.MessageDataType = "auth type"
-	//TypeIdentityProvider identity provider type
-	TypeIdentityProvider logutils.MessageDataType = "identity provider"
-	//TypeIdentityProviderConfig identity provider config type
-	TypeIdentityProviderConfig logutils.MessageDataType = "identity provider config"
-	//TypeIdentityProviderSetting identity provider setting type
-	TypeIdentityProviderSetting logutils.MessageDataType = "identity provider setting"
 	//TypeUserAuth user auth type
 	TypeUserAuth logutils.MessageDataType = "user auth"
 	//TypeAuthCred auth cred type
@@ -77,9 +69,9 @@ const (
 type LoginSession struct {
 	ID string
 
-	AppOrg   ApplicationOrganization
-	AuthType AuthType
-	AppType  ApplicationType
+	AppOrg       ApplicationOrganization
+	AuthTypeCode string
+	AppType      ApplicationType
 
 	Anonymous bool
 
@@ -106,11 +98,14 @@ type LoginSession struct {
 
 // IsExpired says if the sessions is expired
 func (ls LoginSession) IsExpired() bool {
-	loginsSessionsSetting := ls.AppOrg.LoginsSessionsSetting
+	loginSessionSettings, _ := ls.AppOrg.GetLoginSessionSettings(ls.AppType.ID, ls.AuthTypeCode)
+	if loginSessionSettings == nil {
+		return false
+	}
 
-	inactivityExpirePolicy := loginsSessionsSetting.InactivityExpirePolicy
-	tslExpirePolicy := loginsSessionsSetting.TSLExpirePolicy
-	yearlyExpirePolicy := loginsSessionsSetting.YearlyExpirePolicy
+	inactivityExpirePolicy := loginSessionSettings.InactivityExpirePolicy
+	tslExpirePolicy := loginSessionSettings.TSLExpirePolicy
+	yearlyExpirePolicy := loginSessionSettings.YearlyExpirePolicy
 
 	inactivityActive := inactivityExpirePolicy.Active
 	tslActive := tslExpirePolicy.Active
@@ -218,37 +213,6 @@ type APIKey struct {
 	ID    string `json:"id" bson:"_id"`
 	AppID string `json:"app_id" bson:"app_id" validate:"required"`
 	Key   string `json:"key" bson:"key"`
-}
-
-// AuthType represents authentication type entity
-//
-//	The system supports different authentication types - username, email, phone, identity providers ones etc
-type AuthType struct {
-	ID             string                 `bson:"_id"`
-	Code           string                 `bson:"code"` //username or email or phone or illinois_oidc etc
-	Description    string                 `bson:"description"`
-	IsExternal     bool                   `bson:"is_external"`     //says if the users source is external - identity providers
-	IsAnonymous    bool                   `bson:"is_anonymous"`    //says if the auth type results in anonymous users
-	UseCredentials bool                   `bson:"use_credentials"` //says if the auth type uses credentials
-	IgnoreMFA      bool                   `bson:"ignore_mfa"`      //says if login using this auth type may bypass account MFA
-	Params         map[string]interface{} `bson:"params"`
-}
-
-// IdentityProvider represents identity provider entity
-//
-//	The system can integrate different identity providers - facebook, google, illinois etc
-type IdentityProvider struct {
-	ID   string `bson:"_id"`
-	Name string `bson:"name"`
-	Type string `bson:"type"`
-
-	Configs []IdentityProviderConfig `bson:"configs"`
-}
-
-// IdentityProviderConfig represents identity provider config for an application type
-type IdentityProviderConfig struct {
-	AppTypeID string                 `bson:"app_type_id"`
-	Config    map[string]interface{} `bson:"config"`
 }
 
 // UserAuth represents user auth entity

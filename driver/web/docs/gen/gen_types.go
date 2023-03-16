@@ -66,6 +66,8 @@ const (
 const (
 	ServicesReqAccountAuthTypeLinkAuthTypeEmail        ServicesReqAccountAuthTypeLinkAuthType = "email"
 	ServicesReqAccountAuthTypeLinkAuthTypeIllinoisOidc ServicesReqAccountAuthTypeLinkAuthType = "illinois_oidc"
+	ServicesReqAccountAuthTypeLinkAuthTypeOidc         ServicesReqAccountAuthTypeLinkAuthType = "oidc"
+	ServicesReqAccountAuthTypeLinkAuthTypePhone        ServicesReqAccountAuthTypeLinkAuthType = "phone"
 	ServicesReqAccountAuthTypeLinkAuthTypeTwilioPhone  ServicesReqAccountAuthTypeLinkAuthType = "twilio_phone"
 	ServicesReqAccountAuthTypeLinkAuthTypeUsername     ServicesReqAccountAuthTypeLinkAuthType = "username"
 )
@@ -74,6 +76,8 @@ const (
 const (
 	ServicesReqAccountAuthTypeUnlinkAuthTypeEmail        ServicesReqAccountAuthTypeUnlinkAuthType = "email"
 	ServicesReqAccountAuthTypeUnlinkAuthTypeIllinoisOidc ServicesReqAccountAuthTypeUnlinkAuthType = "illinois_oidc"
+	ServicesReqAccountAuthTypeUnlinkAuthTypeOidc         ServicesReqAccountAuthTypeUnlinkAuthType = "oidc"
+	ServicesReqAccountAuthTypeUnlinkAuthTypePhone        ServicesReqAccountAuthTypeUnlinkAuthType = "phone"
 	ServicesReqAccountAuthTypeUnlinkAuthTypeTwilioPhone  ServicesReqAccountAuthTypeUnlinkAuthType = "twilio_phone"
 	ServicesReqAccountAuthTypeUnlinkAuthTypeUsername     ServicesReqAccountAuthTypeUnlinkAuthType = "username"
 )
@@ -116,6 +120,8 @@ const (
 	SharedReqAccountCheckAuthTypeAnonymous    SharedReqAccountCheckAuthType = "anonymous"
 	SharedReqAccountCheckAuthTypeEmail        SharedReqAccountCheckAuthType = "email"
 	SharedReqAccountCheckAuthTypeIllinoisOidc SharedReqAccountCheckAuthType = "illinois_oidc"
+	SharedReqAccountCheckAuthTypeOidc         SharedReqAccountCheckAuthType = "oidc"
+	SharedReqAccountCheckAuthTypePhone        SharedReqAccountCheckAuthType = "phone"
 	SharedReqAccountCheckAuthTypeTwilioPhone  SharedReqAccountCheckAuthType = "twilio_phone"
 	SharedReqAccountCheckAuthTypeUsername     SharedReqAccountCheckAuthType = "username"
 )
@@ -124,6 +130,7 @@ const (
 const (
 	SharedReqCreateAccountAuthTypeEmail        SharedReqCreateAccountAuthType = "email"
 	SharedReqCreateAccountAuthTypeIllinoisOidc SharedReqCreateAccountAuthType = "illinois_oidc"
+	SharedReqCreateAccountAuthTypeOidc         SharedReqCreateAccountAuthType = "oidc"
 )
 
 // Defines values for SharedReqLoginAuthType.
@@ -131,12 +138,15 @@ const (
 	SharedReqLoginAuthTypeAnonymous    SharedReqLoginAuthType = "anonymous"
 	SharedReqLoginAuthTypeEmail        SharedReqLoginAuthType = "email"
 	SharedReqLoginAuthTypeIllinoisOidc SharedReqLoginAuthType = "illinois_oidc"
+	SharedReqLoginAuthTypeOidc         SharedReqLoginAuthType = "oidc"
+	SharedReqLoginAuthTypePhone        SharedReqLoginAuthType = "phone"
 	SharedReqLoginAuthTypeTwilioPhone  SharedReqLoginAuthType = "twilio_phone"
 )
 
 // Defines values for SharedReqLoginUrlAuthType.
 const (
 	SharedReqLoginUrlAuthTypeIllinoisOidc SharedReqLoginUrlAuthType = "illinois_oidc"
+	SharedReqLoginUrlAuthTypeOidc         SharedReqLoginUrlAuthType = "oidc"
 )
 
 // Defines values for SharedReqLoginMfaType.
@@ -158,6 +168,7 @@ const (
 const (
 	Email        SharedReqUpdateAccountAuthType = "email"
 	IllinoisOidc SharedReqUpdateAccountAuthType = "illinois_oidc"
+	Oidc         SharedReqUpdateAccountAuthType = "oidc"
 )
 
 // Defines values for SharedResRokwireTokenTokenType.
@@ -262,13 +273,38 @@ type ApplicationConfig struct {
 
 // ApplicationOrganization defines model for ApplicationOrganization.
 type ApplicationOrganization struct {
-	AppId                    string                      `json:"app_id"`
-	Id                       *string                     `json:"id,omitempty"`
-	IdentityProviderSettings *[]IdentityProviderSettings `json:"identity_provider_settings"`
-	LoginSessionSettings     *LoginSessionSettings       `json:"login_session_settings,omitempty"`
-	OrgId                    string                      `json:"org_id"`
-	ServicesIds              *[]string                   `json:"services_ids"`
-	SupportedAuthTypes       *[]SupportedAuthTypes       `json:"supported_auth_types"`
+	AppId                string                           `json:"app_id"`
+	AuthTypes            *map[string]SupportedAuthType    `json:"auth_types"`
+	Id                   *string                          `json:"id,omitempty"`
+	LoginSessionSettings *ApplicationOrganizationSettings `json:"login_session_settings,omitempty"`
+	OrgId                string                           `json:"org_id"`
+	ServicesIds          *[]string                        `json:"services_ids"`
+}
+
+// ApplicationOrganizationSettings defines model for ApplicationOrganizationSettings.
+type ApplicationOrganizationSettings struct {
+	Default   ApplicationOrganizationSettings_Default           `json:"default"`
+	Overrides *[]ApplicationOrganizationSettings_Overrides_Item `json:"overrides"`
+}
+
+// ApplicationOrganizationSettingsDefault1 defines model for .
+type ApplicationOrganizationSettingsDefault1 struct {
+	union json.RawMessage
+}
+
+// ApplicationOrganizationSettings_Default defines model for ApplicationOrganizationSettings.Default.
+type ApplicationOrganizationSettings_Default struct {
+	union json.RawMessage
+}
+
+// ApplicationOrganizationSettingsOverrides1 defines model for .
+type ApplicationOrganizationSettingsOverrides1 struct {
+	union json.RawMessage
+}
+
+// ApplicationOrganizationSettings_Overrides_Item defines model for ApplicationOrganizationSettings.overrides.Item.
+type ApplicationOrganizationSettings_Overrides_Item struct {
+	union json.RawMessage
 }
 
 // ApplicationType defines model for ApplicationType.
@@ -279,6 +315,40 @@ type ApplicationType struct {
 	Versions   *[]string `json:"versions,omitempty"`
 }
 
+// AuthConfigOAuth2 defines model for AuthConfigOAuth2.
+type AuthConfigOAuth2 struct {
+	AllowSignup  *bool   `json:"allow_signup,omitempty"`
+	AppTypeId    *string `json:"app_type_id"`
+	AuthorizeUrl *string `json:"authorize_url,omitempty"`
+	ClientId     string  `json:"client_id"`
+	ClientSecret string  `json:"client_secret"`
+	Host         string  `json:"host"`
+	Scopes       *string `json:"scopes,omitempty"`
+	TokenUrl     *string `json:"token_url,omitempty"`
+	UseRefresh   *bool   `json:"use_refresh,omitempty"`
+	UseState     *bool   `json:"use_state,omitempty"`
+	UserinfoUrl  *string `json:"userinfo_url,omitempty"`
+}
+
+// AuthConfigOidc defines model for AuthConfigOidc.
+type AuthConfigOidc struct {
+	AppTypeId           *string            `json:"app_type_id"`
+	AuthorizeClaims     *string            `json:"authorize_claims,omitempty"`
+	AuthorizeUrl        *string            `json:"authorize_url,omitempty"`
+	Claims              map[string]string  `json:"claims"`
+	ClientId            string             `json:"client_id"`
+	ClientSecret        *string            `json:"client_secret,omitempty"`
+	Host                string             `json:"host"`
+	Populations         *map[string]string `json:"populations,omitempty"`
+	RequiredPopulations *string            `json:"required_populations,omitempty"`
+	Scopes              *string            `json:"scopes,omitempty"`
+	TokenUrl            *string            `json:"token_url,omitempty"`
+	UsePkce             *bool              `json:"use_pkce,omitempty"`
+	UseRefresh          *bool              `json:"use_refresh,omitempty"`
+	UseState            *bool              `json:"use_state,omitempty"`
+	UserinfoUrl         *string            `json:"userinfo_url,omitempty"`
+}
+
 // AuthServiceReg Service registration record used for auth
 type AuthServiceReg struct {
 	Host             string  `json:"host"`
@@ -287,25 +357,10 @@ type AuthServiceReg struct {
 	ServiceId        string  `json:"service_id"`
 }
 
-// AuthType defines model for AuthType.
-type AuthType struct {
-	// Code username or email or phone or illinois_oidc etc
-	Code        string  `json:"code"`
-	Description string  `json:"description"`
-	Id          *string `json:"id,omitempty"`
-
-	// IgnoreMfa says if login using this auth type may bypass account MFA
-	IgnoreMfa bool `json:"ignore_mfa"`
-
-	// IsAnonymous says if the auth type results in anonymous users
-	IsAnonymous bool `json:"is_anonymous"`
-
-	// IsExternal says if the users source is external - identity providers
-	IsExternal bool                    `json:"is_external"`
-	Params     *map[string]interface{} `json:"params,omitempty"`
-
-	// UseCredentials says if the auth type uses credentials
-	UseCredentials bool `json:"use_credentials"`
+// AuthSettings defines model for AuthSettings.
+type AuthSettings struct {
+	IgnoreMfa *bool   `json:"ignore_mfa"`
+	Provider  *string `json:"provider"`
 }
 
 // Device defines model for Device.
@@ -332,7 +387,6 @@ type IdentityProviderSettings struct {
 	FirstNameField      *string            `json:"first_name_field,omitempty"`
 	Groups              *map[string]string `json:"groups,omitempty"`
 	GroupsField         *string            `json:"groups_field,omitempty"`
-	IdentityProviderId  string             `json:"identity_provider_id"`
 	LastNameField       *string            `json:"last_name_field,omitempty"`
 	MiddleNameField     *string            `json:"middle_name_field,omitempty"`
 	Roles               *map[string]string `json:"roles,omitempty"`
@@ -445,10 +499,12 @@ type LoginSession struct {
 
 // LoginSessionSettings defines model for LoginSessionSettings.
 type LoginSessionSettings struct {
-	InactivityExpirePolicy     *InactiveExpirePolicy `json:"inactivity_expire_policy,omitempty"`
-	MaxConcurrentSessions      *int                  `json:"max_concurrent_sessions,omitempty"`
-	TimeSinceLoginExpirePolicy *TSLExpirePolicy      `json:"time_since_login_expire_policy,omitempty"`
-	YearlyExpirePolicy         *YearlyExpirePolicy   `json:"yearly_expire_policy,omitempty"`
+	AppTypeId                  *string              `json:"app_type_id"`
+	AuthTypeCode               *string              `json:"auth_type_code"`
+	InactivityExpirePolicy     InactiveExpirePolicy `json:"inactivity_expire_policy"`
+	MaxConcurrentSessions      int                  `json:"max_concurrent_sessions"`
+	TimeSinceLoginExpirePolicy TSLExpirePolicy      `json:"time_since_login_expire_policy"`
+	YearlyExpirePolicy         YearlyExpirePolicy   `json:"yearly_expire_policy"`
 }
 
 // OIDCDiscovery OpenID Connect Discovery Metadata
@@ -594,14 +650,14 @@ type ServiceScope struct {
 
 // SupportedAuthType defines model for SupportedAuthType.
 type SupportedAuthType struct {
-	AuthTypeId *string                 `json:"auth_type_id,omitempty"`
-	Params     *map[string]interface{} `json:"params,omitempty"`
+	Alias          *string                          `json:"alias"`
+	AppTypeConfigs *ApplicationOrganizationSettings `json:"app_type_configs,omitempty"`
+	Configs        *SupportedAuthType_Configs       `json:"configs"`
 }
 
-// SupportedAuthTypes defines model for SupportedAuthTypes.
-type SupportedAuthTypes struct {
-	AppTypeId          *string              `json:"app_type_id,omitempty"`
-	SupportedAuthTypes *[]SupportedAuthType `json:"supported_auth_types,omitempty"`
+// SupportedAuthType_Configs defines model for SupportedAuthType.Configs.
+type SupportedAuthType_Configs struct {
+	union json.RawMessage
 }
 
 // TSLExpirePolicy defines model for TSLExpirePolicy.
@@ -873,8 +929,8 @@ type SharedReqCredsEmail struct {
 //   - full redirect URI received from OIDC provider
 type SharedReqCredsOIDC = string
 
-// SharedReqCredsTwilioPhone Auth login creds for auth_type="twilio_phone"
-type SharedReqCredsTwilioPhone struct {
+// SharedReqCredsPhone Auth login creds for auth_type="phone"
+type SharedReqCredsPhone struct {
 	Code  *string `json:"code,omitempty"`
 	Phone string  `json:"phone"`
 }
@@ -1651,12 +1707,6 @@ type PostSystemApplicationsJSONRequestBody = Application
 // PutSystemApplicationsIdJSONRequestBody defines body for PutSystemApplicationsId for application/json ContentType.
 type PutSystemApplicationsIdJSONRequestBody = Application
 
-// PostSystemAuthTypesJSONRequestBody defines body for PostSystemAuthTypes for application/json ContentType.
-type PostSystemAuthTypesJSONRequestBody = AuthType
-
-// PutSystemAuthTypesIdJSONRequestBody defines body for PutSystemAuthTypesId for application/json ContentType.
-type PutSystemAuthTypesIdJSONRequestBody = AuthType
-
 // PostSystemGlobalConfigJSONRequestBody defines body for PostSystemGlobalConfig for application/json ContentType.
 type PostSystemGlobalConfigJSONRequestBody = GlobalConfig
 
@@ -1705,6 +1755,316 @@ type PostTpsAccountsCountJSONRequestBody = PostTpsAccountsCountJSONBody
 // PostTpsServiceAccountIdJSONRequestBody defines body for PostTpsServiceAccountId for application/json ContentType.
 type PostTpsServiceAccountIdJSONRequestBody = ServicesReqServiceAccountsParams
 
+// AsAuthConfigOidc returns the union data inside the ApplicationOrganizationSettingsDefault1 as a AuthConfigOidc
+func (t ApplicationOrganizationSettingsDefault1) AsAuthConfigOidc() (AuthConfigOidc, error) {
+	var body AuthConfigOidc
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromAuthConfigOidc overwrites any union data inside the ApplicationOrganizationSettingsDefault1 as the provided AuthConfigOidc
+func (t *ApplicationOrganizationSettingsDefault1) FromAuthConfigOidc(v AuthConfigOidc) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeAuthConfigOidc performs a merge with any union data inside the ApplicationOrganizationSettingsDefault1, using the provided AuthConfigOidc
+func (t *ApplicationOrganizationSettingsDefault1) MergeAuthConfigOidc(v AuthConfigOidc) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(b, t.union)
+	t.union = merged
+	return err
+}
+
+// AsAuthConfigOAuth2 returns the union data inside the ApplicationOrganizationSettingsDefault1 as a AuthConfigOAuth2
+func (t ApplicationOrganizationSettingsDefault1) AsAuthConfigOAuth2() (AuthConfigOAuth2, error) {
+	var body AuthConfigOAuth2
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromAuthConfigOAuth2 overwrites any union data inside the ApplicationOrganizationSettingsDefault1 as the provided AuthConfigOAuth2
+func (t *ApplicationOrganizationSettingsDefault1) FromAuthConfigOAuth2(v AuthConfigOAuth2) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeAuthConfigOAuth2 performs a merge with any union data inside the ApplicationOrganizationSettingsDefault1, using the provided AuthConfigOAuth2
+func (t *ApplicationOrganizationSettingsDefault1) MergeAuthConfigOAuth2(v AuthConfigOAuth2) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(b, t.union)
+	t.union = merged
+	return err
+}
+
+func (t ApplicationOrganizationSettingsDefault1) MarshalJSON() ([]byte, error) {
+	b, err := t.union.MarshalJSON()
+	return b, err
+}
+
+func (t *ApplicationOrganizationSettingsDefault1) UnmarshalJSON(b []byte) error {
+	err := t.union.UnmarshalJSON(b)
+	return err
+}
+
+// AsLoginSessionSettings returns the union data inside the ApplicationOrganizationSettings_Default as a LoginSessionSettings
+func (t ApplicationOrganizationSettings_Default) AsLoginSessionSettings() (LoginSessionSettings, error) {
+	var body LoginSessionSettings
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromLoginSessionSettings overwrites any union data inside the ApplicationOrganizationSettings_Default as the provided LoginSessionSettings
+func (t *ApplicationOrganizationSettings_Default) FromLoginSessionSettings(v LoginSessionSettings) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeLoginSessionSettings performs a merge with any union data inside the ApplicationOrganizationSettings_Default, using the provided LoginSessionSettings
+func (t *ApplicationOrganizationSettings_Default) MergeLoginSessionSettings(v LoginSessionSettings) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(b, t.union)
+	t.union = merged
+	return err
+}
+
+// AsApplicationOrganizationSettingsDefault1 returns the union data inside the ApplicationOrganizationSettings_Default as a ApplicationOrganizationSettingsDefault1
+func (t ApplicationOrganizationSettings_Default) AsApplicationOrganizationSettingsDefault1() (ApplicationOrganizationSettingsDefault1, error) {
+	var body ApplicationOrganizationSettingsDefault1
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromApplicationOrganizationSettingsDefault1 overwrites any union data inside the ApplicationOrganizationSettings_Default as the provided ApplicationOrganizationSettingsDefault1
+func (t *ApplicationOrganizationSettings_Default) FromApplicationOrganizationSettingsDefault1(v ApplicationOrganizationSettingsDefault1) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeApplicationOrganizationSettingsDefault1 performs a merge with any union data inside the ApplicationOrganizationSettings_Default, using the provided ApplicationOrganizationSettingsDefault1
+func (t *ApplicationOrganizationSettings_Default) MergeApplicationOrganizationSettingsDefault1(v ApplicationOrganizationSettingsDefault1) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(b, t.union)
+	t.union = merged
+	return err
+}
+
+func (t ApplicationOrganizationSettings_Default) MarshalJSON() ([]byte, error) {
+	b, err := t.union.MarshalJSON()
+	return b, err
+}
+
+func (t *ApplicationOrganizationSettings_Default) UnmarshalJSON(b []byte) error {
+	err := t.union.UnmarshalJSON(b)
+	return err
+}
+
+// AsAuthConfigOidc returns the union data inside the ApplicationOrganizationSettingsOverrides1 as a AuthConfigOidc
+func (t ApplicationOrganizationSettingsOverrides1) AsAuthConfigOidc() (AuthConfigOidc, error) {
+	var body AuthConfigOidc
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromAuthConfigOidc overwrites any union data inside the ApplicationOrganizationSettingsOverrides1 as the provided AuthConfigOidc
+func (t *ApplicationOrganizationSettingsOverrides1) FromAuthConfigOidc(v AuthConfigOidc) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeAuthConfigOidc performs a merge with any union data inside the ApplicationOrganizationSettingsOverrides1, using the provided AuthConfigOidc
+func (t *ApplicationOrganizationSettingsOverrides1) MergeAuthConfigOidc(v AuthConfigOidc) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(b, t.union)
+	t.union = merged
+	return err
+}
+
+// AsAuthConfigOAuth2 returns the union data inside the ApplicationOrganizationSettingsOverrides1 as a AuthConfigOAuth2
+func (t ApplicationOrganizationSettingsOverrides1) AsAuthConfigOAuth2() (AuthConfigOAuth2, error) {
+	var body AuthConfigOAuth2
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromAuthConfigOAuth2 overwrites any union data inside the ApplicationOrganizationSettingsOverrides1 as the provided AuthConfigOAuth2
+func (t *ApplicationOrganizationSettingsOverrides1) FromAuthConfigOAuth2(v AuthConfigOAuth2) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeAuthConfigOAuth2 performs a merge with any union data inside the ApplicationOrganizationSettingsOverrides1, using the provided AuthConfigOAuth2
+func (t *ApplicationOrganizationSettingsOverrides1) MergeAuthConfigOAuth2(v AuthConfigOAuth2) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(b, t.union)
+	t.union = merged
+	return err
+}
+
+func (t ApplicationOrganizationSettingsOverrides1) MarshalJSON() ([]byte, error) {
+	b, err := t.union.MarshalJSON()
+	return b, err
+}
+
+func (t *ApplicationOrganizationSettingsOverrides1) UnmarshalJSON(b []byte) error {
+	err := t.union.UnmarshalJSON(b)
+	return err
+}
+
+// AsLoginSessionSettings returns the union data inside the ApplicationOrganizationSettings_Overrides_Item as a LoginSessionSettings
+func (t ApplicationOrganizationSettings_Overrides_Item) AsLoginSessionSettings() (LoginSessionSettings, error) {
+	var body LoginSessionSettings
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromLoginSessionSettings overwrites any union data inside the ApplicationOrganizationSettings_Overrides_Item as the provided LoginSessionSettings
+func (t *ApplicationOrganizationSettings_Overrides_Item) FromLoginSessionSettings(v LoginSessionSettings) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeLoginSessionSettings performs a merge with any union data inside the ApplicationOrganizationSettings_Overrides_Item, using the provided LoginSessionSettings
+func (t *ApplicationOrganizationSettings_Overrides_Item) MergeLoginSessionSettings(v LoginSessionSettings) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(b, t.union)
+	t.union = merged
+	return err
+}
+
+// AsApplicationOrganizationSettingsOverrides1 returns the union data inside the ApplicationOrganizationSettings_Overrides_Item as a ApplicationOrganizationSettingsOverrides1
+func (t ApplicationOrganizationSettings_Overrides_Item) AsApplicationOrganizationSettingsOverrides1() (ApplicationOrganizationSettingsOverrides1, error) {
+	var body ApplicationOrganizationSettingsOverrides1
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromApplicationOrganizationSettingsOverrides1 overwrites any union data inside the ApplicationOrganizationSettings_Overrides_Item as the provided ApplicationOrganizationSettingsOverrides1
+func (t *ApplicationOrganizationSettings_Overrides_Item) FromApplicationOrganizationSettingsOverrides1(v ApplicationOrganizationSettingsOverrides1) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeApplicationOrganizationSettingsOverrides1 performs a merge with any union data inside the ApplicationOrganizationSettings_Overrides_Item, using the provided ApplicationOrganizationSettingsOverrides1
+func (t *ApplicationOrganizationSettings_Overrides_Item) MergeApplicationOrganizationSettingsOverrides1(v ApplicationOrganizationSettingsOverrides1) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(b, t.union)
+	t.union = merged
+	return err
+}
+
+func (t ApplicationOrganizationSettings_Overrides_Item) MarshalJSON() ([]byte, error) {
+	b, err := t.union.MarshalJSON()
+	return b, err
+}
+
+func (t *ApplicationOrganizationSettings_Overrides_Item) UnmarshalJSON(b []byte) error {
+	err := t.union.UnmarshalJSON(b)
+	return err
+}
+
+// AsIdentityProviderSettings returns the union data inside the SupportedAuthType_Configs as a IdentityProviderSettings
+func (t SupportedAuthType_Configs) AsIdentityProviderSettings() (IdentityProviderSettings, error) {
+	var body IdentityProviderSettings
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromIdentityProviderSettings overwrites any union data inside the SupportedAuthType_Configs as the provided IdentityProviderSettings
+func (t *SupportedAuthType_Configs) FromIdentityProviderSettings(v IdentityProviderSettings) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeIdentityProviderSettings performs a merge with any union data inside the SupportedAuthType_Configs, using the provided IdentityProviderSettings
+func (t *SupportedAuthType_Configs) MergeIdentityProviderSettings(v IdentityProviderSettings) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(b, t.union)
+	t.union = merged
+	return err
+}
+
+// AsAuthSettings returns the union data inside the SupportedAuthType_Configs as a AuthSettings
+func (t SupportedAuthType_Configs) AsAuthSettings() (AuthSettings, error) {
+	var body AuthSettings
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromAuthSettings overwrites any union data inside the SupportedAuthType_Configs as the provided AuthSettings
+func (t *SupportedAuthType_Configs) FromAuthSettings(v AuthSettings) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeAuthSettings performs a merge with any union data inside the SupportedAuthType_Configs, using the provided AuthSettings
+func (t *SupportedAuthType_Configs) MergeAuthSettings(v AuthSettings) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(b, t.union)
+	t.union = merged
+	return err
+}
+
+func (t SupportedAuthType_Configs) MarshalJSON() ([]byte, error) {
+	b, err := t.union.MarshalJSON()
+	return b, err
+}
+
+func (t *SupportedAuthType_Configs) UnmarshalJSON(b []byte) error {
+	err := t.union.UnmarshalJSON(b)
+	return err
+}
+
 // AsSharedReqCredsEmail returns the union data inside the ServicesReqAccountAuthTypeLink_Creds as a SharedReqCredsEmail
 func (t ServicesReqAccountAuthTypeLink_Creds) AsSharedReqCredsEmail() (SharedReqCredsEmail, error) {
 	var body SharedReqCredsEmail
@@ -1731,22 +2091,22 @@ func (t *ServicesReqAccountAuthTypeLink_Creds) MergeSharedReqCredsEmail(v Shared
 	return err
 }
 
-// AsSharedReqCredsTwilioPhone returns the union data inside the ServicesReqAccountAuthTypeLink_Creds as a SharedReqCredsTwilioPhone
-func (t ServicesReqAccountAuthTypeLink_Creds) AsSharedReqCredsTwilioPhone() (SharedReqCredsTwilioPhone, error) {
-	var body SharedReqCredsTwilioPhone
+// AsSharedReqCredsPhone returns the union data inside the ServicesReqAccountAuthTypeLink_Creds as a SharedReqCredsPhone
+func (t ServicesReqAccountAuthTypeLink_Creds) AsSharedReqCredsPhone() (SharedReqCredsPhone, error) {
+	var body SharedReqCredsPhone
 	err := json.Unmarshal(t.union, &body)
 	return body, err
 }
 
-// FromSharedReqCredsTwilioPhone overwrites any union data inside the ServicesReqAccountAuthTypeLink_Creds as the provided SharedReqCredsTwilioPhone
-func (t *ServicesReqAccountAuthTypeLink_Creds) FromSharedReqCredsTwilioPhone(v SharedReqCredsTwilioPhone) error {
+// FromSharedReqCredsPhone overwrites any union data inside the ServicesReqAccountAuthTypeLink_Creds as the provided SharedReqCredsPhone
+func (t *ServicesReqAccountAuthTypeLink_Creds) FromSharedReqCredsPhone(v SharedReqCredsPhone) error {
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
 }
 
-// MergeSharedReqCredsTwilioPhone performs a merge with any union data inside the ServicesReqAccountAuthTypeLink_Creds, using the provided SharedReqCredsTwilioPhone
-func (t *ServicesReqAccountAuthTypeLink_Creds) MergeSharedReqCredsTwilioPhone(v SharedReqCredsTwilioPhone) error {
+// MergeSharedReqCredsPhone performs a merge with any union data inside the ServicesReqAccountAuthTypeLink_Creds, using the provided SharedReqCredsPhone
+func (t *ServicesReqAccountAuthTypeLink_Creds) MergeSharedReqCredsPhone(v SharedReqCredsPhone) error {
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -1979,22 +2339,22 @@ func (t *SharedReqLogin_Creds) MergeSharedReqCredsEmail(v SharedReqCredsEmail) e
 	return err
 }
 
-// AsSharedReqCredsTwilioPhone returns the union data inside the SharedReqLogin_Creds as a SharedReqCredsTwilioPhone
-func (t SharedReqLogin_Creds) AsSharedReqCredsTwilioPhone() (SharedReqCredsTwilioPhone, error) {
-	var body SharedReqCredsTwilioPhone
+// AsSharedReqCredsPhone returns the union data inside the SharedReqLogin_Creds as a SharedReqCredsPhone
+func (t SharedReqLogin_Creds) AsSharedReqCredsPhone() (SharedReqCredsPhone, error) {
+	var body SharedReqCredsPhone
 	err := json.Unmarshal(t.union, &body)
 	return body, err
 }
 
-// FromSharedReqCredsTwilioPhone overwrites any union data inside the SharedReqLogin_Creds as the provided SharedReqCredsTwilioPhone
-func (t *SharedReqLogin_Creds) FromSharedReqCredsTwilioPhone(v SharedReqCredsTwilioPhone) error {
+// FromSharedReqCredsPhone overwrites any union data inside the SharedReqLogin_Creds as the provided SharedReqCredsPhone
+func (t *SharedReqLogin_Creds) FromSharedReqCredsPhone(v SharedReqCredsPhone) error {
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
 }
 
-// MergeSharedReqCredsTwilioPhone performs a merge with any union data inside the SharedReqLogin_Creds, using the provided SharedReqCredsTwilioPhone
-func (t *SharedReqLogin_Creds) MergeSharedReqCredsTwilioPhone(v SharedReqCredsTwilioPhone) error {
+// MergeSharedReqCredsPhone performs a merge with any union data inside the SharedReqLogin_Creds, using the provided SharedReqCredsPhone
+func (t *SharedReqLogin_Creds) MergeSharedReqCredsPhone(v SharedReqCredsPhone) error {
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err

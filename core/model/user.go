@@ -100,9 +100,9 @@ func (a Account) GetAccountAuthTypeByID(ID string) *AccountAuthType {
 }
 
 // GetAccountAuthType finds account auth type
-func (a Account) GetAccountAuthType(authTypeID string, identifier string) *AccountAuthType {
+func (a Account) GetAccountAuthType(authTypeCode string, identifier string) *AccountAuthType {
 	for _, aat := range a.AuthTypes {
-		if aat.AuthType.ID == authTypeID && aat.Identifier == identifier {
+		if aat.AuthTypeCode == authTypeCode && aat.Identifier == identifier {
 			aat.Account = a
 			return &aat
 		}
@@ -274,6 +274,17 @@ func (a Account) GetAppOrg() ApplicationOrganization {
 	return a.AppOrg
 }
 
+// RollbackAuthTypeCodes reverts auth type codes unrecognized by certain clients (needed for backward compatibility)
+func (a Account) RollbackAuthTypeCodes() Account {
+	for i, aat := range a.AuthTypes {
+		appOrgAuthType, exists := a.AppOrg.AuthTypes[aat.AuthTypeCode]
+		if exists && appOrgAuthType.Alias != nil {
+			a.AuthTypes[i].AuthTypeCode = *appOrgAuthType.Alias
+		}
+	}
+	return a
+}
+
 // AccountRole represents a role assigned to an account
 type AccountRole struct {
 	Role     AppOrgRole
@@ -310,11 +321,10 @@ func AccountGroupsFromAppOrgGroups(items []AppOrgGroup, active bool, adminSet bo
 type AccountAuthType struct {
 	ID string
 
-	AuthType AuthType //one of the supported auth type
-	Account  Account
-
-	Identifier string
-	Params     map[string]interface{}
+	Account      Account
+	AuthTypeCode string //one of the supported auth type
+	Identifier   string
+	Params       map[string]interface{}
 
 	Credential *Credential //this can be nil as the external auth types authenticates the users outside the system
 
@@ -348,7 +358,7 @@ func (aat *AccountAuthType) Equals(other AccountAuthType) bool {
 	if aat.Account.ID != other.Account.ID {
 		return false
 	}
-	if aat.AuthType.Code != other.AuthType.Code {
+	if utils.GetSuffix(aat.AuthTypeCode, "_") != utils.GetSuffix(other.AuthTypeCode, "_") {
 		return false
 	}
 	if aat.Active != other.Active {
@@ -379,7 +389,7 @@ func (aat *AccountAuthType) Equals(other AccountAuthType) bool {
 type Credential struct {
 	ID string
 
-	AuthType          AuthType
+	AuthTypeCode      string
 	AccountsAuthTypes []AccountAuthType //one credential can be used for more than one account auth type
 	Verified          bool
 	Value             map[string]interface{} //credential value

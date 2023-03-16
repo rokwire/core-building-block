@@ -1,0 +1,20 @@
+required:
+  - default
+  - overrides
+type: object
+properties:
+  default:
+    oneOf:
+      - $ref: "./LoginSessionSettings.yaml"
+      - anyOf:
+        - $ref: "../auth/AuthConfigOidc.yaml"
+        - $ref: "../auth/AuthConfigOAuth2.yaml"
+  overrides:
+    nullable: true
+    type: array
+    items:
+      oneOf:
+        - $ref: "./LoginSessionSettings.yaml"
+        - anyOf:
+          - $ref: "../auth/AuthConfigOidc.yaml"
+          - $ref: "../auth/AuthConfigOAuth2.yaml"

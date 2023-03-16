@@ -17,15 +17,10 @@ properties:
     nullable: true
     items:
       type: string
-  identity_provider_settings:
-    type: array
+  auth_types:
+    type: object
     nullable: true
-    items:
-      $ref: "./IdentityProviderSettings.yaml"
-  supported_auth_types:
-    type: array
-    nullable: true
-    items:
-      $ref: "./SupportedAuthTypes.yaml"
+    additionalProperties:
+      $ref: "./SupportedAuthType.yaml"
   login_session_settings:
-    $ref: "./LoginSessionSettings.yaml"
+    $ref: "./ApplicationOrganizationSettings.yaml"

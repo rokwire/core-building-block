@@ -15,6 +15,7 @@
 package model
 
 import (
+	"core-building-block/utils"
 	"fmt"
 	"strconv"
 	"strings"
@@ -23,6 +24,7 @@ import (
 	"github.com/rokwire/core-auth-library-go/v3/authutils"
 	"github.com/rokwire/logging-library-go/v2/errors"
 	"github.com/rokwire/logging-library-go/v2/logutils"
+	"gopkg.in/go-playground/validator.v9"
 )
 
 const (
@@ -42,6 +44,14 @@ const (
 	TypeApplicationOrganization logutils.MessageDataType = "application organization"
 	//TypeApplicationType ...
 	TypeApplicationType logutils.MessageDataType = "application type"
+	//TypeAuthTypeConfig ...
+	TypeAuthTypeConfig logutils.MessageDataType = "auth type config"
+	//TypeApplicationTypeAuthConfig ...
+	TypeApplicationTypeAuthConfig logutils.MessageDataType = "application type auth config"
+	//TypeLoginSessionSettings ...
+	TypeLoginSessionSettings logutils.MessageDataType = "login session settings"
+	//TypeIdentityProviderSetting ...
+	TypeIdentityProviderSetting logutils.MessageDataType = "identity provider setting"
 	//TypeApplicationTypeVersionList ...
 	TypeApplicationTypeVersionList logutils.MessageDataType = "application type supported version list"
 	//TypeApplicationUserRelations ...
@@ -328,38 +338,70 @@ type ApplicationOrganization struct {
 
 	ServicesIDs []string //which services are used for this app/org
 
-	IdentityProvidersSettings []IdentityProviderSetting
-
-	SupportedAuthTypes []AuthTypesSupport //supported auth types for this organization in this application
-
-	LoginsSessionsSetting LoginsSessionsSetting
+	AuthTypes            map[string]SupportedAuthType //supported auth types for this organization in this application
+	LoginSessionSettings ApplicationOrganizationSettings
 
 	DateCreated time.Time
 	DateUpdated *time.Time
 }
 
-// FindIdentityProviderSetting finds the identity provider setting for the application
-func (ao ApplicationOrganization) FindIdentityProviderSetting(identityProviderID string) *IdentityProviderSetting {
-	for _, idPrSetting := range ao.IdentityProvidersSettings {
-		if idPrSetting.IdentityProviderID == identityProviderID {
-			return &idPrSetting
-		}
+// GetAuthTypeConfig finds the configuration for the given auth type
+func (ao ApplicationOrganization) GetAuthTypeConfig(authType string) map[string]interface{} {
+	supportedType, exists := ao.AuthTypes[authType]
+	if !exists {
+		return nil
 	}
-	return nil
+	return supportedType.Configs
+}
+
+// GetIdentityProviderSetting returns the configuration for the given auth type as an identity provider setting, if possible
+func (ao ApplicationOrganization) GetIdentityProviderSetting(authType string) (*IdentityProviderSetting, error) {
+	errFields := &logutils.FieldArgs{"app_org_id": ao.ID, "auth_type": authType}
+
+	authTypeConfig := ao.GetAuthTypeConfig(authType)
+	if authTypeConfig == nil {
+		return nil, errors.ErrorData(logutils.StatusMissing, TypeAuthTypeConfig, errFields)
+	}
+
+	idpSettings, err := utils.Convert[IdentityProviderSetting](authTypeConfig)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionCast, TypeIdentityProviderSetting, nil, err)
+	}
+
+	validate := validator.New()
+	err = validate.Struct(idpSettings)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionValidate, TypeIdentityProviderSetting, errFields, err)
+	}
+
+	return idpSettings, nil
+}
+
+// GetAppTypeAuthConfig finds the app type auth configuration for the given auth type and app type ID
+func (ao ApplicationOrganization) GetAppTypeAuthConfig(authType string, appTypeID string) interface{} {
+	supportedType, exists := ao.AuthTypes[authType]
+	if !exists {
+		return nil
+	}
+
+	return supportedType.AppTypeConfigs.GetSetting(appTypeID, "")
+}
+
+// GetLoginSessionSettings finds the login session settings for the given auth type and app type ID
+func (ao ApplicationOrganization) GetLoginSessionSettings(authType string, appTypeID string) (*LoginSessionSettings, error) {
+	settings := ao.LoginSessionSettings.GetSetting(appTypeID, authType)
+	loginSessionSettings, err := utils.Convert[LoginSessionSettings](settings)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionCast, TypeLoginSessionSettings, nil, err)
+	}
+
+	return loginSessionSettings, nil
 }
 
 // IsAuthTypeSupported checks if an auth type is supported for application type
-func (ao ApplicationOrganization) IsAuthTypeSupported(appType ApplicationType, authType AuthType) bool {
-	for _, sat := range ao.SupportedAuthTypes {
-		if sat.AppTypeID == appType.ID {
-			for _, at := range sat.SupportedAuthTypes {
-				if at.AuthTypeID == authType.ID {
-					return true
-				}
-			}
-		}
-	}
-	return false
+func (ao ApplicationOrganization) IsAuthTypeSupported(authType string) bool {
+	_, supported := ao.AuthTypes[authType]
+	return supported
 }
 
 // IdentityProviderSetting represents identity provider setting for an organization in an application
@@ -373,33 +415,93 @@ func (ao ApplicationOrganization) IsAuthTypeSupported(appType ApplicationType, a
 //	 	for the UIUC application the Illinois group "urn:mace:uiuc.edu:urbana:authman:app-rokwire-service-policy-rokwire groups access" is mapped to an application group called "groups access"
 //	 	for the Safer Illinois application the Illinois group "urn:mace:uiuc.edu:urbana:authman:app-rokwire-service-policy-rokwire health test verify" is mapped to an application group called "tests verifiers"
 type IdentityProviderSetting struct {
-	IdentityProviderID string `bson:"identity_provider_id"`
+	UserIdentifierField string            `json:"user_identifier_field" bson:"user_identifier_field" validate:"required"`
+	ExternalIDFields    map[string]string `json:"external_id_fields" bson:"external_id_fields"`
 
-	UserIdentifierField string            `bson:"user_identifier_field"`
-	ExternalIDFields    map[string]string `bson:"external_id_fields"`
+	FirstNameField  string `json:"first_name_field" bson:"first_name_field"`
+	MiddleNameField string `json:"middle_name_field" bson:"middle_name_field"`
+	LastNameField   string `json:"last_name_field" bson:"last_name_field"`
+	EmailField      string `json:"email_field" bson:"email_field"`
+	RolesField      string `json:"roles_field" bson:"roles_field"`
+	GroupsField     string `json:"groups_field" bson:"groups_field"`
 
-	FirstNameField  string `bson:"first_name_field"`
-	MiddleNameField string `bson:"middle_name_field"`
-	LastNameField   string `bson:"last_name_field"`
-	EmailField      string `bson:"email_field"`
-	RolesField      string `bson:"roles_field"`
-	GroupsField     string `bson:"groups_field"`
+	UserSpecificFields []string `json:"user_specific_fields" bson:"user_specific_fields"`
 
-	UserSpecificFields []string `bson:"user_specific_fields"`
+	AlwaysSyncProfile bool `json:"always_sync_profile" bson:"always_sync_profile"` // if true, profile data will be overwritten with data from external user on each login/refresh
 
-	AlwaysSyncProfile bool `bson:"always_sync_profile"` // if true, profile data will be overwritten with data from external user on each login/refresh
-
-	Roles  map[string]string `bson:"roles"`  //map[identity_provider_role]app_role_id
-	Groups map[string]string `bson:"groups"` //map[identity_provider_group]app_group_id
+	Roles  map[string]string `json:"roles" bson:"roles"`   //map[identity_provider_role]app_role_id
+	Groups map[string]string `json:"groups" bson:"groups"` //map[identity_provider_group]app_group_id
 }
 
-// LoginsSessionsSetting represents logins sessions setting for an organization in an application
-type LoginsSessionsSetting struct {
+// SupportedAuthType represents a supported auth type for an application organization with configs
+type SupportedAuthType struct {
+	Configs        map[string]interface{}
+	AppTypeConfigs *ApplicationOrganizationSettings
+	Alias          *string
+}
+
+// ApplicationOrganizationSettings represents some app org settings that have a default and possible overrides
+type ApplicationOrganizationSettings struct {
+	Default   AppAuthSetting
+	Overrides []AppAuthSetting
+}
+
+// AppAuthSetting represents any setting specific to an app type and auth type
+type AppAuthSetting interface {
+	GetAppTypeID() *string
+	GetAuthTypeCode() *string
+}
+
+// GetSetting gets the setting for the provided app type and auth type
+func (a *ApplicationOrganizationSettings) GetSetting(appTypeID string, authTypeCode string) interface{} {
+	for _, settings := range a.Overrides {
+		settingAppTypeID := settings.GetAppTypeID()
+		settingAuthTypeCode := settings.GetAuthTypeCode()
+		if (settingAppTypeID == nil || *settingAppTypeID == appTypeID) || (settingAuthTypeCode == nil || *settingAuthTypeCode == authTypeCode) {
+			return settings
+		}
+	}
+
+	return a.Default
+}
+
+// IdentityProviderConfig specifies how to interact with an external identity provider
+type IdentityProviderConfig map[string]interface{}
+
+// GetAppTypeID implements AppAuthSetting interface
+func (i IdentityProviderConfig) GetAppTypeID() *string {
+	appTypeID, ok := i["app_type_id"].(string)
+	if !ok || appTypeID == "" {
+		return nil
+	}
+	return &appTypeID
+}
+
+// GetAuthTypeCode implements AppAuthSetting interface
+func (i IdentityProviderConfig) GetAuthTypeCode() *string {
+	return nil
+}
+
+// LoginSessionSettings represents login session settings for an app type and auth type
+type LoginSessionSettings struct {
+	AppTypeID    *string `bson:"app_type_id,omitempty"`
+	AuthTypeCode *string `bson:"auth_type_code,omitempty"`
+
 	MaxConcurrentSessions int `bson:"max_concurrent_sessions"`
 
 	InactivityExpirePolicy InactivityExpirePolicy `bson:"inactivity_expire_policy"`
 	TSLExpirePolicy        TSLExpirePolicy        `bson:"time_since_login_expire_policy"`
 	YearlyExpirePolicy     YearlyExpirePolicy     `bson:"yearly_expire_policy"`
+}
+
+// GetAppTypeID implements AppAuthSetting interface
+func (l LoginSessionSettings) GetAppTypeID() *string {
+	return l.AppTypeID
+}
+
+// GetAuthTypeCode implements AppAuthSetting interface
+func (l LoginSessionSettings) GetAuthTypeCode() *string {
+	return l.AuthTypeCode
 }
 
 // InactivityExpirePolicy represents expires policy based on inactivity
@@ -444,18 +546,6 @@ func (at ApplicationType) FindVersion(version string) *Version {
 		}
 	}
 	return nil
-}
-
-// AuthTypesSupport represents supported auth types for an organization in an application type with configs/params
-type AuthTypesSupport struct {
-	AppTypeID          string              `bson:"app_type_id"`
-	SupportedAuthTypes []SupportedAuthType `bson:"supported_auth_types"`
-}
-
-// SupportedAuthType represents a supported auth type
-type SupportedAuthType struct {
-	AuthTypeID string                 `bson:"auth_type_id"`
-	Params     map[string]interface{} `bson:"params"`
 }
 
 // ApplicationConfig represents app configs

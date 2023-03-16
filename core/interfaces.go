@@ -114,7 +114,7 @@ type System interface {
 
 	SysGetApplicationOrganization(ID string) (*model.ApplicationOrganization, error)
 	SysGetApplicationOrganizations(appID *string, orgID *string) ([]model.ApplicationOrganization, error)
-	SysCreateApplicationOrganization(appID string, orgID string, appOrg model.ApplicationOrganization) (*model.ApplicationOrganization, error)
+	SysCreateApplicationOrganization(appOrg model.ApplicationOrganization) error
 	SysUpdateApplicationOrganization(updateAppOrg model.ApplicationOrganization) error
 
 	SysCreateOrganization(name string, requestType string, organizationDomains []string) (*model.Organization, error)
@@ -135,10 +135,6 @@ type System interface {
 	SysCreateAppConfig(appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error)
 	SysUpdateAppConfig(id string, appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) error
 	SysDeleteAppConfig(id string) error
-
-	SysCreateAuthTypes(code string, description string, isExternal bool, isAnonymous bool, useCredentials bool, ignoreMFA bool, params map[string]interface{}) (*model.AuthType, error)
-	SysGetAuthTypes() ([]model.AuthType, error)
-	SysUpdateAuthTypes(ID string, code string, description string, isExternal bool, isAnonymous bool, useCredentials bool, ignoreMFA bool, params map[string]interface{}) error
 }
 
 // Storage is used by core to storage data - DB storage adapter, file storage adapter etc
@@ -146,8 +142,6 @@ type Storage interface {
 	RegisterStorageListener(storageListener storage.Listener)
 
 	PerformTransaction(func(context storage.TransactionContext) error) error
-
-	FindAuthType(codeOrID string) (*model.AuthType, error)
 
 	FindAccountByID(context storage.TransactionContext, id string) (*model.Account, error)
 	FindAccounts(context storage.TransactionContext, limit *int, offset *int, appID string, orgID string, accountID *string, firstName *string, lastName *string, authType *string,
@@ -217,10 +211,6 @@ type Storage interface {
 	FindApplication(context storage.TransactionContext, ID string) (*model.Application, error)
 	FindApplications() ([]model.Application, error)
 
-	InsertAuthType(context storage.TransactionContext, authType model.AuthType) (*model.AuthType, error)
-	FindAuthTypes() ([]model.AuthType, error)
-	UpdateAuthTypes(ID string, code string, description string, isExternal bool, isAnonymous bool, useCredentials bool, ignoreMFA bool, params map[string]interface{}) error
-
 	FindApplicationType(id string) (*model.ApplicationType, error)
 
 	FindAppConfigs(appTypeIdentifier string, appOrgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error)
@@ -234,7 +224,7 @@ type Storage interface {
 	FindApplicationOrganizations(appID *string, orgID *string) ([]model.ApplicationOrganization, error)
 	FindApplicationOrganization(appID string, orgID string) (*model.ApplicationOrganization, error)
 	FindApplicationOrganizationByID(ID string) (*model.ApplicationOrganization, error)
-	InsertApplicationOrganization(context storage.TransactionContext, applicationOrganization model.ApplicationOrganization) (*model.ApplicationOrganization, error)
+	InsertApplicationOrganization(context storage.TransactionContext, applicationOrganization model.ApplicationOrganization) error
 	UpdateApplicationOrganization(context storage.TransactionContext, applicationOrganization model.ApplicationOrganization) error
 
 	InsertAPIKey(context storage.TransactionContext, apiKey model.APIKey) (*model.APIKey, error)

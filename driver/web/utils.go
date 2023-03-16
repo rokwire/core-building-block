@@ -17,6 +17,7 @@ package web
 import (
 	"core-building-block/core/model"
 	Def "core-building-block/driver/web/docs/gen"
+	"core-building-block/utils"
 	"encoding/json"
 	"net/http"
 
@@ -25,7 +26,7 @@ import (
 )
 
 // Helper for authLogin and authLoginMFA
-func authBuildLoginResponse(l *logs.Log, loginSession *model.LoginSession) logs.HTTPResponse {
+func authBuildLoginResponse(loginSession *model.LoginSession, r *http.Request, l *logs.Log) logs.HTTPResponse {
 	//token
 	accessToken := loginSession.AccessToken
 	refreshToken := loginSession.CurrentRefreshToken()
@@ -37,24 +38,17 @@ func authBuildLoginResponse(l *logs.Log, loginSession *model.LoginSession) logs.
 	var accountData *Def.Account
 	if loginSession.AccountAuthType != nil {
 		account := loginSession.AccountAuthType.Account
+		checkAccountAuthTypeCodes(&account, r)
 		accountData = accountToDef(account)
 	}
 
 	//params
-	var paramsRes Def.SharedResLogin_Params
-	if loginSession.Params != nil {
-		paramsBytes, err := json.Marshal(loginSession.Params)
-		if err != nil {
-			return l.HTTPResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("auth login response params"), nil, err, http.StatusInternalServerError, false)
-		}
-
-		err = json.Unmarshal(paramsBytes, &paramsRes)
-		if err != nil {
-			return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth login response params"), nil, err, http.StatusInternalServerError, false)
-		}
+	paramsRes, err := utils.Convert[Def.SharedResLogin_Params](loginSession.Params)
+	if err != nil {
+		return l.HTTPResponseErrorAction("converting", logutils.MessageDataType("auth login response params"), nil, err, http.StatusInternalServerError, false)
 	}
 
-	responseData := &Def.SharedResLogin{Token: &rokwireToken, Account: accountData, Params: &paramsRes}
+	responseData := &Def.SharedResLogin{Token: &rokwireToken, Account: accountData, Params: paramsRes}
 	respData, err := json.Marshal(responseData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("auth login response"), nil, err, http.StatusInternalServerError, false)

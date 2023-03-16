@@ -76,22 +76,7 @@ func (c *APIs) storeSystemData() error {
 	transaction := func(context storage.TransactionContext) error {
 		createAccount := false
 
-		//1. insert email auth type if does not exist
-		emailAuthType, err := c.app.storage.FindAuthType(auth.AuthTypeEmail)
-		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthType, nil, err)
-		}
-		if emailAuthType == nil {
-			newDocuments["auth_type"] = uuid.NewString()
-			emailAuthType = &model.AuthType{ID: newDocuments["auth_type"], Code: auth.AuthTypeEmail, Description: "Authentication type relying on email and password",
-				IsExternal: false, IsAnonymous: false, UseCredentials: true, IgnoreMFA: false}
-			_, err = c.app.storage.InsertAuthType(context, *emailAuthType)
-			if err != nil {
-				return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAuthType, nil, err)
-			}
-		}
-
-		//2. insert system org if does not exist
+		//1. insert system org if does not exist
 		systemOrg, err := c.app.storage.FindSystemOrganization()
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
@@ -109,7 +94,8 @@ func (c *APIs) storeSystemData() error {
 			createAccount = true
 		}
 
-		//3. insert system app and appOrg if they do not exist
+		//2. insert system app and appOrg if they do not exist
+		var systemAppOrg model.ApplicationOrganization
 		systemAdminAppOrgs, err := c.app.storage.FindApplicationsOrganizationsByOrgID(systemOrg.ID)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
@@ -131,26 +117,32 @@ func (c *APIs) storeSystemData() error {
 			systemAdminApp := &newSystemAdminApp
 
 			//insert system admin apporg
-			supportedAuthTypes := make([]model.AuthTypesSupport, len(systemAdminApp.Types))
-			for i, appType := range systemAdminApp.Types {
-				supportedAuthTypes[i] = model.AuthTypesSupport{AppTypeID: appType.ID, SupportedAuthTypes: []model.SupportedAuthType{{AuthTypeID: emailAuthType.ID, Params: nil}}}
-			}
-
 			newDocuments["application_organization"] = uuid.NewString()
 			newSystemAdminAppOrg := model.ApplicationOrganization{ID: newDocuments["application_organization"], Application: *systemAdminApp, Organization: *systemOrg,
-				SupportedAuthTypes: supportedAuthTypes, ServicesIDs: []string{model.ServiceIDCore}, DateCreated: time.Now().UTC()}
-			_, err = c.app.storage.InsertApplicationOrganization(context, newSystemAdminAppOrg)
+				AuthTypes: map[string]model.SupportedAuthType{auth.AuthTypeEmail: {}}, ServicesIDs: []string{model.ServiceIDCore}, DateCreated: time.Now().UTC()}
+			err = c.app.storage.InsertApplicationOrganization(context, newSystemAdminAppOrg)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionSave, model.TypeApplicationOrganization, nil, err)
 			}
 
-			systemAdminAppOrgs = append(systemAdminAppOrgs, newSystemAdminAppOrg)
+			systemAppOrg = newSystemAdminAppOrg
 			createAccount = true
+		} else {
+			systemAppOrg = systemAdminAppOrgs[0]
+			if !systemAppOrg.IsAuthTypeSupported(auth.AuthTypeEmail) {
+				//insert email auth type if does not exist
+				if systemAppOrg.AuthTypes == nil {
+					systemAppOrg.AuthTypes = make(map[string]model.SupportedAuthType)
+				}
+				systemAppOrg.AuthTypes[auth.AuthTypeEmail] = model.SupportedAuthType{}
+				err = c.app.storage.UpdateApplicationOrganization(context, systemAppOrg)
+				if err != nil {
+					return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeApplicationOrganization, nil, err)
+				}
+			}
 		}
 
-		systemAppOrg := systemAdminAppOrgs[0]
-
-		//4. insert api key if does not exist
+		//3. insert api key if does not exist
 		apiKeys, err := c.Auth.GetApplicationAPIKeys(systemAppOrg.Application.ID)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAPIKey, nil, err)
@@ -168,7 +160,7 @@ func (c *APIs) storeSystemData() error {
 			}
 		}
 
-		//5. insert all_system_core permission and grant_all_permissions permission if they do not exist
+		//4. insert all_system_core permission and grant_all_permissions permission if they do not exist
 		requiredPermissions := map[string]string{
 			model.PermissionAllSystemCore:       "Gives access to all admin and system APIs",
 			model.PermissionGrantAllPermissions: "Gives the ability to grant any permission",
@@ -218,7 +210,7 @@ func (c *APIs) storeSystemData() error {
 			if c.systemAccountEmail == "" || c.systemAccountPassword == "" {
 				return errors.ErrorData(logutils.StatusMissing, "initial system account email or password", nil)
 			}
-			newDocuments["account"], err = c.Auth.InitializeSystemAccount(context, *emailAuthType, systemAppOrg, model.PermissionAllSystemCore, c.systemAccountEmail, c.systemAccountPassword, "", c.logger.NewRequestLog(nil))
+			newDocuments["account"], err = c.Auth.InitializeSystemAccount(context, systemAppOrg, model.PermissionAllSystemCore, c.systemAccountEmail, c.systemAccountPassword, "", c.logger.NewRequestLog(nil))
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionInitialize, "system account", nil, err)
 			}
@@ -521,8 +513,8 @@ func (s *systemImpl) SysGetApplicationOrganization(ID string) (*model.Applicatio
 	return s.app.sysGetApplicationOrganization(ID)
 }
 
-func (s *systemImpl) SysCreateApplicationOrganization(appID string, orgID string, appOrg model.ApplicationOrganization) (*model.ApplicationOrganization, error) {
-	return s.app.sysCreateApplicationOrganization(appOrg, appID, orgID)
+func (s *systemImpl) SysCreateApplicationOrganization(appOrg model.ApplicationOrganization) error {
+	return s.app.sysCreateApplicationOrganization(appOrg)
 }
 
 func (s *systemImpl) SysUpdateApplicationOrganization(appOrg model.ApplicationOrganization) error {
@@ -587,18 +579,6 @@ func (s *systemImpl) SysUpdateAppConfig(id string, appTypeID string, orgID *stri
 
 func (s *systemImpl) SysDeleteAppConfig(id string) error {
 	return s.app.sysDeleteAppConfig(id)
-}
-
-func (s *systemImpl) SysCreateAuthTypes(code string, description string, isExternal bool, isAnonymous bool, useCredentials bool, ignoreMFA bool, params map[string]interface{}) (*model.AuthType, error) {
-	return s.app.sysCreateAuthTypes(code, description, isExternal, isAnonymous, useCredentials, ignoreMFA, params)
-}
-
-func (s *systemImpl) SysGetAuthTypes() ([]model.AuthType, error) {
-	return s.app.sysGetAuthTypes()
-}
-
-func (s *systemImpl) SysUpdateAuthTypes(ID string, code string, description string, isExternal bool, isAnonymous bool, useCredentials bool, ignoreMFA bool, params map[string]interface{}) error {
-	return s.app.SysUpdateAuthTypes(ID, code, description, isExternal, isAnonymous, useCredentials, ignoreMFA, params)
 }
 
 ///

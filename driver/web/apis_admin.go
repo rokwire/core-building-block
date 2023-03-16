@@ -128,7 +128,7 @@ func (h AdminApisHandler) login(l *logs.Log, r *http.Request, claims *tokenauth.
 	}
 
 	if loginSession.State != "" {
-		paramsRes, err := convert[Def.SharedResLoginMfa_Params](loginSession.Params)
+		paramsRes, err := utils.Convert[Def.SharedResLoginMfa_Params](loginSession.Params)
 		if err != nil {
 			return l.HTTPResponseErrorAction("converting", logutils.MessageDataType("auth login response params"), nil, err, http.StatusInternalServerError, false)
 		}
@@ -143,7 +143,7 @@ func (h AdminApisHandler) login(l *logs.Log, r *http.Request, claims *tokenauth.
 		return l.HTTPResponseSuccessJSON(respData)
 	}
 
-	return authBuildLoginResponse(l, loginSession)
+	return authBuildLoginResponse(loginSession, r, l)
 }
 
 func (h AdminApisHandler) loginMFA(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
@@ -167,7 +167,7 @@ func (h AdminApisHandler) loginMFA(l *logs.Log, r *http.Request, claims *tokenau
 		return l.HTTPResponseError("Error logging in", err, http.StatusInternalServerError, true)
 	}
 
-	return authBuildLoginResponse(l, loginSession)
+	return authBuildLoginResponse(loginSession, r, l)
 }
 
 func (h AdminApisHandler) loginURL(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
@@ -223,7 +223,7 @@ func (h AdminApisHandler) refresh(l *logs.Log, r *http.Request, claims *tokenaut
 	accessToken := loginSession.AccessToken
 	refreshToken := loginSession.CurrentRefreshToken()
 
-	paramsRes, err := convert[Def.SharedResRefresh_Params](loginSession.Params)
+	paramsRes, err := utils.Convert[Def.SharedResRefresh_Params](loginSession.Params)
 	if err != nil {
 		return l.HTTPResponseErrorAction("converting", logutils.MessageDataType("auth refresh response params"), nil, err, http.StatusInternalServerError, false)
 	}
@@ -408,6 +408,7 @@ func (h AdminApisHandler) getApplicationAccounts(l *logs.Log, r *http.Request, c
 	var authType *string
 	authTypeParam := r.URL.Query().Get("auth-type")
 	if len(authTypeParam) > 0 {
+		authTypeParam = utils.GetSuffix(authTypeParam, "_")
 		authType = &authTypeParam
 	}
 	//auth type identifier
@@ -461,7 +462,8 @@ func (h AdminApisHandler) getApplicationAccounts(l *logs.Log, r *http.Request, c
 		return l.HTTPResponseErrorAction("error finding accounts", model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}
 
-	response := partialAccountsToDef(accounts)
+	checkedAccounts := checkAccountListAuthTypeCodes(accounts, r)
+	response := partialAccountsToDef(checkedAccounts)
 
 	data, err := json.Marshal(response)
 	if err != nil {
@@ -589,6 +591,7 @@ func (h AdminApisHandler) createAdminAccount(l *logs.Log, r *http.Request, claim
 		return l.HTTPResponseErrorAction(logutils.ActionCreate, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}
 
+	checkAccountAuthTypeCodes(account, r)
 	respData := partialAccountToDef(*account, params)
 
 	data, err = json.Marshal(respData)
@@ -630,6 +633,7 @@ func (h AdminApisHandler) updateAdminAccount(l *logs.Log, r *http.Request, claim
 		return l.HTTPResponseErrorAction(logutils.ActionUpdate, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}
 
+	checkAccountAuthTypeCodes(account, r)
 	respData := partialAccountToDef(*account, params)
 
 	data, err = json.Marshal(respData)

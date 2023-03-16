@@ -27,8 +27,7 @@ type loginSession struct {
 	AppID string `bson:"app_id"`
 	OrgID string `bson:"org_id"`
 
-	AuthTypeCode string `bson:"auth_type_code"`
-
+	AuthTypeCode      string `bson:"auth_type_code"`
 	AppTypeID         string `bson:"app_type_id"`
 	AppTypeIdentifier string `bson:"app_type_identifier"`
 
@@ -72,4 +71,30 @@ type serviceAccount struct {
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
+}
+
+// ------------------- DEPRECATED -------------------
+
+type authType struct {
+	ID             string                 `bson:"_id"`
+	Code           string                 `bson:"code"` //username or email or phone or illinois_oidc etc
+	Description    string                 `bson:"description"`
+	IsExternal     bool                   `bson:"is_external"`     //says if the users source is external - identity providers
+	IsAnonymous    bool                   `bson:"is_anonymous"`    //says if the auth type results in anonymous users
+	UseCredentials bool                   `bson:"use_credentials"` //says if the auth type uses credentials
+	IgnoreMFA      bool                   `bson:"ignore_mfa"`      //says if login using this auth type may bypass account MFA
+	Params         map[string]interface{} `bson:"params"`
+}
+
+type identityProvider struct {
+	ID   string `bson:"_id"`
+	Name string `bson:"name"`
+	Type string `bson:"type"`
+
+	Configs []identityProviderConfig `bson:"configs"`
+}
+
+type identityProviderConfig struct {
+	AppTypeID string                 `bson:"app_type_id"`
+	Config    map[string]interface{} `bson:"config"`
 }

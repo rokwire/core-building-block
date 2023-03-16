@@ -18,6 +18,7 @@ import (
 	"core-building-block/core/model"
 	Def "core-building-block/driver/web/docs/gen"
 	"core-building-block/utils"
+	"net/http"
 )
 
 // Account
@@ -119,7 +120,7 @@ func partialAccountsToDef(items []model.Account) []Def.PartialAccount {
 func accountAuthTypeToDef(item model.AccountAuthType) Def.AccountAuthType {
 	params := item.Params
 
-	return Def.AccountAuthType{Id: item.ID, Code: item.AuthType.Code, Identifier: item.Identifier, Active: &item.Active, Unverified: &item.Unverified, Params: &params}
+	return Def.AccountAuthType{Id: item.ID, Code: item.AuthTypeCode, Identifier: item.Identifier, Active: &item.Active, Unverified: &item.Unverified, Params: &params}
 }
 
 func accountAuthTypesToDef(items []model.AccountAuthType) []Def.AccountAuthType {
@@ -128,6 +129,29 @@ func accountAuthTypesToDef(items []model.AccountAuthType) []Def.AccountAuthType 
 		result[i] = accountAuthTypeToDef(item)
 	}
 	return result
+}
+
+// checkAccountAuthTypeCodes reverts auth type codes unrecognized by certain client versions (needed for backward compatibility)
+func checkAccountAuthTypeCodes(item *model.Account, r *http.Request) {
+	if item == nil || r == nil || r.Header.Get("CLIENT_VERSION") != "" {
+		return
+	}
+
+	updatedItem := item.RollbackAuthTypeCodes()
+	item = &updatedItem
+}
+
+// checkAccountListAuthTypeCodes reverts auth type codes unrecognized by certain client versions (needed for backward compatibility)
+func checkAccountListAuthTypeCodes(items []model.Account, r *http.Request) []model.Account {
+	if r == nil || r.Header.Get("CLIENT_VERSION") != "" {
+		return items
+	}
+
+	out := make([]model.Account, len(items))
+	for i, item := range items {
+		out[i] = item.RollbackAuthTypeCodes()
+	}
+	return out
 }
 
 // AccountRole
