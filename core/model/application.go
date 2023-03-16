@@ -435,16 +435,18 @@ type IdentityProviderSetting struct {
 
 // SupportedAuthType represents a supported auth type for an application organization with configs
 type SupportedAuthType struct {
-	Configs        map[string]interface{}           `bson:"configs,omitempty"`
-	AppTypeConfigs *ApplicationOrganizationSettings `bson:"app_type_configs,omitempty"`
-	Alias          *string                          `bson:"alias,omitempty"`
+	Configs        map[string]interface{}
+	AppTypeConfigs *ApplicationOrganizationSettings
+	Alias          *string
 }
 
+// ApplicationOrganizationSettings represents some app org settings that have a default and possible overrides
 type ApplicationOrganizationSettings struct {
-	Default   AppAuthSetting   `bson:"default"`
-	Overrides []AppAuthSetting `bson:"overrides"`
+	Default   AppAuthSetting
+	Overrides []AppAuthSetting
 }
 
+// AppAuthSetting represents any setting specific to an app type and auth type
 type AppAuthSetting interface {
 	GetAppTypeID() *string
 	GetAuthTypeCode() *string
@@ -463,8 +465,10 @@ func (a *ApplicationOrganizationSettings) GetSetting(appTypeID string, authTypeC
 	return a.Default
 }
 
+// IdentityProviderConfig specifies how to interact with an external identity provider
 type IdentityProviderConfig map[string]interface{}
 
+// GetAppTypeID implements AppAuthSetting interface
 func (i IdentityProviderConfig) GetAppTypeID() *string {
 	appTypeID, ok := i["app_type_id"].(string)
 	if !ok || appTypeID == "" {
@@ -473,6 +477,7 @@ func (i IdentityProviderConfig) GetAppTypeID() *string {
 	return &appTypeID
 }
 
+// GetAuthTypeCode implements AppAuthSetting interface
 func (i IdentityProviderConfig) GetAuthTypeCode() *string {
 	return nil
 }
@@ -489,10 +494,12 @@ type LoginSessionSettings struct {
 	YearlyExpirePolicy     YearlyExpirePolicy     `bson:"yearly_expire_policy"`
 }
 
+// GetAppTypeID implements AppAuthSetting interface
 func (l LoginSessionSettings) GetAppTypeID() *string {
 	return l.AppTypeID
 }
 
+// GetAuthTypeCode implements AppAuthSetting interface
 func (l LoginSessionSettings) GetAuthTypeCode() *string {
 	return l.AuthTypeCode
 }

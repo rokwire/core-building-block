@@ -5443,10 +5443,7 @@ components:
             - $ref: '#/components/schemas/IdentityProviderSettings'
             - $ref: '#/components/schemas/AuthSettings'
         app_type_configs:
-          type: object
-          nullable: true
-          additionalProperties:
-            $ref: '#/components/schemas/ApplicationOrganizationSettings'
+          $ref: '#/components/schemas/ApplicationOrganizationSettings'
         alias:
           type: string
           nullable: true

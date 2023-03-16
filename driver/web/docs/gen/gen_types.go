@@ -624,9 +624,9 @@ type ServiceScope struct {
 
 // SupportedAuthType defines model for SupportedAuthType.
 type SupportedAuthType struct {
-	Alias          *string                                     `json:"alias"`
-	AppTypeConfigs *map[string]ApplicationOrganizationSettings `json:"app_type_configs"`
-	Configs        *SupportedAuthType_Configs                  `json:"configs"`
+	Alias          *string                          `json:"alias"`
+	AppTypeConfigs *ApplicationOrganizationSettings `json:"app_type_configs,omitempty"`
+	Configs        *SupportedAuthType_Configs       `json:"configs"`
 }
 
 // SupportedAuthType_Configs defines model for SupportedAuthType.Configs.

@@ -7,10 +7,7 @@ properties:
       - $ref: "./IdentityProviderSettings.yaml"
       - $ref: "./AuthSettings.yaml"
   app_type_configs:
-    type: object
-    nullable: true
-    additionalProperties:
-      $ref: "./ApplicationOrganizationSettings.yaml"
+    $ref: "./ApplicationOrganizationSettings.yaml"
   alias:
     type: string
     nullable: true

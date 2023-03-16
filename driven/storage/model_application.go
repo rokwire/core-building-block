@@ -85,8 +85,8 @@ type applicationOrganization struct {
 
 	ServicesIDs []string `bson:"services_ids"`
 
-	AuthTypes            map[string]model.SupportedAuthType    `bson:"auth_types"`
-	LoginSessionSettings model.ApplicationOrganizationSettings `bson:"login_session_settings"`
+	AuthTypes            map[string]supportedAuthType `bson:"auth_types"`
+	LoginSessionSettings loginSessionSettings         `bson:"login_session_settings"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
@@ -97,6 +97,26 @@ type applicationOrganization struct {
 	SupportedAuthTypes []authTypesSupport `bson:"supported_auth_types,omitempty"`
 	// DEPRECATED
 	LegacyLoginSessionSettings model.LoginSessionSettings `bson:"logins_sessions_settings,omitempty"`
+}
+
+type supportedAuthType struct {
+	Configs        map[string]interface{} `bson:"configs,omitempty"`
+	AppTypeConfigs *appTypeConfigs        `bson:"app_type_configs,omitempty"`
+	Alias          *string                `bson:"alias,omitempty"`
+}
+
+type appTypeConfigs struct {
+	Default   model.IdentityProviderConfig   `bson:"default"`
+	Overrides []model.IdentityProviderConfig `bson:"overrides"`
+}
+
+type loginSessionSettings struct {
+	Default   model.LoginSessionSettings   `bson:"default"`
+	Overrides []model.LoginSessionSettings `bson:"overrides"`
+}
+
+type applicationOrganizationSettings interface {
+	appTypeConfigs | loginSessionSettings
 }
 
 type appOrgGroup struct {
@@ -133,10 +153,10 @@ type appOrgRole struct {
 // ------------------- DEPRECATED -------------------
 
 type authTypesSupport struct {
-	AppTypeID          string              `bson:"app_type_id"`
-	SupportedAuthTypes []supportedAuthType `bson:"supported_auth_types"`
+	AppTypeID          string                `bson:"app_type_id"`
+	SupportedAuthTypes []supportedAuthTypeID `bson:"supported_auth_types"`
 }
 
-type supportedAuthType struct {
+type supportedAuthTypeID struct {
 	AuthTypeID string `bson:"auth_type_id"`
 }

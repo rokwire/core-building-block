@@ -146,20 +146,31 @@ func appOrgFromDef(item *Def.ApplicationOrganization) *model.ApplicationOrganiza
 
 	authTypes := supportedAuthTypesFromDef(item.AuthTypes)
 
-	loginSessionSettings := model.LoginSessionSettings{}
+	var loginSessionSettings model.ApplicationOrganizationSettings
 	if item.LoginSessionSettings != nil {
+		// default
 		var defaultSettings model.LoginSessionSettings
-		defaultSettingsVal := loginSessionSettingsFromDef(item.LoginSessionSettings)
+		defaultSettingsDef, _ := utils.Convert[Def.LoginSessionSettings](item.LoginSessionSettings.Default)
+		defaultSettingsVal := loginSessionSettingsFromDef(defaultSettingsDef)
 		if defaultSettingsVal != nil {
 			defaultSettings = *defaultSettingsVal
 		}
 
-		var overrideSettings []model.LoginSessionSettings
-		if item.LoginSessionSettings.Overrides != nil {
-			overrideSettings = loginSessionSettingsListFromDef(*item.LoginSessionSettings.Overrides)
+		// overrides
+		var overrideSettingsRaw []Def.LoginSessionSettings
+		overrideSettingsDef, _ := utils.Convert[[]Def.LoginSessionSettings](item.LoginSessionSettings.Overrides)
+		if overrideSettingsDef != nil {
+			overrideSettingsRaw = *overrideSettingsDef
 		}
 
-		loginSessionSettings = model.LoginSessionSettings{
+		overrideSettingsVal := loginSessionSettingsListFromDef(overrideSettingsRaw)
+		overrideSettings := make([]model.AppAuthSetting, len(overrideSettingsVal))
+		for i, override := range overrideSettingsVal {
+			var overrideVal model.AppAuthSetting = override
+			overrideSettings[i] = overrideVal
+		}
+
+		loginSessionSettings = model.ApplicationOrganizationSettings{
 			Default:   defaultSettings,
 			Overrides: overrideSettings,
 		}
@@ -176,12 +187,20 @@ func appOrgToDef(item *model.ApplicationOrganization) *Def.ApplicationOrganizati
 
 	authTypes := supportedAuthTypesToDef(item.AuthTypes)
 
-	defaultSettingsVal := item.LoginSessionSettings.Default
+	defaultSettingsVal, _ := item.LoginSessionSettings.Default.(model.LoginSessionSettings)
 	defaultSettings := loginSessionSettingsToDef(&defaultSettingsVal)
-	overrideSettings := loginSessionSettingsListToDef(item.LoginSessionSettings.Overrides)
+	defaultSettingsDef, _ := utils.Convert[Def.ApplicationOrganizationSettings_Default](defaultSettings)
+
+	overrideSettingsVal := make([]model.LoginSessionSettings, len(item.LoginSessionSettings.Overrides))
+	for i, override := range item.LoginSessionSettings.Overrides {
+		overrideSettingsVal[i], _ = override.(model.LoginSessionSettings)
+	}
+	overrideSettings := loginSessionSettingsListToDef(overrideSettingsVal)
+	overrideSettingsDef, _ := utils.Convert[[]Def.ApplicationOrganizationSettings_Overrides_Item](overrideSettings)
+
 	loginSessionSettings := Def.ApplicationOrganizationSettings{
-		Default:   defaultSettings,
-		Overrides: &overrideSettings,
+		Default:   defaultSettingsDef,
+		Overrides: overrideSettingsDef,
 	}
 
 	id := item.ID
@@ -320,13 +339,35 @@ func supportedAuthTypeFromDef(item Def.SupportedAuthType) model.SupportedAuthTyp
 	}
 
 	// app type configs
-	var appTypeConfigsVal map[string]interface{}
-	appTypeConfigs, _ := utils.Convert[map[string]interface{}](item.AppTypeConfigs)
-	if appTypeConfigs != nil {
-		appTypeConfigsVal = *appTypeConfigs
+	var appTypeConfigs *model.ApplicationOrganizationSettings
+	if item.AppTypeConfigs != nil {
+		// default
+		var defaultConfig model.IdentityProviderConfig
+		defaultConfigVal, _ := utils.Convert[model.IdentityProviderConfig](item.AppTypeConfigs.Default)
+		if defaultConfigVal != nil {
+			defaultConfig = *defaultConfigVal
+		}
+
+		// overrides
+		var overrideConfigsRaw []model.IdentityProviderConfig
+		overrideConfigsVal, _ := utils.Convert[[]model.IdentityProviderConfig](item.AppTypeConfigs.Overrides)
+		if overrideConfigsVal != nil {
+			overrideConfigsRaw = *overrideConfigsVal
+		}
+
+		overrideConfigs := make([]model.AppAuthSetting, len(overrideConfigsRaw))
+		for i, override := range overrideConfigsRaw {
+			var overrideVal model.AppAuthSetting = override
+			overrideConfigs[i] = overrideVal
+		}
+
+		appTypeConfigs = &model.ApplicationOrganizationSettings{
+			Default:   defaultConfig,
+			Overrides: overrideConfigs,
+		}
 	}
 
-	return model.SupportedAuthType{Configs: configsVal, AppTypeConfigs: appTypeConfigsVal, Alias: item.Alias}
+	return model.SupportedAuthType{Configs: configsVal, AppTypeConfigs: appTypeConfigs, Alias: item.Alias}
 }
 
 func supportedAuthTypesToDef(items map[string]model.SupportedAuthType) map[string]Def.SupportedAuthType {
@@ -343,7 +384,19 @@ func supportedAuthTypesToDef(items map[string]model.SupportedAuthType) map[strin
 
 func supportedAuthTypeToDef(item model.SupportedAuthType) Def.SupportedAuthType {
 	configs, _ := utils.Convert[Def.SupportedAuthType_Configs](item.Configs)
-	appTypeConfigs, _ := utils.Convert[map[string]Def.SupportedAuthType_AppTypeConfigs_AdditionalProperties](item.AppTypeConfigs)
+
+	var appTypeConfigs *Def.ApplicationOrganizationSettings
+	if item.AppTypeConfigs != nil {
+		defaultSettingsVal, _ := item.AppTypeConfigs.Default.(model.IdentityProviderConfig)
+		defaultSettings, _ := utils.Convert[Def.ApplicationOrganizationSettings_Default](defaultSettingsVal)
+
+		overrideSettings, _ := utils.Convert[[]Def.ApplicationOrganizationSettings_Overrides_Item](item.AppTypeConfigs.Overrides)
+
+		appTypeConfigs = &Def.ApplicationOrganizationSettings{
+			Default:   defaultSettings,
+			Overrides: overrideSettings,
+		}
+	}
 
 	return Def.SupportedAuthType{Configs: configs, AppTypeConfigs: appTypeConfigs, Alias: item.Alias}
 }

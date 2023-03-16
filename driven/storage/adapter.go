@@ -92,10 +92,10 @@ func (sa *Adapter) Start() error {
 	}
 
 	//update or comment out this call after auth type migration is done
-	err = sa.migrateAuthTypes()
-	if err != nil {
-		return errors.WrapErrorAction("migrating", "auth types", nil, err)
-	}
+	// err = sa.migrateAuthTypes()
+	// if err != nil {
+	// 	return errors.WrapErrorAction("migrating", "auth types", nil, err)
+	// }
 
 	//cache the application organization
 	err = sa.cacheApplicationsOrganizations()
@@ -3694,14 +3694,14 @@ func (sa *Adapter) migrateAuthTypes() error {
 		}
 		for _, appOrg := range appOrgs {
 			// legacy login session settings are the new default settings, no overrides unless updated by system admin
-			appOrg.LoginSessionSettings = model.ApplicationOrganizationSettings{Default: appOrg.LegacyLoginSessionSettings}
-			appOrg.AuthTypes = make(map[string]model.SupportedAuthType)
+			appOrg.LoginSessionSettings = loginSessionSettings{Default: appOrg.LegacyLoginSessionSettings}
+			appOrg.AuthTypes = make(map[string]supportedAuthType)
 
 			appTypeIDs := make([]string, 0)
 			for _, supportedAppType := range appOrg.SupportedAuthTypes {
 				appTypeIDs = append(appTypeIDs, supportedAppType.AppTypeID)
-				for _, supportedAuthType := range supportedAppType.SupportedAuthTypes {
-					authType := authTypeMap[supportedAuthType.AuthTypeID]
+				for _, supportedAuthTypeID := range supportedAppType.SupportedAuthTypes {
+					authType := authTypeMap[supportedAuthTypeID.AuthTypeID]
 					authTypeCode := authType.Code
 					authTypeSuffix := utils.GetSuffix(authTypeCode, "_")
 
@@ -3711,7 +3711,7 @@ func (sa *Adapter) migrateAuthTypes() error {
 						alias = &authTypeCode
 					}
 
-					appTypeConfigs := make(map[string]interface{})
+					var atConfigs *appTypeConfigs
 					configs := map[string]interface{}{"ignore_mfa": authType.IgnoreMFA}
 					if authTypeSuffix == "phone" {
 						// store provider for phone auth types
@@ -3730,16 +3730,22 @@ func (sa *Adapter) migrateAuthTypes() error {
 						// populate appTypeConfigs if auth type uses identity provider
 						if identityProviderID, _ := authType.Params["identity_provider"].(string); identityProviderID != "" {
 							for _, appTypeID := range appTypeIDs {
-								for _, idProviderConfig := range idProviderMap[identityProviderID].Configs {
-									if appTypeID == idProviderConfig.AppTypeID {
-										appTypeConfigs[appTypeID] = idProviderConfig.Config
+								for _, config := range idProviderMap[identityProviderID].Configs {
+									if appTypeID == config.AppTypeID {
+										idProviderConfig := model.IdentityProviderConfig(config.Config)
+										if atConfigs == nil {
+											atConfigs = &appTypeConfigs{Default: idProviderConfig}
+										} else if !utils.DeepEqual(atConfigs.Default, idProviderConfig) {
+											idProviderConfig["app_type_id"] = appTypeID
+											atConfigs.Overrides = append(atConfigs.Overrides, idProviderConfig)
+										}
 										break
 									}
 								}
 							}
 						}
 					}
-					appOrg.AuthTypes[authTypeSuffix] = model.SupportedAuthType{Alias: alias, Configs: configs, AppTypeConfigs: appTypeConfigs}
+					appOrg.AuthTypes[authTypeSuffix] = supportedAuthType{Alias: alias, Configs: configs, AppTypeConfigs: atConfigs}
 				}
 			}
 

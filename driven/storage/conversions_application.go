@@ -275,13 +275,126 @@ func organizationToStorage(item *model.Organization) *organization {
 
 // ApplicationOrganization
 func applicationOrganizationToStorage(item model.ApplicationOrganization) applicationOrganization {
+	authTypes := authTypesToStorage(item.AuthTypes)
+	loginSessionSettings := loginSessionSettingsToStorage(item.LoginSessionSettings)
 	return applicationOrganization{ID: item.ID, AppID: item.Application.ID, OrgID: item.Organization.ID,
-		ServicesIDs: item.ServicesIDs, AuthTypes: item.AuthTypes, LoginSessionSettings: item.LoginSessionSettings,
+		ServicesIDs: item.ServicesIDs, AuthTypes: authTypes, LoginSessionSettings: loginSessionSettings,
 		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
 func applicationOrganizationFromStorage(item applicationOrganization, application model.Application, organization model.Organization) model.ApplicationOrganization {
+	authTypes := authTypesFromStorage(item.AuthTypes)
+	loginSessionSettings := loginSessionSettingsFromStorage(item.LoginSessionSettings)
 	return model.ApplicationOrganization{ID: item.ID, Application: application, Organization: organization,
-		ServicesIDs: item.ServicesIDs, AuthTypes: item.AuthTypes, LoginSessionSettings: item.LoginSessionSettings,
+		ServicesIDs: item.ServicesIDs, AuthTypes: authTypes, LoginSessionSettings: loginSessionSettings,
 		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+}
+
+// SupportedAuthType
+func authTypesToStorage(items map[string]model.SupportedAuthType) map[string]supportedAuthType {
+	if items == nil {
+		return nil
+	}
+
+	authTypes := make(map[string]supportedAuthType)
+	for code, supported := range items {
+		authTypes[code] = authTypeToStorage(supported)
+	}
+	return authTypes
+}
+
+func authTypeToStorage(item model.SupportedAuthType) supportedAuthType {
+	var alias *string
+	if item.Alias != nil {
+		aliasVal := *item.Alias
+		alias = &aliasVal
+	}
+
+	configs := item.Configs
+	appTypeConfigs := appTypeConfigsToStorage(item.AppTypeConfigs)
+
+	return supportedAuthType{Alias: alias, Configs: configs, AppTypeConfigs: appTypeConfigs}
+}
+
+func authTypesFromStorage(items map[string]supportedAuthType) map[string]model.SupportedAuthType {
+	if items == nil {
+		return nil
+	}
+
+	authTypes := make(map[string]model.SupportedAuthType)
+	for code, supported := range items {
+		authTypes[code] = authTypeFromStorage(supported)
+	}
+	return authTypes
+}
+
+func authTypeFromStorage(item supportedAuthType) model.SupportedAuthType {
+	var alias *string
+	if item.Alias != nil {
+		aliasVal := *item.Alias
+		alias = &aliasVal
+	}
+
+	configs := item.Configs
+	appTypeConfigs := appTypeConfigsFromStorage(item.AppTypeConfigs)
+
+	return model.SupportedAuthType{Alias: alias, Configs: configs, AppTypeConfigs: appTypeConfigs}
+}
+
+// AppTypeConfigs
+func appTypeConfigsToStorage(item *model.ApplicationOrganizationSettings) *appTypeConfigs {
+	if item == nil {
+		return nil
+	}
+
+	defaultSettings, _ := item.Default.(model.IdentityProviderConfig)
+
+	var overrideSettings []model.IdentityProviderConfig
+	if item.Overrides != nil {
+		overrideSettings = make([]model.IdentityProviderConfig, len(item.Overrides))
+	}
+	for i, override := range item.Overrides {
+		overrideSettings[i], _ = override.(model.IdentityProviderConfig)
+	}
+	return &appTypeConfigs{Default: defaultSettings, Overrides: overrideSettings}
+}
+
+func appTypeConfigsFromStorage(item *appTypeConfigs) *model.ApplicationOrganizationSettings {
+	if item == nil {
+		return nil
+	}
+
+	var overrideSettings []model.AppAuthSetting
+	if item.Overrides != nil {
+		overrideSettings = make([]model.AppAuthSetting, len(item.Overrides))
+	}
+	for i, override := range item.Overrides {
+		overrideSettings[i] = override
+	}
+	return &model.ApplicationOrganizationSettings{Default: item.Default, Overrides: overrideSettings}
+}
+
+// LoginSessionSettings
+func loginSessionSettingsToStorage(item model.ApplicationOrganizationSettings) loginSessionSettings {
+	defaultSettings, _ := item.Default.(model.LoginSessionSettings)
+
+	var overrideSettings []model.LoginSessionSettings
+	if item.Overrides != nil {
+		overrideSettings = make([]model.LoginSessionSettings, len(item.Overrides))
+	}
+	for i, override := range item.Overrides {
+		overrideSettings[i], _ = override.(model.LoginSessionSettings)
+	}
+	return loginSessionSettings{Default: defaultSettings, Overrides: overrideSettings}
+}
+
+func loginSessionSettingsFromStorage(item loginSessionSettings) model.ApplicationOrganizationSettings {
+	var overrideSettings []model.AppAuthSetting
+	if item.Overrides != nil {
+		overrideSettings = make([]model.AppAuthSetting, len(item.Overrides))
+	}
+	for i, override := range item.Overrides {
+		overrideSettings[i] = override
+	}
+	return model.ApplicationOrganizationSettings{Default: item.Default, Overrides: overrideSettings}
 }
