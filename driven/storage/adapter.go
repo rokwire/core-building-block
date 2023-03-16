@@ -92,10 +92,10 @@ func (sa *Adapter) Start() error {
 	}
 
 	//update or comment out this call after auth type migration is done
-	// err = sa.migrateAuthTypes()
-	// if err != nil {
-	// 	return errors.WrapErrorAction("migrating", "auth types", nil, err)
-	// }
+	err = sa.migrateAuthTypes()
+	if err != nil {
+		return errors.WrapErrorAction("migrating", "auth types", nil, err)
+	}
 
 	//cache the application organization
 	err = sa.cacheApplicationsOrganizations()
@@ -3694,7 +3694,11 @@ func (sa *Adapter) migrateAuthTypes() error {
 		}
 		for _, appOrg := range appOrgs {
 			// legacy login session settings are the new default settings, no overrides unless updated by system admin
-			appOrg.LoginSessionSettings = loginSessionSettings{Default: appOrg.LegacyLoginSessionSettings}
+			var defaultLoginSessionSettings model.LoginSessionSettings
+			if appOrg.LegacyLoginSessionSettings != nil {
+				defaultLoginSessionSettings = *appOrg.LegacyLoginSessionSettings
+			}
+			appOrg.LoginSessionSettings = loginSessionSettings{Default: defaultLoginSessionSettings}
 			appOrg.AuthTypes = make(map[string]supportedAuthType)
 
 			appTypeIDs := make([]string, 0)

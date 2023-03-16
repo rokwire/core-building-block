@@ -256,23 +256,11 @@ func loginSessionSettingsFromDef(item *Def.LoginSessionSettings) *model.LoginSes
 		authTypeCode = &authTypeCodeVal
 	}
 
-	var maxConcurrentSessions int
-	if item.MaxConcurrentSessions != nil {
-		maxConcurrentSessions = *item.MaxConcurrentSessions
-	}
-	inactivityExpirePolicy := model.InactivityExpirePolicy{}
-	if item.InactivityExpirePolicy != nil {
-		inactivityExpirePolicy = model.InactivityExpirePolicy{Active: item.InactivityExpirePolicy.Active, InactivityPeriod: item.InactivityExpirePolicy.InactivityPeriod}
-	}
-	tslExpirePolicy := model.TSLExpirePolicy{}
-	if item.TimeSinceLoginExpirePolicy != nil {
-		tslExpirePolicy = model.TSLExpirePolicy{Active: item.TimeSinceLoginExpirePolicy.Active, TimeSinceLoginPeriod: item.TimeSinceLoginExpirePolicy.TimeSinceLoginPeriod}
-	}
-	yearlyExpirePolicy := model.YearlyExpirePolicy{}
-	if item.YearlyExpirePolicy != nil {
-		yearlyExpirePolicy = model.YearlyExpirePolicy{Active: item.YearlyExpirePolicy.Active, Day: item.YearlyExpirePolicy.Day, Month: item.YearlyExpirePolicy.Month,
-			Hour: item.YearlyExpirePolicy.Hour, Min: item.YearlyExpirePolicy.Min}
-	}
+	maxConcurrentSessions := item.MaxConcurrentSessions
+	inactivityExpirePolicy := model.InactivityExpirePolicy{Active: item.InactivityExpirePolicy.Active, InactivityPeriod: item.InactivityExpirePolicy.InactivityPeriod}
+	tslExpirePolicy := model.TSLExpirePolicy{Active: item.TimeSinceLoginExpirePolicy.Active, TimeSinceLoginPeriod: item.TimeSinceLoginExpirePolicy.TimeSinceLoginPeriod}
+	yearlyExpirePolicy := model.YearlyExpirePolicy{Active: item.YearlyExpirePolicy.Active, Day: item.YearlyExpirePolicy.Day, Month: item.YearlyExpirePolicy.Month,
+		Hour: item.YearlyExpirePolicy.Hour, Min: item.YearlyExpirePolicy.Min}
 
 	return &model.LoginSessionSettings{AppTypeID: appTypeID, AuthTypeCode: authTypeCode, MaxConcurrentSessions: maxConcurrentSessions,
 		InactivityExpirePolicy: inactivityExpirePolicy, TSLExpirePolicy: tslExpirePolicy, YearlyExpirePolicy: yearlyExpirePolicy}
@@ -314,8 +302,8 @@ func loginSessionSettingsToDef(item *model.LoginSessionSettings) *Def.LoginSessi
 		Hour: item.YearlyExpirePolicy.Hour, Min: item.YearlyExpirePolicy.Min}
 
 	maxConcurrentSessions := item.MaxConcurrentSessions
-	return &Def.LoginSessionSettings{AppTypeId: appTypeID, AuthTypeCode: authTypeCode, MaxConcurrentSessions: &maxConcurrentSessions,
-		InactivityExpirePolicy: &inactivityExpirePolicy, TimeSinceLoginExpirePolicy: &tslExpirePolicy, YearlyExpirePolicy: &yearlyExpirePolicy}
+	return &Def.LoginSessionSettings{AppTypeId: appTypeID, AuthTypeCode: authTypeCode, MaxConcurrentSessions: maxConcurrentSessions,
+		InactivityExpirePolicy: inactivityExpirePolicy, TimeSinceLoginExpirePolicy: tslExpirePolicy, YearlyExpirePolicy: yearlyExpirePolicy}
 }
 
 func supportedAuthTypesFromDef(items *map[string]Def.SupportedAuthType) map[string]model.SupportedAuthType {

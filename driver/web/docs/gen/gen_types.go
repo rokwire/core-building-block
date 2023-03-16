@@ -473,12 +473,12 @@ type LoginSession struct {
 
 // LoginSessionSettings defines model for LoginSessionSettings.
 type LoginSessionSettings struct {
-	AppTypeId                  *string               `json:"app_type_id"`
-	AuthTypeCode               *string               `json:"auth_type_code"`
-	InactivityExpirePolicy     *InactiveExpirePolicy `json:"inactivity_expire_policy,omitempty"`
-	MaxConcurrentSessions      *int                  `json:"max_concurrent_sessions,omitempty"`
-	TimeSinceLoginExpirePolicy *TSLExpirePolicy      `json:"time_since_login_expire_policy,omitempty"`
-	YearlyExpirePolicy         *YearlyExpirePolicy   `json:"yearly_expire_policy,omitempty"`
+	AppTypeId                  *string              `json:"app_type_id"`
+	AuthTypeCode               *string              `json:"auth_type_code"`
+	InactivityExpirePolicy     InactiveExpirePolicy `json:"inactivity_expire_policy"`
+	MaxConcurrentSessions      int                  `json:"max_concurrent_sessions"`
+	TimeSinceLoginExpirePolicy TSLExpirePolicy      `json:"time_since_login_expire_policy"`
+	YearlyExpirePolicy         YearlyExpirePolicy   `json:"yearly_expire_policy"`
 }
 
 // OIDCDiscovery OpenID Connect Discovery Metadata

@@ -96,9 +96,11 @@ func (app *application) sysCreateApplicationOrganization(appOrg model.Applicatio
 
 	// validate app type IDs
 	for _, authType := range appOrg.AuthTypes {
-		for _, config := range authType.AppTypeConfigs.Overrides {
-			if appTypeID := config.GetAppTypeID(); appTypeID == nil || application.FindApplicationType(*appTypeID) == nil {
-				return errors.ErrorData(logutils.StatusInvalid, model.TypeApplicationType, &logutils.FieldArgs{"id": utils.GetPrintableString(appTypeID, "")})
+		if authType.AppTypeConfigs != nil {
+			for _, config := range authType.AppTypeConfigs.Overrides {
+				if appTypeID := config.GetAppTypeID(); appTypeID == nil || application.FindApplicationType(*appTypeID) == nil {
+					return errors.ErrorData(logutils.StatusInvalid, model.TypeApplicationType, &logutils.FieldArgs{"id": utils.GetPrintableString(appTypeID, "")})
+				}
 			}
 		}
 	}
@@ -143,9 +145,11 @@ func (app *application) sysUpdateApplicationOrganization(appOrg model.Applicatio
 
 	// validate app type IDs
 	for _, authType := range appOrg.AuthTypes {
-		for _, config := range authType.AppTypeConfigs.Overrides {
-			if appTypeID := config.GetAppTypeID(); appTypeID == nil || application.FindApplicationType(*appTypeID) == nil {
-				return errors.ErrorData(logutils.StatusInvalid, model.TypeApplicationType, &logutils.FieldArgs{"id": utils.GetPrintableString(appTypeID, "")})
+		if authType.AppTypeConfigs != nil {
+			for _, config := range authType.AppTypeConfigs.Overrides {
+				if appTypeID := config.GetAppTypeID(); appTypeID == nil || application.FindApplicationType(*appTypeID) == nil {
+					return errors.ErrorData(logutils.StatusInvalid, model.TypeApplicationType, &logutils.FieldArgs{"id": utils.GetPrintableString(appTypeID, "")})
+				}
 			}
 		}
 	}

@@ -96,7 +96,7 @@ type applicationOrganization struct {
 	// DEPRECATED
 	SupportedAuthTypes []authTypesSupport `bson:"supported_auth_types,omitempty"`
 	// DEPRECATED
-	LegacyLoginSessionSettings model.LoginSessionSettings `bson:"logins_sessions_settings,omitempty"`
+	LegacyLoginSessionSettings *model.LoginSessionSettings `bson:"logins_sessions_settings,omitempty"`
 }
 
 type supportedAuthType struct {

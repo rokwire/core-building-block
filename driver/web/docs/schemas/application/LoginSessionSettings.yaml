@@ -1,3 +1,8 @@
+required:
+  - max_concurrent_sessions
+  - inactivity_expire_policy
+  - time_since_login_expire_policy
+  - yearly_expire_policy
 type: object
 properties:
   app_type_id:
