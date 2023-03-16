@@ -189,7 +189,11 @@ func appOrgToDef(item *model.ApplicationOrganization) *Def.ApplicationOrganizati
 
 	defaultSettingsVal, _ := item.LoginSessionSettings.Default.(model.LoginSessionSettings)
 	defaultSettings := loginSessionSettingsToDef(&defaultSettingsVal)
-	defaultSettingsDef, _ := utils.Convert[Def.ApplicationOrganizationSettings_Default](defaultSettings)
+	defaultAppOrgSettings, _ := utils.Convert[Def.ApplicationOrganizationSettings_Default](defaultSettings)
+	defaultAppOrgSettingsVal := Def.ApplicationOrganizationSettings_Default{}
+	if defaultAppOrgSettings != nil {
+		defaultAppOrgSettingsVal = *defaultAppOrgSettings
+	}
 
 	overrideSettingsVal := make([]model.LoginSessionSettings, len(item.LoginSessionSettings.Overrides))
 	for i, override := range item.LoginSessionSettings.Overrides {
@@ -199,7 +203,7 @@ func appOrgToDef(item *model.ApplicationOrganization) *Def.ApplicationOrganizati
 	overrideSettingsDef, _ := utils.Convert[[]Def.ApplicationOrganizationSettings_Overrides_Item](overrideSettings)
 
 	loginSessionSettings := Def.ApplicationOrganizationSettings{
-		Default:   defaultSettingsDef,
+		Default:   defaultAppOrgSettingsVal,
 		Overrides: overrideSettingsDef,
 	}
 
@@ -377,11 +381,15 @@ func supportedAuthTypeToDef(item model.SupportedAuthType) Def.SupportedAuthType 
 	if item.AppTypeConfigs != nil {
 		defaultSettingsVal, _ := item.AppTypeConfigs.Default.(model.IdentityProviderConfig)
 		defaultSettings, _ := utils.Convert[Def.ApplicationOrganizationSettings_Default](defaultSettingsVal)
+		defaultAppOrgSettings := Def.ApplicationOrganizationSettings_Default{}
+		if defaultSettings != nil {
+			defaultAppOrgSettings = *defaultSettings
+		}
 
 		overrideSettings, _ := utils.Convert[[]Def.ApplicationOrganizationSettings_Overrides_Item](item.AppTypeConfigs.Overrides)
 
 		appTypeConfigs = &Def.ApplicationOrganizationSettings{
-			Default:   defaultSettings,
+			Default:   defaultAppOrgSettings,
 			Overrides: overrideSettings,
 		}
 	}

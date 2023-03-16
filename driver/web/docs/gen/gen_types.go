@@ -283,12 +283,22 @@ type ApplicationOrganization struct {
 
 // ApplicationOrganizationSettings defines model for ApplicationOrganizationSettings.
 type ApplicationOrganizationSettings struct {
-	Default   *ApplicationOrganizationSettings_Default          `json:"default,omitempty"`
-	Overrides *[]ApplicationOrganizationSettings_Overrides_Item `json:"overrides,omitempty"`
+	Default   ApplicationOrganizationSettings_Default           `json:"default"`
+	Overrides *[]ApplicationOrganizationSettings_Overrides_Item `json:"overrides"`
+}
+
+// ApplicationOrganizationSettingsDefault1 defines model for .
+type ApplicationOrganizationSettingsDefault1 struct {
+	union json.RawMessage
 }
 
 // ApplicationOrganizationSettings_Default defines model for ApplicationOrganizationSettings.Default.
 type ApplicationOrganizationSettings_Default struct {
+	union json.RawMessage
+}
+
+// ApplicationOrganizationSettingsOverrides1 defines model for .
+type ApplicationOrganizationSettingsOverrides1 struct {
 	union json.RawMessage
 }
 
@@ -303,6 +313,21 @@ type ApplicationType struct {
 	Identifier string    `json:"identifier"`
 	Name       *string   `json:"name,omitempty"`
 	Versions   *[]string `json:"versions,omitempty"`
+}
+
+// AuthConfigOAuth2 defines model for AuthConfigOAuth2.
+type AuthConfigOAuth2 struct {
+	AllowSignup  *bool   `json:"allow_signup,omitempty"`
+	AppTypeId    *string `json:"app_type_id"`
+	AuthorizeUrl *string `json:"authorize_url,omitempty"`
+	ClientId     string  `json:"client_id"`
+	ClientSecret string  `json:"client_secret"`
+	Host         string  `json:"host"`
+	Scopes       *string `json:"scopes,omitempty"`
+	TokenUrl     *string `json:"token_url,omitempty"`
+	UseRefresh   *bool   `json:"use_refresh,omitempty"`
+	UseState     *bool   `json:"use_state,omitempty"`
+	UserinfoUrl  *string `json:"userinfo_url,omitempty"`
 }
 
 // AuthConfigOidc defines model for AuthConfigOidc.
@@ -320,6 +345,7 @@ type AuthConfigOidc struct {
 	TokenUrl            *string            `json:"token_url,omitempty"`
 	UsePkce             *bool              `json:"use_pkce,omitempty"`
 	UseRefresh          *bool              `json:"use_refresh,omitempty"`
+	UseState            *bool              `json:"use_state,omitempty"`
 	UserinfoUrl         *string            `json:"userinfo_url,omitempty"`
 }
 
@@ -333,8 +359,8 @@ type AuthServiceReg struct {
 
 // AuthSettings defines model for AuthSettings.
 type AuthSettings struct {
-	IgnoreMfa *string `json:"ignore_mfa,omitempty"`
-	Provider  *string `json:"provider,omitempty"`
+	IgnoreMfa *bool   `json:"ignore_mfa"`
+	Provider  *string `json:"provider"`
 }
 
 // Device defines model for Device.
@@ -1729,6 +1755,68 @@ type PostTpsAccountsCountJSONRequestBody = PostTpsAccountsCountJSONBody
 // PostTpsServiceAccountIdJSONRequestBody defines body for PostTpsServiceAccountId for application/json ContentType.
 type PostTpsServiceAccountIdJSONRequestBody = ServicesReqServiceAccountsParams
 
+// AsAuthConfigOidc returns the union data inside the ApplicationOrganizationSettingsDefault1 as a AuthConfigOidc
+func (t ApplicationOrganizationSettingsDefault1) AsAuthConfigOidc() (AuthConfigOidc, error) {
+	var body AuthConfigOidc
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromAuthConfigOidc overwrites any union data inside the ApplicationOrganizationSettingsDefault1 as the provided AuthConfigOidc
+func (t *ApplicationOrganizationSettingsDefault1) FromAuthConfigOidc(v AuthConfigOidc) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeAuthConfigOidc performs a merge with any union data inside the ApplicationOrganizationSettingsDefault1, using the provided AuthConfigOidc
+func (t *ApplicationOrganizationSettingsDefault1) MergeAuthConfigOidc(v AuthConfigOidc) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(b, t.union)
+	t.union = merged
+	return err
+}
+
+// AsAuthConfigOAuth2 returns the union data inside the ApplicationOrganizationSettingsDefault1 as a AuthConfigOAuth2
+func (t ApplicationOrganizationSettingsDefault1) AsAuthConfigOAuth2() (AuthConfigOAuth2, error) {
+	var body AuthConfigOAuth2
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromAuthConfigOAuth2 overwrites any union data inside the ApplicationOrganizationSettingsDefault1 as the provided AuthConfigOAuth2
+func (t *ApplicationOrganizationSettingsDefault1) FromAuthConfigOAuth2(v AuthConfigOAuth2) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeAuthConfigOAuth2 performs a merge with any union data inside the ApplicationOrganizationSettingsDefault1, using the provided AuthConfigOAuth2
+func (t *ApplicationOrganizationSettingsDefault1) MergeAuthConfigOAuth2(v AuthConfigOAuth2) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(b, t.union)
+	t.union = merged
+	return err
+}
+
+func (t ApplicationOrganizationSettingsDefault1) MarshalJSON() ([]byte, error) {
+	b, err := t.union.MarshalJSON()
+	return b, err
+}
+
+func (t *ApplicationOrganizationSettingsDefault1) UnmarshalJSON(b []byte) error {
+	err := t.union.UnmarshalJSON(b)
+	return err
+}
+
 // AsLoginSessionSettings returns the union data inside the ApplicationOrganizationSettings_Default as a LoginSessionSettings
 func (t ApplicationOrganizationSettings_Default) AsLoginSessionSettings() (LoginSessionSettings, error) {
 	var body LoginSessionSettings
@@ -1755,22 +1843,22 @@ func (t *ApplicationOrganizationSettings_Default) MergeLoginSessionSettings(v Lo
 	return err
 }
 
-// AsAuthConfigOidc returns the union data inside the ApplicationOrganizationSettings_Default as a AuthConfigOidc
-func (t ApplicationOrganizationSettings_Default) AsAuthConfigOidc() (AuthConfigOidc, error) {
-	var body AuthConfigOidc
+// AsApplicationOrganizationSettingsDefault1 returns the union data inside the ApplicationOrganizationSettings_Default as a ApplicationOrganizationSettingsDefault1
+func (t ApplicationOrganizationSettings_Default) AsApplicationOrganizationSettingsDefault1() (ApplicationOrganizationSettingsDefault1, error) {
+	var body ApplicationOrganizationSettingsDefault1
 	err := json.Unmarshal(t.union, &body)
 	return body, err
 }
 
-// FromAuthConfigOidc overwrites any union data inside the ApplicationOrganizationSettings_Default as the provided AuthConfigOidc
-func (t *ApplicationOrganizationSettings_Default) FromAuthConfigOidc(v AuthConfigOidc) error {
+// FromApplicationOrganizationSettingsDefault1 overwrites any union data inside the ApplicationOrganizationSettings_Default as the provided ApplicationOrganizationSettingsDefault1
+func (t *ApplicationOrganizationSettings_Default) FromApplicationOrganizationSettingsDefault1(v ApplicationOrganizationSettingsDefault1) error {
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
 }
 
-// MergeAuthConfigOidc performs a merge with any union data inside the ApplicationOrganizationSettings_Default, using the provided AuthConfigOidc
-func (t *ApplicationOrganizationSettings_Default) MergeAuthConfigOidc(v AuthConfigOidc) error {
+// MergeApplicationOrganizationSettingsDefault1 performs a merge with any union data inside the ApplicationOrganizationSettings_Default, using the provided ApplicationOrganizationSettingsDefault1
+func (t *ApplicationOrganizationSettings_Default) MergeApplicationOrganizationSettingsDefault1(v ApplicationOrganizationSettingsDefault1) error {
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -1787,6 +1875,68 @@ func (t ApplicationOrganizationSettings_Default) MarshalJSON() ([]byte, error) {
 }
 
 func (t *ApplicationOrganizationSettings_Default) UnmarshalJSON(b []byte) error {
+	err := t.union.UnmarshalJSON(b)
+	return err
+}
+
+// AsAuthConfigOidc returns the union data inside the ApplicationOrganizationSettingsOverrides1 as a AuthConfigOidc
+func (t ApplicationOrganizationSettingsOverrides1) AsAuthConfigOidc() (AuthConfigOidc, error) {
+	var body AuthConfigOidc
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromAuthConfigOidc overwrites any union data inside the ApplicationOrganizationSettingsOverrides1 as the provided AuthConfigOidc
+func (t *ApplicationOrganizationSettingsOverrides1) FromAuthConfigOidc(v AuthConfigOidc) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeAuthConfigOidc performs a merge with any union data inside the ApplicationOrganizationSettingsOverrides1, using the provided AuthConfigOidc
+func (t *ApplicationOrganizationSettingsOverrides1) MergeAuthConfigOidc(v AuthConfigOidc) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(b, t.union)
+	t.union = merged
+	return err
+}
+
+// AsAuthConfigOAuth2 returns the union data inside the ApplicationOrganizationSettingsOverrides1 as a AuthConfigOAuth2
+func (t ApplicationOrganizationSettingsOverrides1) AsAuthConfigOAuth2() (AuthConfigOAuth2, error) {
+	var body AuthConfigOAuth2
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromAuthConfigOAuth2 overwrites any union data inside the ApplicationOrganizationSettingsOverrides1 as the provided AuthConfigOAuth2
+func (t *ApplicationOrganizationSettingsOverrides1) FromAuthConfigOAuth2(v AuthConfigOAuth2) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeAuthConfigOAuth2 performs a merge with any union data inside the ApplicationOrganizationSettingsOverrides1, using the provided AuthConfigOAuth2
+func (t *ApplicationOrganizationSettingsOverrides1) MergeAuthConfigOAuth2(v AuthConfigOAuth2) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(b, t.union)
+	t.union = merged
+	return err
+}
+
+func (t ApplicationOrganizationSettingsOverrides1) MarshalJSON() ([]byte, error) {
+	b, err := t.union.MarshalJSON()
+	return b, err
+}
+
+func (t *ApplicationOrganizationSettingsOverrides1) UnmarshalJSON(b []byte) error {
 	err := t.union.UnmarshalJSON(b)
 	return err
 }
@@ -1817,22 +1967,22 @@ func (t *ApplicationOrganizationSettings_Overrides_Item) MergeLoginSessionSettin
 	return err
 }
 
-// AsAuthConfigOidc returns the union data inside the ApplicationOrganizationSettings_Overrides_Item as a AuthConfigOidc
-func (t ApplicationOrganizationSettings_Overrides_Item) AsAuthConfigOidc() (AuthConfigOidc, error) {
-	var body AuthConfigOidc
+// AsApplicationOrganizationSettingsOverrides1 returns the union data inside the ApplicationOrganizationSettings_Overrides_Item as a ApplicationOrganizationSettingsOverrides1
+func (t ApplicationOrganizationSettings_Overrides_Item) AsApplicationOrganizationSettingsOverrides1() (ApplicationOrganizationSettingsOverrides1, error) {
+	var body ApplicationOrganizationSettingsOverrides1
 	err := json.Unmarshal(t.union, &body)
 	return body, err
 }
 
-// FromAuthConfigOidc overwrites any union data inside the ApplicationOrganizationSettings_Overrides_Item as the provided AuthConfigOidc
-func (t *ApplicationOrganizationSettings_Overrides_Item) FromAuthConfigOidc(v AuthConfigOidc) error {
+// FromApplicationOrganizationSettingsOverrides1 overwrites any union data inside the ApplicationOrganizationSettings_Overrides_Item as the provided ApplicationOrganizationSettingsOverrides1
+func (t *ApplicationOrganizationSettings_Overrides_Item) FromApplicationOrganizationSettingsOverrides1(v ApplicationOrganizationSettingsOverrides1) error {
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
 }
 
-// MergeAuthConfigOidc performs a merge with any union data inside the ApplicationOrganizationSettings_Overrides_Item, using the provided AuthConfigOidc
-func (t *ApplicationOrganizationSettings_Overrides_Item) MergeAuthConfigOidc(v AuthConfigOidc) error {
+// MergeApplicationOrganizationSettingsOverrides1 performs a merge with any union data inside the ApplicationOrganizationSettings_Overrides_Item, using the provided ApplicationOrganizationSettingsOverrides1
+func (t *ApplicationOrganizationSettings_Overrides_Item) MergeApplicationOrganizationSettingsOverrides1(v ApplicationOrganizationSettingsOverrides1) error {
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err

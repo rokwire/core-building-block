@@ -21,6 +21,8 @@ properties:
     type: boolean
   use_pkce:
     type: boolean
+  use_state:
+    type: boolean
   client_id:
     type: string
   client_secret:

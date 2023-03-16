@@ -5,7 +5,7 @@ properties:
     nullable: true
     anyOf:
       - $ref: "./IdentityProviderSettings.yaml"
-      - $ref: "./AuthSettings.yaml"
+      - $ref: "../auth/AuthSettings.yaml"
   app_type_configs:
     $ref: "./ApplicationOrganizationSettings.yaml"
   alias:
