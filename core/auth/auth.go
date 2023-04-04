@@ -16,7 +16,6 @@ package auth
 
 import (
 	"core-building-block/core/model"
-	"core-building-block/driven/profilebb"
 	"core-building-block/driven/storage"
 	"core-building-block/utils"
 	"encoding/json"
@@ -94,7 +93,8 @@ type Auth struct {
 	minTokenExp int64  //Minimum access token expiration time in minutes
 	maxTokenExp int64  //Maximum access token expiration time in minutes
 
-	profileBB ProfileBuildingBlock
+	profileBB  ProfileBuildingBlock
+	identityBB IdentityBuildingBlock
 
 	emailFrom   string
 	emailDialer *gomail.Dialer
@@ -112,7 +112,7 @@ type Auth struct {
 
 // NewAuth creates a new auth instance
 func NewAuth(serviceID string, host string, authPrivKey *keys.PrivKey, storage Storage, emailer Emailer, minTokenExp *int64, maxTokenExp *int64, supportLegacySigs bool, twilioAccountSID string,
-	twilioToken string, twilioServiceSID string, profileBB *profilebb.Adapter, smtpHost string, smtpPortNum int, smtpUser string, smtpPassword string, smtpFrom string, logger *logs.Logger) (*Auth, error) {
+	twilioToken string, twilioServiceSID string, profileBB ProfileBuildingBlock, identityBB IdentityBuildingBlock, smtpHost string, smtpPortNum int, smtpUser string, smtpPassword string, smtpFrom string, logger *logs.Logger) (*Auth, error) {
 	if minTokenExp == nil {
 		var minTokenExpVal int64 = 5
 		minTokenExp = &minTokenExpVal
@@ -141,7 +141,7 @@ func NewAuth(serviceID string, host string, authPrivKey *keys.PrivKey, storage S
 
 	auth := &Auth{storage: storage, emailer: emailer, logger: logger, authTypes: authTypes, externalAuthTypes: externalAuthTypes, anonymousAuthTypes: anonymousAuthTypes,
 		serviceAuthTypes: serviceAuthTypes, mfaTypes: mfaTypes, authPrivKey: authPrivKey, ServiceRegManager: nil, serviceID: serviceID, host: host, minTokenExp: *minTokenExp,
-		maxTokenExp: *maxTokenExp, profileBB: profileBB, cachedIdentityProviders: cachedIdentityProviders, identityProvidersLock: identityProvidersLock,
+		maxTokenExp: *maxTokenExp, profileBB: profileBB, identityBB: identityBB, cachedIdentityProviders: cachedIdentityProviders, identityProvidersLock: identityProvidersLock,
 		timerDone: timerDone, emailDialer: emailDialer, emailFrom: smtpFrom, apiKeys: apiKeys, apiKeysLock: apiKeysLock}
 
 	err := auth.storeReg()
@@ -219,7 +219,7 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 
 	//1. get the user from the external system
 	//var externalUser *model.ExternalSystemUser
-	externalUser, extParams, err := authImpl.externalLogin(authType, appType, appOrg, creds, params, l)
+	externalUser, extParams, externalCreds, err := authImpl.externalLogin(authType, appType, appOrg, creds, params, l)
 	if err != nil {
 		return nil, nil, nil, nil, errors.WrapErrorAction("logging in", "external user", nil, err)
 	}
@@ -234,7 +234,7 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 	canSignIn := a.canSignIn(account, authType.ID, externalUser.Identifier)
 	if canSignIn {
 		//account exists
-		accountAuthType, err = a.applySignInExternal(account, authType, appOrg, *externalUser, l)
+		accountAuthType, err = a.applySignInExternal(account, authType, appOrg, *externalUser, externalCreds, l)
 		if err != nil {
 			return nil, nil, nil, nil, errors.WrapErrorAction(logutils.ActionApply, "external sign in", nil, err)
 		}
@@ -242,7 +242,7 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 		externalIDs = account.ExternalIDs
 	} else if !admin {
 		//user does not exist, we need to register it
-		accountAuthType, err = a.applySignUpExternal(nil, authType, appOrg, *externalUser, regProfile, regPreferences, username, clientVersion, l)
+		accountAuthType, err = a.applySignUpExternal(nil, authType, appOrg, *externalUser, externalCreds, regProfile, regPreferences, username, clientVersion, l)
 		if err != nil {
 			return nil, nil, nil, nil, errors.WrapErrorAction(logutils.ActionApply, "external sign up", nil, err)
 		}
@@ -256,7 +256,7 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 }
 
 func (a *Auth) applySignInExternal(account *model.Account, authType model.AuthType, appOrg model.ApplicationOrganization,
-	externalUser model.ExternalSystemUser, l *logs.Log) (*model.AccountAuthType, error) {
+	externalUser model.ExternalSystemUser, externalCreds string, l *logs.Log) (*model.AccountAuthType, error) {
 	var accountAuthType *model.AccountAuthType
 	var err error
 
@@ -267,7 +267,7 @@ func (a *Auth) applySignInExternal(account *model.Account, authType model.AuthTy
 	}
 
 	//check if need to update the account data
-	newAccount, err := a.updateExternalUserIfNeeded(*accountAuthType, externalUser, authType, appOrg, l)
+	newAccount, err := a.updateExternalUserIfNeeded(*accountAuthType, externalUser, authType, appOrg, externalCreds, l)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeExternalSystemUser, nil, err)
 	}
@@ -288,7 +288,7 @@ func (a *Auth) applySignInExternal(account *model.Account, authType model.AuthTy
 }
 
 func (a *Auth) applySignUpExternal(context storage.TransactionContext, authType model.AuthType, appOrg model.ApplicationOrganization, externalUser model.ExternalSystemUser,
-	regProfile model.Profile, regPreferences map[string]interface{}, username string, clientVersion *string, l *logs.Log) (*model.AccountAuthType, error) {
+	externalCreds string, regProfile model.Profile, regPreferences map[string]interface{}, username string, clientVersion *string, l *logs.Log) (*model.AccountAuthType, error) {
 	var accountAuthType *model.AccountAuthType
 
 	//1. prepare external admin user data
@@ -297,13 +297,6 @@ func (a *Auth) applySignUpExternal(context storage.TransactionContext, authType 
 		return nil, errors.WrapErrorAction(logutils.ActionPrepare, "external admin user data", nil, err)
 	}
 
-	//2. apply profile data from the external user if not provided
-	_, err = a.applyProfileDataFromExternalUser(profile, externalUser, nil, false, l)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionApply, "profile data from external user", nil, err)
-	}
-
-	//3. roles and groups mapping
 	identityProviderID, ok := authType.Params["identity_provider"].(string)
 	if !ok {
 		return nil, errors.ErrorData(logutils.StatusMissing, "identity provider id", nil)
@@ -313,6 +306,24 @@ func (a *Auth) applySignUpExternal(context storage.TransactionContext, authType 
 		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeIdentityProviderSetting, nil)
 	}
 
+	var identityBBProfile *model.Profile
+	if identityProviderSetting.IdentityBBBaseURL != "" {
+		identityBBProfile, err = a.identityBB.GetUserProfile(identityProviderSetting.IdentityBBBaseURL, externalUser, externalCreds, l)
+		if err != nil {
+			l.WarnError(logutils.MessageAction(logutils.StatusError, "syncing", "identity bb data", nil), err)
+		}
+	}
+
+	//2. apply profile data from the external user if not provided
+	newProfile, err := a.applyProfileDataFromExternalUser(*profile, externalUser, nil, identityBBProfile, false, l)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionApply, "profile data from external user", nil, err)
+	}
+	if newProfile != nil {
+		profile = newProfile
+	}
+
+	//3. roles and groups mapping
 	externalRoles, externalGroups, err := a.getExternalUserAuthorization(externalUser, identityProviderSetting)
 	if err != nil {
 		l.WarnError(logutils.MessageActionError(logutils.ActionGet, "external authorization", nil), err)
@@ -403,37 +414,39 @@ func (a *Auth) prepareExternalUserData(authType model.AuthType, appOrg model.App
 	return externalUser.Identifier, params, useSharedProfile, &profile, preferences, nil
 }
 
-func (a *Auth) applyProfileDataFromExternalUser(profile *model.Profile, newExternalUser model.ExternalSystemUser,
-	currentExternalUser *model.ExternalSystemUser, alwaysSync bool, l *logs.Log) (bool, error) {
-	if profile == nil {
-		return false, errors.ErrorData(logutils.StatusMissing, model.TypeProfile, nil)
+func (a *Auth) applyProfileDataFromExternalUser(profile model.Profile, newExternalUser model.ExternalSystemUser,
+	currentExternalUser *model.ExternalSystemUser, identityBBProfile *model.Profile, alwaysSync bool, l *logs.Log) (*model.Profile, error) {
+	newProfile := profile
+	if identityBBProfile != nil {
+		newProfile.Merge(*identityBBProfile)
+		alwaysSync = true // External auth system data should always override identity bb data
 	}
 
-	changed := false
 	//first name
 	if len(newExternalUser.FirstName) > 0 && (alwaysSync || len(profile.FirstName) == 0 || (currentExternalUser != nil && currentExternalUser.FirstName != newExternalUser.FirstName)) {
-		changed = changed || (profile.FirstName != newExternalUser.FirstName)
-		profile.FirstName = newExternalUser.FirstName
+		newProfile.FirstName = newExternalUser.FirstName
 	}
 	//last name
 	if len(newExternalUser.LastName) > 0 && (alwaysSync || len(profile.LastName) == 0 || (currentExternalUser != nil && currentExternalUser.LastName != newExternalUser.LastName)) {
-		changed = changed || (profile.LastName != newExternalUser.LastName)
-		profile.LastName = newExternalUser.LastName
+		newProfile.LastName = newExternalUser.LastName
 	}
 	//email
 	if len(newExternalUser.Email) > 0 && (alwaysSync || len(profile.Email) == 0 || (currentExternalUser != nil && currentExternalUser.Email != newExternalUser.Email)) {
-		changed = changed || (profile.Email != newExternalUser.Email)
-		profile.Email = newExternalUser.Email
+		newProfile.Email = newExternalUser.Email
 	}
+
+	changed := utils.DeepEqual(profile, newProfile)
 	if changed {
 		now := time.Now()
-		profile.DateUpdated = &now
+		newProfile.DateUpdated = &now
+		return &newProfile, nil
 	}
-	return changed, nil
+
+	return nil, nil
 }
 
 func (a *Auth) updateExternalUserIfNeeded(accountAuthType model.AccountAuthType, externalUser model.ExternalSystemUser,
-	authType model.AuthType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.Account, error) {
+	authType model.AuthType, appOrg model.ApplicationOrganization, externalCreds string, l *logs.Log) (*model.Account, error) {
 	l.Info("updateExternalUserIfNeeded")
 
 	//get the current external user
@@ -457,11 +470,19 @@ func (a *Auth) updateExternalUserIfNeeded(accountAuthType model.AccountAuthType,
 		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeIdentityProviderSetting, nil)
 	}
 
+	var identityBBProfile *model.Profile
+	if identityProviderSetting.IdentityBBBaseURL != "" {
+		identityBBProfile, err = a.identityBB.GetUserProfile(identityProviderSetting.IdentityBBBaseURL, externalUser, externalCreds, l)
+		if err != nil {
+			l.WarnError(logutils.MessageAction(logutils.StatusError, "syncing", "identity bb data", nil), err)
+		}
+	}
+
 	//check if external system user needs to be updated
 	var newAccount *model.Account
 	//there is changes so we need to update it
 	//TODO: Can we do this all in a single storage operation?
-	updated := !currentData.Equals(externalUser)
+	updatedExternalUser := !currentData.Equals(externalUser)
 	accountAuthType.Params["user"] = externalUser
 	now := time.Now()
 	accountAuthType.DateUpdated = &now
@@ -493,15 +514,21 @@ func (a *Auth) updateExternalUserIfNeeded(accountAuthType model.AccountAuthType,
 				account.ExternalIDs = make(map[string]string)
 			}
 			if account.ExternalIDs[k] != v {
-				updated = true
+				updatedExternalUser = true
 				account.ExternalIDs[k] = v
 			}
 		}
 
 		// 4. update profile
-		profileUpdated, err := a.applyProfileDataFromExternalUser(&account.Profile, externalUser, currentData, identityProviderSetting.AlwaysSyncProfile, l)
+		profileUpdated := false
+		newProfile, err := a.applyProfileDataFromExternalUser(account.Profile, externalUser, currentData, identityBBProfile,
+			identityProviderSetting.AlwaysSyncProfile, l)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeProfile, nil, err)
+		}
+		if newProfile != nil {
+			account.Profile = *newProfile
+			profileUpdated = true
 		}
 
 		// 5. update roles and groups mapping
@@ -519,7 +546,7 @@ func (a *Auth) updateExternalUserIfNeeded(accountAuthType model.AccountAuthType,
 		}
 
 		// 6. update account if needed
-		if updated || profileUpdated || rolesUpdated || groupsUpdated {
+		if updatedExternalUser || profileUpdated || rolesUpdated || groupsUpdated {
 			err = a.storage.SaveAccount(context, account)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionSave, model.TypeAccount, nil, err)
@@ -1626,7 +1653,7 @@ func (a *Auth) linkAccountAuthTypeExternal(account model.Account, authType model
 		return nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeAuthType, nil, err)
 	}
 
-	externalUser, _, err := authImpl.externalLogin(authType, appType, appOrg, creds, params, l)
+	externalUser, _, _, err := authImpl.externalLogin(authType, appType, appOrg, creds, params, l)
 	if err != nil {
 		return nil, errors.WrapErrorAction("logging in", "external user", nil, err)
 	}
