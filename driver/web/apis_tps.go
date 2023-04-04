@@ -25,9 +25,9 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
-	"github.com/rokwire/core-auth-library-go/v2/authorization"
-	"github.com/rokwire/core-auth-library-go/v2/sigauth"
-	"github.com/rokwire/core-auth-library-go/v2/tokenauth"
+	"github.com/rokwire/core-auth-library-go/v3/authorization"
+	"github.com/rokwire/core-auth-library-go/v3/sigauth"
+	"github.com/rokwire/core-auth-library-go/v3/tokenauth"
 	"github.com/rokwire/logging-library-go/v2/errors"
 	"github.com/rokwire/logging-library-go/v2/logs"
 	"github.com/rokwire/logging-library-go/v2/logutils"
@@ -58,12 +58,12 @@ func (h TPSApisHandler) getServiceRegistrations(l *logs.Log, r *http.Request, cl
 }
 
 func (h TPSApisHandler) getAuthKeys(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	keys, err := h.coreAPIs.Auth.GetAuthKeySet()
+	keySet, err := h.coreAPIs.Auth.GetAuthKeySet()
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionGet, model.TypeJSONWebKeySet, logutils.StringArgs("auth"), err, http.StatusInternalServerError, true)
 	}
 
-	keysResp := jsonWebKeySetDef(keys)
+	keysResp := jsonWebKeySetDef(keySet)
 
 	data, err := json.Marshal(keysResp)
 	if err != nil {

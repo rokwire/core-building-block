@@ -19,7 +19,6 @@ import (
 	"core-building-block/driven/profilebb"
 	"core-building-block/driven/storage"
 	"core-building-block/utils"
-	"crypto/rsa"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -28,11 +27,12 @@ import (
 
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
-	"github.com/rokwire/core-auth-library-go/v2/authorization"
-	"github.com/rokwire/core-auth-library-go/v2/authservice"
-	"github.com/rokwire/core-auth-library-go/v2/authutils"
-	"github.com/rokwire/core-auth-library-go/v2/sigauth"
-	"github.com/rokwire/core-auth-library-go/v2/tokenauth"
+	"github.com/rokwire/core-auth-library-go/v3/authorization"
+	"github.com/rokwire/core-auth-library-go/v3/authservice"
+	"github.com/rokwire/core-auth-library-go/v3/authutils"
+	"github.com/rokwire/core-auth-library-go/v3/keys"
+	"github.com/rokwire/core-auth-library-go/v3/sigauth"
+	"github.com/rokwire/core-auth-library-go/v3/tokenauth"
 	"golang.org/x/sync/syncmap"
 	"gopkg.in/go-playground/validator.v9"
 	"gopkg.in/gomail.v2"
@@ -84,7 +84,7 @@ type Auth struct {
 	serviceAuthTypes   map[string]serviceAuthType
 	mfaTypes           map[string]mfaType
 
-	authPrivKey *rsa.PrivateKey
+	authPrivKey *keys.PrivKey
 
 	ServiceRegManager *authservice.ServiceRegManager
 	SignatureAuth     *sigauth.SignatureAuth
@@ -111,7 +111,7 @@ type Auth struct {
 }
 
 // NewAuth creates a new auth instance
-func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage Storage, emailer Emailer, minTokenExp *int64, maxTokenExp *int64, twilioAccountSID string,
+func NewAuth(serviceID string, host string, authPrivKey *keys.PrivKey, storage Storage, emailer Emailer, minTokenExp *int64, maxTokenExp *int64, supportLegacySigs bool, twilioAccountSID string,
 	twilioToken string, twilioServiceSID string, profileBB *profilebb.Adapter, smtpHost string, smtpPortNum int, smtpUser string, smtpPassword string, smtpFrom string, logger *logs.Logger) (*Auth, error) {
 	if minTokenExp == nil {
 		var minTokenExpVal int64 = 5
@@ -165,7 +165,7 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 
 	auth.ServiceRegManager = serviceRegManager
 
-	signatureAuth, err := sigauth.NewSignatureAuth(authPrivKey, serviceRegManager, true)
+	signatureAuth, err := sigauth.NewSignatureAuth(authPrivKey, serviceRegManager, true, supportLegacySigs)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionInitialize, "signature auth", nil, err)
 	}
@@ -2097,12 +2097,12 @@ func (a *Auth) buildAccessToken(claims tokenauth.Claims, permissions string, sco
 		claims.Permissions = permissions
 	}
 	claims.Scope = scope
-	return a.generateToken(&claims)
+	return tokenauth.GenerateSignedToken(&claims, a.authPrivKey)
 }
 
 func (a *Auth) buildCsrfToken(claims tokenauth.Claims) (string, error) {
 	claims.Purpose = "csrf"
-	return a.generateToken(&claims)
+	return tokenauth.GenerateSignedToken(&claims, a.authPrivKey)
 }
 
 func (a *Auth) buildRefreshToken() (string, error) {
@@ -2151,16 +2151,6 @@ func (a *Auth) getStandardClaims(sub string, uid string, name string, email stri
 		ExternalIDs: externalIDs, Anonymous: anonymous, Authenticated: authenticated, Admin: admin, System: system,
 		Service: service, FirstParty: firstParty, SessionID: sessionID,
 	}
-}
-
-func (a *Auth) generateToken(claims *tokenauth.Claims) (string, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
-	kid, err := authutils.GetKeyFingerprint(&a.authPrivKey.PublicKey)
-	if err != nil {
-		return "", errors.WrapErrorAction(logutils.ActionCompute, "fingerprint", logutils.StringArgs("auth key"), err)
-	}
-	token.Header["kid"] = kid
-	return token.SignedString(a.authPrivKey)
 }
 
 func (a *Auth) getExp(exp *int64) int64 {
@@ -2291,15 +2281,8 @@ func (a *Auth) storeReg() error {
 		return errors.WrapErrorAction("migrating", model.TypeServiceReg, nil, err)
 	}
 
-	pem, err := authutils.GetPubKeyPem(&a.authPrivKey.PublicKey)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionEncode, model.TypePubKey, logutils.StringArgs("auth"), err)
-	}
-
-	key := authservice.PubKey{KeyPem: pem, Alg: authKeyAlg}
-
 	// Setup "auth" registration for token validation
-	authReg := model.ServiceRegistration{Registration: authservice.ServiceReg{ServiceID: authServiceID, Host: a.host, PubKey: &key}, CoreHost: a.host,
+	authReg := model.ServiceRegistration{Registration: authservice.ServiceReg{ServiceID: authServiceID, Host: a.host, PubKey: a.authPrivKey.PubKey}, CoreHost: a.host,
 		Name: "ROKWIRE Auth Service", Description: "The Auth Service is a subsystem of the Core Building Block that manages authentication and authorization.", FirstParty: true}
 	err = a.storage.SaveServiceReg(&authReg, true)
 	if err != nil {
@@ -2307,7 +2290,7 @@ func (a *Auth) storeReg() error {
 	}
 
 	// Setup core registration for signature validation
-	coreReg := model.ServiceRegistration{Registration: authservice.ServiceReg{ServiceID: a.serviceID, Host: a.host, PubKey: &key}, CoreHost: a.host,
+	coreReg := model.ServiceRegistration{Registration: authservice.ServiceReg{ServiceID: a.serviceID, Host: a.host, PubKey: a.authPrivKey.PubKey}, CoreHost: a.host,
 		Name: "ROKWIRE Core Building Block", Description: "The Core Building Block manages user, auth, and organization data for the ROKWIRE platform.", FirstParty: true}
 	err = a.storage.SaveServiceReg(&coreReg, true)
 	if err != nil {
@@ -2568,7 +2551,7 @@ func (l *LocalServiceRegLoaderImpl) LoadServices() ([]authservice.ServiceReg, er
 	authRegs := make([]authservice.ServiceReg, len(regs))
 	for i, serviceReg := range regs {
 		reg := serviceReg.Registration
-		reg.PubKey.LoadKeyFromPem()
+		reg.PubKey.Decode()
 		authRegs[i] = reg
 	}
 

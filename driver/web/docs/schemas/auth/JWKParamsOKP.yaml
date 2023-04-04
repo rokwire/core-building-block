@@ -1,0 +1,9 @@
+type: object
+description: JSON Web Key OKP parameters
+properties:
+  crv:
+    type: string
+    description: The curve used with the key
+  x:
+    type: string
+    description: x coordinate of the key - Base64URL encoded

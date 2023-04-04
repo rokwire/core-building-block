@@ -22,13 +22,12 @@ import (
 	"core-building-block/driven/storage"
 	"core-building-block/driver/web"
 	"core-building-block/utils"
-	"io/ioutil"
+	"os"
 	"strconv"
 	"strings"
 
-	"github.com/golang-jwt/jwt"
-
-	"github.com/rokwire/core-auth-library-go/v2/envloader"
+	"github.com/rokwire/core-auth-library-go/v3/envloader"
+	"github.com/rokwire/core-auth-library-go/v3/keys"
 	"github.com/rokwire/logging-library-go/v2/logs"
 )
 
@@ -99,22 +98,33 @@ func main() {
 
 	emailer := emailer.NewEmailerAdapter(smtpHost, smtpPortNum, smtpUser, smtpPassword, smtpFrom)
 
-	var authPrivKeyPem []byte
+	supportLegacySigsStr := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SUPPORT_LEGACY_SIGNATURES", false, false)
+	supportLegacySigs, err := strconv.ParseBool(supportLegacySigsStr)
+	if err != nil {
+		logger.Infof("Error parsing legacy signature support, applying defaults: %v", err)
+		supportLegacySigs = true
+	}
+
+	var authPrivKeyPem string
 	authPrivKeyPemString := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_PRIV_KEY", false, true)
 	if authPrivKeyPemString != "" {
-
 		//make it to be a single line - AWS environemnt variable issue
-		authPrivKeyPemString = strings.Replace(authPrivKeyPemString, `\n`, "\n", -1)
-
-		authPrivKeyPem = []byte(authPrivKeyPemString)
+		authPrivKeyPem = strings.ReplaceAll(authPrivKeyPemString, `\n`, "\n")
 	} else {
 		authPrivateKeyPath := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_PRIV_KEY_PATH", true, false)
-		authPrivKeyPem, err = ioutil.ReadFile(authPrivateKeyPath)
+		authPrivKeyPemBytes, err := os.ReadFile(authPrivateKeyPath)
 		if err != nil {
 			logger.Fatalf("Could not find auth priv key file: %v", err)
 		}
+
+		authPrivKeyPem = string(authPrivKeyPemBytes)
 	}
-	authPrivKey, err := jwt.ParseRSAPrivateKeyFromPEM(authPrivKeyPem)
+
+	alg := keys.PS256
+	if supportLegacySigs {
+		alg = keys.RS256
+	}
+	authPrivKey, err := keys.NewPrivKey(alg, authPrivKeyPem)
 	if err != nil {
 		logger.Fatalf("Failed to parse auth priv key: %v", err)
 	}
@@ -148,7 +158,7 @@ func main() {
 	profileBBApiKey := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_PROFILE_BB_API_KEY", false, true)
 	profileBBAdapter := profilebb.NewProfileBBAdapter(migrate, profileBBHost, profileBBApiKey)
 
-	auth, err := auth.NewAuth(serviceID, host, authPrivKey, storageAdapter, emailer, minTokenExp, maxTokenExp, twilioAccountSID, twilioToken, twilioServiceSID, profileBBAdapter, smtpHost, smtpPortNum, smtpUser, smtpPassword, smtpFrom, logger)
+	auth, err := auth.NewAuth(serviceID, host, authPrivKey, storageAdapter, emailer, minTokenExp, maxTokenExp, supportLegacySigs, twilioAccountSID, twilioToken, twilioServiceSID, profileBBAdapter, smtpHost, smtpPortNum, smtpUser, smtpPassword, smtpFrom, logger)
 	if err != nil {
 		logger.Fatalf("Error initializing auth: %v", err)
 	}

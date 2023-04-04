@@ -35,8 +35,8 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/rokwire/core-auth-library-go/v2/authservice"
-	"github.com/rokwire/core-auth-library-go/v2/tokenauth"
+	"github.com/rokwire/core-auth-library-go/v3/authservice"
+	"github.com/rokwire/core-auth-library-go/v3/tokenauth"
 
 	httpSwagger "github.com/swaggo/http-swagger"
 )

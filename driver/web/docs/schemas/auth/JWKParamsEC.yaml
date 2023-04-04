@@ -1,0 +1,12 @@
+type: object
+description: JSON Web Key EC parameters
+properties:
+  crv:
+    type: string
+    description: The curve used with the key
+  x:
+    type: string
+    description: x coordinate of the key - Base64URL encoded
+  y:
+    type: string
+    description: y coordinate of the key - Base64URL encoded
