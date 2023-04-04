@@ -99,8 +99,8 @@ func newServicesAuth(serviceRegManager *authservice.ServiceRegManager, serviceID
 		return http.StatusOK, nil
 	}
 
-	auth := tokenauth.NewScopeHandler(*servicesTokenAuth, check)
-	return &auth, nil
+	auth := tokenauth.NewScopeHandler(servicesTokenAuth, check)
+	return auth, nil
 }
 
 // AdminAuth
@@ -120,8 +120,8 @@ func newAdminAuth(serviceRegManager *authservice.ServiceRegManager) (*tokenauth.
 		return http.StatusOK, nil
 	}
 
-	auth := tokenauth.NewStandardHandler(*adminTokenAuth, check)
-	return &auth, nil
+	auth := tokenauth.NewStandardHandler(adminTokenAuth, check)
+	return auth, nil
 }
 
 // EncAuth
@@ -133,8 +133,8 @@ func newEncAuth(serviceRegManager *authservice.ServiceRegManager) (*tokenauth.St
 		return nil, errors.WrapErrorAction(logutils.ActionStart, "token auth for encAuth", nil, err)
 	}
 
-	auth := tokenauth.NewStandardHandler(*encTokenAuth, nil)
-	return &auth, nil
+	auth := tokenauth.NewStandardHandler(encTokenAuth, nil)
+	return auth, nil
 }
 
 // BBsAuth
@@ -158,8 +158,8 @@ func newBBsAuth(serviceRegManager *authservice.ServiceRegManager) (*tokenauth.St
 		return http.StatusOK, nil
 	}
 
-	auth := tokenauth.NewStandardHandler(*bbsTokenAuth, check)
-	return &auth, nil
+	auth := tokenauth.NewStandardHandler(bbsTokenAuth, check)
+	return auth, nil
 }
 
 // TPSAuth
@@ -183,8 +183,8 @@ func newTPSAuth(serviceRegManager *authservice.ServiceRegManager) (*tokenauth.St
 		return http.StatusOK, nil
 	}
 
-	auth := tokenauth.NewStandardHandler(*tpsTokenAuth, check)
-	return &auth, nil
+	auth := tokenauth.NewStandardHandler(tpsTokenAuth, check)
+	return auth, nil
 }
 
 // SystemAuth
@@ -204,6 +204,6 @@ func newSystemAuth(serviceRegManager *authservice.ServiceRegManager) (*tokenauth
 		return http.StatusOK, nil
 	}
 
-	auth := tokenauth.NewStandardHandler(*systemTokenAuth, check)
-	return &auth, nil
+	auth := tokenauth.NewStandardHandler(systemTokenAuth, check)
+	return auth, nil
 }

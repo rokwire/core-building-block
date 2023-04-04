@@ -158,7 +158,7 @@ func NewAuth(serviceID string, host string, authPrivKey *keys.PrivKey, storage S
 	serviceRegLoader := NewLocalServiceRegLoader(storage)
 
 	// Instantiate a ServiceRegManager to manage the service registration data loaded by serviceRegLoader
-	serviceRegManager, err := authservice.NewServiceRegManager(&authService, serviceRegLoader)
+	serviceRegManager, err := authservice.NewServiceRegManager(&authService, serviceRegLoader, true)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionInitialize, "service reg manager", nil, err)
 	}
