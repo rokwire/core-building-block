@@ -483,7 +483,7 @@ func (p Profile) Merge(src Profile) Profile {
 
 // ProfileFromMap parses a map and converts it into a Profile struct
 func ProfileFromMap(profileMap map[string]interface{}) Profile {
-	profile := Profile{}
+	profile := Profile{UnstructuredProperties: make(map[string]interface{})}
 	for key, val := range profileMap {
 		if key == "first_name" {
 			if typeVal, ok := val.(string); ok {

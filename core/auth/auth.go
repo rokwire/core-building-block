@@ -418,7 +418,7 @@ func (a *Auth) applyProfileDataFromExternalUser(profile model.Profile, newExtern
 	currentExternalUser *model.ExternalSystemUser, identityBBProfile *model.Profile, alwaysSync bool, l *logs.Log) (*model.Profile, error) {
 	newProfile := profile
 	if identityBBProfile != nil {
-		newProfile.Merge(*identityBBProfile)
+		newProfile = newProfile.Merge(*identityBBProfile)
 		alwaysSync = true // External auth system data should always override identity bb data
 	}
 
@@ -435,7 +435,7 @@ func (a *Auth) applyProfileDataFromExternalUser(profile model.Profile, newExtern
 		newProfile.Email = newExternalUser.Email
 	}
 
-	changed := utils.DeepEqual(profile, newProfile)
+	changed := !utils.DeepEqual(profile, newProfile)
 	if changed {
 		now := time.Now()
 		newProfile.DateUpdated = &now

@@ -328,17 +328,18 @@ type GlobalConfig struct {
 type IdentityProviderSettings struct {
 	AlwaysSyncProfile   *bool              `json:"always_sync_profile,omitempty"`
 	EmailField          *string            `json:"email_field,omitempty"`
-	ExternalIdFields    *map[string]string `json:"external_id_fields,omitempty"`
+	ExternalIdFields    *map[string]string `json:"external_id_fields"`
 	FirstNameField      *string            `json:"first_name_field,omitempty"`
-	Groups              *map[string]string `json:"groups,omitempty"`
+	Groups              *map[string]string `json:"groups"`
 	GroupsField         *string            `json:"groups_field,omitempty"`
+	IdentityBbBaseUrl   *string            `json:"identity_bb_base_url,omitempty"`
 	IdentityProviderId  string             `json:"identity_provider_id"`
 	LastNameField       *string            `json:"last_name_field,omitempty"`
 	MiddleNameField     *string            `json:"middle_name_field,omitempty"`
-	Roles               *map[string]string `json:"roles,omitempty"`
+	Roles               *map[string]string `json:"roles"`
 	RolesField          *string            `json:"roles_field,omitempty"`
 	UserIdentifierField string             `json:"user_identifier_field"`
-	UserSpecificFields  *[]string          `json:"user_specific_fields,omitempty"`
+	UserSpecificFields  *[]string          `json:"user_specific_fields"`
 }
 
 // InactiveExpirePolicy defines model for InactiveExpirePolicy.
@@ -595,7 +596,7 @@ type ServiceScope struct {
 // SupportedAuthType defines model for SupportedAuthType.
 type SupportedAuthType struct {
 	AuthTypeId *string                 `json:"auth_type_id,omitempty"`
-	Params     *map[string]interface{} `json:"params,omitempty"`
+	Params     *map[string]interface{} `json:"params"`
 }
 
 // SupportedAuthTypes defines model for SupportedAuthTypes.
