@@ -1196,7 +1196,7 @@ func (a *Auth) createLoginSession(anonymous bool, sub string, authType model.Aut
 		scopes = append(scopes, accountAuthType.Account.GetScopes()...)
 	}
 	claims := a.getStandardClaims(sub, uid, name, email, phone, rokwireTokenAud, orgID, appID, authType.Code, externalIDs, nil, anonymous, true, appOrg.Application.Admin, appOrg.Organization.System, false, true, idUUID.String())
-	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), strings.Join(scopes, ","))
+	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), strings.Join(scopes, " "))
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
 	}
