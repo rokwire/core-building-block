@@ -371,8 +371,8 @@ func (s *administrationImpl) AdmRemoveAccountsFromGroup(appID string, orgID stri
 	return s.app.admRemoveAccountsFromGroup(appID, orgID, groupID, accountIDs, assignerPermissions, l)
 }
 
-func (s *administrationImpl) AdmCreateAppOrgRole(name string, description string, system bool, permissionNames []string, appID string, orgID string, assignerPermissions []string, systemClaim bool, l *logs.Log) (*model.AppOrgRole, error) {
-	return s.app.admCreateAppOrgRole(name, description, system, permissionNames, appID, orgID, assignerPermissions, systemClaim, l)
+func (s *administrationImpl) AdmCreateAppOrgRole(name string, description string, system bool, permissionNames []string, scopes []string, appID string, orgID string, assignerPermissions []string, systemClaim bool, l *logs.Log) (*model.AppOrgRole, error) {
+	return s.app.admCreateAppOrgRole(name, description, system, permissionNames, scopes, appID, orgID, assignerPermissions, systemClaim, l)
 }
 
 func (s *administrationImpl) AdmGetAppOrgRoles(appID string, orgID string) ([]model.AppOrgRole, error) {
@@ -383,8 +383,8 @@ func (s *administrationImpl) AdmDeleteAppOrgRole(ID string, appID string, orgID 
 	return s.app.admDeleteAppOrgRole(ID, appID, orgID, assignerPermissions, system, l)
 }
 
-func (s *administrationImpl) AdmUpdateAppOrgRole(ID string, name string, description string, system bool, permissionNames []string, appID string, orgID string, assignerPermissions []string, systemClaim bool, l *logs.Log) (*model.AppOrgRole, error) {
-	return s.app.admUpdateAppOrgRole(ID, name, description, system, permissionNames, appID, orgID, assignerPermissions, systemClaim, l)
+func (s *administrationImpl) AdmUpdateAppOrgRole(ID string, name string, description string, system bool, permissionNames []string, scopes []string, appID string, orgID string, assignerPermissions []string, systemClaim bool, l *logs.Log) (*model.AppOrgRole, error) {
+	return s.app.admUpdateAppOrgRole(ID, name, description, system, permissionNames, scopes, appID, orgID, assignerPermissions, systemClaim, l)
 }
 
 func (s *administrationImpl) AdmGrantPermissionsToRole(appID string, orgID string, roleID string, permissionNames []string, assignerPermissions []string, system bool, l *logs.Log) error {

@@ -235,11 +235,11 @@ type APIs interface {
 
 	//CreateAdminAccount creates an account for a new admin user
 	CreateAdminAccount(authenticationType string, appID string, orgID string, identifier string, profile model.Profile, username string, permissions []string,
-		roleIDs []string, groupIDs []string, creatorPermissions []string, clientVersion *string, l *logs.Log) (*model.Account, map[string]interface{}, error)
+		roleIDs []string, groupIDs []string, scoeps []string, creatorPermissions []string, clientVersion *string, l *logs.Log) (*model.Account, map[string]interface{}, error)
 
 	//UpdateAdminAccount updates an existing user's account with new permissions, roles, and groups
 	UpdateAdminAccount(authenticationType string, appID string, orgID string, identifier string, permissions []string, roleIDs []string,
-		groupIDs []string, updaterPermissions []string, l *logs.Log) (*model.Account, map[string]interface{}, error)
+		groupIDs []string, scopes []string, updaterPermissions []string, l *logs.Log) (*model.Account, map[string]interface{}, error)
 
 	//CreateAnonymousAccount creates a new anonymous account
 	CreateAnonymousAccount(context storage.TransactionContext, appID string, orgID string, anonymousID string, preferences map[string]interface{},
@@ -577,6 +577,8 @@ type Storage interface {
 	//AccountRoles
 	UpdateAccountRoles(context storage.TransactionContext, accountID string, roles []model.AccountRole) error
 	InsertAccountRoles(context storage.TransactionContext, accountID string, appOrgID string, roles []model.AccountRole) error
+
+	UpdateAccountScopes(context storage.TransactionContext, accountID string, scopes []string) error
 
 	//ApplicationGroups
 	FindAppOrgGroupsByIDs(context storage.TransactionContext, ids []string, appOrgID string) ([]model.AppOrgGroup, error)

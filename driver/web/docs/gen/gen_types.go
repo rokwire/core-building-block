@@ -188,6 +188,7 @@ type Account struct {
 	Preferences             *map[string]interface{}  `json:"preferences"`
 	Profile                 *Profile                 `json:"profile,omitempty"`
 	Roles                   *[]AppOrgRole            `json:"roles,omitempty"`
+	Scopes                  *[]string                `json:"scopes,omitempty"`
 	System                  *bool                    `json:"system,omitempty"`
 	SystemConfigs           *map[string]interface{}  `json:"system_configs"`
 	Username                *string                  `json:"username,omitempty"`
@@ -236,6 +237,7 @@ type AppOrgRole struct {
 	Id          *string       `json:"id,omitempty"`
 	Name        string        `json:"name"`
 	Permissions *[]Permission `json:"permissions,omitempty"`
+	Scopes      *[]string     `json:"scopes,omitempty"`
 	System      *bool         `json:"system,omitempty"`
 }
 
@@ -493,6 +495,7 @@ type PartialAccount struct {
 	Params        *map[string]interface{} `json:"params"`
 	Permissions   []Permission            `json:"permissions"`
 	Roles         []AppOrgRole            `json:"roles"`
+	Scopes        *[]string               `json:"scopes,omitempty"`
 	System        *bool                   `json:"system,omitempty"`
 	SystemConfigs *map[string]interface{} `json:"system_configs"`
 	Username      *string                 `json:"username,omitempty"`
@@ -641,10 +644,11 @@ type AdminReqApplicationGroup struct {
 
 // AdminReqApplicationRole defines model for _admin_req_application_role.
 type AdminReqApplicationRole struct {
-	Description string   `json:"description"`
-	Name        string   `json:"name"`
-	Permissions []string `json:"permissions"`
-	System      *bool    `json:"system,omitempty"`
+	Description string    `json:"description"`
+	Name        string    `json:"name"`
+	Permissions []string  `json:"permissions"`
+	Scopes      *[]string `json:"scopes,omitempty"`
+	System      *bool     `json:"system,omitempty"`
 }
 
 // AdminReqGrantPermissions defines model for _admin_req_grant-permissions.
@@ -852,6 +856,7 @@ type SharedReqCreateAccount struct {
 	Permissions *[]string                      `json:"permissions,omitempty"`
 	Profile     *ProfileNullable               `json:"profile"`
 	RoleIds     *[]string                      `json:"role_ids,omitempty"`
+	Scopes      *[]string                      `json:"scopes,omitempty"`
 	Username    *string                        `json:"username"`
 }
 
@@ -977,6 +982,7 @@ type SharedReqUpdateAccount struct {
 	Identifier  string                         `json:"identifier"`
 	Permissions *[]string                      `json:"permissions,omitempty"`
 	RoleIds     *[]string                      `json:"role_ids,omitempty"`
+	Scopes      *[]string                      `json:"scopes,omitempty"`
 }
 
 // SharedReqUpdateAccountAuthType defines model for SharedReqUpdateAccount.AuthType.
