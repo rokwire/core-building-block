@@ -51,7 +51,9 @@ const (
 
 	allServices string = "all"
 
-	AdminScopePrefix       string = "admin_"
+	// AdminScopePrefix is the prefix on scope resources used to indicate that the scope is intended for administration
+	AdminScopePrefix string = "admin_"
+	// UpdateScopesPermission is the permission that allows an admin to update account/role scopes
 	UpdateScopesPermission string = "update_auth_scopes"
 
 	typeMail              logutils.MessageDataType = "mail"
@@ -1477,10 +1479,9 @@ func (a *Auth) constructAccount(context storage.TransactionContext, authType mod
 			if err != nil {
 				if adminSet {
 					return nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeScope, nil, err)
-				} else {
-					l.WarnError(logutils.MessageAction(logutils.StatusError, logutils.ActionValidate, model.TypeScope, nil), err)
-					continue
 				}
+				l.WarnError(logutils.MessageAction(logutils.StatusError, logutils.ActionValidate, model.TypeScope, nil), err)
+				continue
 			}
 			if !strings.HasPrefix(parsedScope.Resource, AdminScopePrefix) {
 				parsedScope.Resource = AdminScopePrefix + parsedScope.Resource
