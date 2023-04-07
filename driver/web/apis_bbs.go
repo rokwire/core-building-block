@@ -35,8 +35,7 @@ import (
 
 // BBsApisHandler handles the APIs implementation used by the platform building blocks
 type BBsApisHandler struct {
-	coreAPIs  *core.APIs
-	serviceID string
+	coreAPIs *core.APIs
 }
 
 // getTest TODO get test
@@ -207,7 +206,7 @@ func (h BBsApisHandler) getAccounts(l *logs.Log, r *http.Request, claims *tokena
 
 	// limit search params by scopes
 	scopes := claims.Scopes()
-	minAllAccessScope := authorization.Scope{ServiceID: h.serviceID, Resource: string(model.TypeAccount), Operation: authorization.ScopeOperationGet}
+	minAllAccessScope := authorization.Scope{ServiceID: h.coreAPIs.GetServiceID(), Resource: string(model.TypeAccount), Operation: authorization.ScopeOperationGet}
 	searchKeys := make([]string, 0)
 	for k := range queryParams {
 		searchKeys = append(searchKeys, k)
@@ -229,11 +228,6 @@ func (h BBsApisHandler) getAccounts(l *logs.Log, r *http.Request, claims *tokena
 	}
 
 	return l.HTTPResponseSuccessJSON(respData)
-}
-
-// NewBBsApisHandler creates new bbs Handler instance
-func NewBBsApisHandler(coreAPIs *core.APIs, serviceID string) BBsApisHandler {
-	return BBsApisHandler{coreAPIs: coreAPIs, serviceID: serviceID}
 }
 
 func (h BBsApisHandler) getAccountsCount(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
@@ -262,7 +256,7 @@ func (h BBsApisHandler) getAccountsCount(l *logs.Log, r *http.Request, claims *t
 
 	// limit search params by scopes
 	scopes := claims.Scopes()
-	minAllAccessScope := authorization.Scope{ServiceID: h.serviceID, Resource: string(model.TypeAccount), Operation: authorization.ScopeOperationGet}
+	minAllAccessScope := authorization.Scope{ServiceID: h.coreAPIs.GetServiceID(), Resource: string(model.TypeAccount), Operation: authorization.ScopeOperationGet}
 	searchKeys := make([]string, 0)
 	for k := range queryParams {
 		searchKeys = append(searchKeys, k)
@@ -284,4 +278,9 @@ func (h BBsApisHandler) getAccountsCount(l *logs.Log, r *http.Request, claims *t
 	}
 
 	return l.HTTPResponseSuccessJSON(respData)
+}
+
+// NewBBsApisHandler creates new bbs Handler instance
+func NewBBsApisHandler(coreAPIs *core.APIs) BBsApisHandler {
+	return BBsApisHandler{coreAPIs: coreAPIs}
 }

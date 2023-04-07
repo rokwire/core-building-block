@@ -1159,6 +1159,21 @@ type PutAdminApplicationAccountsIdSystemConfigsParams struct {
 	CreateAnonymous *bool `form:"create-anonymous,omitempty" json:"create-anonymous,omitempty"`
 }
 
+// PostAdminApplicationFilterAccountsJSONBody defines parameters for PostAdminApplicationFilterAccounts.
+type PostAdminApplicationFilterAccountsJSONBody = map[string]interface{}
+
+// PostAdminApplicationFilterAccountsParams defines parameters for PostAdminApplicationFilterAccounts.
+type PostAdminApplicationFilterAccountsParams struct {
+	// Limit The maximum number of accounts to return
+	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+
+	// Offset The index of the first account to return
+	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
+}
+
+// PostAdminApplicationFilterAccountsCountJSONBody defines parameters for PostAdminApplicationFilterAccountsCount.
+type PostAdminApplicationFilterAccountsCountJSONBody = map[string]interface{}
+
 // GetAdminApplicationLoginSessionsParams defines parameters for GetAdminApplicationLoginSessions.
 type GetAdminApplicationLoginSessionsParams struct {
 	// Identifier identifier
@@ -1500,6 +1515,12 @@ type PutAdminApplicationAccountsIdRolesJSONRequestBody = AdminReqGrantRolesToAcc
 
 // PutAdminApplicationAccountsIdSystemConfigsJSONRequestBody defines body for PutAdminApplicationAccountsIdSystemConfigs for application/json ContentType.
 type PutAdminApplicationAccountsIdSystemConfigsJSONRequestBody = PutAdminApplicationAccountsIdSystemConfigsJSONBody
+
+// PostAdminApplicationFilterAccountsJSONRequestBody defines body for PostAdminApplicationFilterAccounts for application/json ContentType.
+type PostAdminApplicationFilterAccountsJSONRequestBody = PostAdminApplicationFilterAccountsJSONBody
+
+// PostAdminApplicationFilterAccountsCountJSONRequestBody defines body for PostAdminApplicationFilterAccountsCount for application/json ContentType.
+type PostAdminApplicationFilterAccountsCountJSONRequestBody = PostAdminApplicationFilterAccountsCountJSONBody
 
 // PostAdminApplicationGroupsJSONRequestBody defines body for PostAdminApplicationGroups for application/json ContentType.
 type PostAdminApplicationGroupsJSONRequestBody = AdminReqApplicationGroup

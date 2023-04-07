@@ -51,11 +51,6 @@ const (
 
 	allServices string = "all"
 
-	// AdminScopePrefix is the prefix on scope resources used to indicate that the scope is intended for administration
-	AdminScopePrefix string = "admin_"
-	// UpdateScopesPermission is the permission that allows an admin to update account/role scopes
-	UpdateScopesPermission string = "update_auth_scopes"
-
 	typeMail              logutils.MessageDataType = "mail"
 	typeExternalAuthType  logutils.MessageDataType = "external auth type"
 	typeAnonymousAuthType logutils.MessageDataType = "anonymous auth type"
@@ -1196,7 +1191,7 @@ func (a *Auth) createLoginSession(anonymous bool, sub string, authType model.Aut
 		scopes = append(scopes, accountAuthType.Account.GetScopes()...)
 	}
 	claims := a.getStandardClaims(sub, uid, name, email, phone, rokwireTokenAud, orgID, appID, authType.Code, externalIDs, nil, anonymous, true, appOrg.Application.Admin, appOrg.Organization.System, false, true, idUUID.String())
-	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), strings.Join(scopes, ","))
+	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), strings.Join(scopes, " "))
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
 	}
@@ -1472,7 +1467,7 @@ func (a *Auth) constructAccount(context storage.TransactionContext, authType mod
 		}
 	}
 
-	if scopes != nil && (adminSet || utils.Contains(assignerPermissions, UpdateScopesPermission)) {
+	if scopes != nil && (adminSet || utils.Contains(assignerPermissions, model.UpdateScopesPermission)) {
 		newScopes := []string{}
 		for _, scope := range scopes {
 			parsedScope, err := authorization.ScopeFromString(scope)
@@ -1483,8 +1478,8 @@ func (a *Auth) constructAccount(context storage.TransactionContext, authType mod
 				l.WarnError(logutils.MessageAction(logutils.StatusError, logutils.ActionValidate, model.TypeScope, nil), err)
 				continue
 			}
-			if !strings.HasPrefix(parsedScope.Resource, AdminScopePrefix) {
-				parsedScope.Resource = AdminScopePrefix + parsedScope.Resource
+			if !strings.HasPrefix(parsedScope.Resource, model.AdminScopePrefix) {
+				parsedScope.Resource = model.AdminScopePrefix + parsedScope.Resource
 				scope = parsedScope.String()
 			}
 			newScopes = append(newScopes, scope)

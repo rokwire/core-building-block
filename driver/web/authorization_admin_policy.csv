@@ -50,6 +50,9 @@ p, update_accounts, /core/admin/application/permissions, (GET),
 p, update_accounts, /core/admin/application/roles, (GET),
 p, update_accounts, /core/admin/application/groups, (GET),
 
+p, get_filter-accounts, /core/admin/application/filter/accounts, (POST), Get filter accounts
+p, get_filter-accounts-count, /core/admin/application/filter/accounts/count, (POST), Get filter accounts count
+
 p, get_account-devices, /core/admin/application/accounts/*/devices, (GET), Get account devices
 
 p, update_account-permissions, /core/admin/application/accounts/*/permissions, (PUT)|(DELETE), Grant and revoke permissions
