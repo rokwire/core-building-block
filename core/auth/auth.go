@@ -1472,7 +1472,7 @@ func (a *Auth) constructAccount(context storage.TransactionContext, authType mod
 		}
 	}
 
-	if scopes != nil && (adminSet || utils.Contains(assignerPermissions, UpdateScopesPermission)) {
+	if scopes != nil && (!adminSet || utils.Contains(assignerPermissions, UpdateScopesPermission)) {
 		newScopes := []string{}
 		for _, scope := range scopes {
 			parsedScope, err := authorization.ScopeFromString(scope)
