@@ -26,6 +26,7 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
+	"github.com/rokwire/core-auth-library-go/v3/authorization"
 	"github.com/rokwire/core-auth-library-go/v3/tokenauth"
 	"github.com/rokwire/logging-library-go/v2/errors"
 	"github.com/rokwire/logging-library-go/v2/logs"
@@ -301,6 +302,101 @@ func (h AdminApisHandler) getAppConfigsForOrganization(l *logs.Log, r *http.Requ
 	}
 
 	return l.HTTPResponseSuccessJSON(response)
+}
+
+func (h AdminApisHandler) getFilterAccounts(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
+	// get scopes relevant to accounts
+	if claims.Scope == "" {
+		return l.HTTPResponseErrorData(logutils.StatusInvalid, model.TypeScope, nil, nil, http.StatusForbidden, false)
+	}
+
+	// limit and offset
+	limit := 100
+	limitArg := r.URL.Query().Get("limit")
+	var err error
+	if limitArg != "" {
+		limit, err = strconv.Atoi(limitArg)
+		if err != nil {
+			return l.HTTPResponseErrorAction(logutils.ActionParse, logutils.TypeArg, logutils.StringArgs("limit"), err, http.StatusBadRequest, false)
+		}
+	}
+	offset := 0
+	offsetArg := r.URL.Query().Get("offset")
+	if offsetArg != "" {
+		offset, err = strconv.Atoi(offsetArg)
+		if err != nil {
+			return l.HTTPResponseErrorAction(logutils.ActionParse, logutils.TypeArg, logutils.StringArgs("offset"), err, http.StatusBadRequest, false)
+		}
+	}
+
+	var queryParams map[string]interface{}
+	err = json.NewDecoder(r.Body).Decode(&queryParams)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	// limit search params by scopes
+	scopes := getAdminScopes(claims)
+	minAllAccessScope := authorization.Scope{ServiceID: h.coreAPIs.GetServiceID(), Resource: model.AdminScopePrefix + string(model.TypeAccount), Operation: authorization.ScopeOperationGet}
+	searchKeys := make([]string, 0)
+	for k := range queryParams {
+		searchKeys = append(searchKeys, k)
+	}
+	allAccess, approvedKeys, err := authorization.ResourceAccessForScopes(scopes, minAllAccessScope, searchKeys)
+	if err != nil {
+		return l.HTTPResponseErrorData(logutils.StatusInvalid, "accounts query", nil, err, http.StatusForbidden, true)
+	}
+
+	accounts, err := h.coreAPIs.Administration.AdmGetFilterAccounts(queryParams, claims.AppID, claims.OrgID, limit, offset, allAccess, approvedKeys)
+	if err != nil {
+		errFields := logutils.FieldArgs(queryParams)
+		return l.HTTPResponseErrorAction(logutils.ActionGet, model.TypeAccount, &errFields, err, http.StatusInternalServerError, true)
+	}
+
+	respData, err := json.Marshal(accounts)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("accounts response"), nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HTTPResponseSuccessJSON(respData)
+}
+
+func (h AdminApisHandler) getFilterAccountsCount(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
+	// get scopes relevant to accounts
+	if claims.Scope == "" {
+		return l.HTTPResponseErrorData(logutils.StatusInvalid, model.TypeScope, nil, nil, http.StatusForbidden, false)
+	}
+
+	var queryParams map[string]interface{}
+	err := json.NewDecoder(r.Body).Decode(&queryParams)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	// limit search params by scopes
+	scopes := getAdminScopes(claims)
+	minAllAccessScope := authorization.Scope{ServiceID: h.coreAPIs.GetServiceID(), Resource: model.AdminScopePrefix + string(model.TypeAccount), Operation: authorization.ScopeOperationGet}
+	searchKeys := make([]string, 0)
+	for k := range queryParams {
+		searchKeys = append(searchKeys, k)
+	}
+	_, _, err = authorization.ResourceAccessForScopes(scopes, minAllAccessScope, searchKeys)
+	if err != nil {
+		return l.HTTPResponseErrorData(logutils.StatusInvalid, "accounts count query", nil, err, http.StatusForbidden, true)
+	}
+
+	count, err := h.coreAPIs.Administration.AdmGetFilterAccountsCount(queryParams, claims.AppID, claims.OrgID)
+	if err != nil {
+		errFields := logutils.FieldArgs(queryParams)
+		return l.HTTPResponseErrorAction(logutils.ActionGet, model.TypeAccount, &errFields, err, http.StatusInternalServerError, true)
+	}
+
+	respData, err := json.Marshal(count)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("accounts count response"), nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HTTPResponseSuccessJSON(respData)
 }
 
 func (h AdminApisHandler) getApplications(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
@@ -1317,6 +1413,17 @@ func (h AdminApisHandler) grantPermissionsToRole(l *logs.Log, r *http.Request, c
 	}
 
 	return l.HTTPResponseSuccess()
+}
+
+func getAdminScopes(claims *tokenauth.Claims) []authorization.Scope {
+	scopes := claims.Scopes()
+	adminScopes := []authorization.Scope{}
+	for _, scope := range scopes {
+		if strings.HasPrefix(scope.Resource, model.AdminScopePrefix) {
+			adminScopes = append(adminScopes, scope)
+		}
+	}
+	return adminScopes
 }
 
 // NewAdminApisHandler creates new admin rest Handler instance

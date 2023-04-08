@@ -123,6 +123,10 @@ paths:
     $ref: "./resources/admin/application/accounts/roles.yaml"
   /admin/application/accounts/{id}/system-configs:
     $ref: "./resources/admin/application/accounts/system-configs.yaml"
+  /admin/application/filter/accounts:
+    $ref: "./resources/admin/application/filter/accounts.yaml"
+  /admin/application/filter/accounts/count:
+    $ref: "./resources/admin/application/filter/accounts-count.yaml"
   /admin/application/login-sessions:
     $ref: "./resources/admin/application/login-sessions.yaml"
   /admin/application/groups:

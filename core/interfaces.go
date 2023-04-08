@@ -67,6 +67,9 @@ type Administration interface {
 		authTypeIdentifier *string, anonymous *bool, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error)
 	AdmGetAccount(accountID string) (*model.Account, error)
 
+	AdmGetFilterAccounts(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]map[string]interface{}, error)
+	AdmGetFilterAccountsCount(searchParams map[string]interface{}, appID string, orgID string) (int64, error)
+
 	AdmUpdateAccountUsername(accountID string, appID string, orgID string, username string) error
 
 	AdmGetAccountSystemConfigs(appID string, orgID string, accountID string, l *logs.Log) (map[string]interface{}, error)

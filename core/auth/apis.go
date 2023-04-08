@@ -773,14 +773,14 @@ func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID
 		}
 
 		//6. update account scopes
-		if scopes != nil && utils.Contains(updaterPermissions, UpdateScopesPermission) && !utils.DeepEqual(account.Scopes, scopes) {
+		if scopes != nil && utils.Contains(updaterPermissions, model.UpdateScopesPermission) && !utils.DeepEqual(account.Scopes, scopes) {
 			for i, scope := range scopes {
 				parsedScope, err := authorization.ScopeFromString(scope)
 				if err != nil {
 					return errors.WrapErrorAction(logutils.ActionValidate, model.TypeScope, nil, err)
 				}
-				if !strings.HasPrefix(parsedScope.Resource, AdminScopePrefix) {
-					parsedScope.Resource = AdminScopePrefix + parsedScope.Resource
+				if !strings.HasPrefix(parsedScope.Resource, model.AdminScopePrefix) {
+					parsedScope.Resource = model.AdminScopePrefix + parsedScope.Resource
 					scopes[i] = parsedScope.String()
 				}
 			}

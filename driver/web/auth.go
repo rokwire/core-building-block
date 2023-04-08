@@ -35,8 +35,8 @@ type Auth struct {
 }
 
 // NewAuth creates new auth handler
-func NewAuth(serviceID string, serviceRegManager *authservice.ServiceRegManager) (*Auth, error) {
-	servicesAuth, err := newServicesAuth(serviceRegManager, serviceID)
+func NewAuth(serviceRegManager *authservice.ServiceRegManager) (*Auth, error) {
+	servicesAuth, err := newServicesAuth(serviceRegManager)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, "services auth", nil, err)
 	}
@@ -79,8 +79,8 @@ func NewAuth(serviceID string, serviceRegManager *authservice.ServiceRegManager)
 
 // ServicesAuth
 
-func newServicesAuth(serviceRegManager *authservice.ServiceRegManager, serviceID string) (*tokenauth.StandardHandler, error) {
-	servicesScopeAuth := authorization.NewCasbinScopeAuthorization("driver/web/scope_authorization_services_policy.csv", serviceID)
+func newServicesAuth(serviceRegManager *authservice.ServiceRegManager) (*tokenauth.StandardHandler, error) {
+	servicesScopeAuth := authorization.NewCasbinScopeAuthorization("driver/web/scope_authorization_services_policy.csv", serviceRegManager.AuthService.ServiceID)
 	servicesPermissionAuth := authorization.NewCasbinStringAuthorization("driver/web/authorization_services_policy.csv")
 
 	servicesTokenAuth, err := tokenauth.NewTokenAuth(true, serviceRegManager, servicesPermissionAuth, servicesScopeAuth)

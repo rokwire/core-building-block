@@ -70,6 +70,11 @@ func (c *APIs) GetVersion() string {
 	return c.app.version
 }
 
+// GetServiceID gives the service ID
+func (c *APIs) GetServiceID() string {
+	return c.app.serviceID
+}
+
 func (c *APIs) storeSystemData() error {
 	newDocuments := make(map[string]string)
 
@@ -245,10 +250,10 @@ func (c *APIs) storeSystemData() error {
 }
 
 // NewCoreAPIs creates new CoreAPIs
-func NewCoreAPIs(env string, version string, build string, storage Storage, auth auth.APIs, systemInitSettings map[string]string, logger *logs.Logger) *APIs {
+func NewCoreAPIs(env string, version string, build string, serviceID string, storage Storage, auth auth.APIs, systemInitSettings map[string]string, logger *logs.Logger) *APIs {
 	//add application instance
 	listeners := []ApplicationListener{}
-	application := application{env: env, version: version, build: build, storage: storage, listeners: listeners, auth: auth}
+	application := application{env: env, version: version, build: build, serviceID: serviceID, storage: storage, listeners: listeners, auth: auth}
 
 	//add coreAPIs instance
 	servicesImpl := &servicesImpl{app: &application}
@@ -402,6 +407,14 @@ func (s *administrationImpl) AdmGetAccounts(limit int, offset int, appID string,
 
 func (s *administrationImpl) AdmGetAccount(accountID string) (*model.Account, error) {
 	return s.app.admGetAccount(accountID)
+}
+
+func (s *administrationImpl) AdmGetFilterAccounts(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]map[string]interface{}, error) {
+	return s.app.sharedGetAccountsByParams(searchParams, appID, orgID, limit, offset, allAccess, approvedKeys)
+}
+
+func (s *administrationImpl) AdmGetFilterAccountsCount(searchParams map[string]interface{}, appID string, orgID string) (int64, error) {
+	return s.app.sharedGetAccountsCountByParams(searchParams, appID, orgID)
 }
 
 func (s *administrationImpl) AdmUpdateAccountUsername(accountID string, appID string, orgID string, username string) error {

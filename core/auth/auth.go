@@ -1483,8 +1483,8 @@ func (a *Auth) constructAccount(context storage.TransactionContext, authType mod
 				l.WarnError(logutils.MessageAction(logutils.StatusError, logutils.ActionValidate, model.TypeScope, nil), err)
 				continue
 			}
-			if !strings.HasPrefix(parsedScope.Resource, AdminScopePrefix) {
-				parsedScope.Resource = AdminScopePrefix + parsedScope.Resource
+			if !strings.HasPrefix(parsedScope.Resource, model.AdminScopePrefix) {
+				parsedScope.Resource = model.AdminScopePrefix + parsedScope.Resource
 				scope = parsedScope.String()
 			}
 			newScopes = append(newScopes, scope)

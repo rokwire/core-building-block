@@ -15,7 +15,6 @@
 package core
 
 import (
-	"core-building-block/core/auth"
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
 	"core-building-block/utils"
@@ -623,14 +622,14 @@ func (app *application) admCreateAppOrgRole(name string, description string, sys
 			return errors.WrapErrorAction(logutils.ActionValidate, model.TypePermission, nil, err)
 		}
 
-		if scopes != nil && utils.Contains(assignerPermissions, auth.UpdateScopesPermission) {
+		if scopes != nil && utils.Contains(assignerPermissions, model.UpdateScopesPermission) {
 			for i, scope := range scopes {
 				parsedScope, err := authorization.ScopeFromString(scope)
 				if err != nil {
 					return errors.WrapErrorAction(logutils.ActionValidate, model.TypeScope, nil, err)
 				}
-				if !strings.HasPrefix(parsedScope.Resource, auth.AdminScopePrefix) {
-					parsedScope.Resource = auth.AdminScopePrefix + parsedScope.Resource
+				if !strings.HasPrefix(parsedScope.Resource, model.AdminScopePrefix) {
+					parsedScope.Resource = model.AdminScopePrefix + parsedScope.Resource
 					scopes[i] = parsedScope.String()
 				}
 			}
@@ -727,14 +726,14 @@ func (app *application) admUpdateAppOrgRole(ID string, name string, description 
 		}
 
 		//6. update account scopes
-		if scopes != nil && utils.Contains(assignerPermissions, auth.UpdateScopesPermission) && !utils.DeepEqual(role.Scopes, scopes) {
+		if scopes != nil && utils.Contains(assignerPermissions, model.UpdateScopesPermission) && !utils.DeepEqual(role.Scopes, scopes) {
 			for i, scope := range scopes {
 				parsedScope, err := authorization.ScopeFromString(scope)
 				if err != nil {
 					return errors.WrapErrorAction(logutils.ActionValidate, model.TypeScope, nil, err)
 				}
-				if !strings.HasPrefix(parsedScope.Resource, auth.AdminScopePrefix) {
-					parsedScope.Resource = auth.AdminScopePrefix + parsedScope.Resource
+				if !strings.HasPrefix(parsedScope.Resource, model.AdminScopePrefix) {
+					parsedScope.Resource = model.AdminScopePrefix + parsedScope.Resource
 					scopes[i] = parsedScope.String()
 				}
 			}
