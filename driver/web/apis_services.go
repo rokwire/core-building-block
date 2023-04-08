@@ -486,6 +486,10 @@ func (h ServicesApisHandler) createAdminAccount(l *logs.Log, r *http.Request, cl
 	if requestData.GroupIds != nil {
 		groupIDs = *requestData.GroupIds
 	}
+	var scopes []string
+	if requestData.Scopes != nil {
+		scopes = *requestData.Scopes
+	}
 	profile := profileFromDefNullable(requestData.Profile)
 
 	username := ""
@@ -495,7 +499,7 @@ func (h ServicesApisHandler) createAdminAccount(l *logs.Log, r *http.Request, cl
 
 	creatorPermissions := strings.Split(claims.Permissions, ",")
 	account, params, err := h.coreAPIs.Auth.CreateAdminAccount(string(requestData.AuthType), claims.AppID, claims.OrgID,
-		requestData.Identifier, profile, username, permissions, roleIDs, groupIDs, creatorPermissions, &clientVersion, l)
+		requestData.Identifier, profile, username, permissions, roleIDs, groupIDs, scopes, creatorPermissions, &clientVersion, l)
 	if err != nil || account == nil {
 		return l.HTTPResponseErrorAction(logutils.ActionCreate, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}
@@ -534,9 +538,13 @@ func (h ServicesApisHandler) updateAdminAccount(l *logs.Log, r *http.Request, cl
 	if requestData.GroupIds != nil {
 		groupIDs = *requestData.GroupIds
 	}
+	var scopes []string
+	if requestData.Scopes != nil {
+		scopes = *requestData.Scopes
+	}
 	updaterPermissions := strings.Split(claims.Permissions, ",")
 	account, params, err := h.coreAPIs.Auth.UpdateAdminAccount(string(requestData.AuthType), claims.AppID, claims.OrgID, requestData.Identifier,
-		permissions, roleIDs, groupIDs, updaterPermissions, l)
+		permissions, roleIDs, groupIDs, scopes, updaterPermissions, l)
 	if err != nil || account == nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUpdate, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}

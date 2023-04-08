@@ -5450,6 +5450,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Permission'
+        scopes:
+          type: array
+          items:
+            type: string
     AppOrgGroup:
       required:
         - id
@@ -6011,6 +6015,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AppOrgGroup'
+        scopes:
+          type: array
+          items:
+            type: string
         devices:
           type: array
           items:
@@ -6063,6 +6071,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AppOrgGroup'
+        scopes:
+          type: array
+          items:
+            type: string
         auth_types:
           type: array
           items:
@@ -6353,6 +6365,10 @@ components:
           type: array
           items:
             type: string
+        scopes:
+          type: array
+          items:
+            type: string
         profile:
           $ref: '#/components/schemas/ProfileNullable'
         username:
@@ -6380,6 +6396,10 @@ components:
           items:
             type: string
         group_ids:
+          type: array
+          items:
+            type: string
+        scopes:
           type: array
           items:
             type: string
@@ -6847,6 +6867,10 @@ components:
         system:
           type: boolean
         permissions:
+          type: array
+          items:
+            type: string
+        scopes:
           type: array
           items:
             type: string

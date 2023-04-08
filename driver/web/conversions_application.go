@@ -398,6 +398,10 @@ func identityProviderSettingToDef(item *model.IdentityProviderSetting) *Def.Iden
 // AppOrgRole
 func appOrgRoleToDef(item model.AppOrgRole) Def.AppOrgRole {
 	permissions := applicationPermissionsToDef(item.Permissions)
+	scopes := item.Scopes
+	if scopes == nil {
+		scopes = []string{}
+	}
 
 	//dates
 	var dateUpdated *string
@@ -409,7 +413,7 @@ func appOrgRoleToDef(item model.AppOrgRole) Def.AppOrgRole {
 	id := item.ID
 	description := item.Description
 	system := item.System
-	return Def.AppOrgRole{Id: &id, Name: item.Name, Description: &description, System: &system, DateCreated: &dateCreated, DateUpdated: dateUpdated, Permissions: &permissions}
+	return Def.AppOrgRole{Id: &id, Name: item.Name, Description: &description, System: &system, DateCreated: &dateCreated, DateUpdated: dateUpdated, Permissions: &permissions, Scopes: &scopes}
 }
 
 func appOrgRolesToDef(items []model.AppOrgRole) []Def.AppOrgRole {

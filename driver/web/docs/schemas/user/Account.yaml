@@ -40,6 +40,10 @@ properties:
     type: array
     items:
       $ref: "../application/AppOrgGroup.yaml"
+  scopes:
+    type: array
+    items:
+      type: string
   devices:
     type: array
     items:

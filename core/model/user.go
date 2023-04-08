@@ -65,6 +65,7 @@ type Account struct {
 	Permissions []Permission
 	Roles       []AccountRole
 	Groups      []AccountGroup
+	Scopes      []string
 
 	AuthTypes []AccountAuthType
 
@@ -167,6 +168,18 @@ func (a Account) GetPermissionsMap() map[string]Permission {
 		}
 	}
 	return permissionsMap
+}
+
+// GetScopes returns all scopes granted to this account
+func (a Account) GetScopes() []string {
+	scopes := []string{}
+	scopes = append(scopes, a.Scopes...)
+	for _, role := range a.Roles {
+		if role.Active {
+			scopes = append(scopes, role.Role.Scopes...)
+		}
+	}
+	return scopes
 }
 
 // GetVerifiedMFATypes returns a list of only verified MFA types for this account

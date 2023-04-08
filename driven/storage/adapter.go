@@ -1909,6 +1909,27 @@ func (sa *Adapter) UpdateAccountGroups(context TransactionContext, accountID str
 	return nil
 }
 
+// UpdateAccountScopes updates account scopes
+func (sa *Adapter) UpdateAccountScopes(context TransactionContext, accountID string, scopes []string) error {
+	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
+	update := bson.D{
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "scopes", Value: scopes},
+			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
+		}},
+	}
+
+	res, err := sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, nil, err)
+	}
+	if res.ModifiedCount != 1 {
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
+	}
+
+	return nil
+}
+
 // InsertAccountAuthType inserts am account auth type
 func (sa *Adapter) InsertAccountAuthType(item model.AccountAuthType) error {
 	storageItem := accountAuthTypeToStorage(item)
@@ -2527,6 +2548,7 @@ func (sa *Adapter) updateAppOrgRole(context TransactionContext, item model.AppOr
 			primitive.E{Key: "name", Value: item.Name},
 			primitive.E{Key: "description", Value: item.Description},
 			primitive.E{Key: "permissions", Value: item.Permissions},
+			primitive.E{Key: "scopes", Value: item.Scopes},
 			primitive.E{Key: "system", Value: item.System},
 			primitive.E{Key: "date_updated", Value: item.DateUpdated},
 		}},
@@ -2560,6 +2582,7 @@ func (sa *Adapter) updateAppOrgRole(context TransactionContext, item model.AppOr
 			primitive.E{Key: "roles.$.role.name", Value: item.Name},
 			primitive.E{Key: "roles.$.role.description", Value: item.Description},
 			primitive.E{Key: "roles.$.role.permissions", Value: item.Permissions},
+			primitive.E{Key: "roles.$.role.scopes", Value: item.Scopes},
 			primitive.E{Key: "roles.$.role.system", Value: item.System},
 			primitive.E{Key: "roles.$.role.date_updated", Value: item.DateUpdated},
 		}},

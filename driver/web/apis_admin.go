@@ -575,6 +575,10 @@ func (h AdminApisHandler) createAdminAccount(l *logs.Log, r *http.Request, claim
 	if requestData.GroupIds != nil {
 		groupIDs = *requestData.GroupIds
 	}
+	var scopes []string
+	if requestData.Scopes != nil {
+		scopes = *requestData.Scopes
+	}
 	profile := profileFromDefNullable(requestData.Profile)
 
 	username := ""
@@ -584,7 +588,7 @@ func (h AdminApisHandler) createAdminAccount(l *logs.Log, r *http.Request, claim
 
 	creatorPermissions := strings.Split(claims.Permissions, ",")
 	account, params, err := h.coreAPIs.Auth.CreateAdminAccount(string(requestData.AuthType), claims.AppID, claims.OrgID,
-		requestData.Identifier, profile, username, permissions, roleIDs, groupIDs, creatorPermissions, &clientVersion, l)
+		requestData.Identifier, profile, username, permissions, roleIDs, groupIDs, scopes, creatorPermissions, &clientVersion, l)
 	if err != nil || account == nil {
 		return l.HTTPResponseErrorAction(logutils.ActionCreate, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}
@@ -623,9 +627,13 @@ func (h AdminApisHandler) updateAdminAccount(l *logs.Log, r *http.Request, claim
 	if requestData.GroupIds != nil {
 		groupIDs = *requestData.GroupIds
 	}
+	var scopes []string
+	if requestData.Scopes != nil {
+		scopes = *requestData.Scopes
+	}
 	updaterPermissions := strings.Split(claims.Permissions, ",")
 	account, params, err := h.coreAPIs.Auth.UpdateAdminAccount(string(requestData.AuthType), claims.AppID, claims.OrgID, requestData.Identifier,
-		permissions, roleIDs, groupIDs, updaterPermissions, l)
+		permissions, roleIDs, groupIDs, scopes, updaterPermissions, l)
 	if err != nil || account == nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUpdate, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}
@@ -981,8 +989,14 @@ func (h AdminApisHandler) createApplicationRole(l *logs.Log, r *http.Request, cl
 	if requestData.System != nil {
 		system = *requestData.System
 	}
+
+	var scopes []string
+	if requestData.Scopes != nil {
+		scopes = *requestData.Scopes
+	}
+
 	assignerPermissions := strings.Split(claims.Permissions, ",")
-	role, err := h.coreAPIs.Administration.AdmCreateAppOrgRole(requestData.Name, requestData.Description, system, requestData.Permissions, claims.AppID, claims.OrgID, assignerPermissions, claims.System, l)
+	role, err := h.coreAPIs.Administration.AdmCreateAppOrgRole(requestData.Name, requestData.Description, system, requestData.Permissions, scopes, claims.AppID, claims.OrgID, assignerPermissions, claims.System, l)
 	if err != nil || role == nil {
 		return l.HTTPResponseErrorAction(logutils.ActionGet, model.TypeAppOrgRole, nil, err, http.StatusInternalServerError, true)
 	}
@@ -998,8 +1012,8 @@ func (h AdminApisHandler) createApplicationRole(l *logs.Log, r *http.Request, cl
 
 func (h AdminApisHandler) updateApplicationRole(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
 	params := mux.Vars(r)
-	rolesID := params["id"]
-	if len(rolesID) <= 0 {
+	roleID := params["id"]
+	if len(roleID) <= 0 {
 		return l.HTTPResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
 	}
 
@@ -1018,8 +1032,15 @@ func (h AdminApisHandler) updateApplicationRole(l *logs.Log, r *http.Request, cl
 	if requestData.System != nil {
 		system = *requestData.System
 	}
+
+	var scopes []string
+	if requestData.Scopes != nil {
+		scopes = *requestData.Scopes
+	}
+
 	assignerPermissions := strings.Split(claims.Permissions, ",")
-	role, err := h.coreAPIs.Administration.AdmUpdateAppOrgRole(rolesID, requestData.Name, requestData.Description, system, requestData.Permissions, claims.AppID, claims.OrgID, assignerPermissions, claims.System, l)
+
+	role, err := h.coreAPIs.Administration.AdmUpdateAppOrgRole(roleID, requestData.Name, requestData.Description, system, requestData.Permissions, scopes, claims.AppID, claims.OrgID, assignerPermissions, claims.System, l)
 	if err != nil || role == nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUpdate, model.TypeAppOrgRole, nil, err, http.StatusInternalServerError, true)
 	}

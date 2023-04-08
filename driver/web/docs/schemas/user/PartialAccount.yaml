@@ -39,6 +39,10 @@ properties:
     type: array
     items:
       $ref: "../application/AppOrgGroup.yaml"
+  scopes:
+    type: array
+    items:
+      type: string
   auth_types:
     type: array
     items:

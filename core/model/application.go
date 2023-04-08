@@ -116,6 +116,7 @@ type AppOrgRole struct {
 	System bool
 
 	Permissions []Permission
+	Scopes      []string
 
 	AppOrg ApplicationOrganization
 
