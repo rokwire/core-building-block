@@ -51,6 +51,11 @@ const (
 
 	allServices string = "all"
 
+	// AdminScopePrefix is the prefix on scope resources used to indicate that the scope is intended for administration
+	AdminScopePrefix string = "admin_"
+	// UpdateScopesPermission is the permission that allows an admin to update account/role scopes
+	UpdateScopesPermission string = "update_auth_scopes"
+
 	typeMail              logutils.MessageDataType = "mail"
 	typeExternalAuthType  logutils.MessageDataType = "external auth type"
 	typeAnonymousAuthType logutils.MessageDataType = "anonymous auth type"
@@ -1467,7 +1472,7 @@ func (a *Auth) constructAccount(context storage.TransactionContext, authType mod
 		}
 	}
 
-	if scopes != nil && (adminSet || utils.Contains(assignerPermissions, model.UpdateScopesPermission)) {
+	if scopes != nil && (!adminSet || utils.Contains(assignerPermissions, UpdateScopesPermission)) {
 		newScopes := []string{}
 		for _, scope := range scopes {
 			parsedScope, err := authorization.ScopeFromString(scope)
