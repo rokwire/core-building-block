@@ -11,6 +11,7 @@ properties:
     type: object
     additionalProperties:
       type: string
+    nullable: true
   first_name_field:
     type: string
   middle_name_field:
@@ -27,13 +28,18 @@ properties:
     type: array
     items:
       type: string
+    nullable: true
   roles:
     type: object
     additionalProperties:
       type: string
+    nullable: true
   groups:
     type: object
     additionalProperties:
       type: string
+    nullable: true
   always_sync_profile:
     type: boolean 
+  identity_bb_base_url:
+    type: string

@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added:
 - Admin scopes [#653](https://github.com/rokwire/core-building-block/issues/653)
 - Admin APIs to get count and list of accounts matching query [#649](https://github.com/rokwire/core-building-block/issues/649)
+- Sync Identity BB for user data on authentication event [#650](https://github.com/rokwire/core-building-block/issues/650)
 
 ## [1.31.2] - 2023-04-04
 ### Fixed

@@ -388,7 +388,8 @@ type IdentityProviderSetting struct {
 
 	UserSpecificFields []string `bson:"user_specific_fields"`
 
-	AlwaysSyncProfile bool `bson:"always_sync_profile"` // if true, profile data will be overwritten with data from external user on each login/refresh
+	AlwaysSyncProfile bool   `bson:"always_sync_profile"` // if true, profile data will be overwritten with data from external user on each login/refresh
+	IdentityBBBaseURL string `bson:"identity_bb_base_url"`
 
 	Roles  map[string]string `bson:"roles"`  //map[identity_provider_role]app_role_id
 	Groups map[string]string `bson:"groups"` //map[identity_provider_group]app_group_id
