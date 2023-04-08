@@ -188,6 +188,7 @@ type Account struct {
 	Preferences             *map[string]interface{}  `json:"preferences"`
 	Profile                 *Profile                 `json:"profile,omitempty"`
 	Roles                   *[]AppOrgRole            `json:"roles,omitempty"`
+	Scopes                  *[]string                `json:"scopes,omitempty"`
 	System                  *bool                    `json:"system,omitempty"`
 	SystemConfigs           *map[string]interface{}  `json:"system_configs"`
 	Username                *string                  `json:"username,omitempty"`
@@ -236,6 +237,7 @@ type AppOrgRole struct {
 	Id          *string       `json:"id,omitempty"`
 	Name        string        `json:"name"`
 	Permissions *[]Permission `json:"permissions,omitempty"`
+	Scopes      *[]string     `json:"scopes,omitempty"`
 	System      *bool         `json:"system,omitempty"`
 }
 
@@ -494,6 +496,7 @@ type PartialAccount struct {
 	Params        *map[string]interface{} `json:"params"`
 	Permissions   []Permission            `json:"permissions"`
 	Roles         []AppOrgRole            `json:"roles"`
+	Scopes        *[]string               `json:"scopes,omitempty"`
 	System        *bool                   `json:"system,omitempty"`
 	SystemConfigs *map[string]interface{} `json:"system_configs"`
 	Username      *string                 `json:"username,omitempty"`
@@ -642,10 +645,11 @@ type AdminReqApplicationGroup struct {
 
 // AdminReqApplicationRole defines model for _admin_req_application_role.
 type AdminReqApplicationRole struct {
-	Description string   `json:"description"`
-	Name        string   `json:"name"`
-	Permissions []string `json:"permissions"`
-	System      *bool    `json:"system,omitempty"`
+	Description string    `json:"description"`
+	Name        string    `json:"name"`
+	Permissions []string  `json:"permissions"`
+	Scopes      *[]string `json:"scopes,omitempty"`
+	System      *bool     `json:"system,omitempty"`
 }
 
 // AdminReqGrantPermissions defines model for _admin_req_grant-permissions.
@@ -853,6 +857,7 @@ type SharedReqCreateAccount struct {
 	Permissions *[]string                      `json:"permissions,omitempty"`
 	Profile     *ProfileNullable               `json:"profile"`
 	RoleIds     *[]string                      `json:"role_ids,omitempty"`
+	Scopes      *[]string                      `json:"scopes,omitempty"`
 	Username    *string                        `json:"username"`
 }
 
@@ -978,6 +983,7 @@ type SharedReqUpdateAccount struct {
 	Identifier  string                         `json:"identifier"`
 	Permissions *[]string                      `json:"permissions,omitempty"`
 	RoleIds     *[]string                      `json:"role_ids,omitempty"`
+	Scopes      *[]string                      `json:"scopes,omitempty"`
 }
 
 // SharedReqUpdateAccountAuthType defines model for SharedReqUpdateAccount.AuthType.
@@ -1153,6 +1159,21 @@ type PutAdminApplicationAccountsIdSystemConfigsParams struct {
 	// CreateAnonymous Create anonymous account if account with ID cannot be found. Default is `false`
 	CreateAnonymous *bool `form:"create-anonymous,omitempty" json:"create-anonymous,omitempty"`
 }
+
+// PostAdminApplicationFilterAccountsJSONBody defines parameters for PostAdminApplicationFilterAccounts.
+type PostAdminApplicationFilterAccountsJSONBody = map[string]interface{}
+
+// PostAdminApplicationFilterAccountsParams defines parameters for PostAdminApplicationFilterAccounts.
+type PostAdminApplicationFilterAccountsParams struct {
+	// Limit The maximum number of accounts to return
+	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+
+	// Offset The index of the first account to return
+	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
+}
+
+// PostAdminApplicationFilterAccountsCountJSONBody defines parameters for PostAdminApplicationFilterAccountsCount.
+type PostAdminApplicationFilterAccountsCountJSONBody = map[string]interface{}
 
 // GetAdminApplicationLoginSessionsParams defines parameters for GetAdminApplicationLoginSessions.
 type GetAdminApplicationLoginSessionsParams struct {
@@ -1495,6 +1516,12 @@ type PutAdminApplicationAccountsIdRolesJSONRequestBody = AdminReqGrantRolesToAcc
 
 // PutAdminApplicationAccountsIdSystemConfigsJSONRequestBody defines body for PutAdminApplicationAccountsIdSystemConfigs for application/json ContentType.
 type PutAdminApplicationAccountsIdSystemConfigsJSONRequestBody = PutAdminApplicationAccountsIdSystemConfigsJSONBody
+
+// PostAdminApplicationFilterAccountsJSONRequestBody defines body for PostAdminApplicationFilterAccounts for application/json ContentType.
+type PostAdminApplicationFilterAccountsJSONRequestBody = PostAdminApplicationFilterAccountsJSONBody
+
+// PostAdminApplicationFilterAccountsCountJSONRequestBody defines body for PostAdminApplicationFilterAccountsCount for application/json ContentType.
+type PostAdminApplicationFilterAccountsCountJSONRequestBody = PostAdminApplicationFilterAccountsCountJSONBody
 
 // PostAdminApplicationGroupsJSONRequestBody defines body for PostAdminApplicationGroups for application/json ContentType.
 type PostAdminApplicationGroupsJSONRequestBody = AdminReqApplicationGroup

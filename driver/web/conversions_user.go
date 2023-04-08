@@ -50,8 +50,13 @@ func accountToDef(item model.Account) *Def.Account {
 	lastLoginDate := utils.FormatTime(item.LastLoginDate)
 	lastAccessTokenDate := utils.FormatTime(item.LastAccessTokenDate)
 
+	scopes := item.Scopes
+	if scopes == nil {
+		scopes = []string{}
+	}
+
 	return &Def.Account{Id: &item.ID, Anonymous: &item.Anonymous, System: &item.AppOrg.Organization.System, Permissions: &permissions, Roles: &roles, Groups: &groups,
-		AuthTypes: &authTypes, Username: username, Profile: profile, Preferences: preferences, SystemConfigs: systemConfigs,
+		Scopes: &scopes, AuthTypes: &authTypes, Username: username, Profile: profile, Preferences: preferences, SystemConfigs: systemConfigs,
 		LastLoginDate: &lastLoginDate, LastAccessTokenDate: &lastAccessTokenDate, MostRecentClientVersion: item.MostRecentClientVersion, ExternalIds: &externalIds}
 }
 
@@ -70,6 +75,12 @@ func partialAccountToDef(item model.Account, params map[string]interface{}) *Def
 	roles := accountRolesToDef(item.GetActiveRoles())
 	//groups
 	groups := accountGroupsToDef(item.GetActiveGroups())
+
+	scopes := item.Scopes
+	if scopes == nil {
+		scopes = []string{}
+	}
+
 	//systemConfigs
 	systemConfigs := &item.SystemConfigs
 	//account auth types
@@ -104,7 +115,7 @@ func partialAccountToDef(item model.Account, params map[string]interface{}) *Def
 
 	return &Def.PartialAccount{Id: &item.ID, Anonymous: item.Anonymous, AppId: item.AppOrg.Application.ID, OrgId: item.AppOrg.Organization.ID, FirstName: item.Profile.FirstName,
 		LastName: item.Profile.LastName, Username: username, System: &item.AppOrg.Organization.System, Permissions: permissions, Roles: roles, Groups: groups,
-		SystemConfigs: systemConfigs, AuthTypes: authTypes, DateCreated: &dateCreated, DateUpdated: dateUpdated, Params: paramsData, ExternalIds: &externalIds}
+		Scopes: &scopes, SystemConfigs: systemConfigs, AuthTypes: authTypes, DateCreated: &dateCreated, DateUpdated: dateUpdated, Params: paramsData, ExternalIds: &externalIds}
 }
 
 func partialAccountsToDef(items []model.Account) []Def.PartialAccount {
@@ -134,6 +145,11 @@ func accountAuthTypesToDef(items []model.AccountAuthType) []Def.AccountAuthType 
 func accountRoleToDef(item model.AccountRole) Def.AppOrgRole {
 	permissions := applicationPermissionsToDef(item.Role.Permissions)
 
+	scopes := item.Role.Scopes
+	if scopes == nil {
+		scopes = []string{}
+	}
+
 	//dates
 	var dateUpdated *string
 	dateCreated := utils.FormatTime(&item.Role.DateCreated)
@@ -142,7 +158,7 @@ func accountRoleToDef(item model.AccountRole) Def.AppOrgRole {
 		dateUpdated = &formatted
 	}
 
-	return Def.AppOrgRole{Id: &item.Role.ID, Name: item.Role.Name, Description: &item.Role.Description, System: &item.Role.System, DateCreated: &dateCreated, DateUpdated: dateUpdated, Permissions: &permissions}
+	return Def.AppOrgRole{Id: &item.Role.ID, Name: item.Role.Name, Description: &item.Role.Description, System: &item.Role.System, DateCreated: &dateCreated, DateUpdated: dateUpdated, Permissions: &permissions, Scopes: &scopes}
 }
 
 func accountRolesToDef(items []model.AccountRole) []Def.AppOrgRole {

@@ -177,10 +177,10 @@ func main() {
 	}
 
 	//core
-	coreAPIs := core.NewCoreAPIs(env, Version, Build, storageAdapter, auth, systemInitSettings, logger)
+	coreAPIs := core.NewCoreAPIs(env, Version, Build, serviceID, storageAdapter, auth, systemInitSettings, logger)
 	coreAPIs.Start()
 
 	//web adapter
-	webAdapter := web.NewWebAdapter(env, serviceID, auth.ServiceRegManager, port, coreAPIs, host, baseServerURL, prodServerURL, testServerURL, devServerURL, logger)
+	webAdapter := web.NewWebAdapter(env, auth.ServiceRegManager, port, coreAPIs, host, baseServerURL, prodServerURL, testServerURL, devServerURL, logger)
 	webAdapter.Start()
 }

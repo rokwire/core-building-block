@@ -71,6 +71,11 @@ const (
 	TypeCreds logutils.MessageDataType = "creds"
 	//TypeIP auth type type
 	TypeIP logutils.MessageDataType = "ip"
+
+	// AdminScopePrefix is the prefix on scope resources used to indicate that the scope is intended for administration
+	AdminScopePrefix string = "admin_"
+	// UpdateScopesPermission is the permission that allows an admin to update account/role scopes
+	UpdateScopesPermission string = "update_auth_scopes"
 )
 
 // LoginSession represents login session entity

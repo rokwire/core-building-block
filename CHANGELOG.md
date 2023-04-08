@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+### Added:
+- Admin scopes [#653](https://github.com/rokwire/core-building-block/issues/653)
+- Admin APIs to get count and list of accounts matching query [#649](https://github.com/rokwire/core-building-block/issues/649)
+
 ## [1.31.2] - 2023-04-04
 ### Fixed
 - Ignore readOnly fields during validation [#641](https://github.com/rokwire/core-building-block/issues/641)

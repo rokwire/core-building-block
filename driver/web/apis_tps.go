@@ -35,8 +35,7 @@ import (
 
 // TPSApisHandler handles the APIs implementation used by third-party services
 type TPSApisHandler struct {
-	coreAPIs  *core.APIs
-	serviceID string
+	coreAPIs *core.APIs
 }
 
 func (h TPSApisHandler) getServiceRegistrations(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
@@ -215,7 +214,7 @@ func (h TPSApisHandler) getAccounts(l *logs.Log, r *http.Request, claims *tokena
 
 	// limit search params by scopes
 	scopes := claims.Scopes()
-	minAllAccessScope := authorization.Scope{ServiceID: h.serviceID, Resource: string(model.TypeAccount), Operation: authorization.ScopeOperationGet}
+	minAllAccessScope := authorization.Scope{ServiceID: h.coreAPIs.GetServiceID(), Resource: string(model.TypeAccount), Operation: authorization.ScopeOperationGet}
 	searchKeys := make([]string, 0)
 	for k := range queryParams {
 		searchKeys = append(searchKeys, k)
@@ -237,11 +236,6 @@ func (h TPSApisHandler) getAccounts(l *logs.Log, r *http.Request, claims *tokena
 	}
 
 	return l.HTTPResponseSuccessJSON(respData)
-}
-
-// NewTPSApisHandler creates new tps Handler instance
-func NewTPSApisHandler(coreAPIs *core.APIs, serviceID string) TPSApisHandler {
-	return TPSApisHandler{coreAPIs: coreAPIs, serviceID: serviceID}
 }
 
 func (h TPSApisHandler) getAccountsCount(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
@@ -270,7 +264,7 @@ func (h TPSApisHandler) getAccountsCount(l *logs.Log, r *http.Request, claims *t
 
 	// limit search params by scopes
 	scopes := claims.Scopes()
-	minAllAccessScope := authorization.Scope{ServiceID: h.serviceID, Resource: string(model.TypeAccount), Operation: authorization.ScopeOperationGet}
+	minAllAccessScope := authorization.Scope{ServiceID: h.coreAPIs.GetServiceID(), Resource: string(model.TypeAccount), Operation: authorization.ScopeOperationGet}
 	searchKeys := make([]string, 0)
 	for k := range queryParams {
 		searchKeys = append(searchKeys, k)
@@ -292,4 +286,9 @@ func (h TPSApisHandler) getAccountsCount(l *logs.Log, r *http.Request, claims *t
 	}
 
 	return l.HTTPResponseSuccessJSON(respData)
+}
+
+// NewTPSApisHandler creates new tps Handler instance
+func NewTPSApisHandler(coreAPIs *core.APIs) TPSApisHandler {
+	return TPSApisHandler{coreAPIs: coreAPIs}
 }
