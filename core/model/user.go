@@ -450,6 +450,7 @@ func (p Profile) GetFullName() string {
 	return fullname
 }
 
+// Merge applies any non-empty fields from the provided profile to receiver
 func (p Profile) Merge(src Profile) Profile {
 	if src.FirstName != "" {
 		p.FirstName = src.FirstName
