@@ -361,6 +361,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 		}
 	}
 
+	scopes := []string{authorization.ScopeGlobal}
 	if !anonymous {
 		accountAuthType := loginSession.AccountAuthType
 		if accountAuthType == nil {
@@ -372,9 +373,10 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 		email = accountAuthType.Account.Profile.Email
 		phone = accountAuthType.Account.Profile.Phone
 		permissions = accountAuthType.Account.GetPermissionNames()
+		scopes = append(scopes, accountAuthType.Account.GetScopes()...)
 	}
 	claims := a.getStandardClaims(sub, uid, name, email, phone, rokwireTokenAud, orgID, appID, authType, loginSession.ExternalIDs, nil, anonymous, false, loginSession.AppOrg.Application.Admin, loginSession.AppOrg.Organization.System, false, true, loginSession.ID)
-	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), authorization.ScopeGlobal)
+	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), strings.Join(scopes, " "))
 	if err != nil {
 		l.Infof("error generating acccess token on refresh - %s", refreshToken)
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
