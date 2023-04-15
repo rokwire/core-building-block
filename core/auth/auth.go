@@ -16,10 +16,8 @@ package auth
 
 import (
 	"core-building-block/core/model"
-	"core-building-block/driven/profilebb"
 	"core-building-block/driven/storage"
 	"core-building-block/utils"
-	"crypto/rsa"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -28,11 +26,12 @@ import (
 
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
-	"github.com/rokwire/core-auth-library-go/v2/authorization"
-	"github.com/rokwire/core-auth-library-go/v2/authservice"
-	"github.com/rokwire/core-auth-library-go/v2/authutils"
-	"github.com/rokwire/core-auth-library-go/v2/sigauth"
-	"github.com/rokwire/core-auth-library-go/v2/tokenauth"
+	"github.com/rokwire/core-auth-library-go/v3/authorization"
+	"github.com/rokwire/core-auth-library-go/v3/authservice"
+	"github.com/rokwire/core-auth-library-go/v3/authutils"
+	"github.com/rokwire/core-auth-library-go/v3/keys"
+	"github.com/rokwire/core-auth-library-go/v3/sigauth"
+	"github.com/rokwire/core-auth-library-go/v3/tokenauth"
 	"golang.org/x/sync/syncmap"
 	"gopkg.in/go-playground/validator.v9"
 	"gopkg.in/gomail.v2"
@@ -50,6 +49,11 @@ const (
 	rokwireTokenAud string = "rokwire"
 
 	allServices string = "all"
+
+	// AdminScopePrefix is the prefix on scope resources used to indicate that the scope is intended for administration
+	AdminScopePrefix string = "admin_"
+	// UpdateScopesPermission is the permission that allows an admin to update account/role scopes
+	UpdateScopesPermission string = "update_auth_scopes"
 
 	typeMail              logutils.MessageDataType = "mail"
 	typeExternalAuthType  logutils.MessageDataType = "external auth type"
@@ -84,7 +88,7 @@ type Auth struct {
 	serviceAuthTypes   map[string]serviceAuthType
 	mfaTypes           map[string]mfaType
 
-	authPrivKey *rsa.PrivateKey
+	authPrivKey *keys.PrivKey
 
 	ServiceRegManager *authservice.ServiceRegManager
 	SignatureAuth     *sigauth.SignatureAuth
@@ -94,7 +98,8 @@ type Auth struct {
 	minTokenExp int64  //Minimum access token expiration time in minutes
 	maxTokenExp int64  //Maximum access token expiration time in minutes
 
-	profileBB ProfileBuildingBlock
+	profileBB  ProfileBuildingBlock
+	identityBB IdentityBuildingBlock
 
 	emailFrom   string
 	emailDialer *gomail.Dialer
@@ -111,8 +116,8 @@ type Auth struct {
 }
 
 // NewAuth creates a new auth instance
-func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage Storage, emailer Emailer, minTokenExp *int64, maxTokenExp *int64, twilioAccountSID string,
-	twilioToken string, twilioServiceSID string, profileBB *profilebb.Adapter, smtpHost string, smtpPortNum int, smtpUser string, smtpPassword string, smtpFrom string, logger *logs.Logger) (*Auth, error) {
+func NewAuth(serviceID string, host string, authPrivKey *keys.PrivKey, storage Storage, emailer Emailer, minTokenExp *int64, maxTokenExp *int64, supportLegacySigs bool, twilioAccountSID string,
+	twilioToken string, twilioServiceSID string, profileBB ProfileBuildingBlock, identityBB IdentityBuildingBlock, smtpHost string, smtpPortNum int, smtpUser string, smtpPassword string, smtpFrom string, logger *logs.Logger) (*Auth, error) {
 	if minTokenExp == nil {
 		var minTokenExpVal int64 = 5
 		minTokenExp = &minTokenExpVal
@@ -141,7 +146,7 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 
 	auth := &Auth{storage: storage, emailer: emailer, logger: logger, authTypes: authTypes, externalAuthTypes: externalAuthTypes, anonymousAuthTypes: anonymousAuthTypes,
 		serviceAuthTypes: serviceAuthTypes, mfaTypes: mfaTypes, authPrivKey: authPrivKey, ServiceRegManager: nil, serviceID: serviceID, host: host, minTokenExp: *minTokenExp,
-		maxTokenExp: *maxTokenExp, profileBB: profileBB, cachedIdentityProviders: cachedIdentityProviders, identityProvidersLock: identityProvidersLock,
+		maxTokenExp: *maxTokenExp, profileBB: profileBB, identityBB: identityBB, cachedIdentityProviders: cachedIdentityProviders, identityProvidersLock: identityProvidersLock,
 		timerDone: timerDone, emailDialer: emailDialer, emailFrom: smtpFrom, apiKeys: apiKeys, apiKeysLock: apiKeysLock}
 
 	err := auth.storeReg()
@@ -158,14 +163,14 @@ func NewAuth(serviceID string, host string, authPrivKey *rsa.PrivateKey, storage
 	serviceRegLoader := NewLocalServiceRegLoader(storage)
 
 	// Instantiate a ServiceRegManager to manage the service registration data loaded by serviceRegLoader
-	serviceRegManager, err := authservice.NewServiceRegManager(&authService, serviceRegLoader)
+	serviceRegManager, err := authservice.NewServiceRegManager(&authService, serviceRegLoader, true)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionInitialize, "service reg manager", nil, err)
 	}
 
 	auth.ServiceRegManager = serviceRegManager
 
-	signatureAuth, err := sigauth.NewSignatureAuth(authPrivKey, serviceRegManager, true)
+	signatureAuth, err := sigauth.NewSignatureAuth(authPrivKey, serviceRegManager, true, supportLegacySigs)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionInitialize, "signature auth", nil, err)
 	}
@@ -219,7 +224,7 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 
 	//1. get the user from the external system
 	//var externalUser *model.ExternalSystemUser
-	externalUser, extParams, err := authImpl.externalLogin(authType, appType, appOrg, creds, params, l)
+	externalUser, extParams, externalCreds, err := authImpl.externalLogin(authType, appType, appOrg, creds, params, l)
 	if err != nil {
 		return nil, nil, nil, nil, errors.WrapErrorAction("logging in", "external user", nil, err)
 	}
@@ -234,7 +239,7 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 	canSignIn := a.canSignIn(account, authType.ID, externalUser.Identifier)
 	if canSignIn {
 		//account exists
-		accountAuthType, err = a.applySignInExternal(account, authType, appOrg, *externalUser, l)
+		accountAuthType, err = a.applySignInExternal(account, authType, appOrg, *externalUser, externalCreds, l)
 		if err != nil {
 			return nil, nil, nil, nil, errors.WrapErrorAction(logutils.ActionApply, "external sign in", nil, err)
 		}
@@ -242,7 +247,7 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 		externalIDs = account.ExternalIDs
 	} else if !admin {
 		//user does not exist, we need to register it
-		accountAuthType, err = a.applySignUpExternal(nil, authType, appOrg, *externalUser, regProfile, regPreferences, username, clientVersion, l)
+		accountAuthType, err = a.applySignUpExternal(nil, authType, appOrg, *externalUser, externalCreds, regProfile, regPreferences, username, clientVersion, l)
 		if err != nil {
 			return nil, nil, nil, nil, errors.WrapErrorAction(logutils.ActionApply, "external sign up", nil, err)
 		}
@@ -256,7 +261,7 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 }
 
 func (a *Auth) applySignInExternal(account *model.Account, authType model.AuthType, appOrg model.ApplicationOrganization,
-	externalUser model.ExternalSystemUser, l *logs.Log) (*model.AccountAuthType, error) {
+	externalUser model.ExternalSystemUser, externalCreds string, l *logs.Log) (*model.AccountAuthType, error) {
 	var accountAuthType *model.AccountAuthType
 	var err error
 
@@ -267,7 +272,7 @@ func (a *Auth) applySignInExternal(account *model.Account, authType model.AuthTy
 	}
 
 	//check if need to update the account data
-	newAccount, err := a.updateExternalUserIfNeeded(*accountAuthType, externalUser, authType, appOrg, l)
+	newAccount, err := a.updateExternalUserIfNeeded(*accountAuthType, externalUser, authType, appOrg, externalCreds, l)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeExternalSystemUser, nil, err)
 	}
@@ -288,7 +293,7 @@ func (a *Auth) applySignInExternal(account *model.Account, authType model.AuthTy
 }
 
 func (a *Auth) applySignUpExternal(context storage.TransactionContext, authType model.AuthType, appOrg model.ApplicationOrganization, externalUser model.ExternalSystemUser,
-	regProfile model.Profile, regPreferences map[string]interface{}, username string, clientVersion *string, l *logs.Log) (*model.AccountAuthType, error) {
+	externalCreds string, regProfile model.Profile, regPreferences map[string]interface{}, username string, clientVersion *string, l *logs.Log) (*model.AccountAuthType, error) {
 	var accountAuthType *model.AccountAuthType
 
 	//1. prepare external admin user data
@@ -297,13 +302,6 @@ func (a *Auth) applySignUpExternal(context storage.TransactionContext, authType 
 		return nil, errors.WrapErrorAction(logutils.ActionPrepare, "external admin user data", nil, err)
 	}
 
-	//2. apply profile data from the external user if not provided
-	_, err = a.applyProfileDataFromExternalUser(profile, externalUser, nil, false, l)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionApply, "profile data from external user", nil, err)
-	}
-
-	//3. roles and groups mapping
 	identityProviderID, ok := authType.Params["identity_provider"].(string)
 	if !ok {
 		return nil, errors.ErrorData(logutils.StatusMissing, "identity provider id", nil)
@@ -313,6 +311,24 @@ func (a *Auth) applySignUpExternal(context storage.TransactionContext, authType 
 		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeIdentityProviderSetting, nil)
 	}
 
+	var identityBBProfile *model.Profile
+	if identityProviderSetting.IdentityBBBaseURL != "" {
+		identityBBProfile, err = a.identityBB.GetUserProfile(identityProviderSetting.IdentityBBBaseURL, externalUser, externalCreds, l)
+		if err != nil {
+			l.WarnError(logutils.MessageAction(logutils.StatusError, "syncing", "identity bb data", nil), err)
+		}
+	}
+
+	//2. apply profile data from the external user if not provided
+	newProfile, err := a.applyProfileDataFromExternalUser(*profile, externalUser, nil, identityBBProfile, false, l)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionApply, "profile data from external user", nil, err)
+	}
+	if newProfile != nil {
+		profile = newProfile
+	}
+
+	//3. roles and groups mapping
 	externalRoles, externalGroups, err := a.getExternalUserAuthorization(externalUser, identityProviderSetting)
 	if err != nil {
 		l.WarnError(logutils.MessageActionError(logutils.ActionGet, "external authorization", nil), err)
@@ -328,7 +344,7 @@ func (a *Auth) applySignUpExternal(context storage.TransactionContext, authType 
 
 	//5. register the account
 	accountAuthType, err = a.registerUser(context, authType, identifier, aatParams, appOrg, nil, useSharedProfile,
-		externalUser.ExternalIDs, *profile, preferences, username, nil, externalRoles, externalGroups, nil, clientVersion, l)
+		externalUser.ExternalIDs, *profile, preferences, username, nil, externalRoles, externalGroups, nil, nil, clientVersion, l)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
 	}
@@ -337,7 +353,7 @@ func (a *Auth) applySignUpExternal(context storage.TransactionContext, authType 
 }
 
 func (a *Auth) applySignUpAdminExternal(context storage.TransactionContext, authType model.AuthType, appOrg model.ApplicationOrganization, externalUser model.ExternalSystemUser, regProfile model.Profile,
-	username string, permissions []string, roleIDs []string, groupIDs []string, creatorPermissions []string, clientVersion *string, l *logs.Log) (*model.AccountAuthType, error) {
+	username string, permissions []string, roleIDs []string, groupIDs []string, scopes []string, creatorPermissions []string, clientVersion *string, l *logs.Log) (*model.AccountAuthType, error) {
 	var accountAuthType *model.AccountAuthType
 
 	//1. prepare external admin user data
@@ -356,7 +372,7 @@ func (a *Auth) applySignUpAdminExternal(context storage.TransactionContext, auth
 
 	//3. register the account
 	accountAuthType, err = a.registerUser(context, authType, identifier, aatParams, appOrg, nil, useSharedProfile, nil, *profile, nil,
-		username, permissions, roleIDs, groupIDs, creatorPermissions, clientVersion, l)
+		username, permissions, roleIDs, groupIDs, scopes, creatorPermissions, clientVersion, l)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionRegister, "admin account", nil, err)
 	}
@@ -403,37 +419,39 @@ func (a *Auth) prepareExternalUserData(authType model.AuthType, appOrg model.App
 	return externalUser.Identifier, params, useSharedProfile, &profile, preferences, nil
 }
 
-func (a *Auth) applyProfileDataFromExternalUser(profile *model.Profile, newExternalUser model.ExternalSystemUser,
-	currentExternalUser *model.ExternalSystemUser, alwaysSync bool, l *logs.Log) (bool, error) {
-	if profile == nil {
-		return false, errors.ErrorData(logutils.StatusMissing, model.TypeProfile, nil)
+func (a *Auth) applyProfileDataFromExternalUser(profile model.Profile, newExternalUser model.ExternalSystemUser,
+	currentExternalUser *model.ExternalSystemUser, identityBBProfile *model.Profile, alwaysSync bool, l *logs.Log) (*model.Profile, error) {
+	newProfile := profile
+	if identityBBProfile != nil {
+		newProfile = newProfile.Merge(*identityBBProfile)
+		alwaysSync = true // External auth system data should always override identity bb data
 	}
 
-	changed := false
 	//first name
 	if len(newExternalUser.FirstName) > 0 && (alwaysSync || len(profile.FirstName) == 0 || (currentExternalUser != nil && currentExternalUser.FirstName != newExternalUser.FirstName)) {
-		changed = changed || (profile.FirstName != newExternalUser.FirstName)
-		profile.FirstName = newExternalUser.FirstName
+		newProfile.FirstName = newExternalUser.FirstName
 	}
 	//last name
 	if len(newExternalUser.LastName) > 0 && (alwaysSync || len(profile.LastName) == 0 || (currentExternalUser != nil && currentExternalUser.LastName != newExternalUser.LastName)) {
-		changed = changed || (profile.LastName != newExternalUser.LastName)
-		profile.LastName = newExternalUser.LastName
+		newProfile.LastName = newExternalUser.LastName
 	}
 	//email
 	if len(newExternalUser.Email) > 0 && (alwaysSync || len(profile.Email) == 0 || (currentExternalUser != nil && currentExternalUser.Email != newExternalUser.Email)) {
-		changed = changed || (profile.Email != newExternalUser.Email)
-		profile.Email = newExternalUser.Email
+		newProfile.Email = newExternalUser.Email
 	}
+
+	changed := !utils.DeepEqual(profile, newProfile)
 	if changed {
 		now := time.Now()
-		profile.DateUpdated = &now
+		newProfile.DateUpdated = &now
+		return &newProfile, nil
 	}
-	return changed, nil
+
+	return nil, nil
 }
 
 func (a *Auth) updateExternalUserIfNeeded(accountAuthType model.AccountAuthType, externalUser model.ExternalSystemUser,
-	authType model.AuthType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.Account, error) {
+	authType model.AuthType, appOrg model.ApplicationOrganization, externalCreds string, l *logs.Log) (*model.Account, error) {
 	l.Info("updateExternalUserIfNeeded")
 
 	//get the current external user
@@ -457,11 +475,19 @@ func (a *Auth) updateExternalUserIfNeeded(accountAuthType model.AccountAuthType,
 		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeIdentityProviderSetting, nil)
 	}
 
+	var identityBBProfile *model.Profile
+	if identityProviderSetting.IdentityBBBaseURL != "" {
+		identityBBProfile, err = a.identityBB.GetUserProfile(identityProviderSetting.IdentityBBBaseURL, externalUser, externalCreds, l)
+		if err != nil {
+			l.WarnError(logutils.MessageAction(logutils.StatusError, "syncing", "identity bb data", nil), err)
+		}
+	}
+
 	//check if external system user needs to be updated
 	var newAccount *model.Account
 	//there is changes so we need to update it
 	//TODO: Can we do this all in a single storage operation?
-	updated := !currentData.Equals(externalUser)
+	updatedExternalUser := !currentData.Equals(externalUser)
 	accountAuthType.Params["user"] = externalUser
 	now := time.Now()
 	accountAuthType.DateUpdated = &now
@@ -493,15 +519,21 @@ func (a *Auth) updateExternalUserIfNeeded(accountAuthType model.AccountAuthType,
 				account.ExternalIDs = make(map[string]string)
 			}
 			if account.ExternalIDs[k] != v {
-				updated = true
+				updatedExternalUser = true
 				account.ExternalIDs[k] = v
 			}
 		}
 
 		// 4. update profile
-		profileUpdated, err := a.applyProfileDataFromExternalUser(&account.Profile, externalUser, currentData, identityProviderSetting.AlwaysSyncProfile, l)
+		profileUpdated := false
+		newProfile, err := a.applyProfileDataFromExternalUser(account.Profile, externalUser, currentData, identityBBProfile,
+			identityProviderSetting.AlwaysSyncProfile, l)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeProfile, nil, err)
+		}
+		if newProfile != nil {
+			account.Profile = *newProfile
+			profileUpdated = true
 		}
 
 		// 5. update roles and groups mapping
@@ -519,7 +551,7 @@ func (a *Auth) updateExternalUserIfNeeded(accountAuthType model.AccountAuthType,
 		}
 
 		// 6. update account if needed
-		if updated || profileUpdated || rolesUpdated || groupsUpdated {
+		if updatedExternalUser || profileUpdated || rolesUpdated || groupsUpdated {
 			err = a.storage.SaveAccount(context, account)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionSave, model.TypeAccount, nil, err)
@@ -706,7 +738,7 @@ func (a *Auth) applySignUp(authImpl authType, account *model.Account, authType m
 		}
 	}
 
-	retParams, accountAuthType, err := a.signUpNewAccount(nil, authImpl, authType, appOrg, userIdentifier, creds, params, clientVersion, regProfile, regPreferences, username, nil, nil, nil, nil, l)
+	retParams, accountAuthType, err := a.signUpNewAccount(nil, authImpl, authType, appOrg, userIdentifier, creds, params, clientVersion, regProfile, regPreferences, username, nil, nil, nil, nil, nil, l)
 	if err != nil {
 		return "", nil, err
 	}
@@ -716,7 +748,7 @@ func (a *Auth) applySignUp(authImpl authType, account *model.Account, authType m
 }
 
 func (a *Auth) applySignUpAdmin(context storage.TransactionContext, authImpl authType, account *model.Account, authType model.AuthType, appOrg model.ApplicationOrganization, identifier string, password string,
-	regProfile model.Profile, username string, permissions []string, roles []string, groups []string, creatorPermissions []string, clientVersion *string, l *logs.Log) (map[string]interface{}, *model.AccountAuthType, error) {
+	regProfile model.Profile, username string, permissions []string, roles []string, groups []string, scopes []string, creatorPermissions []string, clientVersion *string, l *logs.Log) (map[string]interface{}, *model.AccountAuthType, error) {
 
 	if username != "" {
 		err := a.checkUsername(nil, &appOrg, username)
@@ -725,7 +757,7 @@ func (a *Auth) applySignUpAdmin(context storage.TransactionContext, authImpl aut
 		}
 	}
 
-	return a.signUpNewAccount(context, authImpl, authType, appOrg, identifier, password, "", clientVersion, regProfile, nil, username, permissions, roles, groups, creatorPermissions, l)
+	return a.signUpNewAccount(context, authImpl, authType, appOrg, identifier, password, "", clientVersion, regProfile, nil, username, permissions, roles, groups, scopes, creatorPermissions, l)
 }
 
 func (a *Auth) applyCreateAnonymousAccount(context storage.TransactionContext, appOrg model.ApplicationOrganization, anonymousID string,
@@ -736,7 +768,7 @@ func (a *Auth) applyCreateAnonymousAccount(context storage.TransactionContext, a
 
 func (a *Auth) signUpNewAccount(context storage.TransactionContext, authImpl authType, authType model.AuthType, appOrg model.ApplicationOrganization, userIdentifier string,
 	creds string, params string, clientVersion *string, regProfile model.Profile, regPreferences map[string]interface{}, username string, permissions []string,
-	roles []string, groups []string, creatorPermissions []string, l *logs.Log) (map[string]interface{}, *model.AccountAuthType, error) {
+	roles []string, groups []string, scopes []string, creatorPermissions []string, l *logs.Log) (map[string]interface{}, *model.AccountAuthType, error) {
 	var retParams map[string]interface{}
 	var credential *model.Credential
 	var profile model.Profile
@@ -803,7 +835,8 @@ func (a *Auth) signUpNewAccount(context storage.TransactionContext, authImpl aut
 		}
 	}
 
-	accountAuthType, err := a.registerUser(context, authType, userIdentifier, nil, appOrg, credential, useSharedProfile, nil, profile, preferences, username, permissions, roles, groups, creatorPermissions, clientVersion, l)
+	accountAuthType, err := a.registerUser(context, authType, userIdentifier, nil, appOrg, credential, useSharedProfile,
+		nil, profile, preferences, username, permissions, roles, groups, scopes, creatorPermissions, clientVersion, l)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
 	}
@@ -1180,15 +1213,17 @@ func (a *Auth) createLoginSession(anonymous bool, sub string, authType model.Aut
 	email := ""
 	phone := ""
 	permissions := []string{}
+	scopes := []string{authorization.ScopeGlobal}
 	if !anonymous {
 		uid = accountAuthType.Identifier
 		name = accountAuthType.Account.Profile.GetFullName()
 		email = accountAuthType.Account.Profile.Email
 		phone = accountAuthType.Account.Profile.Phone
 		permissions = accountAuthType.Account.GetPermissionNames()
+		scopes = append(scopes, accountAuthType.Account.GetScopes()...)
 	}
 	claims := a.getStandardClaims(sub, uid, name, email, phone, rokwireTokenAud, orgID, appID, authType.Code, externalIDs, nil, anonymous, true, appOrg.Application.Admin, appOrg.Organization.System, false, true, idUUID.String())
-	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), authorization.ScopeGlobal)
+	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), strings.Join(scopes, " "))
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
 	}
@@ -1388,7 +1423,7 @@ func (a *Auth) getProfileBBData(authType model.AuthType, identifier string, l *l
 //		Registered account (AccountAuthType): Registered Account object
 func (a *Auth) registerUser(context storage.TransactionContext, authType model.AuthType, userIdentifier string, accountAuthTypeParams map[string]interface{},
 	appOrg model.ApplicationOrganization, credential *model.Credential, useSharedProfile bool, externalIDs map[string]string, profile model.Profile, preferences map[string]interface{},
-	username string, permissionNames []string, roleIDs []string, groupIDs []string, creatorPermissions []string, clientVersion *string, l *logs.Log) (*model.AccountAuthType, error) {
+	username string, permissionNames []string, roleIDs []string, groupIDs []string, scopes []string, creatorPermissions []string, clientVersion *string, l *logs.Log) (*model.AccountAuthType, error) {
 
 	//External and anonymous auth is automatically verified, otherwise verified if credential has been verified previously
 	unverified := true
@@ -1401,7 +1436,7 @@ func (a *Auth) registerUser(context storage.TransactionContext, authType model.A
 	}
 
 	accountAuthType, err := a.constructAccount(context, authType, userIdentifier, accountAuthTypeParams, appOrg, credential,
-		unverified, externalIDs, profile, preferences, username, permissionNames, roleIDs, groupIDs, creatorPermissions, clientVersion, l)
+		unverified, externalIDs, profile, preferences, username, permissionNames, roleIDs, groupIDs, scopes, creatorPermissions, clientVersion, l)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeAccount, nil, err)
 	}
@@ -1416,7 +1451,7 @@ func (a *Auth) registerUser(context storage.TransactionContext, authType model.A
 
 func (a *Auth) constructAccount(context storage.TransactionContext, authType model.AuthType, userIdentifier string, accountAuthTypeParams map[string]interface{},
 	appOrg model.ApplicationOrganization, credential *model.Credential, unverified bool, externalIDs map[string]string, profile model.Profile, preferences map[string]interface{},
-	username string, permissionNames []string, roleIDs []string, groupIDs []string, assignerPermissions []string, clientVersion *string, l *logs.Log) (*model.AccountAuthType, error) {
+	username string, permissionNames []string, roleIDs []string, groupIDs []string, scopes []string, assignerPermissions []string, clientVersion *string, l *logs.Log) (*model.AccountAuthType, error) {
 	//create account auth type
 	accountAuthType, _, err := a.prepareAccountAuthType(authType, userIdentifier, accountAuthTypeParams, credential, unverified, false)
 	if err != nil {
@@ -1464,8 +1499,30 @@ func (a *Auth) constructAccount(context storage.TransactionContext, authType mod
 		}
 	}
 
+	if scopes != nil && (!adminSet || utils.Contains(assignerPermissions, UpdateScopesPermission)) {
+		newScopes := []string{}
+		for _, scope := range scopes {
+			parsedScope, err := authorization.ScopeFromString(scope)
+			if err != nil {
+				if adminSet {
+					return nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeScope, nil, err)
+				}
+				l.WarnError(logutils.MessageAction(logutils.StatusError, logutils.ActionValidate, model.TypeScope, nil), err)
+				continue
+			}
+			if !strings.HasPrefix(parsedScope.Resource, model.AdminScopePrefix) {
+				parsedScope.Resource = model.AdminScopePrefix + parsedScope.Resource
+				scope = parsedScope.String()
+			}
+			newScopes = append(newScopes, scope)
+		}
+		scopes = newScopes
+	} else {
+		scopes = nil
+	}
+
 	account := model.Account{ID: accountID.String(), AppOrg: appOrg, Permissions: permissions,
-		Roles: model.AccountRolesFromAppOrgRoles(roles, true, adminSet), Groups: model.AccountGroupsFromAppOrgGroups(groups, true, adminSet), AuthTypes: authTypes,
+		Roles: model.AccountRolesFromAppOrgRoles(roles, true, adminSet), Groups: model.AccountGroupsFromAppOrgGroups(groups, true, adminSet), Scopes: scopes, AuthTypes: authTypes,
 		ExternalIDs: externalIDs, Preferences: preferences, Profile: profile, Username: username, DateCreated: time.Now(), MostRecentClientVersion: clientVersion}
 
 	accountAuthType.Account = account
@@ -1626,7 +1683,7 @@ func (a *Auth) linkAccountAuthTypeExternal(account model.Account, authType model
 		return nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeAuthType, nil, err)
 	}
 
-	externalUser, _, err := authImpl.externalLogin(authType, appType, appOrg, creds, params, l)
+	externalUser, _, _, err := authImpl.externalLogin(authType, appType, appOrg, creds, params, l)
 	if err != nil {
 		return nil, errors.WrapErrorAction("logging in", "external user", nil, err)
 	}
@@ -2097,12 +2154,12 @@ func (a *Auth) buildAccessToken(claims tokenauth.Claims, permissions string, sco
 		claims.Permissions = permissions
 	}
 	claims.Scope = scope
-	return a.generateToken(&claims)
+	return tokenauth.GenerateSignedToken(&claims, a.authPrivKey)
 }
 
 func (a *Auth) buildCsrfToken(claims tokenauth.Claims) (string, error) {
 	claims.Purpose = "csrf"
-	return a.generateToken(&claims)
+	return tokenauth.GenerateSignedToken(&claims, a.authPrivKey)
 }
 
 func (a *Auth) buildRefreshToken() (string, error) {
@@ -2151,16 +2208,6 @@ func (a *Auth) getStandardClaims(sub string, uid string, name string, email stri
 		ExternalIDs: externalIDs, Anonymous: anonymous, Authenticated: authenticated, Admin: admin, System: system,
 		Service: service, FirstParty: firstParty, SessionID: sessionID,
 	}
-}
-
-func (a *Auth) generateToken(claims *tokenauth.Claims) (string, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
-	kid, err := authutils.GetKeyFingerprint(&a.authPrivKey.PublicKey)
-	if err != nil {
-		return "", errors.WrapErrorAction(logutils.ActionCompute, "fingerprint", logutils.StringArgs("auth key"), err)
-	}
-	token.Header["kid"] = kid
-	return token.SignedString(a.authPrivKey)
 }
 
 func (a *Auth) getExp(exp *int64) int64 {
@@ -2291,15 +2338,8 @@ func (a *Auth) storeReg() error {
 		return errors.WrapErrorAction("migrating", model.TypeServiceReg, nil, err)
 	}
 
-	pem, err := authutils.GetPubKeyPem(&a.authPrivKey.PublicKey)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionEncode, model.TypePubKey, logutils.StringArgs("auth"), err)
-	}
-
-	key := authservice.PubKey{KeyPem: pem, Alg: authKeyAlg}
-
 	// Setup "auth" registration for token validation
-	authReg := model.ServiceRegistration{Registration: authservice.ServiceReg{ServiceID: authServiceID, Host: a.host, PubKey: &key}, CoreHost: a.host,
+	authReg := model.ServiceRegistration{Registration: authservice.ServiceReg{ServiceID: authServiceID, Host: a.host, PubKey: a.authPrivKey.PubKey}, CoreHost: a.host,
 		Name: "ROKWIRE Auth Service", Description: "The Auth Service is a subsystem of the Core Building Block that manages authentication and authorization.", FirstParty: true}
 	err = a.storage.SaveServiceReg(&authReg, true)
 	if err != nil {
@@ -2307,7 +2347,7 @@ func (a *Auth) storeReg() error {
 	}
 
 	// Setup core registration for signature validation
-	coreReg := model.ServiceRegistration{Registration: authservice.ServiceReg{ServiceID: a.serviceID, Host: a.host, PubKey: &key}, CoreHost: a.host,
+	coreReg := model.ServiceRegistration{Registration: authservice.ServiceReg{ServiceID: a.serviceID, Host: a.host, PubKey: a.authPrivKey.PubKey}, CoreHost: a.host,
 		Name: "ROKWIRE Core Building Block", Description: "The Core Building Block manages user, auth, and organization data for the ROKWIRE platform.", FirstParty: true}
 	err = a.storage.SaveServiceReg(&coreReg, true)
 	if err != nil {
@@ -2568,7 +2608,7 @@ func (l *LocalServiceRegLoaderImpl) LoadServices() ([]authservice.ServiceReg, er
 	authRegs := make([]authservice.ServiceReg, len(regs))
 	for i, serviceReg := range regs {
 		reg := serviceReg.Registration
-		reg.PubKey.LoadKeyFromPem()
+		reg.PubKey.Decode()
 		authRegs[i] = reg
 	}
 

@@ -17,9 +17,9 @@ package web
 import (
 	"net/http"
 
-	"github.com/rokwire/core-auth-library-go/v2/authorization"
-	"github.com/rokwire/core-auth-library-go/v2/authservice"
-	"github.com/rokwire/core-auth-library-go/v2/tokenauth"
+	"github.com/rokwire/core-auth-library-go/v3/authorization"
+	"github.com/rokwire/core-auth-library-go/v3/authservice"
+	"github.com/rokwire/core-auth-library-go/v3/tokenauth"
 	"github.com/rokwire/logging-library-go/v2/errors"
 	"github.com/rokwire/logging-library-go/v2/logutils"
 )
@@ -35,8 +35,8 @@ type Auth struct {
 }
 
 // NewAuth creates new auth handler
-func NewAuth(serviceID string, serviceRegManager *authservice.ServiceRegManager) (*Auth, error) {
-	servicesAuth, err := newServicesAuth(serviceRegManager, serviceID)
+func NewAuth(serviceRegManager *authservice.ServiceRegManager) (*Auth, error) {
+	servicesAuth, err := newServicesAuth(serviceRegManager)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, "services auth", nil, err)
 	}
@@ -79,8 +79,8 @@ func NewAuth(serviceID string, serviceRegManager *authservice.ServiceRegManager)
 
 // ServicesAuth
 
-func newServicesAuth(serviceRegManager *authservice.ServiceRegManager, serviceID string) (*tokenauth.StandardHandler, error) {
-	servicesScopeAuth := authorization.NewCasbinScopeAuthorization("driver/web/scope_authorization_services_policy.csv", serviceID)
+func newServicesAuth(serviceRegManager *authservice.ServiceRegManager) (*tokenauth.StandardHandler, error) {
+	servicesScopeAuth := authorization.NewCasbinScopeAuthorization("driver/web/scope_authorization_services_policy.csv", serviceRegManager.AuthService.ServiceID)
 	servicesPermissionAuth := authorization.NewCasbinStringAuthorization("driver/web/authorization_services_policy.csv")
 
 	servicesTokenAuth, err := tokenauth.NewTokenAuth(true, serviceRegManager, servicesPermissionAuth, servicesScopeAuth)
@@ -99,8 +99,8 @@ func newServicesAuth(serviceRegManager *authservice.ServiceRegManager, serviceID
 		return http.StatusOK, nil
 	}
 
-	auth := tokenauth.NewScopeHandler(*servicesTokenAuth, check)
-	return &auth, nil
+	auth := tokenauth.NewScopeHandler(servicesTokenAuth, check)
+	return auth, nil
 }
 
 // AdminAuth
@@ -120,8 +120,8 @@ func newAdminAuth(serviceRegManager *authservice.ServiceRegManager) (*tokenauth.
 		return http.StatusOK, nil
 	}
 
-	auth := tokenauth.NewStandardHandler(*adminTokenAuth, check)
-	return &auth, nil
+	auth := tokenauth.NewStandardHandler(adminTokenAuth, check)
+	return auth, nil
 }
 
 // EncAuth
@@ -133,8 +133,8 @@ func newEncAuth(serviceRegManager *authservice.ServiceRegManager) (*tokenauth.St
 		return nil, errors.WrapErrorAction(logutils.ActionStart, "token auth for encAuth", nil, err)
 	}
 
-	auth := tokenauth.NewStandardHandler(*encTokenAuth, nil)
-	return &auth, nil
+	auth := tokenauth.NewStandardHandler(encTokenAuth, nil)
+	return auth, nil
 }
 
 // BBsAuth
@@ -158,8 +158,8 @@ func newBBsAuth(serviceRegManager *authservice.ServiceRegManager) (*tokenauth.St
 		return http.StatusOK, nil
 	}
 
-	auth := tokenauth.NewStandardHandler(*bbsTokenAuth, check)
-	return &auth, nil
+	auth := tokenauth.NewStandardHandler(bbsTokenAuth, check)
+	return auth, nil
 }
 
 // TPSAuth
@@ -183,8 +183,8 @@ func newTPSAuth(serviceRegManager *authservice.ServiceRegManager) (*tokenauth.St
 		return http.StatusOK, nil
 	}
 
-	auth := tokenauth.NewStandardHandler(*tpsTokenAuth, check)
-	return &auth, nil
+	auth := tokenauth.NewStandardHandler(tpsTokenAuth, check)
+	return auth, nil
 }
 
 // SystemAuth
@@ -204,6 +204,6 @@ func newSystemAuth(serviceRegManager *authservice.ServiceRegManager) (*tokenauth
 		return http.StatusOK, nil
 	}
 
-	auth := tokenauth.NewStandardHandler(*systemTokenAuth, check)
-	return &auth, nil
+	auth := tokenauth.NewStandardHandler(systemTokenAuth, check)
+	return auth, nil
 }

@@ -23,10 +23,11 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/rokwire/core-auth-library-go/v2/authorization"
-	"github.com/rokwire/core-auth-library-go/v2/authutils"
-	"github.com/rokwire/core-auth-library-go/v2/sigauth"
-	"github.com/rokwire/core-auth-library-go/v2/tokenauth"
+	"github.com/lestrrat-go/jwx/jwk"
+	"github.com/rokwire/core-auth-library-go/v3/authorization"
+	"github.com/rokwire/core-auth-library-go/v3/authutils"
+	"github.com/rokwire/core-auth-library-go/v3/sigauth"
+	"github.com/rokwire/core-auth-library-go/v3/tokenauth"
 	"github.com/rokwire/logging-library-go/v2/errors"
 	"github.com/rokwire/logging-library-go/v2/logutils"
 
@@ -342,14 +343,14 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 			return nil, errors.WrapErrorAction(logutils.ActionGet, "external auth type", nil, err)
 		}
 
-		externalUser, refreshedData, err := extAuthType.refresh(loginSession.Params, loginSession.AuthType, loginSession.AppType, loginSession.AppOrg, l)
+		externalUser, refreshedData, externalCreds, err := extAuthType.refresh(loginSession.Params, loginSession.AuthType, loginSession.AppType, loginSession.AppOrg, l)
 		if err != nil {
 			l.Infof("error refreshing external auth type on refresh - %s", refreshToken)
 			return nil, errors.WrapErrorAction(logutils.ActionRefresh, "external auth type", nil, err)
 		}
 
 		//check if need to update the account data
-		newAccount, err := a.updateExternalUserIfNeeded(*loginSession.AccountAuthType, *externalUser, loginSession.AuthType, loginSession.AppOrg, l)
+		newAccount, err := a.updateExternalUserIfNeeded(*loginSession.AccountAuthType, *externalUser, loginSession.AuthType, loginSession.AppOrg, externalCreds, l)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeExternalSystemUser, logutils.StringArgs("refresh"), err)
 		}
@@ -360,6 +361,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 		}
 	}
 
+	scopes := []string{authorization.ScopeGlobal}
 	if !anonymous {
 		accountAuthType := loginSession.AccountAuthType
 		if accountAuthType == nil {
@@ -371,9 +373,10 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 		email = accountAuthType.Account.Profile.Email
 		phone = accountAuthType.Account.Profile.Phone
 		permissions = accountAuthType.Account.GetPermissionNames()
+		scopes = append(scopes, accountAuthType.Account.GetScopes()...)
 	}
 	claims := a.getStandardClaims(sub, uid, name, email, phone, rokwireTokenAud, orgID, appID, authType, loginSession.ExternalIDs, nil, anonymous, false, loginSession.AppOrg.Application.Admin, loginSession.AppOrg.Organization.System, false, true, loginSession.ID)
-	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), authorization.ScopeGlobal)
+	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), strings.Join(scopes, " "))
 	if err != nil {
 		l.Infof("error generating acccess token on refresh - %s", refreshToken)
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
@@ -561,7 +564,7 @@ func (a *Auth) LoginMFA(apiKey string, accountID string, sessionID string, ident
 
 // CreateAdminAccount creates an account for a new admin user
 func (a *Auth) CreateAdminAccount(authenticationType string, appID string, orgID string, identifier string, profile model.Profile, username string,
-	permissions []string, roleIDs []string, groupIDs []string, creatorPermissions []string, clientVersion *string, l *logs.Log) (*model.Account, map[string]interface{}, error) {
+	permissions []string, roleIDs []string, groupIDs []string, scopes []string, creatorPermissions []string, clientVersion *string, l *logs.Log) (*model.Account, map[string]interface{}, error) {
 	//TODO: add admin authentication policies that specify which auth types may be used for each app org
 	if authenticationType != AuthTypeOidc && authenticationType != AuthTypeEmail && !strings.HasSuffix(authenticationType, "_oidc") {
 		return nil, nil, errors.ErrorData(logutils.StatusInvalid, "auth type", nil)
@@ -591,7 +594,7 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appID string, orgID
 		profile.DateCreated = time.Now().UTC()
 		if authType.IsExternal {
 			externalUser := model.ExternalSystemUser{Identifier: identifier}
-			accountAuthType, err = a.applySignUpAdminExternal(context, *authType, *appOrg, externalUser, profile, username, permissions, roleIDs, groupIDs, creatorPermissions, clientVersion, l)
+			accountAuthType, err = a.applySignUpAdminExternal(context, *authType, *appOrg, externalUser, profile, username, permissions, roleIDs, groupIDs, scopes, creatorPermissions, clientVersion, l)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionRegister, "admin user", &logutils.FieldArgs{"auth_type": authType.Code, "identifier": identifier}, err)
 			}
@@ -602,7 +605,7 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appID string, orgID
 			}
 
 			profile.Email = identifier
-			params, accountAuthType, err = a.applySignUpAdmin(context, authImpl, account, *authType, *appOrg, identifier, "", profile, username, permissions, roleIDs, groupIDs, creatorPermissions, clientVersion, l)
+			params, accountAuthType, err = a.applySignUpAdmin(context, authImpl, account, *authType, *appOrg, identifier, "", profile, username, permissions, roleIDs, groupIDs, scopes, creatorPermissions, clientVersion, l)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionRegister, "admin user", &logutils.FieldArgs{"auth_type": authType.Code, "identifier": identifier}, err)
 			}
@@ -622,7 +625,7 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appID string, orgID
 
 // UpdateAdminAccount updates an existing user's account with new permissions, roles, and groups
 func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID string, identifier string, permissions []string, roleIDs []string,
-	groupIDs []string, updaterPermissions []string, l *logs.Log) (*model.Account, map[string]interface{}, error) {
+	groupIDs []string, scopes []string, updaterPermissions []string, l *logs.Log) (*model.Account, map[string]interface{}, error) {
 	//TODO: when elevating existing accounts to application level admin, need to enforce any authentication policies set up for the app org
 	// when demoting from application level admin to standard user, may want to inform user of applicable authentication policy changes
 
@@ -771,7 +774,28 @@ func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID
 			updated = true
 		}
 
-		//6. delete active login sessions if anything was revoked
+		//6. update account scopes
+		if scopes != nil && utils.Contains(updaterPermissions, model.UpdateScopesPermission) && !utils.DeepEqual(account.Scopes, scopes) {
+			for i, scope := range scopes {
+				parsedScope, err := authorization.ScopeFromString(scope)
+				if err != nil {
+					return errors.WrapErrorAction(logutils.ActionValidate, model.TypeScope, nil, err)
+				}
+				if !strings.HasPrefix(parsedScope.Resource, model.AdminScopePrefix) {
+					parsedScope.Resource = model.AdminScopePrefix + parsedScope.Resource
+					scopes[i] = parsedScope.String()
+				}
+			}
+			err = a.storage.UpdateAccountScopes(context, account.ID, scopes)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionUpdate, "admin account scopes", nil, err)
+			}
+
+			updatedAccount.Scopes = scopes
+			updated = true
+		}
+
+		//7. delete active login sessions if anything was revoked
 		if revoked {
 			err = a.storage.DeleteLoginSessionsByIdentifier(context, account.ID)
 			if err != nil {
@@ -1740,7 +1764,7 @@ func (a *Auth) InitializeSystemAccount(context storage.TransactionContext, authT
 	profile := model.Profile{ID: uuid.NewString(), Email: email, DateCreated: now}
 	permissions := []string{allSystemPermission}
 
-	_, accountAuthType, err := a.applySignUpAdmin(context, authImpl, nil, authType, appOrg, email, password, profile, "", permissions, nil, nil, permissions, &clientVersion, l)
+	_, accountAuthType, err := a.applySignUpAdmin(context, authImpl, nil, authType, appOrg, email, password, profile, "", permissions, nil, nil, nil, permissions, &clientVersion, l)
 	if err != nil {
 		return "", errors.WrapErrorAction(logutils.ActionRegister, "initial system user", &logutils.FieldArgs{"email": email}, err)
 	}
@@ -2020,7 +2044,7 @@ func (a *Auth) DeregisterService(serviceID string) error {
 }
 
 // GetAuthKeySet generates a JSON Web Key Set for auth service registration
-func (a *Auth) GetAuthKeySet() (*model.JSONWebKeySet, error) {
+func (a *Auth) GetAuthKeySet() (jwk.Set, error) {
 	authReg, err := a.ServiceRegManager.GetServiceReg("auth")
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeServiceReg, logutils.StringArgs("auth"), err)
@@ -2030,12 +2054,26 @@ func (a *Auth) GetAuthKeySet() (*model.JSONWebKeySet, error) {
 		return nil, errors.ErrorData(logutils.StatusMissing, model.TypePubKey, nil)
 	}
 
-	jwk, err := model.JSONWebKeyFromPubKey(authReg.PubKey)
-	if err != nil || jwk == nil {
+	webKey, err := jwk.New(authReg.PubKey.Key)
+	if err != nil || webKey == nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeJSONWebKey, nil, err)
 	}
+	err = webKey.Set(jwk.KeyUsageKey, "sig")
+	if err != nil {
+		return nil, errors.WrapErrorAction("setting", model.TypeJSONWebKey+" "+jwk.KeyUsageKey, logutils.StringArgs("sig"), err)
+	}
+	err = webKey.Set(jwk.KeyIDKey, authReg.PubKey.KeyID)
+	if err != nil {
+		return nil, errors.WrapErrorAction("setting", model.TypeJSONWebKey+" "+jwk.KeyIDKey, logutils.StringArgs(authReg.PubKey.KeyID), err)
+	}
+	err = webKey.Set(jwk.AlgorithmKey, authReg.PubKey.Alg)
+	if err != nil {
+		return nil, errors.WrapErrorAction("setting", model.TypeJSONWebKey+" "+jwk.AlgorithmKey, logutils.StringArgs(authReg.PubKey.Alg), err)
+	}
 
-	return &model.JSONWebKeySet{Keys: []model.JSONWebKey{*jwk}}, nil
+	keySet := jwk.NewSet()
+	keySet.Add(webKey)
+	return keySet, nil
 }
 
 // GetApplicationAPIKeys finds and returns the API keys for the provided app
