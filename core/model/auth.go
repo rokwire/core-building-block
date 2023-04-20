@@ -76,6 +76,8 @@ const (
 	AdminScopePrefix string = "admin_"
 	// UpdateScopesPermission is the permission that allows an admin to update account/role scopes
 	UpdateScopesPermission string = "update_auth_scopes"
+	//TokenTypeBearer bearer token type
+	TokenTypeBearer string = "Bearer"
 )
 
 // LoginSession represents login session entity
