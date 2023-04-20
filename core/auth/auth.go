@@ -42,6 +42,9 @@ import (
 )
 
 const (
+	//ServiceAuthTypeCore core auth type
+	ServiceAuthTypeCore string = "core"
+
 	authServiceID  string = "auth"
 	authKeyAlg     string = "RS256"
 	rokwireKeyword string = "ROKWIRE"
@@ -116,8 +119,8 @@ type Auth struct {
 }
 
 // NewAuth creates a new auth instance
-func NewAuth(serviceID string, host string, authPrivKey *keys.PrivKey, storage Storage, emailer Emailer, minTokenExp *int64, maxTokenExp *int64, supportLegacySigs bool, twilioAccountSID string,
-	twilioToken string, twilioServiceSID string, profileBB ProfileBuildingBlock, identityBB IdentityBuildingBlock, smtpHost string, smtpPortNum int, smtpUser string, smtpPassword string, smtpFrom string, logger *logs.Logger) (*Auth, error) {
+func NewAuth(serviceID string, host string, authPrivKey *keys.PrivKey, authService *authservice.AuthService, storage Storage, emailer Emailer, minTokenExp *int64, maxTokenExp *int64, supportLegacySigs bool, twilioAccountSID string,
+	twilioToken string, twilioServiceSID string, profileBB ProfileBuildingBlock, smtpHost string, smtpPortNum int, smtpUser string, smtpPassword string, smtpFrom string, logger *logs.Logger) (*Auth, error) {
 	if minTokenExp == nil {
 		var minTokenExpVal int64 = 5
 		minTokenExp = &minTokenExpVal
@@ -146,24 +149,19 @@ func NewAuth(serviceID string, host string, authPrivKey *keys.PrivKey, storage S
 
 	auth := &Auth{storage: storage, emailer: emailer, logger: logger, authTypes: authTypes, externalAuthTypes: externalAuthTypes, anonymousAuthTypes: anonymousAuthTypes,
 		serviceAuthTypes: serviceAuthTypes, mfaTypes: mfaTypes, authPrivKey: authPrivKey, ServiceRegManager: nil, serviceID: serviceID, host: host, minTokenExp: *minTokenExp,
-		maxTokenExp: *maxTokenExp, profileBB: profileBB, identityBB: identityBB, cachedIdentityProviders: cachedIdentityProviders, identityProvidersLock: identityProvidersLock,
+		maxTokenExp: *maxTokenExp, profileBB: profileBB, cachedIdentityProviders: cachedIdentityProviders, identityProvidersLock: identityProvidersLock,
 		timerDone: timerDone, emailDialer: emailDialer, emailFrom: smtpFrom, apiKeys: apiKeys, apiKeysLock: apiKeysLock}
 
-	err := auth.storeReg()
+	err := auth.storeCoreRegs()
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionSave, model.TypeServiceReg, nil, err)
 	}
-
-	authService := authservice.AuthService{
-		ServiceID:   serviceID,
-		ServiceHost: host,
-		FirstParty:  true,
-	}
+	auth.storeCoreServiceAccount()
 
 	serviceRegLoader := NewLocalServiceRegLoader(storage)
 
 	// Instantiate a ServiceRegManager to manage the service registration data loaded by serviceRegLoader
-	serviceRegManager, err := authservice.NewServiceRegManager(&authService, serviceRegLoader, true)
+	serviceRegManager, err := authservice.NewServiceRegManager(authService, serviceRegLoader, true)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionInitialize, "service reg manager", nil, err)
 	}
@@ -208,6 +206,11 @@ func NewAuth(serviceID string, host string, authPrivKey *keys.PrivKey, storage S
 
 	return auth, nil
 
+}
+
+// SetIdentityBB sets the identity BB adapter
+func (a *Auth) SetIdentityBB(identityBB IdentityBuildingBlock) {
+	a.identityBB = identityBB
 }
 
 func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, clientVersion *string,
@@ -2331,8 +2334,8 @@ func (a *Auth) setLogContext(account *model.Account, l *logs.Log) {
 	l.SetContext("account_id", accountID)
 }
 
-// storeReg stores the service registration record
-func (a *Auth) storeReg() error {
+// storeCoreRegs stores the service registration records for the Core BB
+func (a *Auth) storeCoreRegs() error {
 	err := a.storage.MigrateServiceRegs()
 	if err != nil {
 		return errors.WrapErrorAction("migrating", model.TypeServiceReg, nil, err)
@@ -2347,7 +2350,7 @@ func (a *Auth) storeReg() error {
 	}
 
 	// Setup core registration for signature validation
-	coreReg := model.ServiceRegistration{Registration: authservice.ServiceReg{ServiceID: a.serviceID, Host: a.host, PubKey: a.authPrivKey.PubKey}, CoreHost: a.host,
+	coreReg := model.ServiceRegistration{Registration: authservice.ServiceReg{ServiceID: a.serviceID, ServiceAccountID: a.serviceID, Host: a.host, PubKey: a.authPrivKey.PubKey}, CoreHost: a.host,
 		Name: "ROKWIRE Core Building Block", Description: "The Core Building Block manages user, auth, and organization data for the ROKWIRE platform.", FirstParty: true}
 	err = a.storage.SaveServiceReg(&coreReg, true)
 	if err != nil {
@@ -2355,6 +2358,13 @@ func (a *Auth) storeReg() error {
 	}
 
 	return nil
+}
+
+// storeCoreServiceAccount stores the service account record for the Core BB
+func (a *Auth) storeCoreServiceAccount() {
+	coreAccount := model.ServiceAccount{AccountID: a.serviceID, Name: "ROKWIRE Core Building Block", FirstParty: true, DateCreated: time.Now()}
+	// Setup core service account if missing
+	a.storage.InsertServiceAccount(&coreAccount)
 }
 
 // cacheIdentityProviders caches the identity providers
@@ -2619,6 +2629,36 @@ func (l *LocalServiceRegLoaderImpl) LoadServices() ([]authservice.ServiceReg, er
 func NewLocalServiceRegLoader(storage Storage) *LocalServiceRegLoaderImpl {
 	subscriptions := authservice.NewServiceRegSubscriptions([]string{allServices})
 	return &LocalServiceRegLoaderImpl{storage: storage, ServiceRegSubscriptions: subscriptions}
+}
+
+// LocalServiceAccountLoaderImpl provides a local implementation for authservice.ServiceAccountLoader
+type LocalServiceAccountLoaderImpl struct {
+	auth Auth
+}
+
+// LoadAccessToken gets an access token for appID, orgID if the implementing service is granted access
+func (l *LocalServiceAccountLoaderImpl) LoadAccessToken(appID string, orgID string) (*authservice.AccessToken, error) {
+	account, err := l.auth.storage.FindServiceAccount(nil, l.auth.serviceID, authutils.AllApps, authutils.AllOrgs)
+	if err != nil || account == nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, logutils.StringArgs(l.auth.serviceID), err)
+	}
+	token, _, err := l.auth.buildAccessTokenForServiceAccount(*account, ServiceAuthTypeCore)
+	return &authservice.AccessToken{Token: token, TokenType: model.TokenTypeBearer}, err
+}
+
+// LoadAccessTokens gets an access token for each app org pair the implementing service is granted access
+func (l *LocalServiceAccountLoaderImpl) LoadAccessTokens() (map[authservice.AppOrgPair]authservice.AccessToken, error) {
+	token, err := l.LoadAccessToken(authutils.AllApps, authutils.AllOrgs)
+	if err != nil || token == nil {
+		return nil, errors.WrapErrorAction(logutils.ActionGet, logutils.TypeToken, nil, err)
+	}
+	tokens := map[authservice.AppOrgPair]authservice.AccessToken{{AppID: authutils.AllApps, OrgID: authutils.AllOrgs}: *token}
+	return tokens, nil
+}
+
+// NewLocalServiceAccountLoader creates and configures a new LocalServiceAccountLoaderImpl instance
+func NewLocalServiceAccountLoader(auth Auth) *LocalServiceAccountLoaderImpl {
+	return &LocalServiceAccountLoaderImpl{auth: auth}
 }
 
 // StorageListener represents storage listener implementation for the auth package

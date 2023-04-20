@@ -1610,23 +1610,31 @@ func (a *Auth) RemoveServiceAccountCredential(accountID string, credID string) e
 //		Approved Scopes ([]authorization.Scope): The approved scopes included in the provided token
 //		Service reg (*model.ServiceReg): The service registration record for the requested service
 func (a *Auth) AuthorizeService(claims tokenauth.Claims, serviceID string, approvedScopes []authorization.Scope, l *logs.Log) (string, []authorization.Scope, *model.ServiceRegistration, error) {
-	var authorization model.ServiceAuthorization
+	var serviceAuth model.ServiceAuthorization
 	if approvedScopes != nil {
+		//Prevent user from setting admin scopes
+		var newScopes []authorization.Scope
+		for _, scope := range approvedScopes {
+			if !strings.HasPrefix(scope.Resource, model.AdminScopePrefix) {
+				newScopes = append(newScopes, scope)
+			}
+		}
+
 		//If approved scopes are being updated, save update and return token with updated scopes
-		authorization = model.ServiceAuthorization{UserID: claims.Subject, ServiceID: serviceID, Scopes: approvedScopes}
-		err := a.storage.SaveServiceAuthorization(&authorization)
+		serviceAuth = model.ServiceAuthorization{UserID: claims.Subject, ServiceID: serviceID, Scopes: newScopes}
+		err := a.storage.SaveServiceAuthorization(&serviceAuth)
 		if err != nil {
 			return "", nil, nil, errors.WrapErrorAction(logutils.ActionSave, model.TypeServiceAuthorization, nil, err)
 		}
 	} else {
-		serviceAuth, err := a.storage.FindServiceAuthorization(claims.Subject, serviceID)
+		curServiceAuth, err := a.storage.FindServiceAuthorization(claims.Subject, serviceID)
 		if err != nil {
 			return "", nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAuthorization, nil, err)
 		}
 
-		if serviceAuth != nil {
+		if curServiceAuth != nil {
 			//If service authorization exists, generate token with saved scopes
-			authorization = *serviceAuth
+			serviceAuth = *curServiceAuth
 		} else {
 			//If no service authorization exists, return the service registration record
 			reg, err := a.storage.FindServiceReg(serviceID)
@@ -1637,12 +1645,12 @@ func (a *Auth) AuthorizeService(claims tokenauth.Claims, serviceID string, appro
 		}
 	}
 
-	token, err := a.getScopedAccessToken(claims, serviceID, authorization.Scopes)
+	token, err := a.getScopedAccessToken(claims, serviceID, serviceAuth.Scopes)
 	if err != nil {
 		return "", nil, nil, errors.WrapErrorAction("building", logutils.TypeToken, nil, err)
 	}
 
-	return token, authorization.Scopes, nil, nil
+	return token, serviceAuth.Scopes, nil, nil
 }
 
 // GetAdminToken returns an admin token for the specified application and organization

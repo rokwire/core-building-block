@@ -19,7 +19,11 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 
+	"github.com/rokwire/core-auth-library-go/v3/authservice"
+
+	"github.com/rokwire/core-auth-library-go/v3/authutils"
 	"github.com/rokwire/logging-library-go/v2/errors"
 	"github.com/rokwire/logging-library-go/v2/logs"
 	"github.com/rokwire/logging-library-go/v2/logutils"
@@ -27,6 +31,7 @@ import (
 
 // Adapter implements the IdentityBuildingBlock interface
 type Adapter struct {
+	serviceAccountManager *authservice.ServiceAccountManager
 }
 
 // GetUserProfile gets user profile info for the provided user credentials
@@ -36,18 +41,23 @@ func (a *Adapter) GetUserProfile(baseURL string, externalUser model.ExternalSyst
 	}
 
 	if externalAccessToken == "" {
-		return nil, errors.ErrorData(logutils.StatusMissing, "access token", nil)
+		return nil, errors.ErrorData(logutils.StatusMissing, "external access token", nil)
 	}
 
-	client := &http.Client{}
-	req, err := http.NewRequest(http.MethodGet, baseURL+"/StudentSummary/"+externalUser.Identifier+"/"+externalUser.FirstName+"/"+externalUser.LastName, nil)
+	queryParams := url.Values{
+		"external-id": {externalUser.Identifier},
+		"first-name":  {externalUser.FirstName},
+		"last-name":   {externalUser.LastName},
+	}
+
+	req, err := http.NewRequest(http.MethodGet, baseURL+"/student-summary?"+queryParams.Encode(), nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeRequest, nil, err)
 	}
 
-	req.Header.Set("access_token", externalAccessToken)
+	req.Header.Set("External-Authorization", externalAccessToken)
 
-	resp, err := client.Do(req)
+	resp, err := a.serviceAccountManager.MakeRequest(req, authutils.AllApps, authutils.AllOrgs)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionSend, logutils.TypeRequest, nil, err)
 	}
@@ -76,6 +86,6 @@ func (a *Adapter) GetUserProfile(baseURL string, externalUser model.ExternalSyst
 }
 
 // NewIdentityBBAdapter creates a new identity building block adapter instance
-func NewIdentityBBAdapter() *Adapter {
-	return &Adapter{}
+func NewIdentityBBAdapter(serviceAccountManager *authservice.ServiceAccountManager) *Adapter {
+	return &Adapter{serviceAccountManager: serviceAccountManager}
 }
