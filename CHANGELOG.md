@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+## [1.32.1] - 2023-04-10
+### Fixed
+- Handle admin scopes on refresh
+
+## [1.32.0] - 2023-04-08
 ### Added:
 - Admin scopes [#653](https://github.com/rokwire/core-building-block/issues/653)
 - Admin APIs to get count and list of accounts matching query [#649](https://github.com/rokwire/core-building-block/issues/649)
@@ -381,7 +386,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Users authentication polish [#155](https://github.com/rokwire/core-building-block/issues/155)
 - Optimise the Mongo DB collections indexes usage [#146](https://github.com/rokwire/core-building-block/issues/146)
 
-[Unreleased]: https://github.com/rokwire/core-building-block/compare/v1.31.2...HEAD
+[Unreleased]: https://github.com/rokwire/core-building-block/compare/v1.32.1...HEAD
+[1.32.1]: https://github.com/rokwire/core-building-block/compare/v1.32.0...v1.32.1
+[1.32.0]: https://github.com/rokwire/core-building-block/compare/v1.31.2...v1.32.0
 [1.31.2]: https://github.com/rokwire/core-building-block/compare/v1.31.1...v1.31.2
 [1.31.1]: https://github.com/rokwire/core-building-block/compare/v1.31.0...v1.31.1
 [1.31.0]: https://github.com/rokwire/core-building-block/compare/v1.30.0...v1.31.0
