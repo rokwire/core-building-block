@@ -2646,7 +2646,7 @@ func (l *LocalServiceAccountLoaderImpl) LoadAccessToken(appID string, orgID stri
 	return &authservice.AccessToken{Token: token, TokenType: model.TokenTypeBearer}, err
 }
 
-// LoadAccessToken gets an access token for each app org pair the implementing service is granted access
+// LoadAccessTokens gets an access token for each app org pair the implementing service is granted access
 func (l *LocalServiceAccountLoaderImpl) LoadAccessTokens() (map[authservice.AppOrgPair]authservice.AccessToken, error) {
 	token, err := l.LoadAccessToken(authutils.AllApps, authutils.AllOrgs)
 	if err != nil || token == nil {
