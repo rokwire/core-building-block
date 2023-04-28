@@ -182,6 +182,7 @@ func NewAuth(serviceID string, host string, authPrivKey *keys.PrivKey, authServi
 	initFirebaseAuth(auth)
 	initAnonymousAuth(auth)
 	initSignatureAuth(auth)
+	initWebAuthnAuth(auth)
 
 	initOidcAuth(auth)
 	initSamlAuth(auth)
