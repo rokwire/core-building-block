@@ -41,10 +41,6 @@ type usernameAuthImpl struct {
 type usernameCreds struct {
 	Username string `json:"username" bson:"username" validate:"required"`
 	Password string `json:"password" bson:"password"`
-	// VerificationCode   string    `json:"verification_code" bson:"verification_code"`
-	// VerificationExpiry time.Time `json:"verification_expiry" bson:"verification_expiry"`
-	// ResetCode          string    `json:"reset_code" bson:"reset_code"`
-	// ResetExpiry        time.Time `json:"reset_expiry" bson:"reset_expiry"`
 }
 
 func (a *usernameAuthImpl) signUp(authType model.AuthType, appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error) {
