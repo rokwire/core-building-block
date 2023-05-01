@@ -158,6 +158,53 @@ paths:
                     type: mobile
                     device_id: '5555'
                     os: Android
+              username-sign_in:
+                summary: Username - sign in
+                value:
+                  auth_type: username
+                  app_type_identifier: edu.illinois.rokwire
+                  org_id: 0a2eff20-e2cd-11eb-af68-60f81db5ecc0
+                  api_key: 95a463e3-2ce8-450b-ba75-d8506b874738
+                  username: testName
+                  creds:
+                    username: testName
+                    password: test12345
+                  device:
+                    type: mobile
+                    device_id: '5555'
+                    os: Android
+              username-sign_up:
+                summary: Username - sign up
+                value:
+                  auth_type: username
+                  app_type_identifier: edu.illinois.rokwire
+                  org_id: 0a2eff20-e2cd-11eb-af68-60f81db5ecc0
+                  api_key: 95a463e3-2ce8-450b-ba75-d8506b874738
+                  username: testName
+                  creds:
+                    username: testName
+                    password: test12345
+                  params:
+                    sign_up: true
+                    confirm_password: test12345
+                  preferences:
+                    key1: value1
+                    key2: value2
+                  profile:
+                    address: address
+                    birth_year: 1990
+                    country: county
+                    email: email
+                    first_name: first name
+                    last_name: last name
+                    phone: '+000000000000'
+                    photo_url: photo url
+                    state: state
+                    zip_code: zip code
+                  device:
+                    type: mobile
+                    device_id: '5555'
+                    os: Android
         required: true
       responses:
         '200':
@@ -6355,6 +6402,7 @@ components:
             - twilio_phone
             - illinois_oidc
             - anonymous
+            - username
         app_type_identifier:
           type: string
         org_id:
@@ -6367,12 +6415,31 @@ components:
             - $ref: '#/components/schemas/_shared_req_CredsTwilioPhone'
             - $ref: '#/components/schemas/_shared_req_CredsOIDC'
             - $ref: '#/components/schemas/_shared_req_CredsAPIKey'
+            - required:
+                - username
+                - password
+              type: object
+              description: Auth login creds for auth_type="username"
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
         params:
           type: object
           anyOf:
             - $ref: '#/components/schemas/_shared_req_ParamsEmail'
             - $ref: '#/components/schemas/_shared_req_ParamsOIDC'
             - $ref: '#/components/schemas/_shared_req_ParamsNone'
+            - type: object
+              description: Auth login params for auth_type="username"
+              properties:
+                confirm_password:
+                  type: string
+                  description: This should match the `creds` password field when sign_up=true. This should be verified on the client side as well to reduce invalid requests.
+                sign_up:
+                  type: boolean
+                  default: false
         device:
           $ref: '#/components/schemas/Device'
         profile:
