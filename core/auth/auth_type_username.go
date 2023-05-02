@@ -73,7 +73,7 @@ func (a *usernameAuthImpl) signUp(authType model.AuthType, appOrg model.Applicat
 	if len(confirmPassword) == 0 {
 		return "", nil, errors.ErrorData(logutils.StatusMissing, typeUsernameParams, logutils.StringArgs("confirm_password"))
 	}
-	//check if the passwrod matches with the confirm password one
+	//check if the password matches with the confirm password one
 	if password != confirmPassword {
 		return "", nil, errors.ErrorData(logutils.StatusInvalid, "mismatching password fields", nil)
 	}
@@ -83,8 +83,7 @@ func (a *usernameAuthImpl) signUp(authType model.AuthType, appOrg model.Applicat
 		return "", nil, errors.WrapErrorAction("building", "username credentials", nil, err)
 	}
 
-	return "username created", usernameCreds, nil
-
+	return "", usernameCreds, nil
 }
 
 func (a *usernameAuthImpl) signUpAdmin(authType model.AuthType, appOrg model.ApplicationOrganization, identifier string, password string, newCredentialID string) (map[string]interface{}, map[string]interface{}, error) {
@@ -109,8 +108,7 @@ func (a *usernameAuthImpl) buildCredentials(authType model.AuthType, appName str
 		return nil, errors.WrapErrorAction(logutils.ActionGenerate, "password hash", nil, err)
 	}
 
-	var usernameCredValue usernameCreds
-	usernameCredValue = usernameCreds{Username: username, Password: string(hashedPassword)}
+	usernameCredValue := usernameCreds{Username: username, Password: string(hashedPassword)}
 
 	usernameCredValueMap, err := usernameCredsToMap(&usernameCredValue)
 	if err != nil {
@@ -118,7 +116,6 @@ func (a *usernameAuthImpl) buildCredentials(authType model.AuthType, appName str
 	}
 
 	return usernameCredValueMap, nil
-
 }
 
 func usernameCredsToMap(creds *usernameCreds) (map[string]interface{}, error) {
@@ -181,7 +178,7 @@ func (a *usernameAuthImpl) checkCredentials(accountAuthType model.AccountAuthTyp
 	}
 	requestPassword := sPasswordParams.Password
 
-	//compare stored and requets ones
+	//compare stored and requests ones
 	err = bcrypt.CompareHashAndPassword([]byte(storedCreds.Password), []byte(requestPassword))
 	if err != nil {
 		return "", errors.WrapErrorAction(logutils.ActionValidate, model.TypeCredential, nil, err).SetStatus(utils.ErrorStatusInvalid)
