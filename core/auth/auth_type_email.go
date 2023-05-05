@@ -54,7 +54,7 @@ type emailAuthImpl struct {
 	authType string
 }
 
-func (a *emailAuthImpl) signUp(authType model.AuthType, appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error) {
+func (a *emailAuthImpl) signUp(authType model.AuthType, appOrg model.ApplicationOrganization, identifier string, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error) {
 	type signUpEmailParams struct {
 		ConfirmPassword string `json:"confirm_password"`
 	}

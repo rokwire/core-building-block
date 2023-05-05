@@ -820,7 +820,7 @@ func (a *Auth) signUpNewAccount(context storage.TransactionContext, authImpl aut
 		var credentialValue map[string]interface{}
 		if creatorPermissions == nil {
 			var message string
-			message, credentialValue, err = authImpl.signUp(authType, appOrg, creds, params, credID, l)
+			message, credentialValue, err = authImpl.signUp(authType, appOrg, userIdentifier, creds, params, credID, l)
 			if err != nil {
 				return nil, nil, errors.WrapErrorAction("signing up", "user", nil, err)
 			}
@@ -1630,7 +1630,7 @@ func (a *Auth) linkAccountAuthType(account model.Account, authType model.AuthTyp
 	credID := credentialID.String()
 
 	//apply sign up
-	message, credentialValue, err := authImpl.signUp(authType, appOrg, creds, params, credID, l)
+	message, credentialValue, err := authImpl.signUp(authType, appOrg, userIdentifier, creds, params, credID, l)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction("signing up", "user", nil, err)
 	}

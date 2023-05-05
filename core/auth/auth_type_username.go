@@ -43,7 +43,7 @@ type usernameCreds struct {
 	Password string `json:"password" bson:"password"`
 }
 
-func (a *usernameAuthImpl) signUp(authType model.AuthType, appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error) {
+func (a *usernameAuthImpl) signUp(authType model.AuthType, appOrg model.ApplicationOrganization, identifier string, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error) {
 	type signUpUsernameParams struct {
 		ConfirmPassword string `json:"confirm_password"`
 	}
