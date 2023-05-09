@@ -23,20 +23,20 @@ properties:
     type: string
   creds:
     anyOf:
+      - $ref: "../CredsWebAuthn.yaml"
       - $ref: "../CredsEmail.yaml"
       - $ref: "../CredsTwilioPhone.yaml"
       - $ref: "../CredsOIDC.yaml"
       - $ref: "../CredsAPIKey.yaml"
       - $ref: "../CredsUsername.yaml"
-      - $ref: "../CredsWebAuthn.yaml"
   params:
     type: object
     anyOf:
+      - $ref: "../ParamsWebAuthn.yaml"
       - $ref: "../ParamsEmail.yaml"
       - $ref: "../ParamsOIDC.yaml"
       - $ref: "../ParamsNone.yaml"
       - $ref: "../ParamsUsername.yaml"
-      - $ref: "../ParamsWebAuthn.yaml"
   device:
     $ref: "../../../../user/Device.yaml"
   profile:

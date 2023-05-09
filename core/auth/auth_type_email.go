@@ -54,7 +54,7 @@ type emailAuthImpl struct {
 	authType string
 }
 
-func (a *emailAuthImpl) signUp(authType model.AuthType, appOrg model.ApplicationOrganization, identifier string, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error) {
+func (a *emailAuthImpl) signUp(supportedAuthType model.SupportedAuthType, appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error) {
 	type signUpEmailParams struct {
 		ConfirmPassword string `json:"confirm_password"`
 	}
@@ -88,7 +88,7 @@ func (a *emailAuthImpl) signUp(authType model.AuthType, appOrg model.Application
 		return "", nil, errors.ErrorData(logutils.StatusInvalid, "mismatching password fields", nil)
 	}
 
-	emailCreds, err := a.buildCredentials(authType, appOrg.Application.Name, email, password, newCredentialID)
+	emailCreds, err := a.buildCredentials(supportedAuthType.AuthType, appOrg.Application.Name, email, password, newCredentialID)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction("building", "email credentials", nil, err)
 	}

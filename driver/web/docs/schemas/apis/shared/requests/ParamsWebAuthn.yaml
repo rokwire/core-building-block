@@ -1,12 +1,8 @@
 type: object
 description: Auth login params for auth_type="webauthn"
 properties:
-  name:
-    type: string
-    description: Unique username to associate with the account
   display_name:
     type: string
     description: User's account name for display purposes
   sign_up:
     type: boolean
-    default: false

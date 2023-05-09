@@ -33,7 +33,7 @@ type signatureAuthImpl struct {
 	authType string
 }
 
-func (a *signatureAuthImpl) signUp(authType model.AuthType, appOrg model.ApplicationOrganization, identifier string, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error) {
+func (a *signatureAuthImpl) signUp(supportedAuthType model.SupportedAuthType, appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error) {
 	return "", nil, nil
 }
 

@@ -1,10 +1,9 @@
 required:
-  - id
-  - response
+  - username
 type: object
 description: Auth login creds for auth_type="webauthn"
 properties:
-  id:
+  username:
     type: string
   response:
     type: string

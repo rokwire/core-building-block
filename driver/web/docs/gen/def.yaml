@@ -6439,20 +6439,20 @@ components:
           type: string
         creds:
           anyOf:
+            - $ref: '#/components/schemas/_shared_req_CredsWebAuthn'
             - $ref: '#/components/schemas/_shared_req_CredsEmail'
             - $ref: '#/components/schemas/_shared_req_CredsTwilioPhone'
             - $ref: '#/components/schemas/_shared_req_CredsOIDC'
             - $ref: '#/components/schemas/_shared_req_CredsAPIKey'
             - $ref: '#/components/schemas/_shared_req_CredsUsername'
-            - $ref: '#/components/schemas/_shared_req_CredsWebAuthn'
         params:
           type: object
           anyOf:
+            - $ref: '#/components/schemas/_shared_req_ParamsWebAuthn'
             - $ref: '#/components/schemas/_shared_req_ParamsEmail'
             - $ref: '#/components/schemas/_shared_req_ParamsOIDC'
             - $ref: '#/components/schemas/_shared_req_ParamsNone'
             - $ref: '#/components/schemas/_shared_req_ParamsUsername'
-            - $ref: '#/components/schemas/_shared_req_ParamsWebAuthn'
         device:
           $ref: '#/components/schemas/Device'
         profile:
@@ -6667,12 +6667,11 @@ components:
           type: string
     _shared_req_CredsWebAuthn:
       required:
-        - id
-        - response
+        - username
       type: object
       description: Auth login creds for auth_type="webauthn"
       properties:
-        id:
+        username:
           type: string
         response:
           type: string
@@ -6691,7 +6690,6 @@ components:
           description: This should match the `creds` password field when sign_up=true. This should be verified on the client side as well to reduce invalid requests.
         sign_up:
           type: boolean
-          default: false
     _shared_req_ParamsOIDC:
       type: object
       description: Auth login params for auth_type="oidc" (or variants)
@@ -6709,20 +6707,15 @@ components:
           description: This should match the `creds` password field when sign_up=true. This should be verified on the client side as well to reduce invalid requests.
         sign_up:
           type: boolean
-          default: false
     _shared_req_ParamsWebAuthn:
       type: object
       description: Auth login params for auth_type="webauthn"
       properties:
-        name:
-          type: string
-          description: Unique username to associate with the account
         display_name:
           type: string
           description: User's account name for display purposes
         sign_up:
           type: boolean
-          default: false
     _shared_req_ParamsNone:
       type: object
       description: Auth login request params for unlisted auth_types (None)
