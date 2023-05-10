@@ -636,7 +636,6 @@ func (a *Auth) applyAuthType(supportedAuthType model.SupportedAuthType, appOrg m
 	}
 	if isSignUp {
 		if admin {
-
 			return "", nil, nil, nil, errors.ErrorData(logutils.StatusInvalid, "sign up", &logutils.FieldArgs{"identifier": userIdentifier,
 				"auth_type": supportedAuthType.AuthType.Code, "app_org_id": appOrg.ID, "admin": true}).SetStatus(utils.ErrorStatusNotAllowed)
 		}

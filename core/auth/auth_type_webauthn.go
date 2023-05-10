@@ -182,13 +182,12 @@ func (a *webAuthnAuthImpl) checkCredentials(accountAuthType model.AccountAuthTyp
 		return "", errors.WrapErrorAction(logutils.ActionParse, typeWebAuthnCreds, nil, err)
 	}
 
-	sessionRaw := accountAuthType.Credential.Value["session"]
-	sessionJSON, err := json.Marshal(sessionRaw)
-	if err != nil {
-		return "", errors.WrapErrorAction(logutils.ActionMarshal, "session", nil, err)
+	sessionJSON, ok := accountAuthType.Credential.Value["session"].(string)
+	if !ok {
+		return "", errors.ErrorData(logutils.StatusInvalid, "session param", nil)
 	}
 	var session webauthn.SessionData
-	err = json.Unmarshal(sessionJSON, &session)
+	err = json.Unmarshal([]byte(sessionJSON), &session)
 	if err != nil {
 		return "", errors.WrapErrorAction(logutils.ActionUnmarshal, "session", nil, err)
 	}
@@ -204,10 +203,10 @@ func (a *webAuthnAuthImpl) checkCredentials(accountAuthType model.AccountAuthTyp
 			a.auth.storage.UpdateCredential(nil, accountAuthType.Credential)
 			return message, nil
 		}
-		return "", a.completeRegistration(auth, session, accountAuthType, creds, user, l)
+		return "", a.completeRegistration(auth, session, accountAuthType, parsedCreds.Response, user, l)
 	}
 
-	return "", a.completeLogin(auth, session, accountAuthType, creds, user, l)
+	return "", a.completeLogin(auth, session, accountAuthType, parsedCreds.Response, user, l)
 }
 
 func (a *webAuthnAuthImpl) beginRegistration(auth *webauthn.WebAuthn, user webAuthnUser) (string, map[string]interface{}, error) {
@@ -220,8 +219,13 @@ func (a *webAuthnAuthImpl) beginRegistration(auth *webauthn.WebAuthn, user webAu
 		return "", nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
 	}
 
+	sessionData, err := json.Marshal(session)
+	if err != nil {
+		return "", nil, errors.WrapErrorAction(logutils.ActionMarshal, "session", nil, err)
+	}
+
 	credData := map[string]interface{}{
-		"session": session,
+		"session": string(sessionData),
 	}
 
 	optionData, err := json.Marshal(options)
