@@ -116,12 +116,20 @@ _shared_req_CredsTwilioPhone:
   $ref: "./apis/shared/requests/CredsTwilioPhone.yaml"
 _shared_req_CredsOIDC:
   $ref: "./apis/shared/requests/CredsOIDC.yaml"
+_shared_req_CredsUsername:
+  $ref: "./apis/shared/requests/CredsUsername.yaml"
+_shared_req_CredsWebAuthn:
+  $ref: "./apis/shared/requests/CredsWebAuthn.yaml"
 _shared_req_CredsAPIKey:
   $ref: "./apis/shared/requests/CredsAPIKey.yaml"
 _shared_req_ParamsEmail:
   $ref: "./apis/shared/requests/ParamsEmail.yaml"
 _shared_req_ParamsOIDC:
   $ref: "./apis/shared/requests/ParamsOIDC.yaml"
+_shared_req_ParamsUsername:
+  $ref: "./apis/shared/requests/ParamsUsername.yaml"
+_shared_req_ParamsWebAuthn:
+  $ref: "./apis/shared/requests/ParamsWebAuthn.yaml"
 _shared_req_ParamsNone:
   $ref: "./apis/shared/requests/ParamsNone.yaml"
 _shared_req_ParamsSetEmailCredential:

@@ -43,7 +43,7 @@ type usernameCreds struct {
 	Password string `json:"password" bson:"password"`
 }
 
-func (a *usernameAuthImpl) signUp(authType model.AuthType, appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error) {
+func (a *usernameAuthImpl) signUp(supportedAuthType model.SupportedAuthType, appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error) {
 	type signUpUsernameParams struct {
 		ConfirmPassword string `json:"confirm_password"`
 	}
@@ -78,7 +78,7 @@ func (a *usernameAuthImpl) signUp(authType model.AuthType, appOrg model.Applicat
 		return "", nil, errors.ErrorData(logutils.StatusInvalid, "mismatching password fields", nil)
 	}
 
-	usernameCreds, err := a.buildCredentials(authType, appOrg.Application.Name, username, password, newCredentialID)
+	usernameCreds, err := a.buildCredentials(supportedAuthType.AuthType, appOrg.Application.Name, username, password, newCredentialID)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction("building", "username credentials", nil, err)
 	}

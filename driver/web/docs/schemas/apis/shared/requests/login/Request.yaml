@@ -14,6 +14,7 @@ properties:
       - illinois_oidc
       - anonymous
       - username
+      - webauthn
   app_type_identifier:
     type: string
   org_id:
@@ -22,6 +23,7 @@ properties:
     type: string
   creds:
     anyOf:
+      - $ref: "../CredsWebAuthn.yaml"
       - $ref: "../CredsEmail.yaml"
       - $ref: "../CredsTwilioPhone.yaml"
       - $ref: "../CredsOIDC.yaml"
@@ -30,6 +32,7 @@ properties:
   params:
     type: object
     anyOf:
+      - $ref: "../ParamsWebAuthn.yaml"
       - $ref: "../ParamsEmail.yaml"
       - $ref: "../ParamsOIDC.yaml"
       - $ref: "../ParamsNone.yaml"
