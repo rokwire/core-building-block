@@ -55,7 +55,7 @@
             data: JSON.stringify({
                 auth_type: 'webauthn',
                 app_type_identifier: 'edu.illinois.rokwire.android',
-                api_key: '',
+                api_key: API_KEY,
                 org_id: '0a2eff20-e2cd-11eb-af68-60f81db5ecc0',
                 creds: {
                     username: username,
@@ -108,7 +108,7 @@
                 data: JSON.stringify({
                     auth_type: 'webauthn',
                     app_type_identifier: 'edu.illinois.rokwire.android',
-                    api_key: '',
+                    api_key: API_KEY,
                     org_id: '0a2eff20-e2cd-11eb-af68-60f81db5ecc0',
                     creds: {
                         username: username,
@@ -155,14 +155,31 @@
         return;
       }
 
-      $.get(
-        '/login/begin/' + username,
-        null,
-        function (data) {
-          return data
-        },
-        'json')
-        .then((credentialRequestOptions) => {
+      $.ajax({
+            url: '/core/services/auth/login',
+            type: 'POST',
+            data: JSON.stringify({
+                auth_type: 'webauthn',
+                app_type_identifier: 'edu.illinois.rokwire.android',
+                api_key: API_KEY,
+                org_id: '0a2eff20-e2cd-11eb-af68-60f81db5ecc0',
+                creds: {
+                    username: username,
+                },
+                device: {
+                    type: "web",
+                    device_id: 'test',
+                    os: '',
+                },
+            }),
+            contentType:"application/json; charset=utf-8",
+            success: function (data) {
+                return data
+            },
+            dataType: 'json'
+        })
+        .then((response) => {
+          credentialRequestOptions = JSON.parse(response.message);
           console.log(credentialRequestOptions)
           credentialRequestOptions.publicKey.challenge = bufferDecode(credentialRequestOptions.publicKey.challenge);
           credentialRequestOptions.publicKey.allowCredentials.forEach(function (listItem) {
@@ -181,23 +198,39 @@
           let sig = assertion.response.signature;
           let userHandle = assertion.response.userHandle;
 
-          $.post(
-            '/login/finish/' + username,
-            JSON.stringify({
-              id: assertion.id,
-              rawId: bufferEncode(rawId),
-              type: assertion.type,
-              response: {
-                authenticatorData: bufferEncode(authData),
-                clientDataJSON: bufferEncode(clientDataJSON),
-                signature: bufferEncode(sig),
-                userHandle: bufferEncode(userHandle),
-              },
+          $.ajax({
+            url: '/core/services/auth/login',
+            type: 'POST',
+            data: JSON.stringify({
+                auth_type: 'webauthn',
+                app_type_identifier: 'edu.illinois.rokwire.android',
+                api_key: API_KEY,
+                org_id: '0a2eff20-e2cd-11eb-af68-60f81db5ecc0',
+                creds: {
+                    username: username,
+                    response: JSON.stringify({
+                      id: assertion.id,
+                      rawId: bufferEncode(rawId),
+                      type: assertion.type,
+                      response: {
+                        authenticatorData: bufferEncode(authData),
+                        clientDataJSON: bufferEncode(clientDataJSON),
+                        signature: bufferEncode(sig),
+                        userHandle: bufferEncode(userHandle),
+                      },
+                    })
+                },
+                device: {
+                    type: "web",
+                    device_id: 'test',
+                    os: '',
+                },
             }),
-            function (data) {
-              return data
+            contentType:"application/json; charset=utf-8",
+            success: function (data) {
+                return data
             },
-            'json')
+            dataType: 'json'})
         })
         .then((success) => {
           alert("successfully logged in " + username + "!")
