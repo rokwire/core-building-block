@@ -27,6 +27,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/rokwire/core-auth-library-go/v3/authservice"
+
 	"github.com/rokwire/core-auth-library-go/v3/envloader"
 	"github.com/rokwire/core-auth-library-go/v3/keys"
 	"github.com/rokwire/logging-library-go/v2/logs"
@@ -161,13 +163,25 @@ func main() {
 	profileBBApiKey := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_PROFILE_BB_API_KEY", false, true)
 	profileBBAdapter := profilebb.NewProfileBBAdapter(migrate, profileBBHost, profileBBApiKey)
 
-	identityBBAdapter := identitybb.NewIdentityBBAdapter()
+	authService := &authservice.AuthService{
+		ServiceID:   serviceID,
+		ServiceHost: host,
+		FirstParty:  true,
+	}
 
-	auth, err := auth.NewAuth(serviceID, host, authPrivKey, storageAdapter, emailer, minTokenExp, maxTokenExp, supportLegacySigs,
-		twilioAccountSID, twilioToken, twilioServiceSID, profileBBAdapter, identityBBAdapter, smtpHost, smtpPortNum, smtpUser, smtpPassword, smtpFrom, logger)
+	authImpl, err := auth.NewAuth(serviceID, host, authPrivKey, authService, storageAdapter, emailer, minTokenExp, maxTokenExp, supportLegacySigs,
+		twilioAccountSID, twilioToken, twilioServiceSID, profileBBAdapter, smtpHost, smtpPortNum, smtpUser, smtpPassword, smtpFrom, logger)
 	if err != nil {
 		logger.Fatalf("Error initializing auth: %v", err)
 	}
+
+	serviceAccountLoader := auth.NewLocalServiceAccountLoader(*authImpl)
+	serviceAccountManager, err := authservice.NewServiceAccountManager(authService, serviceAccountLoader)
+	if err != nil {
+		logger.Fatalf("Error initializing service account manager: %v", err)
+	}
+	identityBBAdapter := identitybb.NewIdentityBBAdapter(serviceAccountManager)
+	authImpl.SetIdentityBB(identityBBAdapter)
 
 	//system account init
 	systemInitSettings := map[string]string{
@@ -179,10 +193,10 @@ func main() {
 	}
 
 	//core
-	coreAPIs := core.NewCoreAPIs(env, Version, Build, serviceID, storageAdapter, auth, systemInitSettings, logger)
+	coreAPIs := core.NewCoreAPIs(env, Version, Build, serviceID, storageAdapter, authImpl, systemInitSettings, logger)
 	coreAPIs.Start()
 
 	//web adapter
-	webAdapter := web.NewWebAdapter(env, auth.ServiceRegManager, port, coreAPIs, host, baseServerURL, prodServerURL, testServerURL, devServerURL, logger)
+	webAdapter := web.NewWebAdapter(env, authImpl.ServiceRegManager, port, coreAPIs, host, baseServerURL, prodServerURL, testServerURL, devServerURL, logger)
 	webAdapter.Start()
 }
