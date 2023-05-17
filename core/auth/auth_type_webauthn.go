@@ -186,10 +186,14 @@ func (a *webAuthnAuthImpl) checkCredentials(accountAuthType model.AccountAuthTyp
 				}
 
 				accountAuthType.Credential.Value = credData
-				a.auth.storage.UpdateCredential(nil, accountAuthType.Credential)
+				err = a.auth.storage.UpdateCredential(nil, accountAuthType.Credential)
+				if err != nil {
+					return "", errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
+				}
+
 				return message, nil
 			}
-			return "", errors.ErrorData("unverified", model.TypeCredential, nil)
+			return "", errors.ErrorData(logutils.StatusMissing, model.TypeCredential, nil)
 		}
 		return a.beginLogin(auth, accountAuthType, user, l)
 	}
@@ -260,7 +264,10 @@ func (a *webAuthnAuthImpl) completeRegistration(auth *webauthn.WebAuthn, session
 		"credential": string(credentialData),
 	}
 	accountAuthType.Credential.Verified = true
-	a.auth.storage.UpdateCredential(nil, accountAuthType.Credential)
+	err = a.auth.storage.UpdateCredential(nil, accountAuthType.Credential)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
+	}
 
 	return nil
 }
@@ -277,7 +284,10 @@ func (a *webAuthnAuthImpl) beginLogin(auth *webauthn.WebAuthn, accountAuthType m
 	}
 
 	accountAuthType.Credential.Value["session"] = string(sessionData)
-	a.auth.storage.UpdateCredential(nil, accountAuthType.Credential)
+	err = a.auth.storage.UpdateCredential(nil, accountAuthType.Credential)
+	if err != nil {
+		return "", errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
+	}
 
 	optionData, err := json.Marshal(options)
 	if err != nil {
