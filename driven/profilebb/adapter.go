@@ -17,7 +17,7 @@ package profilebb
 import (
 	"core-building-block/core/model"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"time"
@@ -146,19 +146,16 @@ func (a *Adapter) GetProfileBBData(queryParams map[string]string, l *logs.Log) (
 	}
 
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionRead, logutils.TypeResponse, nil, err)
 	}
 	if resp.StatusCode != 200 {
 		return nil, nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeResponse, &logutils.FieldArgs{"status_code": resp.StatusCode, "error": string(body)})
 	}
-	if len(body) == 0 {
-		return nil, nil, errors.ErrorData(logutils.StatusMissing, logutils.TypeResponseBody, nil)
-	}
 
 	var profileData profileBBData
-	err = json.Unmarshal(body, &profileData)
+	err = json.NewDecoder(resp.Body).Decode(&profileData)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionUnmarshal, logutils.TypeResponseBody, nil, err)
 	}

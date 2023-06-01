@@ -20,7 +20,6 @@ import (
 	Def "core-building-block/driver/web/docs/gen"
 	"core-building-block/utils"
 	"encoding/json"
-	"io/ioutil"
 	"net/http"
 	"strconv"
 	"strings"
@@ -38,20 +37,13 @@ type ServicesApisHandler struct {
 }
 
 func (h ServicesApisHandler) login(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
 
 	ip := utils.GetIP(l, r)
-	if err != nil {
-		return l.HTTPResponseError("Error getting IP", err, http.StatusInternalServerError, true)
-	}
 
 	clientVersion := r.Header.Get("CLIENT_VERSION")
 
 	var requestData Def.SharedReqLogin
-	err = json.Unmarshal(data, &requestData)
+	err := json.NewDecoder(r.Body).Decode(&requestData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth login request"), nil, err, http.StatusBadRequest, true)
 	}
@@ -127,13 +119,9 @@ func (h ServicesApisHandler) login(l *logs.Log, r *http.Request, claims *tokenau
 }
 
 func (h ServicesApisHandler) loginMFA(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
 
 	var mfaData Def.SharedReqLoginMfa
-	err = json.Unmarshal(data, &mfaData)
+	err := json.NewDecoder(r.Body).Decode(&mfaData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("login mfa request"), nil, err, http.StatusBadRequest, true)
 	}
@@ -151,15 +139,11 @@ func (h ServicesApisHandler) loginMFA(l *logs.Log, r *http.Request, claims *toke
 }
 
 func (h ServicesApisHandler) refresh(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
 
 	clientVersion := r.Header.Get("CLIENT_VERSION")
 
 	var requestData Def.SharedReqRefresh
-	err = json.Unmarshal(data, &requestData)
+	err := json.NewDecoder(r.Body).Decode(&requestData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth refresh request"), nil, err, http.StatusBadRequest, true)
 	}
@@ -194,13 +178,9 @@ func (h ServicesApisHandler) refresh(l *logs.Log, r *http.Request, claims *token
 }
 
 func (h ServicesApisHandler) loginURL(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
 
 	var requestData Def.SharedReqLoginUrl
-	err = json.Unmarshal(data, &requestData)
+	err := json.NewDecoder(r.Body).Decode(&requestData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, "auth login url request", nil, err, http.StatusBadRequest, true)
 	}
@@ -220,13 +200,9 @@ func (h ServicesApisHandler) loginURL(l *logs.Log, r *http.Request, claims *toke
 }
 
 func (h ServicesApisHandler) accountExists(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
 
 	var requestData Def.SharedReqAccountCheck
-	err = json.Unmarshal(data, &requestData)
+	err := json.NewDecoder(r.Body).Decode(&requestData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.TypeRequest, nil, err, http.StatusBadRequest, true)
 	}
@@ -245,13 +221,8 @@ func (h ServicesApisHandler) accountExists(l *logs.Log, r *http.Request, claims 
 }
 
 func (h ServicesApisHandler) canSignIn(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
-
 	var requestData Def.SharedReqAccountCheck
-	err = json.Unmarshal(data, &requestData)
+	err := json.NewDecoder(r.Body).Decode(&requestData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.TypeRequest, nil, err, http.StatusBadRequest, true)
 	}
@@ -270,13 +241,9 @@ func (h ServicesApisHandler) canSignIn(l *logs.Log, r *http.Request, claims *tok
 }
 
 func (h ServicesApisHandler) canLink(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
 
 	var requestData Def.SharedReqAccountCheck
-	err = json.Unmarshal(data, &requestData)
+	err := json.NewDecoder(r.Body).Decode(&requestData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.TypeRequest, nil, err, http.StatusBadRequest, true)
 	}
@@ -295,13 +262,9 @@ func (h ServicesApisHandler) canLink(l *logs.Log, r *http.Request, claims *token
 }
 
 func (h ServicesApisHandler) linkAccountAuthType(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
 
 	var requestData Def.ServicesReqAccountAuthTypeLink
-	err = json.Unmarshal(data, &requestData)
+	err := json.NewDecoder(r.Body).Decode(&requestData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("account auth type link request"), nil, err, http.StatusBadRequest, true)
 	}
@@ -339,13 +302,9 @@ func (h ServicesApisHandler) linkAccountAuthType(l *logs.Log, r *http.Request, c
 }
 
 func (h ServicesApisHandler) unlinkAccountAuthType(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
 
 	var requestData Def.ServicesReqAccountAuthTypeUnlink
-	err = json.Unmarshal(data, &requestData)
+	err := json.NewDecoder(r.Body).Decode(&requestData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("account auth type unlink request"), nil, err, http.StatusBadRequest, true)
 	}
@@ -375,13 +334,9 @@ func (h ServicesApisHandler) unlinkAccountAuthType(l *logs.Log, r *http.Request,
 }
 
 func (h ServicesApisHandler) authorizeService(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
 
 	var requestData Def.ServicesReqAuthorizeService
-	err = json.Unmarshal(data, &requestData)
+	err := json.NewDecoder(r.Body).Decode(&requestData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, "auth authorize service request", nil, err, http.StatusBadRequest, true)
 	}
@@ -461,15 +416,11 @@ func (h ServicesApisHandler) getAccount(l *logs.Log, r *http.Request, claims *to
 }
 
 func (h ServicesApisHandler) createAdminAccount(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
 
 	clientVersion := r.Header.Get("CLIENT_VERSION")
 
 	var requestData Def.SharedReqCreateAccount
-	err = json.Unmarshal(data, &requestData)
+	err := json.NewDecoder(r.Body).Decode(&requestData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("create account request"), nil, err, http.StatusBadRequest, true)
 	}
@@ -506,7 +457,7 @@ func (h ServicesApisHandler) createAdminAccount(l *logs.Log, r *http.Request, cl
 
 	respData := partialAccountToDef(*account, params)
 
-	data, err = json.Marshal(respData)
+	data, err := json.Marshal(respData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeAccount, nil, err, http.StatusInternalServerError, false)
 	}
@@ -515,13 +466,9 @@ func (h ServicesApisHandler) createAdminAccount(l *logs.Log, r *http.Request, cl
 }
 
 func (h ServicesApisHandler) updateAdminAccount(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
 
 	var requestData Def.SharedReqUpdateAccount
-	err = json.Unmarshal(data, &requestData)
+	err := json.NewDecoder(r.Body).Decode(&requestData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("update account request"), nil, err, http.StatusBadRequest, true)
 	}
@@ -551,7 +498,7 @@ func (h ServicesApisHandler) updateAdminAccount(l *logs.Log, r *http.Request, cl
 
 	respData := partialAccountToDef(*account, params)
 
-	data, err = json.Marshal(respData)
+	data, err := json.Marshal(respData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeAccount, nil, err, http.StatusInternalServerError, false)
 	}
@@ -576,13 +523,9 @@ func (h ServicesApisHandler) getMFATypes(l *logs.Log, r *http.Request, claims *t
 }
 
 func (h ServicesApisHandler) addMFAType(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
 
 	var mfaData Def.SharedReqMfa
-	err = json.Unmarshal(data, &mfaData)
+	err := json.NewDecoder(r.Body).Decode(&mfaData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("add mfa request"), nil, err, http.StatusBadRequest, true)
 	}
@@ -603,13 +546,9 @@ func (h ServicesApisHandler) addMFAType(l *logs.Log, r *http.Request, claims *to
 }
 
 func (h ServicesApisHandler) removeMFAType(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
 
 	var mfaData Def.SharedReqMfa
-	err = json.Unmarshal(data, &mfaData)
+	err := json.NewDecoder(r.Body).Decode(&mfaData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("remove mfa request"), nil, err, http.StatusBadRequest, true)
 	}
@@ -639,13 +578,9 @@ func (h ServicesApisHandler) getProfile(l *logs.Log, r *http.Request, claims *to
 }
 
 func (h ServicesApisHandler) updateProfile(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
 
 	var requestData Def.Profile
-	err = json.Unmarshal(data, &requestData)
+	err := json.NewDecoder(r.Body).Decode(&requestData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, "profile update request", nil, err, http.StatusBadRequest, true)
 	}
@@ -661,13 +596,9 @@ func (h ServicesApisHandler) updateProfile(l *logs.Log, r *http.Request, claims 
 }
 
 func (h ServicesApisHandler) updateAccountPreferences(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
 
 	var preferences map[string]interface{}
-	err = json.Unmarshal(data, &preferences)
+	err := json.NewDecoder(r.Body).Decode(&preferences)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, "account preferences update request", nil, err, http.StatusBadRequest, true)
 	}
@@ -717,13 +648,9 @@ func (h ServicesApisHandler) getAccountSystemConfigs(l *logs.Log, r *http.Reques
 }
 
 func (h ServicesApisHandler) updateAccountUsername(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
 
 	var username Def.Username
-	err = json.Unmarshal(data, &username)
+	err := json.NewDecoder(r.Body).Decode(&username)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, model.TypeAccountUsername, nil, err, http.StatusBadRequest, true)
 	}
@@ -868,13 +795,9 @@ func (h ServicesApisHandler) verifyCredential(l *logs.Log, r *http.Request, clai
 }
 
 func (h ServicesApisHandler) getApplicationConfigs(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
 
 	var requestData Def.SharedReqAppConfigs
-	err = json.Unmarshal(data, &requestData)
+	err := json.NewDecoder(r.Body).Decode(&requestData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("application config request"), nil, err, http.StatusBadRequest, true)
 	}
@@ -900,13 +823,9 @@ func (h ServicesApisHandler) getApplicationConfigs(l *logs.Log, r *http.Request,
 }
 
 func (h ServicesApisHandler) getApplicationOrgConfigs(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
 
 	var requestData Def.SharedReqAppConfigsOrg
-	err = json.Unmarshal(data, &requestData)
+	err := json.NewDecoder(r.Body).Decode(&requestData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("application org config request"), nil, err, http.StatusBadRequest, true)
 	}
@@ -934,13 +853,9 @@ func (h ServicesApisHandler) getApplicationOrgConfigs(l *logs.Log, r *http.Reque
 // Handler for reset password endpoint from client application
 func (h ServicesApisHandler) updateCredential(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
 	accountID := claims.Subject
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
 
 	var requestData Def.ServicesReqCredentialUpdate
-	err = json.Unmarshal(data, &requestData)
+	err := json.NewDecoder(r.Body).Decode(&requestData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth reset password client request"), nil, err, http.StatusBadRequest, true)
 	}
@@ -960,13 +875,9 @@ func (h ServicesApisHandler) updateCredential(l *logs.Log, r *http.Request, clai
 
 // Handler for reset password endpoint from reset link
 func (h ServicesApisHandler) forgotCredentialComplete(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
 
 	var requestData Def.ServicesReqCredentialForgotComplete
-	err = json.Unmarshal(data, &requestData)
+	err := json.NewDecoder(r.Body).Decode(&requestData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth reset password link request"), nil, err, http.StatusBadRequest, true)
 	}
@@ -986,13 +897,9 @@ func (h ServicesApisHandler) forgotCredentialComplete(l *logs.Log, r *http.Reque
 
 // Handler for forgot credential endpoint
 func (h ServicesApisHandler) forgotCredentialInitiate(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
 
 	var requestData Def.ServicesReqCredentialForgotInitiate
-	err = json.Unmarshal(data, &requestData)
+	err := json.NewDecoder(r.Body).Decode(&requestData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth reset password request"), nil, err, http.StatusBadRequest, true)
 	}
@@ -1007,13 +914,9 @@ func (h ServicesApisHandler) forgotCredentialInitiate(l *logs.Log, r *http.Reque
 
 // Handler for resending verify code
 func (h ServicesApisHandler) sendVerifyCredential(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
 
 	var requestData Def.ServicesReqCredentialSendVerify
-	err = json.Unmarshal(data, &requestData)
+	err := json.NewDecoder(r.Body).Decode(&requestData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth resend verify code request"), nil, err, http.StatusBadRequest, true)
 	}
@@ -1026,13 +929,9 @@ func (h ServicesApisHandler) sendVerifyCredential(l *logs.Log, r *http.Request, 
 }
 
 func (h ServicesApisHandler) verifyMFA(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
 
 	var mfaData Def.SharedReqMfa
-	err = json.Unmarshal(data, &mfaData)
+	err := json.NewDecoder(r.Body).Decode(&mfaData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("verify mfa request"), nil, err, http.StatusBadRequest, true)
 	}
@@ -1062,14 +961,8 @@ func (h ServicesApisHandler) verifyMFA(l *logs.Log, r *http.Request, claims *tok
 }
 
 func (h ServicesApisHandler) logout(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
-
 	var requestDataData Def.PostServicesAuthLogoutJSONBody
-	err = json.Unmarshal(data, &requestDataData)
+	err := json.NewDecoder(r.Body).Decode(&requestDataData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("verify logout request"), nil, err, http.StatusBadRequest, true)
 	}
