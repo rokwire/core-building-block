@@ -17,7 +17,7 @@ package identitybb
 import (
 	"core-building-block/core/model"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 
@@ -63,19 +63,16 @@ func (a *Adapter) GetUserProfile(baseURL string, externalUser model.ExternalSyst
 	}
 
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionRead, logutils.TypeResponse, nil, err)
 	}
 	if resp.StatusCode != 200 {
 		return nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeResponse, &logutils.FieldArgs{"status_code": resp.StatusCode, "error": string(body)})
 	}
-	if len(body) == 0 {
-		return nil, errors.ErrorData(logutils.StatusMissing, logutils.TypeResponseBody, nil)
-	}
 
 	var profileData map[string]interface{}
-	err = json.Unmarshal(body, &profileData)
+	err = json.NewDecoder(resp.Body).Decode(&profileData)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, logutils.TypeResponseBody, nil, err)
 	}

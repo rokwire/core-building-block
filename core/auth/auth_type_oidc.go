@@ -21,7 +21,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -401,7 +401,7 @@ func (a *oidcAuthImpl) loadOidcTokenWithParams(params map[string]string, oidcCon
 	}
 
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err)
 	}
@@ -410,7 +410,7 @@ func (a *oidcAuthImpl) loadOidcTokenWithParams(params map[string]string, oidcCon
 	}
 
 	var authToken oidcToken
-	err = json.Unmarshal(body, &authToken)
+	err = json.NewDecoder(resp.Body).Decode(&authToken)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, logutils.TypeToken, nil, err)
 	}
@@ -447,7 +447,7 @@ func (a *oidcAuthImpl) loadOidcUserInfo(token *oidcToken, url string) ([]byte, e
 	}
 
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionRead, logutils.TypeResponse, nil, err)
 	}
