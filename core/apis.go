@@ -89,7 +89,7 @@ func (c *APIs) storeSystemData() error {
 		if emailAuthType == nil {
 			newDocuments["auth_type"] = uuid.NewString()
 			emailAuthType = &model.AuthType{ID: newDocuments["auth_type"], Code: auth.AuthTypeEmail, Description: "Authentication type relying on email and password",
-				IsExternal: false, IsAnonymous: false, UseCredentials: true, IgnoreMFA: false, Params: map[string]interface{}{"verify_email": false}}
+				IsExternal: false, IsAnonymous: false, UseCredentials: true, IgnoreMFA: false}
 			_, err = c.app.storage.InsertAuthType(context, *emailAuthType)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAuthType, nil, err)
