@@ -520,7 +520,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_services_req_credential_update'
+              $ref: '#/components/schemas/_shared_req_credential_update'
         required: true
       responses:
         '200':
@@ -1746,6 +1746,36 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AdminToken'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /admin/auth/credential/update:
+    post:
+      tags:
+        - Admin
+      summary: Reset a credential from admin application
+      description: |
+        Needs user auth token for authorization
+
+        **Auth:** Requires token from direct user authentication from recent login
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_shared_req_credential_update'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
         '400':
           description: Bad request
         '401':
@@ -6702,6 +6732,17 @@ components:
         version:
           type: string
           description: conforms major.minor.patch format
+    _shared_req_credential_update:
+      required:
+        - account_auth_type_id
+      type: object
+      properties:
+        account_auth_type_id:
+          type: string
+        params:
+          type: object
+          anyOf:
+            - $ref: '#/components/schemas/_shared_req_ParamsSetEmailCredential'
     _shared_res_Login:
       type: object
       properties:
@@ -6874,17 +6915,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AccountAuthType'
-    _services_req_credential_update:
-      required:
-        - account_auth_type_id
-      type: object
-      properties:
-        account_auth_type_id:
-          type: string
-        params:
-          type: object
-          anyOf:
-            - $ref: '#/components/schemas/_shared_req_ParamsSetEmailCredential'
     _services_req_credential_send-verify:
       required:
         - auth_type

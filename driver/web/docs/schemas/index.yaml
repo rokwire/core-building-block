@@ -130,6 +130,8 @@ _shared_req_app-configs:
   $ref: "./apis/shared/requests/app-configs/Request.yaml"
 _shared_req_app-configs-org:
   $ref: "./apis/shared/requests/app-configs/organization/Request.yaml"
+_shared_req_credential_update:
+  $ref: "./apis/shared/requests/credential/update/Request.yaml"
 
 ### responses
 _shared_res_Login:
@@ -164,9 +166,6 @@ _services_req_account_auth-type-unlink:
 _services_res_account_auth-type-link:
   $ref: "./apis/services/account/auth-type/link/response/Response.yaml"
 
-### credential_update API
-_services_req_credential_update:
-  $ref: "./apis/services/credential/update/request/Request.yaml"
 
 ### credential_send-verify API
 _services_req_credential_send-verify:
