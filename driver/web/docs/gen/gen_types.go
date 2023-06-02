@@ -757,17 +757,6 @@ type ServicesReqCredentialSendVerify struct {
 // ServicesReqCredentialSendVerifyAuthType defines model for ServicesReqCredentialSendVerify.AuthType.
 type ServicesReqCredentialSendVerifyAuthType string
 
-// ServicesReqCredentialUpdate defines model for _services_req_credential_update.
-type ServicesReqCredentialUpdate struct {
-	AccountAuthTypeId string                              `json:"account_auth_type_id"`
-	Params            *ServicesReqCredentialUpdate_Params `json:"params,omitempty"`
-}
-
-// ServicesReqCredentialUpdate_Params defines model for ServicesReqCredentialUpdate.Params.
-type ServicesReqCredentialUpdate_Params struct {
-	union json.RawMessage
-}
-
 // ServicesReqServiceAccountsAccessToken defines model for _services_req_service-accounts_access-token.
 type ServicesReqServiceAccountsAccessToken struct {
 	AccountId string                                        `json:"account_id"`
@@ -1018,6 +1007,17 @@ type SharedReqAppConfigsOrg struct {
 
 	// Version conforms major.minor.patch format
 	Version string `json:"version"`
+}
+
+// SharedReqCredentialUpdate defines model for _shared_req_credential_update.
+type SharedReqCredentialUpdate struct {
+	AccountAuthTypeId string                            `json:"account_auth_type_id"`
+	Params            *SharedReqCredentialUpdate_Params `json:"params,omitempty"`
+}
+
+// SharedReqCredentialUpdate_Params defines model for SharedReqCredentialUpdate.Params.
+type SharedReqCredentialUpdate_Params struct {
+	union json.RawMessage
 }
 
 // SharedResAccountCheck defines model for _shared_res_AccountCheck.
@@ -1558,6 +1558,9 @@ type PutAdminApplicationRolesIdJSONRequestBody = AdminReqApplicationRole
 // PutAdminApplicationRolesIdPermissionsJSONRequestBody defines body for PutAdminApplicationRolesIdPermissions for application/json ContentType.
 type PutAdminApplicationRolesIdPermissionsJSONRequestBody = AdminReqGrantPermissionsToRole
 
+// PostAdminAuthCredentialUpdateJSONRequestBody defines body for PostAdminAuthCredentialUpdate for application/json ContentType.
+type PostAdminAuthCredentialUpdateJSONRequestBody = SharedReqCredentialUpdate
+
 // PostAdminAuthLoginJSONRequestBody defines body for PostAdminAuthLogin for application/json ContentType.
 type PostAdminAuthLoginJSONRequestBody = SharedReqLogin
 
@@ -1649,7 +1652,7 @@ type PostServicesAuthCredentialForgotInitiateJSONRequestBody = ServicesReqCreden
 type PostServicesAuthCredentialSendVerifyJSONRequestBody = ServicesReqCredentialSendVerify
 
 // PostServicesAuthCredentialUpdateJSONRequestBody defines body for PostServicesAuthCredentialUpdate for application/json ContentType.
-type PostServicesAuthCredentialUpdateJSONRequestBody = ServicesReqCredentialUpdate
+type PostServicesAuthCredentialUpdateJSONRequestBody = SharedReqCredentialUpdate
 
 // PostServicesAuthLoginJSONRequestBody defines body for PostServicesAuthLogin for application/json ContentType.
 type PostServicesAuthLoginJSONRequestBody = SharedReqLogin
@@ -1959,42 +1962,6 @@ func (t *ServicesReqCredentialForgotComplete_Params) UnmarshalJSON(b []byte) err
 	return err
 }
 
-// AsSharedReqParamsSetEmailCredential returns the union data inside the ServicesReqCredentialUpdate_Params as a SharedReqParamsSetEmailCredential
-func (t ServicesReqCredentialUpdate_Params) AsSharedReqParamsSetEmailCredential() (SharedReqParamsSetEmailCredential, error) {
-	var body SharedReqParamsSetEmailCredential
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromSharedReqParamsSetEmailCredential overwrites any union data inside the ServicesReqCredentialUpdate_Params as the provided SharedReqParamsSetEmailCredential
-func (t *ServicesReqCredentialUpdate_Params) FromSharedReqParamsSetEmailCredential(v SharedReqParamsSetEmailCredential) error {
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeSharedReqParamsSetEmailCredential performs a merge with any union data inside the ServicesReqCredentialUpdate_Params, using the provided SharedReqParamsSetEmailCredential
-func (t *ServicesReqCredentialUpdate_Params) MergeSharedReqParamsSetEmailCredential(v SharedReqParamsSetEmailCredential) error {
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JsonMerge(b, t.union)
-	t.union = merged
-	return err
-}
-
-func (t ServicesReqCredentialUpdate_Params) MarshalJSON() ([]byte, error) {
-	b, err := t.union.MarshalJSON()
-	return b, err
-}
-
-func (t *ServicesReqCredentialUpdate_Params) UnmarshalJSON(b []byte) error {
-	err := t.union.UnmarshalJSON(b)
-	return err
-}
-
 // AsSharedReqCredsEmail returns the union data inside the SharedReqLogin_Creds as a SharedReqCredsEmail
 func (t SharedReqLogin_Creds) AsSharedReqCredsEmail() (SharedReqCredsEmail, error) {
 	var body SharedReqCredsEmail
@@ -2245,6 +2212,42 @@ func (t SharedReqLogin_Params) MarshalJSON() ([]byte, error) {
 }
 
 func (t *SharedReqLogin_Params) UnmarshalJSON(b []byte) error {
+	err := t.union.UnmarshalJSON(b)
+	return err
+}
+
+// AsSharedReqParamsSetEmailCredential returns the union data inside the SharedReqCredentialUpdate_Params as a SharedReqParamsSetEmailCredential
+func (t SharedReqCredentialUpdate_Params) AsSharedReqParamsSetEmailCredential() (SharedReqParamsSetEmailCredential, error) {
+	var body SharedReqParamsSetEmailCredential
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromSharedReqParamsSetEmailCredential overwrites any union data inside the SharedReqCredentialUpdate_Params as the provided SharedReqParamsSetEmailCredential
+func (t *SharedReqCredentialUpdate_Params) FromSharedReqParamsSetEmailCredential(v SharedReqParamsSetEmailCredential) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeSharedReqParamsSetEmailCredential performs a merge with any union data inside the SharedReqCredentialUpdate_Params, using the provided SharedReqParamsSetEmailCredential
+func (t *SharedReqCredentialUpdate_Params) MergeSharedReqParamsSetEmailCredential(v SharedReqParamsSetEmailCredential) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(b, t.union)
+	t.union = merged
+	return err
+}
+
+func (t SharedReqCredentialUpdate_Params) MarshalJSON() ([]byte, error) {
+	b, err := t.union.MarshalJSON()
+	return b, err
+}
+
+func (t *SharedReqCredentialUpdate_Params) UnmarshalJSON(b []byte) error {
 	err := t.union.UnmarshalJSON(b)
 	return err
 }

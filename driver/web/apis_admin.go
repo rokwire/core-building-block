@@ -863,6 +863,29 @@ func (h AdminApisHandler) updateAccountUsername(l *logs.Log, r *http.Request, cl
 	return l.HTTPResponseSuccess()
 }
 
+// Handler for reset password endpoint from admin application
+func (h AdminApisHandler) updateCredential(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
+	accountID := claims.Subject
+
+	var requestData Def.SharedReqCredentialUpdate
+	err := json.NewDecoder(r.Body).Decode(&requestData)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth reset password admin request"), nil, err, http.StatusBadRequest, true)
+	}
+
+	//params
+	requestParams, err := interfaceToJSON(requestData.Params)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionMarshal, "params", nil, err, http.StatusBadRequest, true)
+	}
+
+	if err := h.coreAPIs.Auth.UpdateCredential(accountID, requestData.AccountAuthTypeId, requestParams, l); err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionUpdate, "password", nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HTTPResponseSuccessMessage("Reset Password from admin successfully")
+}
+
 func (h AdminApisHandler) getAppToken(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
 	appID := r.URL.Query().Get("app_id")
 	if appID == "" {

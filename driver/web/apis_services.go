@@ -939,7 +939,7 @@ func (h ServicesApisHandler) updateCredential(l *logs.Log, r *http.Request, clai
 		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
 
-	var requestData Def.ServicesReqCredentialUpdate
+	var requestData Def.SharedReqCredentialUpdate
 	err = json.Unmarshal(data, &requestData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth reset password client request"), nil, err, http.StatusBadRequest, true)

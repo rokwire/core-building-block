@@ -152,6 +152,7 @@ func (we Adapter) Start() {
 	adminSubrouter.HandleFunc("/auth/refresh", we.wrapFunc(we.adminApisHandler.refresh, nil)).Methods("POST")
 	adminSubrouter.HandleFunc("/auth/verify-mfa", we.wrapFunc(we.adminApisHandler.verifyMFA, we.auth.admin.User)).Methods("POST")
 	adminSubrouter.HandleFunc("/auth/app-token", we.wrapFunc(we.adminApisHandler.getAppToken, we.auth.admin.User)).Methods("GET")
+	adminSubrouter.HandleFunc("/auth/credential/update", we.wrapFunc(we.adminApisHandler.updateCredential, we.auth.admin.Authenticated)).Methods("POST")
 
 	adminSubrouter.HandleFunc("/account", we.wrapFunc(we.adminApisHandler.getAccount, we.auth.admin.User)).Methods("GET")
 	adminSubrouter.HandleFunc("/account/mfa", we.wrapFunc(we.adminApisHandler.getMFATypes, we.auth.admin.User)).Methods("GET")

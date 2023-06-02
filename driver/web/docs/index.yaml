@@ -101,6 +101,8 @@ paths:
     $ref: "./resources/admin/auth/verify-mfa.yaml"
   /admin/auth/app-token:
     $ref: "./resources/admin/auth/app-token.yaml"
+  /admin/auth/credential/update:
+    $ref: "./resources/admin/auth/credential/update.yaml"
   /admin/account:
     $ref: "./resources/admin/account.yaml"
   /admin/account/mfa:
