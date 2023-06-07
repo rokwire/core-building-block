@@ -18,7 +18,10 @@ import (
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
 	"core-building-block/utils"
+	"strings"
 	"time"
+
+	"github.com/rokwire/core-auth-library-go/v3/authorization"
 
 	"github.com/google/uuid"
 	"github.com/rokwire/logging-library-go/v2/errors"
@@ -661,7 +664,7 @@ func (app *application) admRemoveAccountsFromGroup(appID string, orgID string, g
 	return app.storage.PerformTransaction(transaction)
 }
 
-func (app *application) admCreateAppOrgRole(name string, description string, system bool, permissionNames []string, appID string, orgID string, assignerPermissions []string, systemClaim bool, l *logs.Log) (*model.AppOrgRole, error) {
+func (app *application) admCreateAppOrgRole(name string, description string, system bool, permissionNames []string, scopes []string, appID string, orgID string, assignerPermissions []string, systemClaim bool, l *logs.Log) (*model.AppOrgRole, error) {
 	var newRole *model.AppOrgRole
 	transaction := func(context storage.TransactionContext) error {
 		//1. get application organization entity
@@ -676,10 +679,26 @@ func (app *application) admCreateAppOrgRole(name string, description string, sys
 			return errors.WrapErrorAction(logutils.ActionValidate, model.TypePermission, nil, err)
 		}
 
+		if scopes != nil && utils.Contains(assignerPermissions, model.UpdateScopesPermission) {
+			for i, scope := range scopes {
+				parsedScope, err := authorization.ScopeFromString(scope)
+				if err != nil {
+					return errors.WrapErrorAction(logutils.ActionValidate, model.TypeScope, nil, err)
+				}
+				if !strings.HasPrefix(parsedScope.Resource, model.AdminScopePrefix) {
+					parsedScope.Resource = model.AdminScopePrefix + parsedScope.Resource
+					scopes[i] = parsedScope.String()
+				}
+			}
+		} else {
+			scopes = nil
+		}
+
 		//3. create and insert role
 		id, _ := uuid.NewUUID()
 		now := time.Now()
-		role := model.AppOrgRole{ID: id.String(), Name: name, Description: description, System: systemClaim && system, Permissions: permissions, AppOrg: *appOrg, DateCreated: now}
+		role := model.AppOrgRole{ID: id.String(), Name: name, Description: description, System: systemClaim && system,
+			Permissions: permissions, Scopes: scopes, AppOrg: *appOrg, DateCreated: now}
 		err = app.storage.InsertAppOrgRole(context, role)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAppOrgRole, nil, err)
@@ -713,7 +732,7 @@ func (app *application) admGetAppOrgRoles(appID string, orgID string) ([]model.A
 	return getAppOrgRoles, nil
 }
 
-func (app *application) admUpdateAppOrgRole(ID string, name string, description string, system bool, permissionNames []string, appID string, orgID string, assignerPermissions []string, systemClaim bool, l *logs.Log) (*model.AppOrgRole, error) {
+func (app *application) admUpdateAppOrgRole(ID string, name string, description string, system bool, permissionNames []string, scopes []string, appID string, orgID string, assignerPermissions []string, systemClaim bool, l *logs.Log) (*model.AppOrgRole, error) {
 	var updatedRole *model.AppOrgRole
 	transaction := func(context storage.TransactionContext) error {
 		//1. find application organization
@@ -760,6 +779,23 @@ func (app *application) admUpdateAppOrgRole(ID string, name string, description 
 			}
 
 			role.Permissions = newPermissions
+			updated = true
+		}
+
+		//6. update account scopes
+		if scopes != nil && utils.Contains(assignerPermissions, model.UpdateScopesPermission) && !utils.DeepEqual(role.Scopes, scopes) {
+			for i, scope := range scopes {
+				parsedScope, err := authorization.ScopeFromString(scope)
+				if err != nil {
+					return errors.WrapErrorAction(logutils.ActionValidate, model.TypeScope, nil, err)
+				}
+				if !strings.HasPrefix(parsedScope.Resource, model.AdminScopePrefix) {
+					parsedScope.Resource = model.AdminScopePrefix + parsedScope.Resource
+					scopes[i] = parsedScope.String()
+				}
+			}
+
+			role.Scopes = scopes
 			updated = true
 		}
 

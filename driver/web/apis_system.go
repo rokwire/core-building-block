@@ -25,8 +25,8 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
-	"github.com/rokwire/core-auth-library-go/v2/authorization"
-	"github.com/rokwire/core-auth-library-go/v2/tokenauth"
+	"github.com/rokwire/core-auth-library-go/v3/authorization"
+	"github.com/rokwire/core-auth-library-go/v3/tokenauth"
 	"github.com/rokwire/logging-library-go/v2/logs"
 	"github.com/rokwire/logging-library-go/v2/logutils"
 )
@@ -1006,7 +1006,7 @@ func (h SystemApisHandler) createAuthTypes(l *logs.Log, r *http.Request, claims 
 	ignoreMFA := requestData.IgnoreMfa
 	var params map[string]interface{}
 	if requestData.Params != nil {
-		params = requestData.Params.AdditionalProperties
+		params = *requestData.Params
 	}
 
 	_, err = h.coreAPIs.System.SysCreateAuthTypes(code, description, isExternal, isAnonymous, useCredentials, ignoreMFA, params)
@@ -1059,7 +1059,7 @@ func (h SystemApisHandler) updateAuthTypes(l *logs.Log, r *http.Request, claims 
 	ignoreMFA := requestData.IgnoreMfa
 	var params map[string]interface{}
 	if requestData.Params != nil {
-		params = requestData.Params.AdditionalProperties
+		params = *requestData.Params
 	}
 
 	err = h.coreAPIs.System.SysUpdateAuthTypes(ID, code, description, isExternal, isAnonymous, useCredentials, ignoreMFA, params)

@@ -28,6 +28,7 @@ type account struct {
 	Permissions []model.Permission `bson:"permissions,omitempty"`
 	Roles       []accountRole      `bson:"roles,omitempty"`
 	Groups      []accountGroup     `bson:"groups,omitempty"`
+	Scopes      []string           `bson:"scopes,omitempty"`
 
 	AuthTypes []accountAuthType `bson:"auth_types,omitempty"`
 

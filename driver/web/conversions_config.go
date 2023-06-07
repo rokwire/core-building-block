@@ -18,9 +18,13 @@ import (
 	"core-building-block/core/model"
 	Def "core-building-block/driver/web/docs/gen"
 	"core-building-block/utils"
+	"encoding/json"
+
+	"github.com/rokwire/logging-library-go/v2/errors"
+	"github.com/rokwire/logging-library-go/v2/logutils"
 )
 
-func configToDef(item model.Config) Def.Config {
+func configToDef(item model.Config) (*Def.Config, error) {
 	var dateUpdated *string
 	dateCreated := utils.FormatTime(&item.DateCreated)
 	if item.DateUpdated != nil {
@@ -28,8 +32,21 @@ func configToDef(item model.Config) Def.Config {
 		dateUpdated = &formatted
 	}
 
-	return Def.Config{Id: &item.ID, Type: item.Type, AppId: item.AppID, OrgId: item.OrgID, System: item.System, Data: item.Data,
-		DateCreated: &dateCreated, DateUpdated: dateUpdated}
+	var configData Def.Config_Data
+	if item.Data != nil {
+		configBytes, err := json.Marshal(item.Data)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionMarshal, model.TypeConfig, nil, err)
+		}
+
+		err = json.Unmarshal(configBytes, &configData)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, model.TypeConfig, nil, err)
+		}
+	}
+
+	return &Def.Config{Id: &item.ID, Type: item.Type, AppId: item.AppID, OrgId: item.OrgID, System: item.System, Data: configData,
+		DateCreated: &dateCreated, DateUpdated: dateUpdated}, nil
 }
 
 func configFromDef(item Def.Config) model.Config {

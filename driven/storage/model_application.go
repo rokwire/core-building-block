@@ -121,6 +121,7 @@ type appOrgRole struct {
 	AppOrgID string `bson:"app_org_id"`
 
 	Permissions []model.Permission `bson:"permissions"`
+	Scopes      []string           `bson:"scopes"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
