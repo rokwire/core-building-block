@@ -27,7 +27,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/rokwire/core-auth-library-go/v3/authorization"
-	"github.com/rokwire/core-auth-library-go/v3/authutils"
 	"github.com/rokwire/core-auth-library-go/v3/tokenauth"
 	"github.com/rokwire/logging-library-go/v2/errors"
 	"github.com/rokwire/logging-library-go/v2/logs"
@@ -301,17 +300,12 @@ func (h AdminApisHandler) createConfig(l *logs.Log, r *http.Request, claims *tok
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, true)
 	}
 
-	appID := claims.AppID
-	if requestData.AllApps != nil && *requestData.AllApps {
-		appID = authutils.AllApps
+	config, err := configFromDef(requestData, claims)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionCast, model.TypeConfig, nil, err, http.StatusInternalServerError, false)
 	}
-	orgID := claims.OrgID
-	if requestData.AllOrgs != nil && *requestData.AllOrgs {
-		orgID = authutils.AllOrgs
-	}
-	config := model.Config{Type: requestData.Type, AppID: appID, OrgID: orgID, System: requestData.System, Data: requestData.Data}
 
-	newConfig, err := h.coreAPIs.Administration.AdmCreateConfig(config, claims)
+	newConfig, err := h.coreAPIs.Administration.AdmCreateConfig(*config, claims)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionCreate, model.TypeConfig, nil, err, http.StatusInternalServerError, true)
 	}
@@ -342,17 +336,12 @@ func (h AdminApisHandler) updateConfig(l *logs.Log, r *http.Request, claims *tok
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, true)
 	}
 
-	appID := claims.AppID
-	if requestData.AllApps != nil && *requestData.AllApps {
-		appID = authutils.AllApps
+	config, err := configFromDef(requestData, claims)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionCast, model.TypeConfig, nil, err, http.StatusInternalServerError, false)
 	}
-	orgID := claims.OrgID
-	if requestData.AllOrgs != nil && *requestData.AllOrgs {
-		orgID = authutils.AllOrgs
-	}
-	config := model.Config{ID: id, Type: requestData.Type, AppID: appID, OrgID: orgID, System: requestData.System, Data: requestData.Data}
 
-	err = h.coreAPIs.Administration.AdmUpdateConfig(config, claims)
+	err = h.coreAPIs.Administration.AdmUpdateConfig(*config, claims)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUpdate, model.TypeConfig, nil, err, http.StatusInternalServerError, true)
 	}

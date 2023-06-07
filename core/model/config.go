@@ -38,20 +38,20 @@ const (
 
 // Config contains generic configs
 type Config struct {
-	ID          string      `json:"id" bson:"_id"`
-	Type        string      `json:"type" bson:"type"`
-	AppID       string      `json:"app_id" bson:"app_id"`
-	OrgID       string      `json:"org_id" bson:"org_id"`
-	System      bool        `json:"system" bson:"system"`
-	Data        interface{} `json:"data" bson:"data"`
-	DateCreated time.Time   `json:"date_created" bson:"date_created"`
-	DateUpdated *time.Time  `json:"date_updated" bson:"date_updated"`
+	ID          string      `bson:"_id"`
+	Type        string      `bson:"type"`
+	AppID       string      `bson:"app_id"`
+	OrgID       string      `bson:"org_id"`
+	System      bool        `bson:"system"`
+	Data        interface{} `bson:"data"`
+	DateCreated time.Time   `bson:"date_created"`
+	DateUpdated *time.Time  `bson:"date_updated"`
 }
 
 // EnvConfigData contains environment configs for this service
 type EnvConfigData struct {
-	CORSAllowedOrigins []string `json:"cors_allowed_origins,omitempty" bson:"cors_allowed_origins"`
-	CORSAllowedHeaders []string `json:"cors_allowed_headers,omitempty" bson:"cors_allowed_headers"`
+	CORSAllowedOrigins []string `json:"cors_allowed_origins" bson:"cors_allowed_origins"`
+	CORSAllowedHeaders []string `json:"cors_allowed_headers" bson:"cors_allowed_headers"`
 }
 
 // GetConfigData returns a pointer to the given config's Data as the given type T

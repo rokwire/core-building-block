@@ -20,6 +20,8 @@ import (
 	"core-building-block/utils"
 	"encoding/json"
 
+	"github.com/rokwire/core-auth-library-go/v3/authutils"
+	"github.com/rokwire/core-auth-library-go/v3/tokenauth"
 	"github.com/rokwire/logging-library-go/v2/errors"
 	"github.com/rokwire/logging-library-go/v2/logutils"
 )
@@ -63,14 +65,25 @@ func configsToDef(items []model.Config) ([]Def.Config, error) {
 	return result, nil
 }
 
-func configFromDef(item Def.Config) model.Config {
-	var appID string
-	if item.AppId != nil {
-		appID = *item.AppId
+func configFromDef(item Def.AdminReqCreateUpdateConfig, claims *tokenauth.Claims) (*model.Config, error) {
+	appID := claims.AppID
+	if item.AllApps != nil && *item.AllApps {
+		appID = authutils.AllApps
 	}
-	var orgID string
-	if item.OrgId != nil {
-		orgID = *item.OrgId
+	orgID := claims.OrgID
+	if item.AllOrgs != nil && *item.AllOrgs {
+		orgID = authutils.AllOrgs
 	}
-	return model.Config{Type: item.Type, AppID: appID, OrgID: orgID, System: item.System, Data: item.Data}
+
+	var configData interface{}
+	configBytes, err := json.Marshal(item.Data)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionMarshal, model.TypeConfig, nil, err)
+	}
+
+	err = json.Unmarshal(configBytes, &configData)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, model.TypeConfig, nil, err)
+	}
+	return &model.Config{Type: item.Type, AppID: appID, OrgID: orgID, System: item.System, Data: configData}, nil
 }
