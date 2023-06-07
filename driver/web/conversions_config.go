@@ -45,10 +45,32 @@ func configToDef(item model.Config) (*Def.Config, error) {
 		}
 	}
 
-	return &Def.Config{Id: &item.ID, Type: item.Type, AppId: item.AppID, OrgId: item.OrgID, System: item.System, Data: configData,
+	appID := item.AppID
+	orgID := item.OrgID
+	return &Def.Config{Id: &item.ID, Type: item.Type, AppId: &appID, OrgId: &orgID, System: item.System, Data: configData,
 		DateCreated: &dateCreated, DateUpdated: dateUpdated}, nil
 }
 
+func configsToDef(items []model.Config) ([]Def.Config, error) {
+	result := make([]Def.Config, 0)
+	for _, item := range items {
+		defItem, err := configToDef(item)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, *defItem)
+	}
+	return result, nil
+}
+
 func configFromDef(item Def.Config) model.Config {
-	return model.Config{Type: item.Type, AppID: item.AppId, OrgID: item.OrgId, System: item.System, Data: item.Data}
+	var appID string
+	if item.AppId != nil {
+		appID = *item.AppId
+	}
+	var orgID string
+	if item.OrgId != nil {
+		orgID = *item.OrgId
+	}
+	return model.Config{Type: item.Type, AppID: appID, OrgID: orgID, System: item.System, Data: item.Data}
 }

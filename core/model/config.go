@@ -25,6 +25,8 @@ import (
 const (
 	// TypeConfig configs type
 	TypeConfig logutils.MessageDataType = "config"
+	// TypeConfigData config data type
+	TypeConfigData logutils.MessageDataType = "config data"
 	// TypeEnvConfigData env configs type
 	TypeEnvConfigData logutils.MessageDataType = "env config data"
 	//TypeOrganizationConfig ...
@@ -46,19 +48,23 @@ type Config struct {
 	DateUpdated *time.Time  `json:"date_updated" bson:"date_updated"`
 }
 
-// DataAsEnvConfig returns the config Data as an EnvConfigData if the cast succeeds
-func (c *Config) DataAsEnvConfig() (*EnvConfigData, error) {
-	data, ok := c.Data.(EnvConfigData)
-	if !ok {
-		return nil, errors.ErrorData(logutils.StatusInvalid, TypeEnvConfigData, nil)
-	}
-	return &data, nil
-}
-
 // EnvConfigData contains environment configs for this service
 type EnvConfigData struct {
 	CORSAllowedOrigins []string `json:"cors_allowed_origins,omitempty" bson:"cors_allowed_origins"`
 	CORSAllowedHeaders []string `json:"cors_allowed_headers,omitempty" bson:"cors_allowed_headers"`
+}
+
+// GetConfigData returns a pointer to the given config's Data as the given type T
+func GetConfigData[T ConfigData](c Config) (*T, error) {
+	if data, ok := c.Data.(T); ok {
+		return &data, nil
+	}
+	return nil, errors.ErrorData(logutils.StatusInvalid, TypeConfigData, &logutils.FieldArgs{"type": c.Type})
+}
+
+// ConfigData represents any set of data that may be stored in a config
+type ConfigData interface {
+	EnvConfigData | map[string]interface{}
 }
 
 // OrganizationConfig represents configuration for an organization

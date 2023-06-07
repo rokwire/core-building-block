@@ -159,10 +159,11 @@ func (we Adapter) Start() {
 	adminSubrouter.HandleFunc("/auth/verify-mfa", we.wrapFunc(we.adminApisHandler.verifyMFA, we.auth.admin.User)).Methods("POST")
 	adminSubrouter.HandleFunc("/auth/app-token", we.wrapFunc(we.adminApisHandler.getAppToken, we.auth.admin.User)).Methods("GET")
 
-	// adminSubrouter.HandleFunc("/configs/{id}", we.wrapFunc(we.adminApisHandler.getConfig, we.auth.system.Permissions)).Methods("GET")
-	adminSubrouter.HandleFunc("/configs", we.wrapFunc(we.adminApisHandler.createConfig, we.auth.system.Permissions)).Methods("POST")
-	adminSubrouter.HandleFunc("/configs/{id}", we.wrapFunc(we.adminApisHandler.updateConfig, we.auth.system.Permissions)).Methods("PUT")
-	// adminSubrouter.HandleFunc("/configs/{id}", we.wrapFunc(we.adminApisHandler.deleteConfig, we.auth.system.Permissions)).Methods("DELETE")
+	adminSubrouter.HandleFunc("/configs/{id}", we.wrapFunc(we.adminApisHandler.getConfig, we.auth.admin.Permissions)).Methods("GET")
+	adminSubrouter.HandleFunc("/configs", we.wrapFunc(we.adminApisHandler.getConfigs, we.auth.admin.Permissions)).Methods("GET")
+	adminSubrouter.HandleFunc("/configs", we.wrapFunc(we.adminApisHandler.createConfig, we.auth.admin.Permissions)).Methods("POST")
+	adminSubrouter.HandleFunc("/configs/{id}", we.wrapFunc(we.adminApisHandler.updateConfig, we.auth.admin.Permissions)).Methods("PUT")
+	adminSubrouter.HandleFunc("/configs/{id}", we.wrapFunc(we.adminApisHandler.deleteConfig, we.auth.admin.Permissions)).Methods("DELETE")
 
 	adminSubrouter.HandleFunc("/account", we.wrapFunc(we.adminApisHandler.getAccount, we.auth.admin.User)).Methods("GET")
 	adminSubrouter.HandleFunc("/account/mfa", we.wrapFunc(we.adminApisHandler.getMFATypes, we.auth.admin.User)).Methods("GET")
@@ -570,12 +571,12 @@ func NewWebAdapter(env string, serviceRegManager *authservice.ServiceRegManager,
 	var corsAllowedOrigins []string
 	config, err := storage.FindConfig(model.ConfigTypeEnv, authutils.AllApps, authutils.AllOrgs)
 	if err != nil {
-		logger.Fatal(err.Error())
+		logger.Fatal(errors.WrapErrorAction(logutils.ActionFind, model.TypeConfig, nil, err).Error())
 	}
 	if config != nil {
-		envData, err = config.DataAsEnvConfig()
+		envData, err = model.GetConfigData[model.EnvConfigData](*config)
 		if err != nil {
-			logger.Fatal(err.Error())
+			logger.Fatal(errors.WrapErrorAction(logutils.ActionCast, model.TypeEnvConfigData, nil, err).Error())
 		}
 
 		corsAllowedHeaders = envData.CORSAllowedHeaders

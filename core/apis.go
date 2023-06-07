@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/rokwire/core-auth-library-go/v3/tokenauth"
 	"github.com/rokwire/logging-library-go/v2/errors"
 	"github.com/rokwire/logging-library-go/v2/logs"
 	"github.com/rokwire/logging-library-go/v2/logutils"
@@ -336,20 +337,24 @@ type administrationImpl struct {
 	app *application
 }
 
-func (s *administrationImpl) AdmGetConfig(id string, system bool) (*model.Config, error) {
-	return s.app.admGetConfig(id, system)
+func (s *administrationImpl) AdmGetConfig(id string, claims *tokenauth.Claims) (*model.Config, error) {
+	return s.app.admGetConfig(id, claims)
 }
 
-func (s *administrationImpl) AdmCreateConfig(config model.Config, system bool) error {
-	return s.app.admCreateConfig(config, system)
+func (s *administrationImpl) AdmGetConfigs(configType *string, claims *tokenauth.Claims) ([]model.Config, error) {
+	return s.app.admGetConfigs(configType, claims)
 }
 
-func (s *administrationImpl) AdmUpdateConfig(config model.Config, system bool) error {
-	return s.app.admUpdateConfig(config, system)
+func (s *administrationImpl) AdmCreateConfig(config model.Config, claims *tokenauth.Claims) (*model.Config, error) {
+	return s.app.admCreateConfig(config, claims)
 }
 
-func (s *administrationImpl) AdmDeleteConfig(id string, system bool) error {
-	return s.app.admDeleteConfig(id, system)
+func (s *administrationImpl) AdmUpdateConfig(config model.Config, claims *tokenauth.Claims) error {
+	return s.app.admUpdateConfig(config, claims)
+}
+
+func (s *administrationImpl) AdmDeleteConfig(id string, claims *tokenauth.Claims) error {
+	return s.app.admDeleteConfig(id, claims)
 }
 
 func (s *administrationImpl) AdmGetTest() string {

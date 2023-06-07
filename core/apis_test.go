@@ -22,6 +22,7 @@ import (
 	genmocks "core-building-block/core/mocks"
 	"core-building-block/core/model"
 
+	"github.com/rokwire/core-auth-library-go/v3/tokenauth"
 	"github.com/rokwire/logging-library-go/v2/logs"
 	"github.com/stretchr/testify/mock"
 	"gotest.tools/assert"
@@ -86,8 +87,8 @@ func TestAdmCreateConfig(t *testing.T) {
 
 	coreAPIs := buildTestCoreAPIs(&storage)
 
-	config := model.Config{Type: model.ConfigTypeEnv, Data: model.EnvConfigData{}}
-	err := coreAPIs.Administration.AdmCreateConfig(config, true)
+	config := model.Config{Type: model.ConfigTypeEnv, AppID: "app", OrgID: "org", System: false, Data: model.EnvConfigData{}}
+	_, err := coreAPIs.Administration.AdmCreateConfig(config, &tokenauth.Claims{AppID: "app", OrgID: "org"})
 	if err != nil {
 		t.Error("we are not expecting error")
 		return
@@ -99,7 +100,7 @@ func TestAdmCreateConfig(t *testing.T) {
 
 	coreAPIs = buildTestCoreAPIs(&storage2)
 
-	err = coreAPIs.Administration.AdmCreateConfig(config, true)
+	_, err = coreAPIs.Administration.AdmCreateConfig(config, &tokenauth.Claims{AppID: "app", OrgID: "org"})
 	if err == nil {
 		t.Error("we are expecting error")
 		return

@@ -18,6 +18,7 @@ import (
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
 
+	"github.com/rokwire/core-auth-library-go/v3/tokenauth"
 	"github.com/rokwire/logging-library-go/v2/logs"
 )
 
@@ -46,10 +47,11 @@ type Administration interface {
 	AdmGetTest() string
 	AdmGetTestModel() string
 
-	AdmGetConfig(id string, system bool) (*model.Config, error)
-	AdmCreateConfig(config model.Config, system bool) error
-	AdmUpdateConfig(config model.Config, system bool) error
-	AdmDeleteConfig(id string, system bool) error
+	AdmGetConfig(id string, claims *tokenauth.Claims) (*model.Config, error)
+	AdmGetConfigs(configType *string, claims *tokenauth.Claims) ([]model.Config, error)
+	AdmCreateConfig(config model.Config, claims *tokenauth.Claims) (*model.Config, error)
+	AdmUpdateConfig(config model.Config, claims *tokenauth.Claims) error
+	AdmDeleteConfig(id string, claims *tokenauth.Claims) error
 
 	AdmGetApplications(orgID string) ([]model.Application, error)
 
@@ -184,7 +186,8 @@ type Storage interface {
 	DeleteDevice(context storage.TransactionContext, id string) error
 
 	FindConfig(configType string, appID string, orgID string) (*model.Config, error)
-	FindConfigs(configType string, appID *string, orgID *string) ([]model.Config, error)
+	FindConfigByID(id string) (*model.Config, error)
+	FindConfigs(configType *string) ([]model.Config, error)
 	InsertConfig(config model.Config) error
 	UpdateConfig(config model.Config) error
 	DeleteConfig(id string) error

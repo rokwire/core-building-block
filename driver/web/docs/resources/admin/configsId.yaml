@@ -5,31 +5,31 @@ get:
   description: |
     Get an existing config
 
-    **Auth:** Requires admin access token with `get_core_configs`, `update_core_configs`, or `all_core_configs` permission
+    **Auth:** Requires admin access token with `get_configs_core`, `update_configs_core`, `delete_configs_core`, or `all_configs_core` permission
   security:
     - bearerAuth: []
   parameters:
     - name: id
       in: path
-      description: config ID
+      description: ID of config to retrieve
       required: true
       style: simple
       explode: false
       schema:
         type: string
   responses:
-      200:
-        description: Success
-        content:
-          application/json:
-            schema:
-              $ref: "../../schemas/config/Config.yaml"
-      400:
-        description: Bad request
-      401:
-        description: Unauthorized
-      500:
-        description: Internal error
+    200:
+      description: Success
+      content:
+        application/json:
+          schema:
+            $ref: "../../schemas/config/Config.yaml"
+    400:
+      description: Bad request
+    401:
+      description: Unauthorized
+    500:
+      description: Internal error
 put:
   tags:
   - Admin
@@ -37,23 +37,58 @@ put:
   description: |
     Updates an existing config
 
-    **Auth:** Requires admin access token with `update_core_configs` or `all_core_configs` permission
+    **Auth:** Requires admin access token with `update_configs_core` or `all_configs_core` permission
   security:
     - bearerAuth: []
   parameters:
     - name: id
       in: path
-      description: config ID
+      description: ID of config to update
       required: true
       style: simple
       explode: false
       schema:
         type: string
   requestBody:
+    description: New config content
     content:
       application/json:
         schema:
-          $ref: "../../schemas/config/Config.yaml"
+          $ref: "../../schemas/apis/admin/configs/request/Request.yaml"
+        examples:
+          system:
+            summary: System-wide config
+            value: 
+              type: "config_type"
+              all_apps: true
+              all_orgs: true
+              system: true
+              data:
+                cors_allowed_origins:
+                  - origin1
+                  - origin2
+          org_admin:
+            summary: Organization-wide config
+            value: 
+              type: "config_type"
+              all_apps: true
+              all_orgs: false
+              system: false
+              data:
+                cors_allowed_origins:
+                  - origin1
+                  - origin2
+          app_org_specific:
+            summary: Application organization specific config
+            value: 
+              type: "config_type"
+              all_apps: false
+              all_orgs: false
+              system: false
+              data:
+                cors_allowed_origins:
+                  - origin1
+                  - origin2
     required: true
   responses:
     200:
@@ -76,13 +111,13 @@ delete:
   description: |
     Deletes a config
 
-    **Auth:** Requires admin access token with `delete_core_configs` or `all_core_configs` permission
+    **Auth:** Requires admin access token with `delete_configs_core` or `all_configs_core` permission
   security:
     - bearerAuth: []
   parameters:
     - name: id
       in: path
-      description: config ID
+      description: ID of config to delete
       required: true
       style: simple
       explode: false
