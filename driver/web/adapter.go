@@ -295,7 +295,11 @@ func (we Adapter) Start() {
 	systemSubrouter.HandleFunc("/auth-types/{id}", we.wrapFunc(we.systemApisHandler.updateAuthTypes, we.auth.system.Permissions)).Methods("PUT")
 	///
 
-	err := http.ListenAndServe(":"+we.port, webauth.SetupCORS(we.corsAllowedOrigins, we.corsAllowedHeaders, router))
+	var handler http.Handler = router
+	if len(we.corsAllowedOrigins) > 0 {
+		handler = webauth.SetupCORS(we.corsAllowedOrigins, we.corsAllowedHeaders, router)
+	}
+	err := http.ListenAndServe(":"+we.port, handler)
 	if err != nil {
 		we.logger.Fatalf("error on listen and server - %s", err.Error())
 	}
