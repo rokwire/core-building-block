@@ -58,6 +58,8 @@ func main() {
 		logger.SetLevel(*logLevel)
 	}
 
+	logger.Infof("Version: %s", Version)
+
 	err := utils.SetRandomSeed()
 	if err != nil {
 		logger.Error(err.Error())
@@ -67,7 +69,7 @@ func main() {
 	port := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_PORT", false, false)
 	//Default port of 80
 	if port == "" {
-		port = "80"
+		port = "5000"
 	}
 
 	host := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_HOST", true, false)
