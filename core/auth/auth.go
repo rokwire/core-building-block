@@ -1019,7 +1019,7 @@ func (a *Auth) findAccountAuthType(account *model.Account, supportedAuthType mod
 	if accountAuthType.Credential != nil {
 		//populate credentials in accountAuthType
 		credential, err := a.storage.FindCredential(nil, accountAuthType.Credential.ID)
-		if err != nil {
+		if err != nil || credential == nil {
 			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
 		}
 		credential.AuthType = supportedAuthType.AuthType
