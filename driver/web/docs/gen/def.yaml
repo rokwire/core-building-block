@@ -6620,6 +6620,7 @@ components:
             - twilio_phone
             - illinois_oidc
             - anonymous
+            - webauthn
         app_type_identifier:
           type: string
         org_id:
