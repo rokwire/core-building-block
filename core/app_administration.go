@@ -920,7 +920,6 @@ func (app *application) admUpdateAccountVerified(accountID string, verified bool
 	account.Verified = verified
 	app.storage.UpdateAccountVerified(nil, accountID, verified)
 
-
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeProfile, nil, err)
 	}

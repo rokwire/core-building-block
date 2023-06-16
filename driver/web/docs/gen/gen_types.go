@@ -629,6 +629,11 @@ type Username struct {
 	Username string `json:"username"`
 }
 
+// Verified defines model for Verified.
+type Verified struct {
+	Verified bool `json:"verified"`
+}
+
 // YearlyExpirePolicy defines model for YearlyExpirePolicy.
 type YearlyExpirePolicy struct {
 	Active bool `json:"active"`
@@ -1530,6 +1535,9 @@ type GetUiCredentialVerifyParams struct {
 
 // PutAdminAccountUsernameJSONRequestBody defines body for PutAdminAccountUsername for application/json ContentType.
 type PutAdminAccountUsernameJSONRequestBody = Username
+
+// PutAdminAccountVerifiedJSONRequestBody defines body for PutAdminAccountVerified for application/json ContentType.
+type PutAdminAccountVerifiedJSONRequestBody = Verified
 
 // PostAdminAppConfigsJSONRequestBody defines body for PostAdminAppConfigs for application/json ContentType.
 type PostAdminAppConfigsJSONRequestBody = SharedReqAppConfigs

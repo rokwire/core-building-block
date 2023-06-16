@@ -1448,6 +1448,20 @@ func (_m *Storage) UpdateAccountUsername(context storage.TransactionContext, acc
 	return r0
 }
 
+// UpdateAccountVerified provides a mock function with given fields: context, accountID, verified
+func (_m *Storage) UpdateAccountVerified(context storage.TransactionContext, accountID string, verified bool) error {
+	ret := _m.Called(context, accountID, verified)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, bool) error); ok {
+		r0 = rf(context, accountID, verified)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // UpdateAppConfig provides a mock function with given fields: ID, appType, appOrg, version, data
 func (_m *Storage) UpdateAppConfig(ID string, appType model.ApplicationType, appOrg *model.ApplicationOrganization, version model.Version, data map[string]interface{}) error {
 	ret := _m.Called(ID, appType, appOrg, version, data)
