@@ -881,7 +881,6 @@ func (h ServicesApisHandler) getPublicAccounts(l *logs.Log, r *http.Request, cla
 	if len(lastNameParam) > 0 {
 		lastName = &lastNameParam
 	}
-	
 
 	accounts, err := h.coreAPIs.Services.SerGetPublicAccounts(limit, offset, username, firstName, lastName)
 	if err != nil {

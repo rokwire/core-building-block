@@ -80,8 +80,8 @@ type Account struct {
 	Devices []Device
 
 	Anonymous bool
-	Public bool
-	Verified bool
+	Public    bool
+	Verified  bool
 
 	DateCreated time.Time
 	DateUpdated *time.Time
@@ -627,7 +627,7 @@ type AccountRelations struct {
 
 // PublicAccount shows public account information
 type PublicAccount struct {
-	Username string
+	Username  string
 	FirstName string
-	LastName string
+	LastName  string
 }

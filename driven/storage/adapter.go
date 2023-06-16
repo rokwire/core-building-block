@@ -1181,7 +1181,7 @@ func (sa *Adapter) FindAccounts(context TransactionContext, limit *int, offset *
 	return accounts, nil
 }
 
-// FindAccounts finds accounts
+// FindPublicAccounts finds accounts and returns name and username
 func (sa *Adapter) FindPublicAccounts(context TransactionContext, limit *int, offset *int,
 	firstName *string, lastName *string, username *string) ([]model.PublicAccount, error) {
 	//find the accounts
@@ -1219,9 +1219,9 @@ func (sa *Adapter) FindPublicAccounts(context TransactionContext, limit *int, of
 	var publicAccounts []model.PublicAccount
 	for _, account := range accounts {
 		publicAccounts = append(publicAccounts, model.PublicAccount{
-			Username: account.Username,
+			Username:  account.Username,
 			FirstName: account.Profile.FirstName,
-			LastName: account.Profile.LastName,
+			LastName:  account.Profile.LastName,
 		})
 	}
 	return publicAccounts, nil

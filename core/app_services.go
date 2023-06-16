@@ -138,7 +138,7 @@ func (app *application) serGetAccounts(limit int, offset int, appID string, orgI
 
 func (app *application) serGetPublicAccounts(limit int, offset int, firstName *string, lastName *string, username *string) ([]model.PublicAccount, error) {
 	//find the accounts
-	accounts, err := app.storage.FindPublicAccounts(nil, limit, offset, firstName, lastName, username)
+	accounts, err := app.storage.FindPublicAccounts(nil, &limit, &offset, firstName, lastName, username)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}

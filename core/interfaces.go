@@ -34,7 +34,7 @@ type Services interface {
 
 	SerGetAccounts(limit int, offset int, appID string, orgID string, accountID *string, firstName *string, lastName *string, authType *string,
 		authTypeIdentifier *string, anonymous *bool, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error)
-	
+
 	SerGetPublicAccounts(limit int, offset int, firstName *string, lastName *string, username *string) ([]model.PublicAccount, error)
 
 	SerGetAuthTest(l *logs.Log) string
@@ -157,7 +157,7 @@ type Storage interface {
 	FindAccountByID(context storage.TransactionContext, id string) (*model.Account, error)
 	FindAccounts(context storage.TransactionContext, limit *int, offset *int, appID string, orgID string, accountID *string, firstName *string, lastName *string, authType *string,
 		authTypeIdentifier *string, anonymous *bool, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error)
-	FindPublicAccounts(context storage.TransactionContext, limit int, offset int, firstName *string, lastName *string, username *string) ([]model.PublicAccount, error)
+	FindPublicAccounts(context storage.TransactionContext, limit *int, offset *int, firstName *string, lastName *string, username *string) ([]model.PublicAccount, error)
 	FindAccountsByParams(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]map[string]interface{}, error)
 	CountAccountsByParams(searchParams map[string]interface{}, appID string, orgID string) (int64, error)
 	FindAccountsByAccountID(context storage.TransactionContext, appID string, orgID string, accountIDs []string) ([]model.Account, error)
