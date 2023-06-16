@@ -863,6 +863,21 @@ func (h AdminApisHandler) updateAccountUsername(l *logs.Log, r *http.Request, cl
 	return l.HTTPResponseSuccess()
 }
 
+func (h AdminApisHandler) updateAccountVerified(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
+	var verified bool
+	err := json.NewDecoder(r.Body).Decode(&verified)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, model.TypeAccountUsername, nil, err, http.StatusBadRequest, true)
+	}
+
+	err = h.coreAPIs.Administration.AdmUpdateAccountVerified(claims.Subject, verified)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionUpdate, model.TypeAccountUsername, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HTTPResponseSuccess()
+}
+
 func (h AdminApisHandler) getAppToken(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
 	appID := r.URL.Query().Get("app_id")
 	if appID == "" {

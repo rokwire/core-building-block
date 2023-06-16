@@ -425,6 +425,10 @@ func (s *administrationImpl) AdmUpdateAccountUsername(accountID string, appID st
 	return s.app.sharedUpdateAccountUsername(accountID, appID, orgID, username)
 }
 
+func (s *administrationImpl) AdmUpdateAccountVerified(accountID string, verified bool) error {
+	return s.app.admUpdateAccountVerified(accountID, verified)
+}
+
 func (s *administrationImpl) AdmGetAccountSystemConfigs(appID string, orgID string, accountID string, l *logs.Log) (map[string]interface{}, error) {
 	return s.app.admGetAccountSystemConfigs(appID, orgID, accountID, l)
 }

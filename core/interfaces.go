@@ -73,6 +73,7 @@ type Administration interface {
 	AdmGetFilterAccountsCount(searchParams map[string]interface{}, appID string, orgID string) (int64, error)
 
 	AdmUpdateAccountUsername(accountID string, appID string, orgID string, username string) error
+	AdmUpdateAccountVerified(accountID string, verified bool) error
 
 	AdmGetAccountSystemConfigs(appID string, orgID string, accountID string, l *logs.Log) (map[string]interface{}, error)
 	AdmUpdateAccountSystemConfigs(appID string, orgID string, accountID string, configs map[string]interface{}, createAnonymous bool, l *logs.Log) (bool, error)
@@ -168,6 +169,7 @@ type Storage interface {
 	InsertAccountPermissions(context storage.TransactionContext, accountID string, permissions []model.Permission) error
 	DeleteAccountPermissions(context storage.TransactionContext, accountID string, permissionNames []string) error
 	UpdateAccountUsername(context storage.TransactionContext, accountID, username string) error
+	UpdateAccountVerified(context storage.TransactionContext, accountID string, verified bool) error
 	InsertAccountRoles(context storage.TransactionContext, accountID string, appOrgID string, roles []model.AccountRole) error
 	DeleteAccountRoles(context storage.TransactionContext, accountID string, roleIDs []string) error
 	InsertAccountsGroup(context storage.TransactionContext, group model.AccountGroup, accountIDs []string) error
