@@ -86,6 +86,8 @@ ProfileNullable:
   $ref: "./user/ProfileNullable.yaml"
 Username:
   $ref: "./user/Username.yaml"
+Verified:
+  $ref: "./user/Verified.yaml"
 AccountAuthType:
   $ref: "./user/AccountAuthType.yaml"
 Device:

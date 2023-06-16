@@ -109,6 +109,8 @@ paths:
     $ref: "./resources/admin/account/mfa.yaml"
   /admin/account/username:
     $ref: "./resources/admin/account/username.yaml"
+  /admin/account/verified:
+    $ref: "./resources/admin/account/verified.yaml"
   /admin/app-configs:
     $ref: "./resources/admin/app-configs/configs.yaml"
   /admin/app-configs/organization:
