@@ -19,6 +19,10 @@ properties:
     nullable: true
   anonymous:
     type: boolean
+  public:
+    type: boolean
+  verified:
+    type: boolean
   system:
     type: boolean
   external_ids:
