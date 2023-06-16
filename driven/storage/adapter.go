@@ -1181,6 +1181,52 @@ func (sa *Adapter) FindAccounts(context TransactionContext, limit *int, offset *
 	return accounts, nil
 }
 
+// FindAccounts finds accounts
+func (sa *Adapter) FindPublicAccounts(context TransactionContext, limit *int, offset *int,
+	firstName *string, lastName *string, username *string) ([]model.PublicAccount, error) {
+	//find the accounts
+	filter := bson.D{}
+
+	if firstName != nil {
+		filter = append(filter, primitive.E{Key: "profile.first_name", Value: *firstName})
+	}
+	if lastName != nil {
+		filter = append(filter, primitive.E{Key: "profile.last_name", Value: *lastName})
+	}
+	if username != nil {
+		filter = append(filter, primitive.E{Key: "username", Value: *username})
+	}
+
+	var list []account
+	var findOptions *options.FindOptions
+	if limit != nil {
+		findOptions = options.Find()
+		findOptions.SetLimit(int64(*limit))
+	}
+	if offset != nil {
+		if findOptions == nil {
+			findOptions = options.Find()
+		}
+		findOptions.SetSkip(int64(*offset))
+	}
+
+	err := sa.db.accounts.FindWithContext(context, filter, &list, findOptions)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+
+	accounts := accountsFromStorage(list, model.ApplicationOrganization{})
+	var publicAccounts []model.PublicAccount
+	for _, account := range accounts {
+		publicAccounts = append(publicAccounts, model.PublicAccount{
+			Username: account.Username,
+			FirstName: account.Profile.FirstName,
+			LastName: account.Profile.LastName,
+		})
+	}
+	return publicAccounts, nil
+}
+
 // FindAccountsByParams finds accounts by an arbitrary set of search params
 func (sa *Adapter) FindAccountsByParams(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]map[string]interface{}, error) {
 	//find app orgs accessed by service

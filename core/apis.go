@@ -316,6 +316,10 @@ func (s *servicesImpl) SerGetAccounts(limit int, offset int, appID string, orgID
 	return s.app.serGetAccounts(limit, offset, appID, orgID, accountID, firstName, lastName, authType, authTypeIdentifier, anonymous, hasPermissions, permissions, roleIDs, groupIDs)
 }
 
+func (s *servicesImpl) SerGetPublicAccounts(limit int, offset int, firstName *string, lastName *string, username *string) ([]model.PublicAccount, error) {
+	return s.app.serGetPublicAccounts(limit, offset, firstName, lastName, username)
+}
+
 func (s *servicesImpl) SerGetAuthTest(l *logs.Log) string {
 	return s.app.serGetAuthTest(l)
 }

@@ -136,6 +136,15 @@ func (app *application) serGetAccounts(limit int, offset int, appID string, orgI
 	return accounts, nil
 }
 
+func (app *application) serGetPublicAccounts(limit int, offset int, firstName *string, lastName *string, username *string) ([]model.PublicAccount, error) {
+	//find the accounts
+	accounts, err := app.storage.FindPublicAccounts(nil, limit, offset, firstName, lastName, username)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+	return accounts, nil
+}
+
 func (app *application) serGetAuthTest(l *logs.Log) string {
 	return "Services - Auth - test"
 }
