@@ -17,7 +17,6 @@ package auth
 import (
 	"core-building-block/core/model"
 	"core-building-block/utils"
-	"encoding/base64"
 	"encoding/json"
 	"time"
 
@@ -64,7 +63,7 @@ func (s *staticTokenServiceAuthImpl) checkCredentials(_ *sigauth.Request, creds 
 		return nil, errors.WrapErrorAction(logutils.ActionValidate, TypeStaticTokenCreds, nil, err).SetStatus(utils.ErrorStatusInvalid)
 	}
 
-	encodedToken := s.hashAndEncodeToken(tokenCreds.Token)
+	encodedToken := s.auth.hashAndEncodeToken(tokenCreds.Token)
 
 	accounts, err := s.auth.storage.FindServiceAccounts(params)
 	if err != nil {
@@ -102,7 +101,7 @@ func (s *staticTokenServiceAuthImpl) addCredentials(creds *model.ServiceAccountC
 
 	creds.ID = uuid.NewString()
 	creds.Secrets = map[string]interface{}{
-		"token": s.hashAndEncodeToken(token),
+		"token": s.auth.hashAndEncodeToken(token),
 	}
 	creds.DateCreated = time.Now().UTC()
 
@@ -110,11 +109,6 @@ func (s *staticTokenServiceAuthImpl) addCredentials(creds *model.ServiceAccountC
 		"token": token,
 	}
 	return displayParams, nil
-}
-
-func (s *staticTokenServiceAuthImpl) hashAndEncodeToken(token string) string {
-	hashedToken := utils.SHA256Hash([]byte(token))
-	return base64.StdEncoding.EncodeToString(hashedToken)
 }
 
 // initStaticTokenServiceAuth initializes and registers a new static token service auth instance

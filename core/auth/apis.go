@@ -39,7 +39,8 @@ func (a *Auth) Start() {
 	storageListener := StorageListener{auth: a}
 	a.storage.RegisterStorageListener(&storageListener)
 
-	go a.setupDeleteSessionsTimer()
+	go utils.StartTimer(a.deleteSessionsTimer, a.deleteSessionsTimerDone, time.Hour*time.Duration(sessionDeletePeriod), a.deleteSessions, "delete sessions", a.logger)
+	go utils.StartTimer(a.sessionIDCacheTimer, a.sessionIDCacheTimerDone, time.Minute*time.Duration(sessionIDRatePeriod), a.clearSessionIDCache, "clear session id cache", a.logger)
 }
 
 // GetHost returns the host/issuer of the auth service
@@ -104,6 +105,7 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 	var message string
 	var accountAuthType *model.AccountAuthType
 	var responseParams map[string]interface{}
+	var storageParams map[string]interface{}
 	var externalIDs map[string]string
 	var mfaTypes []model.MFAType
 	var state string
@@ -124,13 +126,15 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 			accountAuthType = &model.AccountAuthType{Account: *account}
 		}
 	} else if authType.IsExternal {
-		accountAuthType, responseParams, mfaTypes, externalIDs, err = a.applyExternalAuthType(*authType, *appType, *appOrg, creds, params, clientVersion, profile, preferences, username, admin, l)
+		var extParams externalCredential
+		accountAuthType, extParams, storageParams, mfaTypes, externalIDs, err = a.applyExternalAuthType(*authType, *appType, *appOrg, creds, params, clientVersion, profile, preferences, username, admin, l)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionApply, typeExternalAuthType, logutils.StringArgs("user"), err)
 
 		}
 
 		sub = accountAuthType.Account.ID
+		responseParams = extParams.asMap()
 	} else {
 		message, accountAuthType, mfaTypes, externalIDs, err = a.applyAuthType(*authType, *appOrg, creds, params, clientVersion, profile, preferences, username, admin, l)
 		if err != nil {
@@ -161,12 +165,13 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 	}
 
 	//now we are ready to apply login for the user or anonymous
-	loginSession, err := a.applyLogin(anonymous, sub, *authType, *appOrg, accountAuthType, *appType, externalIDs, ipAddress, deviceType, deviceOS, deviceID, clientVersion, responseParams, state, l)
+	loginSession, err := a.applyLogin(anonymous, sub, *authType, *appOrg, accountAuthType, *appType, externalIDs, ipAddress, deviceType, deviceOS, deviceID, clientVersion, storageParams, state, l)
 	if err != nil {
 		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionApply, "login", logutils.StringArgs("user"), err)
 	}
 
 	if loginSession.State == "" {
+		loginSession.Params = responseParams
 		return nil, loginSession, nil, nil
 	}
 
@@ -270,15 +275,60 @@ func (a *Auth) CanLink(authenticationType string, userIdentifier string, apiKey 
 //			Params (interface{}): authType-specific set of parameters passed back to client
 func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string, l *logs.Log) (*model.LoginSession, error) {
 	var loginSession *model.LoginSession
+	var sessionID string
+	var err error
 
-	//find the login session for the refresh token
-	loginSession, err := a.storage.FindLoginSession(refreshToken)
-	if err != nil {
-		l.Infof("error finding session by refresh token - %s", refreshToken)
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, logutils.StringArgs("refresh token"), err)
+	refreshTokenParts := strings.Split(refreshToken, ":")
+	if len(refreshTokenParts) > 1 {
+		sessionID = refreshTokenParts[0]
+
+		defer a.incrementCachedSessionIDCount(sessionID)
+
+		count := a.getCachedSessionIDCount(sessionID)
+		if count >= sessionIDRateLimit { //Rate limit use of a single login session. TODO: Use IP address to prevent spamming invalid random session IDs?
+			l.Warnf("session id (%s) use limit (%d) reached: count=%d", sessionID, sessionIDRateLimit, count)
+
+			// Perform cleanup on exact limit reach, then blacklist session ID to avoid unnecessary DB calls
+			if count == sessionIDRateLimit {
+				//remove the session
+				l.Infof("cleaning up overused session id...")
+				err = a.deleteLoginSession(nil, model.LoginSession{ID: sessionID}, l)
+				if err != nil {
+					l.Error(errors.WrapErrorAction(logutils.ActionDelete, "overused session", nil, err).Error())
+				}
+			}
+
+			return nil, nil
+		}
+
+		refreshToken = a.hashAndEncodeToken(refreshTokenParts[1])
+		loginSession, err = a.storage.FindLoginSessionByID(sessionID)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, nil, err)
+		}
+	} else { //TODO: Remove this else once most sessions have been updated
+		config, err := a.storage.FindConfig(model.ConfigTypeEnv, authutils.AllApps, authutils.AllOrgs)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeConfig, nil, err)
+		}
+
+		var envData *model.EnvConfigData
+		if config != nil {
+			envData, err = model.GetConfigData[model.EnvConfigData](*config)
+			if err != nil {
+				return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeEnvConfigData, nil, err)
+			}
+		}
+		if (envData == nil) || (envData.AllowLegacyRefresh != nil && *envData.AllowLegacyRefresh) {
+			loginSession, err = a.storage.FindLoginSession(refreshToken)
+			if err != nil {
+				l.Infof("error finding session by refresh token - %s", utils.GetLogValue(refreshToken, 10))
+				return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, nil, err)
+			}
+		}
 	}
 	if loginSession == nil {
-		l.Infof("there is no a session for refresh token - %s", refreshToken)
+		l.Infof("there is no session for session ID: %s, refresh token: %s", sessionID, utils.GetLogValue(refreshToken, 10))
 		return nil, nil
 	}
 	l.SetContext("account_id", loginSession.Identifier)
@@ -336,26 +386,27 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 	permissions := []string{}
 
 	// - generate new params and update the account if needed(if external auth type)
+	var externalUser *model.ExternalSystemUser
+	var responseParams externalCredential
+	var storageParams map[string]interface{}
 	if loginSession.AuthType.IsExternal {
 		extAuthType, err := a.getExternalAuthTypeImpl(loginSession.AuthType)
 		if err != nil {
-			l.Infof("error getting external auth type on refresh - %s", refreshToken)
 			return nil, errors.WrapErrorAction(logutils.ActionGet, "external auth type", nil, err)
 		}
 
-		externalUser, refreshedData, externalCreds, err := extAuthType.refresh(loginSession.Params, loginSession.AuthType, loginSession.AppType, loginSession.AppOrg, l)
+		externalUser, responseParams, storageParams, err = extAuthType.refresh(loginSession.Params, loginSession.AuthType, loginSession.AppType, loginSession.AppOrg, l)
 		if err != nil {
-			l.Infof("error refreshing external auth type on refresh - %s", refreshToken)
 			return nil, errors.WrapErrorAction(logutils.ActionRefresh, "external auth type", nil, err)
 		}
 
 		//check if need to update the account data
-		newAccount, err := a.updateExternalUserIfNeeded(*loginSession.AccountAuthType, *externalUser, loginSession.AuthType, loginSession.AppOrg, externalCreds, l)
+		newAccount, err := a.updateExternalUserIfNeeded(*loginSession.AccountAuthType, *externalUser, loginSession.AuthType, loginSession.AppOrg, responseParams.getCredential(), l)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeExternalSystemUser, logutils.StringArgs("refresh"), err)
 		}
 
-		loginSession.Params = refreshedData //assign the refreshed data
+		loginSession.Params = storageParams //assign the refreshed storage params
 		if newAccount != nil {
 			loginSession.ExternalIDs = newAccount.ExternalIDs
 		}
@@ -378,20 +429,18 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 	claims := a.getStandardClaims(sub, uid, name, email, phone, rokwireTokenAud, orgID, appID, authType, loginSession.ExternalIDs, nil, anonymous, false, loginSession.AppOrg.Application.Admin, loginSession.AppOrg.Organization.System, false, true, loginSession.ID)
 	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), strings.Join(scopes, " "))
 	if err != nil {
-		l.Infof("error generating acccess token on refresh - %s", refreshToken)
-		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, logutils.StringArgs("access"), err)
 	}
 	loginSession.AccessToken = accessToken //set the generated token
 	// - generate new refresh token
 	refreshToken, err = a.buildRefreshToken()
 	if err != nil {
-		l.Infof("error generating refresh token on refresh - %s", refreshToken)
-		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, logutils.StringArgs("refresh"), err)
 	}
 	if loginSession.RefreshTokens == nil {
 		loginSession.RefreshTokens = make([]string, 0)
 	}
-	loginSession.RefreshTokens = append(loginSession.RefreshTokens, refreshToken) //set the generated token
+	loginSession.RefreshTokens = append(loginSession.RefreshTokens, a.hashAndEncodeToken(refreshToken)) // store the hash of the generated token
 
 	now := time.Now()
 	loginSession.DateUpdated = &now
@@ -400,7 +449,6 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 	//store the updated session
 	err = a.storage.UpdateLoginSession(nil, *loginSession)
 	if err != nil {
-		l.Infof("error updating login session on refresh - %s", refreshToken)
 		return nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeLoginSession, nil, err)
 	}
 
@@ -414,6 +462,8 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 	}
 
 	//return the updated session
+	loginSession.RefreshTokens = []string{fmt.Sprintf("%s:%s", loginSession.ID, refreshToken)} // return the raw refresh token prefixed by <session ID>:
+	loginSession.Params = responseParams.asMap()
 	return loginSession, nil
 }
 

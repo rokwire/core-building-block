@@ -5,8 +5,10 @@ properties:
   id:
     readOnly: true
     type: string
-  app_org:
-    $ref: "../application/ApplicationOrganization.yaml"
+  app_id:
+    type: string
+  org_id:
+    type: string
   username:
     type: string
   profile:

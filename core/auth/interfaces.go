@@ -74,15 +74,23 @@ type authType interface {
 	checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, error)
 }
 
+// externalCredential is the interface for handling credntials that come from external systems
+type externalCredential interface {
+	//getCredential gets the underlying credential as a string
+	getCredential() string
+	//asMap returns a map of the credential data
+	asMap() map[string]interface{}
+}
+
 // externalAuthType is the interface for authentication for auth types which are external for the system(the users comes from external system).
 // these are the different identity providers - illinois_oidc etc
 type externalAuthType interface {
 	//getLoginUrl retrieves and pre-formats a login url and params for the SSO provider
 	getLoginURL(authType model.AuthType, appType model.ApplicationType, redirectURI string, l *logs.Log) (string, map[string]interface{}, error)
 	//externalLogin logins in the external system and provides the authenticated user
-	externalLogin(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, string, error)
+	externalLogin(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*model.ExternalSystemUser, externalCredential, map[string]interface{}, error)
 	//refresh refreshes tokens
-	refresh(params map[string]interface{}, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, string, error)
+	refresh(params map[string]interface{}, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.ExternalSystemUser, externalCredential, map[string]interface{}, error)
 }
 
 // anonymousAuthType is the interface for authentication for auth types which are anonymous
@@ -462,6 +470,7 @@ type Storage interface {
 	//LoginsSessions
 	InsertLoginSession(context storage.TransactionContext, session model.LoginSession) error
 	FindLoginSessions(context storage.TransactionContext, identifier string) ([]model.LoginSession, error)
+	FindLoginSessionByID(id string) (*model.LoginSession, error)
 	FindLoginSession(refreshToken string) (*model.LoginSession, error)
 	FindAndUpdateLoginSession(context storage.TransactionContext, id string) (*model.LoginSession, error)
 	UpdateLoginSession(context storage.TransactionContext, loginSession model.LoginSession) error
@@ -585,6 +594,9 @@ type Storage interface {
 	//AccountGroups
 	UpdateAccountGroups(context storage.TransactionContext, accountID string, groups []model.AccountGroup) error
 	InsertAccountGroups(context storage.TransactionContext, accountID string, appOrgID string, groups []model.AccountGroup) error
+
+	//Configs
+	FindConfig(configType string, appID string, orgID string) (*model.Config, error)
 }
 
 // ProfileBuildingBlock is used by auth to communicate with the profile building block.

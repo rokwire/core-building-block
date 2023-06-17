@@ -22,7 +22,9 @@ import (
 	genmocks "core-building-block/core/mocks"
 	"core-building-block/core/model"
 
+	"github.com/rokwire/core-auth-library-go/v3/tokenauth"
 	"github.com/rokwire/logging-library-go/v2/logs"
+	"github.com/stretchr/testify/mock"
 	"gotest.tools/assert"
 )
 
@@ -78,39 +80,49 @@ func TestAdmGetTest(t *testing.T) {
 	}
 }
 
-///
-
-//System
-
-func TestSysCreateGlobalConfig(t *testing.T) {
+func TestAdmCreateConfig(t *testing.T) {
+	anyConfig := mock.AnythingOfType("model.Config")
 	storage := genmocks.Storage{}
-	storage.On("GetGlobalConfig").Return(nil, nil)
-	storage.On("CreateGlobalConfig", nil, &model.GlobalConfig{Setting: "setting"}).Return(nil)
+	storage.On("FindOrganization", "system_org_id").Return(&model.Organization{ID: "system_org_id", System: true}, nil)
+	storage.On("FindApplication", nil, "admin_app_id").Return(&model.Application{ID: "admin_app_id", Admin: true}, nil)
+	storage.On("InsertConfig", anyConfig).Return(nil)
 
 	coreAPIs := buildTestCoreAPIs(&storage)
 
-	gc, _ := coreAPIs.System.SysCreateGlobalConfig("setting")
-	if gc == nil {
-		t.Error("gc is nil")
+	trueVal := true
+	systemClaims := tokenauth.Claims{AppID: "admin_app_id", OrgID: "system_org_id", System: true}
+	config := model.Config{ID: model.ConfigTypeEnv, AppID: "admin_app_id", OrgID: "system_org_id", Type: model.ConfigTypeEnv, Data: model.EnvConfigData{AllowLegacyRefresh: &trueVal}}
+	newConfig, err := coreAPIs.Administration.AdmCreateConfig(config, &systemClaims)
+	if err != nil {
+		t.Error("we are not expecting error")
 		return
 	}
-	assert.Equal(t, gc.Setting, "setting", "setting is different")
+	if newConfig == nil || newConfig.ID == "" {
+		t.Error("config must be returned with valid id")
+		return
+	}
 
 	//second case - error
 	storage2 := genmocks.Storage{}
-	storage2.On("GetGlobalConfig").Return(nil, nil)
-	storage2.On("CreateGlobalConfig", nil, &model.GlobalConfig{Setting: "setting"}).Return(errors.New("error occured"))
+	storage2.On("FindOrganization", "system_org_id").Return(&model.Organization{ID: "system_org_id", System: true}, nil)
+	storage2.On("FindApplication", nil, "admin_app_id").Return(&model.Application{ID: "admin_app_id", Admin: true}, nil)
+	storage2.On("InsertConfig", anyConfig).Return(errors.New("error occured"))
 
 	coreAPIs = buildTestCoreAPIs(&storage2)
 
-	_, err := coreAPIs.System.SysCreateGlobalConfig("setting")
+	_, err = coreAPIs.Administration.AdmCreateConfig(config, &systemClaims)
 	if err == nil {
 		t.Error("we are expecting error")
 		return
 	}
+
 	errText := err.Error()
-	assert.Equal(t, errText, "core-building-block/core.(*application).sysCreateGlobalConfig() error inserting global config: error occured", "error is different: "+err.Error())
+	assert.Equal(t, errText, "core-building-block/core.(*application).admCreateConfig() error inserting config: error occured", "error is different: "+err.Error())
 }
+
+///
+
+//System
 
 func TestSysGetOrganization(t *testing.T) {
 	storage := genmocks.Storage{}

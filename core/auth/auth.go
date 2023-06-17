@@ -18,6 +18,7 @@ import (
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
 	"core-building-block/utils"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -67,14 +68,17 @@ const (
 
 	refreshTokenLength int = 256
 
-	sessionDeletePeriod int = 24
+	sessionDeletePeriod int = 24 // hours
 	maxSessionsDelete   int = 250
 
+	sessionIDRateLimit  int = 5
+	sessionIDRatePeriod int = 5 // minutes
+
 	loginStateLength   int = 128
-	loginStateDuration int = 5
+	loginStateDuration int = 5 // minutes
 
 	maxMfaAttempts    int = 5
-	mfaCodeExpiration int = 5
+	mfaCodeExpiration int = 5 // minutes
 	mfaCodeMax        int = 1000000
 )
 
@@ -113,9 +117,15 @@ type Auth struct {
 	apiKeys     *syncmap.Map //cache api keys / api_key (string) -> APIKey
 	apiKeysLock *sync.RWMutex
 
-	//delete refresh tokens timer
-	deleteSessionsTimer *time.Timer
-	timerDone           chan bool
+	sessionIDs *syncmap.Map
+
+	//delete sessions timer
+	deleteSessionsTimer     *time.Timer
+	deleteSessionsTimerDone chan bool
+
+	//clear session ID cache timer
+	sessionIDCacheTimer     *time.Timer
+	sessionIDCacheTimerDone chan bool
 }
 
 // NewAuth creates a new auth instance
@@ -145,12 +155,13 @@ func NewAuth(serviceID string, host string, authPrivKey *keys.PrivKey, authServi
 	apiKeys := &syncmap.Map{}
 	apiKeysLock := &sync.RWMutex{}
 
-	timerDone := make(chan bool)
+	deleteSessionsTimerDone := make(chan bool)
+	sessionIDCacheTimerDone := make(chan bool)
 
 	auth := &Auth{storage: storage, emailer: emailer, logger: logger, authTypes: authTypes, externalAuthTypes: externalAuthTypes, anonymousAuthTypes: anonymousAuthTypes,
 		serviceAuthTypes: serviceAuthTypes, mfaTypes: mfaTypes, authPrivKey: authPrivKey, ServiceRegManager: nil, serviceID: serviceID, host: host, minTokenExp: *minTokenExp,
 		maxTokenExp: *maxTokenExp, profileBB: profileBB, cachedIdentityProviders: cachedIdentityProviders, identityProvidersLock: identityProvidersLock,
-		timerDone: timerDone, emailDialer: emailDialer, emailFrom: smtpFrom, apiKeys: apiKeys, apiKeysLock: apiKeysLock}
+		apiKeys: apiKeys, apiKeysLock: apiKeysLock, deleteSessionsTimerDone: deleteSessionsTimerDone, sessionIDCacheTimerDone: sessionIDCacheTimerDone, emailDialer: emailDialer, emailFrom: smtpFrom}
 
 	err := auth.storeCoreRegs()
 	if err != nil {
@@ -214,7 +225,7 @@ func (a *Auth) SetIdentityBB(identityBB IdentityBuildingBlock) {
 }
 
 func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, clientVersion *string,
-	regProfile model.Profile, regPreferences map[string]interface{}, username string, admin bool, l *logs.Log) (*model.AccountAuthType, map[string]interface{}, []model.MFAType, map[string]string, error) {
+	regProfile model.Profile, regPreferences map[string]interface{}, username string, admin bool, l *logs.Log) (*model.AccountAuthType, externalCredential, map[string]interface{}, []model.MFAType, map[string]string, error) {
 	var accountAuthType *model.AccountAuthType
 	var mfaTypes []model.MFAType
 	var externalIDs map[string]string
@@ -222,45 +233,45 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 	//external auth type
 	authImpl, err := a.getExternalAuthTypeImpl(authType)
 	if err != nil {
-		return nil, nil, nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeExternalAuthType, nil, err)
+		return nil, nil, nil, nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeExternalAuthType, nil, err)
 	}
 
 	//1. get the user from the external system
 	//var externalUser *model.ExternalSystemUser
-	externalUser, extParams, externalCreds, err := authImpl.externalLogin(authType, appType, appOrg, creds, params, l)
+	externalUser, extParams, storageParams, err := authImpl.externalLogin(authType, appType, appOrg, creds, params, l)
 	if err != nil {
-		return nil, nil, nil, nil, errors.WrapErrorAction("logging in", "external user", nil, err)
+		return nil, nil, nil, nil, nil, errors.WrapErrorAction("logging in", "external user", nil, err)
 	}
 
 	//2. check if the user exists
 	account, err := a.storage.FindAccount(nil, appOrg.ID, authType.ID, externalUser.Identifier)
 	if err != nil {
-		return nil, nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+		return nil, nil, nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
 	a.setLogContext(account, l)
 
 	canSignIn := a.canSignIn(account, authType.ID, externalUser.Identifier)
 	if canSignIn {
 		//account exists
-		accountAuthType, err = a.applySignInExternal(account, authType, appOrg, *externalUser, externalCreds, l)
+		accountAuthType, err = a.applySignInExternal(account, authType, appOrg, *externalUser, extParams.getCredential(), l)
 		if err != nil {
-			return nil, nil, nil, nil, errors.WrapErrorAction(logutils.ActionApply, "external sign in", nil, err)
+			return nil, nil, nil, nil, nil, errors.WrapErrorAction(logutils.ActionApply, "external sign in", nil, err)
 		}
 		mfaTypes = account.GetVerifiedMFATypes()
 		externalIDs = account.ExternalIDs
 	} else if !admin {
 		//user does not exist, we need to register it
-		accountAuthType, err = a.applySignUpExternal(nil, authType, appOrg, *externalUser, externalCreds, regProfile, regPreferences, username, clientVersion, l)
+		accountAuthType, err = a.applySignUpExternal(nil, authType, appOrg, *externalUser, extParams.getCredential(), regProfile, regPreferences, username, clientVersion, l)
 		if err != nil {
-			return nil, nil, nil, nil, errors.WrapErrorAction(logutils.ActionApply, "external sign up", nil, err)
+			return nil, nil, nil, nil, nil, errors.WrapErrorAction(logutils.ActionApply, "external sign up", nil, err)
 		}
 		externalIDs = externalUser.ExternalIDs
 	} else {
-		return nil, nil, nil, nil, errors.ErrorData(logutils.StatusInvalid, "sign up", &logutils.FieldArgs{"identifier": externalUser.Identifier, "auth_type": authType.Code, "app_org_id": appOrg.ID, "admin": true}).SetStatus(utils.ErrorStatusNotAllowed)
+		return nil, nil, nil, nil, nil, errors.ErrorData(logutils.StatusInvalid, "sign up", &logutils.FieldArgs{"identifier": externalUser.Identifier, "auth_type": authType.Code, "app_org_id": appOrg.ID, "admin": true}).SetStatus(utils.ErrorStatusNotAllowed)
 	}
 
 	//TODO: make sure we do not return any refresh tokens in extParams
-	return accountAuthType, extParams, mfaTypes, externalIDs, nil
+	return accountAuthType, extParams, storageParams, mfaTypes, externalIDs, nil
 }
 
 func (a *Auth) applySignInExternal(account *model.Account, authType model.AuthType, appOrg model.ApplicationOrganization,
@@ -1107,7 +1118,7 @@ func (a *Auth) applyLogin(anonymous bool, sub string, authType model.AuthType, a
 
 	var err error
 	var loginSession *model.LoginSession
-
+	var refreshToken string
 	transaction := func(context storage.TransactionContext) error {
 		///1. assign device to session and account
 		var device *model.Device
@@ -1139,6 +1150,8 @@ func (a *Auth) applyLogin(anonymous bool, sub string, authType model.AuthType, a
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionCreate, model.TypeLoginSession, nil, err)
 		}
+		refreshToken = loginSession.CurrentRefreshToken()
+		loginSession.RefreshTokens = []string{a.hashAndEncodeToken(refreshToken)} // store the hash of the generated refresh token
 
 		//1. store login session
 		err = a.storage.InsertLoginSession(context, *loginSession)
@@ -1181,6 +1194,7 @@ func (a *Auth) applyLogin(anonymous bool, sub string, authType model.AuthType, a
 		return nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeUserAuth, nil, err)
 	}
 
+	loginSession.RefreshTokens = []string{fmt.Sprintf("%s:%s", loginSession.ID, refreshToken)} // return the raw refresh token prefixed by <session ID>:
 	return loginSession, nil
 }
 
@@ -2233,6 +2247,11 @@ func (a *Auth) getExp(exp *int64) int64 {
 	return *exp
 }
 
+func (a *Auth) hashAndEncodeToken(token string) string {
+	hashedToken := utils.SHA256Hash([]byte(token))
+	return base64.StdEncoding.EncodeToString(hashedToken)
+}
+
 func (a *Auth) getExternalUserAuthorization(externalUser model.ExternalSystemUser, identityProviderSetting *model.IdentityProviderSetting) ([]string, []string, error) {
 	if identityProviderSetting == nil {
 		return nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeIdentityProviderSetting, nil)
@@ -2488,21 +2507,7 @@ func (a *Auth) getCachedAPIKeys() ([]model.APIKey, error) {
 	return apiKeyList, err
 }
 
-func (a *Auth) setupDeleteSessionsTimer() {
-	a.logger.Info("setupDeleteSessionsTimer")
-
-	//cancel if active
-	if a.deleteSessionsTimer != nil {
-		a.timerDone <- true
-		a.deleteSessionsTimer.Stop()
-	}
-
-	a.deleteSessions()
-}
-
 func (a *Auth) deleteSessions() {
-	a.logger.Info("deleteSessions")
-
 	// to delete:
 	// - not completed MFA
 	// - expired sessions
@@ -2512,19 +2517,6 @@ func (a *Auth) deleteSessions() {
 
 	//2. expired sessions
 	a.deleteExpiredSessions()
-
-	duration := time.Hour * time.Duration(sessionDeletePeriod)
-	a.deleteSessionsTimer = time.NewTimer(duration)
-	select {
-	case <-a.deleteSessionsTimer.C:
-		// timer expired
-		a.deleteSessionsTimer = nil
-
-		a.deleteSessions()
-	case <-a.timerDone:
-		// timer aborted
-		a.deleteSessionsTimer = nil
-	}
 }
 
 func (a *Auth) deleteNotCompletedMFASessions() {
@@ -2605,6 +2597,27 @@ func (a *Auth) deleteExpiredSessions() {
 		if err != nil {
 			a.logger.Errorf("error on deleting logins sessions - %s", err)
 		}
+	}
+}
+
+func (a *Auth) clearSessionIDCache() {
+	a.sessionIDs = &sync.Map{}
+}
+
+func (a *Auth) getCachedSessionIDCount(id string) int {
+	count, _ := a.sessionIDs.Load(id)
+	idCount, ok := count.(int)
+	if !ok {
+		return 0
+	}
+	return idCount
+}
+
+func (a *Auth) incrementCachedSessionIDCount(id string) {
+	count, loaded := a.sessionIDs.LoadOrStore(id, 1)
+	if idCount, ok := count.(int); ok && loaded {
+		idCount++
+		a.sessionIDs.Store(id, idCount)
 	}
 }
 

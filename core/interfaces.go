@@ -18,6 +18,7 @@ import (
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
 
+	"github.com/rokwire/core-auth-library-go/v3/tokenauth"
 	"github.com/rokwire/logging-library-go/v2/logs"
 )
 
@@ -45,6 +46,12 @@ type Services interface {
 type Administration interface {
 	AdmGetTest() string
 	AdmGetTestModel() string
+
+	AdmGetConfig(id string, claims *tokenauth.Claims) (*model.Config, error)
+	AdmGetConfigs(configType *string, claims *tokenauth.Claims) ([]model.Config, error)
+	AdmCreateConfig(config model.Config, claims *tokenauth.Claims) (*model.Config, error)
+	AdmUpdateConfig(config model.Config, claims *tokenauth.Claims) error
+	AdmDeleteConfig(id string, claims *tokenauth.Claims) error
 
 	AdmGetApplications(orgID string) ([]model.Application, error)
 
@@ -111,10 +118,6 @@ type TPS interface {
 
 // System exposes system APIs for the driver adapters
 type System interface {
-	SysCreateGlobalConfig(setting string) (*model.GlobalConfig, error)
-	SysGetGlobalConfig() (*model.GlobalConfig, error)
-	SysUpdateGlobalConfig(setting string) error
-
 	SysGetApplicationOrganization(ID string) (*model.ApplicationOrganization, error)
 	SysGetApplicationOrganizations(appID *string, orgID *string) ([]model.ApplicationOrganization, error)
 	SysCreateApplicationOrganization(appID string, orgID string, appOrg model.ApplicationOrganization) (*model.ApplicationOrganization, error)
@@ -182,9 +185,12 @@ type Storage interface {
 	SaveDevice(context storage.TransactionContext, device *model.Device) error
 	DeleteDevice(context storage.TransactionContext, id string) error
 
-	CreateGlobalConfig(context storage.TransactionContext, globalConfig *model.GlobalConfig) error
-	GetGlobalConfig() (*model.GlobalConfig, error)
-	DeleteGlobalConfig(context storage.TransactionContext) error
+	FindConfig(configType string, appID string, orgID string) (*model.Config, error)
+	FindConfigByID(id string) (*model.Config, error)
+	FindConfigs(configType *string) ([]model.Config, error)
+	InsertConfig(config model.Config) error
+	UpdateConfig(config model.Config) error
+	DeleteConfig(id string) error
 
 	FindPermissionsByName(context storage.TransactionContext, names []string) ([]model.Permission, error)
 	FindPermissionsByServiceIDs(serviceIDs []string) ([]model.Permission, error)

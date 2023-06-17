@@ -1,0 +1,91 @@
+get:
+  tags:
+  - Admin
+  summary: Get configs
+  description: |
+    Get existing configs by search parameters
+
+    **Auth:** Requires admin access token with `get_core_configs`, `update_core_configs`, or `all_core_configs` permission
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: type
+      in: query
+      description: config type
+      required: false
+      style: form
+      explode: false
+      schema:
+        type: string
+  responses:
+      200:
+        description: Success
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "../../schemas/config/Config.yaml"
+      400:
+        description: Bad request
+      401:
+        description: Unauthorized
+      500:
+        description: Internal error
+post:
+  tags:
+  - Admin
+  summary: Create config
+  description: |
+    Creates a new config
+
+    **Auth:** Requires admin access token with `update_core_configs` or `all_core_configs` permission
+  security:
+    - bearerAuth: []
+  requestBody:
+    content:
+      application/json:
+        schema:
+          $ref: "../../schemas/config/Config.yaml"
+        examples:
+          system:
+            summary: System-wide config
+            value: 
+              type: "config_type"
+              all_apps: true
+              all_orgs: true
+              system: true
+              data:
+                allow_legacy_refresh: true
+          org_admin:
+            summary: Organization-wide config
+            value: 
+              type: "config_type"
+              all_apps: true
+              all_orgs: false
+              system: false
+              data:
+                allow_legacy_refresh: false
+          app_org_specific:
+            summary: Application organization specific config
+            value: 
+              type: "config_type"
+              all_apps: false
+              all_orgs: false
+              system: false
+              data:
+                allow_legacy_refresh: true
+    required: true
+  responses:
+      200:
+        description: Success
+        content:
+          application/json:
+            schema:
+              $ref: "../../schemas/config/Config.yaml"
+      400:
+        description: Bad request
+      401:
+        description: Unauthorized
+      500:
+        description: Internal error

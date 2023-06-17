@@ -42,7 +42,6 @@ func loginSessionFromStorage(item loginSession, authType model.AuthType, account
 	}
 	device := &model.Device{ID: deviceID}
 	idAddress := item.IPAddress
-	accessToken := item.AccessToken
 	refreshTokens := item.RefreshTokens
 	params := item.Params
 
@@ -63,7 +62,7 @@ func loginSessionFromStorage(item loginSession, authType model.AuthType, account
 
 	return model.LoginSession{ID: id, AppOrg: appOrg, AuthType: authType, AppType: appType,
 		Anonymous: anonymous, Identifier: identifier, ExternalIDs: externalIDs, AccountAuthType: accountAuthType,
-		Device: device, IPAddress: idAddress, AccessToken: accessToken, RefreshTokens: refreshTokens, Params: params,
+		Device: device, IPAddress: idAddress, RefreshTokens: refreshTokens, Params: params,
 		State: state, StateExpires: stateExpires, MfaAttempts: mfaAttempts,
 		DateRefreshed: dateRefreshed, DateUpdated: dateUpdated, DateCreated: dateCreated}
 }
@@ -93,7 +92,6 @@ func loginSessionToStorage(item model.LoginSession) *loginSession {
 		deviceID = &item.Device.ID
 	}
 	ipAddress := item.IPAddress
-	accessToken := item.AccessToken
 	refreshTokens := item.RefreshTokens
 	params := item.Params
 
@@ -115,7 +113,7 @@ func loginSessionToStorage(item model.LoginSession) *loginSession {
 	return &loginSession{ID: id, AppID: appID, OrgID: orgID, AuthTypeCode: authTypeCode,
 		AppTypeID: appTypeID, AppTypeIdentifier: appTypeIdentifier, Anonymous: anonymous,
 		Identifier: identifier, ExternalIDs: externalIDs, AccountAuthTypeID: accountAuthTypeID, AccountAuthTypeIdentifier: accountAuthTypeIdentifier,
-		DeviceID: deviceID, IPAddress: ipAddress, AccessToken: accessToken, RefreshTokens: refreshTokens,
+		DeviceID: deviceID, IPAddress: ipAddress, RefreshTokens: refreshTokens,
 		Params: params, State: state, StateExpires: stateExpires, MfaAttempts: mfaAttempts,
 		DateRefreshed: dateRefreshed, DateUpdated: dateUpdated, DateCreated: dateCreated}
 }
