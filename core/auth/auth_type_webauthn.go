@@ -90,17 +90,34 @@ func buildWebAuthn(supportedAuthType model.SupportedAuthType, appOrg model.Appli
 		return nil, errors.ErrorData(logutils.StatusInvalid, "supported auth type param", &logutils.FieldArgs{"param": "rp_origins", "app_org_id": appOrg.ID})
 	}
 
-	requiredResidentKey := true
+	requireResidentKey, _ := supportedAuthType.Params["require_resident_key"].(bool)
+	residentKey, ok := supportedAuthType.Params["resident_key"].(string)
+	if !ok {
+		residentKey = string(protocol.ResidentKeyRequirementRequired)
+	}
+	userVerification, ok := supportedAuthType.Params["user_verification"].(string)
+	if !ok {
+		userVerification = string(protocol.VerificationRequired)
+	}
+	attestationPreference, ok := supportedAuthType.Params["attestation_preference"].(string)
+	if !ok {
+		attestationPreference = string(protocol.PreferNoAttestation)
+	}
+	authenticatorAttachment, ok := supportedAuthType.Params["authenticator_attachment"].(string)
+	if !ok {
+		authenticatorAttachment = string(protocol.Platform)
+	}
+
 	wconfig := &webauthn.Config{
 		RPDisplayName:         appOrg.Application.Name,       // Display Name for your site
 		RPID:                  rpID,                          // Generally the FQDN for your site
 		RPOrigins:             strings.Split(rpOrigins, ","), // The origin URLs allowed for WebAuthn requests
-		AttestationPreference: protocol.PreferNoAttestation,
+		AttestationPreference: protocol.ConveyancePreference(attestationPreference),
 		AuthenticatorSelection: protocol.AuthenticatorSelection{
-			// AuthenticatorAttachment: protocol.Platform,
-			RequireResidentKey: &requiredResidentKey,
-			ResidentKey:        protocol.ResidentKeyRequirementRequired,
-			UserVerification:   protocol.VerificationRequired,
+			AuthenticatorAttachment: protocol.AuthenticatorAttachment(authenticatorAttachment),
+			RequireResidentKey:      &requireResidentKey,
+			ResidentKey:             protocol.ResidentKeyRequirement(residentKey),
+			UserVerification:        protocol.UserVerificationRequirement(userVerification),
 		},
 	}
 
