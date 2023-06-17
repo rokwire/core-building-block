@@ -26,9 +26,10 @@ import (
 
 // application represents the core application code based on hexagonal architecture
 type application struct {
-	env     string
-	version string
-	build   string
+	env       string
+	version   string
+	build     string
+	serviceID string
 
 	storage interfaces.Storage
 

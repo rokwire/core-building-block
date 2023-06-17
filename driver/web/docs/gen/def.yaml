@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Rokwire Core Building Block API
   description: Core Building Block API Documentation
-  version: 1.30.0
+  version: 1.33.0
 servers:
   - url: 'https://api.rokwire.illinois.edu/core'
     description: Production server
@@ -154,6 +154,51 @@ paths:
                   api_key: 95a463e3-2ce8-450b-ba75-d8506b874738
                   creds:
                     anonymous_id: dbb5ea5d-6c6c-44b8-9952-7ebf0e844beb
+                  device:
+                    type: mobile
+                    device_id: '5555'
+                    os: Android
+              username-sign_in:
+                summary: Username - sign in
+                value:
+                  auth_type: username
+                  app_type_identifier: edu.illinois.rokwire
+                  org_id: 0a2eff20-e2cd-11eb-af68-60f81db5ecc0
+                  api_key: 95a463e3-2ce8-450b-ba75-d8506b874738
+                  creds:
+                    username: testName
+                    password: test12345
+                  device:
+                    type: mobile
+                    device_id: '5555'
+                    os: Android
+              username-sign_up:
+                summary: Username - sign up
+                value:
+                  auth_type: username
+                  app_type_identifier: edu.illinois.rokwire
+                  org_id: 0a2eff20-e2cd-11eb-af68-60f81db5ecc0
+                  api_key: 95a463e3-2ce8-450b-ba75-d8506b874738
+                  creds:
+                    username: testName
+                    password: test12345
+                  params:
+                    sign_up: true
+                    confirm_password: test12345
+                  preferences:
+                    key1: value1
+                    key2: value2
+                  profile:
+                    address: address
+                    birth_year: 1990
+                    country: county
+                    email: email
+                    first_name: first name
+                    last_name: last name
+                    phone: '+000000000000'
+                    photo_url: photo url
+                    state: state
+                    zip_code: zip code
                   device:
                     type: mobile
                     device_id: '5555'
@@ -2412,6 +2457,119 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+  /admin/application/filter/accounts:
+    post:
+      tags:
+        - Admin
+      summary: Finds user accounts matching provided filter
+      description: |
+        **Auth:** Requires admin access token with `get_filter-accounts` permission
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          description: The maximum number of accounts to return
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          description: The index of the first account to return
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+            examples:
+              single_value:
+                summary: Multiple single-value search parameters
+                value:
+                  profile.first_name: Example
+                  preferences.privacy_level: 4
+                  external_ids.uin: '123456789'
+              multiple_value:
+                summary: 'Some single-value, some multi-value search parameters'
+                value:
+                  profile.first_name: Example
+                  preferences.privacy_level:
+                    - 3
+                    - 4
+                    - 5
+                  external_ids.uin: '123456789'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal error
+  /admin/application/filter/accounts/count:
+    post:
+      tags:
+        - Admin
+      summary: Finds the count of user accounts matching filter
+      description: |
+        **Auth:** Requires service access token with `get_filter-accounts-count` permission
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: |
+          Service account credentials
+        content:
+          application/json:
+            schema:
+              type: object
+            examples:
+              single_value:
+                summary: Multiple single-value search parameters
+                value:
+                  profile.first_name: Example
+                  preferences.privacy_level: 4
+                  external_ids.uin: '123456789'
+              multiple_value:
+                summary: 'Some single-value, some multi-value search parameters'
+                value:
+                  profile.first_name: Example
+                  preferences.privacy_level:
+                    - 3
+                    - 4
+                    - 5
+                  external_ids.uin: '123456789'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: integer
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal error
   /admin/application/login-sessions:
     get:
       tags:
@@ -4404,6 +4562,7 @@ paths:
                   type: signature
                   params:
                     key_pem: public_key_pem
+                    alg: PS256
         required: true
       responses:
         '200':
@@ -5449,6 +5608,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Permission'
+        scopes:
+          type: array
+          items:
+            type: string
     AppOrgGroup:
       required:
         - id
@@ -5549,6 +5712,7 @@ components:
           type: object
           additionalProperties:
             type: string
+          nullable: true
         first_name_field:
           type: string
         middle_name_field:
@@ -5565,16 +5729,21 @@ components:
           type: array
           items:
             type: string
+          nullable: true
         roles:
           type: object
           additionalProperties:
             type: string
+          nullable: true
         groups:
           type: object
           additionalProperties:
             type: string
+          nullable: true
         always_sync_profile:
           type: boolean
+        identity_bb_base_url:
+          type: string
     SupportedAuthTypes:
       type: object
       properties:
@@ -5592,6 +5761,7 @@ components:
         params:
           type: object
           additionalProperties: true
+          nullable: true
     LoginSessionSettings:
       type: object
       properties:
@@ -5872,40 +6042,80 @@ components:
         key:
           type: string
     JWK:
-      required:
-        - kty
-        - use
-        - alg
-        - kid
-        - 'n'
-        - e
       type: object
-      description: JSON Web Key (JWK)
+      allOf:
+        - $ref: '#/components/schemas/JWKParamsEC'
+        - $ref: '#/components/schemas/JWKParamsOKP'
+        - $ref: '#/components/schemas/JWKParamsRSA'
+        - required:
+            - kty
+            - use
+            - alg
+            - kid
+          description: JSON Web Key (JWK)
+          properties:
+            kty:
+              type: string
+              description: The "kty" (key type) parameter identifies the cryptographic algorithm family used with the key
+              enum:
+                - RSA
+                - EC
+                - OKP
+            use:
+              type: string
+              description: The "use" (public key use) parameter identifies the intended use of the public key
+              enum:
+                - sig
+            alg:
+              type: string
+              description: The "alg" (algorithm) parameter identifies the algorithm intended for use with the key
+              enum:
+                - RS256
+                - RS384
+                - RS512
+                - PS256
+                - PS384
+                - PS512
+                - ES256
+                - ES384
+                - ES512
+                - OKP
+            kid:
+              type: string
+              description: The "kid" (key ID) parameter is used to match a specific key
+    JWKParamsRSA:
+      type: object
+      description: JSON Web Key RSA parameters
       properties:
-        kty:
-          type: string
-          description: The "kty" (key type) parameter identifies the cryptographic algorithm family used with the key
-          enum:
-            - RSA
-        use:
-          type: string
-          description: The "use" (public key use) parameter identifies the intended use of the public key
-          enum:
-            - sig
-        alg:
-          type: string
-          description: The "alg" (algorithm) parameter identifies the algorithm intended for use with the key
-          enum:
-            - RS256
-        kid:
-          type: string
-          description: The "kid" (key ID) parameter is used to match a specific key
         'n':
           type: string
-          description: The modulus (2048 bit) of the key - Base64URL encoded.
+          description: The modulus of the key - Base64URL encoded
         e:
           type: string
           description: The exponent of the key - Base64URL encoded
+    JWKParamsEC:
+      type: object
+      description: JSON Web Key EC parameters
+      properties:
+        crv:
+          type: string
+          description: The curve used with the key
+        x:
+          type: string
+          description: x coordinate of the key - Base64URL encoded
+        'y':
+          type: string
+          description: y coordinate of the key - Base64URL encoded
+    JWKParamsOKP:
+      type: object
+      description: JSON Web Key OKP parameters
+      properties:
+        crv:
+          type: string
+          description: The curve used with the key
+        x:
+          type: string
+          description: x coordinate of the key - Base64URL encoded
     JWKS:
       required:
         - keys
@@ -5970,6 +6180,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AppOrgGroup'
+        scopes:
+          type: array
+          items:
+            type: string
         devices:
           type: array
           items:
@@ -6022,6 +6236,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AppOrgGroup'
+        scopes:
+          type: array
+          items:
+            type: string
         auth_types:
           type: array
           items:
@@ -6182,6 +6400,7 @@ components:
             - twilio_phone
             - illinois_oidc
             - anonymous
+            - username
         app_type_identifier:
           type: string
         org_id:
@@ -6194,12 +6413,31 @@ components:
             - $ref: '#/components/schemas/_shared_req_CredsTwilioPhone'
             - $ref: '#/components/schemas/_shared_req_CredsOIDC'
             - $ref: '#/components/schemas/_shared_req_CredsAPIKey'
+            - required:
+                - username
+                - password
+              type: object
+              description: Auth login creds for auth_type="username"
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
         params:
           type: object
           anyOf:
             - $ref: '#/components/schemas/_shared_req_ParamsEmail'
             - $ref: '#/components/schemas/_shared_req_ParamsOIDC'
             - $ref: '#/components/schemas/_shared_req_ParamsNone'
+            - type: object
+              description: Auth login params for auth_type="username"
+              properties:
+                confirm_password:
+                  type: string
+                  description: This should match the `creds` password field when sign_up=true. This should be verified on the client side as well to reduce invalid requests.
+                sign_up:
+                  type: boolean
+                  default: false
         device:
           $ref: '#/components/schemas/Device'
         profile:
@@ -6312,6 +6550,10 @@ components:
           type: array
           items:
             type: string
+        scopes:
+          type: array
+          items:
+            type: string
         profile:
           $ref: '#/components/schemas/ProfileNullable'
         username:
@@ -6339,6 +6581,10 @@ components:
           items:
             type: string
         group_ids:
+          type: array
+          items:
+            type: string
+        scopes:
           type: array
           items:
             type: string
@@ -6467,30 +6713,9 @@ components:
           type: object
           nullable: true
           anyOf:
-            - type: object
-              description: Auth login response params for auth_type="oidc" (or variants)
-              properties:
-                oidc_token:
-                  type: object
-                  properties:
-                    id_token:
-                      type: string
-                    access_token:
-                      type: string
-                    refresh_token:
-                      type: string
-                    token_type:
-                      type: string
-                redirect_uri:
-                  type: string
-            - type: object
-              description: Auth login response params for auth_type="anonymous"
-              properties:
-                anonymous_id:
-                  type: string
-            - type: object
-              description: Auth login response params for unlisted auth_types (None)
-              nullable: true
+            - $ref: '#/components/schemas/_shared_res_ParamsOIDC'
+            - $ref: '#/components/schemas/_shared_res_ParamsAPIKey'
+            - $ref: '#/components/schemas/_shared_res_ParamsNone'
         message:
           type: string
     _shared_res_Login_Mfa:
@@ -6515,9 +6740,9 @@ components:
           type: object
           nullable: true
           anyOf:
-            - $ref: '#/components/schemas/_shared_res_Login/properties/params/anyOf/0'
-            - $ref: '#/components/schemas/_shared_res_Login/properties/params/anyOf/1'
-            - $ref: '#/components/schemas/_shared_res_Login/properties/params/anyOf/2'
+            - $ref: '#/components/schemas/_shared_res_ParamsOIDC'
+            - $ref: '#/components/schemas/_shared_res_ParamsAPIKey'
+            - $ref: '#/components/schemas/_shared_res_ParamsNone'
     _shared_res_LoginUrl:
       required:
         - login_url
@@ -6537,9 +6762,9 @@ components:
           type: object
           nullable: true
           anyOf:
-            - $ref: '#/components/schemas/_shared_res_Login/properties/params/anyOf/0'
-            - $ref: '#/components/schemas/_shared_res_Login/properties/params/anyOf/1'
-            - $ref: '#/components/schemas/_shared_res_Login/properties/params/anyOf/2'
+            - $ref: '#/components/schemas/_shared_res_ParamsOIDC'
+            - $ref: '#/components/schemas/_shared_res_ParamsAPIKey'
+            - $ref: '#/components/schemas/_shared_res_ParamsNone'
     _shared_res_Mfa:
       type: object
       properties:
@@ -6551,6 +6776,33 @@ components:
           type: object
     _shared_res_AccountCheck:
       type: boolean
+    _shared_res_ParamsAPIKey:
+      type: object
+      description: Auth login response params for auth_type="anonymous"
+      properties:
+        anonymous_id:
+          type: string
+    _shared_res_ParamsOIDC:
+      type: object
+      description: Auth login response params for auth_type="oidc" (or variants)
+      properties:
+        oidc_token:
+          type: object
+          properties:
+            id_token:
+              type: string
+            access_token:
+              type: string
+            refresh_token:
+              type: string
+            token_type:
+              type: string
+        redirect_uri:
+          type: string
+    _shared_res_ParamsNone:
+      type: object
+      description: Auth login response params for unlisted auth_types (None)
+      nullable: true
     _shared_res_RokwireToken:
       type: object
       properties:
@@ -6800,6 +7052,10 @@ components:
         system:
           type: boolean
         permissions:
+          type: array
+          items:
+            type: string
+        scopes:
           type: array
           items:
             type: string

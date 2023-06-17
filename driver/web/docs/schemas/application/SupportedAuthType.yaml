@@ -5,3 +5,4 @@ properties:
   params:
     type: object
     additionalProperties: true
+    nullable: true

@@ -28,7 +28,7 @@ import (
 )
 
 func buildTestCoreAPIs(storage interfaces.Storage) *core.APIs {
-	return core.NewCoreAPIs("local", "1.1.1", "build", storage, nil, nil, nil)
+	return core.NewCoreAPIs("local", "1.1.1", "build", "core", storage, nil, nil, nil)
 }
 
 //Services

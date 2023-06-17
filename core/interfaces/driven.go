@@ -210,6 +210,9 @@ type Storage interface {
 	UpdateAccountGroups(accountID string, groups []model.AccountGroup) error
 	RemoveAccountsGroup(groupID string, accountIDs []string) error
 
+	//AccountScopes
+	UpdateAccountScopes(accountID string, scopes []string) error
+
 	//GlobalConfigs
 	CreateGlobalConfig(globalConfig *model.GlobalConfig) error
 	GetGlobalConfig() (*model.GlobalConfig, error)
@@ -239,6 +242,11 @@ type StorageListener interface {
 // ProfileBuildingBlock is used by auth to communicate with the profile building block.
 type ProfileBuildingBlock interface {
 	GetProfileBBData(queryParams map[string]string, l *logs.Log) (*model.Profile, map[string]interface{}, error)
+}
+
+// IdentityBuildingBlock is used by auth to communicate with the identity building block.
+type IdentityBuildingBlock interface {
+	GetUserProfile(baseURL string, externalUser model.ExternalSystemUser, externalAccessToken string, l *logs.Log) (*model.Profile, error)
 }
 
 // Emailer is used by core to send emails

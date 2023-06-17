@@ -246,7 +246,7 @@ func supportedAuthTypeFromDef(item *Def.SupportedAuthTypes) *model.AuthTypesSupp
 	if item.SupportedAuthTypes != nil {
 		for _, authType := range *item.SupportedAuthTypes {
 			if authType.AuthTypeId != nil && authType.Params != nil {
-				supportedAuthTypes = append(supportedAuthTypes, model.SupportedAuthType{AuthTypeID: *authType.AuthTypeId, Params: authType.Params.AdditionalProperties})
+				supportedAuthTypes = append(supportedAuthTypes, model.SupportedAuthType{AuthTypeID: *authType.AuthTypeId, Params: *authType.Params})
 			}
 		}
 	}
@@ -277,7 +277,7 @@ func supportedAuthTypeToDef(item *model.AuthTypesSupport) *Def.SupportedAuthType
 	}
 	supportedAuthTypes := []Def.SupportedAuthType{}
 	for _, authType := range item.SupportedAuthTypes {
-		params := Def.SupportedAuthType_Params{AdditionalProperties: authType.Params}
+		params := authType.Params
 		authTypeID := authType.AuthTypeID
 		supportedAuthTypes = append(supportedAuthTypes, Def.SupportedAuthType{AuthTypeId: &authTypeID, Params: &params})
 	}
@@ -335,23 +335,31 @@ func identityProviderSettingFromDef(item *Def.IdentityProviderSettings) *model.I
 	if item.UserSpecificFields != nil {
 		userSpecificFields = *item.UserSpecificFields
 	}
+	var externalIDFields map[string]string
+	if item.ExternalIdFields != nil {
+		externalIDFields = *item.ExternalIdFields
+	}
 	var roles map[string]string
 	if item.Roles != nil {
-		roles = item.Roles.AdditionalProperties
+		roles = *item.Roles
 	}
 	var groups map[string]string
 	if item.Groups != nil {
-		groups = item.Groups.AdditionalProperties
+		groups = *item.Groups
 	}
 	var alwaysSyncProfile bool
 	if item.AlwaysSyncProfile != nil {
 		alwaysSyncProfile = *item.AlwaysSyncProfile
 	}
+	var identityBBBaseURL string
+	if item.IdentityBbBaseUrl != nil {
+		identityBBBaseURL = *item.IdentityBbBaseUrl
+	}
 
 	return &model.IdentityProviderSetting{IdentityProviderID: item.IdentityProviderId, UserIdentifierField: item.UserIdentifierField,
-		ExternalIDFields: item.ExternalIdFields.AdditionalProperties, FirstNameField: firstNameField, MiddleNameField: middleNameField,
+		ExternalIDFields: externalIDFields, FirstNameField: firstNameField, MiddleNameField: middleNameField,
 		LastNameField: lastNameField, EmailField: emailField, RolesField: rolesField, GroupsField: groupsField,
-		UserSpecificFields: userSpecificFields, Roles: roles, Groups: groups, AlwaysSyncProfile: alwaysSyncProfile}
+		UserSpecificFields: userSpecificFields, Roles: roles, Groups: groups, AlwaysSyncProfile: alwaysSyncProfile, IdentityBBBaseURL: identityBBBaseURL}
 }
 
 func identityProviderSettingsToDef(items []model.IdentityProviderSetting) []Def.IdentityProviderSettings {
@@ -373,9 +381,9 @@ func identityProviderSettingToDef(item *model.IdentityProviderSetting) *Def.Iden
 		return nil
 	}
 
-	externalIDs := Def.IdentityProviderSettings_ExternalIdFields{AdditionalProperties: item.ExternalIDFields}
-	roles := Def.IdentityProviderSettings_Roles{AdditionalProperties: item.Roles}
-	groups := Def.IdentityProviderSettings_Groups{AdditionalProperties: item.Groups}
+	externalIDs := item.ExternalIDFields
+	roles := item.Roles
+	groups := item.Groups
 
 	firstNameField := item.FirstNameField
 	middleNameField := item.MiddleNameField
@@ -385,15 +393,20 @@ func identityProviderSettingToDef(item *model.IdentityProviderSetting) *Def.Iden
 	groupsField := item.GroupsField
 	userSpecificFields := item.UserSpecificFields
 	alwaysSyncProfile := item.AlwaysSyncProfile
+	identityBBBaseURL := item.IdentityBBBaseURL
 	return &Def.IdentityProviderSettings{IdentityProviderId: item.IdentityProviderID, UserIdentifierField: item.UserIdentifierField,
 		ExternalIdFields: &externalIDs, FirstNameField: &firstNameField, MiddleNameField: &middleNameField,
 		LastNameField: &lastNameField, EmailField: &emailField, RolesField: &rolesField, GroupsField: &groupsField,
-		UserSpecificFields: &userSpecificFields, Roles: &roles, Groups: &groups, AlwaysSyncProfile: &alwaysSyncProfile}
+		UserSpecificFields: &userSpecificFields, Roles: &roles, Groups: &groups, AlwaysSyncProfile: &alwaysSyncProfile, IdentityBbBaseUrl: &identityBBBaseURL}
 }
 
 // AppOrgRole
 func appOrgRoleToDef(item model.AppOrgRole) Def.AppOrgRole {
 	permissions := applicationPermissionsToDef(item.Permissions)
+	scopes := item.Scopes
+	if scopes == nil {
+		scopes = []string{}
+	}
 
 	//dates
 	var dateUpdated *string
@@ -405,7 +418,7 @@ func appOrgRoleToDef(item model.AppOrgRole) Def.AppOrgRole {
 	id := item.ID
 	description := item.Description
 	system := item.System
-	return Def.AppOrgRole{Id: &id, Name: item.Name, Description: &description, System: &system, DateCreated: &dateCreated, DateUpdated: dateUpdated, Permissions: &permissions}
+	return Def.AppOrgRole{Id: &id, Name: item.Name, Description: &description, System: &system, DateCreated: &dateCreated, DateUpdated: dateUpdated, Permissions: &permissions, Scopes: &scopes}
 }
 
 func appOrgRolesToDef(items []model.AppOrgRole) []Def.AppOrgRole {
