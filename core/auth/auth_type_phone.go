@@ -29,17 +29,10 @@
 package auth
 
 import (
-	"context"
 	"core-building-block/core/model"
-	"core-building-block/utils"
-	"encoding/base64"
 	"encoding/json"
-	"io/ioutil"
-	"net/http"
 	"net/url"
 	"regexp"
-	"strings"
-	"time"
 
 	"github.com/rokwire/logging-library-go/v2/errors"
 	"github.com/rokwire/logging-library-go/v2/logs"
@@ -48,28 +41,18 @@ import (
 )
 
 const (
-	//AuthTypeTwilioPhone phone auth type
-	AuthTypeTwilioPhone string = "twilio_phone"
+	//AuthTypePhone phone auth type
+	AuthTypePhone string = "phone"
 
-	servicesPathPart                                  = "https://verify.twilio.com/v2/Services"
-	verificationsPathPart                             = "Verifications"
-	verificationCheckPart                             = "VerificationCheck"
-	typeVerifyServiceID      logutils.MessageDataType = "phone verification service id"
-	typeVerifyServiceToken   logutils.MessageDataType = "phone verification service token"
-	typeVerificationResponse logutils.MessageDataType = "phone verification response"
-	typeVerificationStatus   logutils.MessageDataType = "phone verification staus"
-	typeVerificationSID      logutils.MessageDataType = "phone verification sid"
-	typePhoneCreds           logutils.MessageDataType = "phone creds"
-	typePhoneNumber          logutils.MessageDataType = "E.164 phone number"
+	typePhoneCreds  logutils.MessageDataType = "phone creds"
+	typePhoneNumber logutils.MessageDataType = "E.164 phone number"
 )
 
 // Phone implementation of authType
-type twilioPhoneAuthImpl struct {
-	auth             *Auth
-	authType         string
-	twilioAccountSID string
-	twilioToken      string
-	twilioServiceSID string
+type phoneAuthImpl struct {
+	auth     *Auth
+	authType string
+	verifier PhoneVerifier
 }
 
 type twilioPhoneCreds struct {
@@ -78,35 +61,7 @@ type twilioPhoneCreds struct {
 	// TODO: Password?
 }
 
-type verifyPhoneResponse struct {
-	Status      string      `json:"status"`
-	Payee       interface{} `json:"payee"`
-	DateUpdated time.Time   `json:"date_updated"`
-	AccountSid  string      `json:"account_sid"`
-	To          string      `json:"to"`
-	Amount      interface{} `json:"amount"`
-	Valid       bool        `json:"valid"`
-	URL         string      `json:"url"`
-	Sid         string      `json:"sid"`
-	DateCreated time.Time   `json:"date_created"`
-	ServiceSid  string      `json:"service_sid"`
-	Channel     string      `json:"channel"`
-}
-
-type checkStatusResponse struct {
-	Sid         string      `json:"sid"`
-	ServiceSid  string      `json:"service_sid"`
-	AccountSid  string      `json:"account_sid"`
-	To          string      `json:"to" validate:"required"`
-	Channel     string      `json:"channel"`
-	Status      string      `json:"status"`
-	Amount      interface{} `json:"amount"`
-	Payee       interface{} `json:"payee"`
-	DateCreated time.Time   `json:"date_created"`
-	DateUpdated time.Time   `json:"date_updated"`
-}
-
-func (a *twilioPhoneAuthImpl) checkRequestCreds(creds string) (*twilioPhoneCreds, error) {
+func (a *phoneAuthImpl) checkRequestCreds(creds string) (*twilioPhoneCreds, error) {
 	var requestCreds twilioPhoneCreds
 	err := json.Unmarshal([]byte(creds), &requestCreds)
 	if err != nil {
@@ -128,7 +83,7 @@ func (a *twilioPhoneAuthImpl) checkRequestCreds(creds string) (*twilioPhoneCreds
 	return &requestCreds, nil
 }
 
-func (a *twilioPhoneAuthImpl) signUp(authType model.AuthType, appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error) {
+func (a *phoneAuthImpl) signUp(authType model.AuthType, appName string, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error) {
 	requestCreds, err := a.checkRequestCreds(creds)
 	if err != nil {
 		return "", nil, err
@@ -142,15 +97,15 @@ func (a *twilioPhoneAuthImpl) signUp(authType model.AuthType, appOrg model.Appli
 	return message, nil, nil
 }
 
-func (a *twilioPhoneAuthImpl) signUpAdmin(authType model.AuthType, appOrg model.ApplicationOrganization, identifier string, password string, newCredentialID string) (map[string]interface{}, map[string]interface{}, error) {
+func (a *phoneAuthImpl) signUpAdmin(authType model.AuthType, appName string, identifier string, password string, newCredentialID string) (map[string]interface{}, map[string]interface{}, error) {
 	return nil, nil, nil
 }
 
-func (a *twilioPhoneAuthImpl) isCredentialVerified(credential *model.Credential, l *logs.Log) (*bool, *bool, error) {
+func (a *phoneAuthImpl) isCredentialVerified(credential *model.Credential, l *logs.Log) (*bool, *bool, error) {
 	return nil, nil, nil
 }
 
-func (a *twilioPhoneAuthImpl) checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, error) {
+func (a *phoneAuthImpl) checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, error) {
 	requestCreds, err := a.checkRequestCreds(creds)
 	if err != nil {
 		return "", err
@@ -165,132 +120,27 @@ func (a *twilioPhoneAuthImpl) checkCredentials(accountAuthType model.AccountAuth
 	return message, nil
 }
 
-func (a *twilioPhoneAuthImpl) handlePhoneVerify(phone string, verificationCreds twilioPhoneCreds, l *logs.Log) (string, error) {
-	if a.twilioAccountSID == "" {
-		return "", errors.ErrorData(logutils.StatusMissing, typeVerifyServiceID, nil)
-	}
-
-	if a.twilioToken == "" {
-		return "", errors.ErrorData(logutils.StatusMissing, typeVerifyServiceToken, nil)
-	}
-
+func (a *phoneAuthImpl) handlePhoneVerify(phone string, verificationCreds twilioPhoneCreds, l *logs.Log) (string, error) {
 	data := url.Values{}
 	data.Add("To", phone)
 	if verificationCreds.Code != "" {
 		// check verification
 		data.Add("Code", verificationCreds.Code)
-		return "", a.checkVerification(phone, data, l)
+		return "", a.verifier.CheckVerification(phone, data)
 	}
 
 	// start verification
 	data.Add("Channel", "sms")
 
 	message := ""
-	err := a.startVerification(phone, data, l)
+	err := a.verifier.StartVerification(phone, data)
 	if err == nil {
 		message = "verification code sent successfully"
 	}
 	return message, err
 }
 
-func (a *twilioPhoneAuthImpl) startVerification(phone string, data url.Values, l *logs.Log) error {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	body, err := makeRequest(ctx, "POST", servicesPathPart+"/"+a.twilioServiceSID+"/"+verificationsPathPart, data, a.twilioAccountSID, a.twilioToken)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionSend, logutils.TypeRequest, &logutils.FieldArgs{"verification params": data}, err)
-	}
-
-	var verifyResult verifyPhoneResponse
-	err = json.Unmarshal(body, &verifyResult)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUnmarshal, typeVerificationResponse, nil, err)
-	}
-
-	if verifyResult.To != phone {
-		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeString, &logutils.FieldArgs{"expected phone": phone, "actual phone": verifyResult.To})
-	}
-	if verifyResult.Status != "pending" {
-		return errors.ErrorData(logutils.StatusInvalid, typeVerificationStatus, &logutils.FieldArgs{"expected pending, actual:": verifyResult.Status})
-	}
-	if verifyResult.Sid == "" {
-		return errors.ErrorData(logutils.StatusMissing, typeVerificationSID, nil)
-	}
-
-	return nil
-}
-
-func (a *twilioPhoneAuthImpl) checkVerification(phone string, data url.Values, l *logs.Log) error {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	body, err := makeRequest(ctx, "POST", servicesPathPart+"/"+a.twilioServiceSID+"/"+verificationCheckPart, data, a.twilioAccountSID, a.twilioToken)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionSend, logutils.TypeRequest, nil, err)
-	}
-
-	var checkResponse checkStatusResponse
-	err = json.Unmarshal(body, &checkResponse)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUnmarshal, typeVerificationResponse, nil, err)
-	}
-
-	if checkResponse.To != phone {
-		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeString, &logutils.FieldArgs{"expected phone": phone, "actual phone": checkResponse.To})
-	}
-	if checkResponse.Status != "approved" {
-		return errors.ErrorData(logutils.StatusInvalid, typeVerificationStatus, &logutils.FieldArgs{"expected approved, actual:": checkResponse.Status}).SetStatus(utils.ErrorStatusInvalid)
-	}
-
-	return nil
-}
-
-func makeRequest(ctx context.Context, method string, pathPart string, data url.Values, user string, token string) ([]byte, error) {
-	client := &http.Client{}
-	rb := new(strings.Reader)
-	logAction := logutils.ActionSend
-
-	if data != nil && (method == "POST" || method == "PUT") {
-		rb = strings.NewReader(data.Encode())
-	}
-	if method == "GET" && data != nil {
-		pathPart = pathPart + "?" + data.Encode()
-		logAction = logutils.ActionRead
-	}
-
-	req, err := http.NewRequest(method, pathPart, rb)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logAction, logutils.TypeRequest, &logutils.FieldArgs{"path": pathPart}, err)
-	}
-
-	if token != "" {
-		req.Header.Add("Authorization", "Basic "+basicAuth(user, token))
-	}
-	req.Header.Add("Accept", "application/json")
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logAction, logutils.TypeRequest, nil, err)
-	}
-
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err)
-	}
-	if resp.StatusCode != 200 && resp.StatusCode != 201 {
-		return nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeResponse, &logutils.FieldArgs{"status_code": resp.StatusCode, "error": string(body)})
-	}
-	return body, nil
-}
-
-func basicAuth(username, password string) string {
-	auth := username + ":" + password
-	return base64.StdEncoding.EncodeToString([]byte(auth))
-}
-
-func (a *twilioPhoneAuthImpl) getUserIdentifier(creds string) (string, error) {
+func (a *phoneAuthImpl) getUserIdentifier(creds string) (string, error) {
 	var requestCreds twilioPhoneCreds
 	err := json.Unmarshal([]byte(creds), &requestCreds)
 	if err != nil {
@@ -300,29 +150,29 @@ func (a *twilioPhoneAuthImpl) getUserIdentifier(creds string) (string, error) {
 	return requestCreds.Phone, nil
 }
 
-func (a *twilioPhoneAuthImpl) verifyCredential(credential *model.Credential, verification string, l *logs.Log) (map[string]interface{}, error) {
+func (a *phoneAuthImpl) verifyCredential(credential *model.Credential, verification string, l *logs.Log) (map[string]interface{}, error) {
 	return nil, errors.New(logutils.Unimplemented)
 }
 
-func (a *twilioPhoneAuthImpl) sendVerifyCredential(credential *model.Credential, appName string, l *logs.Log) error {
+func (a *phoneAuthImpl) sendVerifyCredential(credential *model.Credential, appName string, l *logs.Log) error {
 	return nil
 }
 
-func (a *twilioPhoneAuthImpl) restartCredentialVerification(credential *model.Credential, appName string, l *logs.Log) error {
+func (a *phoneAuthImpl) restartCredentialVerification(credential *model.Credential, appName string, l *logs.Log) error {
 	return nil
 }
 
-func (a *twilioPhoneAuthImpl) resetCredential(credential *model.Credential, resetCode *string, params string, l *logs.Log) (map[string]interface{}, error) {
+func (a *phoneAuthImpl) resetCredential(credential *model.Credential, resetCode *string, params string, l *logs.Log) (map[string]interface{}, error) {
 	return nil, nil
 }
 
-func (a *twilioPhoneAuthImpl) forgotCredential(credential *model.Credential, identifier string, appName string, l *logs.Log) (map[string]interface{}, error) {
+func (a *phoneAuthImpl) forgotCredential(credential *model.Credential, identifier string, appName string, l *logs.Log) (map[string]interface{}, error) {
 	return nil, nil
 }
 
 // initPhoneAuth initializes and registers a new phone auth instance
-func initPhoneAuth(auth *Auth, twilioAccountSID string, twilioToken string, twilioServiceSID string) (*twilioPhoneAuthImpl, error) {
-	phone := &twilioPhoneAuthImpl{auth: auth, authType: AuthTypeTwilioPhone, twilioAccountSID: twilioAccountSID, twilioToken: twilioToken, twilioServiceSID: twilioServiceSID}
+func initPhoneAuth(auth *Auth, verifier PhoneVerifier) (*phoneAuthImpl, error) {
+	phone := &phoneAuthImpl{auth: auth, authType: verifier.Identifier(), verifier: verifier}
 
 	err := auth.registerAuthType(phone.authType, phone)
 	if err != nil {

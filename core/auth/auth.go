@@ -34,7 +34,6 @@ import (
 	"github.com/rokwire/core-auth-library-go/v3/tokenauth"
 	"golang.org/x/sync/syncmap"
 	"gopkg.in/go-playground/validator.v9"
-	"gopkg.in/gomail.v2"
 
 	"github.com/rokwire/logging-library-go/v2/errors"
 	"github.com/rokwire/logging-library-go/v2/logs"
@@ -104,9 +103,6 @@ type Auth struct {
 	profileBB  ProfileBuildingBlock
 	identityBB IdentityBuildingBlock
 
-	emailFrom   string
-	emailDialer *gomail.Dialer
-
 	cachedIdentityProviders *syncmap.Map //cache identityProviders
 	identityProvidersLock   *sync.RWMutex
 
@@ -119,8 +115,8 @@ type Auth struct {
 }
 
 // NewAuth creates a new auth instance
-func NewAuth(serviceID string, host string, authPrivKey *keys.PrivKey, authService *authservice.AuthService, storage Storage, emailer Emailer, minTokenExp *int64, maxTokenExp *int64, supportLegacySigs bool, twilioAccountSID string,
-	twilioToken string, twilioServiceSID string, profileBB ProfileBuildingBlock, smtpHost string, smtpPortNum int, smtpUser string, smtpPassword string, smtpFrom string, logger *logs.Logger) (*Auth, error) {
+func NewAuth(serviceID string, host string, authPrivKey *keys.PrivKey, authService *authservice.AuthService, storage Storage, emailer Emailer, phoneVerifiers []PhoneVerifier,
+	profileBB ProfileBuildingBlock, minTokenExp *int64, maxTokenExp *int64, supportLegacySigs bool, logger *logs.Logger) (*Auth, error) {
 	if minTokenExp == nil {
 		var minTokenExpVal int64 = 5
 		minTokenExp = &minTokenExpVal
@@ -130,8 +126,6 @@ func NewAuth(serviceID string, host string, authPrivKey *keys.PrivKey, authServi
 		var maxTokenExpVal int64 = 60
 		maxTokenExp = &maxTokenExpVal
 	}
-	//maybe set up from config collection for diff types of auth
-	emailDialer := gomail.NewDialer(smtpHost, smtpPortNum, smtpUser, smtpPassword)
 
 	authTypes := map[string]authType{}
 	externalAuthTypes := map[string]externalAuthType{}
@@ -150,7 +144,7 @@ func NewAuth(serviceID string, host string, authPrivKey *keys.PrivKey, authServi
 	auth := &Auth{storage: storage, emailer: emailer, logger: logger, authTypes: authTypes, externalAuthTypes: externalAuthTypes, anonymousAuthTypes: anonymousAuthTypes,
 		serviceAuthTypes: serviceAuthTypes, mfaTypes: mfaTypes, authPrivKey: authPrivKey, ServiceRegManager: nil, serviceID: serviceID, host: host, minTokenExp: *minTokenExp,
 		maxTokenExp: *maxTokenExp, profileBB: profileBB, cachedIdentityProviders: cachedIdentityProviders, identityProvidersLock: identityProvidersLock,
-		timerDone: timerDone, emailDialer: emailDialer, emailFrom: smtpFrom, apiKeys: apiKeys, apiKeysLock: apiKeysLock}
+		timerDone: timerDone, apiKeys: apiKeys, apiKeysLock: apiKeysLock}
 
 	err := auth.storeCoreRegs()
 	if err != nil {
@@ -178,7 +172,11 @@ func NewAuth(serviceID string, host string, authPrivKey *keys.PrivKey, authServi
 	//Initialize auth types
 	initUsernameAuth(auth)
 	initEmailAuth(auth)
-	initPhoneAuth(auth, twilioAccountSID, twilioToken, twilioServiceSID)
+
+	for _, pv := range phoneVerifiers {
+		initPhoneAuth(auth, pv)
+	}
+
 	initFirebaseAuth(auth)
 	initAnonymousAuth(auth)
 	initSignatureAuth(auth)
@@ -205,7 +203,6 @@ func NewAuth(serviceID string, host string, authPrivKey *keys.PrivKey, authServi
 	}
 
 	return auth, nil
-
 }
 
 // SetIdentityBB sets the identity BB adapter
@@ -611,7 +608,7 @@ func (a *Auth) applyAuthType(authType model.AuthType, appOrg model.ApplicationOr
 	}
 
 	if userIdentifier != "" {
-		if authType.Code == AuthTypeTwilioPhone && regProfile.Phone == "" {
+		if authType.Code == AuthTypePhone && regProfile.Phone == "" {
 			regProfile.Phone = userIdentifier
 		} else if authType.Code == AuthTypeEmail && regProfile.Email == "" {
 			regProfile.Email = userIdentifier
@@ -819,14 +816,14 @@ func (a *Auth) signUpNewAccount(context storage.TransactionContext, authImpl aut
 		var credentialValue map[string]interface{}
 		if creatorPermissions == nil {
 			var message string
-			message, credentialValue, err = authImpl.signUp(authType, appOrg, creds, params, credID, l)
+			message, credentialValue, err = authImpl.signUp(authType, appOrg.Application.Name, creds, params, credID, l)
 			if err != nil {
 				return nil, nil, errors.WrapErrorAction("signing up", "user", nil, err)
 			}
 
 			retParams = map[string]interface{}{"message": message}
 		} else {
-			retParams, credentialValue, err = authImpl.signUpAdmin(authType, appOrg, userIdentifier, creds, credID)
+			retParams, credentialValue, err = authImpl.signUpAdmin(authType, appOrg.Application.Name, userIdentifier, creds, credID)
 			if err != nil {
 				return nil, nil, errors.WrapErrorAction("signing up", "admin user", nil, err)
 			}
@@ -1629,7 +1626,7 @@ func (a *Auth) linkAccountAuthType(account model.Account, authType model.AuthTyp
 	credID := credentialID.String()
 
 	//apply sign up
-	message, credentialValue, err := authImpl.signUp(authType, appOrg, creds, params, credID, l)
+	message, credentialValue, err := authImpl.signUp(authType, appOrg.Application.Name, creds, params, credID, l)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction("signing up", "user", nil, err)
 	}

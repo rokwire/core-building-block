@@ -19,6 +19,7 @@ import (
 	"core-building-block/core/auth"
 	"core-building-block/driven/emailer"
 	"core-building-block/driven/identitybb"
+	"core-building-block/driven/phoneverifier"
 	"core-building-block/driven/profilebb"
 	"core-building-block/driven/storage"
 	"core-building-block/driver/web"
@@ -88,9 +89,16 @@ func main() {
 	}
 
 	//auth
+	phoneVerifiers := make([]auth.PhoneVerifier, 0)
 	twilioAccountSID := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_TWILIO_ACCOUNT_SID", false, true)
 	twilioToken := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_TWILIO_TOKEN", false, true)
 	twilioServiceSID := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_TWILIO_SERVICE_SID", false, true)
+
+	twilioPhoneVerifier, err := phoneverifier.NewTwilioAdapter(twilioAccountSID, twilioToken, twilioServiceSID)
+	if err != nil {
+		logger.Fatalf("Cannot start the twilio phone verifier: %v", err)
+	}
+	phoneVerifiers = append(phoneVerifiers, twilioPhoneVerifier)
 
 	smtpHost := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SMTP_HOST", false, false)
 	smtpPort := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SMTP_PORT", false, false)
@@ -167,8 +175,8 @@ func main() {
 		FirstParty:  true,
 	}
 
-	authImpl, err := auth.NewAuth(serviceID, host, authPrivKey, authService, storageAdapter, emailer, minTokenExp, maxTokenExp, supportLegacySigs,
-		twilioAccountSID, twilioToken, twilioServiceSID, profileBBAdapter, smtpHost, smtpPortNum, smtpUser, smtpPassword, smtpFrom, logger)
+	authImpl, err := auth.NewAuth(serviceID, host, authPrivKey, authService, storageAdapter, emailer, phoneVerifiers, profileBBAdapter,
+		minTokenExp, maxTokenExp, supportLegacySigs, logger)
 	if err != nil {
 		logger.Fatalf("Error initializing auth: %v", err)
 	}

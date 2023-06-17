@@ -54,7 +54,7 @@ type emailAuthImpl struct {
 	authType string
 }
 
-func (a *emailAuthImpl) signUp(authType model.AuthType, appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error) {
+func (a *emailAuthImpl) signUp(authType model.AuthType, appName string, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error) {
 	type signUpEmailParams struct {
 		ConfirmPassword string `json:"confirm_password"`
 	}
@@ -88,7 +88,7 @@ func (a *emailAuthImpl) signUp(authType model.AuthType, appOrg model.Application
 		return "", nil, errors.ErrorData(logutils.StatusInvalid, "mismatching password fields", nil)
 	}
 
-	emailCreds, err := a.buildCredentials(authType, appOrg.Application.Name, email, password, newCredentialID)
+	emailCreds, err := a.buildCredentials(authType, appName, email, password, newCredentialID)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction("building", "email credentials", nil, err)
 	}
@@ -96,12 +96,12 @@ func (a *emailAuthImpl) signUp(authType model.AuthType, appOrg model.Application
 	return "verification code sent successfully", emailCreds, nil
 }
 
-func (a *emailAuthImpl) signUpAdmin(authType model.AuthType, appOrg model.ApplicationOrganization, identifier string, password string, newCredentialID string) (map[string]interface{}, map[string]interface{}, error) {
+func (a *emailAuthImpl) signUpAdmin(authType model.AuthType, appName string, identifier string, password string, newCredentialID string) (map[string]interface{}, map[string]interface{}, error) {
 	if password == "" {
 		password = utils.GenerateRandomPassword(12)
 	}
 
-	emailCreds, err := a.buildCredentials(authType, appOrg.Application.Name, identifier, password, newCredentialID)
+	emailCreds, err := a.buildCredentials(authType, appName, identifier, password, newCredentialID)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction("building", "email credentials", nil, err)
 	}
@@ -260,16 +260,12 @@ func (a *emailAuthImpl) sendPasswordResetEmail(credentialID string, resetCode st
 }
 
 func (a *emailAuthImpl) verifyCredential(credential *model.Credential, verification string, l *logs.Log) (map[string]interface{}, error) {
-	credBytes, err := json.Marshal(credential.Value)
+	//Parse credential value to emailCreds
+	creds, err := mapToEmailCreds(credential.Value)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionMarshal, typeEmailCreds, nil, err)
+		return nil, errors.WrapErrorAction("error on map to email creds", "", nil, err)
 	}
 
-	var creds *emailCreds
-	err = json.Unmarshal(credBytes, &creds)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeEmailCreds, nil, err)
-	}
 	err = a.compareCode(creds.VerificationCode, verification, creds.VerificationExpiry, l)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeAuthCred, &logutils.FieldArgs{"verification_code": verification}, err)
@@ -401,16 +397,12 @@ func (a *emailAuthImpl) resetCredential(credential *model.Credential, resetCode 
 		return nil, errors.ErrorData(logutils.StatusInvalid, "mismatching password fields", nil)
 	}
 
-	credBytes, err := json.Marshal(credential.Value)
+	//parse credential value to emailCreds
+	creds, err := mapToEmailCreds(credential.Value)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionMarshal, typeEmailCreds, nil, err)
+		return nil, errors.WrapErrorAction("error on map to email creds", "", nil, err)
 	}
 
-	var creds *emailCreds
-	err = json.Unmarshal(credBytes, &creds)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeEmailCreds, nil, err)
-	}
 	//reset password from link
 	if resetCode != nil {
 		if creds.ResetExpiry.Before(time.Now()) {
@@ -446,7 +438,7 @@ func (a *emailAuthImpl) forgotCredential(credential *model.Credential, identifie
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCast, typeEmailCreds, nil, err)
 	}
-	resetCode, err := utils.GenerateRandomString(64)
+	resetCode, err := utils.GenerateRandomString(48)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGenerate, "reset code", nil, err)
 

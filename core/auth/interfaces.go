@@ -17,6 +17,7 @@ package auth
 import (
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
+	"net/url"
 	"time"
 
 	"github.com/lestrrat-go/jwx/jwk"
@@ -32,13 +33,13 @@ type authType interface {
 	// Returns:
 	//	message (string): Success message if verification is required. If verification is not required, return ""
 	//	credentialValue (map): Credential value
-	signUp(authType model.AuthType, appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error)
+	signUp(authType model.AuthType, appName string, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error)
 
 	//signUpAdmin signs up a new admin user
 	// Returns:
-	//	password (string): newly generated password
+	//	params (map): parameters necessary for new admin to log in (e.g., password)
 	//	credentialValue (map): Credential value
-	signUpAdmin(authType model.AuthType, appOrg model.ApplicationOrganization, identifier string, password string, newCredentialID string) (map[string]interface{}, map[string]interface{}, error)
+	signUpAdmin(authType model.AuthType, appName string, identifier string, password string, newCredentialID string) (map[string]interface{}, map[string]interface{}, error)
 
 	//verifies credential (checks the verification code generated on email signup for email auth type)
 	// Returns:
@@ -600,4 +601,11 @@ type IdentityBuildingBlock interface {
 // Emailer is used by core to send emails
 type Emailer interface {
 	Send(toEmail string, subject string, body string, attachmentFilename *string) error
+}
+
+// PhoneVerifier is used by core to verify phone numbers
+type PhoneVerifier interface {
+	Identifier() string
+	StartVerification(phone string, data url.Values) error
+	CheckVerification(phone string, data url.Values) error
 }

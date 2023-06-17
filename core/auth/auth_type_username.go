@@ -43,7 +43,7 @@ type usernameCreds struct {
 	Password string `json:"password" bson:"password"`
 }
 
-func (a *usernameAuthImpl) signUp(authType model.AuthType, appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error) {
+func (a *usernameAuthImpl) signUp(authType model.AuthType, appName string, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error) {
 	type signUpUsernameParams struct {
 		ConfirmPassword string `json:"confirm_password"`
 	}
@@ -78,7 +78,7 @@ func (a *usernameAuthImpl) signUp(authType model.AuthType, appOrg model.Applicat
 		return "", nil, errors.ErrorData(logutils.StatusInvalid, "mismatching password fields", nil)
 	}
 
-	usernameCreds, err := a.buildCredentials(authType, appOrg.Application.Name, username, password, newCredentialID)
+	usernameCreds, err := a.buildCredentials(authType, appName, username, password, newCredentialID)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction("building", "username credentials", nil, err)
 	}
@@ -86,12 +86,12 @@ func (a *usernameAuthImpl) signUp(authType model.AuthType, appOrg model.Applicat
 	return "", usernameCreds, nil
 }
 
-func (a *usernameAuthImpl) signUpAdmin(authType model.AuthType, appOrg model.ApplicationOrganization, identifier string, password string, newCredentialID string) (map[string]interface{}, map[string]interface{}, error) {
+func (a *usernameAuthImpl) signUpAdmin(authType model.AuthType, appName string, identifier string, password string, newCredentialID string) (map[string]interface{}, map[string]interface{}, error) {
 	if password == "" {
 		password = utils.GenerateRandomPassword(12)
 	}
 
-	usernameCreds, err := a.buildCredentials(authType, appOrg.Application.Name, identifier, password, newCredentialID)
+	usernameCreds, err := a.buildCredentials(authType, appName, identifier, password, newCredentialID)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction("building", "username credentials", nil, err)
 	}

@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+### Added
+- Define unit tests for email auth [#511](https://github.com/rokwire/core-building-block/issues/511)
+
 ## [1.33.0] - 2023-05-02
 - Username and password authentication [#658](https://github.com/rokwire/core-building-block/issues/658)
 
