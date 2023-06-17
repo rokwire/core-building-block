@@ -19,9 +19,10 @@ import (
 	"core-building-block/driven/storage"
 	"time"
 
-	"github.com/rokwire/core-auth-library-go/v2/authorization"
-	"github.com/rokwire/core-auth-library-go/v2/sigauth"
-	"github.com/rokwire/core-auth-library-go/v2/tokenauth"
+	"github.com/lestrrat-go/jwx/jwk"
+	"github.com/rokwire/core-auth-library-go/v3/authorization"
+	"github.com/rokwire/core-auth-library-go/v3/sigauth"
+	"github.com/rokwire/core-auth-library-go/v3/tokenauth"
 	"github.com/rokwire/logging-library-go/v2/logs"
 )
 
@@ -79,9 +80,9 @@ type externalAuthType interface {
 	//getLoginUrl retrieves and pre-formats a login url and params for the SSO provider
 	getLoginURL(authType model.AuthType, appType model.ApplicationType, redirectURI string, l *logs.Log) (string, map[string]interface{}, error)
 	//externalLogin logins in the external system and provides the authenticated user
-	externalLogin(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error)
+	externalLogin(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, string, error)
 	//refresh refreshes tokens
-	refresh(params map[string]interface{}, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, error)
+	refresh(params map[string]interface{}, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, string, error)
 }
 
 // anonymousAuthType is the interface for authentication for auth types which are anonymous
@@ -234,11 +235,11 @@ type APIs interface {
 
 	//CreateAdminAccount creates an account for a new admin user
 	CreateAdminAccount(authenticationType string, appID string, orgID string, identifier string, profile model.Profile, username string, permissions []string,
-		roleIDs []string, groupIDs []string, creatorPermissions []string, clientVersion *string, l *logs.Log) (*model.Account, map[string]interface{}, error)
+		roleIDs []string, groupIDs []string, scopes []string, creatorPermissions []string, clientVersion *string, l *logs.Log) (*model.Account, map[string]interface{}, error)
 
 	//UpdateAdminAccount updates an existing user's account with new permissions, roles, and groups
 	UpdateAdminAccount(authenticationType string, appID string, orgID string, identifier string, permissions []string, roleIDs []string,
-		groupIDs []string, updaterPermissions []string, l *logs.Log) (*model.Account, map[string]interface{}, error)
+		groupIDs []string, scopes []string, updaterPermissions []string, l *logs.Log) (*model.Account, map[string]interface{}, error)
 
 	//CreateAnonymousAccount creates a new anonymous account
 	CreateAnonymousAccount(context storage.TransactionContext, appID string, orgID string, anonymousID string, preferences map[string]interface{},
@@ -360,7 +361,7 @@ type APIs interface {
 	//		Access token (string): Signed scoped access token to be used to authorize requests to the specified service
 	//		Approved Scopes ([]authorization.Scope): The approved scopes included in the provided token
 	//		Service reg (*model.ServiceReg): The service registration record for the requested service
-	AuthorizeService(claims tokenauth.Claims, serviceID string, approvedScopes []authorization.Scope, l *logs.Log) (string, []authorization.Scope, *model.ServiceReg, error)
+	AuthorizeService(claims tokenauth.Claims, serviceID string, approvedScopes []authorization.Scope, l *logs.Log) (string, []authorization.Scope, *model.ServiceRegistration, error)
 
 	//LinkAccountAuthType links new credentials to an existing account.
 	//The authentication method must be one of the supported for the application.
@@ -416,16 +417,16 @@ type APIs interface {
 	GetAdminToken(claims tokenauth.Claims, appID string, orgID string, l *logs.Log) (string, error)
 
 	//GetAuthKeySet generates a JSON Web Key Set for auth service registration
-	GetAuthKeySet() (*model.JSONWebKeySet, error)
+	GetAuthKeySet() (jwk.Set, error)
 
 	//GetServiceRegistrations retrieves all service registrations
-	GetServiceRegistrations(serviceIDs []string) []model.ServiceReg
+	GetServiceRegistrations(serviceIDs []string) []model.ServiceRegistration
 
 	//RegisterService creates a new service registration
-	RegisterService(reg *model.ServiceReg) error
+	RegisterService(reg *model.ServiceRegistration) error
 
 	//UpdateServiceRegistration updates an existing service registration
-	UpdateServiceRegistration(reg *model.ServiceReg) error
+	UpdateServiceRegistration(reg *model.ServiceRegistration) error
 
 	//DeregisterService deletes an existing service registration
 	DeregisterService(serviceID string) error
@@ -530,12 +531,13 @@ type Storage interface {
 	DeleteMFAType(context storage.TransactionContext, accountID string, identifier string, mfaType string) error
 
 	//ServiceRegs
-	FindServiceRegs(serviceIDs []string) []model.ServiceReg
-	FindServiceReg(serviceID string) (*model.ServiceReg, error)
-	InsertServiceReg(reg *model.ServiceReg) error
-	UpdateServiceReg(reg *model.ServiceReg) error
-	SaveServiceReg(reg *model.ServiceReg, immediateCache bool) error
+	FindServiceRegs(serviceIDs []string) []model.ServiceRegistration
+	FindServiceReg(serviceID string) (*model.ServiceRegistration, error)
+	InsertServiceReg(reg *model.ServiceRegistration) error
+	UpdateServiceReg(reg *model.ServiceRegistration) error
+	SaveServiceReg(reg *model.ServiceRegistration, immediateCache bool) error
 	DeleteServiceReg(serviceID string) error
+	MigrateServiceRegs() error
 
 	//IdentityProviders
 	LoadIdentityProviders() ([]model.IdentityProvider, error)
@@ -576,6 +578,8 @@ type Storage interface {
 	UpdateAccountRoles(context storage.TransactionContext, accountID string, roles []model.AccountRole) error
 	InsertAccountRoles(context storage.TransactionContext, accountID string, appOrgID string, roles []model.AccountRole) error
 
+	UpdateAccountScopes(context storage.TransactionContext, accountID string, scopes []string) error
+
 	//ApplicationGroups
 	FindAppOrgGroupsByIDs(context storage.TransactionContext, ids []string, appOrgID string) ([]model.AppOrgGroup, error)
 	//AccountGroups
@@ -586,6 +590,11 @@ type Storage interface {
 // ProfileBuildingBlock is used by auth to communicate with the profile building block.
 type ProfileBuildingBlock interface {
 	GetProfileBBData(queryParams map[string]string, l *logs.Log) (*model.Profile, map[string]interface{}, error)
+}
+
+// IdentityBuildingBlock is used by auth to communicate with the identity building block.
+type IdentityBuildingBlock interface {
+	GetUserProfile(baseURL string, externalUser model.ExternalSystemUser, externalAccessToken string, l *logs.Log) (*model.Profile, error)
 }
 
 // Emailer is used by core to send emails

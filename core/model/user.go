@@ -65,6 +65,7 @@ type Account struct {
 	Permissions []Permission
 	Roles       []AccountRole
 	Groups      []AccountGroup
+	Scopes      []string
 
 	AuthTypes []AccountAuthType
 
@@ -167,6 +168,18 @@ func (a Account) GetPermissionsMap() map[string]Permission {
 		}
 	}
 	return permissionsMap
+}
+
+// GetScopes returns all scopes granted to this account
+func (a Account) GetScopes() []string {
+	scopes := []string{}
+	scopes = append(scopes, a.Scopes...)
+	for _, role := range a.Roles {
+		if role.Active {
+			scopes = append(scopes, role.Role.Scopes...)
+		}
+	}
+	return scopes
 }
 
 // GetVerifiedMFATypes returns a list of only verified MFA types for this account
@@ -435,6 +448,102 @@ func (p Profile) GetFullName() string {
 	}
 	fullname += p.LastName
 	return fullname
+}
+
+// Merge applies any non-empty fields from the provided profile to receiver
+func (p Profile) Merge(src Profile) Profile {
+	if src.FirstName != "" {
+		p.FirstName = src.FirstName
+	}
+	if src.LastName != "" {
+		p.LastName = src.LastName
+	}
+	if src.Email != "" {
+		p.Email = src.Email
+	}
+	if src.Phone != "" {
+		p.Phone = src.Phone
+	}
+	if src.Address != "" {
+		p.Address = src.Address
+	}
+	if src.ZipCode != "" {
+		p.ZipCode = src.ZipCode
+	}
+	if src.State != "" {
+		p.State = src.State
+	}
+	if src.Country != "" {
+		p.Country = src.Country
+	}
+	if src.BirthYear != 0 {
+		p.BirthYear = src.BirthYear
+	}
+	if src.PhotoURL != "" {
+		p.PhotoURL = src.PhotoURL
+	}
+
+	newUnstructured := map[string]interface{}{}
+	for key, val := range p.UnstructuredProperties {
+		newUnstructured[key] = val
+	}
+	for key, val := range src.UnstructuredProperties {
+		newUnstructured[key] = val
+	}
+	p.UnstructuredProperties = newUnstructured
+
+	return p
+}
+
+// ProfileFromMap parses a map and converts it into a Profile struct
+func ProfileFromMap(profileMap map[string]interface{}) Profile {
+	profile := Profile{UnstructuredProperties: make(map[string]interface{})}
+	for key, val := range profileMap {
+		if key == "first_name" {
+			if typeVal, ok := val.(string); ok {
+				profile.FirstName = typeVal
+			}
+		} else if key == "last_name" {
+			if typeVal, ok := val.(string); ok {
+				profile.LastName = typeVal
+			}
+		} else if key == "email" {
+			if typeVal, ok := val.(string); ok {
+				profile.Email = typeVal
+			}
+		} else if key == "phone" {
+			if typeVal, ok := val.(string); ok {
+				profile.Phone = typeVal
+			}
+		} else if key == "birth_year" {
+			if typeVal, ok := val.(int16); ok {
+				profile.BirthYear = typeVal
+			}
+		} else if key == "address" {
+			if typeVal, ok := val.(string); ok {
+				profile.Address = typeVal
+			}
+		} else if key == "zip_code" {
+			if typeVal, ok := val.(string); ok {
+				profile.ZipCode = typeVal
+			}
+		} else if key == "state" {
+			if typeVal, ok := val.(string); ok {
+				profile.State = typeVal
+			}
+		} else if key == "country" {
+			if typeVal, ok := val.(string); ok {
+				profile.Country = typeVal
+			}
+		} else if key == "photo_url" {
+			if typeVal, ok := val.(string); ok {
+				profile.Phone = typeVal
+			}
+		} else {
+			profile.UnstructuredProperties[key] = val
+		}
+	}
+	return profile
 }
 
 // Device represents user devices entity.
