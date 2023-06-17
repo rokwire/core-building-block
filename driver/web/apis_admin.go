@@ -240,6 +240,24 @@ func (h AdminApisHandler) refresh(l *logs.Log, r *http.Request, claims *tokenaut
 	return l.HTTPResponseSuccessJSON(respData)
 }
 
+func (h AdminApisHandler) getServiceRegistrations(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
+	serviceIDsParam := r.URL.Query().Get("ids")
+	if serviceIDsParam == "" {
+		return l.HTTPResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("ids"), nil, http.StatusBadRequest, false)
+	}
+	serviceIDs := strings.Split(serviceIDsParam, ",")
+
+	serviceRegs := h.coreAPIs.Auth.GetServiceRegistrations(serviceIDs)
+	serviceRegResp := serviceRegListToDef(serviceRegs)
+
+	data, err := json.Marshal(serviceRegResp)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeServiceReg, nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HTTPResponseSuccessJSON(data)
+}
+
 func (h AdminApisHandler) getAppConfigs(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {

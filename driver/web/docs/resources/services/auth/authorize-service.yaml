@@ -42,6 +42,7 @@ post:
                   description: string
                   info_url: string
                   logo_url: string
+                  version_path: string
                   scopes:
                     - scope: string
                       required: true

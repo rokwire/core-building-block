@@ -231,7 +231,8 @@ func serviceRegFromDef(item *Def.ServiceReg) (*model.ServiceRegistration, error)
 		return nil, err
 	}
 	return &model.ServiceRegistration{Registration: authservice.ServiceReg{ServiceID: item.ServiceId, ServiceAccountID: serviceAccountID, Host: item.Host, PubKey: pubKey},
-		Name: item.Name, Description: item.Description, InfoURL: defString(item.InfoUrl), LogoURL: defString(item.LogoUrl), Scopes: scopes, FirstParty: item.FirstParty}, nil
+		Name: item.Name, Description: item.Description, InfoURL: defString(item.InfoUrl), LogoURL: defString(item.LogoUrl), VersionPath: item.VersionPath,
+		Scopes: scopes, FirstParty: item.FirstParty}, nil
 }
 
 func serviceRegToDef(item *model.ServiceRegistration) *Def.ServiceReg {
@@ -247,7 +248,7 @@ func serviceRegToDef(item *model.ServiceRegistration) *Def.ServiceReg {
 	pubKey := pubKeyToDef(item.Registration.PubKey)
 	scopes := serviceScopeListToDef(item.Scopes)
 	return &Def.ServiceReg{ServiceId: item.Registration.ServiceID, ServiceAccountId: serviceAccountID, Host: item.Registration.Host,
-		PubKey: pubKey, Name: item.Name, Description: item.Description, InfoUrl: &item.InfoURL, LogoUrl: &item.LogoURL,
+		PubKey: pubKey, Name: item.Name, Description: item.Description, InfoUrl: &item.InfoURL, LogoUrl: &item.LogoURL, VersionPath: item.VersionPath,
 		Scopes: &scopes, FirstParty: item.FirstParty}
 }
 
