@@ -23,7 +23,7 @@ The API documentation is available here: https://api.rokwire.illinois.edu/core/d
 ### Prerequisites
 MongoDB v4.2.2+
 
-Go v1.19+
+Go v1.20+
 
 ### Environment Variables
 The following Environment variables are supported. The service will not start unless those marked as Required are supplied.
@@ -45,8 +45,8 @@ ROKWIRE_CORE_SMTP_PORT | < int > | no | Port used to send emails through the SMT
 ROKWIRE_CORE_SMTP_USER | < string > | no | Username for the user on the SMTP server. Email verification will not work without this variable.
 ROKWIRE_CORE_SMTP_PASSWORD | < string > | no | Password for the user on the SMTP server. Email verification will not work without this variable.
 ROKWIRE_CORE_SMTP_EMAIL_FROM | < string > | no | "From" email address to be used when sending emails. Email verification will not work without this variable.
-ROKWIRE_CORE_AUTH_PRIV_KEY | < string > | yes | PEM encoded private key for auth service RSA keypair. Not required if ROKWIRE_CORE_AUTH_PRIV_KEY_PATH is set.
-ROKWIRE_CORE_AUTH_PRIV_KEY_PATH | < string > | yes | Path to file containing PEM encoded private key for auth service RSA keypair. Not required if ROKWIRE_CORE_AUTH_PRIV_KEY is set.
+ROKWIRE_CORE_AUTH_PRIV_KEY | < string > | yes | PEM encoded private key for auth service keypair. Not required if ROKWIRE_CORE_AUTH_PRIV_KEY_PATH is set.
+ROKWIRE_CORE_AUTH_PRIV_KEY_PATH | < string > | yes | Path to file containing PEM encoded private key for auth service keypair. Not required if ROKWIRE_CORE_AUTH_PRIV_KEY is set.
 ROKWIRE_CORE_MIN_TOKEN_EXP | < int > | no | Minimum duration of access tokens to be allowed in minutes. Defaults to 5.
 ROKWIRE_CORE_MAX_TOKEN_EXP | < int > | no | Maximum duration of access tokens to be allowed in minutes. Defaults to 60.
 ROKWIRE_CORE_MIGRATE_PROFILES | < bool > | no | Boolean value indicating whether profiles should be migrated from the Profile Building Block. Defaults to false.

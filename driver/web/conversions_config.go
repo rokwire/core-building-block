@@ -18,19 +18,14 @@ import (
 	"core-building-block/core/model"
 	Def "core-building-block/driver/web/docs/gen"
 	"core-building-block/utils"
+	"encoding/json"
 
-	"github.com/rokwire/core-auth-library-go/v2/authutils"
+	"github.com/rokwire/core-auth-library-go/v3/authutils"
+	"github.com/rokwire/logging-library-go/v2/errors"
+	"github.com/rokwire/logging-library-go/v2/logutils"
 )
 
-func configListToDef(items []model.Config) []Def.Config {
-	result := make([]Def.Config, len(items))
-	for i, item := range items {
-		result[i] = configToDef(item)
-	}
-	return result
-}
-
-func configToDef(item model.Config) Def.Config {
+func configToDef(item model.Config) (*Def.Config, error) {
 	var dateUpdated *string
 	dateCreated := utils.FormatTime(&item.DateCreated)
 	if item.DateUpdated != nil {
@@ -38,16 +33,54 @@ func configToDef(item model.Config) Def.Config {
 		dateUpdated = &formatted
 	}
 
-	return Def.Config{Id: &item.ID, Type: item.Type, AppId: &item.AppID, OrgId: &item.OrgID, System: item.System, Data: item.Data,
-		DateCreated: &dateCreated, DateUpdated: dateUpdated}
+	var configData Def.Config_Data
+	if item.Data != nil {
+		configBytes, err := json.Marshal(item.Data)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionMarshal, model.TypeConfig, nil, err)
+		}
+
+		err = json.Unmarshal(configBytes, &configData)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, model.TypeConfig, nil, err)
+		}
+	}
+
+	appID := item.AppID
+	orgID := item.OrgID
+	return &Def.Config{Id: &item.ID, Type: item.Type, AppId: &appID, OrgId: &orgID, System: item.System, Data: configData,
+		DateCreated: &dateCreated, DateUpdated: dateUpdated}, nil
 }
 
-func configFromDef(item Def.Config, appID string, orgID string) model.Config {
+func configsToDef(items []model.Config) ([]Def.Config, error) {
+	result := make([]Def.Config, 0)
+	for _, item := range items {
+		defItem, err := configToDef(item)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, *defItem)
+	}
+	return result, nil
+}
+
+func configFromDef(item Def.Config, appID string, orgID string) (*model.Config, error) {
 	if item.AllApps != nil && *item.AllApps {
 		appID = authutils.AllApps
 	}
 	if item.AllOrgs != nil && *item.AllOrgs {
 		orgID = authutils.AllOrgs
 	}
-	return model.Config{Type: item.Type, AppID: appID, OrgID: orgID, System: item.System, Data: item.Data}
+
+	var configData interface{}
+	configBytes, err := json.Marshal(item.Data)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionMarshal, model.TypeConfig, nil, err)
+	}
+
+	err = json.Unmarshal(configBytes, &configData)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, model.TypeConfig, nil, err)
+	}
+	return &model.Config{Type: item.Type, AppID: appID, OrgID: orgID, System: item.System, Data: configData}, nil
 }

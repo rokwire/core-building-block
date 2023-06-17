@@ -35,8 +35,8 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/rokwire/core-auth-library-go/v2/authservice"
-	"github.com/rokwire/core-auth-library-go/v2/tokenauth"
+	"github.com/rokwire/core-auth-library-go/v3/authservice"
+	"github.com/rokwire/core-auth-library-go/v3/tokenauth"
 
 	httpSwagger "github.com/swaggo/http-swagger"
 )
@@ -191,6 +191,9 @@ func (we Adapter) Start() {
 	adminSubrouter.HandleFunc("/application/accounts", we.wrapFunc(we.adminApisHandler.getApplicationAccounts, we.auth.admin.Permissions)).Methods("GET")
 	adminSubrouter.HandleFunc("/application/accounts", we.wrapFunc(we.adminApisHandler.createAdminAccount, we.auth.admin.Permissions)).Methods("POST")
 	adminSubrouter.HandleFunc("/application/accounts", we.wrapFunc(we.adminApisHandler.updateAdminAccount, we.auth.admin.Permissions)).Methods("PUT")
+
+	adminSubrouter.HandleFunc("/application/filter/accounts", we.wrapFunc(we.adminApisHandler.getFilterAccounts, we.auth.admin.Permissions)).Methods("POST")
+	adminSubrouter.HandleFunc("/application/filter/accounts/count", we.wrapFunc(we.adminApisHandler.getFilterAccountsCount, we.auth.admin.Permissions)).Methods("POST")
 
 	adminSubrouter.HandleFunc("/application/accounts/{account_id}/login-sessions/{session_id}", we.wrapFunc(we.adminApisHandler.deleteApplicationLoginSession, we.auth.admin.Permissions)).Methods("DELETE")
 	adminSubrouter.HandleFunc("/application/accounts/{id}/devices", we.wrapFunc(we.adminApisHandler.getApplicationAccountDevices, we.auth.admin.Permissions)).Methods("GET")
@@ -477,7 +480,7 @@ func (we Adapter) validateRequest(req *http.Request) (*openapi3filter.RequestVal
 	dummyAuthFunc := func(c context.Context, input *openapi3filter.AuthenticationInput) error {
 		return nil
 	}
-	options := &openapi3filter.Options{AuthenticationFunc: dummyAuthFunc}
+	options := &openapi3filter.Options{AuthenticationFunc: dummyAuthFunc, ExcludeReadOnlyValidations: true}
 	requestValidationInput := &openapi3filter.RequestValidationInput{
 		Request:    req,
 		PathParams: pathParams,
@@ -520,8 +523,7 @@ func (we Adapter) completeResponse(w http.ResponseWriter, response logs.HTTPResp
 }
 
 // NewWebAdapter creates new WebAdapter instance
-func NewWebAdapter(env string, serviceID string, serviceRegManager *authservice.ServiceRegManager, port string, coreAPIs *core.APIs, host string, storage core.Storage,
-	baseServerURL string, prodServerURL string, testServerURL string, devServerURL string, logger *logs.Logger) Adapter {
+func NewWebAdapter(env string, serviceRegManager *authservice.ServiceRegManager, port string, coreAPIs *core.APIs, host string, baseServerURL string, prodServerURL string, testServerURL string, devServerURL string, logger *logs.Logger) Adapter {
 	//openAPI doc
 	loader := &openapi3.Loader{Context: context.Background(), IsExternalRefsAllowed: true}
 	// doc, err := loader.LoadFromFile("driver/web/docs/gen/def.yaml")
@@ -557,7 +559,7 @@ func NewWebAdapter(env string, serviceID string, serviceRegManager *authservice.
 		logger.Fatalf("error on openapi3 gorillamux router - %s", err.Error())
 	}
 
-	auth, err := NewAuth(serviceID, serviceRegManager)
+	auth, err := NewAuth(serviceRegManager)
 	if err != nil {
 		logger.Fatal(err.Error())
 	}
@@ -566,8 +568,8 @@ func NewWebAdapter(env string, serviceID string, serviceRegManager *authservice.
 	servicesApisHandler := NewServicesApisHandler(coreAPIs)
 	adminApisHandler := NewAdminApisHandler(coreAPIs)
 	encApisHandler := NewEncApisHandler(coreAPIs)
-	bbsApisHandler := NewBBsApisHandler(coreAPIs, serviceID)
-	tpsApisHandler := NewTPSApisHandler(coreAPIs, serviceID)
+	bbsApisHandler := NewBBsApisHandler(coreAPIs)
+	tpsApisHandler := NewTPSApisHandler(coreAPIs)
 	systemApisHandler := NewSystemApisHandler(coreAPIs)
 	return Adapter{env: env, port: port, productionServerURL: prodServerURL, testServerURL: testServerURL, developmentServerURL: devServerURL, cachedYamlDoc: yamlDoc,
 		openAPIRouter: openAPIRouter, host: host, auth: auth, logger: logger, defaultApisHandler: defaultApisHandler, servicesApisHandler: servicesApisHandler, adminApisHandler: adminApisHandler,

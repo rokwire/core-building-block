@@ -22,7 +22,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/rokwire/core-auth-library-go/v2/tokenauth"
+	"github.com/rokwire/core-auth-library-go/v3/tokenauth"
 	"github.com/rokwire/logging-library-go/v2/errors"
 	"github.com/rokwire/logging-library-go/v2/logs"
 	"github.com/rokwire/logging-library-go/v2/logutils"
@@ -69,6 +69,11 @@ func (c *APIs) AddListener(listener ApplicationListener) {
 // GetVersion gives the service version
 func (c *APIs) GetVersion() string {
 	return c.app.version
+}
+
+// GetServiceID gives the service ID
+func (c *APIs) GetServiceID() string {
+	return c.app.serviceID
 }
 
 func (c *APIs) storeSystemData() error {
@@ -246,10 +251,10 @@ func (c *APIs) storeSystemData() error {
 }
 
 // NewCoreAPIs creates new CoreAPIs
-func NewCoreAPIs(env string, version string, build string, storage Storage, auth auth.APIs, systemInitSettings map[string]string, logger *logs.Logger) *APIs {
+func NewCoreAPIs(env string, version string, build string, serviceID string, storage Storage, auth auth.APIs, systemInitSettings map[string]string, logger *logs.Logger) *APIs {
 	//add application instance
 	listeners := []ApplicationListener{}
-	application := application{env: env, version: version, build: build, storage: storage, listeners: listeners, auth: auth}
+	application := application{env: env, version: version, build: build, serviceID: serviceID, storage: storage, listeners: listeners, auth: auth}
 
 	//add coreAPIs instance
 	servicesImpl := &servicesImpl{app: &application}
@@ -392,8 +397,8 @@ func (s *administrationImpl) AdmRemoveAccountsFromGroup(appID string, orgID stri
 	return s.app.admRemoveAccountsFromGroup(appID, orgID, groupID, accountIDs, assignerPermissions, l)
 }
 
-func (s *administrationImpl) AdmCreateAppOrgRole(name string, description string, system bool, permissionNames []string, appID string, orgID string, assignerPermissions []string, systemClaim bool, l *logs.Log) (*model.AppOrgRole, error) {
-	return s.app.admCreateAppOrgRole(name, description, system, permissionNames, appID, orgID, assignerPermissions, systemClaim, l)
+func (s *administrationImpl) AdmCreateAppOrgRole(name string, description string, system bool, permissionNames []string, scopes []string, appID string, orgID string, assignerPermissions []string, systemClaim bool, l *logs.Log) (*model.AppOrgRole, error) {
+	return s.app.admCreateAppOrgRole(name, description, system, permissionNames, scopes, appID, orgID, assignerPermissions, systemClaim, l)
 }
 
 func (s *administrationImpl) AdmGetAppOrgRoles(appID string, orgID string) ([]model.AppOrgRole, error) {
@@ -404,8 +409,8 @@ func (s *administrationImpl) AdmDeleteAppOrgRole(ID string, appID string, orgID 
 	return s.app.admDeleteAppOrgRole(ID, appID, orgID, assignerPermissions, system, l)
 }
 
-func (s *administrationImpl) AdmUpdateAppOrgRole(ID string, name string, description string, system bool, permissionNames []string, appID string, orgID string, assignerPermissions []string, systemClaim bool, l *logs.Log) (*model.AppOrgRole, error) {
-	return s.app.admUpdateAppOrgRole(ID, name, description, system, permissionNames, appID, orgID, assignerPermissions, systemClaim, l)
+func (s *administrationImpl) AdmUpdateAppOrgRole(ID string, name string, description string, system bool, permissionNames []string, scopes []string, appID string, orgID string, assignerPermissions []string, systemClaim bool, l *logs.Log) (*model.AppOrgRole, error) {
+	return s.app.admUpdateAppOrgRole(ID, name, description, system, permissionNames, scopes, appID, orgID, assignerPermissions, systemClaim, l)
 }
 
 func (s *administrationImpl) AdmGrantPermissionsToRole(appID string, orgID string, roleID string, permissionNames []string, assignerPermissions []string, system bool, l *logs.Log) error {
@@ -423,6 +428,14 @@ func (s *administrationImpl) AdmGetAccounts(limit int, offset int, appID string,
 
 func (s *administrationImpl) AdmGetAccount(accountID string) (*model.Account, error) {
 	return s.app.admGetAccount(accountID)
+}
+
+func (s *administrationImpl) AdmGetFilterAccounts(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]map[string]interface{}, error) {
+	return s.app.sharedGetAccountsByParams(searchParams, appID, orgID, limit, offset, allAccess, approvedKeys)
+}
+
+func (s *administrationImpl) AdmGetFilterAccountsCount(searchParams map[string]interface{}, appID string, orgID string) (int64, error) {
+	return s.app.sharedGetAccountsCountByParams(searchParams, appID, orgID)
 }
 
 func (s *administrationImpl) AdmUpdateAccountUsername(accountID string, appID string, orgID string, username string) error {

@@ -22,14 +22,14 @@ import (
 	genmocks "core-building-block/core/mocks"
 	"core-building-block/core/model"
 
-	"github.com/rokwire/core-auth-library-go/v2/tokenauth"
+	"github.com/rokwire/core-auth-library-go/v3/tokenauth"
 	"github.com/rokwire/logging-library-go/v2/logs"
 	"github.com/stretchr/testify/mock"
 	"gotest.tools/assert"
 )
 
 func buildTestCoreAPIs(storage core.Storage) *core.APIs {
-	return core.NewCoreAPIs("local", "1.1.1", "build", storage, nil, nil, nil)
+	return core.NewCoreAPIs("local", "1.1.1", "build", "core", storage, nil, nil, nil)
 }
 
 //Services

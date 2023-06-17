@@ -19,9 +19,10 @@ import (
 	"core-building-block/driven/storage"
 	"time"
 
-	"github.com/rokwire/core-auth-library-go/v2/authorization"
-	"github.com/rokwire/core-auth-library-go/v2/sigauth"
-	"github.com/rokwire/core-auth-library-go/v2/tokenauth"
+	"github.com/lestrrat-go/jwx/jwk"
+	"github.com/rokwire/core-auth-library-go/v3/authorization"
+	"github.com/rokwire/core-auth-library-go/v3/sigauth"
+	"github.com/rokwire/core-auth-library-go/v3/tokenauth"
 	"github.com/rokwire/logging-library-go/v2/logs"
 )
 
@@ -73,15 +74,23 @@ type authType interface {
 	checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, error)
 }
 
+// externalCredential is the interface for handling credntials that come from external systems
+type externalCredential interface {
+	//getCredential gets the underlying credential as a string
+	getCredential() string
+	//asMap returns a map of the credential data
+	asMap() map[string]interface{}
+}
+
 // externalAuthType is the interface for authentication for auth types which are external for the system(the users comes from external system).
 // these are the different identity providers - illinois_oidc etc
 type externalAuthType interface {
 	//getLoginUrl retrieves and pre-formats a login url and params for the SSO provider
 	getLoginURL(authType model.AuthType, appType model.ApplicationType, redirectURI string, l *logs.Log) (string, map[string]interface{}, error)
 	//externalLogin logins in the external system and provides the authenticated user
-	externalLogin(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, map[string]interface{}, error)
+	externalLogin(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*model.ExternalSystemUser, externalCredential, map[string]interface{}, error)
 	//refresh refreshes tokens
-	refresh(params map[string]interface{}, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, map[string]interface{}, error)
+	refresh(params map[string]interface{}, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.ExternalSystemUser, externalCredential, map[string]interface{}, error)
 }
 
 // anonymousAuthType is the interface for authentication for auth types which are anonymous
@@ -234,11 +243,11 @@ type APIs interface {
 
 	//CreateAdminAccount creates an account for a new admin user
 	CreateAdminAccount(authenticationType string, appID string, orgID string, identifier string, profile model.Profile, username string, permissions []string,
-		roleIDs []string, groupIDs []string, creatorPermissions []string, clientVersion *string, l *logs.Log) (*model.Account, map[string]interface{}, error)
+		roleIDs []string, groupIDs []string, scopes []string, creatorPermissions []string, clientVersion *string, l *logs.Log) (*model.Account, map[string]interface{}, error)
 
 	//UpdateAdminAccount updates an existing user's account with new permissions, roles, and groups
 	UpdateAdminAccount(authenticationType string, appID string, orgID string, identifier string, permissions []string, roleIDs []string,
-		groupIDs []string, updaterPermissions []string, l *logs.Log) (*model.Account, map[string]interface{}, error)
+		groupIDs []string, scopes []string, updaterPermissions []string, l *logs.Log) (*model.Account, map[string]interface{}, error)
 
 	//CreateAnonymousAccount creates a new anonymous account
 	CreateAnonymousAccount(context storage.TransactionContext, appID string, orgID string, anonymousID string, preferences map[string]interface{},
@@ -416,7 +425,7 @@ type APIs interface {
 	GetAdminToken(claims tokenauth.Claims, appID string, orgID string, l *logs.Log) (string, error)
 
 	//GetAuthKeySet generates a JSON Web Key Set for auth service registration
-	GetAuthKeySet() (*model.JSONWebKeySet, error)
+	GetAuthKeySet() (jwk.Set, error)
 
 	//GetServiceRegistrations retrieves all service registrations
 	GetServiceRegistrations(serviceIDs []string) []model.ServiceRegistration
@@ -578,6 +587,8 @@ type Storage interface {
 	UpdateAccountRoles(context storage.TransactionContext, accountID string, roles []model.AccountRole) error
 	InsertAccountRoles(context storage.TransactionContext, accountID string, appOrgID string, roles []model.AccountRole) error
 
+	UpdateAccountScopes(context storage.TransactionContext, accountID string, scopes []string) error
+
 	//ApplicationGroups
 	FindAppOrgGroupsByIDs(context storage.TransactionContext, ids []string, appOrgID string) ([]model.AppOrgGroup, error)
 	//AccountGroups
@@ -591,6 +602,11 @@ type Storage interface {
 // ProfileBuildingBlock is used by auth to communicate with the profile building block.
 type ProfileBuildingBlock interface {
 	GetProfileBBData(queryParams map[string]string, l *logs.Log) (*model.Profile, map[string]interface{}, error)
+}
+
+// IdentityBuildingBlock is used by auth to communicate with the identity building block.
+type IdentityBuildingBlock interface {
+	GetUserProfile(baseURL string, externalUser model.ExternalSystemUser, externalAccessToken string, l *logs.Log) (*model.Profile, error)
 }
 
 // Emailer is used by core to send emails

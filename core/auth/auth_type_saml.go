@@ -33,16 +33,16 @@ type samlAuthImpl struct {
 	authType string
 }
 
-func (a *samlAuthImpl) externalLogin(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, map[string]interface{}, error) {
-	return nil, nil, nil, nil
+func (a *samlAuthImpl) externalLogin(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, l *logs.Log) (*model.ExternalSystemUser, externalCredential, map[string]interface{}, error) {
+	return nil, nil, nil, errors.New(logutils.Unimplemented)
 }
 
 func (a *samlAuthImpl) getLoginURL(authType model.AuthType, appType model.ApplicationType, redirectURI string, l *logs.Log) (string, map[string]interface{}, error) {
 	return "", nil, errors.ErrorData(logutils.StatusInvalid, "operation", logutils.StringArgs(a.authType))
 }
 
-func (a *samlAuthImpl) refresh(params map[string]interface{}, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, map[string]interface{}, error) {
-	return nil, nil, nil, nil
+func (a *samlAuthImpl) refresh(params map[string]interface{}, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, l *logs.Log) (*model.ExternalSystemUser, externalCredential, map[string]interface{}, error) {
+	return nil, nil, nil, errors.New(logutils.Unimplemented)
 }
 
 // initSamlAuth initializes and registers a new SAML auth instance

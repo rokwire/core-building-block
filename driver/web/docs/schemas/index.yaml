@@ -64,6 +64,12 @@ APIKey:
   $ref: "./auth/APIKey.yaml"
 JWK:
   $ref: "./auth/JWK.yaml"
+JWKParamsRSA:
+  $ref: "./auth/JWKParamsRSA.yaml"
+JWKParamsEC:
+  $ref: "./auth/JWKParamsEC.yaml"
+JWKParamsOKP:
+  $ref: "./auth/JWKParamsOKP.yaml"
 JWKS:
   $ref: "./auth/JWKS.yaml"
 OIDCDiscovery:
@@ -140,6 +146,12 @@ _shared_res_Mfa:
   $ref: "./apis/shared/responses/mfa/Response.yaml"
 _shared_res_AccountCheck:
   $ref: "./apis/shared/responses/AccountCheck.yaml"
+_shared_res_ParamsAPIKey:
+  $ref: "./apis/shared/responses/ParamsAPIKey.yaml"
+_shared_res_ParamsOIDC:
+  $ref: "./apis/shared/responses/ParamsOIDC.yaml"
+_shared_res_ParamsNone:
+  $ref: "./apis/shared/responses/ParamsNone.yaml"
 _shared_res_RokwireToken:
   $ref: "./apis/shared/responses/RokwireToken.yaml"
 ## end SHARED requests and responses

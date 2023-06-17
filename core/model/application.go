@@ -20,7 +20,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/rokwire/core-auth-library-go/v2/authutils"
+	"github.com/rokwire/core-auth-library-go/v3/authutils"
 	"github.com/rokwire/logging-library-go/v2/errors"
 	"github.com/rokwire/logging-library-go/v2/logutils"
 )
@@ -116,6 +116,7 @@ type AppOrgRole struct {
 	System bool
 
 	Permissions []Permission
+	Scopes      []string
 
 	AppOrg ApplicationOrganization
 
@@ -387,7 +388,8 @@ type IdentityProviderSetting struct {
 
 	UserSpecificFields []string `bson:"user_specific_fields"`
 
-	AlwaysSyncProfile bool `bson:"always_sync_profile"` // if true, profile data will be overwritten with data from external user on each login/refresh
+	AlwaysSyncProfile bool   `bson:"always_sync_profile"` // if true, profile data will be overwritten with data from external user on each login/refresh
+	IdentityBBBaseURL string `bson:"identity_bb_base_url"`
 
 	Roles  map[string]string `bson:"roles"`  //map[identity_provider_role]app_role_id
 	Groups map[string]string `bson:"groups"` //map[identity_provider_group]app_group_id

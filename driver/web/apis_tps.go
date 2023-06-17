@@ -25,9 +25,9 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
-	"github.com/rokwire/core-auth-library-go/v2/authorization"
-	"github.com/rokwire/core-auth-library-go/v2/sigauth"
-	"github.com/rokwire/core-auth-library-go/v2/tokenauth"
+	"github.com/rokwire/core-auth-library-go/v3/authorization"
+	"github.com/rokwire/core-auth-library-go/v3/sigauth"
+	"github.com/rokwire/core-auth-library-go/v3/tokenauth"
 	"github.com/rokwire/logging-library-go/v2/errors"
 	"github.com/rokwire/logging-library-go/v2/logs"
 	"github.com/rokwire/logging-library-go/v2/logutils"
@@ -35,8 +35,7 @@ import (
 
 // TPSApisHandler handles the APIs implementation used by third-party services
 type TPSApisHandler struct {
-	coreAPIs  *core.APIs
-	serviceID string
+	coreAPIs *core.APIs
 }
 
 func (h TPSApisHandler) getServiceRegistrations(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
@@ -58,12 +57,12 @@ func (h TPSApisHandler) getServiceRegistrations(l *logs.Log, r *http.Request, cl
 }
 
 func (h TPSApisHandler) getAuthKeys(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	keys, err := h.coreAPIs.Auth.GetAuthKeySet()
+	keySet, err := h.coreAPIs.Auth.GetAuthKeySet()
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionGet, model.TypeJSONWebKeySet, logutils.StringArgs("auth"), err, http.StatusInternalServerError, true)
 	}
 
-	keysResp := jsonWebKeySetDef(keys)
+	keysResp := jsonWebKeySetDef(keySet)
 
 	data, err := json.Marshal(keysResp)
 	if err != nil {
@@ -215,7 +214,7 @@ func (h TPSApisHandler) getAccounts(l *logs.Log, r *http.Request, claims *tokena
 
 	// limit search params by scopes
 	scopes := claims.Scopes()
-	minAllAccessScope := authorization.Scope{ServiceID: h.serviceID, Resource: string(model.TypeAccount), Operation: authorization.ScopeOperationGet}
+	minAllAccessScope := authorization.Scope{ServiceID: h.coreAPIs.GetServiceID(), Resource: string(model.TypeAccount), Operation: authorization.ScopeOperationGet}
 	searchKeys := make([]string, 0)
 	for k := range queryParams {
 		searchKeys = append(searchKeys, k)
@@ -237,11 +236,6 @@ func (h TPSApisHandler) getAccounts(l *logs.Log, r *http.Request, claims *tokena
 	}
 
 	return l.HTTPResponseSuccessJSON(respData)
-}
-
-// NewTPSApisHandler creates new tps Handler instance
-func NewTPSApisHandler(coreAPIs *core.APIs, serviceID string) TPSApisHandler {
-	return TPSApisHandler{coreAPIs: coreAPIs, serviceID: serviceID}
 }
 
 func (h TPSApisHandler) getAccountsCount(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
@@ -270,7 +264,7 @@ func (h TPSApisHandler) getAccountsCount(l *logs.Log, r *http.Request, claims *t
 
 	// limit search params by scopes
 	scopes := claims.Scopes()
-	minAllAccessScope := authorization.Scope{ServiceID: h.serviceID, Resource: string(model.TypeAccount), Operation: authorization.ScopeOperationGet}
+	minAllAccessScope := authorization.Scope{ServiceID: h.coreAPIs.GetServiceID(), Resource: string(model.TypeAccount), Operation: authorization.ScopeOperationGet}
 	searchKeys := make([]string, 0)
 	for k := range queryParams {
 		searchKeys = append(searchKeys, k)
@@ -292,4 +286,9 @@ func (h TPSApisHandler) getAccountsCount(l *logs.Log, r *http.Request, claims *t
 	}
 
 	return l.HTTPResponseSuccessJSON(respData)
+}
+
+// NewTPSApisHandler creates new tps Handler instance
+func NewTPSApisHandler(coreAPIs *core.APIs) TPSApisHandler {
+	return TPSApisHandler{coreAPIs: coreAPIs}
 }

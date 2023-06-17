@@ -26,7 +26,8 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
-	"github.com/rokwire/core-auth-library-go/v2/tokenauth"
+	"github.com/rokwire/core-auth-library-go/v3/authorization"
+	"github.com/rokwire/core-auth-library-go/v3/tokenauth"
 	"github.com/rokwire/logging-library-go/v2/errors"
 	"github.com/rokwire/logging-library-go/v2/logs"
 	"github.com/rokwire/logging-library-go/v2/logutils"
@@ -128,14 +129,13 @@ func (h AdminApisHandler) login(l *logs.Log, r *http.Request, claims *tokenauth.
 	}
 
 	if loginSession.State != "" {
-		//params
-		var paramsRes interface{}
-		if loginSession.Params != nil {
-			paramsRes = loginSession.Params
+		paramsRes, err := convert[Def.SharedResLoginMfa_Params](loginSession.Params)
+		if err != nil {
+			return l.HTTPResponseErrorAction("converting", logutils.MessageDataType("auth login response params"), nil, err, http.StatusInternalServerError, false)
 		}
 
 		mfaResp := mfaDataListToDef(mfaTypes)
-		responseData := &Def.SharedResLoginMfa{AccountId: loginSession.Identifier, Enrolled: mfaResp, Params: &paramsRes,
+		responseData := &Def.SharedResLoginMfa{AccountId: loginSession.Identifier, Enrolled: mfaResp, Params: paramsRes,
 			SessionId: loginSession.ID, State: loginSession.State}
 		respData, err := json.Marshal(responseData)
 		if err != nil {
@@ -222,14 +222,15 @@ func (h AdminApisHandler) refresh(l *logs.Log, r *http.Request, claims *tokenaut
 
 	accessToken := loginSession.AccessToken
 	refreshToken := loginSession.CurrentRefreshToken()
-	var paramsRes interface{}
-	if loginSession.Params != nil {
-		paramsRes = loginSession.Params
+
+	paramsRes, err := convert[Def.SharedResRefresh_Params](loginSession.Params)
+	if err != nil {
+		return l.HTTPResponseErrorAction("converting", logutils.MessageDataType("auth refresh response params"), nil, err, http.StatusInternalServerError, false)
 	}
 
 	tokenType := Def.SharedResRokwireTokenTokenTypeBearer
 	rokwireToken := Def.SharedResRokwireToken{AccessToken: &accessToken, RefreshToken: &refreshToken, TokenType: &tokenType}
-	responseData := &Def.SharedResRefresh{Token: &rokwireToken, Params: &paramsRes}
+	responseData := &Def.SharedResRefresh{Token: &rokwireToken, Params: paramsRes}
 	respData, err := json.Marshal(responseData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("auth refresh response"), nil, err, http.StatusInternalServerError, false)
@@ -318,7 +319,11 @@ func (h AdminApisHandler) getConfig(l *logs.Log, r *http.Request, claims *tokena
 		return l.HTTPResponseErrorData(logutils.StatusMissing, model.TypeConfig, &logutils.FieldArgs{"id": id}, nil, http.StatusNotFound, true)
 	}
 
-	data, err := json.Marshal(configToDef(*config))
+	configRes, err := configToDef(*config)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionCast, "config response", nil, err, http.StatusInternalServerError, false)
+	}
+	data, err := json.Marshal(configRes)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeConfig, nil, err, http.StatusInternalServerError, false)
 	}
@@ -339,7 +344,11 @@ func (h AdminApisHandler) getConfigs(l *logs.Log, r *http.Request, claims *token
 		return l.HTTPResponseErrorAction(logutils.ActionGet, model.TypeConfig, nil, err, http.StatusInternalServerError, true)
 	}
 
-	data, err := json.Marshal(configListToDef(configs))
+	configRes, err := configsToDef(configs)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionCast, "configs response", nil, err, http.StatusInternalServerError, false)
+	}
+	data, err := json.Marshal(configRes)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeConfig, nil, err, http.StatusInternalServerError, false)
 	}
@@ -355,13 +364,21 @@ func (h AdminApisHandler) createConfig(l *logs.Log, r *http.Request, claims *tok
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, true)
 	}
 
-	config := configFromDef(requestData, claims.AppID, claims.OrgID)
-	newConfig, err := h.coreAPIs.Administration.AdmCreateConfig(config, claims)
+	config, err := configFromDef(requestData, claims.AppID, claims.OrgID)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionCast, model.TypeConfig, nil, err, http.StatusInternalServerError, false)
+	}
+
+	newConfig, err := h.coreAPIs.Administration.AdmCreateConfig(*config, claims)
 	if err != nil || newConfig == nil {
 		return l.HTTPResponseErrorAction(logutils.ActionCreate, model.TypeConfig, nil, err, http.StatusInternalServerError, true)
 	}
 
-	data, err := json.Marshal(configToDef(*newConfig))
+	configRes, err := configToDef(*newConfig)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionCast, "config response", nil, err, http.StatusInternalServerError, false)
+	}
+	data, err := json.Marshal(configRes)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeConfig, nil, err, http.StatusInternalServerError, false)
 	}
@@ -383,9 +400,13 @@ func (h AdminApisHandler) updateConfig(l *logs.Log, r *http.Request, claims *tok
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, true)
 	}
 
-	config := configFromDef(requestData, claims.AppID, claims.OrgID)
+	config, err := configFromDef(requestData, claims.AppID, claims.OrgID)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionCast, model.TypeConfig, nil, err, http.StatusInternalServerError, false)
+	}
+
 	config.ID = id
-	err = h.coreAPIs.Administration.AdmUpdateConfig(config, claims)
+	err = h.coreAPIs.Administration.AdmUpdateConfig(*config, claims)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUpdate, model.TypeConfig, nil, err, http.StatusInternalServerError, true)
 	}
@@ -407,6 +428,101 @@ func (h AdminApisHandler) deleteConfig(l *logs.Log, r *http.Request, claims *tok
 	}
 
 	return l.HTTPResponseSuccess()
+}
+
+func (h AdminApisHandler) getFilterAccounts(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
+	// get scopes relevant to accounts
+	if claims.Scope == "" {
+		return l.HTTPResponseErrorData(logutils.StatusInvalid, model.TypeScope, nil, nil, http.StatusForbidden, false)
+	}
+
+	// limit and offset
+	limit := 100
+	limitArg := r.URL.Query().Get("limit")
+	var err error
+	if limitArg != "" {
+		limit, err = strconv.Atoi(limitArg)
+		if err != nil {
+			return l.HTTPResponseErrorAction(logutils.ActionParse, logutils.TypeArg, logutils.StringArgs("limit"), err, http.StatusBadRequest, false)
+		}
+	}
+	offset := 0
+	offsetArg := r.URL.Query().Get("offset")
+	if offsetArg != "" {
+		offset, err = strconv.Atoi(offsetArg)
+		if err != nil {
+			return l.HTTPResponseErrorAction(logutils.ActionParse, logutils.TypeArg, logutils.StringArgs("offset"), err, http.StatusBadRequest, false)
+		}
+	}
+
+	var queryParams map[string]interface{}
+	err = json.NewDecoder(r.Body).Decode(&queryParams)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	// limit search params by scopes
+	scopes := getAdminScopes(claims)
+	minAllAccessScope := authorization.Scope{ServiceID: h.coreAPIs.GetServiceID(), Resource: model.AdminScopePrefix + string(model.TypeAccount), Operation: authorization.ScopeOperationGet}
+	searchKeys := make([]string, 0)
+	for k := range queryParams {
+		searchKeys = append(searchKeys, k)
+	}
+	allAccess, approvedKeys, err := authorization.ResourceAccessForScopes(scopes, minAllAccessScope, searchKeys)
+	if err != nil {
+		return l.HTTPResponseErrorData(logutils.StatusInvalid, "accounts query", nil, err, http.StatusForbidden, true)
+	}
+
+	accounts, err := h.coreAPIs.Administration.AdmGetFilterAccounts(queryParams, claims.AppID, claims.OrgID, limit, offset, allAccess, approvedKeys)
+	if err != nil {
+		errFields := logutils.FieldArgs(queryParams)
+		return l.HTTPResponseErrorAction(logutils.ActionGet, model.TypeAccount, &errFields, err, http.StatusInternalServerError, true)
+	}
+
+	respData, err := json.Marshal(accounts)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("accounts response"), nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HTTPResponseSuccessJSON(respData)
+}
+
+func (h AdminApisHandler) getFilterAccountsCount(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
+	// get scopes relevant to accounts
+	if claims.Scope == "" {
+		return l.HTTPResponseErrorData(logutils.StatusInvalid, model.TypeScope, nil, nil, http.StatusForbidden, false)
+	}
+
+	var queryParams map[string]interface{}
+	err := json.NewDecoder(r.Body).Decode(&queryParams)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	// limit search params by scopes
+	scopes := getAdminScopes(claims)
+	minAllAccessScope := authorization.Scope{ServiceID: h.coreAPIs.GetServiceID(), Resource: model.AdminScopePrefix + string(model.TypeAccount), Operation: authorization.ScopeOperationGet}
+	searchKeys := make([]string, 0)
+	for k := range queryParams {
+		searchKeys = append(searchKeys, k)
+	}
+	_, _, err = authorization.ResourceAccessForScopes(scopes, minAllAccessScope, searchKeys)
+	if err != nil {
+		return l.HTTPResponseErrorData(logutils.StatusInvalid, "accounts count query", nil, err, http.StatusForbidden, true)
+	}
+
+	count, err := h.coreAPIs.Administration.AdmGetFilterAccountsCount(queryParams, claims.AppID, claims.OrgID)
+	if err != nil {
+		errFields := logutils.FieldArgs(queryParams)
+		return l.HTTPResponseErrorAction(logutils.ActionGet, model.TypeAccount, &errFields, err, http.StatusInternalServerError, true)
+	}
+
+	respData, err := json.Marshal(count)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("accounts count response"), nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HTTPResponseSuccessJSON(respData)
 }
 
 func (h AdminApisHandler) getApplications(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
@@ -681,6 +797,10 @@ func (h AdminApisHandler) createAdminAccount(l *logs.Log, r *http.Request, claim
 	if requestData.GroupIds != nil {
 		groupIDs = *requestData.GroupIds
 	}
+	var scopes []string
+	if requestData.Scopes != nil {
+		scopes = *requestData.Scopes
+	}
 	profile := profileFromDefNullable(requestData.Profile)
 
 	username := ""
@@ -690,7 +810,7 @@ func (h AdminApisHandler) createAdminAccount(l *logs.Log, r *http.Request, claim
 
 	creatorPermissions := strings.Split(claims.Permissions, ",")
 	account, params, err := h.coreAPIs.Auth.CreateAdminAccount(string(requestData.AuthType), claims.AppID, claims.OrgID,
-		requestData.Identifier, profile, username, permissions, roleIDs, groupIDs, creatorPermissions, &clientVersion, l)
+		requestData.Identifier, profile, username, permissions, roleIDs, groupIDs, scopes, creatorPermissions, &clientVersion, l)
 	if err != nil || account == nil {
 		return l.HTTPResponseErrorAction(logutils.ActionCreate, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}
@@ -729,9 +849,13 @@ func (h AdminApisHandler) updateAdminAccount(l *logs.Log, r *http.Request, claim
 	if requestData.GroupIds != nil {
 		groupIDs = *requestData.GroupIds
 	}
+	var scopes []string
+	if requestData.Scopes != nil {
+		scopes = *requestData.Scopes
+	}
 	updaterPermissions := strings.Split(claims.Permissions, ",")
 	account, params, err := h.coreAPIs.Auth.UpdateAdminAccount(string(requestData.AuthType), claims.AppID, claims.OrgID, requestData.Identifier,
-		permissions, roleIDs, groupIDs, updaterPermissions, l)
+		permissions, roleIDs, groupIDs, scopes, updaterPermissions, l)
 	if err != nil || account == nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUpdate, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}
@@ -1087,8 +1211,14 @@ func (h AdminApisHandler) createApplicationRole(l *logs.Log, r *http.Request, cl
 	if requestData.System != nil {
 		system = *requestData.System
 	}
+
+	var scopes []string
+	if requestData.Scopes != nil {
+		scopes = *requestData.Scopes
+	}
+
 	assignerPermissions := strings.Split(claims.Permissions, ",")
-	role, err := h.coreAPIs.Administration.AdmCreateAppOrgRole(requestData.Name, requestData.Description, system, requestData.Permissions, claims.AppID, claims.OrgID, assignerPermissions, claims.System, l)
+	role, err := h.coreAPIs.Administration.AdmCreateAppOrgRole(requestData.Name, requestData.Description, system, requestData.Permissions, scopes, claims.AppID, claims.OrgID, assignerPermissions, claims.System, l)
 	if err != nil || role == nil {
 		return l.HTTPResponseErrorAction(logutils.ActionGet, model.TypeAppOrgRole, nil, err, http.StatusInternalServerError, true)
 	}
@@ -1104,8 +1234,8 @@ func (h AdminApisHandler) createApplicationRole(l *logs.Log, r *http.Request, cl
 
 func (h AdminApisHandler) updateApplicationRole(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
 	params := mux.Vars(r)
-	rolesID := params["id"]
-	if len(rolesID) <= 0 {
+	roleID := params["id"]
+	if len(roleID) <= 0 {
 		return l.HTTPResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
 	}
 
@@ -1124,8 +1254,15 @@ func (h AdminApisHandler) updateApplicationRole(l *logs.Log, r *http.Request, cl
 	if requestData.System != nil {
 		system = *requestData.System
 	}
+
+	var scopes []string
+	if requestData.Scopes != nil {
+		scopes = *requestData.Scopes
+	}
+
 	assignerPermissions := strings.Split(claims.Permissions, ",")
-	role, err := h.coreAPIs.Administration.AdmUpdateAppOrgRole(rolesID, requestData.Name, requestData.Description, system, requestData.Permissions, claims.AppID, claims.OrgID, assignerPermissions, claims.System, l)
+
+	role, err := h.coreAPIs.Administration.AdmUpdateAppOrgRole(roleID, requestData.Name, requestData.Description, system, requestData.Permissions, scopes, claims.AppID, claims.OrgID, assignerPermissions, claims.System, l)
 	if err != nil || role == nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUpdate, model.TypeAppOrgRole, nil, err, http.StatusInternalServerError, true)
 	}
@@ -1402,6 +1539,17 @@ func (h AdminApisHandler) grantPermissionsToRole(l *logs.Log, r *http.Request, c
 	}
 
 	return l.HTTPResponseSuccess()
+}
+
+func getAdminScopes(claims *tokenauth.Claims) []authorization.Scope {
+	scopes := claims.Scopes()
+	adminScopes := []authorization.Scope{}
+	for _, scope := range scopes {
+		if strings.HasPrefix(scope.Resource, model.AdminScopePrefix) {
+			adminScopes = append(adminScopes, scope)
+		}
+	}
+	return adminScopes
 }
 
 // NewAdminApisHandler creates new admin rest Handler instance

@@ -18,7 +18,6 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	crand "crypto/rand"
-	"crypto/rsa"
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/binary"
@@ -30,6 +29,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/rokwire/core-auth-library-go/v3/keys"
 	"github.com/rokwire/logging-library-go/v2/logs"
 	"github.com/rokwire/logging-library-go/v2/logutils"
 
@@ -227,8 +227,8 @@ func GetPrintableString(v *string, defaultVal string) string {
 	return defaultVal
 }
 
-// Encrypt data with AES-128 encryption algorithm and returns the encrypted data and the AES key encrypted with RSA
-func Encrypt(data []byte, pub *rsa.PublicKey) (string, string, string, error) {
+// Encrypt data with AES-128 encryption algorithm and returns the encrypted data and the AES key encrypted with the given public key
+func Encrypt(data []byte, pub *keys.PubKey) (string, string, string, error) {
 	blockSize := 16
 	randomKey, err := GenerateRandomBytes(blockSize)
 	if err != nil {
@@ -250,7 +250,7 @@ func Encrypt(data []byte, pub *rsa.PublicKey) (string, string, string, error) {
 	}
 	cipherText := gcm.Seal(nil, nonce, data, nil)
 
-	//Encrypt the session key with RSA public key
+	//Encrypt the session key with public key
 	encryptedKeyBytes, err := EncryptWithPublicKey(randomKey, pub)
 	if err != nil || encryptedKeyBytes == nil {
 		return "", "", "", err
@@ -261,17 +261,17 @@ func Encrypt(data []byte, pub *rsa.PublicKey) (string, string, string, error) {
 	return encodedKey, encodedNonce, encodedData, nil
 }
 
-// EncryptWithPublicKey encrypts data with RSA public key
-func EncryptWithPublicKey(data []byte, pub *rsa.PublicKey) ([]byte, error) {
-	cipherText, err := rsa.EncryptPKCS1v15(crand.Reader, pub, data)
+// EncryptWithPublicKey encrypts data with the given public key
+func EncryptWithPublicKey(data []byte, pub *keys.PubKey) ([]byte, error) {
+	cipherText, err := pub.Encrypt(data, nil)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionEncrypt, logutils.TypeString, logutils.StringArgs("RSA public key"), err)
+		return nil, errors.WrapErrorAction(logutils.ActionEncrypt, logutils.TypeString, logutils.StringArgs("public key"), err)
 	}
 	return cipherText, nil
 }
 
 // Decrypt decrypts data using AES-128 with the key decrypted using priv
-func Decrypt(data string, key string, nonce string, priv *rsa.PrivateKey) ([]byte, error) {
+func Decrypt(data string, key string, nonce string, priv *keys.PrivKey) ([]byte, error) {
 	//1. decrypt key
 	decodedKey, err := base64.StdEncoding.DecodeString(key)
 	if err != nil {
@@ -308,13 +308,13 @@ func Decrypt(data string, key string, nonce string, priv *rsa.PrivateKey) ([]byt
 	return decryptedData, nil
 }
 
-// DecryptWithPrivateKey decrypts data with RSA private key
-func DecryptWithPrivateKey(data []byte, priv *rsa.PrivateKey) ([]byte, error) {
-	cipherText, err := rsa.DecryptPKCS1v15(crand.Reader, priv, data)
+// DecryptWithPrivateKey decrypts data with the given private key
+func DecryptWithPrivateKey(data []byte, priv *keys.PrivKey) ([]byte, error) {
+	cipherText, err := priv.Decrypt(data, nil)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionDecrypt, logutils.TypeString, logutils.StringArgs("RSA private key"), err)
+		return nil, errors.WrapErrorAction(logutils.ActionDecrypt, logutils.TypeString, logutils.StringArgs("private key"), err)
 	}
-	return cipherText, nil
+	return []byte(cipherText), nil
 }
 
 // StartTimer starts a timer with the given name, period, and function to call when the timer goes off
