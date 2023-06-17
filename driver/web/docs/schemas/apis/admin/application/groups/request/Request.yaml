@@ -1,14 +1,24 @@
 required:
   - name
+  - description
 type: object
 properties:
   name:
     type: string
+  description:
+    type: string
+  system:
+    type: boolean
   permissions:
     type: array
     items:
       type: string
   roles:
+    type: array
+    items:
+      type: string
+  account_ids:
+    nullable: true
     type: array
     items:
       type: string

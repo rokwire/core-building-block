@@ -21,14 +21,16 @@ import (
 	"core-building-block/utils"
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/gorilla/mux"
-	"github.com/rokwire/core-auth-library-go/v2/sigauth"
-	"github.com/rokwire/core-auth-library-go/v2/tokenauth"
-	"github.com/rokwire/logging-library-go/errors"
-	"github.com/rokwire/logging-library-go/logs"
-	"github.com/rokwire/logging-library-go/logutils"
+	"github.com/rokwire/core-auth-library-go/v3/authorization"
+	"github.com/rokwire/core-auth-library-go/v3/sigauth"
+	"github.com/rokwire/core-auth-library-go/v3/tokenauth"
+	"github.com/rokwire/logging-library-go/v2/errors"
+	"github.com/rokwire/logging-library-go/v2/logs"
+	"github.com/rokwire/logging-library-go/v2/logutils"
 )
 
 // TPSApisHandler handles the APIs implementation used by third-party services
@@ -36,10 +38,10 @@ type TPSApisHandler struct {
 	coreAPIs *core.APIs
 }
 
-func (h TPSApisHandler) getServiceRegistrations(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+func (h TPSApisHandler) getServiceRegistrations(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
 	serviceIDsParam := r.URL.Query().Get("ids")
 	if serviceIDsParam == "" {
-		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("ids"), nil, http.StatusBadRequest, false)
+		return l.HTTPResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("ids"), nil, http.StatusBadRequest, false)
 	}
 	serviceIDs := strings.Split(serviceIDsParam, ",")
 
@@ -48,38 +50,38 @@ func (h TPSApisHandler) getServiceRegistrations(l *logs.Log, r *http.Request, cl
 
 	data, err := json.Marshal(serviceRegResp)
 	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeServiceReg, nil, err, http.StatusInternalServerError, false)
+		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeServiceReg, nil, err, http.StatusInternalServerError, false)
 	}
 
-	return l.HttpResponseSuccessJSON(data)
+	return l.HTTPResponseSuccessJSON(data)
 }
 
-func (h TPSApisHandler) getAuthKeys(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
-	keys, err := h.coreAPIs.Auth.GetAuthKeySet()
+func (h TPSApisHandler) getAuthKeys(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
+	keySet, err := h.coreAPIs.Auth.GetAuthKeySet()
 	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionGet, model.TypeJSONWebKeySet, logutils.StringArgs("auth"), err, http.StatusInternalServerError, true)
+		return l.HTTPResponseErrorAction(logutils.ActionGet, model.TypeJSONWebKeySet, logutils.StringArgs("auth"), err, http.StatusInternalServerError, true)
 	}
 
-	keysResp := jsonWebKeySetDef(keys)
+	keysResp := jsonWebKeySetDef(keySet)
 
 	data, err := json.Marshal(keysResp)
 	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionMarshal, model.TypeJSONWebKeySet, nil, err, http.StatusInternalServerError, false)
+		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeJSONWebKeySet, nil, err, http.StatusInternalServerError, false)
 	}
 
-	return l.HttpResponseSuccessJSON(data)
+	return l.HTTPResponseSuccessJSON(data)
 }
 
-func (h TPSApisHandler) getServiceAccountParams(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+func (h TPSApisHandler) getServiceAccountParams(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
 	params := mux.Vars(r)
 	accountID := params["id"]
 	if len(accountID) <= 0 {
-		return l.HttpResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
+		return l.HTTPResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
 	}
 
 	req, err := sigauth.ParseHTTPRequest(r)
 	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionParse, "service account params http request", nil, err, http.StatusInternalServerError, false)
+		return l.HTTPResponseErrorAction(logutils.ActionParse, "service account params http request", nil, err, http.StatusInternalServerError, false)
 	}
 
 	accountParams, err := h.coreAPIs.Auth.GetServiceAccountParams(accountID, false, req, l)
@@ -87,26 +89,26 @@ func (h TPSApisHandler) getServiceAccountParams(l *logs.Log, r *http.Request, cl
 		if loggingErr, ok := err.(*errors.Error); ok {
 			status := loggingErr.Status()
 			if status == utils.ErrorStatusInvalid || status == utils.ErrorStatusNotFound {
-				return l.HttpResponseError("Error getting service account params", err, http.StatusUnauthorized, true)
+				return l.HTTPResponseError("Error getting service account params", err, http.StatusUnauthorized, true)
 			}
 		}
-		return l.HttpResponseError("Error getting service account params", err, http.StatusInternalServerError, true)
+		return l.HTTPResponseError("Error getting service account params", err, http.StatusInternalServerError, true)
 	}
 
 	appOrgPairs := appOrgPairListToDef(accountParams)
 
 	respData, err := json.Marshal(appOrgPairs)
 	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("service account params response"), nil, err, http.StatusInternalServerError, false)
+		return l.HTTPResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("service account params response"), nil, err, http.StatusInternalServerError, false)
 	}
 
-	return l.HttpResponseSuccessJSON(respData)
+	return l.HTTPResponseSuccessJSON(respData)
 }
 
-func (h TPSApisHandler) getServiceAccessToken(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+func (h TPSApisHandler) getServiceAccessToken(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
 	req, err := sigauth.ParseHTTPRequest(r)
 	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionParse, "service access token http request", nil, err, http.StatusInternalServerError, false)
+		return l.HTTPResponseErrorAction(logutils.ActionParse, "service access token http request", nil, err, http.StatusInternalServerError, false)
 	}
 
 	accessToken, err := h.coreAPIs.Auth.GetServiceAccessToken(false, req, l)
@@ -114,10 +116,10 @@ func (h TPSApisHandler) getServiceAccessToken(l *logs.Log, r *http.Request, clai
 		if loggingErr, ok := err.(*errors.Error); ok {
 			status := loggingErr.Status()
 			if status == utils.ErrorStatusInvalid || status == utils.ErrorStatusNotFound {
-				return l.HttpResponseError("Error getting access token", err, http.StatusUnauthorized, true)
+				return l.HTTPResponseError("Error getting access token", err, http.StatusUnauthorized, true)
 			}
 		}
-		return l.HttpResponseError("Error getting access token", err, http.StatusInternalServerError, true)
+		return l.HTTPResponseError("Error getting access token", err, http.StatusInternalServerError, true)
 	}
 
 	tokenType := Def.SharedResRokwireTokenTokenTypeBearer
@@ -125,16 +127,16 @@ func (h TPSApisHandler) getServiceAccessToken(l *logs.Log, r *http.Request, clai
 
 	respData, err := json.Marshal(rokwireToken)
 	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("service access token response"), nil, err, http.StatusInternalServerError, false)
+		return l.HTTPResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("service access token response"), nil, err, http.StatusInternalServerError, false)
 	}
 
-	return l.HttpResponseSuccessJSON(respData)
+	return l.HTTPResponseSuccessJSON(respData)
 }
 
-func (h TPSApisHandler) getServiceAccessTokens(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+func (h TPSApisHandler) getServiceAccessTokens(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
 	req, err := sigauth.ParseHTTPRequest(r)
 	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionParse, "service access tokens http request", nil, err, http.StatusInternalServerError, false)
+		return l.HTTPResponseErrorAction(logutils.ActionParse, "service access tokens http request", nil, err, http.StatusInternalServerError, false)
 	}
 
 	accessTokens, err := h.coreAPIs.Auth.GetAllServiceAccessTokens(false, req, l)
@@ -142,10 +144,10 @@ func (h TPSApisHandler) getServiceAccessTokens(l *logs.Log, r *http.Request, cla
 		if loggingErr, ok := err.(*errors.Error); ok {
 			status := loggingErr.Status()
 			if status == utils.ErrorStatusInvalid || status == utils.ErrorStatusNotFound {
-				return l.HttpResponseError("Error getting access tokens", err, http.StatusUnauthorized, true)
+				return l.HTTPResponseError("Error getting access tokens", err, http.StatusUnauthorized, true)
 			}
 		}
-		return l.HttpResponseError("Error getting access tokens", err, http.StatusInternalServerError, true)
+		return l.HTTPResponseError("Error getting access tokens", err, http.StatusInternalServerError, true)
 	}
 
 	rokwireTokens := make([]Def.ServicesResServiceAccountsAccessTokens, len(accessTokens))
@@ -161,10 +163,129 @@ func (h TPSApisHandler) getServiceAccessTokens(l *logs.Log, r *http.Request, cla
 
 	respData, err := json.Marshal(rokwireTokens)
 	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("service access tokens response"), nil, err, http.StatusInternalServerError, false)
+		return l.HTTPResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("service access tokens response"), nil, err, http.StatusInternalServerError, false)
 	}
 
-	return l.HttpResponseSuccessJSON(respData)
+	return l.HTTPResponseSuccessJSON(respData)
+}
+
+func (h TPSApisHandler) getAccounts(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
+	// get scopes relevant to accounts
+	if claims.Scope == "" {
+		return l.HTTPResponseErrorData(logutils.StatusInvalid, model.TypeScope, nil, nil, http.StatusForbidden, false)
+	}
+
+	// appID and orgID
+	appID := r.URL.Query().Get("app_id")
+	orgID := r.URL.Query().Get("org_id")
+	if appID != "" && orgID != "" {
+		if !claims.AppOrg().CanAccessAppOrg(appID, orgID) {
+			return l.HTTPResponseErrorData(logutils.StatusInvalid, model.TypeAppOrgPair, nil, nil, http.StatusForbidden, false)
+		}
+	} else {
+		appID = claims.AppID
+		orgID = claims.OrgID
+	}
+
+	// limit and offset
+	limit := 100
+	limitArg := r.URL.Query().Get("limit")
+	var err error
+	if limitArg != "" {
+		limit, err = strconv.Atoi(limitArg)
+		if err != nil {
+			return l.HTTPResponseErrorAction(logutils.ActionParse, logutils.TypeArg, logutils.StringArgs("limit"), err, http.StatusBadRequest, false)
+		}
+	}
+	offset := 0
+	offsetArg := r.URL.Query().Get("offset")
+	if offsetArg != "" {
+		offset, err = strconv.Atoi(offsetArg)
+		if err != nil {
+			return l.HTTPResponseErrorAction(logutils.ActionParse, logutils.TypeArg, logutils.StringArgs("offset"), err, http.StatusBadRequest, false)
+		}
+	}
+
+	var queryParams map[string]interface{}
+	err = json.NewDecoder(r.Body).Decode(&queryParams)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	// limit search params by scopes
+	scopes := claims.Scopes()
+	minAllAccessScope := authorization.Scope{ServiceID: h.coreAPIs.GetServiceID(), Resource: string(model.TypeAccount), Operation: authorization.ScopeOperationGet}
+	searchKeys := make([]string, 0)
+	for k := range queryParams {
+		searchKeys = append(searchKeys, k)
+	}
+	allAccess, approvedKeys, err := authorization.ResourceAccessForScopes(scopes, minAllAccessScope, searchKeys)
+	if err != nil {
+		return l.HTTPResponseErrorData(logutils.StatusInvalid, "accounts query", nil, err, http.StatusForbidden, true)
+	}
+
+	accounts, err := h.coreAPIs.TPS.TPSGetAccounts(queryParams, appID, orgID, limit, offset, allAccess, approvedKeys)
+	if err != nil {
+		errFields := logutils.FieldArgs(queryParams)
+		return l.HTTPResponseErrorAction(logutils.ActionGet, model.TypeAccount, &errFields, err, http.StatusInternalServerError, false)
+	}
+
+	respData, err := json.Marshal(accounts)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("accounts response"), nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HTTPResponseSuccessJSON(respData)
+}
+
+func (h TPSApisHandler) getAccountsCount(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
+	// get scopes relevant to accounts
+	if claims.Scope == "" {
+		return l.HTTPResponseErrorData(logutils.StatusInvalid, model.TypeScope, nil, nil, http.StatusForbidden, false)
+	}
+
+	// appID and orgID
+	appID := r.URL.Query().Get("app_id")
+	orgID := r.URL.Query().Get("org_id")
+	if appID != "" && orgID != "" {
+		if !claims.AppOrg().CanAccessAppOrg(appID, orgID) {
+			return l.HTTPResponseErrorData(logutils.StatusInvalid, model.TypeAppOrgPair, nil, nil, http.StatusForbidden, false)
+		}
+	} else {
+		appID = claims.AppID
+		orgID = claims.OrgID
+	}
+
+	var queryParams map[string]interface{}
+	err := json.NewDecoder(r.Body).Decode(&queryParams)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	// limit search params by scopes
+	scopes := claims.Scopes()
+	minAllAccessScope := authorization.Scope{ServiceID: h.coreAPIs.GetServiceID(), Resource: string(model.TypeAccount), Operation: authorization.ScopeOperationGet}
+	searchKeys := make([]string, 0)
+	for k := range queryParams {
+		searchKeys = append(searchKeys, k)
+	}
+	_, _, err = authorization.ResourceAccessForScopes(scopes, minAllAccessScope, searchKeys)
+	if err != nil {
+		return l.HTTPResponseErrorData(logutils.StatusInvalid, "accounts count query", nil, err, http.StatusForbidden, true)
+	}
+
+	accounts, err := h.coreAPIs.TPS.TPSGetAccountsCount(queryParams, appID, orgID)
+	if err != nil {
+		errFields := logutils.FieldArgs(queryParams)
+		return l.HTTPResponseErrorAction(logutils.ActionGet, model.TypeAccount, &errFields, err, http.StatusInternalServerError, false)
+	}
+
+	respData, err := json.Marshal(accounts)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("accounts count response"), nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HTTPResponseSuccessJSON(respData)
 }
 
 // NewTPSApisHandler creates new tps Handler instance

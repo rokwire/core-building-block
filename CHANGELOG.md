@@ -5,17 +5,98 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## Unreleased
 ### Added
 - Define unit tests for email auth [#511](https://github.com/rokwire/core-building-block/issues/511)
+
+## [1.33.0] - 2023-05-02
+- Username and password authentication [#658](https://github.com/rokwire/core-building-block/issues/658)
+
+## [1.32.2] - 2023-04-20
+### Changed
+- Sync Identity BB for user data on authentication event [#650](https://github.com/rokwire/core-building-block/issues/650)
+
+## [1.32.1] - 2023-04-10
+### Fixed
+- Handle admin scopes on refresh
+
+## [1.32.0] - 2023-04-08
+### Added:
+- Admin scopes [#653](https://github.com/rokwire/core-building-block/issues/653)
+- Admin APIs to get count and list of accounts matching query [#649](https://github.com/rokwire/core-building-block/issues/649)
+- Sync Identity BB for user data on authentication event [#650](https://github.com/rokwire/core-building-block/issues/650)
+
+## [1.31.2] - 2023-04-04
+### Fixed
+- Ignore readOnly fields during validation [#641](https://github.com/rokwire/core-building-block/issues/641)
+
+## [1.31.1] - 2023-03-14
+### Changed
+- Upgrade to auth library v3 [#645](https://github.com/rokwire/core-building-block/issues/645)
+
+## [1.31.0] - 2023-03-02
+### Changed
+- Prepare for deployment in OpenShift [#638](https://github.com/rokwire/core-building-block/issues/638)
+
+## [1.30.0] - 2023-02-03
+### Added
+- Update role admin API [#516](https://github.com/rokwire/core-building-block/issues/516)
+- Add admin application config endpoints [#633](https://github.com/rokwire/core-building-block/issues/633)
+### Changed
+- Upgrade dependencies [#624](https://github.com/rokwire/core-building-block/issues/624)
+### Fixed
+- Fix system account initialization [#594](https://github.com/rokwire/core-building-block/issues/594)
+
+## [1.29.0] - 2022-11-16
+### Added
+- Create API to get count of accounts matching criteria [#619](https://github.com/rokwire/core-building-block/issues/619)
+### Fixed
+- Panic on anonymous refresh [#621](https://github.com/rokwire/core-building-block/issues/621)
+
+## [1.28.0] - 2022-10-24
+### Added
+- Add unstructured additional properties to profile [#609](https://github.com/rokwire/core-building-block/issues/609)
+
+## [1.27.0] - 2022-10-21
+### Added
+- BBs/TPS API to search accounts matching criteria [#606](https://github.com/rokwire/core-building-block/issues/606)
+- Add scopes to service accounts [#605](https://github.com/rokwire/core-building-block/issues/605)
+- Update application system API [#549](https://github.com/rokwire/core-building-block/issues/549)
+- Update group admin API [#518](https://github.com/rokwire/core-building-block/issues/518)
+
+## [1.26.0] - 2022-10-05
+### Fixed
+- Services crashes on anonymous login [#603](https://github.com/rokwire/core-building-block/issues/603)
+
+### Security
+- Fix code scanning alert - Log entries created from user input [#601](https://github.com/rokwire/core-building-block/issues/601)
+
+## [1.25.0] - 2022-10-04
+### Added
+- Update app/org endpoint [#543](https://github.com/rokwire/core-building-block/issues/543)
+- Create app/org endpoint [#544](https://github.com/rokwire/core-building-block/issues/544)
+- Expose account external IDs [#582](https://github.com/rokwire/core-building-block/issues/582)
+- Anonymous accounts [#559](https://github.com/rokwire/core-building-block/issues/559)
+- Usernames [#574](https://github.com/rokwire/core-building-block/issues/574)
+- Add release instructions to CONVENTIONS.md [#519](https://github.com/rokwire/core-building-block/issues/519)
+- Set up system app org token endpoint [#493](https://github.com/rokwire/core-building-block/issues/493)
+- Track usage info in accounts [#445](https://github.com/rokwire/core-building-block/issues/445)
 - Use signature Key ID to check specific key for service account auth [#481](https://github.com/rokwire/core-building-block/issues/481)
+- Allow overriding docs base URLs [#513](https://github.com/rokwire/core-building-block/issues/513)
 - Include account ID in request logs [#562](https://github.com/rokwire/core-building-block/issues/562)
 - Add system flag to login response [#552](https://github.com/rokwire/core-building-block/issues/552)
 - Add default assigners permission [#477](https://github.com/rokwire/core-building-block/issues/477)
 
 ### Fixed
+- Fix has_permissions for existing accounts [#531](https://github.com/rokwire/core-building-block/issues/531)
 - Service registration error handling change [#468](https://github.com/rokwire/core-building-block/issues/468)
 - Update account permission duplication [#545](https://github.com/rokwire/core-building-block/issues/545)
+- Deleting application roles and groups uses bad accounts query [#536](https://github.com/rokwire/core-building-block/issues/536)
+
+### Changed
+- Update oapi-codegen usage [#597](https://github.com/rokwire/core-building-block/issues/597)
+- BREAKING: Permission assigners should be OR instead of AND [#482](https://github.com/rokwire/core-building-block/issues/482)]
+- Update profile when external user info changes [#589](https://github.com/rokwire/core-building-block/issues/589)
 
 ## [1.24.2] - 2022-08-08
 ### Added
@@ -315,7 +396,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Users authentication polish [#155](https://github.com/rokwire/core-building-block/issues/155)
 - Optimise the Mongo DB collections indexes usage [#146](https://github.com/rokwire/core-building-block/issues/146)
 
-[Unreleased]: https://github.com/rokwire/core-building-block/compare/v1.24.1...HEAD
+[Unreleased]: https://github.com/rokwire/core-building-block/compare/v1.33.0...HEAD
+[1.33.0]: https://github.com/rokwire/core-building-block/compare/v1.32.2...v1.33.0
+[1.32.2]: https://github.com/rokwire/core-building-block/compare/v1.32.1...v1.32.2
+[1.32.1]: https://github.com/rokwire/core-building-block/compare/v1.32.0...v1.32.1
+[1.32.0]: https://github.com/rokwire/core-building-block/compare/v1.31.2...v1.32.0
+[1.31.2]: https://github.com/rokwire/core-building-block/compare/v1.31.1...v1.31.2
+[1.31.1]: https://github.com/rokwire/core-building-block/compare/v1.31.0...v1.31.1
+[1.31.0]: https://github.com/rokwire/core-building-block/compare/v1.30.0...v1.31.0
+[1.30.0]: https://github.com/rokwire/core-building-block/compare/v1.29.0...v1.30.0
+[1.29.0]: https://github.com/rokwire/core-building-block/compare/v1.28.0...v1.29.0
+[1.28.0]: https://github.com/rokwire/core-building-block/compare/v1.27.0...v1.28.0
+[1.27.0]: https://github.com/rokwire/core-building-block/compare/v1.26.0...v1.27.0
+[1.26.0]: https://github.com/rokwire/core-building-block/compare/v1.25.0...v1.26.0
+[1.25.0]: https://github.com/rokwire/core-building-block/compare/v1.24.2...v1.25.0
+[1.24.2]: https://github.com/rokwire/core-building-block/compare/v1.24.1...v1.24.2
 [1.24.1]: https://github.com/rokwire/core-building-block/compare/v1.24.0...v1.24.1
 [1.24.0]: https://github.com/rokwire/core-building-block/compare/v1.23.0...v1.24.0
 [1.23.0]: https://github.com/rokwire/core-building-block/compare/v1.22.0...v1.23.0

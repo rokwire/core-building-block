@@ -1,11 +1,33 @@
+required:
+  - id
 type: object
 properties:
-  fields:
-    $ref: "./AccountFields.yaml"
+  id:
+    readOnly: true
+    type: string
   app_org:
     $ref: "../application/ApplicationOrganization.yaml"
+  username:
+    type: string
+  profile:
+    $ref: "./Profile.yaml"
+  preferences:
+    type: object
+    nullable: true
+  system_configs:
+    type: object
+    nullable: true
+  anonymous:
+    type: boolean
   system:
     type: boolean
+  external_ids:
+    type: object
+    nullable: true
+  auth_types:
+    type: array
+    items:
+      $ref: "./AccountAuthType.yaml"
   permissions:
     type: array
     items:
@@ -18,19 +40,17 @@ properties:
     type: array
     items:
       $ref: "../application/AppOrgGroup.yaml"
-  auth_types:
+  scopes:
     type: array
     items:
-      $ref: "./AccountAuthType.yaml"
-  preferences:
-    type: object
-    nullable: true
-  system_configs:
-    type: object
-    nullable: true
-  profile:
-    $ref: "./Profile.yaml"
+      type: string
   devices:
     type: array
     items:
       $ref: "./Device.yaml"
+  last_login_date:
+    type: string
+  last_access_token_date:
+    type: string
+  most_recent_client_version:
+    type: string

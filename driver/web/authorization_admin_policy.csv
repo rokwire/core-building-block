@@ -15,6 +15,7 @@ p, all_auth-groups, /core/admin/application/groups, (GET)|(POST)|(PUT)|(DELETE),
 p, all_auth-groups, /core/admin/application/groups/*, (GET)|(POST)|(PUT)|(DELETE),
 p, get_auth-groups, /core/admin/application/groups, (GET), Get auth groups
 p, update_auth-groups, /core/admin/application/groups, (GET)|(POST)|(PUT), Update and create auth groups
+p, update_auth-groups, /core/admin/application/groups/*, (GET)|(POST)|(PUT),
 p, delete_auth-groups, /core/admin/application/groups/*, (GET)|(DELETE), Delete auth groups
 
 p, all_auth-roles, /core/admin/application/roles, (GET)|(POST)|(PUT)|(DELETE), All auth role actions
@@ -22,6 +23,7 @@ p, all_auth-roles, /core/admin/application/roles/*, (GET)|(POST)|(PUT)|(DELETE),
 p, all_auth-roles, /core/admin/application/roles/*/permissions, (PUT),
 p, get_auth-roles, /core/admin/application/roles, (GET), Get auth roles
 p, update_auth-roles, /core/admin/application/roles, (GET)|(POST)|(PUT), Update and create auth roles
+p, update_auth-roles, /core/admin/application/roles/*, (PUT),
 p, update_auth-roles, /core/admin/application/roles/*/permissions, (PUT),
 p, delete_auth-roles, /core/admin/application/roles/*, (DELETE), Delete auth roles
 p, delete_auth-roles, /core/admin/application/roles, (GET),
@@ -47,6 +49,9 @@ p, update_accounts, /core/admin/application/groups/*/accounts, (PUT)|(DELETE),
 p, update_accounts, /core/admin/application/permissions, (GET),
 p, update_accounts, /core/admin/application/roles, (GET),
 p, update_accounts, /core/admin/application/groups, (GET),
+
+p, get_filter-accounts, /core/admin/application/filter/accounts, (POST), Get filter accounts
+p, get_filter-accounts-count, /core/admin/application/filter/accounts/count, (POST), Get filter accounts count
 
 p, get_account-devices, /core/admin/application/accounts/*/devices, (GET), Get account devices
 

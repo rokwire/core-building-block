@@ -17,6 +17,8 @@ package storage
 import (
 	"core-building-block/core/model"
 	"time"
+
+	"github.com/rokwire/core-auth-library-go/v3/authorization"
 )
 
 type loginSession struct {
@@ -62,8 +64,9 @@ type serviceAccount struct {
 	AppID string `bson:"app_id"`
 	OrgID string `bson:"org_id"`
 
-	Permissions []model.Permission `bson:"permissions"`
-	FirstParty  bool               `bson:"first_party"`
+	Permissions []model.Permission    `bson:"permissions"`
+	Scopes      []authorization.Scope `bson:"scopes"`
+	FirstParty  bool                  `bson:"first_party"`
 
 	Credentials []model.ServiceAccountCredential `bson:"credentials"`
 

@@ -1,0 +1,9 @@
+type: object
+description: JSON Web Key RSA parameters
+properties:
+  n:
+    type: string
+    description: The modulus of the key - Base64URL encoded
+  e:
+    type: string
+    description: The exponent of the key - Base64URL encoded
