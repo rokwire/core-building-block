@@ -1,0 +1,18 @@
+type: object
+required:
+ - active
+ - day
+ - month
+ - hour
+ - min
+properties:
+  active:
+    type: boolean
+  day:
+    type: integer
+  month:
+    type: integer
+  hour:
+    type: integer
+  min:
+    type: integer

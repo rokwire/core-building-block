@@ -1,9 +1,12 @@
 required:
   - id
   - name
+  - description
+  - service_id
 type: object
 properties:
   id:
+    readOnly: true
     type: string
   name:
     type: string

@@ -25,15 +25,16 @@ type account struct {
 
 	AppOrgID string `bson:"app_org_id,omitempty"`
 
-	HasPermissions bool               `bson:"has_permissions"`
-	Permissions    []model.Permission `bson:"permissions,omitempty"`
-	Roles          []accountRole      `bson:"roles,omitempty"`
-	Groups         []accountGroup     `bson:"groups,omitempty"`
+	Permissions []model.Permission `bson:"permissions,omitempty"`
+	Roles       []accountRole      `bson:"roles,omitempty"`
+	Groups      []accountGroup     `bson:"groups,omitempty"`
+	Scopes      []string           `bson:"scopes,omitempty"`
 
 	AuthTypes []accountAuthType `bson:"auth_types,omitempty"`
 
 	MFATypes []mfaType `bson:"mfa_types,omitempty"`
 
+	Username      string                 `bson:"username"`
 	ExternalIDs   map[string]string      `bson:"external_ids"`
 	Preferences   map[string]interface{} `bson:"preferences"`
 	SystemConfigs map[string]interface{} `bson:"system_configs"`
@@ -41,10 +42,14 @@ type account struct {
 
 	Devices []userDevice `bson:"devices,omitempty"`
 
-	// Anonymous bool         `bson:"anonymous"`
+	Anonymous bool `bson:"anonymous"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
+
+	LastLoginDate           *time.Time `bson:"last_login_date"`
+	LastAccessTokenDate     *time.Time `bson:"last_access_token_date"`
+	MostRecentClientVersion *string    `bson:"most_recent_client_version"`
 }
 
 type accountRole struct {
@@ -90,6 +95,8 @@ type profile struct {
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
+
+	UnstructuredProperties map[string]interface{} `bson:"unstructured_properties"`
 }
 
 type userDevice struct {

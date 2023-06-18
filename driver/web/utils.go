@@ -20,12 +20,12 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/rokwire/logging-library-go/logs"
-	"github.com/rokwire/logging-library-go/logutils"
+	"github.com/rokwire/logging-library-go/v2/logs"
+	"github.com/rokwire/logging-library-go/v2/logutils"
 )
 
 // Helper for authLogin and authLoginMFA
-func authBuildLoginResponse(l *logs.Log, loginSession *model.LoginSession) logs.HttpResponse {
+func authBuildLoginResponse(l *logs.Log, loginSession *model.LoginSession) logs.HTTPResponse {
 	//token
 	accessToken := loginSession.AccessToken
 	refreshToken := loginSession.CurrentRefreshToken()
@@ -34,23 +34,31 @@ func authBuildLoginResponse(l *logs.Log, loginSession *model.LoginSession) logs.
 	rokwireToken := Def.SharedResRokwireToken{AccessToken: &accessToken, RefreshToken: &refreshToken, TokenType: &tokenType}
 
 	//account
-	var accountData *Def.SharedResAccount
-	if !loginSession.Anonymous {
+	var accountData *Def.Account
+	if loginSession.AccountAuthType != nil {
 		account := loginSession.AccountAuthType.Account
 		accountData = accountToDef(account)
 	}
 
 	//params
-	var paramsRes interface{}
+	var paramsRes Def.SharedResLogin_Params
 	if loginSession.Params != nil {
-		paramsRes = loginSession.Params
+		paramsBytes, err := json.Marshal(loginSession.Params)
+		if err != nil {
+			return l.HTTPResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("auth login response params"), nil, err, http.StatusInternalServerError, false)
+		}
+
+		err = json.Unmarshal(paramsBytes, &paramsRes)
+		if err != nil {
+			return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth login response params"), nil, err, http.StatusInternalServerError, false)
+		}
 	}
 
 	responseData := &Def.SharedResLogin{Token: &rokwireToken, Account: accountData, Params: &paramsRes}
 	respData, err := json.Marshal(responseData)
 	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("auth login response"), nil, err, http.StatusInternalServerError, false)
+		return l.HTTPResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("auth login response"), nil, err, http.StatusInternalServerError, false)
 	}
 
-	return l.HttpResponseSuccessJSON(respData)
+	return l.HTTPResponseSuccessJSON(respData)
 }

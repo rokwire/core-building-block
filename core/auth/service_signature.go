@@ -20,11 +20,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
-	"github.com/rokwire/core-auth-library-go/v2/sigauth"
-	"github.com/rokwire/logging-library-go/errors"
-	"github.com/rokwire/logging-library-go/logutils"
+	"github.com/rokwire/core-auth-library-go/v3/keys"
+	"github.com/rokwire/core-auth-library-go/v3/sigauth"
+	"github.com/rokwire/logging-library-go/v2/errors"
+	"github.com/rokwire/logging-library-go/v2/logutils"
 )
 
 const (
@@ -41,6 +41,11 @@ type signatureServiceAuthImpl struct {
 }
 
 func (s *signatureServiceAuthImpl) checkCredentials(r *sigauth.Request, _ interface{}, params map[string]interface{}) ([]model.ServiceAccount, error) {
+	sigString, sigAuthHeader, err := s.auth.SignatureAuth.ParseRequestSignature(r)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionParse, "request signature and header", nil, err).SetStatus(utils.ErrorStatusInvalid)
+	}
+
 	accounts, err := s.auth.storage.FindServiceAccounts(params)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, nil, err)
@@ -50,28 +55,24 @@ func (s *signatureServiceAuthImpl) checkCredentials(r *sigauth.Request, _ interf
 	}
 
 	for _, credential := range accounts[0].Credentials {
-		if credential.Type == ServiceAuthTypeSignature && credential.Params != nil {
-			pubKeyPem, ok := credential.Params["pub_key"].(string)
-			if !ok {
-				s.auth.logger.ErrorWithFields("error asserting stored public key is string", logutils.Fields{"pub_key": credential.Params["pub_key"]})
-				continue
-			}
-			pubKeyPem = strings.ReplaceAll(pubKeyPem, `\n`, "\n")
-
-			pubKey, err := jwt.ParseRSAPublicKeyFromPEM([]byte(pubKeyPem))
+		if credential.Type == ServiceAuthTypeSignature {
+			pubKey, err := s.pubKeyFromCred(&credential, true)
 			if err != nil {
-				s.auth.logger.ErrorWithFields("error parsing stored public key", logutils.Fields{"pub_key": credential.Params["pub_key"]})
+				s.auth.logger.Error(err.Error())
+				continue
+			}
+			if pubKey.KeyID != sigAuthHeader.KeyID {
 				continue
 			}
 
-			err = s.auth.SignatureAuth.CheckRequestSignature(r, pubKey)
+			err = s.auth.SignatureAuth.CheckParsedRequestSignature(sigString, sigAuthHeader, pubKey)
 			if err == nil {
 				return accounts, nil
 			}
 		}
 	}
 
-	return nil, errors.WrapErrorAction(logutils.ActionValidate, "request signature", nil, err).SetStatus(utils.ErrorStatusInvalid)
+	return nil, errors.WrapErrorAction(logutils.ActionValidate, "signed request", nil, err).SetStatus(utils.ErrorStatusInvalid)
 }
 
 func (s *signatureServiceAuthImpl) addCredentials(creds *model.ServiceAccountCredential) (map[string]interface{}, error) {
@@ -79,13 +80,46 @@ func (s *signatureServiceAuthImpl) addCredentials(creds *model.ServiceAccountCre
 		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeServiceAccountCredential, nil)
 	}
 
-	now := time.Now().UTC()
-	id, _ := uuid.NewUUID()
+	pubKey, err := s.pubKeyFromCred(creds, false)
+	if err != nil {
+		return nil, err
+	}
 
-	creds.ID = id.String()
-	creds.DateCreated = now
+	creds.ID = uuid.NewString()
+	creds.Params = map[string]interface{}{
+		"key_pem": pubKey.KeyPem,
+		"alg":     pubKey.Alg,
+	}
+	creds.DateCreated = time.Now().UTC()
 
-	return creds.Params, nil
+	displayParams := map[string]interface{}{
+		"key_pem": pubKey.KeyPem,
+	}
+	return displayParams, nil
+}
+
+// pubKeyFromCred parses a keys.PubKey from credential params (this does not decode key_pem)
+func (s *signatureServiceAuthImpl) pubKeyFromCred(creds *model.ServiceAccountCredential, decode bool) (*keys.PubKey, error) {
+	alg, ok := creds.Params["alg"].(string)
+	if !ok {
+		return nil, errors.ErrorAction(logutils.ActionParse, "public key algorithm", &logutils.FieldArgs{"alg": creds.Params["alg"]})
+	}
+	keyPem, ok := creds.Params["key_pem"].(string)
+	if !ok {
+		return nil, errors.ErrorAction(logutils.ActionParse, "public key pem", &logutils.FieldArgs{"key_pem": creds.Params["key_pem"]})
+	}
+	keyPem = strings.ReplaceAll(keyPem, `\n`, "\n")
+
+	if decode {
+		pubKey, err := keys.NewPubKey(alg, keyPem)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionLoad, "public key", nil, err)
+		}
+
+		return pubKey, nil
+	}
+
+	return &keys.PubKey{Alg: alg, KeyPem: keyPem}, nil
 }
 
 // initSignatureServiceAuth initializes and registers a new signature service auth instance

@@ -22,9 +22,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/rokwire/logging-library-go/errors"
-	"github.com/rokwire/logging-library-go/logs"
-	"github.com/rokwire/logging-library-go/logutils"
+	"github.com/rokwire/logging-library-go/v2/errors"
+	"github.com/rokwire/logging-library-go/v2/logs"
+	"github.com/rokwire/logging-library-go/v2/logutils"
 )
 
 // APIs exposes to the drivers adapters access to the core functionality
@@ -33,6 +33,7 @@ type APIs struct {
 	Administration Administration //expose to the drivers adapters
 	Encryption     Encryption     //expose to the drivers adapters
 	BBs            BBs            //expose to the drivers adapters
+	TPS            TPS            //expose to the drivers adapters
 	System         System         //expose to the drivers adapters
 
 	Auth auth.APIs //expose to the drivers auth
@@ -69,8 +70,13 @@ func (c *APIs) GetVersion() string {
 	return c.app.version
 }
 
+// GetServiceID gives the service ID
+func (c *APIs) GetServiceID() string {
+	return c.app.serviceID
+}
+
 func (c *APIs) storeSystemData() error {
-	documentIDs := make(map[string]string)
+	newDocuments := make(map[string]string)
 
 	transaction := func(context storage.TransactionContext) error {
 		createAccount := false
@@ -81,8 +87,8 @@ func (c *APIs) storeSystemData() error {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthType, nil, err)
 		}
 		if emailAuthType == nil {
-			documentIDs["auth_type"] = uuid.NewString()
-			emailAuthType = &model.AuthType{ID: documentIDs["auth_type"], Code: auth.AuthTypeEmail, Description: "Authentication type relying on email and password",
+			newDocuments["auth_type"] = uuid.NewString()
+			emailAuthType = &model.AuthType{ID: newDocuments["auth_type"], Code: auth.AuthTypeEmail, Description: "Authentication type relying on email and password",
 				IsExternal: false, IsAnonymous: false, UseCredentials: true, IgnoreMFA: false}
 			_, err = c.app.storage.InsertAuthType(context, *emailAuthType)
 			if err != nil {
@@ -96,9 +102,9 @@ func (c *APIs) storeSystemData() error {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
 		}
 		if systemOrg == nil {
-			documentIDs["organization"] = uuid.NewString()
-			systemOrgConfig := model.OrganizationConfig{ID: uuid.NewString(), DateCreated: time.Now().UTC()}
-			newSystemOrg := model.Organization{ID: documentIDs["organization"], Name: "System", Type: "small", System: true, Config: systemOrgConfig, DateCreated: time.Now().UTC()}
+			newDocuments["organization"] = uuid.NewString()
+			systemOrgConfig := model.OrganizationConfig{ID: uuid.NewString(), Domains: []string{}, DateCreated: time.Now().UTC()}
+			newSystemOrg := model.Organization{ID: newDocuments["organization"], Name: "System", Type: "small", System: true, Config: systemOrgConfig, DateCreated: time.Now().UTC()}
 			_, err = c.app.storage.InsertOrganization(context, newSystemOrg)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionInsert, model.TypeOrganization, nil, err)
@@ -118,9 +124,9 @@ func (c *APIs) storeSystemData() error {
 			if c.systemAppTypeIdentifier == "" || c.systemAppTypeName == "" {
 				return errors.ErrorData(logutils.StatusMissing, "initial system app type identifier or name", nil)
 			}
-			documentIDs["application"] = uuid.NewString()
+			newDocuments["application"] = uuid.NewString()
 			newAndroidAppType := model.ApplicationType{ID: uuid.NewString(), Identifier: c.systemAppTypeIdentifier, Name: c.systemAppTypeName, Versions: nil}
-			newSystemAdminApp := model.Application{ID: documentIDs["application"], Name: "System Admin application", MultiTenant: false, Admin: true,
+			newSystemAdminApp := model.Application{ID: newDocuments["application"], Name: "System Admin application", MultiTenant: false, Admin: true,
 				SharedIdentities: false, Types: []model.ApplicationType{newAndroidAppType}, DateCreated: time.Now().UTC()}
 			_, err = c.app.storage.InsertApplication(context, newSystemAdminApp)
 			if err != nil {
@@ -130,20 +136,14 @@ func (c *APIs) storeSystemData() error {
 			systemAdminApp := &newSystemAdminApp
 
 			//insert system admin apporg
-			emailSupport := []struct {
-				AuthTypeID string                 `bson:"auth_type_id"`
-				Params     map[string]interface{} `bson:"params"`
-			}{
-				{emailAuthType.ID, nil},
-			}
 			supportedAuthTypes := make([]model.AuthTypesSupport, len(systemAdminApp.Types))
 			for i, appType := range systemAdminApp.Types {
-				supportedAuthTypes[i] = model.AuthTypesSupport{AppTypeID: appType.ID, SupportedAuthTypes: emailSupport}
+				supportedAuthTypes[i] = model.AuthTypesSupport{AppTypeID: appType.ID, SupportedAuthTypes: []model.SupportedAuthType{{AuthTypeID: emailAuthType.ID, Params: nil}}}
 			}
 
-			documentIDs["application_organization"] = uuid.NewString()
-			newSystemAdminAppOrg := model.ApplicationOrganization{ID: documentIDs["application_organization"], Application: *systemAdminApp, Organization: *systemOrg,
-				SupportedAuthTypes: supportedAuthTypes, DateCreated: time.Now().UTC()}
+			newDocuments["application_organization"] = uuid.NewString()
+			newSystemAdminAppOrg := model.ApplicationOrganization{ID: newDocuments["application_organization"], Application: *systemAdminApp, Organization: *systemOrg,
+				SupportedAuthTypes: supportedAuthTypes, ServicesIDs: []string{model.ServiceIDCore}, DateCreated: time.Now().UTC()}
 			_, err = c.app.storage.InsertApplicationOrganization(context, newSystemAdminAppOrg)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionSave, model.TypeApplicationOrganization, nil, err)
@@ -165,31 +165,57 @@ func (c *APIs) storeSystemData() error {
 			if c.systemAPIKey == "" {
 				return errors.ErrorData(logutils.StatusMissing, "initial system api key", nil)
 			}
-			documentIDs["api_key"] = uuid.NewString()
-			newAPIKey := model.APIKey{ID: documentIDs["api_key"], AppID: systemAppOrg.Application.ID, Key: c.systemAPIKey}
+			newDocuments["api_key"] = uuid.NewString()
+			newAPIKey := model.APIKey{ID: newDocuments["api_key"], AppID: systemAppOrg.Application.ID, Key: c.systemAPIKey}
 			_, err := c.app.storage.InsertAPIKey(context, newAPIKey)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAPIKey, nil, err)
 			}
 		}
 
-		//5. insert all_system_core permission if does not exist
-		systemPermissions := []string{model.PermissionAllSystemCore}
-		allSystemPermissions, err := c.app.storage.FindPermissionsByName(context, systemPermissions)
+		//5. insert all_system_core permission and grant_all_permissions permission if they do not exist
+		requiredPermissions := map[string]string{
+			model.PermissionAllSystemCore:       "Gives access to all admin and system APIs",
+			model.PermissionGrantAllPermissions: "Gives the ability to grant any permission",
+		}
+		existingPermissions, err := c.app.storage.FindPermissionsByName(context, []string{model.PermissionAllSystemCore, model.PermissionGrantAllPermissions})
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypePermission, &logutils.FieldArgs{"name": model.PermissionAllSystemCore}, err)
 		}
 
-		if len(allSystemPermissions) == 0 {
-			documentIDs["permission"] = uuid.NewString()
-			allSystemCore := model.Permission{ID: documentIDs["permission"], Name: model.PermissionAllSystemCore, ServiceID: "core",
-				Assigners: systemPermissions, DateCreated: time.Now().UTC()}
-			err = c.app.storage.InsertPermission(context, allSystemCore)
-			if err != nil {
-				return errors.WrapErrorAction(logutils.ActionInsert, model.TypePermission, nil, err)
+		if len(existingPermissions) < len(requiredPermissions) {
+			insert := []model.Permission{}
+			for name, desc := range requiredPermissions {
+				found := false
+				for _, existing := range existingPermissions {
+					if existing.Name == name {
+						found = true
+						continue
+					}
+				}
+				if !found {
+					newPermission := model.Permission{ID: uuid.NewString(), Name: name, Description: desc, ServiceID: model.ServiceIDCore,
+						Assigners: []string{model.PermissionAllSystemCore}, DateCreated: time.Now().UTC()}
+					insert = append(insert, newPermission)
+				}
 			}
 
-			allSystemPermissions = append(allSystemPermissions, allSystemCore)
+			if len(insert) > 0 {
+				names := ""
+				for _, p := range insert {
+					if len(names) > 0 {
+						names += ","
+					}
+					names += p.Name
+				}
+
+				err = c.app.storage.InsertPermissions(context, insert)
+				if err != nil {
+					return errors.WrapErrorAction(logutils.ActionCreate, model.TypePermission, logutils.StringArgs(names), err)
+				}
+
+				newDocuments["permissions"] = names
+			}
 		}
 
 		//6. insert system account if needed
@@ -197,7 +223,7 @@ func (c *APIs) storeSystemData() error {
 			if c.systemAccountEmail == "" || c.systemAccountPassword == "" {
 				return errors.ErrorData(logutils.StatusMissing, "initial system account email or password", nil)
 			}
-			documentIDs["account"], err = c.Auth.InitializeSystemAccount(context, *emailAuthType, systemAppOrg, model.PermissionAllSystemCore, c.systemAccountEmail, c.systemAccountPassword, c.logger.NewRequestLog(nil))
+			newDocuments["account"], err = c.Auth.InitializeSystemAccount(context, *emailAuthType, systemAppOrg, model.PermissionAllSystemCore, c.systemAccountEmail, c.systemAccountPassword, "", c.logger.NewRequestLog(nil))
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionInitialize, "system account", nil, err)
 			}
@@ -208,12 +234,14 @@ func (c *APIs) storeSystemData() error {
 
 	err := c.app.storage.PerformTransaction(transaction)
 	if err == nil {
-		for doc, id := range documentIDs {
-			fields := logutils.Fields{"id": id}
+		for doc, data := range newDocuments {
+			key := "id"
+			if doc == "permissions" {
+				key = "names"
+			}
+			fields := logutils.Fields{key: data}
 			if doc == "auth_type" {
 				fields["code"] = auth.AuthTypeEmail
-			} else if doc == "permission" {
-				fields["name"] = model.PermissionAllSystemCore
 			}
 			c.logger.InfoWithFields(fmt.Sprintf("new system %s created", doc), fields)
 		}
@@ -222,21 +250,22 @@ func (c *APIs) storeSystemData() error {
 }
 
 // NewCoreAPIs creates new CoreAPIs
-func NewCoreAPIs(env string, version string, build string, storage Storage, auth auth.APIs, systemInitSettings map[string]string, logger *logs.Logger) *APIs {
+func NewCoreAPIs(env string, version string, build string, serviceID string, storage Storage, auth auth.APIs, systemInitSettings map[string]string, logger *logs.Logger) *APIs {
 	//add application instance
 	listeners := []ApplicationListener{}
-	application := application{env: env, version: version, build: build, storage: storage, listeners: listeners, auth: auth}
+	application := application{env: env, version: version, build: build, serviceID: serviceID, storage: storage, listeners: listeners, auth: auth}
 
 	//add coreAPIs instance
 	servicesImpl := &servicesImpl{app: &application}
 	administrationImpl := &administrationImpl{app: &application}
 	encryptionImpl := &encryptionImpl{app: &application}
 	bbsImpl := &bbsImpl{app: &application}
+	tpsImpl := &tpsImpl{app: &application}
 	systemImpl := &systemImpl{app: &application}
 
 	//+ auth
 	coreAPIs := APIs{Services: servicesImpl, Administration: administrationImpl, Encryption: encryptionImpl,
-		BBs: bbsImpl, System: systemImpl, Auth: auth, app: &application, systemAppTypeIdentifier: systemInitSettings["app_type_id"],
+		BBs: bbsImpl, TPS: tpsImpl, System: systemImpl, Auth: auth, app: &application, systemAppTypeIdentifier: systemInitSettings["app_type_id"],
 		systemAppTypeName: systemInitSettings["app_type_name"], systemAPIKey: systemInitSettings["api_key"],
 		systemAccountEmail: systemInitSettings["email"], systemAccountPassword: systemInitSettings["password"], logger: logger}
 
@@ -270,17 +299,21 @@ func (s *servicesImpl) SerGetAccountSystemConfigs(accountID string) (map[string]
 	return s.app.serGetAccountSystemConfigs(accountID)
 }
 
-func (s *servicesImpl) SerUpdateAccountPreferences(id string, preferences map[string]interface{}) error {
-	return s.app.serUpdateAccountPreferences(id, preferences)
+func (s *servicesImpl) SerUpdateAccountPreferences(id string, appID string, orgID string, anonymous bool, preferences map[string]interface{}, l *logs.Log) (bool, error) {
+	return s.app.serUpdateAccountPreferences(id, appID, orgID, anonymous, preferences, l)
 }
 
 func (s *servicesImpl) SerUpdateProfile(accountID string, profile model.Profile) error {
 	return s.app.serUpdateProfile(accountID, profile)
 }
 
+func (s *servicesImpl) SerUpdateAccountUsername(accountID string, appID string, orgID string, username string) error {
+	return s.app.sharedUpdateAccountUsername(accountID, appID, orgID, username)
+}
+
 func (s *servicesImpl) SerGetAccounts(limit int, offset int, appID string, orgID string, accountID *string, firstName *string, lastName *string, authType *string,
-	authTypeIdentifier *string, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error) {
-	return s.app.serGetAccounts(limit, offset, appID, orgID, accountID, firstName, lastName, authType, authTypeIdentifier, hasPermissions, permissions, roleIDs, groupIDs)
+	authTypeIdentifier *string, anonymous *bool, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error) {
+	return s.app.serGetAccounts(limit, offset, appID, orgID, accountID, firstName, lastName, authType, authTypeIdentifier, anonymous, hasPermissions, permissions, roleIDs, groupIDs)
 }
 
 func (s *servicesImpl) SerGetAuthTest(l *logs.Log) string {
@@ -311,6 +344,10 @@ func (s *administrationImpl) AdmGetTestModel() string {
 	return s.app.admGetTestModel()
 }
 
+func (s *administrationImpl) AdmGetAppConfig(appTypeIdentifier string, orgID *string, versionNumbers model.VersionNumbers, apiKey *string) (*model.ApplicationConfig, error) {
+	return s.app.adminGetAppConfig(appTypeIdentifier, orgID, versionNumbers, apiKey)
+}
+
 func (s *administrationImpl) AdmGetApplications(orgID string) ([]model.Application, error) {
 	return s.app.admGetApplications(orgID)
 }
@@ -339,8 +376,8 @@ func (s *administrationImpl) AdmRemoveAccountsFromGroup(appID string, orgID stri
 	return s.app.admRemoveAccountsFromGroup(appID, orgID, groupID, accountIDs, assignerPermissions, l)
 }
 
-func (s *administrationImpl) AdmCreateAppOrgRole(name string, description string, system bool, permissionNames []string, appID string, orgID string, assignerPermissions []string, systemClaim bool, l *logs.Log) (*model.AppOrgRole, error) {
-	return s.app.admCreateAppOrgRole(name, description, system, permissionNames, appID, orgID, assignerPermissions, systemClaim, l)
+func (s *administrationImpl) AdmCreateAppOrgRole(name string, description string, system bool, permissionNames []string, scopes []string, appID string, orgID string, assignerPermissions []string, systemClaim bool, l *logs.Log) (*model.AppOrgRole, error) {
+	return s.app.admCreateAppOrgRole(name, description, system, permissionNames, scopes, appID, orgID, assignerPermissions, systemClaim, l)
 }
 
 func (s *administrationImpl) AdmGetAppOrgRoles(appID string, orgID string) ([]model.AppOrgRole, error) {
@@ -351,8 +388,8 @@ func (s *administrationImpl) AdmDeleteAppOrgRole(ID string, appID string, orgID 
 	return s.app.admDeleteAppOrgRole(ID, appID, orgID, assignerPermissions, system, l)
 }
 
-func (s *administrationImpl) AdmUpdateAppOrgRole(ID string, name string, description string, system bool, permissionNames []string, appID string, orgID string, assignerPermissions []string, systemClaim bool, l *logs.Log) (*model.AppOrgRole, error) {
-	return s.app.admUpdateAppOrgRole(ID, name, description, system, permissionNames, appID, orgID, assignerPermissions, systemClaim, l)
+func (s *administrationImpl) AdmUpdateAppOrgRole(ID string, name string, description string, system bool, permissionNames []string, scopes []string, appID string, orgID string, assignerPermissions []string, systemClaim bool, l *logs.Log) (*model.AppOrgRole, error) {
+	return s.app.admUpdateAppOrgRole(ID, name, description, system, permissionNames, scopes, appID, orgID, assignerPermissions, systemClaim, l)
 }
 
 func (s *administrationImpl) AdmGrantPermissionsToRole(appID string, orgID string, roleID string, permissionNames []string, assignerPermissions []string, system bool, l *logs.Log) error {
@@ -364,20 +401,32 @@ func (s *administrationImpl) AdmGetApplicationPermissions(appID string, orgID st
 }
 
 func (s *administrationImpl) AdmGetAccounts(limit int, offset int, appID string, orgID string, accountID *string, firstName *string, lastName *string, authType *string,
-	authTypeIdentifier *string, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error) {
-	return s.app.admGetAccounts(limit, offset, appID, orgID, accountID, firstName, lastName, authType, authTypeIdentifier, hasPermissions, permissions, roleIDs, groupIDs)
+	authTypeIdentifier *string, anonymous *bool, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error) {
+	return s.app.admGetAccounts(limit, offset, appID, orgID, accountID, firstName, lastName, authType, authTypeIdentifier, anonymous, hasPermissions, permissions, roleIDs, groupIDs)
 }
 
 func (s *administrationImpl) AdmGetAccount(accountID string) (*model.Account, error) {
 	return s.app.admGetAccount(accountID)
 }
 
+func (s *administrationImpl) AdmGetFilterAccounts(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]map[string]interface{}, error) {
+	return s.app.sharedGetAccountsByParams(searchParams, appID, orgID, limit, offset, allAccess, approvedKeys)
+}
+
+func (s *administrationImpl) AdmGetFilterAccountsCount(searchParams map[string]interface{}, appID string, orgID string) (int64, error) {
+	return s.app.sharedGetAccountsCountByParams(searchParams, appID, orgID)
+}
+
+func (s *administrationImpl) AdmUpdateAccountUsername(accountID string, appID string, orgID string, username string) error {
+	return s.app.sharedUpdateAccountUsername(accountID, appID, orgID, username)
+}
+
 func (s *administrationImpl) AdmGetAccountSystemConfigs(appID string, orgID string, accountID string, l *logs.Log) (map[string]interface{}, error) {
 	return s.app.admGetAccountSystemConfigs(appID, orgID, accountID, l)
 }
 
-func (s *administrationImpl) AdmUpdateAccountSystemConfigs(appID string, orgID string, accountID string, configs map[string]interface{}, l *logs.Log) error {
-	return s.app.admUpdateAccountSystemConfigs(appID, orgID, accountID, configs, l)
+func (s *administrationImpl) AdmUpdateAccountSystemConfigs(appID string, orgID string, accountID string, configs map[string]interface{}, createAnonymous bool, l *logs.Log) (bool, error) {
+	return s.app.admUpdateAccountSystemConfigs(appID, orgID, accountID, configs, createAnonymous, l)
 }
 
 func (s *administrationImpl) AdmGrantAccountPermissions(appID string, orgID string, accountID string, permissionNames []string, assignerPermissions []string, l *logs.Log) error {
@@ -433,6 +482,30 @@ func (s *bbsImpl) BBsGetTest() string {
 	return s.app.bbsGetTest()
 }
 
+func (s *bbsImpl) BBsGetAccounts(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]map[string]interface{}, error) {
+	return s.app.sharedGetAccountsByParams(searchParams, appID, orgID, limit, offset, allAccess, approvedKeys)
+}
+
+func (s *bbsImpl) BBsGetAccountsCount(searchParams map[string]interface{}, appID string, orgID string) (int64, error) {
+	return s.app.sharedGetAccountsCountByParams(searchParams, appID, orgID)
+}
+
+///
+
+//bbsImpl
+
+type tpsImpl struct {
+	app *application
+}
+
+func (s *tpsImpl) TPSGetAccounts(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]map[string]interface{}, error) {
+	return s.app.sharedGetAccountsByParams(searchParams, appID, orgID, limit, offset, allAccess, approvedKeys)
+}
+
+func (s *tpsImpl) TPSGetAccountsCount(searchParams map[string]interface{}, appID string, orgID string) (int64, error) {
+	return s.app.sharedGetAccountsCountByParams(searchParams, appID, orgID)
+}
+
 ///
 
 //systemImpl
@@ -453,6 +526,22 @@ func (s *systemImpl) SysUpdateGlobalConfig(setting string) error {
 	return s.app.sysUpdateGlobalConfig(setting)
 }
 
+func (s *systemImpl) SysGetApplicationOrganizations(appID *string, orgID *string) ([]model.ApplicationOrganization, error) {
+	return s.app.sysGetApplicationOrganizations(appID, orgID)
+}
+
+func (s *systemImpl) SysGetApplicationOrganization(ID string) (*model.ApplicationOrganization, error) {
+	return s.app.sysGetApplicationOrganization(ID)
+}
+
+func (s *systemImpl) SysCreateApplicationOrganization(appID string, orgID string, appOrg model.ApplicationOrganization) (*model.ApplicationOrganization, error) {
+	return s.app.sysCreateApplicationOrganization(appOrg, appID, orgID)
+}
+
+func (s *systemImpl) SysUpdateApplicationOrganization(appOrg model.ApplicationOrganization) error {
+	return s.app.sysUpdateApplicationOrganization(appOrg)
+}
+
 func (s *systemImpl) SysCreateOrganization(name string, requestType string, organizationDomains []string) (*model.Organization, error) {
 	return s.app.sysCreateOrganization(name, requestType, organizationDomains)
 }
@@ -471,6 +560,10 @@ func (s *systemImpl) SysGetOrganization(ID string) (*model.Organization, error) 
 
 func (s *systemImpl) SysCreateApplication(name string, multiTenant bool, admin bool, sharedIdentities bool, appTypes []model.ApplicationType) (*model.Application, error) {
 	return s.app.sysCreateApplication(name, multiTenant, admin, sharedIdentities, appTypes)
+}
+
+func (s *systemImpl) SysUpdateApplication(ID string, name string, multiTenant bool, admin bool, sharedIdentities bool, appTypes []model.ApplicationType) error {
+	return s.app.sysUpdateApplication(ID, name, multiTenant, admin, sharedIdentities, appTypes)
 }
 
 func (s *systemImpl) SysGetApplication(ID string) (*model.Application, error) {

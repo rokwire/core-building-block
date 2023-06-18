@@ -18,8 +18,8 @@ import (
 	"core-building-block/core"
 	"net/http"
 
-	"github.com/rokwire/core-auth-library-go/v2/tokenauth"
-	"github.com/rokwire/logging-library-go/logs"
+	"github.com/rokwire/core-auth-library-go/v3/tokenauth"
+	"github.com/rokwire/logging-library-go/v2/logs"
 )
 
 // EncApisHandler handles the APIs implementation used by the Encryption BB
@@ -28,10 +28,10 @@ type EncApisHandler struct {
 }
 
 // getTest TODO get test
-func (h EncApisHandler) getTest(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+func (h EncApisHandler) getTest(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
 	res := h.coreAPIs.Encryption.EncGetTest()
 
-	return l.HttpResponseSuccessMessage(res)
+	return l.HTTPResponseSuccessMessage(res)
 }
 
 // NewEncApisHandler creates new enc Handler instance

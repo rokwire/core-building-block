@@ -22,15 +22,19 @@ import (
 	genmocks "core-building-block/core/mocks"
 	"core-building-block/core/model"
 
-	"github.com/rokwire/logging-library-go/logs"
+	"github.com/rokwire/logging-library-go/v2/logs"
 	"gotest.tools/assert"
 )
+
+func buildTestCoreAPIs(storage core.Storage) *core.APIs {
+	return core.NewCoreAPIs("local", "1.1.1", "build", "core", storage, nil, nil, nil)
+}
 
 //Services
 
 func TestSerGetVersion(t *testing.T) {
 	storage := genmocks.Storage{}
-	coreAPIs := core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil, nil, nil)
+	coreAPIs := buildTestCoreAPIs(&storage)
 	got := coreAPIs.GetVersion()
 	want := "1.1.1"
 
@@ -39,8 +43,7 @@ func TestSerGetVersion(t *testing.T) {
 
 func TestSerGetAuthTest(t *testing.T) {
 	storage := genmocks.Storage{}
-	coreAPIs := core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil, nil, nil)
-
+	coreAPIs := buildTestCoreAPIs(&storage)
 	l := logs.NewLogger("test", nil).NewLog("1", logs.RequestContext{})
 	got := coreAPIs.Services.SerGetAuthTest(l)
 	want := "Services - Auth - test"
@@ -50,7 +53,7 @@ func TestSerGetAuthTest(t *testing.T) {
 
 func TestSerGetCommonTest(t *testing.T) {
 	storage := genmocks.Storage{}
-	coreAPIs := core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil, nil, nil)
+	coreAPIs := buildTestCoreAPIs(&storage)
 
 	l := logs.NewLogger("test", nil).NewLog("1", logs.RequestContext{})
 	got := coreAPIs.Services.SerGetCommonTest(l)
@@ -65,7 +68,7 @@ func TestSerGetCommonTest(t *testing.T) {
 
 func TestAdmGetTest(t *testing.T) {
 	storage := genmocks.Storage{}
-	coreAPIs := core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil, nil, nil)
+	coreAPIs := buildTestCoreAPIs(&storage)
 
 	got := coreAPIs.Administration.AdmGetTest()
 	want := "Admin - test"
@@ -84,9 +87,9 @@ func TestSysCreateGlobalConfig(t *testing.T) {
 	storage.On("GetGlobalConfig").Return(nil, nil)
 	storage.On("CreateGlobalConfig", nil, &model.GlobalConfig{Setting: "setting"}).Return(nil)
 
-	app := core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil, nil, nil)
+	coreAPIs := buildTestCoreAPIs(&storage)
 
-	gc, _ := app.System.SysCreateGlobalConfig("setting")
+	gc, _ := coreAPIs.System.SysCreateGlobalConfig("setting")
 	if gc == nil {
 		t.Error("gc is nil")
 		return
@@ -98,9 +101,9 @@ func TestSysCreateGlobalConfig(t *testing.T) {
 	storage2.On("GetGlobalConfig").Return(nil, nil)
 	storage2.On("CreateGlobalConfig", nil, &model.GlobalConfig{Setting: "setting"}).Return(errors.New("error occured"))
 
-	app = core.NewCoreAPIs("local", "1.1.1", "build", &storage2, nil, nil, nil)
+	coreAPIs = buildTestCoreAPIs(&storage2)
 
-	_, err := app.System.SysCreateGlobalConfig("setting")
+	_, err := coreAPIs.System.SysCreateGlobalConfig("setting")
 	if err == nil {
 		t.Error("we are expecting error")
 		return
@@ -112,9 +115,9 @@ func TestSysCreateGlobalConfig(t *testing.T) {
 func TestSysGetOrganization(t *testing.T) {
 	storage := genmocks.Storage{}
 	storage.On("FindOrganization", "_id").Return(&model.Organization{ID: "_id"}, nil)
-	app := core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil, nil, nil)
+	coreAPIs := buildTestCoreAPIs(&storage)
 
-	getOrganization, _ := app.System.SysGetOrganization("_id")
+	getOrganization, _ := coreAPIs.System.SysGetOrganization("_id")
 
 	if getOrganization == nil {
 		t.Errorf("Error on getting the organization")
@@ -122,9 +125,9 @@ func TestSysGetOrganization(t *testing.T) {
 	// second case error
 	storage2 := genmocks.Storage{}
 	storage2.On("FindOrganization").Return(&model.Organization{ID: "_id"}, nil)
-	app = core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil, nil, nil)
+	coreAPIs = buildTestCoreAPIs(&storage)
 
-	err, _ := app.System.SysGetOrganization("_id")
+	err, _ := coreAPIs.System.SysGetOrganization("_id")
 
 	if err == nil {
 		t.Error("We are expecting error")
@@ -136,9 +139,9 @@ func TestSysGetOrganization(t *testing.T) {
 func TestSysGetOrganizations(t *testing.T) {
 	storage := genmocks.Storage{}
 	storage.On("FindOrganizations").Return([]model.Organization{}, nil)
-	app := core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil, nil, nil)
+	coreAPIs := buildTestCoreAPIs(&storage)
 
-	getOrganization, _ := app.System.SysGetOrganizations()
+	getOrganization, _ := coreAPIs.System.SysGetOrganizations()
 
 	if getOrganization == nil {
 		t.Errorf("Error on getting the organizations")
@@ -146,9 +149,9 @@ func TestSysGetOrganizations(t *testing.T) {
 	// second case error
 	storage2 := genmocks.Storage{}
 	storage2.On("FindOrganizations").Return([]model.Organization{}, nil)
-	app = core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil, nil, nil)
+	coreAPIs = buildTestCoreAPIs(&storage)
 
-	err, _ := app.System.SysGetOrganizations()
+	err, _ := coreAPIs.System.SysGetOrganizations()
 
 	if err == nil {
 		t.Error("We are expecting error")
@@ -158,10 +161,10 @@ func TestSysGetOrganizations(t *testing.T) {
 
 func TestSysGetApplication(t *testing.T) {
 	storage := genmocks.Storage{}
-	storage.On("FindApplication", "_id").Return(&model.Application{ID: "_id"}, nil)
-	app := core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil, nil, nil)
+	storage.On("FindApplication", nil, "_id").Return(&model.Application{ID: "_id"}, nil)
+	coreAPIs := buildTestCoreAPIs(&storage)
 
-	getApplication, _ := app.System.SysGetApplication("_id")
+	getApplication, _ := coreAPIs.System.SysGetApplication("_id")
 
 	if getApplication == nil {
 		t.Errorf("Error on geting the application")
@@ -169,9 +172,9 @@ func TestSysGetApplication(t *testing.T) {
 	// second case error
 	storage2 := genmocks.Storage{}
 	storage2.On("FindApplication").Return(&model.Application{ID: "_id"}, nil)
-	app = core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil, nil, nil)
+	coreAPIs = buildTestCoreAPIs(&storage)
 
-	err, _ := app.System.SysGetApplication("_id")
+	err, _ := coreAPIs.System.SysGetApplication("_id")
 
 	if err == nil {
 		t.Error("We are expecting error")
@@ -182,7 +185,7 @@ func TestSysGetApplication(t *testing.T) {
 func TestSysGetApplications(t *testing.T) {
 	storage := genmocks.Storage{}
 	storage.On("FindApplications").Return([]model.Application{}, nil)
-	app := core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil, nil, nil)
+	app := buildTestCoreAPIs(&storage)
 
 	getApplications, _ := app.System.SysGetApplications()
 
@@ -192,7 +195,7 @@ func TestSysGetApplications(t *testing.T) {
 	// second case error
 	storage2 := genmocks.Storage{}
 	storage2.On("FindApplications").Return([]model.Application{}, nil)
-	app = core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil, nil, nil)
+	app = buildTestCoreAPIs(&storage)
 
 	err, _ := app.System.SysGetApplications()
 
@@ -208,7 +211,7 @@ func TestSysGetApplications(t *testing.T) {
 
 func TestEncGetTest(t *testing.T) {
 	storage := genmocks.Storage{}
-	coreAPIs := core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil, nil, nil)
+	coreAPIs := buildTestCoreAPIs(&storage)
 
 	got := coreAPIs.Encryption.EncGetTest()
 	want := "Enc - test"
@@ -251,7 +254,7 @@ func TestCreateApplication(t *testing.T) {
 
 func TestBBsGetTest(t *testing.T) {
 	storage := genmocks.Storage{}
-	coreAPIs := core.NewCoreAPIs("local", "1.1.1", "build", &storage, nil, nil, nil)
+	coreAPIs := buildTestCoreAPIs(&storage)
 
 	got := coreAPIs.BBs.BBsGetTest()
 	want := "BBs - test"

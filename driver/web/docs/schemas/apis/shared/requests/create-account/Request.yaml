@@ -22,5 +22,12 @@ properties:
     type: array
     items:
       type: string
+  scopes:
+    type: array
+    items:
+      type: string
   profile:
-    $ref:  "../ProfileNullable.yaml"
+    $ref:  "../../../../user/ProfileNullable.yaml"
+  username:
+    type: string
+    nullable: true

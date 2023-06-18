@@ -1,12 +1,23 @@
+required:
+  - id
+  - name
+  - multi_tenant
+  - admin
+  - shared_identities
 type: object
 properties:
-  fields:
-    $ref: "./ApplicationFields.yaml"
+  id:
+    readOnly: true
+    type: string
+  name:
+    type: string
+  multi_tenant:
+    type: boolean
+  admin:
+    type: boolean
+  shared_identities:
+    type: boolean
   types:
     type: array
     items:
       $ref: "./ApplicationType.yaml"
-  organizations:
-    type: array
-    items:
-      $ref: "./ApplicationOrganization.yaml"

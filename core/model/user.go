@@ -19,7 +19,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/rokwire/logging-library-go/logutils"
+	"github.com/rokwire/logging-library-go/v2/logutils"
 )
 
 const (
@@ -27,6 +27,8 @@ const (
 	TypeAccount logutils.MessageDataType = "account"
 	//TypeAccountPreferences account preferences
 	TypeAccountPreferences logutils.MessageDataType = "account preferences"
+	//TypeAccountUsername account username
+	TypeAccountUsername logutils.MessageDataType = "account username"
 	//TypeAccountSystemConfigs account system configs
 	TypeAccountSystemConfigs logutils.MessageDataType = "account system configs"
 	//TypeAccountAuthType account auth type
@@ -35,6 +37,10 @@ const (
 	TypeAccountPermissions logutils.MessageDataType = "account permissions"
 	//TypeAccountRoles account roles
 	TypeAccountRoles logutils.MessageDataType = "account roles"
+	//TypeAccountUsageInfo account usage information
+	TypeAccountUsageInfo logutils.MessageDataType = "account usage information"
+	//TypeExternalSystemUser external system user
+	TypeExternalSystemUser logutils.MessageDataType = "external system user"
 	//TypeMFAType mfa type
 	TypeMFAType logutils.MessageDataType = "mfa type"
 	//TypeAccountGroups account groups
@@ -56,15 +62,16 @@ type Account struct {
 
 	AppOrg ApplicationOrganization
 
-	HasPermissions bool
-	Permissions    []Permission
-	Roles          []AccountRole
-	Groups         []AccountGroup
+	Permissions []Permission
+	Roles       []AccountRole
+	Groups      []AccountGroup
+	Scopes      []string
 
 	AuthTypes []AccountAuthType
 
 	MFATypes []MFAType
 
+	Username      string
 	ExternalIDs   map[string]string
 	Preferences   map[string]interface{}
 	SystemConfigs map[string]interface{}
@@ -72,8 +79,14 @@ type Account struct {
 
 	Devices []Device
 
+	Anonymous bool
+
 	DateCreated time.Time
 	DateUpdated *time.Time
+
+	LastLoginDate           *time.Time
+	LastAccessTokenDate     *time.Time
+	MostRecentClientVersion *string
 }
 
 // GetAccountAuthTypeByID finds account auth type by id
@@ -155,6 +168,18 @@ func (a Account) GetPermissionsMap() map[string]Permission {
 		}
 	}
 	return permissionsMap
+}
+
+// GetScopes returns all scopes granted to this account
+func (a Account) GetScopes() []string {
+	scopes := []string{}
+	scopes = append(scopes, a.Scopes...)
+	for _, role := range a.Roles {
+		if role.Active {
+			scopes = append(scopes, role.Role.Scopes...)
+		}
+	}
+	return scopes
 }
 
 // GetVerifiedMFATypes returns a list of only verified MFA types for this account
@@ -328,6 +353,41 @@ func (aat *AccountAuthType) SetUnverified(value bool) {
 	}
 }
 
+// Equals checks if two account auth types are equal
+func (aat *AccountAuthType) Equals(other AccountAuthType) bool {
+	if aat.Identifier != other.Identifier {
+		return false
+	}
+	if aat.Account.ID != other.Account.ID {
+		return false
+	}
+	if aat.AuthType.Code != other.AuthType.Code {
+		return false
+	}
+	if aat.Active != other.Active {
+		return false
+	}
+	if aat.Unverified != other.Unverified {
+		return false
+	}
+	if aat.Linked != other.Linked {
+		return false
+	}
+	if !utils.DeepEqual(aat.Params, other.Params) {
+		return false
+	}
+
+	thisCred := aat.Credential
+	otherCred := other.Credential
+	if (thisCred != nil) != (otherCred != nil) {
+		return false
+	} else if thisCred != nil && otherCred != nil && (thisCred.ID != otherCred.ID) {
+		return false
+	}
+
+	return true
+}
+
 // Credential represents a credential for account auth type/s
 type Credential struct {
 	ID string
@@ -376,6 +436,8 @@ type Profile struct {
 
 	DateCreated time.Time
 	DateUpdated *time.Time
+
+	UnstructuredProperties map[string]interface{}
 }
 
 // GetFullName returns the user's full name
@@ -386,6 +448,102 @@ func (p Profile) GetFullName() string {
 	}
 	fullname += p.LastName
 	return fullname
+}
+
+// Merge applies any non-empty fields from the provided profile to receiver
+func (p Profile) Merge(src Profile) Profile {
+	if src.FirstName != "" {
+		p.FirstName = src.FirstName
+	}
+	if src.LastName != "" {
+		p.LastName = src.LastName
+	}
+	if src.Email != "" {
+		p.Email = src.Email
+	}
+	if src.Phone != "" {
+		p.Phone = src.Phone
+	}
+	if src.Address != "" {
+		p.Address = src.Address
+	}
+	if src.ZipCode != "" {
+		p.ZipCode = src.ZipCode
+	}
+	if src.State != "" {
+		p.State = src.State
+	}
+	if src.Country != "" {
+		p.Country = src.Country
+	}
+	if src.BirthYear != 0 {
+		p.BirthYear = src.BirthYear
+	}
+	if src.PhotoURL != "" {
+		p.PhotoURL = src.PhotoURL
+	}
+
+	newUnstructured := map[string]interface{}{}
+	for key, val := range p.UnstructuredProperties {
+		newUnstructured[key] = val
+	}
+	for key, val := range src.UnstructuredProperties {
+		newUnstructured[key] = val
+	}
+	p.UnstructuredProperties = newUnstructured
+
+	return p
+}
+
+// ProfileFromMap parses a map and converts it into a Profile struct
+func ProfileFromMap(profileMap map[string]interface{}) Profile {
+	profile := Profile{UnstructuredProperties: make(map[string]interface{})}
+	for key, val := range profileMap {
+		if key == "first_name" {
+			if typeVal, ok := val.(string); ok {
+				profile.FirstName = typeVal
+			}
+		} else if key == "last_name" {
+			if typeVal, ok := val.(string); ok {
+				profile.LastName = typeVal
+			}
+		} else if key == "email" {
+			if typeVal, ok := val.(string); ok {
+				profile.Email = typeVal
+			}
+		} else if key == "phone" {
+			if typeVal, ok := val.(string); ok {
+				profile.Phone = typeVal
+			}
+		} else if key == "birth_year" {
+			if typeVal, ok := val.(int16); ok {
+				profile.BirthYear = typeVal
+			}
+		} else if key == "address" {
+			if typeVal, ok := val.(string); ok {
+				profile.Address = typeVal
+			}
+		} else if key == "zip_code" {
+			if typeVal, ok := val.(string); ok {
+				profile.ZipCode = typeVal
+			}
+		} else if key == "state" {
+			if typeVal, ok := val.(string); ok {
+				profile.State = typeVal
+			}
+		} else if key == "country" {
+			if typeVal, ok := val.(string); ok {
+				profile.Country = typeVal
+			}
+		} else if key == "photo_url" {
+			if typeVal, ok := val.(string); ok {
+				profile.Phone = typeVal
+			}
+		} else {
+			profile.UnstructuredProperties[key] = val
+		}
+	}
+	return profile
 }
 
 // Device represents user devices entity.

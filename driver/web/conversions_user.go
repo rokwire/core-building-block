@@ -21,7 +21,7 @@ import (
 )
 
 // Account
-func accountToDef(item model.Account) *Def.SharedResAccount {
+func accountToDef(item model.Account) *Def.Account {
 	//profile
 	profile := profileToDef(&item.Profile)
 	//preferences
@@ -36,12 +36,32 @@ func accountToDef(item model.Account) *Def.SharedResAccount {
 	groups := accountGroupsToDef(item.GetActiveGroups())
 	//account auth types
 	authTypes := accountAuthTypesToDef(item.AuthTypes)
-	return &Def.SharedResAccount{Id: item.ID, HasPermissions: &item.HasPermissions, Permissions: &permissions, Roles: &roles, Groups: &groups,
-		AuthTypes: &authTypes, Profile: profile, Preferences: preferences, SystemConfigs: systemConfigs}
+	//external ids
+	externalIds := map[string]interface{}{}
+	for k, v := range item.ExternalIDs {
+		externalIds[k] = v
+	}
+	//username
+	var username *string
+	if item.Username != "" {
+		username = &item.Username
+	}
+	//account usage information
+	lastLoginDate := utils.FormatTime(item.LastLoginDate)
+	lastAccessTokenDate := utils.FormatTime(item.LastAccessTokenDate)
+
+	scopes := item.Scopes
+	if scopes == nil {
+		scopes = []string{}
+	}
+
+	return &Def.Account{Id: &item.ID, Anonymous: &item.Anonymous, System: &item.AppOrg.Organization.System, Permissions: &permissions, Roles: &roles, Groups: &groups,
+		Scopes: &scopes, AuthTypes: &authTypes, Username: username, Profile: profile, Preferences: preferences, SystemConfigs: systemConfigs,
+		LastLoginDate: &lastLoginDate, LastAccessTokenDate: &lastAccessTokenDate, MostRecentClientVersion: item.MostRecentClientVersion, ExternalIds: &externalIds}
 }
 
-func accountsToDef(items []model.Account) []Def.SharedResAccount {
-	result := make([]Def.SharedResAccount, len(items))
+func accountsToDef(items []model.Account) []Def.Account {
+	result := make([]Def.Account, len(items))
 	for i, item := range items {
 		result[i] = *accountToDef(item)
 	}
@@ -55,6 +75,12 @@ func partialAccountToDef(item model.Account, params map[string]interface{}) *Def
 	roles := accountRolesToDef(item.GetActiveRoles())
 	//groups
 	groups := accountGroupsToDef(item.GetActiveGroups())
+
+	scopes := item.Scopes
+	if scopes == nil {
+		scopes = []string{}
+	}
+
 	//systemConfigs
 	systemConfigs := &item.SystemConfigs
 	//account auth types
@@ -69,16 +95,27 @@ func partialAccountToDef(item model.Account, params map[string]interface{}) *Def
 		formatted := utils.FormatTime(item.DateUpdated)
 		dateUpdated = &formatted
 	}
+	//username
+	var username *string
+	if item.Username != "" {
+		username = &item.Username
+	}
 
 	//params
 	var paramsData *map[string]interface{}
 	if params != nil {
 		paramsData = &params
 	}
-	return &Def.PartialAccount{Id: item.ID, AppId: item.AppOrg.Application.ID, OrgId: item.AppOrg.Organization.ID,
-		FirstName: item.Profile.FirstName, LastName: item.Profile.LastName, HasPermissions: item.HasPermissions,
-		Permissions: permissions, Roles: roles, Groups: groups, SystemConfigs: systemConfigs, AuthTypes: authTypes,
-		DateCreated: dateCreated, DateUpdated: dateUpdated, Params: paramsData}
+
+	//external ids
+	externalIds := map[string]interface{}{}
+	for k, v := range item.ExternalIDs {
+		externalIds[k] = v
+	}
+
+	return &Def.PartialAccount{Id: &item.ID, Anonymous: item.Anonymous, AppId: item.AppOrg.Application.ID, OrgId: item.AppOrg.Organization.ID, FirstName: item.Profile.FirstName,
+		LastName: item.Profile.LastName, Username: username, System: &item.AppOrg.Organization.System, Permissions: permissions, Roles: roles, Groups: groups,
+		Scopes: &scopes, SystemConfigs: systemConfigs, AuthTypes: authTypes, DateCreated: &dateCreated, DateUpdated: dateUpdated, Params: paramsData, ExternalIds: &externalIds}
 }
 
 func partialAccountsToDef(items []model.Account) []Def.PartialAccount {
@@ -90,15 +127,14 @@ func partialAccountsToDef(items []model.Account) []Def.PartialAccount {
 }
 
 // AccountAuthType
-func accountAuthTypeToDef(item model.AccountAuthType) Def.AccountAuthTypeFields {
-	params := &Def.AccountAuthTypeFields_Params{}
-	params.AdditionalProperties = item.Params
+func accountAuthTypeToDef(item model.AccountAuthType) Def.AccountAuthType {
+	params := item.Params
 
-	return Def.AccountAuthTypeFields{Id: &item.ID, Code: &item.AuthType.Code, Identifier: &item.Identifier, Active: &item.Active, Unverified: &item.Unverified, Params: params}
+	return Def.AccountAuthType{Id: item.ID, Code: item.AuthType.Code, Identifier: item.Identifier, Active: &item.Active, Unverified: &item.Unverified, Params: &params}
 }
 
-func accountAuthTypesToDef(items []model.AccountAuthType) []Def.AccountAuthTypeFields {
-	result := make([]Def.AccountAuthTypeFields, len(items))
+func accountAuthTypesToDef(items []model.AccountAuthType) []Def.AccountAuthType {
+	result := make([]Def.AccountAuthType, len(items))
 	for i, item := range items {
 		result[i] = accountAuthTypeToDef(item)
 	}
@@ -109,6 +145,11 @@ func accountAuthTypesToDef(items []model.AccountAuthType) []Def.AccountAuthTypeF
 func accountRoleToDef(item model.AccountRole) Def.AppOrgRole {
 	permissions := applicationPermissionsToDef(item.Role.Permissions)
 
+	scopes := item.Role.Scopes
+	if scopes == nil {
+		scopes = []string{}
+	}
+
 	//dates
 	var dateUpdated *string
 	dateCreated := utils.FormatTime(&item.Role.DateCreated)
@@ -117,7 +158,7 @@ func accountRoleToDef(item model.AccountRole) Def.AppOrgRole {
 		dateUpdated = &formatted
 	}
 
-	return Def.AppOrgRole{Id: item.Role.ID, Name: item.Role.Name, Description: &item.Role.Description, System: &item.Role.System, DateCreated: &dateCreated, DateUpdated: dateUpdated, Permissions: &permissions}
+	return Def.AppOrgRole{Id: &item.Role.ID, Name: item.Role.Name, Description: &item.Role.Description, System: &item.Role.System, DateCreated: &dateCreated, DateUpdated: dateUpdated, Permissions: &permissions, Scopes: &scopes}
 }
 
 func accountRolesToDef(items []model.AccountRole) []Def.AppOrgRole {
@@ -141,7 +182,7 @@ func accountGroupToDef(item model.AccountGroup) Def.AppOrgGroup {
 		dateUpdated = &formatted
 	}
 
-	return Def.AppOrgGroup{Id: item.Group.ID, Name: item.Group.Name, Description: &item.Group.Description, System: &item.Group.System, DateCreated: &dateCreated, DateUpdated: dateUpdated, Permissions: &permissions, Roles: &roles}
+	return Def.AppOrgGroup{Id: &item.Group.ID, Name: item.Group.Name, Description: &item.Group.Description, System: &item.Group.System, DateCreated: &dateCreated, DateUpdated: dateUpdated, Permissions: &permissions, Roles: &roles}
 }
 
 func accountGroupsToDef(items []model.AccountGroup) []Def.AppOrgGroup {
@@ -153,7 +194,7 @@ func accountGroupsToDef(items []model.AccountGroup) []Def.AppOrgGroup {
 }
 
 // Profile
-func profileFromDef(item *Def.SharedReqProfile) model.Profile {
+func profileFromDef(item *Def.Profile) model.Profile {
 	if item == nil {
 		return model.Profile{}
 	}
@@ -198,11 +239,86 @@ func profileFromDef(item *Def.SharedReqProfile) model.Profile {
 	if item.Country != nil {
 		country = *item.Country
 	}
+
+	var unstructuredProperties map[string]interface{}
+	if item.UnstructuredProperties != nil {
+		unstructuredProperties = *item.UnstructuredProperties
+	}
+
 	return model.Profile{PhotoURL: photoURL, FirstName: firstName, LastName: lastName,
 		Email: email, Phone: phone, BirthYear: int16(birthYear), Address: address, ZipCode: zipCode,
-		State: state, Country: country}
+		State: state, Country: country, UnstructuredProperties: unstructuredProperties}
 }
 
+func profileToDef(item *model.Profile) *Def.Profile {
+	if item == nil {
+		return nil
+	}
+
+	itemVal := *item
+	birthYear := int(itemVal.BirthYear)
+	return &Def.Profile{Id: &itemVal.ID, PhotoUrl: &itemVal.PhotoURL, FirstName: &itemVal.FirstName, LastName: &itemVal.LastName,
+		Email: &itemVal.Email, Phone: &itemVal.Phone, BirthYear: &birthYear, Address: &itemVal.Address, ZipCode: &itemVal.ZipCode,
+		State: &itemVal.State, Country: &itemVal.Country, UnstructuredProperties: &itemVal.UnstructuredProperties}
+}
+
+func profileFromDefNullable(item *Def.ProfileNullable) model.Profile {
+	if item == nil {
+		return model.Profile{}
+	}
+
+	var photoURL string
+	if item.PhotoUrl != nil {
+		photoURL = *item.PhotoUrl
+	}
+	var firstName string
+	if item.FirstName != nil {
+		firstName = *item.FirstName
+	}
+	var lastName string
+	if item.LastName != nil {
+		lastName = *item.LastName
+	}
+	var email string
+	if item.Email != nil {
+		email = *item.Email
+	}
+	var phone string
+	if item.Phone != nil {
+		phone = *item.Phone
+	}
+	var birthYear int
+	if item.BirthYear != nil {
+		birthYear = *item.BirthYear
+	}
+	var address string
+	if item.Address != nil {
+		address = *item.Address
+	}
+	var zipCode string
+	if item.ZipCode != nil {
+		zipCode = *item.ZipCode
+	}
+	var state string
+	if item.State != nil {
+		state = *item.State
+	}
+	var country string
+	if item.Country != nil {
+		country = *item.Country
+	}
+
+	var unstructuredProperties map[string]interface{}
+	if item.UnstructuredProperties != nil {
+		unstructuredProperties = *item.UnstructuredProperties
+	}
+
+	return model.Profile{PhotoURL: photoURL, FirstName: firstName, LastName: lastName,
+		Email: email, Phone: phone, BirthYear: int16(birthYear), Address: address, ZipCode: zipCode,
+		State: state, Country: country, UnstructuredProperties: unstructuredProperties}
+}
+
+// MFA
 func mfaDataListToDef(items []model.MFAType) []Def.SharedResMfa {
 	out := make([]Def.SharedResMfa, len(items))
 	for i, item := range items {
@@ -237,90 +353,35 @@ func mfaDataToDef(item *model.MFAType) *Def.SharedResMfa {
 	return &Def.SharedResMfa{Type: &mfaType, Verified: &verified, Params: &params}
 }
 
-func profileToDef(item *model.Profile) *Def.ProfileFields {
-	if item == nil {
-		return nil
-	}
-	birthYear := int(item.BirthYear)
-	return &Def.ProfileFields{Id: &item.ID, PhotoUrl: &item.PhotoURL, FirstName: &item.FirstName, LastName: &item.LastName,
-		Email: &item.Email, Phone: &item.Phone, BirthYear: &birthYear, Address: &item.Address, ZipCode: &item.ZipCode,
-		State: &item.State, Country: &item.Country}
-}
-
-func profileFromDefNullable(item *Def.SharedReqProfileNullable) model.Profile {
-	if item == nil {
-		return model.Profile{}
-	}
-
-	var photoURL string
-	if item.PhotoUrl != nil {
-		photoURL = *item.PhotoUrl
-	}
-	var firstName string
-	if item.FirstName != nil {
-		firstName = *item.FirstName
-	}
-	var lastName string
-	if item.LastName != nil {
-		lastName = *item.LastName
-	}
-	var email string
-	if item.Email != nil {
-		email = *item.Email
-	}
-	var phone string
-	if item.Phone != nil {
-		phone = *item.Phone
-	}
-	var birthYear int
-	if item.BirthYear != nil {
-		birthYear = *item.BirthYear
-	}
-	var address string
-	if item.Address != nil {
-		address = *item.Address
-	}
-	var zipCode string
-	if item.ZipCode != nil {
-		zipCode = *item.ZipCode
-	}
-	var state string
-	if item.State != nil {
-		state = *item.State
-	}
-	var country string
-	if item.Country != nil {
-		country = *item.Country
-	}
-	return model.Profile{PhotoURL: photoURL, FirstName: firstName, LastName: lastName,
-		Email: email, Phone: phone, BirthYear: int16(birthYear), Address: address, ZipCode: zipCode,
-		State: state, Country: country}
-}
-
 // Device
-func deviceFromDef(item *Def.DeviceFields) *model.Device {
-	if item == nil {
-		return nil
-	}
-	return &model.Device{ID: item.Id, Type: string(item.Type), OS: defString(item.Os)}
-}
-
-func deviceToDef(item *model.Device) *Def.DeviceFields {
+func deviceFromDef(item *Def.Device) *model.Device {
 	if item == nil {
 		return nil
 	}
 
-	return &Def.DeviceFields{Id: item.ID, DeviceId: &item.DeviceID, Type: Def.DeviceFieldsType(item.Type), Os: &item.OS}
+	var deviceID string
+	if item.DeviceId != nil {
+		deviceID = *item.DeviceId
+	}
+	return &model.Device{DeviceID: deviceID, Type: string(item.Type), OS: defString(item.Os)}
 }
 
-func deviceListToDef(items []model.Device) []Def.DeviceFields {
-	out := make([]Def.DeviceFields, len(items))
+func deviceToDef(item *model.Device) *Def.Device {
+	if item == nil {
+		return nil
+	}
+
+	return &Def.Device{Id: &item.ID, DeviceId: &item.DeviceID, Type: Def.DeviceType(item.Type), Os: &item.OS}
+}
+
+func deviceListToDef(items []model.Device) []Def.Device {
+	out := make([]Def.Device, len(items))
 	for i, item := range items {
 		defItem := deviceToDef(&item)
 		if defItem != nil {
 			out[i] = *defItem
 		} else {
-			out[i] = Def.DeviceFields{}
+			out[i] = Def.Device{}
 		}
 	}
 	return out

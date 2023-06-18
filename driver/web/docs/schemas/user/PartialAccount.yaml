@@ -4,10 +4,10 @@ required:
   - org_id
   - first_name
   - last_name
-  - has_permissions
   - permissions
   - roles
   - groups
+  - anonymous
   - auth_types
   - date_created
 type: object
@@ -23,8 +23,10 @@ properties:
     type: string
   last_name:
     type: string
-  has_permissions:
+  system:
     type: boolean
+  username:
+    type: string
   permissions:
     type: array
     items:
@@ -37,18 +39,28 @@ properties:
     type: array
     items:
       $ref: "../application/AppOrgGroup.yaml"
+  scopes:
+    type: array
+    items:
+      type: string
   auth_types:
     type: array
     items:
-      $ref: "../user/AccountAuthTypeFields.yaml"
+      $ref: "../user/AccountAuthType.yaml"
   system_configs:
     type: object
     nullable: true
   params:
     type: object
     nullable: true
+  anonymous:
+    type: boolean
   date_created:
+    readOnly: true
     type: string
   date_updated:
     type: string
+    nullable: true
+  external_ids:
+    type: object
     nullable: true

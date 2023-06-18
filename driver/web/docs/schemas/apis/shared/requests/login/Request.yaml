@@ -13,6 +13,7 @@ properties:
       - twilio_phone
       - illinois_oidc
       - anonymous
+      - username
   app_type_identifier:
     type: string
   org_id:
@@ -25,16 +26,21 @@ properties:
       - $ref: "../CredsTwilioPhone.yaml"
       - $ref: "../CredsOIDC.yaml"
       - $ref: "../CredsAPIKey.yaml"
+      - $ref: "../CredsUsername.yaml"
   params:
     type: object
     anyOf:
       - $ref: "../ParamsEmail.yaml"
       - $ref: "../ParamsOIDC.yaml"
       - $ref: "../ParamsNone.yaml"
+      - $ref: "../ParamsUsername.yaml"
   device:
-    $ref: "./Device.yaml"
+    $ref: "../../../../user/Device.yaml"
   profile:
-    $ref:  "../../requests/ProfileNullable.yaml"  
+    $ref:  "../../../../user/ProfileNullable.yaml"  
   preferences:
     type: object
+    nullable: true
+  username:
+    type: string
     nullable: true

@@ -16,46 +16,36 @@ post:
         examples:
           email-sign_up:
             summary: Email
-            value: |
-              {
-                "auth_type": "email",
-                "app_type_identifier": "edu.illinois.rokwire",
-                "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
-                "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
-                "creds": {
-                  "email": "test@example.com", 
-                  "password": "test12345"
-                },
-                "params":{
-                    "confirm_password": "test12345"
-                }
-              }
+            value:
+              auth_type: email
+              app_type_identifier: edu.illinois.rokwire
+              org_id: 0a2eff20-e2cd-11eb-af68-60f81db5ecc0
+              api_key: 95a463e3-2ce8-450b-ba75-d8506b874738
+              creds:
+                email: test@example.com 
+                password: test12345
+              params:
+                confirm_password: test12345
           phone:
             summary: Phone
-            value: |
-              {
-                "auth_type": "twilio_phone",
-                "app_type_identifier": "edu.illinois.rokwire",
-                "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
-                "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
-                "creds": {
-                  "phone": "+12223334444"
-                }
-              }
+            value:
+              auth_type: twilio_phone
+              app_type_identifier: edu.illinois.rokwire
+              org_id: 0a2eff20-e2cd-11eb-af68-60f81db5ecc0
+              api_key: 95a463e3-2ce8-450b-ba75-d8506b874738
+              creds:
+                phone: "+12223334444"
           illinois_oidc:
             summary: Illinois OIDC
-            value: |
-              {
-                "auth_type": "illinois_oidc",
-                "app_type_identifier": "edu.illinois.rokwire",
-                "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
-                "api_key": "95a463e3-2ce8-450b-ba75-d8506b874738",
-                "creds": "https://redirect.example.com?code=ai324uith8gSEefesEguorgwsf43",
-                "params": {
-                  "redirect_uri": "https://redirect.example.com",
-                  "pkce_verifier": "w4iuhfq0u43hfq38ghn3gnSFSFiqp3ugnpugnqiprgUGNPINfsdoirpgia"
-                }
-              }
+            value:
+              auth_type: illinois_oidc
+              app_type_identifier: edu.illinois.rokwire
+              org_id: 0a2eff20-e2cd-11eb-af68-60f81db5ecc0
+              api_key: 95a463e3-2ce8-450b-ba75-d8506b874738
+              creds: https://redirect.example.com?code=ai324uith8gSEefesEguorgwsf43
+              params:
+                redirect_uri: https://redirect.example.com
+                pkce_verifier: w4iuhfq0u43hfq38ghn3gnSFSFiqp3ugnpugnqiprgUGNPINfsdoirpgia
     required: true
   responses:
     200:
@@ -111,28 +101,22 @@ delete:
         examples:
           email:
             summary: Email
-            value: |
-              {
-                "auth_type": "email",
-                "app_type_identifier": "edu.illinois.rokwire",
-                "identifier": "test@example.com"
-              }
+            value:
+              auth_type: email
+              app_type_identifier: edu.illinois.rokwire
+              identifier: test@example.com
           phone:
             summary: Phone
-            value: |
-              {
-                "auth_type": "twilio_phone",
-                "app_type_identifier": "edu.illinois.rokwire",
-                "identifier": "+12223334444"
-              }
+            value: 
+              auth_type: twilio_phone
+              app_type_identifier: edu.illinois.rokwire
+              identifier: "+12223334444"
           illinois_oidc:
             summary: Illinois OIDC
-            value: |
-              {
-                "auth_type": "illinois_oidc",
-                "app_type_identifier": "edu.illinois.rokwire",
-                "identifier": "123456789"
-              }
+            value:
+              auth_type: illinois_oidc
+              app_type_identifier: edu.illinois.rokwire
+              identifier: "123456789"
     required: true
   responses:
     200:

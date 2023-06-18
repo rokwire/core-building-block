@@ -21,15 +21,16 @@ import (
 	"core-building-block/utils"
 	"time"
 
-	"github.com/rokwire/logging-library-go/errors"
-	"github.com/rokwire/logging-library-go/logutils"
+	"github.com/rokwire/logging-library-go/v2/errors"
+	"github.com/rokwire/logging-library-go/v2/logutils"
 )
 
 // application represents the core application code based on hexagonal architecture
 type application struct {
-	env     string
-	version string
-	build   string
+	env       string
+	version   string
+	build     string
+	serviceID string
 
 	storage Storage
 
@@ -135,8 +136,9 @@ func (app *application) grantOrRevokePermissions(context storage.TransactionCont
 		return nil
 	}
 
+	appOrg := container.GetAppOrg()
 	//check permissions
-	permissions, err := app.auth.CheckPermissions(context, container.GetAppOrg().ServicesIDs, checkPermissions, assignerPermissions, revoke)
+	permissions, err := app.auth.CheckPermissions(context, []model.ApplicationOrganization{appOrg}, checkPermissions, assignerPermissions, revoke)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionValidate, model.TypePermission, nil, err)
 	}
@@ -145,11 +147,10 @@ func (app *application) grantOrRevokePermissions(context storage.TransactionCont
 	case *model.Account:
 		{
 			if revoke {
-				hasPermissions := len(c.Permissions) > len(checkPermissions) || len(c.Roles) > 0 || len(c.Groups) > 0
 				//delete permissions from an account
-				err = app.storage.DeleteAccountPermissions(context, c.ID, hasPermissions, checkPermissions)
+				err = app.storage.DeleteAccountPermissions(context, c.ID, checkPermissions)
 				if err != nil {
-					return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccountPermissions, nil, err)
+					return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccountPermissions, &logutils.FieldArgs{"names": checkPermissions}, err)
 				}
 
 				//delete all sessions for the account
@@ -161,7 +162,7 @@ func (app *application) grantOrRevokePermissions(context storage.TransactionCont
 				//add permissions to account
 				err = app.storage.InsertAccountPermissions(context, c.ID, permissions)
 				if err != nil {
-					return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAccountPermissions, nil, err)
+					return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAccountPermissions, &logutils.FieldArgs{"names": checkPermissions}, err)
 				}
 			}
 		}
@@ -213,8 +214,9 @@ func (app *application) grantOrRevokeRoles(context storage.TransactionContext, c
 		return nil
 	}
 
+	appOrg := container.GetAppOrg()
 	//check roles
-	roles, err := app.auth.CheckRoles(context, container.GetAppOrg().ID, checkRoles, assignerPermissions, revoke)
+	roles, err := app.auth.CheckRoles(context, &appOrg, checkRoles, assignerPermissions, revoke)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionValidate, model.TypeAppOrgRole, nil, err)
 	}
@@ -223,11 +225,10 @@ func (app *application) grantOrRevokeRoles(context storage.TransactionContext, c
 	case *model.Account:
 		{
 			if revoke {
-				hasPermissions := len(c.Permissions) > 0 || len(c.Roles) > len(checkRoles) || len(c.Groups) > 0
 				//delete roles from an account
-				err = app.storage.DeleteAccountRoles(context, c.ID, hasPermissions, checkRoles)
+				err = app.storage.DeleteAccountRoles(context, c.ID, checkRoles)
 				if err != nil {
-					return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccountRoles, nil, err)
+					return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccountRoles, &logutils.FieldArgs{"ids": checkRoles}, err)
 				}
 
 				//delete all sessions for the account
@@ -240,7 +241,7 @@ func (app *application) grantOrRevokeRoles(context storage.TransactionContext, c
 				accountRoles := model.AccountRolesFromAppOrgRoles(roles, true, true)
 				err = app.storage.InsertAccountRoles(context, c.ID, c.AppOrg.ID, accountRoles)
 				if err != nil {
-					return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAccountRoles, nil, err)
+					return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAccountRoles, &logutils.FieldArgs{"ids": checkRoles}, err)
 				}
 			}
 		}

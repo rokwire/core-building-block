@@ -1,55 +1,43 @@
 DATE    ?= $(shell date +%FT%T%z)
-BIN      = $(CURDIR)/build
+GOBIN    = $(CURDIR)/bin
 BASE     = $(CURDIR)
 MODULE = $(shell cd $(BASE) && $(GO) list -m)
 PKGS     = $(or $(PKG),$(shell cd $(BASE) && $(GO) list ./...))
 BUILDS   = $(or $(BUILD),$(shell cd $(BASE) && $(GO) list -f "{{if eq .Name \"main\"}}{{.ImportPath}}{{end}}" ./...))
-GIT_VERSION=$(shell git describe --match "v*" 2> /dev/null || cat $(CURDIR)/.version 2> /dev/null || echo v0.0-0-)
+GIT_VERSION=$(shell git describe --tags --match "v*" 2> /dev/null || cat $(CURDIR)/.version 2> /dev/null || echo v0.0-0-)
 BASE_VERSION=$(shell echo $(GIT_VERSION) | cut -f1 -d'-')
 MAJOR_VERSION=$(shell echo $(BASE_VERSION) | cut -f1 -d'.' | cut -f2 -d'v')
 MINOR_VERSION=$(shell echo $(BASE_VERSION) | cut -f2 -d'.')
-BUILD_VERSION=$(shell echo $(BASE_VERSION) | cut -f3 -d'.' || echo 0)
-BUILD_OFFSET=$(shell echo $(GIT_VERSION) | cut -s -f2 -d'-' )
-CODE_OFFSET=$(shell [ -z "$(BUILD_OFFSET)" ] && echo "0" || echo "$(BUILD_OFFSET)")
-BUILD_NUMBER=$(shell echo $$(( $(BUILD_VERSION) + $(CODE_OFFSET) )))
-VERSION ?= ${MAJOR_VERSION}.${MINOR_VERSION}.${BUILD_NUMBER}
+PATCH_VERSION=$(shell echo $(BASE_VERSION) | cut -f3 -d'.' || echo 0)
+COMMIT_OFFSET=$(shell echo $(GIT_VERSION) | cut -s -f2 -d'-')
+COMMIT_HASH=$(shell echo $(GIT_VERSION) | cut -s -f3 -d'-')
+VERSION=${MAJOR_VERSION}.${MINOR_VERSION}.${PATCH_VERSION}$(if $(COMMIT_OFFSET),+$(COMMIT_OFFSET),)
 
 export -n GOBIN
-#export PATH=$(BIN): $(shell printenv PATH)
 
 GO      = go
 GODOC   = godoc
 GOFMT   = gofmt
+GOVET	= go vet
+GOLINT  = $(GOBIN)/golint
+GOVULN  = $(GOBIN)/govulncheck
 TIMEOUT = 25
 V = 0
 Q = $(if $(filter 1,$V),,@)
 M = $(shell printf "\033[34;1m▶\033[0m")
 
-SHELL=bash
+SHELL=sh
 
 .PHONY: all
-all: vendor log-variables checkfmt lint test-short | $(BASE) ; $(info $(M) building executable(s)… $(VERSION) $(DATE)) @ ## Build program binary
+all: vendor log-variables checkfmt lint vet vuln test-short | $(BASE) ; $(info $(M) building executable(s)... $(VERSION) $(DATE)) @ ## Build program binary
 	$Q cd $(CURDIR) && $(GO) generate ./...
 	@ret=0 && for d in $(BUILDS); do \
 		if expr \"$$d\" : \"${MODULE}\" 1>/dev/null; then SRCPATH=$(CURDIR) ; else SRCPATH=$(CURDIR)/$${d/${MODULE}\//} ; fi ;  \
 		echo $$d; \
-		cd $${SRCPATH} && env GOBIN=$(CURDIR)/bin $(GO) install \
+		cd $${SRCPATH} && $(GO) install \
 			-tags release \
 			-ldflags '-X main.Version=$(VERSION) -X main.Build=$(DATE)' || ret=$$? ; \
 	 done ; exit $$ret
-
-# Tools
-
-$(BIN):
-	@mkdir -p $@
-	
-$(BIN)/%: | $(BIN) $(BASE) ; $(info $(M) building $(REPOSITORY)…)
-	$Q tmp=$$(mktemp -d); \
-		(cd $(tmp) && GOPATH=$$tmp $(GO) install $(REPOSITORY) && cp $$tmp/bin/* $(BIN)/.) || ret=$$?; \
-		rm -rf $$tmp ; exit $$ret
-
-GOLINT = $(BIN)/golint
-$(GOLINT): REPOSITORY=golang.org/x/lint/golint@latest
 
 # Tests
 
@@ -61,21 +49,25 @@ test-verbose: ARGS=-v            ## Run tests in verbose mode with coverage repo
 test-race:    ARGS=-race         ## Run tests with race detector
 $(TEST_TARGETS): NAME=$(MAKECMDGOALS:test-%=%)
 $(TEST_TARGETS): test
-check test tests: checkfmt lint | $(BASE) ; $(info $(M) running $(NAME:%=% )tests…) @ ## Run tests
+check test tests: checkfmt lint vet | $(BASE) ; $(info $(M) running $(NAME:%=% )tests...) @ ## Run tests
 	$Q cd $(CURDIR) && $(GO) test -v -gcflags=-l -timeout $(TIMEOUT)s $(ARGS) ./...
 
 .PHONY: cover
-cover: checkfmt lint | $(BASE) ; $(info $(M) running coverage…) @ ## Run code coverage tests
+cover: tools checkfmt lint vet | $(BASE) ; $(info $(M) running coverage...) @ ## Run code coverage tests
 	$Q cd $(BASE) && 2>&1 $(GO) test -v -gcflags=-l ./... -coverprofile=c.out
 	$Q cd $(BASE) && 2>&1 $(GO) tool cover -html=c.out
 	$Q cd $(BASE) && 2>&1 rm -f c.out
 
 .PHONY: lint
-lint:  $(BASE) $(GOLINT) ; $(info $(M) running golint…) @ ## Run golint
+lint: tools | $(BASE) $(GOLINT) ; $(info $(M) running golint...) @ ## Run golint
 	$Q cd $(BASE) && $(GOLINT) -set_exit_status $(PKGS)
 
+.PHONY: vet
+vet: ; $(info $(M) running go vet...) @ ## Run go vet
+	$Q cd $(CURDIR) && $(GOVET) $(PKGS)
+
 .PHONY: checkfmt
-checkfmt: ; $(info $(M) Checking formatting…) @ ## Run gofmt to cehck formatting on all source files 
+checkfmt: ; $(info $(M) checking formatting...) @ ## Run gofmt to cehck formatting on all source files 
 	@ret=0 && for d in $$($(GO) list -f '{{.Dir}}' ./...); do \
 	    if [ $$($(GOFMT) -l $$d/*.go | wc -l | sed 's| ||g') -ne "0" ] ; then \
 	    $(GOFMT) -l $$d/*.go ; \
@@ -84,21 +76,23 @@ checkfmt: ; $(info $(M) Checking formatting…) @ ## Run gofmt to cehck formatti
 	 done ; exit $$ret
 
 .PHONY: fixfmt
-fixfmt: ; $(info $(M) Fixings formatting…) @ ## Run gofmt to fix formatting on all source files
+fixfmt: vendor ; $(info $(M) fixing formatting...) @ ## Run gofmt to fix formatting on all source files
 	@ret=0 && for d in $$($(GO) list -f '{{.Dir}}' ./...); do \
 		$(GOFMT) -l -w $$d/*.go || ret=$$? ; \
 	 done ; exit $$ret
 
+.PHONY: vuln
+vuln: tools ; $(info $(M) running govulncheck...) @ ## Run govulncheck
+	$Q cd $(CURDIR) && $(GOVULN) ./...
+
 # Misc
 
 .PHONY: clean
-clean: ; $(info $(M) cleaning…)	@ ## Cleanup everything
+clean: ; $(info $(M) cleaning...)	@ ## Cleanup everything
 	@rm -rf bin
-	@rm -rf build
 	@chmod -R +w vendor
 	@rm -rf vendor
 	@rm -f c.out
-	@rm -f go.sum
 	@rm -f test.html
 
 .PHONY: help
@@ -116,16 +110,16 @@ vendor:
 
 .PHONY: oapi-gen-types
 oapi-gen-types: ;
-	oapi-codegen --generate types -o driver/web/docs/gen/gen_types.go driver/web/docs/gen/def.yaml
+	oapi-codegen --config oapi-codegen-config.yaml driver/web/docs/gen/def.yaml
 
 .PHONY: oapi-gen-docs
 oapi-gen-docs: ;
 	swagger-cli bundle driver/web/docs/index.yaml --outfile driver/web/docs/gen/def.yaml --type yaml
 
 .PHONY: log-variables
-log-variables: ; $(info $(M) Log info…) @ ## Log the variables values
+log-variables: ; $(info $(M) logging variables...) @ ## Log the variables values
 	@echo "DATE:"$(DATE)
-	@echo "BIN:"$(BIN)
+	@echo "GOBIN:"$(GOBIN)
 	@echo "BASE:"$(BASE)
 	@echo "MODULE:"$(MODULE)
 	@echo "PKGS:"$(PKGS)
@@ -134,9 +128,15 @@ log-variables: ; $(info $(M) Log info…) @ ## Log the variables values
 	@echo "BASE_VERSION:"$(BASE_VERSION)
 	@echo "MAJOR_VERSION:"$(MAJOR_VERSION)
 	@echo "MINOR_VERSION:"$(MINOR_VERSION)
-	@echo "BUILD_VERSION:"$(BUILD_VERSION)
-	@echo "BUILD_OFFSET:"$(BUILD_OFFSET)
-	@echo "CODE_OFFSET:"$(CODE_OFFSET)
-	@echo "BUILD_NUMBER:"$(BUILD_NUMBER)
+	@echo "PATCH_VERSION:"$(PATCH_VERSION)
+	@echo "COMMIT_OFFSET:"$(COMMIT_OFFSET)
+	@echo "COMMIT_HASH:"$(COMMIT_HASH)
 	@echo "VERSION:"$(VERSION)
 
+# Tools
+
+.PHONY: tools
+tools: ; $(info $(M) installing tools...) @ ## Install tools
+	go install golang.org/x/tools/cmd/cover@latest
+	go install golang.org/x/lint/golint@latest
+	go install golang.org/x/vuln/cmd/govulncheck@latest
