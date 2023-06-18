@@ -392,9 +392,6 @@ type APIs interface {
 	//InitializeSystemAccount initializes the first system account
 	InitializeSystemAccount(context storage.TransactionContext, authType model.AuthType, appOrg model.ApplicationOrganization, allSystemPermission string, email string, password string, clientVersion string, l *logs.Log) (string, error)
 
-	//GrantAccountPermissions grants new permissions to an account after validating the assigner has required permissions
-	GrantAccountPermissions(context storage.TransactionContext, account *model.Account, permissionNames []string, assignerPermissions []string) error
-
 	//CheckPermissions loads permissions by names from storage and checks that they are assignable and valid for the given appOrgs or revocable
 	CheckPermissions(context storage.TransactionContext, appOrgs []model.ApplicationOrganization, permissionNames []string, assignerPermissions []string, revoke bool) ([]model.Permission, error)
 

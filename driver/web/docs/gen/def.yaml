@@ -4769,10 +4769,9 @@ paths:
         '200':
           description: Success
           content:
-            text/plain:
+            application/json:
               schema:
-                type: string
-                example: Success
+                $ref: '#/components/schemas/Permission'
         '400':
           description: Bad request
         '401':
@@ -4800,10 +4799,9 @@ paths:
         '200':
           description: Success
           content:
-            text/plain:
+            application/json:
               schema:
-                type: string
-                example: Success
+                $ref: '#/components/schemas/Permission'
         '400':
           description: Bad request
         '401':
@@ -5564,6 +5562,8 @@ components:
       required:
         - id
         - name
+        - description
+        - service_id
       type: object
       properties:
         id:

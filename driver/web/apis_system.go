@@ -20,6 +20,7 @@ import (
 	Def "core-building-block/driver/web/docs/gen"
 	"core-building-block/utils"
 	"encoding/json"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -201,7 +202,7 @@ func (h SystemApisHandler) updateApplicationOrganization(l *logs.Log, r *http.Re
 		return l.HTTPResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
 	}
 
-	data, err := ioutil.ReadAll(r.Body)
+	data, err := io.ReadAll(r.Body)
 	if err != nil {
 		return l.HTTPResponseErrorData(logutils.StatusInvalid, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
@@ -259,7 +260,7 @@ func (h SystemApisHandler) updateOrganization(l *logs.Log, r *http.Request, clai
 		return l.HTTPResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
 	}
 
-	data, err := ioutil.ReadAll(r.Body)
+	data, err := io.ReadAll(r.Body)
 	if err != nil {
 		return l.HTTPResponseErrorData(logutils.StatusInvalid, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
@@ -452,7 +453,7 @@ func (h SystemApisHandler) registerServiceAccount(l *logs.Log, r *http.Request, 
 	fromAppID := utils.StringOrNil(r.URL.Query().Get("app_id"), "")
 	fromOrgID := utils.StringOrNil(r.URL.Query().Get("org_id"), "")
 
-	data, err := ioutil.ReadAll(r.Body)
+	data, err := io.ReadAll(r.Body)
 	if err != nil {
 		return l.HTTPResponseErrorData(logutils.StatusInvalid, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
@@ -554,7 +555,7 @@ func (h SystemApisHandler) updateServiceAccountInstance(l *logs.Log, r *http.Req
 		return l.HTTPResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("org_id"), nil, http.StatusBadRequest, false)
 	}
 
-	data, err := ioutil.ReadAll(r.Body)
+	data, err := io.ReadAll(r.Body)
 	if err != nil {
 		return l.HTTPResponseErrorData(logutils.StatusInvalid, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
@@ -620,7 +621,7 @@ func (h SystemApisHandler) addServiceAccountCredential(l *logs.Log, r *http.Requ
 		return l.HTTPResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
 	}
 
-	data, err := ioutil.ReadAll(r.Body)
+	data, err := io.ReadAll(r.Body)
 	if err != nil {
 		return l.HTTPResponseErrorData(logutils.StatusInvalid, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
@@ -882,12 +883,18 @@ func (h SystemApisHandler) createPermission(l *logs.Log, r *http.Request, claims
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, model.TypePermission, nil, err, http.StatusBadRequest, true)
 	}
 
-	_, err = h.coreAPIs.System.SysCreatePermission(requestData.Name, requestData.Description, requestData.ServiceId, requestData.Assigners)
+	permission, err := h.coreAPIs.System.SysCreatePermission(requestData.Name, requestData.Description, requestData.ServiceId, requestData.Assigners)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionCreate, model.TypePermission, nil, err, http.StatusInternalServerError, true)
 	}
 
-	return l.HTTPResponseSuccess()
+	permissionResp := applicationPermissionToDef(*permission)
+	data, err = json.Marshal(permissionResp)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypePermission, nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HTTPResponseSuccessJSON(data)
 }
 
 // updatePermission updates an permission
@@ -903,12 +910,18 @@ func (h SystemApisHandler) updatePermission(l *logs.Log, r *http.Request, claims
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, model.TypePermission, nil, err, http.StatusBadRequest, true)
 	}
 
-	_, err = h.coreAPIs.System.SysUpdatePermission(requestData.Name, requestData.Description, requestData.ServiceId, requestData.Assigners)
+	permission, err := h.coreAPIs.System.SysUpdatePermission(requestData.Name, requestData.Description, requestData.ServiceId, requestData.Assigners)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUpdate, model.TypePermission, nil, err, http.StatusInternalServerError, true)
 	}
 
-	return l.HTTPResponseSuccess()
+	permissionResp := applicationPermissionToDef(*permission)
+	data, err = json.Marshal(permissionResp)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypePermission, nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HTTPResponseSuccessJSON(data)
 }
 
 func (h SystemApisHandler) getApplicationConfigs(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
@@ -1008,7 +1021,7 @@ func (h SystemApisHandler) updateApplicationConfig(l *logs.Log, r *http.Request,
 		return l.HTTPResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
 	}
 
-	data, err := ioutil.ReadAll(r.Body)
+	data, err := io.ReadAll(r.Body)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
@@ -1050,7 +1063,7 @@ func (h SystemApisHandler) deleteApplicationConfig(l *logs.Log, r *http.Request,
 // createAuthTypes creates auth-type
 func (h SystemApisHandler) createAuthTypes(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
 
-	data, err := ioutil.ReadAll(r.Body)
+	data, err := io.ReadAll(r.Body)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}
@@ -1104,7 +1117,7 @@ func (h SystemApisHandler) updateAuthTypes(l *logs.Log, r *http.Request, claims 
 		return l.HTTPResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
 	}
 
-	data, err := ioutil.ReadAll(r.Body)
+	data, err := io.ReadAll(r.Body)
 	if err != nil {
 		return l.HTTPResponseErrorData(logutils.StatusInvalid, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
 	}

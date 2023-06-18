@@ -276,9 +276,9 @@ func (app *application) admUpdateAppOrgGroup(ID string, name string, description
 	var updatedGroup *model.AppOrgGroup
 	transaction := func(context storage.TransactionContext) error {
 		//1. get application organization entity
-		appOrg, err := app.storage.FindApplicationOrganization(appID, orgID)
-		if err != nil || appOrg == nil {
-			return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
+		appOrg, err := app.getApplicationOrganization(appID, orgID)
+		if err != nil {
+			return err
 		}
 
 		//2. find group, check if update allowed by system flag
@@ -683,9 +683,6 @@ func (app *application) admUpdateAppOrgRole(ID string, name string, description 
 		if err != nil {
 			return err
 		}
-		if appOrg == nil {
-			return errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": appID, "org_id": orgID})
-		}
 
 		//2. find role, check if update allowed by system flag
 		role, err := app.getAppOrgRole(context, ID, appOrg.ID, systemClaim)
@@ -725,7 +722,7 @@ func (app *application) admUpdateAppOrgRole(ID string, name string, description 
 			updated = true
 		}
 
-		//6. update account scopes
+		//4. update account scopes
 		if scopes != nil && utils.Contains(assignerPermissions, model.UpdateScopesPermission) && !utils.DeepEqual(role.Scopes, scopes) {
 			for i, scope := range scopes {
 				parsedScope, err := authorization.ScopeFromString(scope)
@@ -742,7 +739,7 @@ func (app *application) admUpdateAppOrgRole(ID string, name string, description 
 			updated = true
 		}
 
-		//4. update role (also updates all necessary groups and accounts)
+		//5. update role (also updates all necessary groups and accounts)
 		updated = updated || (role.Name != name) || (role.Description != description) || (role.System != (systemClaim && system))
 		if updated {
 			now := time.Now().UTC()
@@ -865,9 +862,9 @@ func (app *application) admUpdateAccountSystemConfigs(appID string, orgID string
 	created := false
 	transaction := func(context storage.TransactionContext) error {
 		//1. verify that the account is for the current app/org
-		account, err := app.getAccount(context, accountID)
+		account, err := app.storage.FindAccountByID(context, accountID)
 		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountSystemConfigs, &logutils.FieldArgs{"account_id": accountID}, err)
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"id": accountID}, err)
 		}
 		if account == nil {
 			if !createAnonymous {

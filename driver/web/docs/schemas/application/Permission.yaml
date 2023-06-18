@@ -1,6 +1,8 @@
 required:
   - id
   - name
+  - description
+  - service_id
 type: object
 properties:
   id:

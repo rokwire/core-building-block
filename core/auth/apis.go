@@ -1831,22 +1831,9 @@ func (a *Auth) CheckPermissions(context storage.TransactionContext, appOrgs []mo
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypePermission, nil, err)
 	}
-	//Allow revocation of missing permissions
-	if len(permissions) != len(permissionNames) && !revoke {
-		badNames := make([]string, 0)
-		for _, pName := range permissionNames {
-			bad := true
-			for _, p := range permissions {
-				if p.Name == pName {
-					bad = false
-					break
-				}
-			}
-			if bad {
-				badNames = append(badNames, pName)
-			}
-		}
-		return nil, errors.ErrorData(logutils.StatusInvalid, model.TypePermission, &logutils.FieldArgs{"names": badNames})
+	if len(permissions) < len(permissionNames) && !revoke {
+		missing := model.GetMissingPermissionNames(permissions, permissionNames)
+		return nil, errors.ErrorData(logutils.StatusInvalid, model.TypePermission, &logutils.FieldArgs{"names": missing})
 	}
 
 	//check if authorized
@@ -1914,21 +1901,9 @@ func (a *Auth) CheckRoles(context storage.TransactionContext, appOrg *model.Appl
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgRole, nil, err)
 	}
-	if len(roles) != len(roleIDs) && !revoke {
-		badIDs := make([]string, 0)
-		for _, rID := range roleIDs {
-			bad := true
-			for _, r := range roles {
-				if r.ID == rID {
-					bad = false
-					break
-				}
-			}
-			if bad {
-				badIDs = append(badIDs, rID)
-			}
-		}
-		return nil, errors.ErrorData(logutils.StatusInvalid, model.TypeAppOrgRole, &logutils.FieldArgs{"ids": badIDs})
+	if len(roles) < len(roleIDs) && !revoke {
+		missing := model.GetMissingRoleIDs(roles, roleIDs)
+		return nil, errors.ErrorData(logutils.StatusInvalid, model.TypeAppOrgRole, &logutils.FieldArgs{"ids": missing})
 	}
 
 	//check if authorized

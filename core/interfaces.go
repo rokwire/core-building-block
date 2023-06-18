@@ -130,8 +130,8 @@ type System interface {
 	SysGetApplication(ID string) (*model.Application, error)
 	SysGetApplications() ([]model.Application, error)
 
-	SysCreatePermission(name string, description *string, serviceID *string, assigners *[]string) (*model.Permission, error)
-	SysUpdatePermission(name string, description *string, serviceID *string, assigners *[]string) (*model.Permission, error)
+	SysCreatePermission(name string, description string, serviceID string, assigners *[]string) (*model.Permission, error)
+	SysUpdatePermission(name string, description string, serviceID string, assigners *[]string) (*model.Permission, error)
 
 	SysGetAppConfigs(appTypeID string, orgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error)
 	SysGetAppConfig(id string) (*model.ApplicationConfig, error)
@@ -155,9 +155,9 @@ type Storage interface {
 	FindAccountByID(context storage.TransactionContext, id string) (*model.Account, error)
 	FindAccounts(context storage.TransactionContext, limit *int, offset *int, appID string, orgID string, accountID *string, firstName *string, lastName *string, authType *string,
 		authTypeIdentifier *string, anonymous *bool, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error)
+	FindAccountsByAccountID(context storage.TransactionContext, appID string, orgID string, accountIDs []string) ([]model.Account, error)
 	FindAccountsByParams(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]map[string]interface{}, error)
 	CountAccountsByParams(searchParams map[string]interface{}, appID string, orgID string) (int64, error)
-	FindAccountsByAccountID(context storage.TransactionContext, appID string, orgID string, accountIDs []string) ([]model.Account, error)
 	FindAccountsByUsername(context storage.TransactionContext, appOrg *model.ApplicationOrganization, username string) ([]model.Account, error)
 
 	UpdateAccountPreferences(context storage.TransactionContext, accountID string, preferences map[string]interface{}) error
@@ -190,7 +190,7 @@ type Storage interface {
 	FindPermissionsByServiceIDs(serviceIDs []string) ([]model.Permission, error)
 	InsertPermission(context storage.TransactionContext, item model.Permission) error
 	InsertPermissions(context storage.TransactionContext, items []model.Permission) error
-	UpdatePermission(item model.Permission) error
+	UpdatePermission(context storage.TransactionContext, item model.Permission) error
 	DeletePermission(id string) error
 
 	FindAppOrgRoles(appOrgID string) ([]model.AppOrgRole, error)

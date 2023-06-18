@@ -222,28 +222,6 @@ func (cg AppOrgGroup) CheckAssigners(assignerPermissions []string) error {
 	return nil
 }
 
-// GetAssignedPermissionNames returns a list of names of assigned permissions for this group
-func (cg AppOrgGroup) GetAssignedPermissionNames() []string {
-	names := make([]string, len(cg.Permissions))
-	for i, permission := range cg.Permissions {
-		names[i] = permission.Name
-	}
-	return names
-}
-
-// GetAssignedRoleIDs returns a list of ids of assigned roles for this group
-func (cg AppOrgGroup) GetAssignedRoleIDs() []string {
-	ids := make([]string, len(cg.Roles))
-	for i, role := range cg.Roles {
-		ids[i] = role.ID
-	}
-	return ids
-}
-
-func (cg AppOrgGroup) String() string {
-	return fmt.Sprintf("[ID:%s\nName:%s\nAppOrg:%s]", cg.ID, cg.Name, cg.AppOrg.ID)
-}
-
 // GetPermissionNamed returns the permission for a name if the group has it directly
 func (cg AppOrgGroup) GetPermissionNamed(name string) *Permission {
 	for _, permission := range cg.Permissions {
@@ -252,6 +230,15 @@ func (cg AppOrgGroup) GetPermissionNamed(name string) *Permission {
 		}
 	}
 	return nil
+}
+
+// GetAssignedPermissionNames returns a list of names of directly assigned permissions for this group
+func (cg AppOrgGroup) GetAssignedPermissionNames() []string {
+	names := make([]string, len(cg.Permissions))
+	for i, permission := range cg.Permissions {
+		names[i] = permission.Name
+	}
+	return names
 }
 
 // GetRole returns the role for an ID if the group has it
@@ -264,9 +251,22 @@ func (cg AppOrgGroup) GetRole(id string) *AppOrgRole {
 	return nil
 }
 
+// GetAssignedRoleIDs returns a list of ids of assigned roles for this group
+func (cg AppOrgGroup) GetAssignedRoleIDs() []string {
+	ids := make([]string, len(cg.Roles))
+	for i, role := range cg.Roles {
+		ids[i] = role.ID
+	}
+	return ids
+}
+
 // GetAppOrg returns the group's application organization
 func (cg AppOrgGroup) GetAppOrg() ApplicationOrganization {
 	return cg.AppOrg
+}
+
+func (cg AppOrgGroup) String() string {
+	return fmt.Sprintf("[ID:%s\nName:%s\nAppOrg:%s]", cg.ID, cg.Name, cg.AppOrg.ID)
 }
 
 // Application represents users application entity - safer community, uuic, etc
@@ -536,6 +536,73 @@ func VersionNumbersFromString(version string) *VersionNumbers {
 	}
 
 	return &VersionNumbers{Major: major, Minor: minor, Patch: patch}
+}
+
+// GetMissingPermissionNames returns a list of permission names missing from items
+func GetMissingPermissionNames(items []Permission, names []string) []string {
+	missingNames := make([]string, 0)
+	for _, name := range names {
+		missing := true
+		for _, e := range items {
+			if e.Name == name {
+				missing = false
+				break
+			}
+		}
+		if missing {
+			missingNames = append(missingNames, name)
+		}
+	}
+	return missingNames
+}
+
+// CheckPermissionsExist checks if permissions already exist or are included in list of incoming permissions
+func CheckPermissionsExist(names []string, existing []Permission, incoming []Permission) error {
+	missing := GetMissingPermissionNames(existing, names)
+	if len(missing) > 0 {
+		missing = GetMissingPermissionNames(incoming, missing)
+		if len(missing) > 0 {
+			return errors.ErrorData(logutils.StatusInvalid, TypePermission, &logutils.FieldArgs{"names": missing})
+		}
+	}
+
+	return nil
+}
+
+// GetMissingRoleIDs returns a list of role IDs missing from items
+func GetMissingRoleIDs(items []AppOrgRole, ids []string) []string {
+	missingIDs := make([]string, 0)
+	for _, id := range ids {
+		missing := true
+		for _, e := range items {
+			if e.ID == id {
+				missing = false
+				break
+			}
+		}
+		if missing {
+			missingIDs = append(missingIDs, id)
+		}
+	}
+	return missingIDs
+}
+
+// GetMissingGroupIDs returns a list of group IDs missing from items
+func GetMissingGroupIDs(items []AppOrgGroup, ids []string) []string {
+	missingIDs := make([]string, 0)
+	for _, id := range ids {
+		missing := true
+		for _, e := range items {
+			if e.ID == id {
+				missing = false
+				break
+			}
+		}
+		if missing {
+			missingIDs = append(missingIDs, id)
+		}
+	}
+	return missingIDs
 }
 
 // GetMissingAccountIDs returns a list of account IDs missing from items

@@ -64,11 +64,12 @@ func (app *application) getAccount(context storage.TransactionContext, accountID
 	//find the account
 	account, err := app.storage.FindAccountByID(context, accountID)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"id": accountID}, err)
 	}
 	if account == nil {
-		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeAccount, nil, err)
+		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeAccount, &logutils.FieldArgs{"id": accountID}, err)
 	}
+
 	return account, nil
 }
 
