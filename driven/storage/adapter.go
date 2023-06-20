@@ -1270,10 +1270,10 @@ func (sa *Adapter) FindAccounts(context TransactionContext, limit *int, offset *
 }
 
 // FindPublicAccounts finds accounts and returns name and username
-func (sa *Adapter) FindPublicAccounts(context TransactionContext, limit *int, offset *int,
+func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, orgID string, limit *int, offset *int,
 	firstName *string, lastName *string, username *string) ([]model.PublicAccount, error) {
 	//find the accounts
-	filter := bson.D{}
+	filter := bson.D{primitive.E{Key: "app_id", Value: appID}, primitive.E{Key: "org_id", Value: orgID}}
 
 	if firstName != nil {
 		filter = append(filter, primitive.E{Key: "profile.first_name", Value: *firstName})

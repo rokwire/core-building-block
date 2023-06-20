@@ -882,7 +882,7 @@ func (h ServicesApisHandler) getPublicAccounts(l *logs.Log, r *http.Request, cla
 		lastName = &lastNameParam
 	}
 
-	accounts, err := h.coreAPIs.Services.SerGetPublicAccounts(limit, offset, username, firstName, lastName)
+	accounts, err := h.coreAPIs.Services.SerGetPublicAccounts(claims.AppID, claims.OrgID, limit, offset, username, firstName, lastName)
 	if err != nil {
 		return l.HTTPResponseErrorAction("error finding accounts", model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}
