@@ -1432,7 +1432,7 @@ paths:
         - Services
       summary: Get follows for a specific user
       description: |
-        Returns a list of users that follow specified user
+        Returns a list of public accounts of users that follow specified user
 
         **Auth:** Requires user auth token
       security:
@@ -1454,6 +1454,14 @@ paths:
           explode: false
           schema:
             type: integer
+        - name: user_id
+          in: query
+          description: The ID of the account to query follows
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
       responses:
         '200':
           description: Success
@@ -1462,7 +1470,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/PartialAccount'
+                  $ref: '#/components/schemas/PublicAccount'
         '400':
           description: Bad request
         '401':
@@ -1494,6 +1502,32 @@ paths:
               schema:
                 type: string
                 example: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+    delete:
+      tags:
+        - Services
+      summary: Delete a follow relationship
+      description: |
+        Delete a follow where subject follows userID
+
+        **Auth:** Requires user auth token
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: |
+          Delete follow params
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserID'
+      responses:
+        '200':
+          description: Success
         '400':
           description: Bad request
         '401':
@@ -6523,6 +6557,13 @@ components:
           type: object
           nullable: true
     Username:
+      required:
+        - username
+      type: object
+      properties:
+        username:
+          type: string
+    UserID:
       required:
         - username
       type: object

@@ -632,6 +632,11 @@ type TSLExpirePolicy struct {
 	TimeSinceLoginPeriod int  `json:"time_since_login_period"`
 }
 
+// UserID defines model for UserID.
+type UserID struct {
+	Username string `json:"username"`
+}
+
 // Username defines model for Username.
 type Username struct {
 	Username string `json:"username"`
@@ -1290,6 +1295,9 @@ type GetServicesAccountFollowParams struct {
 
 	// Offset The index of the first account to return
 	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
+
+	// UserId The ID of the account to query follows
+	UserId *string `form:"user_id,omitempty" json:"user_id,omitempty"`
 }
 
 // PutServicesAccountPreferencesJSONBody defines parameters for PutServicesAccountPreferences.
@@ -1639,6 +1647,9 @@ type PostBbsAccountsCountJSONRequestBody = PostBbsAccountsCountJSONBody
 
 // PostBbsServiceAccountIdJSONRequestBody defines body for PostBbsServiceAccountId for application/json ContentType.
 type PostBbsServiceAccountIdJSONRequestBody = ServicesReqServiceAccountsParams
+
+// DeleteServicesAccountFollowJSONRequestBody defines body for DeleteServicesAccountFollow for application/json ContentType.
+type DeleteServicesAccountFollowJSONRequestBody = UserID
 
 // PostServicesAccountFollowJSONRequestBody defines body for PostServicesAccountFollow for application/json ContentType.
 type PostServicesAccountFollowJSONRequestBody = Follow
