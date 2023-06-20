@@ -84,6 +84,8 @@ Profile:
   $ref: "./user/Profile.yaml"
 ProfileNullable:
   $ref: "./user/ProfileNullable.yaml"
+Privacy:
+  $ref: "./user/Privacy.yaml"
 Username:
   $ref: "./user/Username.yaml"
 UserID:

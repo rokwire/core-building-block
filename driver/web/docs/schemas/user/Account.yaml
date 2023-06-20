@@ -11,6 +11,8 @@ properties:
     type: string
   profile:
     $ref: "./Profile.yaml"
+  privacy:
+    $ref: "./Privacy.yaml"
   preferences:
     type: object
     nullable: true
@@ -18,8 +20,6 @@ properties:
     type: object
     nullable: true
   anonymous:
-    type: boolean
-  public:
     type: boolean
   verified:
     type: boolean

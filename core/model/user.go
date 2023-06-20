@@ -53,6 +53,10 @@ const (
 	TypeFollow logutils.MessageDataType = "follow"
 )
 
+type Privacy struct {
+	Public bool `json:"public" bson:"public"`
+}
+
 // Account represents account entity
 //
 //	The account is the user himself or herself.
@@ -78,11 +82,11 @@ type Account struct {
 	Preferences   map[string]interface{}
 	SystemConfigs map[string]interface{}
 	Profile       Profile //one account has one profile, one profile can be shared between many accounts
+	Privacy       Privacy
 
 	Devices []Device
 
 	Anonymous bool
-	Public    bool
 	Verified  bool
 
 	DateCreated time.Time
