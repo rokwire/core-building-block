@@ -131,6 +131,9 @@ func (we Adapter) Start() {
 	servicesSubRouter.HandleFunc("/account/profile", we.wrapFunc(we.servicesApisHandler.updateProfile, we.auth.services.User)).Methods("PUT")
 	servicesSubRouter.HandleFunc("/account/system-configs", we.wrapFunc(we.servicesApisHandler.getAccountSystemConfigs, we.auth.services.Standard)).Methods("GET")
 	servicesSubRouter.HandleFunc("/account/username", we.wrapFunc(we.servicesApisHandler.updateAccountUsername, we.auth.services.User)).Methods("PUT")
+	servicesSubRouter.HandleFunc("/account/follow", we.wrapFunc(we.servicesApisHandler.addFollow, we.auth.services.User)).Methods("POST")
+	servicesSubRouter.HandleFunc("/account/follow", we.wrapFunc(we.servicesApisHandler.deleteFollow, we.auth.services.User)).Methods("DELETE")
+	servicesSubRouter.HandleFunc("/account/follow", we.wrapFunc(we.servicesApisHandler.getFollows, we.auth.services.Standard)).Methods("GET")
 	servicesSubRouter.HandleFunc("/test", we.wrapFunc(we.servicesApisHandler.getTest, nil)).Methods("GET")                       //Public
 	servicesSubRouter.HandleFunc("/app-configs", we.wrapFunc(we.servicesApisHandler.getApplicationConfigs, nil)).Methods("POST") //Requires API key in request
 	servicesSubRouter.HandleFunc("/app-configs/organization", we.wrapFunc(we.servicesApisHandler.getApplicationOrgConfigs, we.auth.services.Standard)).Methods("POST")

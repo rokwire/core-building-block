@@ -145,6 +145,14 @@ func (app *application) serGetPublicAccounts(limit int, offset int, firstName *s
 	return accounts, nil
 }
 
+func (app *application) SerAddFollow(follow model.Follow) error {
+	err := app.storage.InsertFollower(nil, follow)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeFollow, nil, err)
+	}
+	return nil
+}
+
 func (app *application) serGetAuthTest(l *logs.Log) string {
 	return "Services - Auth - test"
 }

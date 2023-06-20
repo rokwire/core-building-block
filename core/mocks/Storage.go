@@ -215,6 +215,11 @@ func (_m *Storage) DeleteDevice(context storage.TransactionContext, id string) e
 	return r0
 }
 
+// DeleteFollower provides a mock function with given fields: context, appID, ordID, followerID, userID
+func (_m *Storage) DeleteFollower(context storage.TransactionContext, appID string, ordID string, followerID string, userID string) {
+	_m.Called(context, appID, ordID, followerID, userID)
+}
+
 // DeleteGlobalConfig provides a mock function with given fields: context
 func (_m *Storage) DeleteGlobalConfig(context storage.TransactionContext) error {
 	ret := _m.Called(context)
@@ -869,6 +874,11 @@ func (_m *Storage) FindAuthTypes() ([]model.AuthType, error) {
 	return r0, r1
 }
 
+// FindFollowers provides a mock function with given fields: context, appID, ordID, limit, offset, userID
+func (_m *Storage) FindFollowers(context storage.TransactionContext, appID string, ordID string, limit *int, offset *int, userID string) {
+	_m.Called(context, appID, ordID, limit, offset, userID)
+}
+
 // FindLoginSessionsByParams provides a mock function with given fields: appID, orgID, sessionID, identifier, accountAuthTypeIdentifier, appTypeID, appTypeIdentifier, anonymous, deviceID, ipAddress
 func (_m *Storage) FindLoginSessionsByParams(appID string, orgID string, sessionID *string, identifier *string, accountAuthTypeIdentifier *string, appTypeID *string, appTypeIdentifier *string, anonymous *bool, deviceID *string, ipAddress *string) ([]model.LoginSession, error) {
 	ret := _m.Called(appID, orgID, sessionID, identifier, accountAuthTypeIdentifier, appTypeID, appTypeIdentifier, anonymous, deviceID, ipAddress)
@@ -1289,6 +1299,11 @@ func (_m *Storage) InsertAuthType(context storage.TransactionContext, authType m
 	}
 
 	return r0, r1
+}
+
+// InsertFollower provides a mock function with given fields: context, follow
+func (_m *Storage) InsertFollower(context storage.TransactionContext, follow model.Follow) {
+	_m.Called(context, follow)
 }
 
 // InsertOrganization provides a mock function with given fields: context, organization

@@ -733,7 +733,7 @@ func (sa *Adapter) DeleteFollower(context TransactionContext, appID string, orgI
 		primitive.E{Key: "org_id", Value: orgID},
 		primitive.E{Key: "follower_id", Value: followerID},
 		primitive.E{Key: "user_id", Value: userID}}
-	
+
 	res, err := sa.db.follows.DeleteOneWithContext(context, filter, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeFollow, nil, err)

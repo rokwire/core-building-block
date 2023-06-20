@@ -894,6 +894,28 @@ func (h ServicesApisHandler) getPublicAccounts(l *logs.Log, r *http.Request, cla
 	return l.HTTPResponseSuccessJSON(data)
 }
 
+func (h ServicesApisHandler) addFollow(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
+	var follow Def.Follow
+	err := json.NewDecoder(r.Body).Decode(&follow)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, model.TypeFollow, nil, err, http.StatusBadRequest, true)
+	}
+
+	claims.AppOrg()
+
+	err = h.coreAPIs.Services.SerAddFollow(model.Follow{
+		ID: *follow.Id,
+		AppOrg: *appOrgFromDef(*&follow.AppOrg),
+		FollowerID: *follow.FollowerId,
+		UserID: *follow.UserId,
+	})
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionUpdate, model.TypeFollow, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HTTPResponseSuccess()
+}
+
 // getCommonTest TODO get test
 func (h ServicesApisHandler) getTest(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
 	res := h.coreAPIs.Services.SerGetCommonTest(l)

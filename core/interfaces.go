@@ -37,6 +37,8 @@ type Services interface {
 
 	SerGetPublicAccounts(limit int, offset int, firstName *string, lastName *string, username *string) ([]model.PublicAccount, error)
 
+	SerAddFollow(follow model.Follow) error
+
 	SerGetAuthTest(l *logs.Log) string
 	SerGetCommonTest(l *logs.Log) string
 
@@ -155,9 +157,9 @@ type Storage interface {
 
 	FindAuthType(codeOrID string) (*model.AuthType, error)
 
-	InsertFollower(context storage.TransactionContext, follow model.Follow)
-	DeleteFollower(context storage.TransactionContext, appID string, ordID string, followerID string, userID string)
-	FindFollowers(context storage.TransactionContext, appID string, ordID string, limit *int, offset *int, userID string)
+	InsertFollower(context storage.TransactionContext, follow model.Follow) error
+	DeleteFollower(context storage.TransactionContext, appID string, ordID string, followerID string, userID string) error
+	FindFollowers(context storage.TransactionContext, appID string, ordID string, limit *int, offset *int, userID string) ([]model.PublicAccount, error)
 
 	FindAccountByID(context storage.TransactionContext, id string) (*model.Account, error)
 	FindAccounts(context storage.TransactionContext, limit *int, offset *int, appID string, orgID string, accountID *string, firstName *string, lastName *string, authType *string,
