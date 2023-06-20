@@ -39,6 +39,7 @@ type Services interface {
 
 	SerAddFollow(follow model.Follow) error
 	SerDeleteFollow(appID string, orgID string, followerID string, userID string) error
+	SerGetFollows(appID string, orgID string, limit *int, offset *int, userID string) ([]model.PublicAccount, error)
 
 	SerGetAuthTest(l *logs.Log) string
 	SerGetCommonTest(l *logs.Log) string

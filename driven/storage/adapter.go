@@ -745,13 +745,7 @@ func (sa *Adapter) DeleteFollow(context TransactionContext, appID string, orgID 
 	return nil
 }
 
-func (sa *Adapter) FindFollows(context TransactionContext, appID string, orgID string, limit *int, offset *int, userID string) ([]model.Account, error) {
-	//find app org id
-	appOrg, err := sa.getCachedApplicationOrganization(appID, orgID)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeApplicationOrganization, nil, err)
-	}
-
+func (sa *Adapter) FindFollows(context TransactionContext, appID string, orgID string, limit *int, offset *int, userID string) ([]model.PublicAccount, error) {
 	filter := bson.D{primitive.E{Key: "app_id", Value: appID},
 		primitive.E{Key: "org_id", Value: orgID}}
 
@@ -773,7 +767,7 @@ func (sa *Adapter) FindFollows(context TransactionContext, appID string, orgID s
 	}
 
 	// Get all follow objects specified
-	err = sa.db.follows.FindWithContext(context, filter, &follows, findOptions)
+	err := sa.db.follows.FindWithContext(context, filter, &follows, findOptions)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeFollow, nil, err)
 	}
@@ -798,7 +792,16 @@ func (sa *Adapter) FindFollows(context TransactionContext, appID string, orgID s
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
 
-	return accountsFromStorage(accounts, *appOrg), nil
+	// convert accounts to public accounts
+	var publicAccounts []model.PublicAccount
+	for _, account := range accounts {
+		publicAccounts = append(publicAccounts, model.PublicAccount{
+			Username:  account.Username,
+			FirstName: account.Profile.FirstName,
+			LastName:  account.Profile.LastName,
+		})
+	}
+	return publicAccounts, nil
 }
 
 // InsertLoginSession inserts login session
