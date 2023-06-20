@@ -903,7 +903,7 @@ func (h ServicesApisHandler) addFollow(l *logs.Log, r *http.Request, claims *tok
 
 	err = h.coreAPIs.Services.SerAddFollow(model.Follow{
 		ID: *follow.Id,
-		AppOrg: *appOrgFromDef(*&follow.AppOrg),
+		AppOrg: *appOrgFromDef(follow.AppOrg),
 		FollowerID: *follow.FollowerId,
 		UserID: *follow.UserId,
 	})
@@ -952,13 +952,13 @@ func (h ServicesApisHandler) getFollows(l *logs.Log, r *http.Request, claims *to
 	}
 
 	// userID
-	var userID *string
-	userIDParam := r.URL.Query().Get("user_id")
-	if len(userIDParam) > 0 {
-		userID = &userIDParam
+	var userID Def.UserID
+	err = json.NewDecoder(r.Body).Decode(userID)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, model.TypeFollow, nil, err, http.StatusBadRequest, true)
 	}
 
-	accounts, err := h.coreAPIs.Services.SerGetFollows(claims.AppID, claims.OrgID, &limit, &offset, *userID)
+	accounts, err := h.coreAPIs.Services.SerGetFollows(claims.AppID, claims.OrgID, &limit, &offset, userID.Username)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionGet, model.TypeAccount, nil, err, http.StatusInternalServerError, false)
 	}
