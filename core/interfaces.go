@@ -158,9 +158,9 @@ type Storage interface {
 
 	FindAuthType(codeOrID string) (*model.AuthType, error)
 
-	InsertFollower(context storage.TransactionContext, follow model.Follow) error
-	DeleteFollower(context storage.TransactionContext, appID string, orgID string, followerID string, userID string) error
-	FindFollowers(context storage.TransactionContext, appID string, orgID string, limit *int, offset *int, userID string) ([]model.PublicAccount, error)
+	InsertFollow(context storage.TransactionContext, follow model.Follow) error
+	DeleteFollow(context storage.TransactionContext, appID string, orgID string, followerID string, userID string) error
+	FindFollows(context storage.TransactionContext, appID string, orgID string, limit *int, offset *int, userID string) ([]model.PublicAccount, error)
 
 	FindAccountByID(context storage.TransactionContext, id string) (*model.Account, error)
 	FindAccounts(context storage.TransactionContext, limit *int, offset *int, appID string, orgID string, accountID *string, firstName *string, lastName *string, authType *string,

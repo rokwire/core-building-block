@@ -145,16 +145,16 @@ func (app *application) serGetPublicAccounts(limit int, offset int, firstName *s
 	return accounts, nil
 }
 
-func (app *application) SerAddFollow(follow model.Follow) error {
-	err := app.storage.InsertFollower(nil, follow)
+func (app *application) serAddFollow(follow model.Follow) error {
+	err := app.storage.InsertFollow(nil, follow)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeFollow, nil, err)
 	}
 	return nil
 }
 
-func (app *application) SerDeleteFollow(appID string, orgID string, followerID string, userID string) error {
-	err := app.storage.DeleteFollower(nil, appID, orgID, followerID, userID)
+func (app *application) serDeleteFollow(appID string, orgID string, followerID string, userID string) error {
+	err := app.storage.DeleteFollow(nil, appID, orgID, followerID, userID)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeFollow, nil, err)
 	}

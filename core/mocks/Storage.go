@@ -215,9 +215,18 @@ func (_m *Storage) DeleteDevice(context storage.TransactionContext, id string) e
 	return r0
 }
 
-// DeleteFollower provides a mock function with given fields: context, appID, ordID, followerID, userID
-func (_m *Storage) DeleteFollower(context storage.TransactionContext, appID string, ordID string, followerID string, userID string) {
-	_m.Called(context, appID, ordID, followerID, userID)
+// DeleteFollow provides a mock function with given fields: context, appID, orgID, followerID, userID
+func (_m *Storage) DeleteFollow(context storage.TransactionContext, appID string, orgID string, followerID string, userID string) error {
+	ret := _m.Called(context, appID, orgID, followerID, userID)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, string, string, string) error); ok {
+		r0 = rf(context, appID, orgID, followerID, userID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
 }
 
 // DeleteGlobalConfig provides a mock function with given fields: context
@@ -874,9 +883,30 @@ func (_m *Storage) FindAuthTypes() ([]model.AuthType, error) {
 	return r0, r1
 }
 
-// FindFollowers provides a mock function with given fields: context, appID, ordID, limit, offset, userID
-func (_m *Storage) FindFollowers(context storage.TransactionContext, appID string, ordID string, limit *int, offset *int, userID string) {
-	_m.Called(context, appID, ordID, limit, offset, userID)
+// FindFollows provides a mock function with given fields: context, appID, orgID, limit, offset, userID
+func (_m *Storage) FindFollows(context storage.TransactionContext, appID string, orgID string, limit *int, offset *int, userID string) ([]model.PublicAccount, error) {
+	ret := _m.Called(context, appID, orgID, limit, offset, userID)
+
+	var r0 []model.PublicAccount
+	var r1 error
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, string, *int, *int, string) ([]model.PublicAccount, error)); ok {
+		return rf(context, appID, orgID, limit, offset, userID)
+	}
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, string, *int, *int, string) []model.PublicAccount); ok {
+		r0 = rf(context, appID, orgID, limit, offset, userID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]model.PublicAccount)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(storage.TransactionContext, string, string, *int, *int, string) error); ok {
+		r1 = rf(context, appID, orgID, limit, offset, userID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // FindLoginSessionsByParams provides a mock function with given fields: appID, orgID, sessionID, identifier, accountAuthTypeIdentifier, appTypeID, appTypeIdentifier, anonymous, deviceID, ipAddress
@@ -1301,9 +1331,18 @@ func (_m *Storage) InsertAuthType(context storage.TransactionContext, authType m
 	return r0, r1
 }
 
-// InsertFollower provides a mock function with given fields: context, follow
-func (_m *Storage) InsertFollower(context storage.TransactionContext, follow model.Follow) {
-	_m.Called(context, follow)
+// InsertFollow provides a mock function with given fields: context, follow
+func (_m *Storage) InsertFollow(context storage.TransactionContext, follow model.Follow) error {
+	ret := _m.Called(context, follow)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, model.Follow) error); ok {
+		r0 = rf(context, follow)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
 }
 
 // InsertOrganization provides a mock function with given fields: context, organization

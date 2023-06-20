@@ -719,7 +719,7 @@ func (sa *Adapter) FindAuthTypes() ([]model.AuthType, error) {
 	return sa.getCachedAuthTypes()
 }
 
-func (sa *Adapter) InsertFollower(context TransactionContext, follow model.Follow) error {
+func (sa *Adapter) InsertFollow(context TransactionContext, follow model.Follow) error {
 	_, err := sa.db.follows.InsertOneWithContext(context, follow)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeFollow, nil, err)
@@ -728,7 +728,7 @@ func (sa *Adapter) InsertFollower(context TransactionContext, follow model.Follo
 	return nil
 }
 
-func (sa *Adapter) DeleteFollower(context TransactionContext, appID string, orgID string, followerID string, userID string) error {
+func (sa *Adapter) DeleteFollow(context TransactionContext, appID string, orgID string, followerID string, userID string) error {
 	filter := bson.D{primitive.E{Key: "app_id", Value: appID},
 		primitive.E{Key: "org_id", Value: orgID},
 		primitive.E{Key: "follower_id", Value: followerID},
@@ -745,7 +745,7 @@ func (sa *Adapter) DeleteFollower(context TransactionContext, appID string, orgI
 	return nil
 }
 
-func (sa *Adapter) FindFollowers(context TransactionContext, appID string, orgID string, limit *int, offset *int, userID string) ([]model.Account, error) {
+func (sa *Adapter) FindFollows(context TransactionContext, appID string, orgID string, limit *int, offset *int, userID string) ([]model.Account, error) {
 	//find app org id
 	appOrg, err := sa.getCachedApplicationOrganization(appID, orgID)
 	if err != nil {

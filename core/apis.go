@@ -320,6 +320,14 @@ func (s *servicesImpl) SerGetPublicAccounts(limit int, offset int, firstName *st
 	return s.app.serGetPublicAccounts(limit, offset, firstName, lastName, username)
 }
 
+func (s *servicesImpl) SerAddFollow(follow model.Follow) error {
+	return s.app.serAddFollow(follow)
+}
+
+func (s *servicesImpl) SerDeleteFollow(appID string, orgID string, followerID string, userID string) error {
+	return s.app.serDeleteFollow(appID, orgID, followerID, userID)
+}
+
 func (s *servicesImpl) SerGetAuthTest(l *logs.Log) string {
 	return s.app.serGetAuthTest(l)
 }
