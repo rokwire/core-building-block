@@ -553,7 +553,7 @@ func (m *database) applyFollowsChecks(follows *collectionWrapper) error {
 	}
 
 	//add following index
-	err = follows.AddIndex(bson.D{primitive.E{Key: "app_id", Value: 1}, primitive.E{Key: "org_id", Value: 1}, primitive.E{Key: "following_id", Value: 1}}, false)
+	err = follows.AddIndex(bson.D{primitive.E{Key: "app_id", Value: 1}, primitive.E{Key: "org_id", Value: 1}, primitive.E{Key: "user_id", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
