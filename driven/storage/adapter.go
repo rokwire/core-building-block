@@ -719,14 +719,25 @@ func (sa *Adapter) FindAuthTypes() ([]model.AuthType, error) {
 	return sa.getCachedAuthTypes()
 }
 
-func (sa *Adapter) InsertFollower(followerID string, userID string) error {
+func (sa *Adapter) InsertFollower(context TransactionContext, appID string, orgID string, followerID string, userID string) error {
 
 
 	return nil
 }
 
-func (sa *Adapter) DeleteFollower(followerID string, userID string) error {
-
+func (sa *Adapter) DeleteFollower(context TransactionContext, appID string, orgID string, followerID string, userID string) error {
+	filter := bson.D{primitive.E{Key: "app_id", Value: appID},
+		primitive.E{Key: "org_id", Value: orgID},
+		primitive.E{Key: "follower_id", Value: followerID},
+		primitive.E{Key: "user_id", Value: userID}}
+	
+	res, err := sa.db.follows.DeleteOneWithContext(context, filter, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeFollow, nil, err)
+	}
+	if res.DeletedCount != 1 {
+		return errors.ErrorAction(logutils.ActionDelete, model.TypeFollow, logutils.StringArgs("unexpected deleted count"))
+	}
 
 	return nil
 }
