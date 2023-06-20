@@ -153,6 +153,14 @@ func (app *application) SerAddFollow(follow model.Follow) error {
 	return nil
 }
 
+func (app *application) SerDeleteFollow(appID string, orgID string, followerID string, userID string) error {
+	err := app.storage.DeleteFollower(nil, appID, orgID, followerID, userID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeFollow, nil, err)
+	}
+	return nil
+}
+
 func (app *application) serGetAuthTest(l *logs.Log) string {
 	return "Services - Auth - test"
 }

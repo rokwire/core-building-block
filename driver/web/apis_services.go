@@ -901,8 +901,6 @@ func (h ServicesApisHandler) addFollow(l *logs.Log, r *http.Request, claims *tok
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, model.TypeFollow, nil, err, http.StatusBadRequest, true)
 	}
 
-	claims.AppOrg()
-
 	err = h.coreAPIs.Services.SerAddFollow(model.Follow{
 		ID: *follow.Id,
 		AppOrg: *appOrgFromDef(*&follow.AppOrg),
@@ -911,6 +909,22 @@ func (h ServicesApisHandler) addFollow(l *logs.Log, r *http.Request, claims *tok
 	})
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUpdate, model.TypeFollow, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HTTPResponseSuccess()
+}
+
+func (h ServicesApisHandler) deleteFollow(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
+	//user id (user being followed)
+	var userID string
+	userIDParam := r.URL.Query().Get("user_id")
+	if len(userIDParam) > 0 {
+		userID = userIDParam
+	}
+
+	err := h.coreAPIs.Services.SerDeleteFollow(claims.AppID, claims.OrgID, claims.Subject, userID)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionDelete, model.TypeFollow, nil, err, http.StatusInternalServerError, true)
 	}
 
 	return l.HTTPResponseSuccess()
