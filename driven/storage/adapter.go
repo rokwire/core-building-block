@@ -719,6 +719,74 @@ func (sa *Adapter) FindAuthTypes() ([]model.AuthType, error) {
 	return sa.getCachedAuthTypes()
 }
 
+func (sa *Adapter) InsertFollower(followerID string, userID string) error {
+
+
+	return nil
+}
+
+func (sa *Adapter) DeleteFollower(followerID string, userID string) error {
+
+
+	return nil
+}
+
+func (sa *Adapter) FindFollowers(context TransactionContext, appID string, orgID string, limit *int, offset *int, userID string) ([]model.Account, error) {
+	//find app org id
+	appOrg, err := sa.getCachedApplicationOrganization(appID, orgID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeApplicationOrganization, nil, err)
+	}
+
+	filter := bson.D{primitive.E{Key: "app_id", Value: appID},
+		primitive.E{Key: "org_id", Value: orgID}}
+
+	if userID != "" {
+		filter = append(filter, primitive.E{Key: "user_id", Value: userID})
+	}
+
+	var follows []follow
+	var findOptions *options.FindOptions
+	if limit != nil {
+		findOptions = options.Find()
+		findOptions.SetLimit(int64(*limit))
+	}
+	if offset != nil {
+		if findOptions == nil {
+			findOptions = options.Find()
+		}
+		findOptions.SetSkip(int64(*offset))
+	}
+
+	// Get all follow objects specified
+	err = sa.db.follows.FindWithContext(context, filter, &follows, findOptions)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeFollow, nil, err)
+	}
+
+	// Get all followerIDs from follows
+	var followerIDs []string
+	for _, follow := range follows {
+		followerIDs = append(followerIDs, follow.FollowerID)
+	}
+
+	// filter for getting accounts
+	filter = bson.D{primitive.E{Key: "app_id", Value: appID},
+		primitive.E{Key: "org_id", Value: orgID}}
+	if userID != "" {
+		filter = append(filter, primitive.E{Key: "_id", Value: bson.M{"$in": followerIDs}})
+	}
+
+	// Get all accounts associated with follow objects
+	var accounts []account
+	err = sa.db.accounts.FindWithContext(context, filter, &accounts, options.Find())
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+
+	return accountsFromStorage(accounts, *appOrg), nil
+}
+
 // InsertLoginSession inserts login session
 func (sa *Adapter) InsertLoginSession(context TransactionContext, session model.LoginSession) error {
 	storageLoginSession := loginSessionToStorage(session)

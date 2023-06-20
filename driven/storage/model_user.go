@@ -148,3 +148,12 @@ type mfaType struct {
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
 }
+
+type follow struct {
+	ID string `bson:"_id"`
+
+	AppOrgID string `bson:"app_org_id,omitempty"`
+
+	FollowerID string `bson:"follower_id"`
+	UserID     string `bson:"user_id"`
+}

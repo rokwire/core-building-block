@@ -49,6 +49,8 @@ const (
 	TypeProfile logutils.MessageDataType = "profile"
 	//TypeDevice device
 	TypeDevice logutils.MessageDataType = "device"
+	//TypeFollow follow
+	TypeFollow logutils.MessageDataType = "follow"
 )
 
 // Account represents account entity
