@@ -59,7 +59,7 @@ post:
   security:
     - bearerAuth: []
   requestBody:
-    description: Profile update
+    description: Follow relationship
     content:
       application/json:
         schema:
