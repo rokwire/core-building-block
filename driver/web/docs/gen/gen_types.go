@@ -324,6 +324,14 @@ type Device struct {
 // DeviceType defines model for Device.Type.
 type DeviceType string
 
+// Follow defines model for Follow.
+type Follow struct {
+	AppOrg     *ApplicationOrganization `json:"app_org"`
+	FollowerId *string                  `json:"follower_id,omitempty"`
+	Id         *string                  `json:"id,omitempty"`
+	UserId     *string                  `json:"user_id,omitempty"`
+}
+
 // GlobalConfig defines model for GlobalConfig.
 type GlobalConfig struct {
 	Setting string `json:"setting"`
@@ -1275,6 +1283,15 @@ type GetBbsServiceRegsParams struct {
 	Ids string `form:"ids" json:"ids"`
 }
 
+// GetServicesAccountFollowParams defines parameters for GetServicesAccountFollow.
+type GetServicesAccountFollowParams struct {
+	// Limit The maximum number of accounts to return
+	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+
+	// Offset The index of the first account to return
+	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
+}
+
 // PutServicesAccountPreferencesJSONBody defines parameters for PutServicesAccountPreferences.
 type PutServicesAccountPreferencesJSONBody = map[string]interface{}
 
@@ -1622,6 +1639,9 @@ type PostBbsAccountsCountJSONRequestBody = PostBbsAccountsCountJSONBody
 
 // PostBbsServiceAccountIdJSONRequestBody defines body for PostBbsServiceAccountId for application/json ContentType.
 type PostBbsServiceAccountIdJSONRequestBody = ServicesReqServiceAccountsParams
+
+// PostServicesAccountFollowJSONRequestBody defines body for PostServicesAccountFollow for application/json ContentType.
+type PostServicesAccountFollowJSONRequestBody = Follow
 
 // DeleteServicesAccountMfaJSONRequestBody defines body for DeleteServicesAccountMfa for application/json ContentType.
 type DeleteServicesAccountMfaJSONRequestBody = SharedReqMfa

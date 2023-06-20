@@ -1,0 +1,13 @@
+required:
+  - id
+type: object
+properties:
+  id:
+    readOnly: true
+    type: string
+  app_org:
+    $ref: "../application/ApplicationOrganization.yaml"
+  follower_id:
+    type: string
+  user_id:
+    type: string

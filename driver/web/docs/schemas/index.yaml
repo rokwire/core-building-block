@@ -92,6 +92,8 @@ AccountAuthType:
   $ref: "./user/AccountAuthType.yaml"
 Device:
   $ref: "./user/Device.yaml"
+Follow:
+  $ref: "./user/Follow.yaml"
 
 ##### APIs requests and responses - they are at bottom
 
