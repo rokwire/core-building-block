@@ -660,6 +660,24 @@ func (h ServicesApisHandler) updateProfile(l *logs.Log, r *http.Request, claims 
 	return l.HTTPResponseSuccess()
 }
 
+func (h ServicesApisHandler) updatePrivacy(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
+
+	var requestData Def.Privacy
+	err := json.NewDecoder(r.Body).Decode(&requestData)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
+	}
+
+	privacy := privacyFromDef(&requestData)
+
+	err = h.coreAPIs.Services.SerUpdatePrivacy(claims.Subject, privacy)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionUpdate, model.TypeProfile, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HTTPResponseSuccess()
+}
+
 func (h ServicesApisHandler) updateAccountPreferences(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {

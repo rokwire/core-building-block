@@ -187,8 +187,8 @@ type Account struct {
 	MostRecentClientVersion *string                  `json:"most_recent_client_version,omitempty"`
 	Permissions             *[]Permission            `json:"permissions,omitempty"`
 	Preferences             *map[string]interface{}  `json:"preferences"`
+	Privacy                 *Privacy                 `json:"privacy,omitempty"`
 	Profile                 *Profile                 `json:"profile,omitempty"`
-	Public                  *bool                    `json:"public,omitempty"`
 	Roles                   *[]AppOrgRole            `json:"roles,omitempty"`
 	Scopes                  *[]string                `json:"scopes,omitempty"`
 	System                  *bool                    `json:"system,omitempty"`
@@ -522,6 +522,11 @@ type Permission struct {
 	Id          *string   `json:"id,omitempty"`
 	Name        string    `json:"name"`
 	ServiceId   *string   `json:"service_id,omitempty"`
+}
+
+// Privacy defines model for Privacy.
+type Privacy struct {
+	Public *bool `json:"public,omitempty"`
 }
 
 // Profile defines model for Profile.
@@ -1662,6 +1667,9 @@ type PostServicesAccountMfaJSONRequestBody = SharedReqMfa
 
 // PutServicesAccountPreferencesJSONRequestBody defines body for PutServicesAccountPreferences for application/json ContentType.
 type PutServicesAccountPreferencesJSONRequestBody = PutServicesAccountPreferencesJSONBody
+
+// PutServicesAccountPrivacyJSONRequestBody defines body for PutServicesAccountPrivacy for application/json ContentType.
+type PutServicesAccountPrivacyJSONRequestBody = Privacy
 
 // PutServicesAccountProfileJSONRequestBody defines body for PutServicesAccountProfile for application/json ContentType.
 type PutServicesAccountProfileJSONRequestBody = Profile

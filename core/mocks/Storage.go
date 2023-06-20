@@ -1039,25 +1039,25 @@ func (_m *Storage) FindPermissionsByServiceIDs(serviceIDs []string) ([]model.Per
 	return r0, r1
 }
 
-// FindPublicAccounts provides a mock function with given fields: context, limit, offset, firstName, lastName, username
-func (_m *Storage) FindPublicAccounts(context storage.TransactionContext, limit *int, offset *int, firstName *string, lastName *string, username *string) ([]model.PublicAccount, error) {
-	ret := _m.Called(context, limit, offset, firstName, lastName, username)
+// FindPublicAccounts provides a mock function with given fields: context, appID, orgID, limit, offset, firstName, lastName, username
+func (_m *Storage) FindPublicAccounts(context storage.TransactionContext, appID string, orgID string, limit *int, offset *int, firstName *string, lastName *string, username *string) ([]model.PublicAccount, error) {
+	ret := _m.Called(context, appID, orgID, limit, offset, firstName, lastName, username)
 
 	var r0 []model.PublicAccount
 	var r1 error
-	if rf, ok := ret.Get(0).(func(storage.TransactionContext, *int, *int, *string, *string, *string) ([]model.PublicAccount, error)); ok {
-		return rf(context, limit, offset, firstName, lastName, username)
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, string, *int, *int, *string, *string, *string) ([]model.PublicAccount, error)); ok {
+		return rf(context, appID, orgID, limit, offset, firstName, lastName, username)
 	}
-	if rf, ok := ret.Get(0).(func(storage.TransactionContext, *int, *int, *string, *string, *string) []model.PublicAccount); ok {
-		r0 = rf(context, limit, offset, firstName, lastName, username)
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, string, *int, *int, *string, *string, *string) []model.PublicAccount); ok {
+		r0 = rf(context, appID, orgID, limit, offset, firstName, lastName, username)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]model.PublicAccount)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(storage.TransactionContext, *int, *int, *string, *string, *string) error); ok {
-		r1 = rf(context, limit, offset, firstName, lastName, username)
+	if rf, ok := ret.Get(1).(func(storage.TransactionContext, string, string, *int, *int, *string, *string, *string) error); ok {
+		r1 = rf(context, appID, orgID, limit, offset, firstName, lastName, username)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -1467,6 +1467,20 @@ func (_m *Storage) UpdateAccountPreferences(context storage.TransactionContext, 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, map[string]interface{}) error); ok {
 		r0 = rf(context, accountID, preferences)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// UpdateAccountPrivacy provides a mock function with given fields: context, accountID, privacy
+func (_m *Storage) UpdateAccountPrivacy(context storage.TransactionContext, accountID string, privacy model.Privacy) error {
+	ret := _m.Called(context, accountID, privacy)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, model.Privacy) error); ok {
+		r0 = rf(context, accountID, privacy)
 	} else {
 		r0 = ret.Error(0)
 	}

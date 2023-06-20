@@ -307,6 +307,10 @@ func (s *servicesImpl) SerUpdateProfile(accountID string, profile model.Profile)
 	return s.app.serUpdateProfile(accountID, profile)
 }
 
+func (s *servicesImpl) SerUpdatePrivacy(accountID string, privacy model.Privacy) error {
+	return s.app.serUpdatePrivacy(accountID, privacy)
+}
+
 func (s *servicesImpl) SerUpdateAccountUsername(accountID string, appID string, orgID string, username string) error {
 	return s.app.sharedUpdateAccountUsername(accountID, appID, orgID, username)
 }

@@ -84,6 +84,14 @@ func (app *application) serUpdateProfile(accountID string, profile model.Profile
 	return nil
 }
 
+func (app *application) serUpdatePrivacy(accountID string, privacy model.Privacy) error {
+	err := app.storage.UpdateAccountPrivacy(nil, accountID, privacy)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, nil, err)
+	}
+	return nil
+}
+
 func (app *application) serUpdateAccountPreferences(id string, appID string, orgID string, anonymous bool, preferences map[string]interface{}, l *logs.Log) (bool, error) {
 	if anonymous {
 		created := false
