@@ -719,8 +719,11 @@ func (sa *Adapter) FindAuthTypes() ([]model.AuthType, error) {
 	return sa.getCachedAuthTypes()
 }
 
-func (sa *Adapter) InsertFollower(context TransactionContext, appID string, orgID string, followerID string, userID string) error {
-
+func (sa *Adapter) InsertFollower(context TransactionContext, follow model.Follow) error {
+	_, err := sa.db.follows.InsertOneWithContext(context, follow)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeFollow, nil, err)
+	}
 
 	return nil
 }

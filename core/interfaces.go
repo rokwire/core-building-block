@@ -155,7 +155,7 @@ type Storage interface {
 
 	FindAuthType(codeOrID string) (*model.AuthType, error)
 
-	InsertFollower(context storage.TransactionContext, appID string, ordID string, followerID string, userID string)
+	InsertFollower(context storage.TransactionContext, follow model.Follow)
 	DeleteFollower(context storage.TransactionContext, appID string, ordID string, followerID string, userID string)
 	FindFollowers(context storage.TransactionContext, appID string, ordID string, limit *int, offset *int, userID string)
 

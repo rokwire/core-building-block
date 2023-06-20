@@ -633,3 +633,11 @@ type PublicAccount struct {
 	FirstName string
 	LastName  string
 }
+
+// Follow shows the relationship between user and follower
+type Follow struct {
+	ID string
+	AppOrg ApplicationOrganization
+	FollowerID string
+	UserID string
+}
