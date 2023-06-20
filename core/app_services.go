@@ -77,7 +77,7 @@ func (app *application) serUpdateProfile(accountID string, profile model.Profile
 	profile.ID = account.Profile.ID
 
 	//3. update profile
-	err = app.storage.UpdateProfile(nil, profile)
+	err = app.storage.UpdateAccountProfile(nil, profile)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeProfile, nil, err)
 	}

@@ -3042,7 +3042,7 @@ func (sa *Adapter) LoadIdentityProviders() ([]model.IdentityProvider, error) {
 }
 
 // UpdateProfile updates a profile
-func (sa *Adapter) UpdateProfile(context TransactionContext, profile model.Profile) error {
+func (sa *Adapter) UpdateAccountProfile(context TransactionContext, profile model.Profile) error {
 	filter := bson.D{primitive.E{Key: "profile.id", Value: profile.ID}}
 
 	now := time.Now().UTC()
