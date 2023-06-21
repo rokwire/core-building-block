@@ -1474,13 +1474,27 @@ func (_m *Storage) UpdateAccountPreferences(context storage.TransactionContext, 
 	return r0
 }
 
-// UpdateAccountPrivacy provides a mock function with given fields: context, accountID, privacy
-func (_m *Storage) UpdateAccountPrivacy(context storage.TransactionContext, accountID string, privacy model.Privacy) error {
-	ret := _m.Called(context, accountID, privacy)
+// UpdateAccountPrivacy provides a mock function with given fields: context, privacy
+func (_m *Storage) UpdateAccountPrivacy(context storage.TransactionContext, privacy model.Privacy) error {
+	ret := _m.Called(context, privacy)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, model.Privacy) error); ok {
-		r0 = rf(context, accountID, privacy)
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, model.Privacy) error); ok {
+		r0 = rf(context, privacy)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// UpdateAccountProfile provides a mock function with given fields: context, profile
+func (_m *Storage) UpdateAccountProfile(context storage.TransactionContext, profile model.Profile) error {
+	ret := _m.Called(context, profile)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, model.Profile) error); ok {
+		r0 = rf(context, profile)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -1621,20 +1635,6 @@ func (_m *Storage) UpdatePermission(item model.Permission) error {
 	var r0 error
 	if rf, ok := ret.Get(0).(func(model.Permission) error); ok {
 		r0 = rf(item)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// UpdateProfile provides a mock function with given fields: context, profile
-func (_m *Storage) UpdateProfile(context storage.TransactionContext, profile model.Profile) error {
-	ret := _m.Called(context, profile)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(storage.TransactionContext, model.Profile) error); ok {
-		r0 = rf(context, profile)
 	} else {
 		r0 = ret.Error(0)
 	}

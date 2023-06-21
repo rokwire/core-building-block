@@ -3041,7 +3041,7 @@ func (sa *Adapter) LoadIdentityProviders() ([]model.IdentityProvider, error) {
 
 }
 
-// UpdateProfile updates a profile
+// UpdateAccountProfile updates a profile
 func (sa *Adapter) UpdateAccountProfile(context TransactionContext, profile model.Profile) error {
 	filter := bson.D{primitive.E{Key: "profile.id", Value: profile.ID}}
 
@@ -3072,8 +3072,27 @@ func (sa *Adapter) UpdateAccountProfile(context TransactionContext, profile mode
 	return nil
 }
 
-// FindProfiles finds profiles by app id, authtype id and account auth type identifier
-func (sa *Adapter) FindProfiles(appID string, authTypeID string, accountAuthTypeIdentifier string) ([]model.Profile, error) {
+// UpdateAccountPrivacy updates the privacy settings for an account
+func (sa *Adapter) UpdateAccountPrivacy(context TransactionContext, privacy model.Privacy) error {
+	filter := bson.D{primitive.E{Key: "_id", Value: privacy.ID}}
+
+	privacyUpdate := bson.D{
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "privacy.public", Value: privacy.Public},
+		}},
+	}
+
+	res, err := sa.db.accounts.UpdateManyWithContext(context, filter, privacyUpdate, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, nil, err)
+	}
+	sa.logger.Infof("modified %d privacy copies", res.ModifiedCount)
+
+	return nil
+}
+
+// FindAccountProfiles finds profiles by app id, authtype id and account auth type identifier
+func (sa *Adapter) FindAccountProfiles(appID string, authTypeID string, accountAuthTypeIdentifier string) ([]model.Profile, error) {
 	pipeline := []bson.M{
 		{"$match": bson.M{"auth_types.auth_type_id": authTypeID, "auth_types.identifier": accountAuthTypeIdentifier}},
 		{"$lookup": bson.M{

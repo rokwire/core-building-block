@@ -29,8 +29,8 @@ type Services interface {
 	SerGetPreferences(accountID string) (map[string]interface{}, error)
 	SerGetAccountSystemConfigs(accountID string) (map[string]interface{}, error)
 	SerUpdateAccountPreferences(id string, appID string, orgID string, anonymous bool, preferences map[string]interface{}, l *logs.Log) (bool, error)
-	SerUpdateProfile(accountID string, profile model.Profile) error
-	SerUpdatePrivacy(accountID string, privacy model.Privacy) error
+	SerUpdateAccountProfile(accountID string, profile model.Profile) error
+	SerUpdateAccountPrivacy(accountID string, privacy model.Privacy) error
 	SerUpdateAccountUsername(accountID string, appID string, orgID string, username string) error
 
 	SerGetAccounts(limit int, offset int, appID string, orgID string, accountID *string, firstName *string, lastName *string, authType *string,
@@ -187,7 +187,7 @@ type Storage interface {
 	CountAccountsByGroupID(groupID string) (*int64, error)
 
 	UpdateAccountProfile(context storage.TransactionContext, profile model.Profile) error
-	UpdateAccountPrivacy(context storage.TransactionContext, accountID string, privacy model.Privacy) error
+	UpdateAccountPrivacy(context storage.TransactionContext, privacy model.Privacy) error
 
 	FindLoginSessionsByParams(appID string, orgID string, sessionID *string, identifier *string, accountAuthTypeIdentifier *string,
 		appTypeID *string, appTypeIdentifier *string, anonymous *bool, deviceID *string, ipAddress *string) ([]model.LoginSession, error)

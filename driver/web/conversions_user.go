@@ -260,7 +260,7 @@ func profileToDef(item *model.Profile) *Def.Profile {
 	return &Def.Profile{Id: &itemVal.ID, PhotoUrl: &itemVal.PhotoURL, FirstName: &itemVal.FirstName, LastName: &itemVal.LastName,
 		Email: &itemVal.Email, Phone: &itemVal.Phone, BirthYear: &birthYear, Address: &itemVal.Address, ZipCode: &itemVal.ZipCode,
 		State: &itemVal.State, Country: &itemVal.Country, UnstructuredProperties: &itemVal.UnstructuredProperties}
-	}
+}
 
 func profileFromDefNullable(item *Def.ProfileNullable) model.Profile {
 	if item == nil {
@@ -328,7 +328,7 @@ func privacyFromDef(item *Def.Privacy) model.Privacy {
 		public = *item.Public
 	}
 
-	return model.Privacy{ Public: public }
+	return model.Privacy{Public: public}
 }
 
 // MFA

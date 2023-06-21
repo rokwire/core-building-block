@@ -303,12 +303,12 @@ func (s *servicesImpl) SerUpdateAccountPreferences(id string, appID string, orgI
 	return s.app.serUpdateAccountPreferences(id, appID, orgID, anonymous, preferences, l)
 }
 
-func (s *servicesImpl) SerUpdateProfile(accountID string, profile model.Profile) error {
-	return s.app.serUpdateProfile(accountID, profile)
+func (s *servicesImpl) SerUpdateAccountProfile(accountID string, profile model.Profile) error {
+	return s.app.serUpdateAccountProfile(accountID, profile)
 }
 
-func (s *servicesImpl) SerUpdatePrivacy(accountID string, privacy model.Privacy) error {
-	return s.app.serUpdatePrivacy(accountID, privacy)
+func (s *servicesImpl) SerUpdateAccountPrivacy(accountID string, privacy model.Privacy) error {
+	return s.app.serUpdateAccountPrivacy(accountID, privacy)
 }
 
 func (s *servicesImpl) SerUpdateAccountUsername(accountID string, appID string, orgID string, username string) error {

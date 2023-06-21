@@ -884,7 +884,7 @@ func (a *Auth) hasSharedProfile(app model.Application, authTypeID string, userId
 	l.Info("hasSharedProfile")
 
 	//find if already there is a profile for the application
-	profiles, err := a.storage.FindProfiles(app.ID, authTypeID, userIdentifier)
+	profiles, err := a.storage.FindAccountProfiles(app.ID, authTypeID, userIdentifier)
 	if err != nil {
 		return false, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeProfile, nil, err)
 	}
@@ -1560,7 +1560,7 @@ func (a *Auth) storeNewAccountInfo(context storage.TransactionContext, account m
 
 	//update profile if shared
 	if useSharedProfile {
-		err = a.storage.UpdateProfile(context, profile)
+		err = a.storage.UpdateAccountProfile(context, profile)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeProfile, nil, err)
 		}
