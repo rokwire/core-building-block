@@ -924,6 +924,13 @@ func (h ServicesApisHandler) addFollow(l *logs.Log, r *http.Request, claims *tok
 		return l.HTTPResponseErrorAction(logutils.ActionInsert, model.TypeFollow, nil, err, http.StatusBadRequest, true)
 	}
 
+	// Check to make sure account exists
+	account, err := h.coreAPIs.Services.SerGetAccount(follow.FolloweeId)
+	if err != nil || account == nil {
+		return l.HTTPResponseErrorAction(logutils.ActionInsert, model.TypeFollow, nil, err, http.StatusBadRequest, true)
+	}
+
+
 	err = h.coreAPIs.Services.SerAddFollow(model.Follow{
 		AppID: claims.AppID,
 		OrgID: claims.OrgID,
