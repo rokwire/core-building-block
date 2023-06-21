@@ -328,8 +328,8 @@ func (s *servicesImpl) SerAddFollow(follow model.Follow) error {
 	return s.app.serAddFollow(follow)
 }
 
-func (s *servicesImpl) SerDeleteFollow(appID string, orgID string, followerID string, userID string) error {
-	return s.app.serDeleteFollow(appID, orgID, followerID, userID)
+func (s *servicesImpl) SerDeleteFollow(appID string, orgID string, FolloweeID string, userID string) error {
+	return s.app.serDeleteFollow(appID, orgID, FolloweeID, userID)
 }
 
 func (s *servicesImpl) SerGetFollows(appID string, orgID string, limit *int, offset *int, userID string) ([]model.PublicAccount, error) {

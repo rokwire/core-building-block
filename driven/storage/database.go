@@ -547,13 +547,13 @@ func (m *database) applyFollowsChecks(follows *collectionWrapper) error {
 	m.logger.Info("apply applications follows checks.....")
 
 	//add follower index
-	err := follows.AddIndex(bson.D{primitive.E{Key: "app_id", Value: 1}, primitive.E{Key: "org_id", Value: 1}, primitive.E{Key: "follower_id", Value: 1}}, false)
+	err := follows.AddIndex(bson.D{primitive.E{Key: "app_id", Value: 1}, primitive.E{Key: "org_id", Value: 1}, primitive.E{Key: "user_id", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
 
 	//add following index
-	err = follows.AddIndex(bson.D{primitive.E{Key: "app_id", Value: 1}, primitive.E{Key: "org_id", Value: 1}, primitive.E{Key: "user_id", Value: 1}}, false)
+	err = follows.AddIndex(bson.D{primitive.E{Key: "app_id", Value: 1}, primitive.E{Key: "org_id", Value: 1}, primitive.E{Key: "followee_id", Value: 1}, primitive.E{Key: "user_id", Value: 1}}, true)
 	if err != nil {
 		return err
 	}

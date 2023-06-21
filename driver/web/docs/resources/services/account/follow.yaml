@@ -25,7 +25,7 @@ get:
       explode: false
       schema:
         type: integer
-    - name: user_id
+    - name: followee_id
       in: query
       description: The ID of the account to query follows
       required: false

@@ -647,6 +647,6 @@ type PublicAccount struct {
 type Follow struct {
 	ID         string
 	AppOrg     ApplicationOrganization
-	FollowerID string
+	FolloweeID string
 	UserID     string
 }

@@ -1,13 +1,14 @@
 required:
   - id
+  - followee_id
+  - user_id
 type: object
 properties:
   id:
     readOnly: true
     type: string
-  app_org:
-    $ref: "../application/ApplicationOrganization.yaml"
-  follower_id:
+  followee_id:
     type: string
   user_id:
+    readOnly: true
     type: string

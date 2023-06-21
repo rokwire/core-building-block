@@ -39,7 +39,7 @@ type Services interface {
 	SerGetPublicAccounts(appID string, orgID string, limit int, offset int, firstName *string, lastName *string, username *string) ([]model.PublicAccount, error)
 
 	SerAddFollow(follow model.Follow) error
-	SerDeleteFollow(appID string, orgID string, followerID string, userID string) error
+	SerDeleteFollow(appID string, orgID string, FolloweeID string, userID string) error
 	SerGetFollows(appID string, orgID string, limit *int, offset *int, userID string) ([]model.PublicAccount, error)
 
 	SerGetAuthTest(l *logs.Log) string
@@ -161,7 +161,7 @@ type Storage interface {
 	FindAuthType(codeOrID string) (*model.AuthType, error)
 
 	InsertFollow(context storage.TransactionContext, follow model.Follow) error
-	DeleteFollow(context storage.TransactionContext, appID string, orgID string, followerID string, userID string) error
+	DeleteFollow(context storage.TransactionContext, appID string, orgID string, FolloweeID string, userID string) error
 	FindFollows(context storage.TransactionContext, appID string, orgID string, limit *int, offset *int, userID string) ([]model.PublicAccount, error)
 
 	FindAccountByID(context storage.TransactionContext, id string) (*model.Account, error)

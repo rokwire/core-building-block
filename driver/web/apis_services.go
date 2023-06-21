@@ -922,7 +922,7 @@ func (h ServicesApisHandler) addFollow(l *logs.Log, r *http.Request, claims *tok
 	err = h.coreAPIs.Services.SerAddFollow(model.Follow{
 		ID:         *follow.Id,
 		AppOrg:     *appOrgFromDef(follow.AppOrg),
-		FollowerID: *follow.FollowerId,
+		FolloweeID: *follow.FolloweeID,
 		UserID:     *follow.UserId,
 	})
 	if err != nil {

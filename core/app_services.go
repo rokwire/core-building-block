@@ -171,8 +171,8 @@ func (app *application) serAddFollow(follow model.Follow) error {
 	return nil
 }
 
-func (app *application) serDeleteFollow(appID string, orgID string, followerID string, userID string) error {
-	err := app.storage.DeleteFollow(nil, appID, orgID, followerID, userID)
+func (app *application) serDeleteFollow(appID string, orgID string, FolloweeID string, userID string) error {
+	err := app.storage.DeleteFollow(nil, appID, orgID, FolloweeID, userID)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeFollow, nil, err)
 	}
