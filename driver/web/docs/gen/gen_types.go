@@ -526,7 +526,8 @@ type Permission struct {
 
 // Privacy defines model for Privacy.
 type Privacy struct {
-	Public *bool `json:"public,omitempty"`
+	Id     *string `json:"id,omitempty"`
+	Public *bool   `json:"public,omitempty"`
 }
 
 // Profile defines model for Profile.

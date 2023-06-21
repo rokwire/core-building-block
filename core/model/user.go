@@ -47,13 +47,18 @@ const (
 	TypeAccountGroups logutils.MessageDataType = "account groups"
 	//TypeProfile profile
 	TypeProfile logutils.MessageDataType = "profile"
+	//TypePrivacy privacy
+	TypePrivacy logutils.MessageDataType = "privacy"
 	//TypeDevice device
 	TypeDevice logutils.MessageDataType = "device"
 	//TypeFollow follow
 	TypeFollow logutils.MessageDataType = "follow"
 )
 
+// Privacy represents the privacy options for each account
 type Privacy struct {
+	ID string `json:"id" bson:"_id"`
+
 	Public bool `json:"public" bson:"public"`
 }
 
