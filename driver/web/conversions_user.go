@@ -24,6 +24,8 @@ import (
 func accountToDef(item model.Account) *Def.Account {
 	//profile
 	profile := profileToDef(&item.Profile)
+	//privacy
+	privacy := privacyToDef(&item.Privacy)
 	//preferences
 	preferences := &item.Preferences
 	//systemConfigs
@@ -56,7 +58,7 @@ func accountToDef(item model.Account) *Def.Account {
 	}
 
 	return &Def.Account{Id: &item.ID, Anonymous: &item.Anonymous, System: &item.AppOrg.Organization.System, Permissions: &permissions, Roles: &roles, Groups: &groups,
-		Scopes: &scopes, AuthTypes: &authTypes, Username: username, Profile: profile, Preferences: preferences, SystemConfigs: systemConfigs,
+		Privacy: privacy, Scopes: &scopes, AuthTypes: &authTypes, Username: username, Profile: profile, Preferences: preferences, SystemConfigs: systemConfigs,
 		LastLoginDate: &lastLoginDate, LastAccessTokenDate: &lastAccessTokenDate, MostRecentClientVersion: item.MostRecentClientVersion, ExternalIds: &externalIds}
 }
 
@@ -316,6 +318,17 @@ func profileFromDefNullable(item *Def.ProfileNullable) model.Profile {
 	return model.Profile{PhotoURL: photoURL, FirstName: firstName, LastName: lastName,
 		Email: email, Phone: phone, BirthYear: int16(birthYear), Address: address, ZipCode: zipCode,
 		State: state, Country: country, UnstructuredProperties: unstructuredProperties}
+}
+
+func privacyToDef(item *model.Privacy) *Def.Privacy {
+	if item == nil {
+		return nil
+	}
+
+	return &Def.Privacy{
+		Id: &item.ID,
+		Public: &item.Public,
+	}
 }
 
 func privacyFromDef(item *Def.Privacy) model.Privacy {

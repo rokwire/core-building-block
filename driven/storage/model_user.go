@@ -42,9 +42,9 @@ type account struct {
 
 	Devices []userDevice `bson:"devices,omitempty"`
 
-	Anonymous bool `bson:"anonymous"`
-	Public    bool `bson:"public"`
-	Verified  bool `bson:"verified"`
+	Anonymous bool          `bson:"anonymous"`
+	Privacy   model.Privacy `bson:"privacy"`
+	Verified  bool          `bson:"verified"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
