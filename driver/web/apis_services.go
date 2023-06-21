@@ -930,6 +930,11 @@ func (h ServicesApisHandler) addFollow(l *logs.Log, r *http.Request, claims *tok
 		return l.HTTPResponseErrorAction(logutils.ActionInsert, model.TypeFollow, nil, err, http.StatusBadRequest, true)
 	}
 
+	// Check to make sure account is public
+	if !account.Privacy.Public {
+		return l.HTTPResponseErrorAction(logutils.ActionInsert, model.TypeFollow, nil, err, http.StatusForbidden, true)
+	}
+
 
 	err = h.coreAPIs.Services.SerAddFollow(model.Follow{
 		AppID: claims.AppID,
@@ -995,6 +1000,10 @@ func (h ServicesApisHandler) getFollows(l *logs.Log, r *http.Request, claims *to
 	accounts, err := h.coreAPIs.Services.SerGetFollows(claims.AppID, claims.OrgID, &limit, &offset, followeeID, userID)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionGet, model.TypeAccount, nil, err, http.StatusInternalServerError, false)
+	}
+	
+	if accounts == nil {
+		accounts = []model.PublicAccount{}
 	}
 
 	data, err := json.Marshal(accounts)
