@@ -179,8 +179,8 @@ func (app *application) serDeleteFollow(appID string, orgID string, FolloweeID s
 	return nil
 }
 
-func (app *application) serGetFollows(appID string, orgID string, limit *int, offset *int, userID string) ([]model.PublicAccount, error) {
-	follows, err := app.storage.FindFollows(nil, appID, orgID, limit, offset, userID)
+func (app *application) serGetFollows(appID string, orgID string, limit *int, offset *int, followeeID string, userID string) ([]model.PublicAccount, error) {
+	follows, err := app.storage.FindFollows(nil, appID, orgID, limit, offset, followeeID, userID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}

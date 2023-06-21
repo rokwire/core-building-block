@@ -969,14 +969,13 @@ func (h ServicesApisHandler) getFollows(l *logs.Log, r *http.Request, claims *to
 		}
 	}
 
-	// userID
-	var userID Def.UserID
-	err = json.NewDecoder(r.Body).Decode(&userID)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, model.TypeFollow, nil, err, http.StatusBadRequest, true)
+	var followeeID string
+	followeeIDArg := r.URL.Query().Get("followee_id")
+	if len(followeeIDArg) > 0 {
+		followeeID = followeeIDArg
 	}
 
-	accounts, err := h.coreAPIs.Services.SerGetFollows(claims.AppID, claims.OrgID, &limit, &offset, userID.Username)
+	accounts, err := h.coreAPIs.Services.SerGetFollows(claims.AppID, claims.OrgID, &limit, &offset, followeeID, claims.Subject)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionGet, model.TypeAccount, nil, err, http.StatusInternalServerError, false)
 	}

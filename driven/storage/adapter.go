@@ -730,7 +730,7 @@ func (sa *Adapter) InsertFollow(context TransactionContext, follow model.Follow)
 }
 
 // DeleteFollow deletes a specified follow relationship
-func (sa *Adapter) DeleteFollow(context TransactionContext, appID string, orgID string, FolloweeID string, userID string) error {
+func (sa *Adapter) DeleteFollow(context TransactionContext, appID string, orgID string, followeeID string, userID string) error {
 	filter := bson.D{primitive.E{Key: "app_id", Value: appID},
 		primitive.E{Key: "org_id", Value: orgID},
 		primitive.E{Key: "followee_id", Value: followeeID},
@@ -748,9 +748,13 @@ func (sa *Adapter) DeleteFollow(context TransactionContext, appID string, orgID 
 }
 
 // FindFollows finds a list of follows specified by parameters
-func (sa *Adapter) FindFollows(context TransactionContext, appID string, orgID string, limit *int, offset *int, userID string) ([]model.PublicAccount, error) {
+func (sa *Adapter) FindFollows(context TransactionContext, appID string, orgID string, limit *int, offset *int, followeeID string, userID string) ([]model.PublicAccount, error) {
 	filter := bson.D{primitive.E{Key: "app_id", Value: appID},
 		primitive.E{Key: "org_id", Value: orgID}}
+
+	if followeeID != "" {
+		filter = append(filter, primitive.E{Key: "followee_id", Value: followeeID})
+	}
 
 	if userID != "" {
 		filter = append(filter, primitive.E{Key: "user_id", Value: userID})
@@ -776,17 +780,19 @@ func (sa *Adapter) FindFollows(context TransactionContext, appID string, orgID s
 	}
 
 	// Get all FolloweeIDs from follows
-	var FolloweeIDs []string
+	var accountIDs []string
 	for _, follow := range follows {
-		FolloweeIDs = append(FolloweeIDs, follow.FolloweeID)
+		if followeeID == "" {
+			accountIDs = append(accountIDs, follow.FolloweeID)
+		} else {
+			accountIDs = append(accountIDs, follow.UserID)
+		}
 	}
 
 	// filter for getting accounts
 	filter = bson.D{primitive.E{Key: "app_id", Value: appID},
-		primitive.E{Key: "org_id", Value: orgID}}
-	if userID != "" {
-		filter = append(filter, primitive.E{Key: "_id", Value: bson.M{"$in": FolloweeIDs}})
-	}
+		primitive.E{Key: "org_id", Value: orgID},
+		primitive.E{Key: "_id", Value: bson.M{"$in": accountIDs}}}
 
 	// Get all accounts associated with follow objects
 	var accounts []account
