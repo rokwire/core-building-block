@@ -88,7 +88,7 @@ func (app *application) serUpdateAccountPrivacy(accountID string, privacy model.
 	//1. find the account
 	account, err := app.storage.FindAccountByID(nil, accountID)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypePrivacy, nil, err)
 	}
 
 	//2. get the privacy ID from the account
@@ -97,7 +97,7 @@ func (app *application) serUpdateAccountPrivacy(accountID string, privacy model.
 	//3. update privacy
 	err = app.storage.UpdateAccountPrivacy(nil, privacy)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeProfile, nil, err)
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypePrivacy, nil, err)
 	}
 	return nil
 }

@@ -3084,7 +3084,7 @@ func (sa *Adapter) UpdateAccountPrivacy(context TransactionContext, privacy mode
 
 	res, err := sa.db.accounts.UpdateManyWithContext(context, filter, privacyUpdate, nil)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, nil, err)
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypePrivacy, nil, err)
 	}
 	sa.logger.Infof("modified %d privacy copies", res.ModifiedCount)
 

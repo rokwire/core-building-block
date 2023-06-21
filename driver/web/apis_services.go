@@ -672,7 +672,7 @@ func (h ServicesApisHandler) updatePrivacy(l *logs.Log, r *http.Request, claims 
 
 	err = h.coreAPIs.Services.SerUpdateAccountPrivacy(claims.Subject, privacy)
 	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionUpdate, model.TypeProfile, nil, err, http.StatusInternalServerError, true)
+		return l.HTTPResponseErrorAction(logutils.ActionUpdate, model.TypePrivacy, nil, err, http.StatusInternalServerError, true)
 	}
 
 	return l.HTTPResponseSuccess()
