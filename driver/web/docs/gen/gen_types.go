@@ -207,6 +207,11 @@ type AccountAuthType struct {
 	Unverified *bool                   `json:"unverified,omitempty"`
 }
 
+// AccountID defines model for AccountID.
+type AccountID struct {
+	Id string `json:"id"`
+}
+
 // AdminToken defines model for AdminToken.
 type AdminToken struct {
 	Token string `json:"token"`
@@ -326,10 +331,9 @@ type DeviceType string
 
 // Follow defines model for Follow.
 type Follow struct {
-	AppOrg     *ApplicationOrganization `json:"app_org"`
-	FollowerId *string                  `json:"follower_id,omitempty"`
-	Id         *string                  `json:"id,omitempty"`
-	UserId     *string                  `json:"user_id,omitempty"`
+	FolloweeId string  `json:"followee_id"`
+	Id         *string `json:"id,omitempty"`
+	UserId     *string `json:"user_id,omitempty"`
 }
 
 // GlobalConfig defines model for GlobalConfig.
@@ -570,6 +574,7 @@ type PubKey struct {
 // PublicAccount defines model for PublicAccount.
 type PublicAccount struct {
 	Firstname *string `json:"firstname,omitempty"`
+	Id        string  `json:"id"`
 	Lastname  *string `json:"lastname,omitempty"`
 	Username  *string `json:"username,omitempty"`
 }
@@ -636,11 +641,6 @@ type SupportedAuthTypes struct {
 type TSLExpirePolicy struct {
 	Active               bool `json:"active"`
 	TimeSinceLoginPeriod int  `json:"time_since_login_period"`
-}
-
-// UserID defines model for UserID.
-type UserID struct {
-	Username string `json:"username"`
 }
 
 // Username defines model for Username.
@@ -1302,7 +1302,10 @@ type GetServicesAccountFollowParams struct {
 	// Offset The index of the first account to return
 	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
 
-	// UserId The ID of the account to query follows
+	// FolloweeId The ID of the account that's being followed
+	FolloweeId *string `form:"followee_id,omitempty" json:"followee_id,omitempty"`
+
+	// UserId The ID of the account following others
 	UserId *string `form:"user_id,omitempty" json:"user_id,omitempty"`
 }
 
@@ -1655,7 +1658,7 @@ type PostBbsAccountsCountJSONRequestBody = PostBbsAccountsCountJSONBody
 type PostBbsServiceAccountIdJSONRequestBody = ServicesReqServiceAccountsParams
 
 // DeleteServicesAccountFollowJSONRequestBody defines body for DeleteServicesAccountFollow for application/json ContentType.
-type DeleteServicesAccountFollowJSONRequestBody = UserID
+type DeleteServicesAccountFollowJSONRequestBody = AccountID
 
 // PostServicesAccountFollowJSONRequestBody defines body for PostServicesAccountFollow for application/json ContentType.
 type PostServicesAccountFollowJSONRequestBody = Follow

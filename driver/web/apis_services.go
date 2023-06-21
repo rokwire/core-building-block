@@ -920,10 +920,8 @@ func (h ServicesApisHandler) addFollow(l *logs.Log, r *http.Request, claims *tok
 	}
 
 	err = h.coreAPIs.Services.SerAddFollow(model.Follow{
-		ID:         *follow.Id,
-		AppOrg:     *appOrgFromDef(follow.AppOrg),
-		FolloweeID: *follow.FolloweeID,
-		UserID:     *follow.UserId,
+		FolloweeID: follow.FolloweeId,
+		UserID:     claims.Subject,
 	})
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUpdate, model.TypeFollow, nil, err, http.StatusInternalServerError, true)
@@ -933,14 +931,13 @@ func (h ServicesApisHandler) addFollow(l *logs.Log, r *http.Request, claims *tok
 }
 
 func (h ServicesApisHandler) deleteFollow(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	//user id (user being followed)
-	var userID string
-	userIDParam := r.URL.Query().Get("user_id")
-	if len(userIDParam) > 0 {
-		userID = userIDParam
+	var followeeID Def.AccountID
+	err := json.NewDecoder(r.Body).Decode(&followeeID)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, model.TypeFollow, nil, err, http.StatusBadRequest, true)
 	}
 
-	err := h.coreAPIs.Services.SerDeleteFollow(claims.AppID, claims.OrgID, claims.Subject, userID)
+	err = h.coreAPIs.Services.SerDeleteFollow(claims.AppID, claims.OrgID, followeeID.Id, claims.Subject)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionDelete, model.TypeFollow, nil, err, http.StatusInternalServerError, true)
 	}
@@ -975,7 +972,13 @@ func (h ServicesApisHandler) getFollows(l *logs.Log, r *http.Request, claims *to
 		followeeID = followeeIDArg
 	}
 
-	accounts, err := h.coreAPIs.Services.SerGetFollows(claims.AppID, claims.OrgID, &limit, &offset, followeeID, claims.Subject)
+	var userID string
+	userIDArg := r.URL.Query().Get("user_id")
+	if len(userIDArg) > 0 {
+		userID = userIDArg
+	}
+
+	accounts, err := h.coreAPIs.Services.SerGetFollows(claims.AppID, claims.OrgID, &limit, &offset, followeeID, userID)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionGet, model.TypeAccount, nil, err, http.StatusInternalServerError, false)
 	}

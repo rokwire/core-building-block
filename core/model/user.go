@@ -638,6 +638,7 @@ type AccountRelations struct {
 
 // PublicAccount shows public account information
 type PublicAccount struct {
+	ID        string
 	Username  string
 	FirstName string
 	LastName  string
@@ -646,7 +647,6 @@ type PublicAccount struct {
 // Follow shows the relationship between user and follower
 type Follow struct {
 	ID         string
-	AppOrg     ApplicationOrganization
 	FolloweeID string
 	UserID     string
 }

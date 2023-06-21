@@ -27,7 +27,15 @@ get:
         type: integer
     - name: followee_id
       in: query
-      description: The ID of the account to query follows
+      description: The ID of the account that's being followed
+      required: false
+      style: form
+      explode: false
+      schema:
+        type: string
+    - name: user_id
+      in: query
+      description: The ID of the account following others
       required: false
       style: form
       explode: false
@@ -90,12 +98,12 @@ delete:
   security:
     - bearerAuth: []
   requestBody:
-    description: |
-      Delete follow params
+    description: ID of the followee
     content:
       application/json:
         schema:
-          $ref: "../../../schemas/user/UserID.yaml"
+          $ref: "../../../schemas/user/AccountID.yaml"
+    required: true
   responses:
     200:
       description: Success

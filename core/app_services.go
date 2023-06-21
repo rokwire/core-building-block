@@ -18,6 +18,7 @@ import (
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
 
+	"github.com/google/uuid"
 	"github.com/rokwire/logging-library-go/v2/errors"
 	"github.com/rokwire/logging-library-go/v2/logs"
 	"github.com/rokwire/logging-library-go/v2/logutils"
@@ -164,6 +165,7 @@ func (app *application) serGetPublicAccounts(appID string, orgID string, limit i
 }
 
 func (app *application) serAddFollow(follow model.Follow) error {
+	follow.ID = uuid.NewString()
 	err := app.storage.InsertFollow(nil, follow)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeFollow, nil, err)

@@ -1481,9 +1481,17 @@ paths:
           explode: false
           schema:
             type: integer
+        - name: followee_id
+          in: query
+          description: The ID of the account that's being followed
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
         - name: user_id
           in: query
-          description: The ID of the account to query follows
+          description: The ID of the account following others
           required: false
           style: form
           explode: false
@@ -1546,12 +1554,12 @@ paths:
       security:
         - bearerAuth: []
       requestBody:
-        description: |
-          Delete follow params
+        description: ID of the followee
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UserID'
+              $ref: '#/components/schemas/AccountID'
+        required: true
       responses:
         '200':
           description: Success
@@ -6435,6 +6443,8 @@ components:
         - id
       type: object
       properties:
+        id:
+          type: string
         username:
           type: string
         firstname:
@@ -6600,12 +6610,12 @@ components:
       properties:
         username:
           type: string
-    UserID:
+    AccountID:
       required:
-        - username
+        - id
       type: object
       properties:
-        username:
+        id:
           type: string
     Verified:
       required:
@@ -6658,16 +6668,17 @@ components:
     Follow:
       required:
         - id
+        - followee_id
+        - user_id
       type: object
       properties:
         id:
           readOnly: true
           type: string
-        app_org:
-          $ref: '#/components/schemas/ApplicationOrganization'
-        follower_id:
+        followee_id:
           type: string
         user_id:
+          readOnly: true
           type: string
     _shared_req_Login:
       required:

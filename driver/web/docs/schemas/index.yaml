@@ -88,8 +88,8 @@ Privacy:
   $ref: "./user/Privacy.yaml"
 Username:
   $ref: "./user/Username.yaml"
-UserID:
-  $ref: "./user/UserID.yaml"
+AccountID:
+  $ref: "./user/AccountID.yaml"
 Verified:
   $ref: "./user/Verified.yaml"
 AccountAuthType:
