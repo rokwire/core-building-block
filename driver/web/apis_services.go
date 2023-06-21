@@ -919,7 +919,14 @@ func (h ServicesApisHandler) addFollow(l *logs.Log, r *http.Request, claims *tok
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, model.TypeFollow, nil, err, http.StatusBadRequest, true)
 	}
 
+	// Don't allow people to follow themselves
+	if follow.FolloweeId == claims.Subject {
+		return l.HTTPResponseErrorAction(logutils.ActionInsert, model.TypeFollow, nil, err, http.StatusBadRequest, true)
+	}
+
 	err = h.coreAPIs.Services.SerAddFollow(model.Follow{
+		AppID: claims.AppID,
+		OrgID: claims.OrgID,
 		FolloweeID: follow.FolloweeId,
 		UserID:     claims.Subject,
 	})
