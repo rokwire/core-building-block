@@ -796,9 +796,11 @@ func (sa *Adapter) FindFollows(context TransactionContext, appID string, orgID s
 
 	// Get all accounts associated with follow objects
 	var accounts []account
-	err = sa.db.accounts.FindWithContext(context, filter, &accounts, options.Find())
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	if accountIDs != nil {
+		err = sa.db.accounts.FindWithContext(context, filter, &accounts, options.Find())
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+		}
 	}
 
 	// convert accounts to public accounts
