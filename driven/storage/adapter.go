@@ -805,6 +805,7 @@ func (sa *Adapter) FindFollows(context TransactionContext, appID string, orgID s
 	var publicAccounts []model.PublicAccount
 	for _, account := range accounts {
 		publicAccounts = append(publicAccounts, model.PublicAccount{
+			ID: account.ID,
 			Username:  account.Username,
 			FirstName: account.Profile.FirstName,
 			LastName:  account.Profile.LastName,
