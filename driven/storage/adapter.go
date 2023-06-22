@@ -789,8 +789,9 @@ func (sa *Adapter) FindFollows(context TransactionContext, appID string, orgID s
 		}
 	}
 
-	// filter for getting accounts
-	filter = bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": accountIDs}}}
+	// filter for getting public accounts
+	filter = bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": accountIDs}},
+					primitive.E{Key: "privacy.public", Value: true}}
 
 	// Get all accounts associated with follow objects
 	var accounts []account
