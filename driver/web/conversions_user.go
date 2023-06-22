@@ -326,12 +326,25 @@ func privacyToDef(item *model.Privacy) *Def.Privacy {
 	}
 
 	return &Def.Privacy{
-		Id: &item.ID,
+		Id:     &item.ID,
 		Public: &item.Public,
 	}
 }
 
 func privacyFromDef(item *Def.Privacy) model.Privacy {
+	if item == nil {
+		return model.Privacy{}
+	}
+
+	var public bool
+	if item.Public != nil {
+		public = *item.Public
+	}
+
+	return model.Privacy{Public: public}
+}
+
+func privacyFromDefNullable(item *Def.PrivacyNullable) model.Privacy {
 	if item == nil {
 		return model.Privacy{}
 	}

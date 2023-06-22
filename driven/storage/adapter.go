@@ -790,9 +790,7 @@ func (sa *Adapter) FindFollows(context TransactionContext, appID string, orgID s
 	}
 
 	// filter for getting accounts
-	filter = bson.D{primitive.E{Key: "app_id", Value: appID},
-		primitive.E{Key: "org_id", Value: orgID},
-		primitive.E{Key: "_id", Value: bson.M{"$in": accountIDs}}}
+	filter = bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": accountIDs}}}
 
 	// Get all accounts associated with follow objects
 	var accounts []account
@@ -3082,7 +3080,7 @@ func (sa *Adapter) UpdateAccountProfile(context TransactionContext, profile mode
 
 // UpdateAccountPrivacy updates the privacy settings for an account
 func (sa *Adapter) UpdateAccountPrivacy(context TransactionContext, privacy model.Privacy) error {
-	filter := bson.D{primitive.E{Key: "_id", Value: privacy.ID}}
+	filter := bson.D{primitive.E{Key: "privacy.id", Value: privacy.ID}}
 
 	privacyUpdate := bson.D{
 		primitive.E{Key: "$set", Value: bson.D{

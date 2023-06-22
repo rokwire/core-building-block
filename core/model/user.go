@@ -57,7 +57,7 @@ const (
 
 // Privacy represents the privacy options for each account
 type Privacy struct {
-	ID string `json:"id" bson:"_id"`
+	ID string `json:"id" bson:"id"`
 
 	Public bool `json:"public" bson:"public"`
 }
@@ -638,10 +638,10 @@ type AccountRelations struct {
 
 // PublicAccount shows public account information
 type PublicAccount struct {
-	ID        string
-	Username  string
-	FirstName string
-	LastName  string
+	ID        string `json:"id"`
+	Username  string `json:"username"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
 }
 
 // Follow shows the relationship between user and follower
