@@ -84,6 +84,8 @@ paths:
                     photo_url: photo url
                     state: state
                     zip_code: zip code
+                  privacy:
+                    public: false
                   device:
                     type: mobile
                     device_id: '5555'
@@ -112,6 +114,8 @@ paths:
                     photo_url: photo url
                     state: state
                     zip_code: zip code
+                  privacy:
+                    public: false
                   device:
                     type: mobile
                     device_id: '5555'
@@ -141,6 +145,8 @@ paths:
                     photo_url: photo url
                     state: state
                     zip_code: zip code
+                  privacy:
+                    public: false
                   device:
                     type: mobile
                     device_id: '5555'
@@ -199,6 +205,8 @@ paths:
                     photo_url: photo url
                     state: state
                     zip_code: zip code
+                  privacy:
+                    public: false
                   device:
                     type: mobile
                     device_id: '5555'
@@ -1778,6 +1786,8 @@ paths:
                     photo_url: photo url
                     state: state
                     zip_code: zip code
+                  privacy:
+                    public: false
                   device:
                     type: mobile
                     device_id: '5555'
@@ -6603,6 +6613,19 @@ components:
           type: string
         public:
           type: boolean
+    PrivacyNullable:
+      required:
+        - id
+      type: object
+      nullable: true
+      properties:
+        id:
+          readOnly: true
+          type: string
+          nullable: true
+        public:
+          type: boolean
+          nullable: true
     Username:
       required:
         - username
@@ -6738,6 +6761,8 @@ components:
           $ref: '#/components/schemas/Device'
         profile:
           $ref: '#/components/schemas/ProfileNullable'
+        privacy:
+          $ref: '#/components/schemas/PrivacyNullable'
         preferences:
           type: object
           nullable: true
@@ -6852,6 +6877,8 @@ components:
             type: string
         profile:
           $ref: '#/components/schemas/ProfileNullable'
+        privacy:
+          $ref: '#/components/schemas/PrivacyNullable'
         username:
           type: string
           nullable: true

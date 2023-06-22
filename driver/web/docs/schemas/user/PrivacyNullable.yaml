@@ -1,0 +1,12 @@
+required:
+  - id
+type: object
+nullable: true
+properties:
+  id:
+    readOnly: true
+    type: string
+    nullable: true
+  public:
+    type: boolean
+    nullable: true

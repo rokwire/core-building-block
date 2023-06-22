@@ -534,6 +534,12 @@ type Privacy struct {
 	Public *bool   `json:"public,omitempty"`
 }
 
+// PrivacyNullable defines model for PrivacyNullable.
+type PrivacyNullable struct {
+	Id     *string `json:"id"`
+	Public *bool   `json:"public"`
+}
+
 // Profile defines model for Profile.
 type Profile struct {
 	Address                *string                 `json:"address"`
@@ -889,6 +895,7 @@ type SharedReqCreateAccount struct {
 	GroupIds    *[]string                      `json:"group_ids,omitempty"`
 	Identifier  string                         `json:"identifier"`
 	Permissions *[]string                      `json:"permissions,omitempty"`
+	Privacy     *PrivacyNullable               `json:"privacy"`
 	Profile     *ProfileNullable               `json:"profile"`
 	RoleIds     *[]string                      `json:"role_ids,omitempty"`
 	Scopes      *[]string                      `json:"scopes,omitempty"`
@@ -929,6 +936,7 @@ type SharedReqLogin struct {
 	OrgId             string                  `json:"org_id"`
 	Params            *SharedReqLogin_Params  `json:"params,omitempty"`
 	Preferences       *map[string]interface{} `json:"preferences"`
+	Privacy           *PrivacyNullable        `json:"privacy"`
 	Profile           *ProfileNullable        `json:"profile"`
 	Username          *string                 `json:"username"`
 }
