@@ -43,42 +43,27 @@ type usernameCreds struct {
 	Password string `json:"password" bson:"password"`
 }
 
-func (a *usernameAuthImpl) signUp(authType model.AuthType, appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error) {
-	type signUpUsernameParams struct {
-		ConfirmPassword string `json:"confirm_password"`
-	}
+func (c *usernameCreds) identifier() string {
+	return c.Username
+}
 
+func (c *usernameCreds) credential() string {
+	return c.Password
+}
+
+func (a *usernameAuthImpl) signUp(verificationImpl verificationType, authType model.AuthType, appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error) {
 	var sUsernameCreds usernameCreds
-	err := json.Unmarshal([]byte(creds), &sUsernameCreds)
-	if err != nil {
-		return "", nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeUsernameCreds, nil, err)
+	err := verificationImpl.parseCreds(creds, &sUsernameCreds)
+
+	var sUsernameParams signUpParams
+	err = verificationImpl.parseParams(creds, &sUsernameParams)
+
+	//check if credentials match
+	if sUsernameCreds.credential() != sUsernameParams.credential() {
+		return "", nil, errors.ErrorData(logutils.StatusInvalid, "mismatching credentials", nil)
 	}
 
-	var sUsernameParams signUpUsernameParams
-	err = json.Unmarshal([]byte(params), &sUsernameParams)
-	if err != nil {
-		return "", nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeUsernameParams, nil, err)
-	}
-
-	username := sUsernameCreds.Username
-	password := sUsernameCreds.Password
-	confirmPassword := sUsernameParams.ConfirmPassword
-	if len(username) == 0 {
-		return "", nil, errors.ErrorData(logutils.StatusMissing, typeUsernameCreds, logutils.StringArgs("username"))
-	}
-	if len(password) == 0 {
-		return "", nil, errors.ErrorData(logutils.StatusMissing, typeUsernameCreds, logutils.StringArgs("password"))
-	}
-
-	if len(confirmPassword) == 0 {
-		return "", nil, errors.ErrorData(logutils.StatusMissing, typeUsernameParams, logutils.StringArgs("confirm_password"))
-	}
-	//check if the password matches with the confirm password one
-	if password != confirmPassword {
-		return "", nil, errors.ErrorData(logutils.StatusInvalid, "mismatching password fields", nil)
-	}
-
-	usernameCreds, err := a.buildCredentials(authType, appOrg.Application.Name, username, password, newCredentialID)
+	usernameCreds, err := a.buildCredentials(authType, appOrg.Application.Name, sUsernameCreds.identifier(), sUsernameCreds.credential(), newCredentialID)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction("building", "username credentials", nil, err)
 	}
@@ -158,33 +143,6 @@ func (a *usernameAuthImpl) isCredentialVerified(credential *model.Credential, l 
 	verified := true
 	expired := false
 	return &verified, &expired, nil
-}
-
-func (a *usernameAuthImpl) checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, error) {
-	//get stored credential
-	storedCreds, err := mapToUsernameCreds(accountAuthType.Credential.Value)
-	if err != nil {
-		return "", errors.WrapErrorAction(logutils.ActionCast, typeUsernameCreds, nil, err)
-	}
-
-	//get request credential
-	type signInPasswordCred struct {
-		Password string `json:"password"`
-	}
-	var sPasswordParams signInPasswordCred
-	err = json.Unmarshal([]byte(creds), &sPasswordParams)
-	if err != nil {
-		return "", errors.WrapErrorAction(logutils.ActionUnmarshal, "sign in password creds", nil, err)
-	}
-	requestPassword := sPasswordParams.Password
-
-	//compare stored and requests ones
-	err = bcrypt.CompareHashAndPassword([]byte(storedCreds.Password), []byte(requestPassword))
-	if err != nil {
-		return "", errors.WrapErrorAction(logutils.ActionValidate, model.TypeCredential, nil, err).SetStatus(utils.ErrorStatusInvalid)
-	}
-
-	return "", nil
 }
 
 func mapToUsernameCreds(credsMap map[string]interface{}) (*usernameCreds, error) {

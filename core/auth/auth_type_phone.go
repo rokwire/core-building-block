@@ -78,6 +78,14 @@ type twilioPhoneCreds struct {
 	// TODO: Password?
 }
 
+func (c *twilioPhoneCreds) identifier() string {
+	return c.Phone
+}
+
+func (c *twilioPhoneCreds) credential() string {
+	return c.Code
+}
+
 type verifyPhoneResponse struct {
 	Status      string      `json:"status"`
 	Payee       interface{} `json:"payee"`
@@ -148,21 +156,6 @@ func (a *twilioPhoneAuthImpl) signUpAdmin(authType model.AuthType, appOrg model.
 
 func (a *twilioPhoneAuthImpl) isCredentialVerified(credential *model.Credential, l *logs.Log) (*bool, *bool, error) {
 	return nil, nil, nil
-}
-
-func (a *twilioPhoneAuthImpl) checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, error) {
-	requestCreds, err := a.checkRequestCreds(creds)
-	if err != nil {
-		return "", err
-	}
-
-	// existing user
-	message, err := a.handlePhoneVerify(requestCreds.Phone, *requestCreds, l)
-	if err != nil {
-		return "", err
-	}
-
-	return message, nil
 }
 
 func (a *twilioPhoneAuthImpl) handlePhoneVerify(phone string, verificationCreds twilioPhoneCreds, l *logs.Log) (string, error) {

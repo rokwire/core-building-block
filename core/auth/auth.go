@@ -58,12 +58,15 @@ const (
 	// UpdateScopesPermission is the permission that allows an admin to update account/role scopes
 	UpdateScopesPermission string = "update_auth_scopes"
 
-	typeMail              logutils.MessageDataType = "mail"
-	typeExternalAuthType  logutils.MessageDataType = "external auth type"
-	typeAnonymousAuthType logutils.MessageDataType = "anonymous auth type"
-	typeServiceAuthType   logutils.MessageDataType = "service auth type"
-	typeAuth              logutils.MessageDataType = "auth"
-	typeAuthRefreshParams logutils.MessageDataType = "auth refresh params"
+	typeMail               logutils.MessageDataType = "mail"
+	typeVerificationType   logutils.MessageDataType = "verification type"
+	typeVerificationCreds  logutils.MessageDataType = "verification creds"
+	typeVerificationParams logutils.MessageDataType = "verification params"
+	typeExternalAuthType   logutils.MessageDataType = "external auth type"
+	typeAnonymousAuthType  logutils.MessageDataType = "anonymous auth type"
+	typeServiceAuthType    logutils.MessageDataType = "service auth type"
+	typeAuth               logutils.MessageDataType = "auth"
+	typeAuthRefreshParams  logutils.MessageDataType = "auth refresh params"
 
 	refreshTokenLength int = 256
 
@@ -86,6 +89,7 @@ type Auth struct {
 	logger *logs.Logger
 
 	authTypes          map[string]authType
+	verificationTypes  map[string]verificationType
 	externalAuthTypes  map[string]externalAuthType
 	anonymousAuthTypes map[string]anonymousAuthType
 	serviceAuthTypes   map[string]serviceAuthType
@@ -134,6 +138,7 @@ func NewAuth(serviceID string, host string, authPrivKey *keys.PrivKey, authServi
 	emailDialer := gomail.NewDialer(smtpHost, smtpPortNum, smtpUser, smtpPassword)
 
 	authTypes := map[string]authType{}
+	verificationTypes := map[string]verificationType{}
 	externalAuthTypes := map[string]externalAuthType{}
 	anonymousAuthTypes := map[string]anonymousAuthType{}
 	serviceAuthTypes := map[string]serviceAuthType{}
@@ -147,7 +152,7 @@ func NewAuth(serviceID string, host string, authPrivKey *keys.PrivKey, authServi
 
 	timerDone := make(chan bool)
 
-	auth := &Auth{storage: storage, emailer: emailer, logger: logger, authTypes: authTypes, externalAuthTypes: externalAuthTypes, anonymousAuthTypes: anonymousAuthTypes,
+	auth := &Auth{storage: storage, emailer: emailer, logger: logger, authTypes: authTypes, verificationTypes: verificationTypes, externalAuthTypes: externalAuthTypes, anonymousAuthTypes: anonymousAuthTypes,
 		serviceAuthTypes: serviceAuthTypes, mfaTypes: mfaTypes, authPrivKey: authPrivKey, ServiceRegManager: nil, serviceID: serviceID, host: host, minTokenExp: *minTokenExp,
 		maxTokenExp: *maxTokenExp, profileBB: profileBB, cachedIdentityProviders: cachedIdentityProviders, identityProvidersLock: identityProvidersLock,
 		timerDone: timerDone, emailDialer: emailDialer, emailFrom: smtpFrom, apiKeys: apiKeys, apiKeysLock: apiKeysLock}
@@ -2004,6 +2009,16 @@ func (a *Auth) registerAuthType(name string, auth authType) error {
 	}
 
 	a.authTypes[name] = auth
+
+	return nil
+}
+
+func (a *Auth) registerVerificationType(name string, verify verificationType) error {
+	if _, ok := a.verificationTypes[name]; ok {
+		return errors.ErrorData(logutils.StatusFound, typeVerificationType, &logutils.FieldArgs{"name": name})
+	}
+
+	a.verificationTypes[name] = verify
 
 	return nil
 }

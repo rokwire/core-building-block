@@ -48,47 +48,33 @@ type emailCreds struct {
 	ResetExpiry        time.Time `json:"reset_expiry" bson:"reset_expiry"`
 }
 
+func (c *emailCreds) identifier() string {
+	return c.Email
+}
+
+func (c *emailCreds) credential() string {
+	return c.Password
+}
+
 // Email implementation of authType
 type emailAuthImpl struct {
 	auth     *Auth
 	authType string
 }
 
-func (a *emailAuthImpl) signUp(authType model.AuthType, appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error) {
-	type signUpEmailParams struct {
-		ConfirmPassword string `json:"confirm_password"`
-	}
-
+func (a *emailAuthImpl) signUp(verificationImpl verificationType, authType model.AuthType, appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error) {
 	var sEmailCreds emailCreds
-	err := json.Unmarshal([]byte(creds), &sEmailCreds)
-	if err != nil {
-		return "", nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeEmailCreds, nil, err)
+	err := verificationImpl.parseCreds(creds, &sEmailCreds)
+
+	var sEmailParams signUpParams
+	err = verificationImpl.parseParams(creds, &sEmailParams)
+
+	//check if credentials match
+	if sEmailCreds.credential() != sEmailParams.credential() {
+		return "", nil, errors.ErrorData(logutils.StatusInvalid, "mismatching credentials", nil)
 	}
 
-	var sEmailParams signUpEmailParams
-	err = json.Unmarshal([]byte(params), &sEmailParams)
-	if err != nil {
-		return "", nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeEmailParams, nil, err)
-	}
-
-	email := sEmailCreds.Email
-	password := sEmailCreds.Password
-	confirmPassword := sEmailParams.ConfirmPassword
-	if len(email) == 0 {
-		return "", nil, errors.ErrorData(logutils.StatusMissing, typeEmailCreds, logutils.StringArgs("email"))
-	}
-	if len(password) == 0 {
-		return "", nil, errors.ErrorData(logutils.StatusMissing, typeEmailCreds, logutils.StringArgs("password"))
-	}
-	if len(confirmPassword) == 0 {
-		return "", nil, errors.ErrorData(logutils.StatusMissing, typeEmailParams, logutils.StringArgs("confirm_password"))
-	}
-	//check if the passwrod matches with the confirm password one
-	if password != confirmPassword {
-		return "", nil, errors.ErrorData(logutils.StatusInvalid, "mismatching password fields", nil)
-	}
-
-	emailCreds, err := a.buildCredentials(authType, appOrg.Application.Name, email, password, newCredentialID)
+	emailCreds, err := a.buildCredentials(authType, appOrg.Application.Name, sEmailCreds.identifier(), sEmailCreds.credential(), newCredentialID)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction("building", "email credentials", nil, err)
 	}
@@ -135,33 +121,6 @@ func (a *emailAuthImpl) isCredentialVerified(credential *model.Credential, l *lo
 		expired = true
 	}
 	return &verified, &expired, nil
-}
-
-func (a *emailAuthImpl) checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, error) {
-	//get stored credential
-	storedCreds, err := mapToEmailCreds(accountAuthType.Credential.Value)
-	if err != nil {
-		return "", errors.WrapErrorAction(logutils.ActionCast, typeEmailCreds, nil, err)
-	}
-
-	//get request credential
-	type signInPasswordCred struct {
-		Password string `json:"password"`
-	}
-	var sPasswordParams signInPasswordCred
-	err = json.Unmarshal([]byte(creds), &sPasswordParams)
-	if err != nil {
-		return "", errors.WrapErrorAction(logutils.ActionUnmarshal, "sign in password creds", nil, err)
-	}
-	requestPassword := sPasswordParams.Password
-
-	//compare stored and requets ones
-	err = bcrypt.CompareHashAndPassword([]byte(storedCreds.Password), []byte(requestPassword))
-	if err != nil {
-		return "", errors.WrapErrorAction(logutils.ActionValidate, model.TypeCredential, nil, err).SetStatus(utils.ErrorStatusInvalid)
-	}
-
-	return "", nil
 }
 
 func (a *emailAuthImpl) buildCredentials(authType model.AuthType, appName string, email string, password string, credID string) (map[string]interface{}, error) {

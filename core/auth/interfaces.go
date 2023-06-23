@@ -69,9 +69,6 @@ type authType interface {
 	//	verified (bool): is credential verified
 	//	expired (bool): is credential verification expired
 	isCredentialVerified(credential *model.Credential, l *logs.Log) (*bool, *bool, error)
-
-	//checkCredentials checks if the account credentials are valid for the account auth type
-	checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, error)
 }
 
 // externalAuthType is the interface for authentication for auth types which are external for the system(the users comes from external system).
@@ -106,6 +103,22 @@ type mfaType interface {
 	enroll(identifier string) (*model.MFAType, error)
 	//sendCode generates a mfa code and expiration time and sends the code to the user
 	sendCode(identifier string) (string, *time.Time, error)
+}
+
+type verificationType interface {
+	parseCreds(creds string, credential verificationCreds) error
+	parseParams(params string, credential verificationParams) error
+	//checkCredentials checks if the account credentials are valid for the account auth type
+	checkCredentials(accountAuthType model.AccountAuthType, creds string, credential verificationCreds, l *logs.Log) (string, error)
+}
+
+type verificationCreds interface {
+	identifier() string
+	credential() string
+}
+
+type verificationParams interface {
+	credential() string
 }
 
 // APIs is the interface which defines the APIs provided by the auth package
