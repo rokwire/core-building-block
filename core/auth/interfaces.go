@@ -26,6 +26,16 @@ import (
 	"github.com/rokwire/logging-library-go/v2/logs"
 )
 
+// identifierType is the interface for auth identifiers that are not external to the system
+type identifierType interface {
+	//getUserIdentifier parses the credentials and returns the user identifier
+	// Returns:
+	//	userIdentifier (string): User identifier
+	getUserIdentifier(creds string) (string, error)
+
+	// parseCreds(creds string, credential verificationCreds) error
+}
+
 // authType is the interface for authentication for auth types which are not external for the system(the users do not come from external system)
 type authType interface {
 	//signUp applies sign up operation
@@ -40,6 +50,23 @@ type authType interface {
 	//	credentialValue (map): Credential value
 	signUpAdmin(authType model.AuthType, appOrg model.ApplicationOrganization, identifier string, password string, newCredentialID string) (map[string]interface{}, map[string]interface{}, error)
 
+	//updates the value of the credential object with new value
+	// Returns:
+	//	authTypeCreds (map[string]interface{}): Updated Credential.Value
+	resetCredential(credential *model.Credential, resetCode *string, params string, l *logs.Log) (map[string]interface{}, error)
+
+	//isCredentialVerified says if the credential is verified
+	// Returns:
+	//	verified (bool): is credential verified
+	//	expired (bool): is credential verification expired
+	isCredentialVerified(credential *model.Credential, l *logs.Log) (*bool, *bool, error)
+
+	//checkCredentials checks if the account credentials are valid for the account auth type
+	checkCredentials(accountAuthType model.AccountAuthType, creds string, credential verificationCreds, l *logs.Log) (string, error)
+}
+
+// verificationType is the interface for verification of identifiers which are not external to the system
+type verificationType interface {
 	//verifies credential (checks the verification code generated on email signup for email auth type)
 	// Returns:
 	//	authTypeCreds (map[string]interface{}): Updated Credential.Value
@@ -51,24 +78,19 @@ type authType interface {
 	//restarts the credential verification
 	restartCredentialVerification(credential *model.Credential, appName string, l *logs.Log) error
 
-	//updates the value of the credential object with new value
-	// Returns:
-	//	authTypeCreds (map[string]interface{}): Updated Credential.Value
-	resetCredential(credential *model.Credential, resetCode *string, params string, l *logs.Log) (map[string]interface{}, error)
-
 	//apply forgot credential for the auth type (generates a reset password link with code and expiry and sends it to given identifier for email auth type)
 	forgotCredential(credential *model.Credential, identifier string, appName string, l *logs.Log) (map[string]interface{}, error)
 
-	//getUserIdentifier parses the credentials and returns the user identifier
-	// Returns:
-	//	userIdentifier (string): User identifier
-	getUserIdentifier(creds string) (string, error)
+	// parseParams(params string, credential verificationParams) error
+}
 
-	//isCredentialVerified says if the credential is verified
-	// Returns:
-	//	verified (bool): is credential verified
-	//	expired (bool): is credential verification expired
-	isCredentialVerified(credential *model.Credential, l *logs.Log) (*bool, *bool, error)
+type verificationCreds interface {
+	identifier() string
+	credential() string
+}
+
+type verificationParams interface {
+	credential() string
 }
 
 // externalAuthType is the interface for authentication for auth types which are external for the system(the users comes from external system).
@@ -103,22 +125,6 @@ type mfaType interface {
 	enroll(identifier string) (*model.MFAType, error)
 	//sendCode generates a mfa code and expiration time and sends the code to the user
 	sendCode(identifier string) (string, *time.Time, error)
-}
-
-type verificationType interface {
-	parseCreds(creds string, credential verificationCreds) error
-	parseParams(params string, credential verificationParams) error
-	//checkCredentials checks if the account credentials are valid for the account auth type
-	checkCredentials(accountAuthType model.AccountAuthType, creds string, credential verificationCreds, l *logs.Log) (string, error)
-}
-
-type verificationCreds interface {
-	identifier() string
-	credential() string
-}
-
-type verificationParams interface {
-	credential() string
 }
 
 // APIs is the interface which defines the APIs provided by the auth package

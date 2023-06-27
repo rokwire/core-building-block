@@ -41,36 +41,16 @@ func (a *signatureAuthImpl) signUpAdmin(authType model.AuthType, appOrg model.Ap
 	return nil, nil, nil
 }
 
-func (a *signatureAuthImpl) getUserIdentifier(creds string) (string, error) {
-	return "", nil
-}
-
-func (a *signatureAuthImpl) verifyCredential(credential *model.Credential, verification string, l *logs.Log) (map[string]interface{}, error) {
-	return nil, errors.New(logutils.Unimplemented)
-}
-
-func (a *signatureAuthImpl) sendVerifyCredential(credential *model.Credential, appName string, l *logs.Log) error {
-	return nil
-}
-
-func (a *signatureAuthImpl) restartCredentialVerification(credential *model.Credential, appName string, l *logs.Log) error {
-	return nil
-}
-
 func (a *signatureAuthImpl) isCredentialVerified(credential *model.Credential, l *logs.Log) (*bool, *bool, error) {
 	return nil, nil, nil
-}
-
-func (a *signatureAuthImpl) checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, error) {
-	return "", nil
 }
 
 func (a *signatureAuthImpl) resetCredential(credential *model.Credential, resetCode *string, params string, l *logs.Log) (map[string]interface{}, error) {
 	return nil, nil
 }
 
-func (a *signatureAuthImpl) forgotCredential(credential *model.Credential, identifier string, appName string, l *logs.Log) (map[string]interface{}, error) {
-	return nil, nil
+func (a *signatureAuthImpl) checkCredentials(accountAuthType model.AccountAuthType, creds string, credential verificationCreds, l *logs.Log) (string, error) {
+	return "", nil
 }
 
 // initSignatureAuth initializes and registers a new signature auth instance

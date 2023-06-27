@@ -518,7 +518,7 @@ func initOidcAuth(auth *Auth) (*oidcAuthImpl, error) {
 
 	err := auth.registerExternalAuthType(oidc.authType, oidc)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAuthType, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionRegister, typeExternalAuthType, nil, err)
 	}
 
 	return oidc, nil

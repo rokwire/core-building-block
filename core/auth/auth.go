@@ -59,6 +59,7 @@ const (
 	UpdateScopesPermission string = "update_auth_scopes"
 
 	typeMail               logutils.MessageDataType = "mail"
+	typeIdentifierType     logutils.MessageDataType = "identifier type"
 	typeVerificationType   logutils.MessageDataType = "verification type"
 	typeVerificationCreds  logutils.MessageDataType = "verification creds"
 	typeVerificationParams logutils.MessageDataType = "verification params"
@@ -88,6 +89,7 @@ type Auth struct {
 
 	logger *logs.Logger
 
+	identifierTypes    map[string]identifierType
 	authTypes          map[string]authType
 	verificationTypes  map[string]verificationType
 	externalAuthTypes  map[string]externalAuthType
@@ -137,6 +139,7 @@ func NewAuth(serviceID string, host string, authPrivKey *keys.PrivKey, authServi
 	//maybe set up from config collection for diff types of auth
 	emailDialer := gomail.NewDialer(smtpHost, smtpPortNum, smtpUser, smtpPassword)
 
+	identifierTypes := map[string]identifierType{}
 	authTypes := map[string]authType{}
 	verificationTypes := map[string]verificationType{}
 	externalAuthTypes := map[string]externalAuthType{}
@@ -152,10 +155,10 @@ func NewAuth(serviceID string, host string, authPrivKey *keys.PrivKey, authServi
 
 	timerDone := make(chan bool)
 
-	auth := &Auth{storage: storage, emailer: emailer, logger: logger, authTypes: authTypes, verificationTypes: verificationTypes, externalAuthTypes: externalAuthTypes, anonymousAuthTypes: anonymousAuthTypes,
-		serviceAuthTypes: serviceAuthTypes, mfaTypes: mfaTypes, authPrivKey: authPrivKey, ServiceRegManager: nil, serviceID: serviceID, host: host, minTokenExp: *minTokenExp,
-		maxTokenExp: *maxTokenExp, profileBB: profileBB, cachedIdentityProviders: cachedIdentityProviders, identityProvidersLock: identityProvidersLock,
-		timerDone: timerDone, emailDialer: emailDialer, emailFrom: smtpFrom, apiKeys: apiKeys, apiKeysLock: apiKeysLock}
+	auth := &Auth{storage: storage, emailer: emailer, logger: logger, identifierTypes: identifierTypes, authTypes: authTypes, verificationTypes: verificationTypes,
+		externalAuthTypes: externalAuthTypes, anonymousAuthTypes: anonymousAuthTypes, serviceAuthTypes: serviceAuthTypes, mfaTypes: mfaTypes, authPrivKey: authPrivKey,
+		ServiceRegManager: nil, serviceID: serviceID, host: host, minTokenExp: *minTokenExp, maxTokenExp: *maxTokenExp, profileBB: profileBB, cachedIdentityProviders: cachedIdentityProviders,
+		identityProvidersLock: identityProvidersLock, timerDone: timerDone, emailDialer: emailDialer, emailFrom: smtpFrom, apiKeys: apiKeys, apiKeysLock: apiKeysLock}
 
 	err := auth.storeCoreRegs()
 	if err != nil {
@@ -180,20 +183,29 @@ func NewAuth(serviceID string, host string, authPrivKey *keys.PrivKey, authServi
 
 	auth.SignatureAuth = signatureAuth
 
-	//Initialize auth types
-	initUsernameAuth(auth)
-	initEmailAuth(auth)
-	initPhoneAuth(auth, twilioAccountSID, twilioToken, twilioServiceSID)
-	initFirebaseAuth(auth)
-	initAnonymousAuth(auth)
-	initSignatureAuth(auth)
+	// identifier types
+	initUsernameIdentifier(auth)
+	initEmailIdentifier(auth)
+	initPhoneIdentifier(auth, twilioAccountSID, twilioToken, twilioServiceSID)
 
+	// auth types
+	initAnonymousAuth(auth)
+	initPasswordAuth(auth)
+	// initFirebaseAuth(auth)
+	// initSignatureAuth(auth)
+
+	// verification types
+	initCodeVerification(auth)
+
+	// external auth types
 	initOidcAuth(auth)
 	initSamlAuth(auth)
 
+	// service auth types
 	initStaticTokenServiceAuth(auth)
 	initSignatureServiceAuth(auth)
 
+	// mfa types
 	initTotpMfa(auth)
 	initEmailMfa(auth)
 	initPhoneMfa(auth)
@@ -603,24 +615,24 @@ func (a *Auth) applyAnonymousAuthType(authType model.AuthType, creds string) (st
 func (a *Auth) applyAuthType(authType model.AuthType, appOrg model.ApplicationOrganization, creds string, params string, clientVersion *string, regProfile model.Profile,
 	regPreferences map[string]interface{}, username string, admin bool, l *logs.Log) (string, *model.AccountAuthType, []model.MFAType, map[string]string, error) {
 
-	//auth type
-	authImpl, err := a.getAuthTypeImpl(authType)
+	//identifier type
+	identifierImpl, err := a.getIdentifierTypeImpl(authType)
 	if err != nil {
-		return "", nil, nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeAuthType, nil, err)
+		return "", nil, nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeIdentifierType, nil, err)
 	}
 
 	//check if the user exists check
-	userIdentifier, err := authImpl.getUserIdentifier(creds)
+	userIdentifier, err := identifierImpl.getUserIdentifier(creds)
 	if err != nil {
 		return "", nil, nil, nil, errors.WrapErrorAction(logutils.ActionGet, "user identifier", nil, err)
 	}
 
 	if userIdentifier != "" {
-		if authType.Code == AuthTypeTwilioPhone && regProfile.Phone == "" {
+		if authType.Code == IdentifierTypeTwilioPhone && regProfile.Phone == "" {
 			regProfile.Phone = userIdentifier
-		} else if authType.Code == AuthTypeEmail && regProfile.Email == "" {
+		} else if authType.Code == IdentifierTypeEmail && regProfile.Email == "" {
 			regProfile.Email = userIdentifier
-		} else if authType.Code == authTypeUsername {
+		} else if authType.Code == IdentifierTypeUsername {
 			username = userIdentifier
 		}
 	}
@@ -1588,12 +1600,12 @@ func (a *Auth) checkUsername(context storage.TransactionContext, appOrg *model.A
 
 func (a *Auth) linkAccountAuthType(account model.Account, authType model.AuthType, appOrg model.ApplicationOrganization,
 	creds string, params string, l *logs.Log) (string, *model.AccountAuthType, error) {
-	authImpl, err := a.getAuthTypeImpl(authType)
+	identifierImpl, err := a.getIdentifierTypeImpl(authType)
 	if err != nil {
-		return "", nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeAuthType, nil, err)
+		return "", nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeIdentifierType, nil, err)
 	}
 
-	userIdentifier, err := authImpl.getUserIdentifier(creds)
+	userIdentifier, err := identifierImpl.getUserIdentifier(creds)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionGet, "user identifier", nil, err)
 	}
@@ -2003,6 +2015,16 @@ func (a *Auth) buildAccessTokenForServiceAccount(account model.ServiceAccount, a
 	return accessToken, &model.AppOrgPair{AppID: appID, OrgID: orgID}, nil
 }
 
+func (a *Auth) registerIdentifierType(name string, identifier identifierType) error {
+	if _, ok := a.identifierTypes[name]; ok {
+		return errors.ErrorData(logutils.StatusFound, model.TypeIdentifierType, &logutils.FieldArgs{"name": name})
+	}
+
+	a.identifierTypes[name] = identifier
+
+	return nil
+}
+
 func (a *Auth) registerAuthType(name string, auth authType) error {
 	if _, ok := a.authTypes[name]; ok {
 		return errors.ErrorData(logutils.StatusFound, model.TypeAuthType, &logutils.FieldArgs{"name": name})
@@ -2121,12 +2143,29 @@ func (a *Auth) validateAuthTypeForAppOrg(authenticationType string, appID string
 	return nil, nil, errors.ErrorData(logutils.StatusInvalid, model.TypeAuthType, &logutils.FieldArgs{"app_org_id": appOrg.ID, "auth_type": authenticationType})
 }
 
+// TODO: update auth type model, add identifier types, verification types?
+func (a *Auth) getIdentifierTypeImpl(authType model.AuthType) (identifierType, error) {
+	if auth, ok := a.identifierTypes[authType.Code]; ok {
+		return auth, nil
+	}
+
+	return nil, errors.ErrorData(logutils.StatusInvalid, model.TypeIdentifierType, logutils.StringArgs(authType.Code))
+}
+
 func (a *Auth) getAuthTypeImpl(authType model.AuthType) (authType, error) {
 	if auth, ok := a.authTypes[authType.Code]; ok {
 		return auth, nil
 	}
 
 	return nil, errors.ErrorData(logutils.StatusInvalid, model.TypeAuthType, logutils.StringArgs(authType.Code))
+}
+
+func (a *Auth) getVerificationTypeImpl(authType model.AuthType) (verificationType, error) {
+	if auth, ok := a.verificationTypes[authType.Code]; ok {
+		return auth, nil
+	}
+
+	return nil, errors.ErrorData(logutils.StatusInvalid, model.TypeVerificationType, logutils.StringArgs(authType.Code))
 }
 
 func (a *Auth) getExternalAuthTypeImpl(authType model.AuthType) (externalAuthType, error) {
