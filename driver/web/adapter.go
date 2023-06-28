@@ -18,7 +18,6 @@ import (
 	"bytes"
 	"context"
 	"core-building-block/core"
-	"core-building-block/core/model"
 	"fmt"
 	"html/template"
 	"net/http"
@@ -37,7 +36,6 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/rokwire/core-auth-library-go/v3/authservice"
-	"github.com/rokwire/core-auth-library-go/v3/authutils"
 	"github.com/rokwire/core-auth-library-go/v3/tokenauth"
 	"github.com/rokwire/core-auth-library-go/v3/webauth"
 
@@ -533,7 +531,8 @@ func (we Adapter) completeResponse(w http.ResponseWriter, response logs.HTTPResp
 }
 
 // NewWebAdapter creates new WebAdapter instance
-func NewWebAdapter(env string, serviceRegManager *authservice.ServiceRegManager, port string, coreAPIs *core.APIs, host string, storage core.Storage, baseServerURL string, prodServerURL string, testServerURL string, devServerURL string, logger *logs.Logger) Adapter {
+func NewWebAdapter(env string, serviceRegManager *authservice.ServiceRegManager, port string, coreAPIs *core.APIs, host string, corsAllowedOrigins []string,
+	corsAllowedHeaders []string, baseServerURL string, prodServerURL string, testServerURL string, devServerURL string, logger *logs.Logger) Adapter {
 	//openAPI doc
 	loader := &openapi3.Loader{Context: context.Background(), IsExternalRefsAllowed: true}
 	// doc, err := loader.LoadFromFile("driver/web/docs/gen/def.yaml")
@@ -567,24 +566,6 @@ func NewWebAdapter(env string, serviceRegManager *authservice.ServiceRegManager,
 	openAPIRouter, err := gorillamux.NewRouter(doc)
 	if err != nil {
 		logger.Fatalf("error on openapi3 gorillamux router - %s", err.Error())
-	}
-
-	// read CORS parameters from stored env config
-	var envData *model.EnvConfigData
-	var corsAllowedHeaders []string
-	var corsAllowedOrigins []string
-	config, err := storage.FindConfig(model.ConfigTypeEnv, authutils.AllApps, authutils.AllOrgs)
-	if err != nil {
-		logger.Fatal(errors.WrapErrorAction(logutils.ActionFind, model.TypeConfig, nil, err).Error())
-	}
-	if config != nil {
-		envData, err = model.GetConfigData[model.EnvConfigData](*config)
-		if err != nil {
-			logger.Fatal(errors.WrapErrorAction(logutils.ActionCast, model.TypeEnvConfigData, nil, err).Error())
-		}
-
-		corsAllowedHeaders = envData.CORSAllowedHeaders
-		corsAllowedOrigins = envData.CORSAllowedOrigins
 	}
 
 	auth, err := NewAuth(serviceRegManager)
