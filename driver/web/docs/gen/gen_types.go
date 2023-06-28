@@ -1364,6 +1364,9 @@ type GetServicesAccountsPublicParams struct {
 	// Offset The index of the first account to return
 	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
 
+	// Search The search for username, firstname, or lastname
+	Search *string `form:"search,omitempty" json:"search,omitempty"`
+
 	// Username The username
 	Username *string `form:"username,omitempty" json:"username,omitempty"`
 
@@ -1372,6 +1375,12 @@ type GetServicesAccountsPublicParams struct {
 
 	// Lastname The account profile last name
 	Lastname *string `form:"lastname,omitempty" json:"lastname,omitempty"`
+
+	// FollowingId The ID of the account being followed
+	FollowingId *string `form:"following-id,omitempty" json:"following-id,omitempty"`
+
+	// FollowerId The ID of the account following
+	FollowerId *string `form:"follower-id,omitempty" json:"follower-id,omitempty"`
 }
 
 // GetServicesAuthCredentialVerifyParams defines parameters for GetServicesAuthCredentialVerify.

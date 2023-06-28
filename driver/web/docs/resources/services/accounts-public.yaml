@@ -24,6 +24,14 @@ get:
       explode: false
       schema:
         type: integer
+    - name: search
+      in: query
+      description: The search for username, firstname, or lastname
+      required: false
+      style: form
+      explode: false
+      schema:
+        type: string
     - name: username
       in: query
       description: The username
@@ -43,6 +51,22 @@ get:
     - name: lastname
       in: query
       description: The account profile last name
+      required: false
+      style: form
+      explode: false
+      schema:
+        type: string
+    - name: following-id
+      in: query
+      description: The ID of the account being followed
+      required: false
+      style: form
+      explode: false
+      schema:
+        type: string
+    - name: follower-id
+      in: query
+      description: The ID of the account following
       required: false
       style: form
       explode: false

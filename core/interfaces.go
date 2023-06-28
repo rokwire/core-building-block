@@ -36,7 +36,7 @@ type Services interface {
 	SerGetAccounts(limit int, offset int, appID string, orgID string, accountID *string, firstName *string, lastName *string, authType *string,
 		authTypeIdentifier *string, anonymous *bool, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error)
 
-	SerGetPublicAccounts(appID string, orgID string, limit int, offset int, firstName *string, lastName *string, username *string) ([]model.PublicAccount, error)
+	SerGetPublicAccounts(appID string, orgID string, limit int, offset int, search *string, firstName *string, lastName *string, username *string, followingID *string, followerID *string) ([]model.PublicAccount, error)
 
 	SerAddFollow(follow model.Follow) error
 	SerDeleteFollow(appID string, orgID string, FolloweeID string, userID string) error

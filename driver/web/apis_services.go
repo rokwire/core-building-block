@@ -884,6 +884,13 @@ func (h ServicesApisHandler) getPublicAccounts(l *logs.Log, r *http.Request, cla
 		}
 	}
 
+	//search
+	var search *string
+	searchParam := r.URL.Query().Get("search")
+	if len(searchParam) > 0 {
+		search = &searchParam
+	}
+
 	//username
 	var username *string
 	usernameParam := r.URL.Query().Get("username")
@@ -904,7 +911,21 @@ func (h ServicesApisHandler) getPublicAccounts(l *logs.Log, r *http.Request, cla
 		lastName = &lastNameParam
 	}
 
-	accounts, err := h.coreAPIs.Services.SerGetPublicAccounts(claims.AppID, claims.OrgID, limit, offset, username, firstName, lastName)
+	//following id
+	var followingID *string
+	followingIDParam := r.URL.Query().Get("following-id")
+	if len(followingIDParam) > 0 {
+		followingID = &followingIDParam
+	}
+
+	//following id
+	var followerID *string
+	followerIDParam := r.URL.Query().Get("follower-id")
+	if len(followerIDParam) > 0 {
+		followerID = &followerIDParam
+	}
+
+	accounts, err := h.coreAPIs.Services.SerGetPublicAccounts(claims.AppID, claims.OrgID, limit, offset, search, firstName, lastName, username, followingID, followerID)
 	if err != nil {
 		return l.HTTPResponseErrorAction("error finding accounts", model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}

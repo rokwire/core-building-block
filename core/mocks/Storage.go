@@ -1039,25 +1039,25 @@ func (_m *Storage) FindPermissionsByServiceIDs(serviceIDs []string) ([]model.Per
 	return r0, r1
 }
 
-// FindPublicAccounts provides a mock function with given fields: context, appID, orgID, limit, offset, firstName, lastName, username
-func (_m *Storage) FindPublicAccounts(context storage.TransactionContext, appID string, orgID string, limit *int, offset *int, firstName *string, lastName *string, username *string) ([]model.PublicAccount, error) {
-	ret := _m.Called(context, appID, orgID, limit, offset, firstName, lastName, username)
+// FindPublicAccounts provides a mock function with given fields: context, appID, orgID, limit, offset, search, firstName, lastName, username, followingID, followerID
+func (_m *Storage) FindPublicAccounts(context storage.TransactionContext, appID string, orgID string, limit *int, offset *int, search *string, firstName *string, lastName *string, username *string, followingID *string, followerID *string) ([]model.PublicAccount, error) {
+	ret := _m.Called(context, appID, orgID, limit, offset, search, firstName, lastName, username, followingID, followerID)
 
 	var r0 []model.PublicAccount
 	var r1 error
-	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, string, *int, *int, *string, *string, *string) ([]model.PublicAccount, error)); ok {
-		return rf(context, appID, orgID, limit, offset, firstName, lastName, username)
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, string, *int, *int, *string, *string, *string, *string, *string, *string) ([]model.PublicAccount, error)); ok {
+		return rf(context, appID, orgID, limit, offset, search, firstName, lastName, username, followingID, followerID)
 	}
-	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, string, *int, *int, *string, *string, *string) []model.PublicAccount); ok {
-		r0 = rf(context, appID, orgID, limit, offset, firstName, lastName, username)
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, string, *int, *int, *string, *string, *string, *string, *string, *string) []model.PublicAccount); ok {
+		r0 = rf(context, appID, orgID, limit, offset, search, firstName, lastName, username, followingID, followerID)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]model.PublicAccount)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(storage.TransactionContext, string, string, *int, *int, *string, *string, *string) error); ok {
-		r1 = rf(context, appID, orgID, limit, offset, firstName, lastName, username)
+	if rf, ok := ret.Get(1).(func(storage.TransactionContext, string, string, *int, *int, *string, *string, *string, *string, *string, *string) error); ok {
+		r1 = rf(context, appID, orgID, limit, offset, search, firstName, lastName, username, followingID, followerID)
 	} else {
 		r1 = ret.Error(1)
 	}
