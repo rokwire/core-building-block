@@ -978,13 +978,13 @@ func (h ServicesApisHandler) addFollow(l *logs.Log, r *http.Request, claims *tok
 }
 
 func (h ServicesApisHandler) deleteFollow(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	var followeeID Def.AccountID
-	err := json.NewDecoder(r.Body).Decode(&followeeID)
+	var followingID Def.AccountID
+	err := json.NewDecoder(r.Body).Decode(&followingID)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, model.TypeFollow, nil, err, http.StatusBadRequest, true)
 	}
 
-	err = h.coreAPIs.Services.SerDeleteFollow(claims.AppID, claims.OrgID, followeeID.Id, claims.Subject)
+	err = h.coreAPIs.Services.SerDeleteFollow(claims.AppID, claims.OrgID, followingID.Id, claims.Subject)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionDelete, model.TypeFollow, nil, err, http.StatusInternalServerError, true)
 	}
@@ -1013,19 +1013,19 @@ func (h ServicesApisHandler) getFollows(l *logs.Log, r *http.Request, claims *to
 		}
 	}
 
-	var followeeID string
-	followeeIDArg := r.URL.Query().Get("followee_id")
-	if len(followeeIDArg) > 0 {
-		followeeID = followeeIDArg
+	var followingID string
+	followingIDArg := r.URL.Query().Get("following_id")
+	if len(followingIDArg) > 0 {
+		followingID = followingIDArg
 	}
 
-	var userID string
-	userIDArg := r.URL.Query().Get("user_id")
-	if len(userIDArg) > 0 {
-		userID = userIDArg
+	var followerID string
+	followerIDArg := r.URL.Query().Get("follower_id")
+	if len(followerIDArg) > 0 {
+		followerID = followerIDArg
 	}
 
-	accounts, err := h.coreAPIs.Services.SerGetFollows(claims.AppID, claims.OrgID, &limit, &offset, followeeID, userID)
+	accounts, err := h.coreAPIs.Services.SerGetFollows(claims.AppID, claims.OrgID, &limit, &offset, followingID, followerID)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionGet, model.TypeAccount, nil, err, http.StatusInternalServerError, false)
 	}

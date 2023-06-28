@@ -173,16 +173,16 @@ func (app *application) serAddFollow(follow model.Follow) error {
 	return nil
 }
 
-func (app *application) serDeleteFollow(appID string, orgID string, FolloweeID string, userID string) error {
-	err := app.storage.DeleteFollow(nil, appID, orgID, FolloweeID, userID)
+func (app *application) serDeleteFollow(appID string, orgID string, followingID string, followerID string) error {
+	err := app.storage.DeleteFollow(nil, appID, orgID, followingID, followerID)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeFollow, nil, err)
 	}
 	return nil
 }
 
-func (app *application) serGetFollows(appID string, orgID string, limit *int, offset *int, followeeID string, userID string) ([]model.PublicAccount, error) {
-	publicAccounts, err := app.storage.FindFollows(nil, appID, orgID, limit, offset, followeeID, userID)
+func (app *application) serGetFollows(appID string, orgID string, limit *int, offset *int, followingID string, followerID string) ([]model.PublicAccount, error) {
+	publicAccounts, err := app.storage.FindFollows(nil, appID, orgID, limit, offset, followingID, followerID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
