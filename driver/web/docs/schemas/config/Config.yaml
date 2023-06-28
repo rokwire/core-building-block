@@ -1,0 +1,34 @@
+required:
+  - id
+  - type
+  - app_id
+  - org_id
+  - system
+  - data
+  - date_created
+  - date_updated
+type: object
+properties:
+  id:
+    readOnly: true
+    type: string
+  type:
+    type: string
+  app_id:
+    readOnly: true
+    type: string
+  org_id:
+    readOnly: true
+    type: string
+  system:
+    type: boolean
+  data:
+    anyOf:
+      - $ref: "./EnvConfigData.yaml"
+  date_created:
+    readOnly: true
+    type: string
+  date_updated:
+    readOnly: true
+    type: string
+    nullable: true

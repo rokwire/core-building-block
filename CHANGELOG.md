@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Added
 - WebAuthn authentication [#659](https://github.com/rokwire/core-building-block/issues/659)
+- Enable CORS [#632](https://github.com/rokwire/core-building-block/issues/632)
 
 ## [1.33.0] - 2023-05-02
 ### Added
