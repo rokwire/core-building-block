@@ -18,7 +18,6 @@ import (
 	"core-building-block/core/model"
 
 	"github.com/rokwire/logging-library-go/v2/errors"
-	"github.com/rokwire/logging-library-go/v2/logs"
 	"github.com/rokwire/logging-library-go/v2/logutils"
 )
 
@@ -33,24 +32,20 @@ type firebaseAuthImpl struct {
 	authType string
 }
 
-func (a *firebaseAuthImpl) signUp(authType model.AuthType, appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error) {
+func (a *firebaseAuthImpl) signUp(identifierImpl identifierType, appName string, creds string, params string, newCredentialID string) (string, map[string]interface{}, error) {
 	return "", nil, nil
 }
 
-func (a *firebaseAuthImpl) signUpAdmin(authType model.AuthType, appOrg model.ApplicationOrganization, identifier string, password string, newCredentialID string) (map[string]interface{}, map[string]interface{}, error) {
+func (a *firebaseAuthImpl) signUpAdmin(identifierImpl identifierType, appName string, identifier string, password string, newCredentialID string) (map[string]interface{}, map[string]interface{}, error) {
 	return nil, nil, nil
 }
 
-func (a *firebaseAuthImpl) isCredentialVerified(credential *model.Credential, l *logs.Log) (*bool, *bool, error) {
-	return nil, nil, nil
-}
-
-func (a *firebaseAuthImpl) resetCredential(credential *model.Credential, resetCode *string, params string, l *logs.Log) (map[string]interface{}, error) {
+func (a *firebaseAuthImpl) resetCredential(credential authCreds, resetCode *string, params string) (map[string]interface{}, error) {
 	return nil, nil
 }
 
-func (a *firebaseAuthImpl) checkCredentials(accountAuthType model.AccountAuthType, creds string, credential verificationCreds, l *logs.Log) (string, error) {
-	return "", nil
+func (a *firebaseAuthImpl) checkCredentials(storedCreds authCreds, incomingCreds authCreds) error {
+	return nil
 }
 
 // initFirebaseAuth initializes and registers a new Firebase auth instance

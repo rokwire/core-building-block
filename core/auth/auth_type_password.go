@@ -18,31 +18,23 @@ import (
 	"core-building-block/core/model"
 	"core-building-block/utils"
 	"encoding/json"
-	"regexp"
 	"time"
 
 	"github.com/rokwire/logging-library-go/v2/errors"
-	"github.com/rokwire/logging-library-go/v2/logs"
 	"github.com/rokwire/logging-library-go/v2/logutils"
 	"golang.org/x/crypto/bcrypt"
-	"gopkg.in/go-playground/validator.v9"
 )
 
 const (
 	//AuthTypePassword password auth type
 	AuthTypePassword string = "password"
+
+	typePasswordResetParams logutils.MessageDataType = "password reset params"
 )
 
-type passwordCreds struct {
-	Password string `json:"password"`
-}
-
-type passwordParams struct {
+type passwordResetParams struct {
+	NewPassword     string `json:"new_password"`
 	ConfirmPassword string `json:"confirm_password"`
-}
-
-func (p *passwordParams) credential() string {
-	return p.ConfirmPassword
 }
 
 // Password implementation of authType
@@ -51,462 +43,148 @@ type passwordAuthImpl struct {
 	authType string
 }
 
-func emailCredsToMap(creds *emailCreds) (map[string]interface{}, error) {
-	credBytes, err := json.Marshal(creds)
+func (a *passwordAuthImpl) signUp(identifierImpl identifierType, appName string, creds string, params string, newCredentialID string) (string, map[string]interface{}, error) {
+	passwordCreds, err := identifierImpl.parseCreds(creds)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionMarshal, typeEmailCreds, nil, err)
+		return "", nil, errors.ErrorData(logutils.StatusInvalid, "password creds", nil)
 	}
-	var credsMap map[string]interface{}
-	err = json.Unmarshal(credBytes, &credsMap)
+
+	passwordParams, err := identifierImpl.parseParams(params)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, "map from email creds", nil, err)
-	}
-	return credsMap, nil
-}
-
-func mapToEmailCreds(credsMap map[string]interface{}) (*emailCreds, error) {
-	credBytes, err := json.Marshal(credsMap)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionMarshal, typeEmailCreds, nil, err)
-	}
-	var creds emailCreds
-	err = json.Unmarshal(credBytes, &creds)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeEmailCreds, nil, err)
-	}
-	return &creds, nil
-}
-
-func usernameCredsToMap(creds *usernameCreds) (map[string]interface{}, error) {
-	credBytes, err := json.Marshal(creds)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionMarshal, typeUsernameCreds, nil, err)
-	}
-	var credsMap map[string]interface{}
-	err = json.Unmarshal(credBytes, &credsMap)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, "map from username creds", nil, err)
-	}
-	return credsMap, nil
-}
-
-func mapToUsernameCreds(credsMap map[string]interface{}) (*usernameCreds, error) {
-	credBytes, err := json.Marshal(credsMap)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionMarshal, typeUsernameCreds, nil, err)
-	}
-	var creds usernameCreds
-	err = json.Unmarshal(credBytes, &creds)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeUsernameCreds, nil, err)
-	}
-	return &creds, nil
-}
-
-func (a *twilioPhoneAuthImpl) checkRequestCreds(creds string) (*twilioPhoneCreds, error) {
-	var requestCreds twilioPhoneCreds
-	err := json.Unmarshal([]byte(creds), &requestCreds)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typePhoneCreds, nil, err)
+		return "", nil, errors.ErrorData(logutils.StatusInvalid, "password params", nil)
 	}
 
-	validate := validator.New()
-	err = validate.Struct(requestCreds)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionValidate, typePhoneCreds, nil, err)
-	}
-
-	phone := requestCreds.Phone
-	validPhone := regexp.MustCompile(`^\+[1-9]\d{1,14}$`)
-	if !validPhone.MatchString(phone) {
-		return nil, errors.ErrorData(logutils.StatusInvalid, typePhoneNumber, &logutils.FieldArgs{"phone": phone})
-	}
-
-	return &requestCreds, nil
-}
-
-func (a *passwordAuthImpl) parseCreds(creds string, credential authCreds) error {
-	err := json.Unmarshal([]byte(creds), credential)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUnmarshal, typeAuthCreds, nil, err)
-	}
-
-	if len(credential.identifier()) == 0 {
-		return errors.ErrorData(logutils.StatusMissing, typeAuthCreds, logutils.StringArgs("identifier"))
-	}
-	if len(credential.credential()) == 0 {
-		return errors.ErrorData(logutils.StatusMissing, typeAuthCreds, logutils.StringArgs("credential"))
-	}
-
-	return nil
-}
-
-func (a *passwordAuthImpl) parseParams(params string, parameter authParams) error {
-	err := json.Unmarshal([]byte(params), parameter)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUnmarshal, typeAuthParams, nil, err)
-	}
-
-	if len(parameter.credential()) == 0 {
-		return errors.ErrorData(logutils.StatusMissing, typeAuthParams, logutils.StringArgs("credential"))
-	}
-
-	return nil
-}
-
-// Email
-// Username
-
-func (a *passwordAuthImpl) signUp(verificationImpl verificationType, authType model.AuthType, appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error) {
-	var sEmailCreds emailCreds
-	err := verificationImpl.parseCreds(creds, &sEmailCreds)
-
-	var sEmailParams signUpParams
-	err = verificationImpl.parseParams(creds, &sEmailParams)
-
-	//check if credentials match
-	if sEmailCreds.credential() != sEmailParams.credential() {
-		return "", nil, errors.ErrorData(logutils.StatusInvalid, "mismatching credentials", nil)
-	}
-
-	emailCreds, err := a.buildCredentials(authType, appOrg.Application.Name, sEmailCreds.identifier(), sEmailCreds.credential(), newCredentialID)
-	if err != nil {
-		return "", nil, errors.WrapErrorAction("building", "email credentials", nil, err)
-	}
-
-	return "verification code sent successfully", emailCreds, nil
-}
-
-func (a *passwordAuthImpl) signUp(verificationImpl verificationType, authType model.AuthType, appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error) {
-	var sUsernameCreds usernameCreds
-	err := verificationImpl.parseCreds(creds, &sUsernameCreds)
-
-	var sUsernameParams signUpParams
-	err = verificationImpl.parseParams(creds, &sUsernameParams)
-
-	//check if credentials match
-	if sUsernameCreds.credential() != sUsernameParams.credential() {
-		return "", nil, errors.ErrorData(logutils.StatusInvalid, "mismatching credentials", nil)
-	}
-
-	usernameCreds, err := a.buildCredentials(authType, appOrg.Application.Name, sUsernameCreds.identifier(), sUsernameCreds.credential(), newCredentialID)
-	if err != nil {
-		return "", nil, errors.WrapErrorAction("building", "username credentials", nil, err)
-	}
-
-	return "", usernameCreds, nil
-}
-
-// auth type code
-func (a *passwordAuthImpl) signUp(authType model.AuthType, appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error) {
-	requestCreds, err := a.checkRequestCreds(creds)
-	if err != nil {
-		return "", nil, err
-	}
-
-	message, err := a.handlePhoneVerify(requestCreds.Phone, *requestCreds, l)
-	if err != nil {
-		return "", nil, err
-	}
-
-	return message, nil, nil
-}
-
-func (a *passwordAuthImpl) signUpAdmin(authType model.AuthType, appOrg model.ApplicationOrganization, identifier string, password string, newCredentialID string) (map[string]interface{}, map[string]interface{}, error) {
-	if password == "" {
-		password = utils.GenerateRandomPassword(12)
-	}
-
-	emailCreds, err := a.buildCredentials(authType, appOrg.Application.Name, identifier, password, newCredentialID)
-	if err != nil {
-		return nil, nil, errors.WrapErrorAction("building", "email credentials", nil, err)
-	}
-
-	params := map[string]interface{}{"password": password}
-	return params, emailCreds, nil
-}
-
-func (a *passwordAuthImpl) signUpAdmin(authType model.AuthType, appOrg model.ApplicationOrganization, identifier string, password string, newCredentialID string) (map[string]interface{}, map[string]interface{}, error) {
-	if password == "" {
-		password = utils.GenerateRandomPassword(12)
-	}
-
-	usernameCreds, err := a.buildCredentials(authType, appOrg.Application.Name, identifier, password, newCredentialID)
-	if err != nil {
-		return nil, nil, errors.WrapErrorAction("building", "username credentials", nil, err)
-	}
-
-	params := map[string]interface{}{"password": password}
-	return params, usernameCreds, nil
-}
-
-func (a *passwordAuthImpl) isCredentialVerified(credential *model.Credential, l *logs.Log) (*bool, *bool, error) {
-	if credential.Verified {
-		verified := true
-		return &verified, nil, nil
-	}
-
-	//check if email verification is off
-	verifyEmail := a.getVerifyEmail(credential.AuthType)
-	if !verifyEmail {
-		verified := true
-		return &verified, nil, nil
-	}
-
-	//it is unverified
-	verified := false
-	//check if the verification is expired
-	storedCreds, err := mapToEmailCreds(credential.Value)
-	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionCast, typeEmailCreds, nil, err)
-	}
-	expired := false
-	if storedCreds.VerificationExpiry.Before(time.Now()) {
-		expired = true
-	}
-	return &verified, &expired, nil
-}
-
-func (a *passwordAuthImpl) isCredentialVerified(credential *model.Credential, l *logs.Log) (*bool, *bool, error) {
-	//TODO verification process for usernames
-	verified := true
-	expired := false
-	return &verified, &expired, nil
-}
-
-func (a *passwordAuthImpl) buildCredentials(authType model.AuthType, appName string, email string, password string, credID string) (map[string]interface{}, error) {
-	//password hash
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionGenerate, "password hash", nil, err)
-	}
-
-	//verification code
-	code, err := utils.GenerateRandomString(64)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionGenerate, "verification code", nil, err)
-	}
-
-	verifyEmail := a.getVerifyEmail(authType)
-	verifyExpiryTime := a.getVerifyExpiry(authType)
-
-	var emailCredValue emailCreds
-	if verifyEmail {
-		emailCredValue = emailCreds{Email: email, Password: string(hashedPassword), VerificationCode: code, VerificationExpiry: time.Now().Add(time.Hour * time.Duration(verifyExpiryTime))}
-	} else {
-		emailCredValue = emailCreds{Email: email, Password: string(hashedPassword)}
-	}
-
-	emailCredValueMap, err := emailCredsToMap(&emailCredValue)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionCast, "map from email creds", nil, err)
-	}
-
-	if verifyEmail {
-		//send verification code
-		if err = a.sendVerificationCode(email, appName, code, credID); err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionSend, "verification email", nil, err)
+	credType, cred := passwordCreds.getCredential()
+	if passwordParams != nil {
+		confirmCredType, confirmCred := passwordParams.parameter()
+		if credType != AuthTypePassword || confirmCredType != AuthTypePassword || cred != confirmCred {
+			return "", nil, errors.ErrorData(logutils.StatusInvalid, "mismatching credentials", nil)
 		}
 	}
 
-	return emailCredValueMap, nil
+	message, credsMap, err := a.generateCredential(identifierImpl, appName, passwordCreds.identifier(), cred, newCredentialID)
+	if err != nil {
+		return "", nil, errors.WrapErrorAction("building", "password credentials", nil, err)
+	}
+
+	//TODO (for auth type code)
+	// message, err = a.handlePhoneVerify(requestCreds.Phone, *requestCreds, l)
+	// if err != nil {
+	// 	return "", nil, err
+	// }
+
+	return message, credsMap, nil
 }
 
-func (a *passwordAuthImpl) buildCredentials(authType model.AuthType, appName string, username string, password string, credID string) (map[string]interface{}, error) {
+func (a *passwordAuthImpl) signUpAdmin(identifierImpl identifierType, appName string, identifier string, password string, newCredentialID string) (map[string]interface{}, map[string]interface{}, error) {
+	if password == "" {
+		password = utils.GenerateRandomPassword(12)
+	}
 
+	_, creds, err := a.generateCredential(identifierImpl, appName, identifier, password, newCredentialID)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction("building", "password credentials", nil, err)
+	}
+
+	params := map[string]interface{}{"password": password}
+	return params, creds, nil
+}
+
+func (a *passwordAuthImpl) generateCredential(identifierImpl identifierType, appName string, identifier string, password string, credID string) (string, map[string]interface{}, error) {
 	//password hash
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionGenerate, "password hash", nil, err)
+		return "", nil, errors.WrapErrorAction(logutils.ActionGenerate, "password hash", nil, err)
 	}
 
-	usernameCredValue := usernameCreds{Username: username, Password: string(hashedPassword)}
+	message := ""
+	credValue := identifierImpl.buildCredential(identifier, string(hashedPassword), AuthTypePassword)
+	verificationTypeCode := identifierImpl.verificationType()
+	if verificationTypeCode != "" {
+		verificationImpl, err := a.auth.getVerificationTypeImpl(verificationTypeCode)
+		if err != nil {
+			return "", nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeVerificationType, logutils.StringArgs(verificationTypeCode), err)
+		}
 
-	usernameCredValueMap, err := usernameCredsToMap(&usernameCredValue)
+		code, expiry, err := verificationImpl.sendVerifyOnSignup(identifierImpl, identifier, appName, credID)
+		if err != nil {
+			return "", nil, errors.WrapErrorAction(logutils.ActionSend, "identifier verification", nil, err)
+		}
+
+		credValue.setVerificationParams(code, expiry)
+		message = "verification code sent successfully"
+	}
+
+	credValueMap, err := credValue.toMap()
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionCast, "map from username creds", nil, err)
+		return "", nil, errors.WrapErrorAction(logutils.ActionCast, "map from password creds", nil, err)
 	}
 
-	return usernameCredValueMap, nil
+	return message, credValueMap, nil
 }
 
-func (a *passwordAuthImpl) resetCredential(credential *model.Credential, resetCode *string, params string, l *logs.Log) (map[string]interface{}, error) {
-	//get the data from params
-	type Params struct {
-		NewPassword     string `json:"new_password"`
-		ConfirmPassword string `json:"confirm_password"`
-	}
-
-	var paramsData Params
-	err := json.Unmarshal([]byte(params), &paramsData)
+func (a *passwordAuthImpl) resetCredential(credential authCreds, resetCode *string, params string) (map[string]interface{}, error) {
+	var resetData passwordResetParams
+	err := json.Unmarshal([]byte(params), &resetData)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeEmailParams, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typePasswordResetParams, nil, err)
 	}
-	newPassword := paramsData.NewPassword
-	confirmPassword := paramsData.ConfirmPassword
 
-	if len(newPassword) == 0 {
-		return nil, errors.ErrorData(logutils.StatusMissing, logutils.TypeString, logutils.StringArgs("new_password"))
+	if len(resetData.NewPassword) == 0 {
+		return nil, errors.ErrorData(logutils.StatusMissing, logutils.TypeString, logutils.StringArgs("new password"))
 	}
-	if len(confirmPassword) == 0 {
-		return nil, errors.ErrorData(logutils.StatusMissing, logutils.TypeString, logutils.StringArgs("confirm_password"))
+	if len(resetData.ConfirmPassword) == 0 {
+		return nil, errors.ErrorData(logutils.StatusMissing, logutils.TypeString, logutils.StringArgs("confirm password"))
 	}
 	//check if the password matches with the confirm password one
-	if newPassword != confirmPassword {
-		return nil, errors.ErrorData(logutils.StatusInvalid, "mismatching password fields", nil)
+	if resetData.NewPassword != resetData.ConfirmPassword {
+		return nil, errors.ErrorData(logutils.StatusInvalid, "mismatching password reset fields", nil)
 	}
 
-	credBytes, err := json.Marshal(credential.Value)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionMarshal, typeEmailCreds, nil, err)
-	}
-
-	var creds *emailCreds
-	err = json.Unmarshal(credBytes, &creds)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeEmailCreds, nil, err)
-	}
 	//reset password from link
 	if resetCode != nil {
-		if creds.ResetExpiry.Before(time.Now()) {
+		storedResetCode, storedResetExpiry := credential.getResetParams()
+		if storedResetExpiry == nil || storedResetExpiry.Before(time.Now()) {
 			return nil, errors.ErrorData("expired", "reset expiration time", nil)
 		}
-		err = bcrypt.CompareHashAndPassword([]byte(creds.ResetCode), []byte(*resetCode))
+		err = bcrypt.CompareHashAndPassword([]byte(storedResetCode), []byte(*resetCode))
 		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeAuthCred, &logutils.FieldArgs{"reset_code": *resetCode}, err)
+			return nil, errors.WrapErrorAction(logutils.ActionValidate, "password reset code", nil, err)
 		}
 
 		//Update verification data
-		creds.ResetCode = ""
-		creds.ResetExpiry = time.Time{}
+		credential.setResetParams("", nil)
 	}
 
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(resetData.NewPassword), bcrypt.DefaultCost)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGenerate, "password hash", nil, err)
 	}
 
 	//Update verification data
-	creds.Password = string(hashedPassword)
-	credsMap, err := emailCredsToMap(creds)
+	credential.setCredential(string(hashedPassword), AuthTypePassword)
+	credsMap, err := credential.toMap()
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionCast, "map from email creds", nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionCast, "map from password creds", nil, err)
 	}
 
 	return credsMap, nil
 }
 
-func (a *passwordAuthImpl) resetCredential(credential *model.Credential, resetCode *string, params string, l *logs.Log) (map[string]interface{}, error) {
-	//get the data from params
-	type Params struct {
-		NewPassword     string `json:"new_password"`
-		ConfirmPassword string `json:"confirm_password"`
-	}
-
-	var paramsData Params
-	err := json.Unmarshal([]byte(params), &paramsData)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeUsernameParams, nil, err)
-	}
-	newPassword := paramsData.NewPassword
-	confirmPassword := paramsData.ConfirmPassword
-
-	if len(newPassword) == 0 {
-		return nil, errors.ErrorData(logutils.StatusMissing, logutils.TypeString, logutils.StringArgs("new_password"))
-	}
-	if len(confirmPassword) == 0 {
-		return nil, errors.ErrorData(logutils.StatusMissing, logutils.TypeString, logutils.StringArgs("confirm_password"))
-	}
-	//check if the password matches with the confirm password one
-	if newPassword != confirmPassword {
-		return nil, errors.ErrorData(logutils.StatusInvalid, "mismatching password fields", nil)
-	}
-
-	credBytes, err := json.Marshal(credential.Value)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionMarshal, typeUsernameCreds, nil, err)
-	}
-
-	var creds *usernameCreds
-	err = json.Unmarshal(credBytes, &creds)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeUsernameCreds, nil, err)
-	}
-
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionGenerate, "password hash", nil, err)
-	}
-
-	//Update verification data
-	creds.Password = string(hashedPassword)
-	credsMap, err := usernameCredsToMap(creds)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionCast, "map from username creds", nil, err)
-	}
-
-	return credsMap, nil
-}
-
-func (a *passwordAuthImpl) checkCredentials(accountAuthType model.AccountAuthType, creds string, credential authCreds, l *logs.Log) (string, error) {
-	//get stored credential
-	credBytes, err := json.Marshal(accountAuthType.Credential.Value)
-	if err != nil {
-		return "", errors.WrapErrorAction(logutils.ActionMarshal, typeAuthCreds, nil, err)
-	}
-	var verifyCreds authCreds
-	err = json.Unmarshal(credBytes, verifyCreds)
-	if err != nil {
-		return "", errors.WrapErrorAction(logutils.ActionUnmarshal, typeAuthCreds, nil, err)
-	}
-
-	//get request credential
-	var sPasswordCreds signInCreds
-	err = json.Unmarshal([]byte(creds), &sPasswordCreds)
-	if err != nil {
-		return "", errors.WrapErrorAction(logutils.ActionUnmarshal, "sign in password creds", nil, err)
+func (a *passwordAuthImpl) checkCredentials(storedCreds authCreds, incomingCreds authCreds) error {
+	storedCredType, storedCred := storedCreds.getCredential()
+	incomingCredType, incomingCred := incomingCreds.getCredential()
+	if storedCredType != AuthTypePassword || incomingCredType != AuthTypePassword {
+		return errors.ErrorData(logutils.StatusInvalid, "mismatching credential types", nil)
 	}
 
 	//compare stored and requets ones
-	err = bcrypt.CompareHashAndPassword([]byte(verifyCreds.credential()), []byte(sPasswordCreds.Password))
+	err := bcrypt.CompareHashAndPassword([]byte(storedCred), []byte(incomingCred))
 	if err != nil {
-		return "", errors.WrapErrorAction(logutils.ActionValidate, model.TypeCredential, nil, err).SetStatus(utils.ErrorStatusInvalid)
+		return errors.WrapErrorAction(logutils.ActionValidate, model.TypeCredential, nil, err).SetStatus(utils.ErrorStatusInvalid)
 	}
 
-	return "", nil
-}
-
-// Helpers
-
-func (a *passwordAuthImpl) shouldVerifyIdentifier(authType model.AuthType) bool {
-	verify := true
-	verifyParam, ok := authType.Params["verify"].(bool)
-	if ok {
-		verify = verifyParam
-	}
-	return verify
-}
-
-// Time in seconds to wait before sending another auth code
-func (a *passwordAuthImpl) getVerifyWaitTime(authType model.AuthType) int {
-	//Default is 30 seconds
-	verifyWaitTime := 30
-	verifyWaitTimeParam, ok := authType.Params["verify_wait_time"].(int)
-	if ok {
-		verifyWaitTime = verifyWaitTimeParam
-	}
-	return verifyWaitTime
-}
-
-// Time in hours before auth code expires
-func (a *passwordAuthImpl) getVerifyExpiry(authType model.AuthType) int {
-	//Default is 24 hours
-	verifyExpiry := 24
-	verifyExpiryParam, ok := authType.Params["verify_expiry"].(int)
-	if ok {
-		verifyExpiry = verifyExpiryParam
-	}
-	return verifyExpiry
+	return nil
 }
 
 // initPasswordAuth initializes and registers a new password auth instance

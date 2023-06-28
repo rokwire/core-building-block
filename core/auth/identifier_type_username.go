@@ -16,6 +16,7 @@ package auth
 
 import (
 	"encoding/json"
+	"time"
 
 	"github.com/rokwire/logging-library-go/v2/errors"
 	"github.com/rokwire/logging-library-go/v2/logutils"
@@ -29,23 +30,68 @@ const (
 	typeUsernameParams logutils.MessageDataType = "username params"
 )
 
-// Username implementation of identifierType
-type usernameIdentifierImpl struct {
-	identifierType string
-}
-
 // userNameCreds represents the creds struct for username identifier
 type usernameCreds struct {
-	Username string `json:"username" bson:"username" validate:"required"`
-	Password string `json:"password" bson:"password"`
+	Username string  `json:"username" bson:"username" validate:"required"`
+	Password *string `json:"password" bson:"password,omitempty"`
 }
 
 func (c *usernameCreds) identifier() string {
 	return c.Username
 }
 
-func (c *usernameCreds) credential() string {
-	return c.Password
+func (c *usernameCreds) getCredential() (string, string) {
+	if c.Password != nil {
+		return AuthTypePassword, *c.Password
+	}
+	return "", ""
+}
+
+func (c *usernameCreds) setCredential(value string, credType string) {
+	if credType == AuthTypePassword {
+		c.Password = &value
+	}
+}
+
+func (c *usernameCreds) getVerificationParams() (string, *time.Time) {
+	return "", nil
+}
+
+func (c *usernameCreds) setVerificationParams(code string, expiry *time.Time) {}
+
+func (c *usernameCreds) getResetParams() (string, *time.Time) {
+	return "", nil
+}
+
+func (c *usernameCreds) setResetParams(code string, expiry *time.Time) {}
+
+func (c *usernameCreds) toMap() (map[string]interface{}, error) {
+	credBytes, err := json.Marshal(c)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionMarshal, typeUsernameCreds, nil, err)
+	}
+	var credsMap map[string]interface{}
+	err = json.Unmarshal(credBytes, &credsMap)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, "username creds map", nil, err)
+	}
+	return credsMap, nil
+}
+
+type usernameParams struct {
+	ConfirmPassword *string `json:"confirm_password"`
+}
+
+func (p *usernameParams) parameter() (string, string) {
+	if p.ConfirmPassword != nil {
+		return AuthTypePassword, *p.ConfirmPassword
+	}
+	return "", ""
+}
+
+// Username implementation of identifierType
+type usernameIdentifierImpl struct {
+	identifierType string
 }
 
 func (a *usernameIdentifierImpl) getUserIdentifier(creds string) (string, error) {
@@ -56,6 +102,62 @@ func (a *usernameIdentifierImpl) getUserIdentifier(creds string) (string, error)
 	}
 
 	return requestCreds.Username, nil
+}
+
+func (a *usernameIdentifierImpl) parseCreds(creds string) (authCreds, error) {
+	var credential usernameCreds
+	err := json.Unmarshal([]byte(creds), &credential)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeUsernameCreds, nil, err)
+	}
+
+	if len(credential.Username) == 0 {
+		return nil, errors.ErrorData(logutils.StatusMissing, typeUsernameCreds, logutils.StringArgs("username"))
+	}
+	if credType, cred := credential.getCredential(); len(credType) == 0 || len(cred) == 0 {
+		return nil, errors.ErrorData(logutils.StatusMissing, typeUsernameCreds, logutils.StringArgs("credential"))
+	}
+
+	return &credential, nil
+}
+
+func (a *usernameIdentifierImpl) parseParams(params string) (authParams, error) {
+	var parameters usernameParams
+	err := json.Unmarshal([]byte(params), &parameters)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeUsernameParams, nil, err)
+	}
+
+	if paramType, param := parameters.parameter(); len(paramType) == 0 || len(param) == 0 {
+		return nil, errors.ErrorData(logutils.StatusMissing, typeUsernameParams, logutils.StringArgs("parameter"))
+	}
+
+	return &parameters, nil
+}
+
+func (a *usernameIdentifierImpl) mapToCreds(credsMap map[string]interface{}) (authCreds, error) {
+	credBytes, err := json.Marshal(credsMap)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionMarshal, "username creds map", nil, err)
+	}
+	var creds usernameCreds
+	err = json.Unmarshal(credBytes, &creds)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeUsernameCreds, nil, err)
+	}
+	return &creds, nil
+}
+
+func (a *usernameIdentifierImpl) buildCredential(identifier string, credential string, credType string) authCreds {
+	if credType == AuthTypePassword {
+		return &usernameCreds{Username: identifier, Password: &credential}
+	}
+	return nil
+}
+
+func (a *usernameIdentifierImpl) verificationType() string {
+	//TODO: how to get verification type and params?
+	return ""
 }
 
 // initUsernameIdentifier initializes and registers a new username identifier instance

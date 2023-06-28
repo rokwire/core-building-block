@@ -73,54 +73,20 @@ type checkStatusResponse struct {
 	DateUpdated time.Time   `json:"date_updated"`
 }
 
-func (a *codeVerificationImpl) sendVerificationCode(email string, appName string, verificationCode string, credentialID string) error {
-	params := url.Values{}
-	params.Add("id", credentialID)
-	params.Add("code", verificationCode)
-	verificationLink := a.auth.host + fmt.Sprintf("/ui/credential/verify?%s", params.Encode())
-	subject := "Verify your email address"
-	if appName != "" {
-		subject += " for " + appName
+func (a *codeVerificationImpl) verifyCredential(credential authCreds, verification string) (map[string]interface{}, error) {
+	verificationCode, verificationExpiry := credential.getVerificationParams()
+	if verificationExpiry == nil || verificationExpiry.Before(time.Now()) {
+		return nil, errors.ErrorData("expired", "credential verification code", nil)
 	}
-	body := "Please click the link below to verify your email address:<br><a href=" + verificationLink + ">" + verificationLink + "</a><br><br>If you did not request this verification link, please ignore this message."
-	return a.auth.emailer.Send(email, subject, body, nil)
-}
-
-func (a *codeVerificationImpl) sendPasswordResetEmail(credentialID string, resetCode string, email string, appName string) error {
-	params := url.Values{}
-	params.Add("id", credentialID)
-	params.Add("code", resetCode)
-	passwordResetLink := a.auth.host + fmt.Sprintf("/ui/credential/reset?%s", params.Encode())
-	subject := "Reset your password"
-	if appName != "" {
-		subject += " for " + appName
-	}
-	body := "Please click the link below to reset your password:<br><a href=" + passwordResetLink + ">" + passwordResetLink + "</a><br><br>If you did not request a password reset, please ignore this message."
-	return a.auth.emailer.Send(email, subject, body, nil)
-}
-
-func (a *codeVerificationImpl) verifyCredential(credential *model.Credential, verification string, l *logs.Log) (map[string]interface{}, error) {
-	credBytes, err := json.Marshal(credential.Value)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionMarshal, typeEmailCreds, nil, err)
-	}
-
-	var creds *emailCreds
-	err = json.Unmarshal(credBytes, &creds)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeEmailCreds, nil, err)
-	}
-	err = a.compareCode(creds.VerificationCode, verification, creds.VerificationExpiry, l)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeAuthCred, &logutils.FieldArgs{"verification_code": verification}, err)
+	if subtle.ConstantTimeCompare([]byte(verificationCode), []byte(verification)) == 0 {
+		return nil, errors.ErrorData(logutils.StatusInvalid, "credential verification code", nil)
 	}
 
 	//Update verification data
-	creds.VerificationCode = ""
-	creds.VerificationExpiry = time.Time{}
-	credsMap, err := emailCredsToMap(creds)
+	credential.setVerificationParams("", nil)
+	credsMap, err := credential.toMap()
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionCast, typeEmailCreds, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionCast, "map from creds", nil, err)
 	}
 
 	return credsMap, nil
@@ -174,6 +140,23 @@ func (a *codeVerificationImpl) sendVerifyCredential(credential *model.Credential
 	return nil
 }
 
+func (a *codeVerificationImpl) sendVerifyOnSignup(identifierImpl identifierType, identifier string, appName string, credID string) (string, *time.Time, error) {
+	//verification code
+	code, err := utils.GenerateRandomString(64)
+	if err != nil {
+		return "", nil, errors.WrapErrorAction(logutils.ActionGenerate, "verification code", nil, err)
+	}
+
+	verificationExpiry := time.Now().Add(time.Hour * time.Duration(identifierImpl.getVerifyExpiry(authType)))
+
+	//send verification code
+	if err = identifierImpl.sendVerificationCode(identifier, appName, code, credID); err != nil {
+		return "", nil, errors.WrapErrorAction(logutils.ActionSend, "verification email", nil, err)
+	}
+
+	return code, &verificationExpiry, nil
+}
+
 func (a *codeVerificationImpl) restartCredentialVerification(credential *model.Credential, appName string, l *logs.Log) error {
 	storedCreds, err := mapToEmailCreds(credential.Value)
 	if err != nil {
@@ -204,16 +187,23 @@ func (a *codeVerificationImpl) restartCredentialVerification(credential *model.C
 	return nil
 }
 
-func (a *codeVerificationImpl) compareCode(credCode string, requestCode string, expiryTime time.Time, l *logs.Log) error {
-	if expiryTime.Before(time.Now()) {
-		return errors.ErrorData("expired", "code", nil)
+func (a *codeVerificationImpl) sendVerificationCode(email string, appName string, verificationCode string, credentialID string) error {
+	params := url.Values{}
+	params.Add("id", credentialID)
+	params.Add("code", verificationCode)
+	verificationLink := a.auth.host + fmt.Sprintf("/ui/credential/verify?%s", params.Encode())
+	subject := "Verify your email address"
+	if appName != "" {
+		subject += " for " + appName
 	}
-
-	if subtle.ConstantTimeCompare([]byte(credCode), []byte(requestCode)) == 0 {
-		return errors.ErrorData(logutils.StatusInvalid, "code", nil)
-	}
-	return nil
+	body := "Please click the link below to verify your email address:<br><a href=" + verificationLink + ">" + verificationLink + "</a><br><br>If you did not request this verification link, please ignore this message."
+	return a.auth.emailer.Send(email, subject, body, nil)
 }
+
+// func (a *codeVerificationImpl) compareCode(credCode string, requestCode string, expiryTime time.Time) error {
+
+// 	return nil
+// }
 
 func (a *codeVerificationImpl) forgotCredential(credential *model.Credential, identifier string, appName string, l *logs.Log) (map[string]interface{}, error) {
 	emailCreds, err := mapToEmailCreds(credential.Value)
@@ -240,6 +230,19 @@ func (a *codeVerificationImpl) forgotCredential(credential *model.Credential, id
 		return nil, errors.WrapErrorAction(logutils.ActionCast, "map from email creds", nil, err)
 	}
 	return credsMap, nil
+}
+
+func (a *codeVerificationImpl) sendPasswordResetEmail(credentialID string, resetCode string, email string, appName string) error {
+	params := url.Values{}
+	params.Add("id", credentialID)
+	params.Add("code", resetCode)
+	passwordResetLink := a.auth.host + fmt.Sprintf("/ui/credential/reset?%s", params.Encode())
+	subject := "Reset your password"
+	if appName != "" {
+		subject += " for " + appName
+	}
+	body := "Please click the link below to reset your password:<br><a href=" + passwordResetLink + ">" + passwordResetLink + "</a><br><br>If you did not request a password reset, please ignore this message."
+	return a.auth.emailer.Send(email, subject, body, nil)
 }
 
 func (a *codeVerificationImpl) handlePhoneVerify(phone string, verificationCreds twilioPhoneCreds, l *logs.Log) (string, error) {
@@ -365,6 +368,40 @@ func makeRequest(ctx context.Context, method string, pathPart string, data url.V
 func basicAuth(username, password string) string {
 	auth := username + ":" + password
 	return base64.StdEncoding.EncodeToString([]byte(auth))
+}
+
+func (a *passwordAuthImpl) isCredentialVerified(credential *model.Credential, l *logs.Log) (*bool, *bool, error) {
+	if credential.Verified {
+		verified := true
+		return &verified, nil, nil
+	}
+
+	//check if email verification is off
+	verifyEmail := a.getVerifyEmail(credential.AuthType)
+	if !verifyEmail {
+		verified := true
+		return &verified, nil, nil
+	}
+
+	//it is unverified
+	verified := false
+	//check if the verification is expired
+	storedCreds, err := mapToEmailCreds(credential.Value)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionCast, typeEmailCreds, nil, err)
+	}
+	expired := false
+	if storedCreds.VerificationExpiry.Before(time.Now()) {
+		expired = true
+	}
+	return &verified, &expired, nil
+}
+
+func (a *passwordAuthImpl) isCredentialVerified(credential *model.Credential, l *logs.Log) (*bool, *bool, error) {
+	//TODO verification process for usernames
+	verified := true
+	expired := false
+	return &verified, &expired, nil
 }
 
 // initCodeVerification initializes and registers a new code verification instance
