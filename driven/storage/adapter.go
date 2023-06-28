@@ -1285,7 +1285,8 @@ func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, 
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
 	}
 	pipeline := []bson.M{
-		{"$match": bson.M{"app_org_id": appOrg.ID}},
+		// make sure accounts are public
+		{"$match": bson.M{"app_org_id": appOrg.ID, "privacy.public": true}},
 		{"$lookup": bson.M{
 			"from":         "follows",
 			"localField":   "_id",
