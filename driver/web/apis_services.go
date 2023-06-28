@@ -959,7 +959,7 @@ func (h ServicesApisHandler) addFollow(l *logs.Log, r *http.Request, claims *tok
 		return l.HTTPResponseErrorAction(logutils.ActionInsert, model.TypeFollow, nil, err, http.StatusBadRequest, true)
 	}
 
-	// Check to make sure account exists
+	// Check to make sure follower account is public
 	followerAccount, err := h.coreAPIs.Services.SerGetAccount(claims.Subject)
 	if err != nil || followerAccount == nil || !followerAccount.Privacy.Public {
 		return l.HTTPResponseErrorAction(logutils.ActionInsert, model.TypeFollow, nil, err, http.StatusBadRequest, true)
