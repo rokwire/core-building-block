@@ -67,14 +67,17 @@ const (
 
 	refreshTokenLength int = 256
 
-	sessionDeletePeriod int = 24
+	sessionDeletePeriod int = 24 // hours
 	maxSessionsDelete   int = 250
 
+	sessionIDRateLimit  int = 5
+	sessionIDRatePeriod int = 5 // minutes
+
 	loginStateLength   int = 128
-	loginStateDuration int = 5
+	loginStateDuration int = 5 // minutes
 
 	maxMfaAttempts    int = 5
-	mfaCodeExpiration int = 5
+	mfaCodeExpiration int = 5 // minutes
 	mfaCodeMax        int = 1000000
 )
 
@@ -113,9 +116,9 @@ type Auth struct {
 	apiKeys     *syncmap.Map //cache api keys / api_key (string) -> APIKey
 	apiKeysLock *sync.RWMutex
 
-	//delete refresh tokens timer
-	deleteSessionsTimer *time.Timer
-	timerDone           chan bool
+	//delete sessions timer
+	deleteSessionsTimer     *time.Timer
+	deleteSessionsTimerDone chan bool
 }
 
 // NewAuth creates a new auth instance
@@ -145,12 +148,12 @@ func NewAuth(serviceID string, host string, authPrivKey *keys.PrivKey, authServi
 	apiKeys := &syncmap.Map{}
 	apiKeysLock := &sync.RWMutex{}
 
-	timerDone := make(chan bool)
+	deleteSessionsTimerDone := make(chan bool)
 
 	auth := &Auth{storage: storage, emailer: emailer, logger: logger, authTypes: authTypes, externalAuthTypes: externalAuthTypes, anonymousAuthTypes: anonymousAuthTypes,
 		serviceAuthTypes: serviceAuthTypes, mfaTypes: mfaTypes, authPrivKey: authPrivKey, ServiceRegManager: nil, serviceID: serviceID, host: host, minTokenExp: *minTokenExp,
 		maxTokenExp: *maxTokenExp, profileBB: profileBB, cachedIdentityProviders: cachedIdentityProviders, identityProvidersLock: identityProvidersLock,
-		timerDone: timerDone, emailDialer: emailDialer, emailFrom: smtpFrom, apiKeys: apiKeys, apiKeysLock: apiKeysLock}
+		apiKeys: apiKeys, apiKeysLock: apiKeysLock, deleteSessionsTimerDone: deleteSessionsTimerDone, emailDialer: emailDialer, emailFrom: smtpFrom}
 
 	err := auth.storeCoreRegs()
 	if err != nil {
@@ -1107,7 +1110,6 @@ func (a *Auth) applyLogin(anonymous bool, sub string, authType model.AuthType, a
 
 	var err error
 	var loginSession *model.LoginSession
-
 	transaction := func(context storage.TransactionContext) error {
 		///1. assign device to session and account
 		var device *model.Device
@@ -2488,21 +2490,7 @@ func (a *Auth) getCachedAPIKeys() ([]model.APIKey, error) {
 	return apiKeyList, err
 }
 
-func (a *Auth) setupDeleteSessionsTimer() {
-	a.logger.Info("setupDeleteSessionsTimer")
-
-	//cancel if active
-	if a.deleteSessionsTimer != nil {
-		a.timerDone <- true
-		a.deleteSessionsTimer.Stop()
-	}
-
-	a.deleteSessions()
-}
-
 func (a *Auth) deleteSessions() {
-	a.logger.Info("deleteSessions")
-
 	// to delete:
 	// - not completed MFA
 	// - expired sessions
@@ -2512,19 +2500,6 @@ func (a *Auth) deleteSessions() {
 
 	//2. expired sessions
 	a.deleteExpiredSessions()
-
-	duration := time.Hour * time.Duration(sessionDeletePeriod)
-	a.deleteSessionsTimer = time.NewTimer(duration)
-	select {
-	case <-a.deleteSessionsTimer.C:
-		// timer expired
-		a.deleteSessionsTimer = nil
-
-		a.deleteSessions()
-	case <-a.timerDone:
-		// timer aborted
-		a.deleteSessionsTimer = nil
-	}
 }
 
 func (a *Auth) deleteNotCompletedMFASessions() {
