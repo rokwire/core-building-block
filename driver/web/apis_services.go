@@ -949,12 +949,12 @@ func (h ServicesApisHandler) addFollow(l *logs.Log, r *http.Request, claims *tok
 	}
 
 	// Don't allow people to follow themselves
-	if follow.FolloweeId == claims.Subject {
+	if follow.FollowingId == claims.Subject {
 		return l.HTTPResponseErrorAction(logutils.ActionInsert, model.TypeFollow, nil, err, http.StatusBadRequest, true)
 	}
 
 	// Check to make sure account exists
-	account, err := h.coreAPIs.Services.SerGetAccount(follow.FolloweeId)
+	account, err := h.coreAPIs.Services.SerGetAccount(follow.FollowingId)
 	if err != nil || account == nil {
 		return l.HTTPResponseErrorAction(logutils.ActionInsert, model.TypeFollow, nil, err, http.StatusBadRequest, true)
 	}
@@ -967,8 +967,8 @@ func (h ServicesApisHandler) addFollow(l *logs.Log, r *http.Request, claims *tok
 	err = h.coreAPIs.Services.SerAddFollow(model.Follow{
 		AppID:      claims.AppID,
 		OrgID:      claims.OrgID,
-		FolloweeID: follow.FolloweeId,
-		UserID:     claims.Subject,
+		FollowerID: claims.Subject,
+		FollowingID: follow.FollowingId,
 	})
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUpdate, model.TypeFollow, nil, err, http.StatusInternalServerError, true)

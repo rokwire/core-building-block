@@ -331,9 +331,9 @@ type DeviceType string
 
 // Follow defines model for Follow.
 type Follow struct {
-	FolloweeId string  `json:"followee_id"`
-	Id         *string `json:"id,omitempty"`
-	UserId     *string `json:"user_id,omitempty"`
+	FollowerId  *string `json:"follower_id,omitempty"`
+	FollowingId string  `json:"following_id"`
+	Id          *string `json:"id,omitempty"`
 }
 
 // GlobalConfig defines model for GlobalConfig.

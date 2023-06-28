@@ -6715,16 +6715,16 @@ components:
     Follow:
       required:
         - id
-        - followee_id
-        - user_id
+        - follower_id
+        - following_id
       type: object
       properties:
         id:
           readOnly: true
           type: string
-        followee_id:
+        following_id:
           type: string
-        user_id:
+        follower_id:
           readOnly: true
           type: string
     _shared_req_Login:

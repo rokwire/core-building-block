@@ -646,9 +646,9 @@ type PublicAccount struct {
 
 // Follow shows the relationship between user and follower
 type Follow struct {
-	ID         string `json:"id" bson:"_id"`
-	AppID      string `json:"app_id" bson:"app_id"`
-	OrgID      string `json:"org_id" bson:"org_id"`
-	FolloweeID string `json:"followee_id" bson:"followee_id"`
-	UserID     string `json:"user_id" bson:"user_id"`
+	ID          string `json:"id" bson:"_id"`
+	AppID       string `json:"app_id" bson:"app_id"`
+	OrgID       string `json:"org_id" bson:"org_id"`
+	FollowerID  string `json:"follower_id" bson:"follower_id"`
+	FollowingID string `json:"following_id" bson:"following_id"`
 }
