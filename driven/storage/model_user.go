@@ -154,6 +154,6 @@ type follow struct {
 
 	AppOrgID string `bson:"app_org_id,omitempty"`
 
-	FolloweeID string `bson:"followee_id"`
-	UserID     string `bson:"user_id"`
+	FollowerID  string `bson:"follower_id"`
+	FollowingID string `bson:"following_id"`
 }

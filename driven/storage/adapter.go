@@ -730,11 +730,11 @@ func (sa *Adapter) InsertFollow(context TransactionContext, follow model.Follow)
 }
 
 // DeleteFollow deletes a specified follow relationship
-func (sa *Adapter) DeleteFollow(context TransactionContext, appID string, orgID string, followeeID string, userID string) error {
+func (sa *Adapter) DeleteFollow(context TransactionContext, appID string, orgID string, followingID string, followerID string) error {
 	filter := bson.D{primitive.E{Key: "app_id", Value: appID},
 		primitive.E{Key: "org_id", Value: orgID},
-		primitive.E{Key: "followee_id", Value: followeeID},
-		primitive.E{Key: "user_id", Value: userID}}
+		primitive.E{Key: "following_id", Value: followingID},
+		primitive.E{Key: "follower_id", Value: followerID}}
 
 	res, err := sa.db.follows.DeleteOneWithContext(context, filter, nil)
 	if err != nil {
@@ -748,16 +748,16 @@ func (sa *Adapter) DeleteFollow(context TransactionContext, appID string, orgID 
 }
 
 // FindFollows finds a list of follows specified by parameters
-func (sa *Adapter) FindFollows(context TransactionContext, appID string, orgID string, limit *int, offset *int, followeeID string, userID string) ([]model.PublicAccount, error) {
+func (sa *Adapter) FindFollows(context TransactionContext, appID string, orgID string, limit *int, offset *int, followingID string, followerID string) ([]model.PublicAccount, error) {
 	filter := bson.D{primitive.E{Key: "app_id", Value: appID},
 		primitive.E{Key: "org_id", Value: orgID}}
 
-	if followeeID != "" {
-		filter = append(filter, primitive.E{Key: "followee_id", Value: followeeID})
+	if followingID != "" {
+		filter = append(filter, primitive.E{Key: "following_id", Value: followingID})
 	}
 
-	if userID != "" {
-		filter = append(filter, primitive.E{Key: "user_id", Value: userID})
+	if followerID != "" {
+		filter = append(filter, primitive.E{Key: "follower_id", Value: followerID})
 	}
 
 	var follows []follow
@@ -782,10 +782,10 @@ func (sa *Adapter) FindFollows(context TransactionContext, appID string, orgID s
 	// Get all FolloweeIDs from follows
 	var accountIDs []string
 	for _, follow := range follows {
-		if followeeID == "" {
-			accountIDs = append(accountIDs, follow.FolloweeID)
+		if followingID == "" {
+			accountIDs = append(accountIDs, follow.FollowingID)
 		} else {
-			accountIDs = append(accountIDs, follow.UserID)
+			accountIDs = append(accountIDs, follow.FollowerID)
 		}
 	}
 
