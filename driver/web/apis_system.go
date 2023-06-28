@@ -60,69 +60,6 @@ func (h SystemApisHandler) getAppOrgToken(l *logs.Log, r *http.Request, claims *
 	return l.HTTPResponseSuccessJSON(responseJSON)
 }
 
-// createGlobalConfig creates a global config
-func (h SystemApisHandler) createGlobalConfig(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
-
-	var requestData Def.GlobalConfig
-	err = json.Unmarshal(data, &requestData)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, model.TypeGlobalConfig, nil, err, http.StatusBadRequest, true)
-	}
-
-	_, err = h.coreAPIs.System.SysCreateGlobalConfig(requestData.Setting)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionCreate, model.TypeGlobalConfig, nil, err, http.StatusInternalServerError, true)
-	}
-
-	return l.HTTPResponseSuccess()
-}
-
-// getGlobalConfig gets config
-func (h SystemApisHandler) getGlobalConfig(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	config, err := h.coreAPIs.System.SysGetGlobalConfig()
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionGet, model.TypeGlobalConfig, nil, err, http.StatusInternalServerError, true)
-	}
-
-	var responseData *Def.GlobalConfig
-	if config != nil {
-		responseData = &Def.GlobalConfig{Setting: config.Setting}
-	}
-	data, err := json.Marshal(responseData)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeGlobalConfig, nil, err, http.StatusInternalServerError, false)
-	}
-
-	return l.HTTPResponseSuccessJSON(data)
-}
-
-// updateGlobalConfig updates global config
-func (h SystemApisHandler) updateGlobalConfig(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
-
-	var updateConfig Def.GlobalConfig
-	err = json.Unmarshal(data, &updateConfig)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, model.TypeGlobalConfig, nil, err, http.StatusBadRequest, true)
-	}
-
-	setting := updateConfig.Setting
-
-	err = h.coreAPIs.System.SysUpdateGlobalConfig(setting)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionUpdate, model.TypeGlobalConfig, nil, err, http.StatusInternalServerError, true)
-	}
-
-	return l.HTTPResponseSuccess()
-}
-
 // getApplicationOrganization retrieves app-org for specified id
 func (h SystemApisHandler) getApplicationOrganization(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
 	params := mux.Vars(r)

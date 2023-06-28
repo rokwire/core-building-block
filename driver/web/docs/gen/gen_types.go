@@ -313,6 +313,23 @@ type AuthType struct {
 	UseCredentials bool `json:"use_credentials"`
 }
 
+// Config defines model for Config.
+type Config struct {
+	AppId       *string     `json:"app_id,omitempty"`
+	Data        Config_Data `json:"data"`
+	DateCreated *string     `json:"date_created,omitempty"`
+	DateUpdated *string     `json:"date_updated"`
+	Id          *string     `json:"id,omitempty"`
+	OrgId       *string     `json:"org_id,omitempty"`
+	System      bool        `json:"system"`
+	Type        string      `json:"type"`
+}
+
+// Config_Data defines model for Config.Data.
+type Config_Data struct {
+	union json.RawMessage
+}
+
 // Device defines model for Device.
 type Device struct {
 	DeviceId *string    `json:"device_id,omitempty"`
@@ -324,9 +341,10 @@ type Device struct {
 // DeviceType defines model for Device.Type.
 type DeviceType string
 
-// GlobalConfig defines model for GlobalConfig.
-type GlobalConfig struct {
-	Setting string `json:"setting"`
+// EnvConfigData defines model for EnvConfigData.
+type EnvConfigData struct {
+	CorsAllowedHeaders *[]string `json:"cors_allowed_headers"`
+	CorsAllowedOrigins *[]string `json:"cors_allowed_origins"`
 }
 
 // IdentityProviderSettings defines model for IdentityProviderSettings.
@@ -653,6 +671,20 @@ type AdminReqApplicationRole struct {
 	Permissions []string  `json:"permissions"`
 	Scopes      *[]string `json:"scopes,omitempty"`
 	System      *bool     `json:"system,omitempty"`
+}
+
+// AdminReqCreateUpdateConfig defines model for _admin_req_create-update-config.
+type AdminReqCreateUpdateConfig struct {
+	AllApps *bool                           `json:"all_apps"`
+	AllOrgs *bool                           `json:"all_orgs"`
+	Data    AdminReqCreateUpdateConfig_Data `json:"data"`
+	System  bool                            `json:"system"`
+	Type    string                          `json:"type"`
+}
+
+// AdminReqCreateUpdateConfig_Data defines model for AdminReqCreateUpdateConfig.Data.
+type AdminReqCreateUpdateConfig_Data struct {
+	union json.RawMessage
 }
 
 // AdminReqGrantPermissions defines model for _admin_req_grant-permissions.
@@ -1240,6 +1272,12 @@ type PostAdminAuthMfaParams struct {
 	State *string `form:"state,omitempty" json:"state,omitempty"`
 }
 
+// GetAdminConfigsParams defines parameters for GetAdminConfigs.
+type GetAdminConfigsParams struct {
+	// Type config type
+	Type *string `form:"type,omitempty" json:"type,omitempty"`
+}
+
 // PostBbsAccountsJSONBody defines parameters for PostBbsAccounts.
 type PostBbsAccountsJSONBody = map[string]interface{}
 
@@ -1588,6 +1626,12 @@ type PostAdminAuthRefreshJSONRequestBody = SharedReqRefresh
 // PostAdminAuthVerifyMfaJSONRequestBody defines body for PostAdminAuthVerifyMfa for application/json ContentType.
 type PostAdminAuthVerifyMfaJSONRequestBody = SharedReqMfa
 
+// PostAdminConfigsJSONRequestBody defines body for PostAdminConfigs for application/json ContentType.
+type PostAdminConfigsJSONRequestBody = AdminReqCreateUpdateConfig
+
+// PutAdminConfigsIdJSONRequestBody defines body for PutAdminConfigsId for application/json ContentType.
+type PutAdminConfigsIdJSONRequestBody = AdminReqCreateUpdateConfig
+
 // PostBbsAccessTokenJSONRequestBody defines body for PostBbsAccessToken for application/json ContentType.
 type PostBbsAccessTokenJSONRequestBody = ServicesReqServiceAccountsAccessToken
 
@@ -1714,12 +1758,6 @@ type PostSystemAuthTypesJSONRequestBody = AuthType
 // PutSystemAuthTypesIdJSONRequestBody defines body for PutSystemAuthTypesId for application/json ContentType.
 type PutSystemAuthTypesIdJSONRequestBody = AuthType
 
-// PostSystemGlobalConfigJSONRequestBody defines body for PostSystemGlobalConfig for application/json ContentType.
-type PostSystemGlobalConfigJSONRequestBody = GlobalConfig
-
-// PutSystemGlobalConfigJSONRequestBody defines body for PutSystemGlobalConfig for application/json ContentType.
-type PutSystemGlobalConfigJSONRequestBody = GlobalConfig
-
 // PostSystemOrganizationsJSONRequestBody defines body for PostSystemOrganizations for application/json ContentType.
 type PostSystemOrganizationsJSONRequestBody = Organization
 
@@ -1761,6 +1799,78 @@ type PostTpsAccountsCountJSONRequestBody = PostTpsAccountsCountJSONBody
 
 // PostTpsServiceAccountIdJSONRequestBody defines body for PostTpsServiceAccountId for application/json ContentType.
 type PostTpsServiceAccountIdJSONRequestBody = ServicesReqServiceAccountsParams
+
+// AsEnvConfigData returns the union data inside the Config_Data as a EnvConfigData
+func (t Config_Data) AsEnvConfigData() (EnvConfigData, error) {
+	var body EnvConfigData
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromEnvConfigData overwrites any union data inside the Config_Data as the provided EnvConfigData
+func (t *Config_Data) FromEnvConfigData(v EnvConfigData) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeEnvConfigData performs a merge with any union data inside the Config_Data, using the provided EnvConfigData
+func (t *Config_Data) MergeEnvConfigData(v EnvConfigData) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+func (t Config_Data) MarshalJSON() ([]byte, error) {
+	b, err := t.union.MarshalJSON()
+	return b, err
+}
+
+func (t *Config_Data) UnmarshalJSON(b []byte) error {
+	err := t.union.UnmarshalJSON(b)
+	return err
+}
+
+// AsEnvConfigData returns the union data inside the AdminReqCreateUpdateConfig_Data as a EnvConfigData
+func (t AdminReqCreateUpdateConfig_Data) AsEnvConfigData() (EnvConfigData, error) {
+	var body EnvConfigData
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromEnvConfigData overwrites any union data inside the AdminReqCreateUpdateConfig_Data as the provided EnvConfigData
+func (t *AdminReqCreateUpdateConfig_Data) FromEnvConfigData(v EnvConfigData) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeEnvConfigData performs a merge with any union data inside the AdminReqCreateUpdateConfig_Data, using the provided EnvConfigData
+func (t *AdminReqCreateUpdateConfig_Data) MergeEnvConfigData(v EnvConfigData) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+func (t AdminReqCreateUpdateConfig_Data) MarshalJSON() ([]byte, error) {
+	b, err := t.union.MarshalJSON()
+	return b, err
+}
+
+func (t *AdminReqCreateUpdateConfig_Data) UnmarshalJSON(b []byte) error {
+	err := t.union.UnmarshalJSON(b)
+	return err
+}
 
 // AsSharedReqCredsEmail returns the union data inside the ServicesReqAccountAuthTypeLink_Creds as a SharedReqCredsEmail
 func (t ServicesReqAccountAuthTypeLink_Creds) AsSharedReqCredsEmail() (SharedReqCredsEmail, error) {
