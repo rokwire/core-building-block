@@ -1280,9 +1280,12 @@ func (sa *Adapter) FindAccounts(context TransactionContext, limit *int, offset *
 // FindPublicAccounts finds accounts and returns name and username
 func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, orgID string, limit *int, offset *int,
 	search *string, firstName *string, lastName *string, username *string, followingID *string, followerID *string) ([]model.PublicAccount, error) {
-
+	appOrg, err := sa.FindApplicationOrganization(appID, orgID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
+	}
 	pipeline := []bson.M{
-		{"$match": bson.M{"app_id": appID, "org_id": orgID}},
+		{"$match": bson.M{"app_org_id": appOrg.ID}},
 		{"$lookup": bson.M{
 			"from":         "follows",
 			"localField":   "_id",
@@ -1295,9 +1298,7 @@ func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, 
 			"foreignField": "follower_id",
 			"as":           "followers",
 		}},
-		{"$match": bson.M{"app_org.app_id": appID}},
 	}
-
 
 	if firstName != nil {
 		pipeline = append(pipeline, bson.M{"$match": bson.M{"profile.first_name": *firstName}})
@@ -1310,7 +1311,7 @@ func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, 
 	}
 
 	if followingID != nil {
-		pipeline = append(pipeline, bson.M{"$match": bson.M{"followers.following_id": *followingID}})
+		pipeline = append(pipeline, bson.M{"$match": bson.M{"followings.following_id": *followingID}})
 	}
 
 	if followerID != nil {
@@ -1326,7 +1327,7 @@ func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, 
 	}
 
 	var accounts []account
-	err := sa.db.accounts.Aggregate(pipeline, &accounts, nil)
+	err = sa.db.accounts.Aggregate(pipeline, &accounts, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"app_id": appID, "org_id": orgID, "first_name": *firstName, "last_name": *lastName, "username": *username, "following_id": *followingID, "follower_id": *followerID}, err)
 	}

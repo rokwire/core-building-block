@@ -3,7 +3,7 @@ get:
   - Services
   summary: Finds public accounts
   description: |
-    Finds public accounts using username, first name, and last name
+    Finds public accounts using search, username, first name, and last name, following id, and follower id
 
   security:
     - bearerAuth: []
