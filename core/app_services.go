@@ -181,14 +181,6 @@ func (app *application) serDeleteFollow(appID string, orgID string, followingID 
 	return nil
 }
 
-func (app *application) serGetFollows(appID string, orgID string, limit *int, offset *int, followingID string, followerID string) ([]model.PublicAccount, error) {
-	publicAccounts, err := app.storage.FindFollows(nil, appID, orgID, limit, offset, followingID, followerID)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
-	}
-	return publicAccounts, nil
-}
-
 func (app *application) serGetAuthTest(l *logs.Log) string {
 	return "Services - Auth - test"
 }

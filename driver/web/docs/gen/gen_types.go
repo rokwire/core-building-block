@@ -1302,21 +1302,6 @@ type GetBbsServiceRegsParams struct {
 	Ids string `form:"ids" json:"ids"`
 }
 
-// GetServicesAccountFollowParams defines parameters for GetServicesAccountFollow.
-type GetServicesAccountFollowParams struct {
-	// Limit The maximum number of accounts to return
-	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
-
-	// Offset The index of the first account to return
-	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
-
-	// FolloweeId The ID of the account that's being followed
-	FolloweeId *string `form:"followee_id,omitempty" json:"followee_id,omitempty"`
-
-	// UserId The ID of the account following others
-	UserId *string `form:"user_id,omitempty" json:"user_id,omitempty"`
-}
-
 // PutServicesAccountPreferencesJSONBody defines parameters for PutServicesAccountPreferences.
 type PutServicesAccountPreferencesJSONBody = map[string]interface{}
 

@@ -747,74 +747,6 @@ func (sa *Adapter) DeleteFollow(context TransactionContext, appID string, orgID 
 	return nil
 }
 
-// FindFollows finds a list of follows specified by parameters
-func (sa *Adapter) FindFollows(context TransactionContext, appID string, orgID string, limit *int, offset *int, followingID string, followerID string) ([]model.PublicAccount, error) {
-	filter := bson.D{primitive.E{Key: "app_id", Value: appID},
-		primitive.E{Key: "org_id", Value: orgID}}
-
-	if followingID != "" {
-		filter = append(filter, primitive.E{Key: "following_id", Value: followingID})
-	}
-
-	if followerID != "" {
-		filter = append(filter, primitive.E{Key: "follower_id", Value: followerID})
-	}
-
-	var follows []follow
-	var findOptions *options.FindOptions
-	if limit != nil {
-		findOptions = options.Find()
-		findOptions.SetLimit(int64(*limit))
-	}
-	if offset != nil {
-		if findOptions == nil {
-			findOptions = options.Find()
-		}
-		findOptions.SetSkip(int64(*offset))
-	}
-
-	// Get all follow objects specified
-	err := sa.db.follows.FindWithContext(context, filter, &follows, findOptions)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeFollow, nil, err)
-	}
-
-	// Get all FolloweeIDs from follows
-	var accountIDs []string
-	for _, follow := range follows {
-		if followingID == "" {
-			accountIDs = append(accountIDs, follow.FollowingID)
-		} else {
-			accountIDs = append(accountIDs, follow.FollowerID)
-		}
-	}
-
-	// filter for getting public accounts
-	filter = bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": accountIDs}},
-		primitive.E{Key: "privacy.public", Value: true}}
-
-	// Get all accounts associated with follow objects
-	var accounts []account
-	if accountIDs != nil {
-		err = sa.db.accounts.FindWithContext(context, filter, &accounts, options.Find())
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
-		}
-	}
-
-	// convert accounts to public accounts
-	var publicAccounts []model.PublicAccount
-	for _, account := range accounts {
-		publicAccounts = append(publicAccounts, model.PublicAccount{
-			ID:        account.ID,
-			Username:  account.Username,
-			FirstName: account.Profile.FirstName,
-			LastName:  account.Profile.LastName,
-		})
-	}
-	return publicAccounts, nil
-}
-
 // InsertLoginSession inserts login session
 func (sa *Adapter) InsertLoginSession(context TransactionContext, session model.LoginSession) error {
 	storageLoginSession := loginSessionToStorage(session)
@@ -1290,11 +1222,11 @@ func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, 
 	var searchStr, firstNameStr, lastNameStr, usernameStr, followingIDStr, followerIDStr string
 	if search != nil {
 		searchStr = *search
-		pipeline = append(pipeline, 
+		pipeline = append(pipeline,
 			bson.M{
 				"$match": bson.M{
 					"$text": bson.M{
-						"$search":        search,
+						"$search": search,
 						// "$caseSensitive": false,
 					}},
 			})

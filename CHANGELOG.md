@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 ### Added
+- Users can query for username, first name, and last name for public accounts and followers
+
+### Added
 - Allow users to be able to "follow" other users and allow them to view some public information about the accounts they follow.
 
 ## [1.33.0] - 2023-05-02

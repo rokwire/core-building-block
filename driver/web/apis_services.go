@@ -971,9 +971,9 @@ func (h ServicesApisHandler) addFollow(l *logs.Log, r *http.Request, claims *tok
 	}
 
 	err = h.coreAPIs.Services.SerAddFollow(model.Follow{
-		AppID:      claims.AppID,
-		OrgID:      claims.OrgID,
-		FollowerID: claims.Subject,
+		AppID:       claims.AppID,
+		OrgID:       claims.OrgID,
+		FollowerID:  claims.Subject,
 		FollowingID: follow.FollowingId,
 	})
 	if err != nil {
@@ -996,55 +996,6 @@ func (h ServicesApisHandler) deleteFollow(l *logs.Log, r *http.Request, claims *
 	}
 
 	return l.HTTPResponseSuccess()
-}
-
-func (h ServicesApisHandler) getFollows(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	var err error
-
-	//limit and offset
-	limit := 20
-	limitArg := r.URL.Query().Get("limit")
-	if limitArg != "" {
-		limit, err = strconv.Atoi(limitArg)
-		if err != nil {
-			return l.HTTPResponseErrorAction(logutils.ActionParse, logutils.TypeArg, logutils.StringArgs("limit"), err, http.StatusBadRequest, false)
-		}
-	}
-	offset := 0
-	offsetArg := r.URL.Query().Get("offset")
-	if offsetArg != "" {
-		offset, err = strconv.Atoi(offsetArg)
-		if err != nil {
-			return l.HTTPResponseErrorAction(logutils.ActionParse, logutils.TypeArg, logutils.StringArgs("offset"), err, http.StatusBadRequest, false)
-		}
-	}
-
-	var followingID string
-	followingIDArg := r.URL.Query().Get("following_id")
-	if len(followingIDArg) > 0 {
-		followingID = followingIDArg
-	}
-
-	var followerID string
-	followerIDArg := r.URL.Query().Get("follower_id")
-	if len(followerIDArg) > 0 {
-		followerID = followerIDArg
-	}
-
-	accounts, err := h.coreAPIs.Services.SerGetFollows(claims.AppID, claims.OrgID, &limit, &offset, followingID, followerID)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionGet, model.TypeAccount, nil, err, http.StatusInternalServerError, false)
-	}
-
-	if accounts == nil {
-		accounts = []model.PublicAccount{}
-	}
-
-	data, err := json.Marshal(accounts)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeAccount, nil, err, http.StatusInternalServerError, false)
-	}
-	return l.HTTPResponseSuccessJSON(data)
 }
 
 // getCommonTest TODO get test

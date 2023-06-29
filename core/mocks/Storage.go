@@ -883,32 +883,6 @@ func (_m *Storage) FindAuthTypes() ([]model.AuthType, error) {
 	return r0, r1
 }
 
-// FindFollows provides a mock function with given fields: context, appID, orgID, limit, offset, followingID, followerID
-func (_m *Storage) FindFollows(context storage.TransactionContext, appID string, orgID string, limit *int, offset *int, followingID string, followerID string) ([]model.PublicAccount, error) {
-	ret := _m.Called(context, appID, orgID, limit, offset, followingID, followerID)
-
-	var r0 []model.PublicAccount
-	var r1 error
-	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, string, *int, *int, string, string) ([]model.PublicAccount, error)); ok {
-		return rf(context, appID, orgID, limit, offset, followingID, followerID)
-	}
-	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, string, *int, *int, string, string) []model.PublicAccount); ok {
-		r0 = rf(context, appID, orgID, limit, offset, followingID, followerID)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]model.PublicAccount)
-		}
-	}
-
-	if rf, ok := ret.Get(1).(func(storage.TransactionContext, string, string, *int, *int, string, string) error); ok {
-		r1 = rf(context, appID, orgID, limit, offset, followingID, followerID)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // FindLoginSessionsByParams provides a mock function with given fields: appID, orgID, sessionID, identifier, accountAuthTypeIdentifier, appTypeID, appTypeIdentifier, anonymous, deviceID, ipAddress
 func (_m *Storage) FindLoginSessionsByParams(appID string, orgID string, sessionID *string, identifier *string, accountAuthTypeIdentifier *string, appTypeID *string, appTypeIdentifier *string, anonymous *bool, deviceID *string, ipAddress *string) ([]model.LoginSession, error) {
 	ret := _m.Called(appID, orgID, sessionID, identifier, accountAuthTypeIdentifier, appTypeID, appTypeIdentifier, anonymous, deviceID, ipAddress)

@@ -332,10 +332,6 @@ func (s *servicesImpl) SerDeleteFollow(appID string, orgID string, FolloweeID st
 	return s.app.serDeleteFollow(appID, orgID, FolloweeID, userID)
 }
 
-func (s *servicesImpl) SerGetFollows(appID string, orgID string, limit *int, offset *int, followeeID string, userID string) ([]model.PublicAccount, error) {
-	return s.app.serGetFollows(appID, orgID, limit, offset, followeeID, userID)
-}
-
 func (s *servicesImpl) SerGetAuthTest(l *logs.Log) string {
 	return s.app.serGetAuthTest(l)
 }
