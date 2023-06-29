@@ -57,16 +57,15 @@ const (
 	// UpdateScopesPermission is the permission that allows an admin to update account/role scopes
 	UpdateScopesPermission string = "update_auth_scopes"
 
-	typeMail               logutils.MessageDataType = "mail"
-	typeIdentifierType     logutils.MessageDataType = "identifier type"
-	typeVerificationType   logutils.MessageDataType = "verification type"
-	typeVerificationCreds  logutils.MessageDataType = "verification creds"
-	typeVerificationParams logutils.MessageDataType = "verification params"
-	typeExternalAuthType   logutils.MessageDataType = "external auth type"
-	typeAnonymousAuthType  logutils.MessageDataType = "anonymous auth type"
-	typeServiceAuthType    logutils.MessageDataType = "service auth type"
-	typeAuth               logutils.MessageDataType = "auth"
-	typeAuthRefreshParams  logutils.MessageDataType = "auth refresh params"
+	typeMail              logutils.MessageDataType = "mail"
+	typeIdentifierType    logutils.MessageDataType = "identifier type"
+	typeExternalAuthType  logutils.MessageDataType = "external auth type"
+	typeAnonymousAuthType logutils.MessageDataType = "anonymous auth type"
+	typeServiceAuthType   logutils.MessageDataType = "service auth type"
+	typeAuth              logutils.MessageDataType = "auth"
+	typeAuthRefreshParams logutils.MessageDataType = "auth refresh params"
+
+	typeVerificationCode string = "verification code"
 
 	refreshTokenLength int = 256
 
@@ -83,14 +82,14 @@ const (
 
 // Auth represents the auth functionality unit
 type Auth struct {
-	storage Storage
-	emailer Emailer
+	storage       Storage
+	emailer       Emailer
+	phoneVerifier PhoneVerifier
 
 	logger *logs.Logger
 
 	identifierTypes    map[string]identifierType
 	authTypes          map[string]authType
-	verificationTypes  map[string]verificationType
 	externalAuthTypes  map[string]externalAuthType
 	anonymousAuthTypes map[string]anonymousAuthType
 	serviceAuthTypes   map[string]serviceAuthType
@@ -121,7 +120,7 @@ type Auth struct {
 }
 
 // NewAuth creates a new auth instance
-func NewAuth(serviceID string, host string, authPrivKey *keys.PrivKey, authService *authservice.AuthService, storage Storage, emailer Emailer, phoneVerifiers []PhoneVerifier,
+func NewAuth(serviceID string, host string, authPrivKey *keys.PrivKey, authService *authservice.AuthService, storage Storage, emailer Emailer, phoneVerifier PhoneVerifier,
 	profileBB ProfileBuildingBlock, minTokenExp *int64, maxTokenExp *int64, supportLegacySigs bool, logger *logs.Logger) (*Auth, error) {
 	if minTokenExp == nil {
 		var minTokenExpVal int64 = 5
@@ -135,7 +134,6 @@ func NewAuth(serviceID string, host string, authPrivKey *keys.PrivKey, authServi
 
 	identifierTypes := map[string]identifierType{}
 	authTypes := map[string]authType{}
-	verificationTypes := map[string]verificationType{}
 	externalAuthTypes := map[string]externalAuthType{}
 	anonymousAuthTypes := map[string]anonymousAuthType{}
 	serviceAuthTypes := map[string]serviceAuthType{}
@@ -149,10 +147,10 @@ func NewAuth(serviceID string, host string, authPrivKey *keys.PrivKey, authServi
 
 	timerDone := make(chan bool)
 
-	auth := &Auth{storage: storage, emailer: emailer, logger: logger, identifierTypes: identifierTypes, authTypes: authTypes, verificationTypes: verificationTypes,
+	auth := &Auth{storage: storage, emailer: emailer, phoneVerifier: phoneVerifier, logger: logger, identifierTypes: identifierTypes, authTypes: authTypes,
 		externalAuthTypes: externalAuthTypes, anonymousAuthTypes: anonymousAuthTypes, serviceAuthTypes: serviceAuthTypes, mfaTypes: mfaTypes, authPrivKey: authPrivKey,
-		ServiceRegManager: nil, serviceID: serviceID, host: host, minTokenExp: *minTokenExp, maxTokenExp: *maxTokenExp, profileBB: profileBB, cachedIdentityProviders: cachedIdentityProviders,
-		identityProvidersLock: identityProvidersLock, timerDone: timerDone, apiKeys: apiKeys, apiKeysLock: apiKeysLock}
+		ServiceRegManager: nil, serviceID: serviceID, host: host, minTokenExp: *minTokenExp, maxTokenExp: *maxTokenExp, profileBB: profileBB,
+		cachedIdentityProviders: cachedIdentityProviders, identityProvidersLock: identityProvidersLock, timerDone: timerDone, apiKeys: apiKeys, apiKeysLock: apiKeysLock}
 
 	err := auth.storeCoreRegs()
 	if err != nil {
@@ -180,18 +178,14 @@ func NewAuth(serviceID string, host string, authPrivKey *keys.PrivKey, authServi
 	// identifier types
 	initUsernameIdentifier(auth)
 	initEmailIdentifier(auth)
-	for _, pv := range phoneVerifiers {
-		initPhoneIdentifier(auth, pv)
-	}
+	initPhoneIdentifier(auth)
 
 	// auth types
 	initAnonymousAuth(auth)
 	initPasswordAuth(auth)
+	initCodeAuth(auth)
 	// initFirebaseAuth(auth)
 	// initSignatureAuth(auth)
-
-	// verification types
-	initCodeVerification(auth)
 
 	// external auth types
 	initOidcAuth(auth)
@@ -704,6 +698,11 @@ func (a *Auth) checkCredentialVerified(authImpl authType, accountAuthType *model
 		err = authImpl.restartCredentialVerification(accountAuthType.Credential, accountAuthType.Account.AppOrg.Application.Name, l)
 		if err != nil {
 			return errors.WrapErrorAction("restarting", "credential verification", nil, err)
+		}
+
+		err = a.storage.UpdateCredentialValue(credID, emailCredValueMap)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
 		}
 
 		//notify the client
@@ -2033,16 +2032,6 @@ func (a *Auth) registerAuthType(name string, auth authType) error {
 	return nil
 }
 
-func (a *Auth) registerVerificationType(name string, verify verificationType) error {
-	if _, ok := a.verificationTypes[name]; ok {
-		return errors.ErrorData(logutils.StatusFound, typeVerificationType, &logutils.FieldArgs{"name": name})
-	}
-
-	a.verificationTypes[name] = verify
-
-	return nil
-}
-
 func (a *Auth) registerExternalAuthType(name string, auth externalAuthType) error {
 	if _, ok := a.externalAuthTypes[name]; ok {
 		return errors.ErrorData(logutils.StatusFound, typeExternalAuthType, &logutils.FieldArgs{"name": name})
@@ -2143,27 +2132,26 @@ func (a *Auth) validateAuthTypeForAppOrg(authenticationType string, appID string
 
 // TODO: update auth type model, add identifier types, verification types?
 func (a *Auth) getIdentifierTypeImpl(authType model.AuthType) (identifierType, error) {
-	if identifier, ok := a.identifierTypes[authType.Code]; ok {
+	key := authType.Code
+
+	//twilio_phone
+	if strings.HasSuffix(authType.Code, "_phone") {
+		key = "phone"
+	}
+
+	if identifier, ok := a.identifierTypes[key]; ok {
 		return identifier, nil
 	}
 
-	return nil, errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, logutils.StringArgs(authType.Code))
+	return nil, errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, logutils.StringArgs(key))
 }
 
-func (a *Auth) getAuthTypeImpl(authType model.AuthType) (authType, error) {
-	if auth, ok := a.authTypes[authType.Code]; ok {
+func (a *Auth) getAuthTypeImpl(code string) (authType, error) {
+	if auth, ok := a.authTypes[code]; ok {
 		return auth, nil
 	}
 
-	return nil, errors.ErrorData(logutils.StatusInvalid, model.TypeAuthType, logutils.StringArgs(authType.Code))
-}
-
-func (a *Auth) getVerificationTypeImpl(verificationType string) (verificationType, error) {
-	if verify, ok := a.verificationTypes[verificationType]; ok {
-		return verify, nil
-	}
-
-	return nil, errors.ErrorData(logutils.StatusInvalid, typeVerificationType, logutils.StringArgs(verificationType))
+	return nil, errors.ErrorData(logutils.StatusInvalid, model.TypeAuthType, logutils.StringArgs(code))
 }
 
 func (a *Auth) getExternalAuthTypeImpl(authType model.AuthType) (externalAuthType, error) {

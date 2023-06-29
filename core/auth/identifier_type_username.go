@@ -15,6 +15,7 @@
 package auth
 
 import (
+	"core-building-block/core/model"
 	"encoding/json"
 	"time"
 
@@ -91,6 +92,7 @@ func (p *usernameParams) parameter() (string, string) {
 
 // Username implementation of identifierType
 type usernameIdentifierImpl struct {
+	auth           *Auth
 	identifierType string
 }
 
@@ -155,14 +157,32 @@ func (a *usernameIdentifierImpl) buildCredential(identifier string, credential s
 	return nil
 }
 
-func (a *usernameIdentifierImpl) verificationType() string {
-	//TODO: how to get verification type and params?
-	return ""
+func (a *usernameIdentifierImpl) verifyCredential(credential authCreds, verification string) (map[string]interface{}, error) {
+	return nil, errors.New(logutils.Unimplemented)
+}
+
+func (a *usernameIdentifierImpl) sendVerifyCredential(credential authCreds, appName string, credID string) (map[string]interface{}, bool, error) {
+	return nil, false, errors.New(logutils.Unimplemented)
+}
+
+func (a *usernameIdentifierImpl) restartCredentialVerification(credential authCreds, appName string, credID string) (map[string]interface{}, error) {
+	return nil, errors.New(logutils.Unimplemented)
+}
+
+func (a *usernameIdentifierImpl) isCredentialVerified(credential *model.Credential) (*bool, *bool, error) {
+	//TODO verification process for usernames
+	verified := true
+	expired := false
+	return &verified, &expired, nil
+}
+
+func (a *usernameIdentifierImpl) sendCode(identifier string, appName string, code string, codeType string, credID string) (string, error) {
+	return "", errors.New(logutils.Unimplemented)
 }
 
 // initUsernameIdentifier initializes and registers a new username identifier instance
 func initUsernameIdentifier(auth *Auth) (*usernameIdentifierImpl, error) {
-	username := &usernameIdentifierImpl{identifierType: IdentifierTypeUsername}
+	username := &usernameIdentifierImpl{auth: auth, identifierType: IdentifierTypeUsername}
 
 	err := auth.registerIdentifierType(username.identifierType, username)
 	if err != nil {

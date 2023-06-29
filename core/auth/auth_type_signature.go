@@ -40,12 +40,16 @@ func (a *signatureAuthImpl) signUpAdmin(identifierImpl identifierType, appName s
 	return nil, nil, nil
 }
 
+func (a *signatureAuthImpl) forgotCredential(identifierImpl identifierType, credential authCreds, appName string, credID string) (map[string]interface{}, error) {
+	return nil, nil
+}
+
 func (a *signatureAuthImpl) resetCredential(credential authCreds, resetCode *string, params string) (map[string]interface{}, error) {
 	return nil, nil
 }
 
-func (a *signatureAuthImpl) checkCredentials(storedCreds authCreds, incomingCreds authCreds) error {
-	return nil
+func (a *signatureAuthImpl) checkCredential(identifierImpl identifierType, storedCreds authCreds, incomingCreds authCreds, appName string, credID string) (string, error) {
+	return "", nil
 }
 
 // initSignatureAuth initializes and registers a new signature auth instance

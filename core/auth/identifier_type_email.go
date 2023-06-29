@@ -16,7 +16,11 @@ package auth
 
 import (
 	"core-building-block/core/model"
+	"core-building-block/utils"
+	"crypto/subtle"
 	"encoding/json"
+	"fmt"
+	"net/url"
 	"time"
 
 	"github.com/rokwire/logging-library-go/v2/errors"
@@ -104,6 +108,7 @@ func (p *emailParams) parameter() (string, string) {
 
 // Email implementation of identifierType
 type emailIdentifierImpl struct {
+	auth           *Auth
 	identifierType string
 }
 
@@ -168,44 +173,189 @@ func (a *emailIdentifierImpl) buildCredential(identifier string, credential stri
 	return nil
 }
 
-func (a *emailIdentifierImpl) verificationType() string {
-	//TODO: how to get verification type and params?
-	// verify := true
-	// verifyParam, ok := authType.Params["verify"].(bool)
-	// if ok {
-	// 	verify = verifyParam
-	// }
-	// return verify
-	return VerificationTypeCode
+func (a *emailIdentifierImpl) verifyCredential(credential authCreds, verification string) (map[string]interface{}, error) {
+	verificationCode, verificationExpiry := credential.getVerificationParams()
+	if verificationExpiry == nil || verificationExpiry.Before(time.Now()) {
+		return nil, errors.ErrorData("expired", "email verification code", nil)
+	}
+	if subtle.ConstantTimeCompare([]byte(verificationCode), []byte(verification)) == 0 {
+		return nil, errors.ErrorData(logutils.StatusInvalid, "email verification code", nil)
+	}
+
+	//Update verification data
+	credential.setVerificationParams("", nil)
+	credsMap, err := credential.toMap()
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionCast, "map from creds", nil, err)
+	}
+
+	return credsMap, nil
+}
+
+func (a *emailIdentifierImpl) sendVerifyCredential(credential authCreds, appName string, credID string) (map[string]interface{}, bool, error) {
+	//verification settings
+	verifyWaitTime, verifyExpiryTime, err := a.getVerificationSettings()
+	if err != nil {
+		return nil, false, errors.WrapErrorAction(logutils.ActionGet, "email verification settings", nil, err)
+	}
+	if verifyWaitTime == nil || verifyExpiryTime == nil {
+		credsMap, err := credential.toMap()
+		if err != nil {
+			return nil, false, errors.WrapErrorAction(logutils.ActionCast, "map from email creds", nil, err)
+		}
+		return credsMap, false, nil
+	}
+
+	//Check if previous verification email was sent within the wait time if one was already sent
+	_, verificationExpiry := credential.getVerificationParams()
+	if verificationExpiry != nil {
+		prevTime := verificationExpiry.Add(time.Duration(-*verifyExpiryTime) * time.Hour)
+		if time.Now().Sub(prevTime) < time.Duration(*verifyWaitTime)*time.Second {
+			return nil, false, errors.ErrorAction(logutils.ActionSend, "verification email", logutils.StringArgs("resend requested too soon"))
+		}
+	}
+
+	//verification code
+	//TODO: turn length of reset code into a setting
+	code, err := utils.GenerateRandomString(64)
+	if err != nil {
+		return nil, false, errors.WrapErrorAction(logutils.ActionGenerate, "verification code", nil, err)
+	}
+
+	//send verification email
+	if _, err = a.sendCode(credential.identifier(), appName, code, typeVerificationCode, credID); err != nil {
+		return nil, false, errors.WrapErrorAction(logutils.ActionSend, "verification email", nil, err)
+	}
+
+	//Update verification data in credential value
+	newExpiry := time.Now().Add(time.Hour * time.Duration(*verifyExpiryTime))
+	credential.setVerificationParams(code, &newExpiry)
+	credsMap, err := credential.toMap()
+	if err != nil {
+		return nil, true, errors.WrapErrorAction(logutils.ActionCast, "map from email creds", nil, err)
+	}
+
+	return credsMap, true, nil
+}
+
+func (a *emailIdentifierImpl) restartCredentialVerification(credential authCreds, appName string, credID string) (map[string]interface{}, error) {
+	//Generate new verification code
+	//TODO: turn length of reset code into a setting
+	newCode, err := utils.GenerateRandomString(64)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionGenerate, "verification code", nil, err)
+
+	}
+	//send new verification code for future
+	if _, err = a.sendCode(credential.identifier(), appName, newCode, typeVerificationCode, credID); err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionSend, "verification email", nil, err)
+	}
+	//update new verification data in credential value
+	expiry := time.Now().Add(time.Hour * 24)
+	credential.setVerificationParams(newCode, &expiry)
+	credValueMap, err := credential.toMap()
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionCast, "map from creds", nil, err)
+	}
+
+	return credValueMap, nil
+}
+
+func (a *emailIdentifierImpl) isCredentialVerified(credential *model.Credential) (*bool, *bool, error) {
+	if credential.Verified {
+		verified := true
+		return &verified, nil, nil
+	}
+
+	//verification settings
+	verifyWaitTime, verifyExpiryTime, err := a.getVerificationSettings()
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionGet, "email verification settings", nil, err)
+	}
+	//check if email verification is off
+	if verifyWaitTime == nil || verifyExpiryTime == nil {
+		verified := true
+		return &verified, nil, nil
+	}
+
+	//it is unverified
+	verified := false
+	//check if the verification is expired
+	storedCreds, err := a.mapToCreds(credential.Value)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionCast, typeEmailCreds, nil, err)
+	}
+	expired := false
+	_, verificationExpiry := storedCreds.getVerificationParams()
+	if verificationExpiry == nil || verificationExpiry.Before(time.Now()) {
+		expired = true
+	}
+	return &verified, &expired, nil
+}
+
+func (a *emailIdentifierImpl) sendCode(identifier string, appName string, code string, codeType string, credID string) (string, error) {
+	params := url.Values{}
+	params.Add("id", credID)
+	params.Add("code", code)
+	switch codeType {
+	case typePasswordResetCode:
+		passwordResetLink := a.auth.host + fmt.Sprintf("/ui/credential/reset?%s", params.Encode())
+		subject := "Reset your password"
+		if appName != "" {
+			subject += " for " + appName
+		}
+		body := "Please click the link below to reset your password:<br><a href=" + passwordResetLink + ">" + passwordResetLink + "</a><br><br>If you did not request a password reset, please ignore this message."
+		return "", a.auth.emailer.Send(identifier, subject, body, nil)
+	case typeVerificationCode:
+		verificationLink := a.auth.host + fmt.Sprintf("/ui/credential/verify?%s", params.Encode())
+		subject := "Verify your email address"
+		if appName != "" {
+			subject += " for " + appName
+		}
+		body := "Please click the link below to verify your email address:<br><a href=" + verificationLink + ">" + verificationLink + "</a><br><br>If you did not request this verification link, please ignore this message."
+		return "", a.auth.emailer.Send(identifier, subject, body, nil)
+	default:
+		return "", errors.ErrorData(logutils.StatusInvalid, "code type", logutils.StringArgs(codeType))
+	}
 }
 
 // Helpers
 
-// Time in seconds to wait before sending another auth code
-func (a *emailIdentifierImpl) getVerifyWaitTime(authType model.AuthType) int {
-	//Default is 30 seconds
+func (a *emailIdentifierImpl) getVerificationSettings() (*int, *int, error) {
+	authType, err := a.auth.storage.FindAuthType(a.identifierType)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthType, logutils.StringArgs(a.identifierType), err)
+	}
+	if authType == nil {
+		return nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeAuthType, logutils.StringArgs(a.identifierType))
+	}
+
+	// Should email addresses be verified (default is true)
+	shouldVerify, ok := authType.Params["verify_email"].(bool)
+	if ok && !shouldVerify {
+		return nil, nil, nil
+	}
+
+	// Time in seconds to wait before sending another auth code (default is 30)
 	verifyWaitTime := 30
 	verifyWaitTimeParam, ok := authType.Params["verify_wait_time"].(int)
 	if ok {
 		verifyWaitTime = verifyWaitTimeParam
 	}
-	return verifyWaitTime
-}
 
-// Time in hours before auth code expires
-func (a *emailIdentifierImpl) getVerifyExpiry(authType model.AuthType) int {
-	//Default is 24 hours
+	// Time in hours before auth code expires (default is 24)
 	verifyExpiry := 24
 	verifyExpiryParam, ok := authType.Params["verify_expiry"].(int)
 	if ok {
 		verifyExpiry = verifyExpiryParam
 	}
-	return verifyExpiry
+
+	return &verifyWaitTime, &verifyExpiry, nil
 }
 
 // initEmailIdentifier initializes and registers a new email identifier instance
 func initEmailIdentifier(auth *Auth) (*emailIdentifierImpl, error) {
-	email := &emailIdentifierImpl{identifierType: IdentifierTypeEmail}
+	email := &emailIdentifierImpl{auth: auth, identifierType: IdentifierTypeEmail}
 
 	err := auth.registerIdentifierType(email.identifierType, email)
 	if err != nil {

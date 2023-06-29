@@ -566,7 +566,7 @@ func (a *Auth) LoginMFA(apiKey string, accountID string, sessionID string, ident
 func (a *Auth) CreateAdminAccount(authenticationType string, appID string, orgID string, identifier string, profile model.Profile, username string,
 	permissions []string, roleIDs []string, groupIDs []string, scopes []string, creatorPermissions []string, clientVersion *string, l *logs.Log) (*model.Account, map[string]interface{}, error) {
 	//TODO: add admin authentication policies that specify which auth types may be used for each app org
-	if authenticationType != AuthTypeOidc && authenticationType != AuthTypeEmail && !strings.HasSuffix(authenticationType, "_oidc") {
+	if authenticationType != AuthTypeOidc && authenticationType != IdentifierTypeEmail && !strings.HasSuffix(authenticationType, "_oidc") {
 		return nil, nil, errors.ErrorData(logutils.StatusInvalid, "auth type", nil)
 	}
 
@@ -629,7 +629,7 @@ func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID
 	//TODO: when elevating existing accounts to application level admin, need to enforce any authentication policies set up for the app org
 	// when demoting from application level admin to standard user, may want to inform user of applicable authentication policy changes
 
-	if authenticationType != AuthTypeOidc && authenticationType != AuthTypeEmail && !strings.HasSuffix(authenticationType, "_oidc") {
+	if authenticationType != AuthTypeOidc && authenticationType != IdentifierTypeEmail && !strings.HasSuffix(authenticationType, "_oidc") {
 		return nil, nil, errors.ErrorData(logutils.StatusInvalid, "auth type", nil)
 	}
 
@@ -882,12 +882,16 @@ func (a *Auth) VerifyCredential(id string, verification string, l *logs.Log) err
 		return errors.ErrorData(logutils.StatusInvalid, model.TypeAuthType, logutils.StringArgs("credential verification"))
 	}
 
-	authImpl, err := a.getAuthTypeImpl(*authType)
+	identifierImpl, err := a.getIdentifierTypeImpl(*authType)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeAuthType, nil, err)
+		return errors.WrapErrorAction(logutils.ActionLoadCache, typeIdentifierType, nil, err)
 	}
 
-	authTypeCreds, err := authImpl.verifyCredential(credential, verification, l)
+	identifierCreds, err := identifierImpl.mapToCreds(credential.Value)
+	if err != nil {
+		return errors.ErrorData(logutils.StatusInvalid, "credential value", logutils.StringArgs(credential.AuthType.Code))
+	}
+	authTypeCreds, err := identifierImpl.verifyCredential(identifierCreds, verification)
 	if err != nil || authTypeCreds == nil {
 		return errors.WrapErrorAction(logutils.ActionValidate, "verification code", nil, err)
 	}
@@ -933,12 +937,22 @@ func (a *Auth) UpdateCredential(accountID string, accountAuthTypeID string, para
 		return errors.ErrorData(logutils.StatusInvalid, model.TypeAuthType, logutils.StringArgs("reset password"))
 	}
 
-	authImpl, err := a.getAuthTypeImpl(authType)
+	//TODO: check/simplify this
+	identifierImpl, err := a.getIdentifierTypeImpl(authType)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeAuthType, nil, err)
 	}
+	identifierCreds, err := identifierImpl.mapToCreds(credential.Value)
+	if err != nil {
+		return errors.ErrorData(logutils.StatusInvalid, "credential value", logutils.StringArgs(credential.AuthType.Code))
+	}
 
-	authTypeCreds, err := authImpl.resetCredential(credential, nil, params, l)
+	_, credType := identifierCreds.getCredential()
+	authImpl, err := a.getAuthTypeImpl(credType)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeAuthType, nil, err)
+	}
+	authTypeCreds, err := authImpl.resetCredential(identifierCreds, nil, params)
 	if err != nil || authTypeCreds == nil {
 		return errors.WrapErrorAction(logutils.ActionValidate, "reset password", nil, err)
 	}
@@ -1107,9 +1121,12 @@ func (a *Auth) SendVerifyCredential(authenticationType string, appTypeIdentifier
 		return errors.ErrorData(logutils.StatusInvalid, "credential verification status", &logutils.FieldArgs{"verified": true})
 	}
 
-	err = authImpl.sendVerifyCredential(credential, appOrg.Application.Name, l)
+	credential.Value, err = authImpl.sendVerifyCredential(credential, appOrg.Application.Name, l)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionSend, "verification code", nil, err)
+	}
+	if err = a.storage.UpdateCredential(nil, credential); err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
 	}
 
 	return nil

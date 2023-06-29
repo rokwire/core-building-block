@@ -41,8 +41,27 @@ type identifierType interface {
 
 	buildCredential(identifier string, credential string, credType string) authCreds
 
-	verificationType() string
-	// verificationParams(authType model.AuthType)
+	//verifies credential (checks the verification code generated on email signup for email auth type)
+	// Returns:
+	//	authTypeCreds (map[string]interface{}): Updated Credential.Value
+	verifyCredential(credential authCreds, verification string) (map[string]interface{}, error)
+
+	//sends the verification code to the identifier
+	// Returns:
+	//	authTypeCreds (map[string]interface{}): Updated Credential.Value
+	//	sentCode (bool): whether the verification code was sent successfully
+	sendVerifyCredential(credential authCreds, appName string, credID string) (map[string]interface{}, bool, error)
+
+	//restarts the credential verification
+	restartCredentialVerification(credential authCreds, appName string, credID string) (map[string]interface{}, error)
+
+	//isCredentialVerified says if the credential is verified
+	// Returns:
+	//	verified (bool): is credential verified
+	//	expired (bool): is credential verification expired
+	isCredentialVerified(credential *model.Credential) (*bool, *bool, error)
+
+	sendCode(identifier string, appName string, code string, codeType string, credID string) (string, error)
 }
 
 // authType is the interface for authentication for auth types which are not external for the system(the users do not come from external system)
@@ -59,19 +78,23 @@ type authType interface {
 	//	credentialValue (map): Credential value
 	signUpAdmin(identifierImpl identifierType, appName string, identifier string, password string, newCredentialID string) (map[string]interface{}, map[string]interface{}, error)
 
+	//apply forgot credential for the auth type (generates a reset password link with code and expiry and sends it to given identifier for email auth type)
+	forgotCredential(identifierImpl identifierType, credential authCreds, appName string, credID string) (map[string]interface{}, error)
+
 	//updates the value of the credential object with new value
 	// Returns:
 	//	authTypeCreds (map[string]interface{}): Updated Credential.Value
 	resetCredential(credential authCreds, resetCode *string, params string) (map[string]interface{}, error)
 
-	//checkCredentials checks if the incoming credentials are valid for the stored credentials
-	checkCredentials(storedCreds authCreds, incomingCreds authCreds) error
+	//checkCredential checks if the incoming credentials are valid for the stored credentials
+	checkCredential(identifierImpl identifierType, storedCreds authCreds, incomingCreds authCreds, appName string, credID string) (string, error)
 }
 
 type authCreds interface {
 	identifier() string
 	getCredential() (string, string)
 	setCredential(value string, credType string)
+	//TODO: use type?
 	getVerificationParams() (string, *time.Time)
 	setVerificationParams(code string, expiry *time.Time)
 	getResetParams() (string, *time.Time)
@@ -81,31 +104,6 @@ type authCreds interface {
 
 type authParams interface {
 	parameter() (string, string)
-}
-
-// verificationType is the interface for verification of identifiers which are not external to the system
-type verificationType interface {
-	//verifies credential (checks the verification code generated on email signup for email auth type)
-	// Returns:
-	//	authTypeCreds (map[string]interface{}): Updated Credential.Value
-	verifyCredential(credential *model.Credential, verification string) (map[string]interface{}, error)
-
-	//sends the verification code to the identifier
-	sendVerifyCredential(credential *model.Credential, appName string, l *logs.Log) error
-
-	//restarts the credential verification
-	restartCredentialVerification(credential *model.Credential, appName string, l *logs.Log) error
-
-	//apply forgot credential for the auth type (generates a reset password link with code and expiry and sends it to given identifier for email auth type)
-	forgotCredential(credential *model.Credential, identifier string, appName string, l *logs.Log) (map[string]interface{}, error)
-
-	//isCredentialVerified says if the credential is verified
-	// Returns:
-	//	verified (bool): is credential verified
-	//	expired (bool): is credential verification expired
-	isCredentialVerified(credential *model.Credential, l *logs.Log) (*bool, *bool, error)
-
-	sendVerifyOnSignup(identifierImpl identifierType, identifier string, appName string, credID string) (string, *time.Time, error)
 }
 
 // externalAuthType is the interface for authentication for auth types which are external for the system(the users comes from external system).

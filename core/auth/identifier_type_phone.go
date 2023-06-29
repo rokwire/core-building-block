@@ -15,7 +15,9 @@
 package auth
 
 import (
+	"core-building-block/core/model"
 	"encoding/json"
+	"net/url"
 	"regexp"
 	"time"
 
@@ -40,41 +42,41 @@ const (
 	typePhoneNumber          logutils.MessageDataType = "E.164 phone number"
 )
 
-type twilioPhoneCreds struct {
+type phoneCreds struct {
 	Phone string  `json:"phone" validate:"required"`
 	Code  *string `json:"code"`
 }
 
-func (c *twilioPhoneCreds) identifier() string {
+func (c *phoneCreds) identifier() string {
 	return c.Phone
 }
 
-func (c *twilioPhoneCreds) getCredential() (string, string) {
+func (c *phoneCreds) getCredential() (string, string) {
 	if c.Code != nil {
 		return AuthTypeCode, *c.Code
 	}
 	return "", ""
 }
 
-func (c *twilioPhoneCreds) setCredential(value string, credType string) {
+func (c *phoneCreds) setCredential(value string, credType string) {
 	if credType == AuthTypeCode {
 		c.Code = &value
 	}
 }
 
-func (c *twilioPhoneCreds) getVerificationParams() (string, *time.Time) {
+func (c *phoneCreds) getVerificationParams() (string, *time.Time) {
 	return "", nil
 }
 
-func (c *twilioPhoneCreds) setVerificationParams(code string, expiry *time.Time) {}
+func (c *phoneCreds) setVerificationParams(code string, expiry *time.Time) {}
 
-func (c *twilioPhoneCreds) getResetParams() (string, *time.Time) {
+func (c *phoneCreds) getResetParams() (string, *time.Time) {
 	return "", nil
 }
 
-func (c *twilioPhoneCreds) setResetParams(code string, expiry *time.Time) {}
+func (c *phoneCreds) setResetParams(code string, expiry *time.Time) {}
 
-func (c *twilioPhoneCreds) toMap() (map[string]interface{}, error) {
+func (c *phoneCreds) toMap() (map[string]interface{}, error) {
 	credBytes, err := json.Marshal(c)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionMarshal, typePhoneCreds, nil, err)
@@ -87,25 +89,14 @@ func (c *twilioPhoneCreds) toMap() (map[string]interface{}, error) {
 	return credsMap, nil
 }
 
-type twilioPhoneParams struct {
-	ConfirmPassword *string `json:"confirm_password"`
-}
-
-func (p *twilioPhoneParams) parameter() (string, string) {
-	if p.ConfirmPassword != nil {
-		return AuthTypePassword, *p.ConfirmPassword
-	}
-	return "", ""
-}
-
 // Phone implementation of identifierType
-type twilioPhoneIdentifierImpl struct {
+type phoneIdentifierImpl struct {
+	auth           *Auth
 	identifierType string
-	verifier       PhoneVerifier
 }
 
-func (a *twilioPhoneIdentifierImpl) getUserIdentifier(creds string) (string, error) {
-	var requestCreds twilioPhoneCreds
+func (a *phoneIdentifierImpl) getUserIdentifier(creds string) (string, error) {
+	var requestCreds phoneCreds
 	err := json.Unmarshal([]byte(creds), &requestCreds)
 	if err != nil {
 		return "", errors.WrapErrorAction(logutils.ActionUnmarshal, typePhoneCreds, nil, err)
@@ -114,8 +105,8 @@ func (a *twilioPhoneIdentifierImpl) getUserIdentifier(creds string) (string, err
 	return requestCreds.Phone, nil
 }
 
-func (a *twilioPhoneIdentifierImpl) parseCreds(creds string) (authCreds, error) {
-	var credential twilioPhoneCreds
+func (a *phoneIdentifierImpl) parseCreds(creds string) (authCreds, error) {
+	var credential phoneCreds
 	err := json.Unmarshal([]byte(creds), &credential)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typePhoneCreds, nil, err)
@@ -136,16 +127,16 @@ func (a *twilioPhoneIdentifierImpl) parseCreds(creds string) (authCreds, error) 
 	return &credential, nil
 }
 
-func (a *twilioPhoneIdentifierImpl) parseParams(params string) (authParams, error) {
+func (a *phoneIdentifierImpl) parseParams(params string) (authParams, error) {
 	return nil, nil
 }
 
-func (a *twilioPhoneIdentifierImpl) mapToCreds(credsMap map[string]interface{}) (authCreds, error) {
+func (a *phoneIdentifierImpl) mapToCreds(credsMap map[string]interface{}) (authCreds, error) {
 	credBytes, err := json.Marshal(credsMap)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionMarshal, "phone creds map", nil, err)
 	}
-	var creds twilioPhoneCreds
+	var creds phoneCreds
 	err = json.Unmarshal(credBytes, &creds)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typePhoneCreds, nil, err)
@@ -153,21 +144,52 @@ func (a *twilioPhoneIdentifierImpl) mapToCreds(credsMap map[string]interface{}) 
 	return &creds, nil
 }
 
-func (a *twilioPhoneIdentifierImpl) buildCredential(identifier string, credential string, credType string) authCreds {
+func (a *phoneIdentifierImpl) buildCredential(identifier string, credential string, credType string) authCreds {
 	if credType == AuthTypePassword {
-		return &twilioPhoneCreds{Phone: identifier, Code: &credential}
+		return &phoneCreds{Phone: identifier, Code: &credential}
 	}
 	return nil
 }
 
-func (a *twilioPhoneIdentifierImpl) verificationType() string {
-	//TODO: how to get verification type and params?
-	return ""
+func (a *phoneIdentifierImpl) verifyCredential(credential authCreds, verification string) (map[string]interface{}, error) {
+	return nil, errors.New(logutils.Unimplemented)
+}
+
+func (a *phoneIdentifierImpl) sendVerifyCredential(credential authCreds, appName string, credID string) (map[string]interface{}, bool, error) {
+	return nil, false, errors.New(logutils.Unimplemented)
+}
+
+func (a *phoneIdentifierImpl) restartCredentialVerification(credential authCreds, appName string, credID string) (map[string]interface{}, error) {
+	return nil, errors.New(logutils.Unimplemented)
+}
+
+func (a *phoneIdentifierImpl) isCredentialVerified(credential *model.Credential) (*bool, *bool, error) {
+	return nil, nil, errors.New(logutils.Unimplemented)
+}
+
+func (a *phoneIdentifierImpl) sendCode(identifier string, appName string, code string, codeType string, credID string) (string, error) {
+	data := url.Values{}
+	data.Add("To", identifier)
+	if code != "" {
+		// check verification
+		data.Add("Code", code)
+		return "", a.auth.phoneVerifier.CheckVerification(identifier, data)
+	}
+
+	// start verification
+	data.Add("Channel", "sms")
+
+	message := ""
+	err := a.auth.phoneVerifier.StartVerification(identifier, data)
+	if err == nil {
+		message = "verification code sent successfully"
+	}
+	return message, err
 }
 
 // initPhoneIdentifier initializes and registers a new phone identifier instance
-func initPhoneIdentifier(auth *Auth, verifier PhoneVerifier) (*twilioPhoneIdentifierImpl, error) {
-	phone := &twilioPhoneIdentifierImpl{identifierType: verifier.Identifier(), verifier: verifier}
+func initPhoneIdentifier(auth *Auth) (*phoneIdentifierImpl, error) {
+	phone := &phoneIdentifierImpl{auth: auth, identifierType: IdentifierTypePhone}
 
 	err := auth.registerIdentifierType(phone.identifierType, phone)
 	if err != nil {

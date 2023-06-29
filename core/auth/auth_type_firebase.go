@@ -40,12 +40,16 @@ func (a *firebaseAuthImpl) signUpAdmin(identifierImpl identifierType, appName st
 	return nil, nil, nil
 }
 
+func (a *firebaseAuthImpl) forgotCredential(identifierImpl identifierType, credential authCreds, appName string, credID string) (map[string]interface{}, error) {
+	return nil, nil
+}
+
 func (a *firebaseAuthImpl) resetCredential(credential authCreds, resetCode *string, params string) (map[string]interface{}, error) {
 	return nil, nil
 }
 
-func (a *firebaseAuthImpl) checkCredentials(storedCreds authCreds, incomingCreds authCreds) error {
-	return nil
+func (a *firebaseAuthImpl) checkCredential(identifierImpl identifierType, storedCreds authCreds, incomingCreds authCreds, appName string, credID string) (string, error) {
+	return "", nil
 }
 
 // initFirebaseAuth initializes and registers a new Firebase auth instance
