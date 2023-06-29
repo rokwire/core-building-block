@@ -283,6 +283,19 @@ func (m *database) applyAccountsChecks(accounts *collectionWrapper) error {
 		return err
 	}
 
+	indexModel := mongo.IndexModel{
+		Keys: bson.D{
+			{Key: "username", Value: "text"},
+			{Key: "profile.first_name", Value: "text"},
+			{Key: "profile.last_name", Value: "text"},
+		},
+	}
+
+	_, err = accounts.coll.Indexes().CreateOne(context.TODO(), indexModel)
+	if err != nil {
+		return err
+	}
+
 	m.logger.Info("accounts check passed")
 	return nil
 }

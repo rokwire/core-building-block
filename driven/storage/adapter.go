@@ -1284,45 +1284,63 @@ func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, 
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
 	}
-	pipeline := []bson.M{
-		// make sure accounts are public
-		{"$match": bson.M{"app_org_id": appOrg.ID, "privacy.public": true}},
-		{"$lookup": bson.M{
-			"from":         "follows",
-			"localField":   "_id",
-			"foreignField": "following_id",
-			"as":           "followings",
-		}},
-		{"$lookup": bson.M{
-			"from":         "follows",
-			"localField":   "_id",
-			"foreignField": "follower_id",
-			"as":           "followers",
-		}},
+
+	pipeline := []bson.M{}
+
+	var searchStr, firstNameStr, lastNameStr, usernameStr, followingIDStr, followerIDStr string
+	if search != nil {
+		searchStr = *search
+		pipeline = append(pipeline, 
+			bson.M{
+				"$match": bson.M{
+					"$text": bson.M{
+						"$search":        search,
+						// "$caseSensitive": false,
+					}},
+			})
 	}
 
+	pipeline = append(pipeline, bson.M{"$match": bson.M{"app_org_id": appOrg.ID, "privacy.public": true}})
+	pipeline = append(pipeline, bson.M{"$lookup": bson.M{
+		"from":         "follows",
+		"localField":   "_id",
+		"foreignField": "following_id",
+		"as":           "followings",
+	}})
+	pipeline = append(pipeline, bson.M{"$lookup": bson.M{
+		"from":         "follows",
+		"localField":   "_id",
+		"foreignField": "follower_id",
+		"as":           "followers",
+	}})
+
 	if firstName != nil {
+		firstNameStr = *firstName
 		pipeline = append(pipeline, bson.M{"$match": bson.M{"profile.first_name": *firstName}})
 	}
 	if lastName != nil {
+		lastNameStr = *lastName
 		pipeline = append(pipeline, bson.M{"$match": bson.M{"profile.last_name": *lastName}})
 	}
 	if username != nil {
+		usernameStr = *username
 		pipeline = append(pipeline, bson.M{"$match": bson.M{"username": *username}})
 	}
 
 	if followingID != nil {
+		followingIDStr = *followingID
 		pipeline = append(pipeline, bson.M{"$match": bson.M{"followings.following_id": *followingID}})
 	}
 
 	if followerID != nil {
+		followerIDStr = *followerID
 		pipeline = append(pipeline, bson.M{"$match": bson.M{"followers.follower_id": *followerID}})
 	}
 
 	if offset != nil {
 		pipeline = append(pipeline, bson.M{"$skip": *offset})
 	}
-	
+
 	if limit != nil {
 		pipeline = append(pipeline, bson.M{"$limit": *limit})
 	}
@@ -1330,13 +1348,13 @@ func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, 
 	var accounts []account
 	err = sa.db.accounts.Aggregate(pipeline, &accounts, nil)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"app_id": appID, "org_id": orgID, "first_name": *firstName, "last_name": *lastName, "username": *username, "following_id": *followingID, "follower_id": *followerID}, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"app_id": appID, "org_id": orgID, "search": searchStr, "first_name": firstNameStr, "last_name": lastNameStr, "username": usernameStr, "following_id": followingIDStr, "follower_id": followerIDStr}, err)
 	}
 
 	var publicAccounts []model.PublicAccount
 	for _, account := range accounts {
 		publicAccounts = append(publicAccounts, model.PublicAccount{
-			ID: account.ID,
+			ID:        account.ID,
 			Username:  account.Username,
 			FirstName: account.Profile.FirstName,
 			LastName:  account.Profile.LastName,
