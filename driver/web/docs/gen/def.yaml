@@ -203,6 +203,35 @@ paths:
                     type: mobile
                     device_id: '5555'
                     os: Android
+              webauthn-sign_up:
+                summary: WebAuthn - sign up
+                value:
+                  auth_type: webauthn
+                  app_type_identifier: edu.illinois.rokwire
+                  org_id: 0a2eff20-e2cd-11eb-af68-60f81db5ecc0
+                  api_key: 95a463e3-2ce8-450b-ba75-d8506b874738
+                  params:
+                    sign_up: true
+                    name: test
+                    display_name: John Doe
+                  preferences:
+                    key1: value1
+                    key2: value2
+                  profile:
+                    address: address
+                    birth_year: 1990
+                    country: county
+                    email: email
+                    first_name: first name
+                    last_name: last name
+                    phone: '+000000000000'
+                    photo_url: photo url
+                    state: state
+                    zip_code: zip code
+                  device:
+                    type: mobile
+                    device_id: '5555'
+                    os: Android
         required: true
       responses:
         '200':
@@ -6596,6 +6625,7 @@ components:
             - illinois_oidc
             - anonymous
             - username
+            - webauthn
         app_type_identifier:
           type: string
         org_id:
@@ -6604,35 +6634,20 @@ components:
           type: string
         creds:
           anyOf:
+            - $ref: '#/components/schemas/_shared_req_CredsWebAuthn'
             - $ref: '#/components/schemas/_shared_req_CredsEmail'
             - $ref: '#/components/schemas/_shared_req_CredsTwilioPhone'
             - $ref: '#/components/schemas/_shared_req_CredsOIDC'
             - $ref: '#/components/schemas/_shared_req_CredsAPIKey'
-            - required:
-                - username
-                - password
-              type: object
-              description: Auth login creds for auth_type="username"
-              properties:
-                username:
-                  type: string
-                password:
-                  type: string
+            - $ref: '#/components/schemas/_shared_req_CredsUsername'
         params:
           type: object
           anyOf:
+            - $ref: '#/components/schemas/_shared_req_ParamsWebAuthn'
             - $ref: '#/components/schemas/_shared_req_ParamsEmail'
             - $ref: '#/components/schemas/_shared_req_ParamsOIDC'
             - $ref: '#/components/schemas/_shared_req_ParamsNone'
-            - type: object
-              description: Auth login params for auth_type="username"
-              properties:
-                confirm_password:
-                  type: string
-                  description: This should match the `creds` password field when sign_up=true. This should be verified on the client side as well to reduce invalid requests.
-                sign_up:
-                  type: boolean
-                  default: false
+            - $ref: '#/components/schemas/_shared_req_ParamsUsername'
         device:
           $ref: '#/components/schemas/Device'
         profile:
@@ -6800,6 +6815,7 @@ components:
             - twilio_phone
             - illinois_oidc
             - anonymous
+            - webauthn
         app_type_identifier:
           type: string
         org_id:
@@ -6834,6 +6850,27 @@ components:
       description: |
         Auth login creds for auth_type="oidc" (or variants)
           - full redirect URI received from OIDC provider
+    _shared_req_CredsUsername:
+      required:
+        - username
+        - password
+      type: object
+      description: Auth login creds for auth_type="username"
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+    _shared_req_CredsWebAuthn:
+      required:
+        - username
+      type: object
+      description: Auth login creds for auth_type="webauthn"
+      properties:
+        username:
+          type: string
+        response:
+          type: string
     _shared_req_CredsAPIKey:
       type: object
       description: Auth login creds for auth_type="anonymous"
@@ -6849,7 +6886,6 @@ components:
           description: This should match the `creds` password field when sign_up=true. This should be verified on the client side as well to reduce invalid requests.
         sign_up:
           type: boolean
-          default: false
     _shared_req_ParamsOIDC:
       type: object
       description: Auth login params for auth_type="oidc" (or variants)
@@ -6858,6 +6894,24 @@ components:
           type: string
         pkce_verifier:
           type: string
+    _shared_req_ParamsUsername:
+      type: object
+      description: Auth login params for auth_type="username"
+      properties:
+        confirm_password:
+          type: string
+          description: This should match the `creds` password field when sign_up=true. This should be verified on the client side as well to reduce invalid requests.
+        sign_up:
+          type: boolean
+    _shared_req_ParamsWebAuthn:
+      type: object
+      description: Auth login params for auth_type="webauthn"
+      properties:
+        display_name:
+          type: string
+          description: User's account name for display purposes
+        sign_up:
+          type: boolean
     _shared_req_ParamsNone:
       type: object
       description: Auth login request params for unlisted auth_types (None)

@@ -245,8 +245,12 @@ func supportedAuthTypeFromDef(item *Def.SupportedAuthTypes) *model.AuthTypesSupp
 	supportedAuthTypes := []model.SupportedAuthType{}
 	if item.SupportedAuthTypes != nil {
 		for _, authType := range *item.SupportedAuthTypes {
-			if authType.AuthTypeId != nil && authType.Params != nil {
-				supportedAuthTypes = append(supportedAuthTypes, model.SupportedAuthType{AuthTypeID: *authType.AuthTypeId, Params: *authType.Params})
+			var params map[string]interface{}
+			if authType.Params != nil {
+				params = *authType.Params
+			}
+			if authType.AuthTypeId != nil {
+				supportedAuthTypes = append(supportedAuthTypes, model.SupportedAuthType{AuthTypeID: *authType.AuthTypeId, Params: params})
 			}
 		}
 	}

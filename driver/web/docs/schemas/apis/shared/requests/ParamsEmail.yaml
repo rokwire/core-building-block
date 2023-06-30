@@ -6,4 +6,3 @@ properties:
     description: This should match the `creds` password field when sign_up=true. This should be verified on the client side as well to reduce invalid requests.
   sign_up:
     type: boolean
-    default: false
