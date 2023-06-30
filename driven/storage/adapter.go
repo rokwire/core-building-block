@@ -1261,21 +1261,19 @@ func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, 
 
 	if followingID != nil {
 		followingIDStr = *followingID
-		pipeline = append(pipeline, bson.M{"$match": bson.M{"followings.following_id": *followingID}})
+		pipeline = append(pipeline, bson.M{"$match": bson.M{"followers.following_id": *followingID}})
 	}
 
 	if followerID != nil {
 		followerIDStr = *followerID
-		pipeline = append(pipeline, bson.M{"$match": bson.M{"followers.follower_id": *followerID}})
+		pipeline = append(pipeline, bson.M{"$match": bson.M{"followings.follower_id": *followerID}})
 	}
 
 	// adds boolean value whether API calling user is following account
-	pipeline = append(pipeline, bson.M{"$addFields": bson.M{"is_following": bson.D{{"$cond", bson.A{
-		bson.D{{"$eq", bson.A{"$followings.following_id", userID}}},
-		true,
-		false,
-	}}}}})
-
+	pipeline = append(pipeline, bson.M{"$addFields": 
+		bson.M{"is_following": 
+			bson.D{{"$in", 
+				bson.A{*userID, "$followings.follower_id"}}}}})
 
 	if offset != nil {
 		pipeline = append(pipeline, bson.M{"$skip": *offset})
