@@ -39,6 +39,7 @@ const (
 type emailCreds struct {
 	Email              string     `json:"email" bson:"email" validate:"required"`
 	Password           *string    `json:"password" bson:"password,omitempty"`
+	Code               *string    `json:"code" bson:"code,omitempty"`
 	VerificationCode   string     `json:"verification_code" bson:"verification_code"`
 	VerificationExpiry *time.Time `json:"verification_expiry" bson:"verification_expiry"`
 	ResetCode          string     `json:"reset_code" bson:"reset_code"`
@@ -52,6 +53,8 @@ func (c *emailCreds) identifier() string {
 func (c *emailCreds) getCredential() (string, string) {
 	if c.Password != nil {
 		return AuthTypePassword, *c.Password
+	} else if c.Code != nil {
+		return AuthTypeCode, *c.Code
 	}
 	return "", ""
 }
@@ -59,6 +62,8 @@ func (c *emailCreds) getCredential() (string, string) {
 func (c *emailCreds) setCredential(value string, credType string) {
 	if credType == AuthTypePassword {
 		c.Password = &value
+	} else if credType == AuthTypeCode {
+		c.Code = &value
 	}
 }
 

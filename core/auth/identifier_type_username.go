@@ -35,6 +35,7 @@ const (
 type usernameCreds struct {
 	Username string  `json:"username" bson:"username" validate:"required"`
 	Password *string `json:"password" bson:"password,omitempty"`
+	Code     *string `json:"code" bson:"code,omitempty"`
 }
 
 func (c *usernameCreds) identifier() string {
@@ -44,6 +45,8 @@ func (c *usernameCreds) identifier() string {
 func (c *usernameCreds) getCredential() (string, string) {
 	if c.Password != nil {
 		return AuthTypePassword, *c.Password
+	} else if c.Code != nil {
+		return AuthTypeCode, *c.Code
 	}
 	return "", ""
 }
@@ -51,6 +54,8 @@ func (c *usernameCreds) getCredential() (string, string) {
 func (c *usernameCreds) setCredential(value string, credType string) {
 	if credType == AuthTypePassword {
 		c.Password = &value
+	} else if credType == AuthTypeCode {
+		c.Code = &value
 	}
 }
 

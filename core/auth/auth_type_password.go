@@ -45,18 +45,13 @@ type passwordAuthImpl struct {
 	authType string
 }
 
-func (a *passwordAuthImpl) signUp(identifierImpl identifierType, appName string, creds string, params string, newCredentialID string) (string, map[string]interface{}, error) {
-	passwordCreds, err := identifierImpl.parseCreds(creds)
-	if err != nil {
-		return "", nil, errors.ErrorData(logutils.StatusInvalid, "password creds", nil)
-	}
-
+func (a *passwordAuthImpl) signUp(identifierImpl identifierType, appName string, creds authCreds, params string, newCredentialID string) (string, map[string]interface{}, error) {
 	passwordParams, err := identifierImpl.parseParams(params)
 	if err != nil {
 		return "", nil, errors.ErrorData(logutils.StatusInvalid, "password params", nil)
 	}
 
-	credType, cred := passwordCreds.getCredential()
+	credType, cred := creds.getCredential()
 	if credType != AuthTypePassword {
 		return "", nil, errors.ErrorData(logutils.StatusInvalid, "credential type", logutils.StringArgs(credType))
 	}
@@ -70,7 +65,7 @@ func (a *passwordAuthImpl) signUp(identifierImpl identifierType, appName string,
 		}
 	}
 
-	message, credsMap, err := a.generateCredential(identifierImpl, appName, passwordCreds.identifier(), cred, newCredentialID)
+	message, credsMap, err := a.generateCredential(identifierImpl, appName, creds.identifier(), cred, newCredentialID)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction("building", "password credentials", nil, err)
 	}
@@ -78,18 +73,23 @@ func (a *passwordAuthImpl) signUp(identifierImpl identifierType, appName string,
 	return message, credsMap, nil
 }
 
-func (a *passwordAuthImpl) signUpAdmin(identifierImpl identifierType, appName string, identifier string, credential string, newCredentialID string) (map[string]interface{}, map[string]interface{}, error) {
-	if credential == "" {
-		credential = utils.GenerateRandomPassword(12)
+func (a *passwordAuthImpl) signUpAdmin(identifierImpl identifierType, appName string, creds authCreds, newCredentialID string) (map[string]interface{}, map[string]interface{}, error) {
+	credType, cred := creds.getCredential()
+	if credType != AuthTypePassword {
+		return nil, nil, errors.ErrorData(logutils.StatusInvalid, "credential type", logutils.StringArgs(credType))
 	}
 
-	_, creds, err := a.generateCredential(identifierImpl, appName, identifier, credential, newCredentialID)
+	if cred == "" {
+		cred = utils.GenerateRandomPassword(12)
+	}
+
+	_, credsMap, err := a.generateCredential(identifierImpl, appName, creds.identifier(), cred, newCredentialID)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction("building", "password credentials", nil, err)
 	}
 
-	params := map[string]interface{}{"password": credential}
-	return params, creds, nil
+	params := map[string]interface{}{"password": cred}
+	return params, credsMap, nil
 }
 
 func (a *passwordAuthImpl) forgotCredential(identifierImpl identifierType, credential authCreds, appName string, credID string) (map[string]interface{}, error) {
@@ -165,7 +165,15 @@ func (a *passwordAuthImpl) resetCredential(credential authCreds, resetCode *stri
 	return credsMap, nil
 }
 
-func (a *passwordAuthImpl) checkCredential(identifierImpl identifierType, storedCreds authCreds, incomingCreds authCreds, appName string, credID string) (string, error) {
+func (a *passwordAuthImpl) checkCredential(identifierImpl identifierType, credential *model.Credential, incomingCreds authCreds, appName string) (string, error) {
+	if credential == nil {
+		return "", errors.ErrorData(logutils.StatusMissing, model.TypeCredential, nil)
+	}
+	storedCreds, err := identifierImpl.mapToCreds(credential.Value)
+	if err != nil {
+		return "", errors.WrapErrorAction(logutils.ActionCast, "map to password creds", nil, err)
+	}
+
 	storedCredType, storedCred := storedCreds.getCredential()
 	incomingCredType, incomingCred := incomingCreds.getCredential()
 	if storedCredType != AuthTypePassword || incomingCredType != AuthTypePassword {
@@ -173,7 +181,7 @@ func (a *passwordAuthImpl) checkCredential(identifierImpl identifierType, stored
 	}
 
 	//compare stored and requets ones
-	err := bcrypt.CompareHashAndPassword([]byte(storedCred), []byte(incomingCred))
+	err = bcrypt.CompareHashAndPassword([]byte(storedCred), []byte(incomingCred))
 	if err != nil {
 		return "", errors.WrapErrorAction(logutils.ActionValidate, model.TypeCredential, nil, err).SetStatus(utils.ErrorStatusInvalid)
 	}

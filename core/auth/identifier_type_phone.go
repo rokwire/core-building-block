@@ -43,8 +43,9 @@ const (
 )
 
 type phoneCreds struct {
-	Phone string  `json:"phone" validate:"required"`
-	Code  *string `json:"code"`
+	Phone    string  `json:"phone" bson:"phone" validate:"required"`
+	Code     *string `json:"code"`
+	Password *string `json:"password" bson:"password,omitempty"`
 }
 
 func (c *phoneCreds) identifier() string {
@@ -54,6 +55,8 @@ func (c *phoneCreds) identifier() string {
 func (c *phoneCreds) getCredential() (string, string) {
 	if c.Code != nil {
 		return AuthTypeCode, *c.Code
+	} else if c.Password != nil {
+		return AuthTypePassword, *c.Password
 	}
 	return "", ""
 }
@@ -61,6 +64,8 @@ func (c *phoneCreds) getCredential() (string, string) {
 func (c *phoneCreds) setCredential(value string, credType string) {
 	if credType == AuthTypeCode {
 		c.Code = &value
+	} else if credType == AuthTypePassword {
+		c.Password = &value
 	}
 }
 

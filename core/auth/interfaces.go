@@ -70,13 +70,13 @@ type authType interface {
 	// Returns:
 	//	message (string): Success message if verification is required. If verification is not required, return ""
 	//	credentialValue (map): Credential value
-	signUp(identifierImpl identifierType, appName string, creds string, params string, newCredentialID string) (string, map[string]interface{}, error)
+	signUp(identifierImpl identifierType, appName string, creds authCreds, params string, newCredentialID string) (string, map[string]interface{}, error)
 
 	//signUpAdmin signs up a new admin user
 	// Returns:
 	//	credentialParams (map): newly generated credential parameters
 	//	credentialValue (map): Credential value
-	signUpAdmin(identifierImpl identifierType, appName string, identifier string, password string, newCredentialID string) (map[string]interface{}, map[string]interface{}, error)
+	signUpAdmin(identifierImpl identifierType, appName string, creds authCreds, newCredentialID string) (map[string]interface{}, map[string]interface{}, error)
 
 	//apply forgot credential for the auth type (generates a reset password link with code and expiry and sends it to given identifier for email auth type)
 	forgotCredential(identifierImpl identifierType, credential authCreds, appName string, credID string) (map[string]interface{}, error)
@@ -87,7 +87,7 @@ type authType interface {
 	resetCredential(credential authCreds, resetCode *string, params string) (map[string]interface{}, error)
 
 	//checkCredential checks if the incoming credentials are valid for the stored credentials
-	checkCredential(identifierImpl identifierType, storedCreds authCreds, incomingCreds authCreds, appName string, credID string) (string, error)
+	checkCredential(identifierImpl identifierType, storedCreds *model.Credential, incomingCreds authCreds, appName string) (string, error)
 }
 
 type authCreds interface {
