@@ -925,7 +925,7 @@ func (h ServicesApisHandler) getPublicAccounts(l *logs.Log, r *http.Request, cla
 		followerID = &followerIDParam
 	}
 
-	accounts, err := h.coreAPIs.Services.SerGetPublicAccounts(claims.AppID, claims.OrgID, limit, offset, search, firstName, lastName, username, followingID, followerID)
+	accounts, err := h.coreAPIs.Services.SerGetPublicAccounts(claims.AppID, claims.OrgID, limit, offset, search, firstName, lastName, username, followingID, followerID, &claims.Subject)
 	if err != nil {
 		return l.HTTPResponseErrorAction("error finding accounts", model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}

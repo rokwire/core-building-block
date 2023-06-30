@@ -638,10 +638,11 @@ type AccountRelations struct {
 
 // PublicAccount shows public account information
 type PublicAccount struct {
-	ID        string `json:"id"`
-	Username  string `json:"username"`
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
+	ID          string `json:"id"`
+	Username    string `json:"username"`
+	FirstName   string `json:"first_name"`
+	LastName    string `json:"last_name"`
+	IsFollowing bool   `json:"is_following"`
 }
 
 // Follow shows the relationship between user and follower

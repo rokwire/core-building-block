@@ -49,6 +49,8 @@ type account struct {
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
 
+	IsFollowing bool `bson:"is_following"`
+
 	LastLoginDate           *time.Time `bson:"last_login_date"`
 	LastAccessTokenDate     *time.Time `bson:"last_access_token_date"`
 	MostRecentClientVersion *string    `bson:"most_recent_client_version"`

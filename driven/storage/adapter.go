@@ -1211,7 +1211,7 @@ func (sa *Adapter) FindAccounts(context TransactionContext, limit *int, offset *
 
 // FindPublicAccounts finds accounts and returns name and username
 func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, orgID string, limit *int, offset *int,
-	search *string, firstName *string, lastName *string, username *string, followingID *string, followerID *string) ([]model.PublicAccount, error) {
+	search *string, firstName *string, lastName *string, username *string, followingID *string, followerID *string, userID *string) ([]model.PublicAccount, error) {
 	appOrg, err := sa.FindApplicationOrganization(appID, orgID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
@@ -1269,6 +1269,14 @@ func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, 
 		pipeline = append(pipeline, bson.M{"$match": bson.M{"followers.follower_id": *followerID}})
 	}
 
+	// adds boolean value whether API calling user is following account
+	pipeline = append(pipeline, bson.M{"$addFields": bson.M{"is_following": bson.D{{"$cond", bson.A{
+		bson.D{{"$eq", bson.A{"$followings.following_id", userID}}},
+		true,
+		false,
+	}}}}})
+
+
 	if offset != nil {
 		pipeline = append(pipeline, bson.M{"$skip": *offset})
 	}
@@ -1286,10 +1294,11 @@ func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, 
 	var publicAccounts []model.PublicAccount
 	for _, account := range accounts {
 		publicAccounts = append(publicAccounts, model.PublicAccount{
-			ID:        account.ID,
-			Username:  account.Username,
-			FirstName: account.Profile.FirstName,
-			LastName:  account.Profile.LastName,
+			ID:          account.ID,
+			Username:    account.Username,
+			FirstName:   account.Profile.FirstName,
+			LastName:    account.Profile.LastName,
+			IsFollowing: account.IsFollowing,
 		})
 	}
 	return publicAccounts, nil
