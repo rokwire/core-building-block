@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/rokwire/core-auth-library-go/v3/tokenauth"
 	"github.com/rokwire/logging-library-go/v2/errors"
 	"github.com/rokwire/logging-library-go/v2/logs"
 	"github.com/rokwire/logging-library-go/v2/logutils"
@@ -336,6 +337,26 @@ type administrationImpl struct {
 	app *application
 }
 
+func (s *administrationImpl) AdmGetConfig(id string, claims *tokenauth.Claims) (*model.Config, error) {
+	return s.app.admGetConfig(id, claims)
+}
+
+func (s *administrationImpl) AdmGetConfigs(configType *string, claims *tokenauth.Claims) ([]model.Config, error) {
+	return s.app.admGetConfigs(configType, claims)
+}
+
+func (s *administrationImpl) AdmCreateConfig(config model.Config, claims *tokenauth.Claims) (*model.Config, error) {
+	return s.app.admCreateConfig(config, claims)
+}
+
+func (s *administrationImpl) AdmUpdateConfig(config model.Config, claims *tokenauth.Claims) error {
+	return s.app.admUpdateConfig(config, claims)
+}
+
+func (s *administrationImpl) AdmDeleteConfig(id string, claims *tokenauth.Claims) error {
+	return s.app.admDeleteConfig(id, claims)
+}
+
 func (s *administrationImpl) AdmGetTest() string {
 	return s.app.admGetTest()
 }
@@ -512,18 +533,6 @@ func (s *tpsImpl) TPSGetAccountsCount(searchParams map[string]interface{}, appID
 
 type systemImpl struct {
 	app *application
-}
-
-func (s *systemImpl) SysCreateGlobalConfig(setting string) (*model.GlobalConfig, error) {
-	return s.app.sysCreateGlobalConfig(setting)
-}
-
-func (s *systemImpl) SysGetGlobalConfig() (*model.GlobalConfig, error) {
-	return s.app.sysGetGlobalConfig()
-}
-
-func (s *systemImpl) SysUpdateGlobalConfig(setting string) error {
-	return s.app.sysUpdateGlobalConfig(setting)
 }
 
 func (s *systemImpl) SysGetApplicationOrganizations(appID *string, orgID *string) ([]model.ApplicationOrganization, error) {

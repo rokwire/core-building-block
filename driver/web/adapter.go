@@ -37,6 +37,7 @@ import (
 
 	"github.com/rokwire/core-auth-library-go/v3/authservice"
 	"github.com/rokwire/core-auth-library-go/v3/tokenauth"
+	"github.com/rokwire/core-auth-library-go/v3/webauth"
 
 	httpSwagger "github.com/swaggo/http-swagger"
 )
@@ -67,6 +68,9 @@ type Adapter struct {
 	systemApisHandler   SystemApisHandler
 
 	coreAPIs *core.APIs
+
+	corsAllowedOrigins []string
+	corsAllowedHeaders []string
 }
 
 type handlerFunc = func(*logs.Log, *http.Request, *tokenauth.Claims) logs.HTTPResponse
@@ -153,6 +157,12 @@ func (we Adapter) Start() {
 	adminSubrouter.HandleFunc("/auth/verify-mfa", we.wrapFunc(we.adminApisHandler.verifyMFA, we.auth.admin.User)).Methods("POST")
 	adminSubrouter.HandleFunc("/auth/app-token", we.wrapFunc(we.adminApisHandler.getAppToken, we.auth.admin.User)).Methods("GET")
 
+	adminSubrouter.HandleFunc("/configs/{id}", we.wrapFunc(we.adminApisHandler.getConfig, we.auth.admin.Permissions)).Methods("GET")
+	adminSubrouter.HandleFunc("/configs", we.wrapFunc(we.adminApisHandler.getConfigs, we.auth.admin.Permissions)).Methods("GET")
+	adminSubrouter.HandleFunc("/configs", we.wrapFunc(we.adminApisHandler.createConfig, we.auth.admin.Permissions)).Methods("POST")
+	adminSubrouter.HandleFunc("/configs/{id}", we.wrapFunc(we.adminApisHandler.updateConfig, we.auth.admin.Permissions)).Methods("PUT")
+	adminSubrouter.HandleFunc("/configs/{id}", we.wrapFunc(we.adminApisHandler.deleteConfig, we.auth.admin.Permissions)).Methods("DELETE")
+
 	adminSubrouter.HandleFunc("/account", we.wrapFunc(we.adminApisHandler.getAccount, we.auth.admin.User)).Methods("GET")
 	adminSubrouter.HandleFunc("/account/mfa", we.wrapFunc(we.adminApisHandler.getMFATypes, we.auth.admin.User)).Methods("GET")
 	adminSubrouter.HandleFunc("/account/mfa", we.wrapFunc(we.adminApisHandler.addMFAType, we.auth.admin.Authenticated)).Methods("POST")
@@ -235,10 +245,6 @@ func (we Adapter) Start() {
 
 	systemSubrouter.HandleFunc("/auth/app-org-token", we.wrapFunc(we.systemApisHandler.getAppOrgToken, we.auth.system.User)).Methods("GET")
 
-	systemSubrouter.HandleFunc("/global-config", we.wrapFunc(we.systemApisHandler.createGlobalConfig, we.auth.system.Permissions)).Methods("POST")
-	systemSubrouter.HandleFunc("/global-config", we.wrapFunc(we.systemApisHandler.getGlobalConfig, we.auth.system.Permissions)).Methods("GET")
-	systemSubrouter.HandleFunc("/global-config", we.wrapFunc(we.systemApisHandler.updateGlobalConfig, we.auth.system.Permissions)).Methods("PUT")
-
 	systemSubrouter.HandleFunc("/organizations", we.wrapFunc(we.systemApisHandler.createOrganization, we.auth.system.Permissions)).Methods("POST")
 	systemSubrouter.HandleFunc("/organizations/{id}", we.wrapFunc(we.systemApisHandler.updateOrganization, we.auth.system.Permissions)).Methods("PUT")
 	systemSubrouter.HandleFunc("/organizations/{id}", we.wrapFunc(we.systemApisHandler.getOrganization, we.auth.system.Permissions)).Methods("GET")
@@ -287,7 +293,11 @@ func (we Adapter) Start() {
 	systemSubrouter.HandleFunc("/auth-types/{id}", we.wrapFunc(we.systemApisHandler.updateAuthTypes, we.auth.system.Permissions)).Methods("PUT")
 	///
 
-	err := http.ListenAndServe(":"+we.port, router)
+	var handler http.Handler = router
+	if len(we.corsAllowedOrigins) > 0 {
+		handler = webauth.SetupCORS(we.corsAllowedOrigins, we.corsAllowedHeaders, router)
+	}
+	err := http.ListenAndServe(":"+we.port, handler)
 	if err != nil {
 		we.logger.Fatalf("error on listen and server - %s", err.Error())
 	}
@@ -521,7 +531,8 @@ func (we Adapter) completeResponse(w http.ResponseWriter, response logs.HTTPResp
 }
 
 // NewWebAdapter creates new WebAdapter instance
-func NewWebAdapter(env string, serviceRegManager *authservice.ServiceRegManager, port string, coreAPIs *core.APIs, host string, baseServerURL string, prodServerURL string, testServerURL string, devServerURL string, logger *logs.Logger) Adapter {
+func NewWebAdapter(env string, serviceRegManager *authservice.ServiceRegManager, port string, coreAPIs *core.APIs, host string, corsAllowedOrigins []string,
+	corsAllowedHeaders []string, baseServerURL string, prodServerURL string, testServerURL string, devServerURL string, logger *logs.Logger) Adapter {
 	//openAPI doc
 	loader := &openapi3.Loader{Context: context.Background(), IsExternalRefsAllowed: true}
 	// doc, err := loader.LoadFromFile("driver/web/docs/gen/def.yaml")
@@ -571,7 +582,8 @@ func NewWebAdapter(env string, serviceRegManager *authservice.ServiceRegManager,
 	systemApisHandler := NewSystemApisHandler(coreAPIs)
 	return Adapter{env: env, port: port, productionServerURL: prodServerURL, testServerURL: testServerURL, developmentServerURL: devServerURL, cachedYamlDoc: yamlDoc,
 		openAPIRouter: openAPIRouter, host: host, auth: auth, logger: logger, defaultApisHandler: defaultApisHandler, servicesApisHandler: servicesApisHandler, adminApisHandler: adminApisHandler,
-		encApisHandler: encApisHandler, bbsApisHandler: bbsApisHandler, tpsApisHandler: tpsApisHandler, systemApisHandler: systemApisHandler, coreAPIs: coreAPIs}
+		encApisHandler: encApisHandler, bbsApisHandler: bbsApisHandler, tpsApisHandler: tpsApisHandler, systemApisHandler: systemApisHandler, coreAPIs: coreAPIs,
+		corsAllowedOrigins: corsAllowedOrigins, corsAllowedHeaders: corsAllowedHeaders}
 }
 
 // AppListener implements core.ApplicationListener interface

@@ -22,6 +22,8 @@ import (
 	"time"
 
 	"github.com/rokwire/core-auth-library-go/v3/authorization"
+	"github.com/rokwire/core-auth-library-go/v3/authutils"
+	"github.com/rokwire/core-auth-library-go/v3/tokenauth"
 
 	"github.com/google/uuid"
 	"github.com/rokwire/logging-library-go/v2/errors"
@@ -182,6 +184,113 @@ func (app *application) admGetTestModel() string {
 	return res
 	*/
 	return ""
+}
+
+func (app *application) admGetConfig(id string, claims *tokenauth.Claims) (*model.Config, error) {
+	config, err := app.storage.FindConfigByID(id)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeConfig, nil, err)
+	}
+	if config == nil {
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeConfig, &logutils.FieldArgs{"id": id})
+	}
+
+	err = claims.CanAccess(config.AppID, config.OrgID, config.System)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionValidate, "config access", nil, err)
+	}
+
+	return config, nil
+}
+
+func (app *application) admGetConfigs(configType *string, claims *tokenauth.Claims) ([]model.Config, error) {
+	configs, err := app.storage.FindConfigs(configType)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeConfig, nil, err)
+	}
+
+	allowedConfigs := make([]model.Config, 0)
+	for _, config := range configs {
+		if err := claims.CanAccess(config.AppID, config.OrgID, config.System); err == nil {
+			allowedConfigs = append(allowedConfigs, config)
+		}
+	}
+	return allowedConfigs, nil
+}
+
+func (app *application) admCreateConfig(config model.Config, claims *tokenauth.Claims) (*model.Config, error) {
+	// must be a system config if applying to all orgs
+	if config.OrgID == authutils.AllOrgs && !config.System {
+		return nil, errors.ErrorData(logutils.StatusInvalid, "config system status", &logutils.FieldArgs{"config.org_id": authutils.AllOrgs})
+	}
+
+	err := claims.CanAccess(config.AppID, config.OrgID, config.System)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionValidate, "config access", nil, err)
+	}
+
+	config.ID = uuid.NewString()
+	config.DateCreated = time.Now().UTC()
+	err = app.storage.InsertConfig(config)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeConfig, nil, err)
+	}
+	return &config, nil
+}
+
+func (app *application) admUpdateConfig(config model.Config, claims *tokenauth.Claims) error {
+	// must be a system config if applying to all orgs
+	if config.OrgID == authutils.AllOrgs && !config.System {
+		return errors.ErrorData(logutils.StatusInvalid, "config system status", &logutils.FieldArgs{"config.org_id": authutils.AllOrgs})
+	}
+
+	oldConfig, err := app.storage.FindConfig(config.Type, config.AppID, config.OrgID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeConfig, nil, err)
+	}
+	if oldConfig == nil {
+		return errors.ErrorData(logutils.StatusMissing, model.TypeConfig, &logutils.FieldArgs{"type": config.Type, "app_id": config.AppID, "org_id": config.OrgID})
+	}
+
+	// cannot update a system config if not a system admin
+	if !claims.System && oldConfig.System {
+		return errors.ErrorData(logutils.StatusInvalid, "system claim", nil)
+	}
+	err = claims.CanAccess(config.AppID, config.OrgID, config.System)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionValidate, "config access", nil, err)
+	}
+
+	now := time.Now().UTC()
+	config.ID = oldConfig.ID
+	config.DateUpdated = &now
+
+	err = app.storage.UpdateConfig(config)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeConfig, nil, err)
+	}
+	return nil
+}
+
+func (app *application) admDeleteConfig(id string, claims *tokenauth.Claims) error {
+	config, err := app.storage.FindConfigByID(id)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeConfig, nil, err)
+	}
+	if config == nil {
+		return errors.ErrorData(logutils.StatusMissing, model.TypeConfig, &logutils.FieldArgs{"id": id})
+	}
+
+	err = claims.CanAccess(config.AppID, config.OrgID, config.System)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionValidate, "config access", nil, err)
+	}
+
+	err = app.storage.DeleteConfig(id)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeConfig, nil, err)
+	}
+	return nil
 }
 
 func (app *application) adminGetAppConfig(appTypeIdentifier string, orgID *string, versionNumbers model.VersionNumbers, apiKey *string) (*model.ApplicationConfig, error) {
@@ -443,7 +552,7 @@ func (app *application) admGetAppOrgGroups(appID string, orgID string) ([]model.
 	//find application organization groups
 	getAppOrgGroups, err := app.storage.FindAppOrgGroups(appOrg.ID)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeAppOrgGroup, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgGroup, nil, err)
 	}
 
 	return getAppOrgGroups, nil
