@@ -10,3 +10,5 @@ properties:
     type: string
   lastname:
     type: string
+  is_following:
+    type: bool
