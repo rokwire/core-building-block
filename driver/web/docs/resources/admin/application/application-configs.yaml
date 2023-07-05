@@ -1,13 +1,13 @@
 get:
   tags:
-  - System
+  - Admin
   summary: Reads app configs
   description: |
     If version is provided, the app config for the highest version that is equal to or less than this value will be returned as the only item in the list.
     Otherwise it will return a list of all app config versions for the given app_type_id. If org_id is provided, the configs for that organization will
     be returned, otherwise the default configs will be returned.
 
-    **Auth:** Requires system access token with `get_app-configs`, `update_app-configs`, `delete_app-configs`, or `all_app-configs` permission
+    **Auth:** Requires admin access token with `get_app-configs`, `update_app-configs`, `delete_app-configs`, or `all_app-configs` permission
   security:
     - bearerAuth: []
   parameters:
@@ -47,12 +47,12 @@ get:
       description: Internal error
 post:
   tags:
-  - System
+  - Admin
   summary: Creates app configs
   description: |
     Creates a new app config
 
-    **Auth:** Requires system access token with `update_app-configs` or `all_app-configs` permission
+    **Auth:** Requires admin access token with `update_app-configs` or `all_app-configs` permission
   security:
     - bearerAuth: []
   requestBody:
