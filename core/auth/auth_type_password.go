@@ -45,7 +45,7 @@ type passwordAuthImpl struct {
 	authType string
 }
 
-func (a *passwordAuthImpl) signUp(identifierImpl identifierType, appName string, creds authCreds, params string, newCredentialID string) (string, map[string]interface{}, error) {
+func (a *passwordAuthImpl) signUp(identifierImpl identifierType, appName string, creds authCreds, params string, config map[string]interface{}, newCredentialID string) (string, map[string]interface{}, error) {
 	passwordParams, err := identifierImpl.parseParams(params)
 	if err != nil {
 		return "", nil, errors.ErrorData(logutils.StatusInvalid, "password params", nil)
@@ -165,7 +165,7 @@ func (a *passwordAuthImpl) resetCredential(credential authCreds, resetCode *stri
 	return credsMap, nil
 }
 
-func (a *passwordAuthImpl) checkCredential(identifierImpl identifierType, credential *model.Credential, incomingCreds authCreds, appName string) (string, error) {
+func (a *passwordAuthImpl) checkCredential(identifierImpl identifierType, credential *model.Credential, incomingCreds authCreds, displayName string, appName string, config map[string]interface{}) (string, error) {
 	if credential == nil {
 		return "", errors.ErrorData(logutils.StatusMissing, model.TypeCredential, nil)
 	}

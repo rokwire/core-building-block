@@ -627,7 +627,7 @@ func (a *Auth) applyAuthType(supportedAuthType model.SupportedAuthType, appOrg m
 			regProfile.Phone = userIdentifier
 		} else if supportedAuthType.AuthType.Code == IdentifierTypeEmail && regProfile.Email == "" {
 			regProfile.Email = userIdentifier
-		} else if supportedAuthType.AuthType.Code == IdentifierTypeUsername || supportedAuthType.AuthType.Code == authTypeWebAuthn {
+		} else if supportedAuthType.AuthType.Code == IdentifierTypeUsername || supportedAuthType.AuthType.Code == AuthTypeWebAuthn {
 			username = userIdentifier
 		}
 	}
@@ -718,7 +718,7 @@ func (a *Auth) checkCredentialVerified(identifierImpl identifierType, credential
 }
 
 func (a *Auth) checkCredentials(identifierImpl identifierType, accountAuthType model.AccountAuthType, creds string) (string, error) {
-	authImpl, identifierCreds, err := a.getAuthTypeImpl(identifierImpl, accountAuthType.Credential, &creds)
+	authImpl, identifierCreds, err := a.getAuthTypeImpl(identifierImpl, accountAuthType.Credential, nil)
 	if err != nil {
 		return "", errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeAuthType, nil, err)
 	}
@@ -736,7 +736,11 @@ func (a *Auth) checkCredentials(identifierImpl identifierType, accountAuthType m
 	if err != nil {
 		return "", errors.WrapErrorAction(logutils.ActionParse, model.TypeCredential, nil, err)
 	}
-	message, err := authImpl.checkCredential(identifierImpl, accountAuthType.Credential, incomingCreds, accountAuthType.Account.AppOrg.Application.Name)
+	if credType, cred := incomingCreds.getCredential(); len(credType) == 0 || len(cred) == 0 {
+		return "", errors.ErrorData(logutils.StatusMissing, "incoming credential", logutils.StringArgs(identifierCreds.identifier()))
+	}
+	message, err := authImpl.checkCredential(identifierImpl, accountAuthType.Credential, incomingCreds, accountAuthType.Account.Profile.GetFullName(),
+		accountAuthType.Account.AppOrg.Application.Name, accountAuthType.SupportedAuthType.Params)
 	if err != nil {
 		return message, errors.WrapErrorAction(logutils.ActionValidate, model.TypeCredential, nil, err)
 	}
@@ -853,7 +857,7 @@ func (a *Auth) signUpNewAccount(context storage.TransactionContext, identifierIm
 		}
 		if creatorPermissions == nil {
 			var message string
-			message, credentialValue, err = authImpl.signUp(identifierImpl, appOrg.Application.Name, identifierCreds, params, credID)
+			message, credentialValue, err = authImpl.signUp(identifierImpl, appOrg.Application.Name, identifierCreds, params, supportedAuthType.Params, credID)
 			if err != nil {
 				return nil, nil, errors.WrapErrorAction("signing up", "user", nil, err)
 			}
@@ -1662,7 +1666,7 @@ func (a *Auth) linkAccountAuthType(account model.Account, supportedAuthType mode
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeAuthType, nil, err)
 	}
-	message, credentialValue, err := authImpl.signUp(identifierImpl, appOrg.Application.Name, identifierCreds, params, credID)
+	message, credentialValue, err := authImpl.signUp(identifierImpl, appOrg.Application.Name, identifierCreds, params, supportedAuthType.Params, credID)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction("signing up", "user", nil, err)
 	}

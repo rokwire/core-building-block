@@ -39,6 +39,7 @@ const (
 type emailCreds struct {
 	Email              string     `json:"email" bson:"email" validate:"required"`
 	Password           *string    `json:"password" bson:"password,omitempty"`
+	Response           *string    `json:"response"`
 	Code               *string    `json:"code" bson:"code,omitempty"`
 	VerificationCode   string     `json:"verification_code" bson:"verification_code"`
 	VerificationExpiry *time.Time `json:"verification_expiry" bson:"verification_expiry"`
@@ -102,11 +103,14 @@ func (c *emailCreds) toMap() (map[string]interface{}, error) {
 
 type emailParams struct {
 	ConfirmPassword *string `json:"confirm_password"`
+	DisplayName     *string `json:"display_name"`
 }
 
 func (p *emailParams) parameter() (string, string) {
 	if p.ConfirmPassword != nil {
 		return AuthTypePassword, *p.ConfirmPassword
+	} else if p.DisplayName != nil {
+		return AuthTypeWebAuthn, *p.DisplayName
 	}
 	return "", ""
 }
@@ -136,9 +140,6 @@ func (a *emailIdentifierImpl) parseCreds(creds string) (authCreds, error) {
 
 	if len(credential.Email) == 0 {
 		return nil, errors.ErrorData(logutils.StatusMissing, typeEmailCreds, logutils.StringArgs("email"))
-	}
-	if credType, cred := credential.getCredential(); len(credType) == 0 || len(cred) == 0 {
-		return nil, errors.ErrorData(logutils.StatusMissing, typeEmailCreds, logutils.StringArgs("credential"))
 	}
 
 	return &credential, nil

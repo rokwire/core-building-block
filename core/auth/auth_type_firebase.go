@@ -32,7 +32,7 @@ type firebaseAuthImpl struct {
 	authType string
 }
 
-func (a *firebaseAuthImpl) signUp(identifierImpl identifierType, appName string, creds authCreds, params string, newCredentialID string) (string, map[string]interface{}, error) {
+func (a *firebaseAuthImpl) signUp(identifierImpl identifierType, appName string, creds authCreds, params string, config map[string]interface{}, newCredentialID string) (string, map[string]interface{}, error) {
 	return "", nil, nil
 }
 
@@ -48,7 +48,7 @@ func (a *firebaseAuthImpl) resetCredential(credential authCreds, resetCode *stri
 	return nil, nil
 }
 
-func (a *firebaseAuthImpl) checkCredential(identifierImpl identifierType, storedCreds *model.Credential, incomingCreds authCreds, appName string) (string, error) {
+func (a *firebaseAuthImpl) checkCredential(identifierImpl identifierType, storedCreds *model.Credential, incomingCreds authCreds, displayName string, appName string, config map[string]interface{}) (string, error) {
 	return "", nil
 }
 

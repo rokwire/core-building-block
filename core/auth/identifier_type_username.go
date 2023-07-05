@@ -35,6 +35,7 @@ const (
 type usernameCreds struct {
 	Username string  `json:"username" bson:"username" validate:"required"`
 	Password *string `json:"password" bson:"password,omitempty"`
+	Response *string `json:"response"`
 	Code     *string `json:"code" bson:"code,omitempty"`
 }
 
@@ -86,11 +87,14 @@ func (c *usernameCreds) toMap() (map[string]interface{}, error) {
 
 type usernameParams struct {
 	ConfirmPassword *string `json:"confirm_password"`
+	DisplayName     *string `json:"display_name"`
 }
 
 func (p *usernameParams) parameter() (string, string) {
 	if p.ConfirmPassword != nil {
 		return AuthTypePassword, *p.ConfirmPassword
+	} else if p.DisplayName != nil {
+		return AuthTypeWebAuthn, *p.DisplayName
 	}
 	return "", ""
 }
@@ -120,9 +124,6 @@ func (a *usernameIdentifierImpl) parseCreds(creds string) (authCreds, error) {
 
 	if len(credential.Username) == 0 {
 		return nil, errors.ErrorData(logutils.StatusMissing, typeUsernameCreds, logutils.StringArgs("username"))
-	}
-	if credType, cred := credential.getCredential(); len(credType) == 0 || len(cred) == 0 {
-		return nil, errors.ErrorData(logutils.StatusMissing, typeUsernameCreds, logutils.StringArgs("credential"))
 	}
 
 	return &credential, nil

@@ -46,6 +46,7 @@ type phoneCreds struct {
 	Phone    string  `json:"phone" bson:"phone" validate:"required"`
 	Code     *string `json:"code"`
 	Password *string `json:"password" bson:"password,omitempty"`
+	Response *string `json:"response"`
 }
 
 func (c *phoneCreds) identifier() string {
