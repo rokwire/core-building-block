@@ -2192,7 +2192,7 @@ func (a *Auth) getAuthTypeImpl(identifierImpl identifierType, credential *model.
 		return nil, nil, errors.ErrorData(logutils.StatusMissing, "credentials", nil)
 	}
 
-	_, credType := identifierCreds.getCredential()
+	credType, _ := identifierCreds.getCredential()
 	if auth, ok := a.authTypes[credType]; ok {
 		return auth, identifierCreds, nil
 	}

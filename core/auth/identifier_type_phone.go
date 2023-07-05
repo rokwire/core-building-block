@@ -58,6 +58,8 @@ func (c *phoneCreds) getCredential() (string, string) {
 		return AuthTypeCode, *c.Code
 	} else if c.Password != nil {
 		return AuthTypePassword, *c.Password
+	} else if c.Response != nil {
+		return AuthTypeWebAuthn, *c.Response
 	}
 	return "", ""
 }
@@ -67,6 +69,8 @@ func (c *phoneCreds) setCredential(value string, credType string) {
 		c.Code = &value
 	} else if credType == AuthTypePassword {
 		c.Password = &value
+	} else if credType == AuthTypeWebAuthn {
+		c.Response = &value
 	}
 }
 

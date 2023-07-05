@@ -54,6 +54,8 @@ func (c *emailCreds) identifier() string {
 func (c *emailCreds) getCredential() (string, string) {
 	if c.Password != nil {
 		return AuthTypePassword, *c.Password
+	} else if c.Response != nil {
+		return AuthTypeWebAuthn, *c.Response
 	} else if c.Code != nil {
 		return AuthTypeCode, *c.Code
 	}
@@ -63,6 +65,8 @@ func (c *emailCreds) getCredential() (string, string) {
 func (c *emailCreds) setCredential(value string, credType string) {
 	if credType == AuthTypePassword {
 		c.Password = &value
+	} else if credType == AuthTypeWebAuthn {
+		c.Response = &value
 	} else if credType == AuthTypeCode {
 		c.Code = &value
 	}
