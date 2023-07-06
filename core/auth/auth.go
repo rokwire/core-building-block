@@ -2156,7 +2156,7 @@ func (a *Auth) validateAuthTypeForAppOrg(authenticationType string, appID string
 }
 
 // TODO: update auth type model, add identifier types, verification types?
-func (a *Auth) getIdentifierTypeImpl(authType model.AuthType) (identifierType, error) {
+func (a *Auth) getIdentifierTypeImpl(credential *model.Credential, creds *string, authType model.AuthType) (identifierType, authCreds, error) {
 	key := authType.Code
 
 	//twilio_phone
@@ -2165,13 +2165,32 @@ func (a *Auth) getIdentifierTypeImpl(authType model.AuthType) (identifierType, e
 	}
 
 	if identifier, ok := a.identifierTypes[key]; ok {
-		return identifier, nil
+		return identifier, nil, nil
 	}
 
-	return nil, errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, logutils.StringArgs(key))
+	var identifierCreds authCreds
+	var err error
+	for _, identifierImpl := range a.identifierTypes {
+		if credential != nil {
+			identifierCreds, err = identifierImpl.mapToCreds(credential.Value)
+		} else if creds != nil {
+			identifierCreds, err = identifierImpl.parseCreds(*creds)
+		}
+		if err == nil {
+			return identifierImpl, identifierCreds, nil
+		}
+	}
+
+	return nil, nil, errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, logutils.StringArgs(key))
 }
 
-func (a *Auth) getAuthTypeImpl(identifierImpl identifierType, credential *model.Credential, creds *string) (authType, authCreds, error) {
+func (a *Auth) getAuthTypeImpl(identifierImpl identifierType, credential *model.Credential, creds *string, authType *model.AuthType) (authType, authCreds, error) {
+	if authType != nil {
+		if auth, ok := a.authTypes[authType.Code]; ok {
+			return auth, nil, nil
+		}
+	}
+
 	if identifierImpl == nil {
 		return nil, nil, errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, nil)
 	}
@@ -2198,6 +2217,20 @@ func (a *Auth) getAuthTypeImpl(identifierImpl identifierType, credential *model.
 	}
 
 	return nil, nil, errors.ErrorData(logutils.StatusInvalid, model.TypeAuthType, logutils.StringArgs(credType))
+}
+
+func (a *Auth) getIdentifierAndAuthTypeImpls(credential *model.Credential, creds *string, auth model.AuthType) (identifierType, authType, authCreds, error) {
+	identifierImpl, identifierCreds, err := a.getIdentifierTypeImpl(credential, creds, auth)
+	if err != nil {
+		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeIdentifierType, nil, err)
+	}
+
+	authImpl, identifierCreds, err := a.getAuthTypeImpl(identifierImpl, credential, creds, &auth)
+	if err != nil {
+		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeAuthType, nil, err)
+	}
+
+	return identifierImpl, authImpl, identifierCreds, nil
 }
 
 func (a *Auth) getExternalAuthTypeImpl(authType model.AuthType) (externalAuthType, error) {

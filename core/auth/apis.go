@@ -928,18 +928,13 @@ func (a *Auth) UpdateCredential(accountID string, accountAuthTypeID string, para
 
 	credential := accountAuthType.Credential
 	//Determine the auth type for resetPassword
-	authType := accountAuthType.SupportedAuthType.AuthType
-	if !authType.UseCredentials {
+	if !accountAuthType.SupportedAuthType.AuthType.UseCredentials {
 		return errors.ErrorData(logutils.StatusInvalid, model.TypeAuthType, logutils.StringArgs("reset password"))
 	}
 
-	identifierImpl, err := a.getIdentifierTypeImpl(authType)
+	_, authImpl, identifierCreds, err := a.getIdentifierAndAuthTypeImpls(credential, nil, accountAuthType.SupportedAuthType.AuthType)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeAuthType, nil, err)
-	}
-	authImpl, identifierCreds, err := a.getAuthTypeImpl(identifierImpl, credential, nil)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeAuthType, nil, err)
+		return errors.WrapErrorAction(logutils.ActionGet, "identifier and auth types", nil, err)
 	}
 
 	authTypeCreds, err := authImpl.resetCredential(identifierCreds, nil, params)
@@ -982,13 +977,9 @@ func (a *Auth) ResetForgotCredential(credsID string, resetCode string, params st
 		return errors.ErrorData(logutils.StatusInvalid, model.TypeAuthType, logutils.StringArgs("reset forgot credential"))
 	}
 
-	identifierImpl, err := a.getIdentifierTypeImpl(*authType)
+	_, authImpl, identifierCreds, err := a.getIdentifierAndAuthTypeImpls(credential, nil, *authType)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeAuthType, nil, err)
-	}
-	authImpl, identifierCreds, err := a.getAuthTypeImpl(identifierImpl, credential, nil)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeAuthType, nil, err)
+		return errors.WrapErrorAction(logutils.ActionGet, "identifier and auth types", nil, err)
 	}
 
 	authTypeCreds, err := authImpl.resetCredential(identifierCreds, &resetCode, params)
@@ -1038,10 +1029,6 @@ func (a *Auth) ForgotCredential(authenticationType string, appTypeIdentifier str
 		return errors.ErrorData(logutils.StatusInvalid, model.TypeAuthType, logutils.StringArgs("credential reset"))
 	}
 
-	identifierImpl, err := a.getIdentifierTypeImpl(authType.AuthType)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionLoadCache, typeIdentifierType, nil, err)
-	}
 	authTypeID := authType.AuthType.ID
 
 	//Find the credential for setting reset code and expiry and sending credID in reset link
@@ -1060,9 +1047,9 @@ func (a *Auth) ForgotCredential(authenticationType string, appTypeIdentifier str
 	}
 	a.setLogContext(account, l)
 
-	authImpl, identifierCreds, err := a.getAuthTypeImpl(identifierImpl, credential, nil)
+	identifierImpl, authImpl, identifierCreds, err := a.getIdentifierAndAuthTypeImpls(credential, nil, authType.AuthType)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeAuthType, nil, err)
+		return errors.WrapErrorAction(logutils.ActionGet, "identifier and auth types", nil, err)
 	}
 	//do not allow to reset credential for unverified credentials
 	err = a.checkCredentialVerified(identifierImpl, credential, identifierCreds, appOrg.Application.Name)
