@@ -369,6 +369,26 @@ func (s *administrationImpl) AdmGetAppConfig(appTypeIdentifier string, orgID *st
 	return s.app.adminGetAppConfig(appTypeIdentifier, orgID, versionNumbers, apiKey)
 }
 
+func (s *administrationImpl) AdmGetAppConfigs(appTypeID string, orgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error) {
+	return s.app.admGetAppConfigs(appTypeID, orgID, versionNumbers)
+}
+
+func (s *administrationImpl) AdmGetAppConfigByID(id string) (*model.ApplicationConfig, error) {
+	return s.app.admGetAppConfigByID(id)
+}
+
+func (s *administrationImpl) AdmCreateAppConfig(appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error) {
+	return s.app.admCreateAppConfig(appTypeID, orgID, data, versionNumbers)
+}
+
+func (s *administrationImpl) AdmUpdateAppConfig(id string, appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) error {
+	return s.app.admUpdateAppConfig(id, appTypeID, orgID, data, versionNumbers)
+}
+
+func (s *administrationImpl) AdmDeleteAppConfig(id string) error {
+	return s.app.admDeleteAppConfig(id)
+}
+
 func (s *administrationImpl) AdmGetApplications(orgID string) ([]model.Application, error) {
 	return s.app.admGetApplications(orgID)
 }
@@ -589,26 +609,6 @@ func (s *systemImpl) SysCreatePermission(name string, description *string, servi
 
 func (s *systemImpl) SysUpdatePermission(name string, description *string, serviceID *string, assigners *[]string) (*model.Permission, error) {
 	return s.app.sysUpdatePermission(name, description, serviceID, assigners)
-}
-
-func (s *systemImpl) SysGetAppConfigs(appTypeID string, orgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error) {
-	return s.app.sysGetAppConfigs(appTypeID, orgID, versionNumbers)
-}
-
-func (s *systemImpl) SysGetAppConfig(id string) (*model.ApplicationConfig, error) {
-	return s.app.sysGetAppConfig(id)
-}
-
-func (s *systemImpl) SysCreateAppConfig(appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error) {
-	return s.app.sysCreateAppConfig(appTypeID, orgID, data, versionNumbers)
-}
-
-func (s *systemImpl) SysUpdateAppConfig(id string, appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) error {
-	return s.app.sysUpdateAppConfig(id, appTypeID, orgID, data, versionNumbers)
-}
-
-func (s *systemImpl) SysDeleteAppConfig(id string) error {
-	return s.app.sysDeleteAppConfig(id)
 }
 
 func (s *systemImpl) SysCreateAuthTypes(code string, description string, isExternal bool, isAnonymous bool, useCredentials bool, ignoreMFA bool, params map[string]interface{}) (*model.AuthType, error) {

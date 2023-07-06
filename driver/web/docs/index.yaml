@@ -123,6 +123,10 @@ paths:
     $ref: "./resources/admin/application/accounts/roles.yaml"
   /admin/application/accounts/{id}/system-configs:
     $ref: "./resources/admin/application/accounts/system-configs.yaml"
+  /admin/application/configs:
+    $ref: "./resources/admin/application/configs.yaml"
+  /admin/application/configs/{id}:
+    $ref: "./resources/admin/application/configsId.yaml"
   /admin/application/filter/accounts:
     $ref: "./resources/admin/application/filter/accounts.yaml"
   /admin/application/filter/accounts/count:
@@ -207,10 +211,6 @@ paths:
     $ref: "./resources/system/applications.yaml"
   /system/permissions:
     $ref: "./resources/system/permissions.yaml"
-  /system/application/configs:
-    $ref: "./resources/system/application-configs.yaml"
-  /system/application/configs/{id}:
-    $ref: "./resources/system/application-configsId.yaml"
   /system/api-keys:
     $ref: "./resources/system/api-keys.yaml"
   /system/auth-types:

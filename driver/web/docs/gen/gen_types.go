@@ -1206,6 +1206,13 @@ type PutAdminApplicationAccountsIdSystemConfigsParams struct {
 	CreateAnonymous *bool `form:"create-anonymous,omitempty" json:"create-anonymous,omitempty"`
 }
 
+// GetAdminApplicationConfigsParams defines parameters for GetAdminApplicationConfigs.
+type GetAdminApplicationConfigsParams struct {
+	AppTypeId string  `form:"app_type_id" json:"app_type_id"`
+	OrgId     *string `form:"org_id,omitempty" json:"org_id,omitempty"`
+	Version   *string `form:"version,omitempty" json:"version,omitempty"`
+}
+
 // PostAdminApplicationFilterAccountsJSONBody defines parameters for PostAdminApplicationFilterAccounts.
 type PostAdminApplicationFilterAccountsJSONBody = map[string]interface{}
 
@@ -1388,13 +1395,6 @@ type GetSystemAppOrgsParams struct {
 	OrgId *string `form:"org_id,omitempty" json:"org_id,omitempty"`
 }
 
-// GetSystemApplicationConfigsParams defines parameters for GetSystemApplicationConfigs.
-type GetSystemApplicationConfigsParams struct {
-	AppTypeId string  `form:"app_type_id" json:"app_type_id"`
-	OrgId     *string `form:"org_id,omitempty" json:"org_id,omitempty"`
-	Version   *string `form:"version,omitempty" json:"version,omitempty"`
-}
-
 // GetSystemAuthAppOrgTokenParams defines parameters for GetSystemAuthAppOrgToken.
 type GetSystemAuthAppOrgTokenParams struct {
 	// AppId The application ID of the token to return
@@ -1569,6 +1569,12 @@ type PutAdminApplicationAccountsIdRolesJSONRequestBody = AdminReqGrantRolesToAcc
 // PutAdminApplicationAccountsIdSystemConfigsJSONRequestBody defines body for PutAdminApplicationAccountsIdSystemConfigs for application/json ContentType.
 type PutAdminApplicationAccountsIdSystemConfigsJSONRequestBody = PutAdminApplicationAccountsIdSystemConfigsJSONBody
 
+// PostAdminApplicationConfigsJSONRequestBody defines body for PostAdminApplicationConfigs for application/json ContentType.
+type PostAdminApplicationConfigsJSONRequestBody = ApplicationConfig
+
+// PutAdminApplicationConfigsIdJSONRequestBody defines body for PutAdminApplicationConfigsId for application/json ContentType.
+type PutAdminApplicationConfigsIdJSONRequestBody = ApplicationConfig
+
 // PostAdminApplicationFilterAccountsJSONRequestBody defines body for PostAdminApplicationFilterAccounts for application/json ContentType.
 type PostAdminApplicationFilterAccountsJSONRequestBody = PostAdminApplicationFilterAccountsJSONBody
 
@@ -1724,12 +1730,6 @@ type PostSystemAppOrgsJSONRequestBody = ApplicationOrganization
 
 // PutSystemAppOrgsIdJSONRequestBody defines body for PutSystemAppOrgsId for application/json ContentType.
 type PutSystemAppOrgsIdJSONRequestBody = ApplicationOrganization
-
-// PostSystemApplicationConfigsJSONRequestBody defines body for PostSystemApplicationConfigs for application/json ContentType.
-type PostSystemApplicationConfigsJSONRequestBody = ApplicationConfig
-
-// PutSystemApplicationConfigsIdJSONRequestBody defines body for PutSystemApplicationConfigsId for application/json ContentType.
-type PutSystemApplicationConfigsIdJSONRequestBody = ApplicationConfig
 
 // PostSystemApplicationsJSONRequestBody defines body for PostSystemApplications for application/json ContentType.
 type PostSystemApplicationsJSONRequestBody = Application
