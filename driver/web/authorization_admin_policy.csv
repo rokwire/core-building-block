@@ -76,3 +76,12 @@ p, update_account-auth-groups, /core/admin/application/groups, (GET),
 p, all_account-system-configs, /core/admin/application/accounts/*/system-configs, (GET)|(POST)|(PUT)|(DELETE), All account system config actions
 p, get_account-system-configs, /core/admin/application/accounts/*/system-configs, (GET), Get account system configs
 p, update_account-system-configs, /core/admin/application/accounts/*/system-configs, (PUT), Update account system configs
+
+p, all_app-configs, /core/admin/application/configs, (GET)|(POST)|(PUT)|(DELETE), All app config actions
+p, all_app-configs, /core/admin/application/configs/*, (GET)|(POST)|(PUT)|(DELETE), All app config actions
+p, get_app-configs, /core/admin/application/configs, (GET), Get app configs
+p, get_app-configs, /core/admin/application/configs/*, (GET),
+p, update_app-configs, /core/admin/application/configs, (GET)|(POST), Update and create app configs
+p, update_app-configs, /core/admin/application/configs/*, (GET)|(PUT),
+p, delete_app-config, /core/admin/application/configs/*, (GET)|(DELETE), Delete app configs
+p, delete_app-config, /core/admin/application/configs, (GET),

@@ -768,7 +768,7 @@ func (h AdminApisHandler) getApplicationConfigs(l *logs.Log, r *http.Request, cl
 		return l.HTTPResponseErrorData(logutils.StatusInvalid, logutils.TypeQueryParam, logutils.StringArgs("version"), nil, http.StatusBadRequest, false)
 	}
 
-	appConfigs, err := h.coreAPIs.System.SysGetAppConfigs(appTypeIdentifier, orgIDRef, versionNumbers)
+	appConfigs, err := h.coreAPIs.Administration.AdmGetAppConfigs(appTypeIdentifier, orgIDRef, versionNumbers)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionGet, model.TypeApplicationConfig, nil, err, http.StatusInternalServerError, true)
 	}
@@ -790,7 +790,7 @@ func (h AdminApisHandler) getApplicationConfig(l *logs.Log, r *http.Request, cla
 		return l.HTTPResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
 	}
 
-	appConfig, err := h.coreAPIs.System.SysGetAppConfig(ID)
+	appConfig, err := h.coreAPIs.Administration.AdmGetAppConfigByID(ID)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUpdate, model.TypeApplicationConfig, nil, err, http.StatusInternalServerError, true)
 	}
@@ -825,7 +825,7 @@ func (h AdminApisHandler) createApplicationConfig(l *logs.Log, r *http.Request, 
 		return l.HTTPResponseErrorData(logutils.StatusInvalid, model.TypeVersionNumbers, nil, nil, http.StatusBadRequest, false)
 	}
 
-	_, err = h.coreAPIs.System.SysCreateAppConfig(requestData.AppTypeId, requestData.OrgId, requestData.Data, *version)
+	_, err = h.coreAPIs.Administration.AdmCreateAppConfig(requestData.AppTypeId, requestData.OrgId, requestData.Data, *version)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionCreate, model.TypeApplicationConfig, nil, err, http.StatusBadRequest, true)
 	}
@@ -863,7 +863,7 @@ func (h AdminApisHandler) updateApplicationConfig(l *logs.Log, r *http.Request, 
 		return l.HTTPResponseErrorData(logutils.StatusInvalid, model.TypeVersionNumbers, nil, nil, http.StatusBadRequest, false)
 	}
 
-	err = h.coreAPIs.System.SysUpdateAppConfig(ID, requestData.AppTypeId, requestData.OrgId, requestData.Data, *version)
+	err = h.coreAPIs.Administration.AdmUpdateAppConfig(ID, requestData.AppTypeId, requestData.OrgId, requestData.Data, *version)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUpdate, model.TypeApplicationConfig, nil, err, http.StatusInternalServerError, true)
 	}
@@ -878,7 +878,7 @@ func (h AdminApisHandler) deleteApplicationConfig(l *logs.Log, r *http.Request, 
 		return l.HTTPResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
 	}
 
-	err := h.coreAPIs.System.SysDeleteAppConfig(ID)
+	err := h.coreAPIs.Administration.AdmDeleteAppConfig(ID)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUpdate, model.TypeApplicationConfig, nil, err, http.StatusInternalServerError, true)
 	}

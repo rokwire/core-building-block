@@ -95,6 +95,11 @@ type Administration interface {
 	AdmGetApplicationAccountDevices(appID string, orgID string, accountID string, l *logs.Log) ([]model.Device, error)
 
 	AdmGetAppConfig(appTypeIdentifier string, orgID *string, versionNumbers model.VersionNumbers, apiKey *string) (*model.ApplicationConfig, error)
+	AdmGetAppConfigs(appTypeID string, orgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error)
+	AdmGetAppConfigByID(id string) (*model.ApplicationConfig, error)
+	AdmCreateAppConfig(appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error)
+	AdmUpdateAppConfig(id string, appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) error
+	AdmDeleteAppConfig(id string) error
 }
 
 // Encryption exposes APIs for the Encryption building block
@@ -135,12 +140,6 @@ type System interface {
 
 	SysCreatePermission(name string, description *string, serviceID *string, assigners *[]string) (*model.Permission, error)
 	SysUpdatePermission(name string, description *string, serviceID *string, assigners *[]string) (*model.Permission, error)
-
-	SysGetAppConfigs(appTypeID string, orgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error)
-	SysGetAppConfig(id string) (*model.ApplicationConfig, error)
-	SysCreateAppConfig(appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error)
-	SysUpdateAppConfig(id string, appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) error
-	SysDeleteAppConfig(id string) error
 
 	SysCreateAuthTypes(code string, description string, isExternal bool, isAnonymous bool, useCredentials bool, ignoreMFA bool, params map[string]interface{}) (*model.AuthType, error)
 	SysGetAuthTypes() ([]model.AuthType, error)
