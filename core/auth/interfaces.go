@@ -39,7 +39,7 @@ type identifierType interface {
 
 	mapToCreds(credsMap map[string]interface{}) (authCreds, error)
 
-	buildCredential(identifier string, credential string, credType string) authCreds
+	buildCredential(identifier string, credential string, key string) authCreds
 
 	//verifies credential (checks the verification code generated on email signup for email auth type)
 	// Returns:
@@ -70,7 +70,8 @@ type authType interface {
 	// Returns:
 	//	message (string): Success message if verification is required. If verification is not required, return ""
 	//	credentialValue (map): Credential value
-	signUp(identifierImpl identifierType, appName string, creds authCreds, params string, config map[string]interface{}, newCredentialID string) (string, map[string]interface{}, error)
+	//	verified (bool): Whether the credential is verified
+	signUp(identifierImpl identifierType, appName string, creds authCreds, params string, config map[string]interface{}, newCredentialID string) (string, map[string]interface{}, bool, error)
 
 	//signUpAdmin signs up a new admin user
 	// Returns:
@@ -92,9 +93,9 @@ type authType interface {
 
 type authCreds interface {
 	identifier() string
-	getCredential() (string, string)
-	setCredential(value string, credType string)
-	//TODO: use type?
+	getAuthType() string
+	getCredential(key string) string
+	setCredential(value string, key string)
 	getVerificationParams() (string, *time.Time)
 	setVerificationParams(code string, expiry *time.Time)
 	getResetParams() (string, *time.Time)
@@ -103,7 +104,7 @@ type authCreds interface {
 }
 
 type authParams interface {
-	parameter() (string, string)
+	parameter(key string) string
 }
 
 // externalAuthType is the interface for authentication for auth types which are external for the system(the users comes from external system).

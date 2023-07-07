@@ -29,6 +29,8 @@ const (
 	//AuthTypePassword password auth type
 	AuthTypePassword string = "password"
 
+	credentialKeyPassword string = "password"
+	parameterKeyPassword  string = "password"
 	typePasswordResetCode string = "password reset code"
 
 	typePasswordResetParams logutils.MessageDataType = "password reset params"
@@ -45,45 +47,45 @@ type passwordAuthImpl struct {
 	authType string
 }
 
-func (a *passwordAuthImpl) signUp(identifierImpl identifierType, appName string, creds authCreds, params string, config map[string]interface{}, newCredentialID string) (string, map[string]interface{}, error) {
+func (a *passwordAuthImpl) signUp(identifierImpl identifierType, appName string, creds authCreds, params string, config map[string]interface{}, newCredentialID string) (string, map[string]interface{}, bool, error) {
 	passwordParams, err := identifierImpl.parseParams(params)
 	if err != nil {
-		return "", nil, errors.ErrorData(logutils.StatusInvalid, "password params", nil)
+		return "", nil, false, errors.ErrorData(logutils.StatusInvalid, "password params", nil)
 	}
 
-	credType, cred := creds.getCredential()
-	if credType != AuthTypePassword {
-		return "", nil, errors.ErrorData(logutils.StatusInvalid, "credential type", logutils.StringArgs(credType))
+	cred := creds.getCredential(credentialKeyPassword)
+	if cred == "" {
+		return "", nil, false, errors.ErrorData(logutils.StatusMissing, logutils.MessageDataType(credentialKeyPassword), nil)
 	}
 	if passwordParams != nil {
-		confirmCredType, confirmCred := passwordParams.parameter()
-		if confirmCredType != AuthTypePassword {
-			return "", nil, errors.ErrorData(logutils.StatusInvalid, "confirmation credential type", logutils.StringArgs(confirmCredType))
+		confirmCred := passwordParams.parameter(parameterKeyPassword)
+		if confirmCred == "" {
+			return "", nil, false, errors.ErrorData(logutils.StatusMissing, "confirmation password", nil)
 		}
 		if cred != confirmCred {
-			return "", nil, errors.ErrorData(logutils.StatusInvalid, "mismatching credentials", nil)
+			return "", nil, false, errors.ErrorData(logutils.StatusInvalid, "mismatching credentials", nil)
 		}
 	}
 
-	message, credsMap, err := a.generateCredential(identifierImpl, appName, creds.identifier(), cred, newCredentialID)
+	message, credsMap, verified, err := a.generateCredential(identifierImpl, appName, creds.identifier(), cred, newCredentialID)
 	if err != nil {
-		return "", nil, errors.WrapErrorAction("building", "password credentials", nil, err)
+		return "", nil, false, errors.WrapErrorAction("building", "password credentials", nil, err)
 	}
 
-	return message, credsMap, nil
+	return message, credsMap, verified, nil
 }
 
 func (a *passwordAuthImpl) signUpAdmin(identifierImpl identifierType, appName string, creds authCreds, newCredentialID string) (map[string]interface{}, map[string]interface{}, error) {
-	credType, cred := creds.getCredential()
-	if credType != AuthTypePassword {
-		return nil, nil, errors.ErrorData(logutils.StatusInvalid, "credential type", logutils.StringArgs(credType))
+	cred := creds.getCredential(credentialKeyPassword)
+	if cred == "" {
+		return nil, nil, errors.ErrorData(logutils.StatusMissing, logutils.MessageDataType(credentialKeyPassword), nil)
 	}
 
 	if cred == "" {
 		cred = utils.GenerateRandomPassword(12)
 	}
 
-	_, credsMap, err := a.generateCredential(identifierImpl, appName, creds.identifier(), cred, newCredentialID)
+	_, credsMap, _, err := a.generateCredential(identifierImpl, appName, creds.identifier(), cred, newCredentialID)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction("building", "password credentials", nil, err)
 	}
@@ -156,7 +158,7 @@ func (a *passwordAuthImpl) resetCredential(credential authCreds, resetCode *stri
 	}
 
 	//Update verification data
-	credential.setCredential(string(hashedPassword), AuthTypePassword)
+	credential.setCredential(string(hashedPassword), credentialKeyPassword)
 	credsMap, err := credential.toMap()
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCast, "map from password creds", nil, err)
@@ -174,10 +176,10 @@ func (a *passwordAuthImpl) checkCredential(identifierImpl identifierType, creden
 		return "", errors.WrapErrorAction(logutils.ActionCast, "map to password creds", nil, err)
 	}
 
-	storedCredType, storedCred := storedCreds.getCredential()
-	incomingCredType, incomingCred := incomingCreds.getCredential()
-	if storedCredType != AuthTypePassword || incomingCredType != AuthTypePassword {
-		return "", errors.ErrorData(logutils.StatusInvalid, "mismatching credential types", nil)
+	storedCred := storedCreds.getCredential(credentialKeyPassword)
+	incomingCred := incomingCreds.getCredential(credentialKeyPassword)
+	if storedCred == "" || incomingCred == "" {
+		return "", errors.ErrorData(logutils.StatusMissing, "stored or incoming password", nil)
 	}
 
 	//compare stored and requets ones
@@ -191,25 +193,25 @@ func (a *passwordAuthImpl) checkCredential(identifierImpl identifierType, creden
 
 // Helpers
 
-func (a *passwordAuthImpl) generateCredential(identifierImpl identifierType, appName string, identifier string, password string, credID string) (string, map[string]interface{}, error) {
+func (a *passwordAuthImpl) generateCredential(identifierImpl identifierType, appName string, identifier string, password string, credID string) (string, map[string]interface{}, bool, error) {
 	//password hash
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		return "", nil, errors.WrapErrorAction(logutils.ActionGenerate, "password hash", nil, err)
+		return "", nil, false, errors.WrapErrorAction(logutils.ActionGenerate, "password hash", nil, err)
 	}
 
 	message := ""
-	credValue := identifierImpl.buildCredential(identifier, string(hashedPassword), AuthTypePassword)
+	credValue := identifierImpl.buildCredential(identifier, string(hashedPassword), credentialKeyPassword)
 	credValueMap, sent, err := identifierImpl.sendVerifyCredential(credValue, appName, credID)
 	if err != nil {
-		return "", nil, errors.WrapErrorAction(logutils.ActionSend, "identifier verification", nil, err)
+		return "", nil, false, errors.WrapErrorAction(logutils.ActionSend, "identifier verification", nil, err)
 	}
 
 	if sent {
 		message = "verification code sent successfully"
 	}
 
-	return message, credValueMap, nil
+	return message, credValueMap, !sent, nil
 }
 
 // initPasswordAuth initializes and registers a new password auth instance

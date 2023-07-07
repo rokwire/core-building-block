@@ -39,6 +39,8 @@ const (
 type emailCreds struct {
 	Email              string     `json:"email" bson:"email" validate:"required"`
 	Password           *string    `json:"password" bson:"password,omitempty"`
+	Session            *string    `json:"session" bson:"session,omitempty"`
+	Credential         *string    `json:"credential" bson:"credential,omitempty"`
 	Response           *string    `json:"response"`
 	Code               *string    `json:"code" bson:"code,omitempty"`
 	VerificationCode   string     `json:"verification_code" bson:"verification_code"`
@@ -51,24 +53,43 @@ func (c *emailCreds) identifier() string {
 	return c.Email
 }
 
-func (c *emailCreds) getCredential() (string, string) {
+func (c *emailCreds) getAuthType() string {
 	if c.Password != nil {
-		return AuthTypePassword, *c.Password
-	} else if c.Response != nil {
-		return AuthTypeWebAuthn, *c.Response
+		return AuthTypePassword
 	} else if c.Code != nil {
-		return AuthTypeCode, *c.Code
+		return AuthTypeCode
+	} else if c.Session != nil || c.Credential != nil || c.Response != nil {
+		return AuthTypeWebAuthn
 	}
-	return "", ""
+	return ""
 }
 
-func (c *emailCreds) setCredential(value string, credType string) {
-	if credType == AuthTypePassword {
-		c.Password = &value
-	} else if credType == AuthTypeWebAuthn {
-		c.Response = &value
-	} else if credType == AuthTypeCode {
+func (c *emailCreds) getCredential(key string) string {
+	if key == credentialKeyCode && c.Code != nil {
+		return *c.Code
+	} else if key == credentialKeyPassword && c.Password != nil {
+		return *c.Password
+	} else if key == credentialKeyResponse && c.Response != nil {
+		return *c.Response
+	} else if key == credentialKeySession && c.Session != nil {
+		return *c.Session
+	} else if key == credentialKeyCredential && c.Credential != nil {
+		return *c.Credential
+	}
+	return ""
+}
+
+func (c *emailCreds) setCredential(value string, key string) {
+	if key == credentialKeyCode {
 		c.Code = &value
+	} else if key == credentialKeyPassword {
+		c.Password = &value
+	} else if key == credentialKeyResponse {
+		c.Response = &value
+	} else if key == credentialKeySession {
+		c.Session = &value
+	} else if key == credentialKeyCredential {
+		c.Credential = &value
 	}
 }
 
@@ -110,13 +131,13 @@ type emailParams struct {
 	DisplayName     *string `json:"display_name"`
 }
 
-func (p *emailParams) parameter() (string, string) {
-	if p.ConfirmPassword != nil {
-		return AuthTypePassword, *p.ConfirmPassword
-	} else if p.DisplayName != nil {
-		return AuthTypeWebAuthn, *p.DisplayName
+func (p *emailParams) parameter(key string) string {
+	if key == parameterKeyPassword && p.ConfirmPassword != nil {
+		return *p.ConfirmPassword
+	} else if key == parameterKeyDisplayName && p.DisplayName != nil {
+		return *p.DisplayName
 	}
-	return "", ""
+	return ""
 }
 
 // Email implementation of identifierType
@@ -156,10 +177,6 @@ func (a *emailIdentifierImpl) parseParams(params string) (authParams, error) {
 		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeEmailParams, nil, err)
 	}
 
-	if paramType, param := parameters.parameter(); len(paramType) == 0 || len(param) == 0 {
-		return nil, errors.ErrorData(logutils.StatusMissing, typeEmailParams, logutils.StringArgs("parameter"))
-	}
-
 	return &parameters, nil
 }
 
@@ -176,9 +193,15 @@ func (a *emailIdentifierImpl) mapToCreds(credsMap map[string]interface{}) (authC
 	return &creds, nil
 }
 
-func (a *emailIdentifierImpl) buildCredential(identifier string, credential string, credType string) authCreds {
-	if credType == AuthTypePassword {
+func (a *emailIdentifierImpl) buildCredential(identifier string, credential string, key string) authCreds {
+	if key == credentialKeyCode {
+		return &emailCreds{Email: identifier, Code: &credential}
+	} else if key == credentialKeyPassword {
 		return &emailCreds{Email: identifier, Password: &credential}
+	} else if key == credentialKeySession {
+		return &emailCreds{Email: identifier, Session: &credential}
+	} else if key == credentialKeyCredential {
+		return &emailCreds{Email: identifier, Credential: &credential}
 	}
 	return nil
 }
@@ -324,6 +347,7 @@ func (a *emailIdentifierImpl) sendCode(identifier string, appName string, code s
 		}
 		body := "Please click the link below to verify your email address:<br><a href=" + verificationLink + ">" + verificationLink + "</a><br><br>If you did not request this verification link, please ignore this message."
 		return "", a.auth.emailer.Send(identifier, subject, body, nil)
+	//TODO: typeAuthenticationCode
 	default:
 		return "", errors.ErrorData(logutils.StatusInvalid, "code type", logutils.StringArgs(codeType))
 	}

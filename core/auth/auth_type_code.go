@@ -25,6 +25,7 @@ const (
 	//AuthTypeCode code auth type
 	AuthTypeCode string = "code"
 
+	credentialKeyCode      string = "code"
 	typeAuthenticationCode string = "authentication code"
 )
 
@@ -34,18 +35,18 @@ type codeAuthImpl struct {
 	authType string
 }
 
-func (a *codeAuthImpl) signUp(identifierImpl identifierType, appName string, creds authCreds, params string, config map[string]interface{}, newCredentialID string) (string, map[string]interface{}, error) {
-	credType, cred := creds.getCredential()
-	if credType != AuthTypeCode {
-		return "", nil, errors.ErrorData(logutils.StatusInvalid, "credential type", logutils.StringArgs(credType))
+func (a *codeAuthImpl) signUp(identifierImpl identifierType, appName string, creds authCreds, params string, config map[string]interface{}, newCredentialID string) (string, map[string]interface{}, bool, error) {
+	cred := creds.getCredential(credentialKeyCode)
+	if cred == "" {
+		return "", nil, false, errors.ErrorData(logutils.StatusMissing, logutils.MessageDataType(credentialKeyCode), nil)
 	}
 
 	message, err := identifierImpl.sendCode(creds.identifier(), appName, cred, typeAuthenticationCode, newCredentialID)
 	if err != nil {
-		return "", nil, err
+		return "", nil, false, err
 	}
 
-	return message, nil, nil
+	return message, nil, false, nil
 }
 
 func (a *codeAuthImpl) signUpAdmin(identifierImpl identifierType, appName string, creds authCreds, newCredentialID string) (map[string]interface{}, map[string]interface{}, error) {
@@ -62,7 +63,6 @@ func (a *codeAuthImpl) resetCredential(credential authCreds, resetCode *string, 
 
 func (a *codeAuthImpl) checkCredential(identifierImpl identifierType, credential *model.Credential, incomingCreds authCreds, displayName string, appName string, config map[string]interface{}) (string, error) {
 	var credID string
-	var storedCredType string
 	var storedCred string
 	if credential != nil {
 		credID = credential.ID
@@ -71,17 +71,17 @@ func (a *codeAuthImpl) checkCredential(identifierImpl identifierType, credential
 			return "", errors.WrapErrorAction(logutils.ActionCast, "map to code creds", nil, err)
 		}
 
-		storedCredType, storedCred = storedCreds.getCredential()
-		if storedCredType != "" && storedCredType != AuthTypeCode {
-			return "", errors.ErrorData(logutils.StatusInvalid, "credential type", logutils.StringArgs(storedCredType))
+		storedCred := storedCreds.getCredential(credentialKeyCode)
+		if storedCred == "" {
+			return "", errors.ErrorData(logutils.StatusMissing, logutils.MessageDataType(credentialKeyCode), nil)
 		}
 	}
 
-	incomingCredType, incomingCred := incomingCreds.getCredential()
-	if incomingCredType != AuthTypeCode {
-		return "", errors.ErrorData(logutils.StatusInvalid, "credential type", logutils.StringArgs(incomingCredType))
+	incomingCred := incomingCreds.getCredential(credentialKeyCode)
+	if incomingCred == "" {
+		return "", errors.ErrorData(logutils.StatusMissing, logutils.MessageDataType(credentialKeyCode), nil)
 	}
-	if storedCred != "" && incomingCred != storedCred {
+	if incomingCred != storedCred {
 		return "", errors.ErrorData(logutils.StatusInvalid, "credential", logutils.StringArgs(incomingCred))
 	}
 

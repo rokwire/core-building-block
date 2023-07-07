@@ -30,47 +30,60 @@ const (
 	//IdentifierTypePhone phone identifier type
 	IdentifierTypePhone string = "phone"
 
-	servicesPathPart         string                   = "https://verify.twilio.com/v2/Services"
-	verificationsPathPart    string                   = "Verifications"
-	verificationCheckPart    string                   = "VerificationCheck"
-	typeVerifyServiceID      logutils.MessageDataType = "phone verification service id"
-	typeVerifyServiceToken   logutils.MessageDataType = "phone verification service token"
-	typeVerificationResponse logutils.MessageDataType = "phone verification response"
-	typeVerificationStatus   logutils.MessageDataType = "phone verification staus"
-	typeVerificationSID      logutils.MessageDataType = "phone verification sid"
-	typePhoneCreds           logutils.MessageDataType = "phone creds"
-	typePhoneNumber          logutils.MessageDataType = "E.164 phone number"
+	typePhoneCreds  logutils.MessageDataType = "phone creds"
+	typePhoneNumber logutils.MessageDataType = "E.164 phone number"
 )
 
 type phoneCreds struct {
-	Phone    string  `json:"phone" bson:"phone" validate:"required"`
-	Code     *string `json:"code"`
-	Password *string `json:"password" bson:"password,omitempty"`
-	Response *string `json:"response"`
+	Phone      string  `json:"phone" bson:"phone" validate:"required"`
+	Code       *string `json:"code"`
+	Password   *string `json:"password" bson:"password,omitempty"`
+	Session    *string `json:"session" bson:"session,omitempty"`
+	Credential *string `json:"credential" bson:"credential,omitempty"`
+	Response   *string `json:"response"`
 }
 
 func (c *phoneCreds) identifier() string {
 	return c.Phone
 }
 
-func (c *phoneCreds) getCredential() (string, string) {
-	if c.Code != nil {
-		return AuthTypeCode, *c.Code
-	} else if c.Password != nil {
-		return AuthTypePassword, *c.Password
-	} else if c.Response != nil {
-		return AuthTypeWebAuthn, *c.Response
+func (c *phoneCreds) getAuthType() string {
+	if c.Password != nil {
+		return AuthTypePassword
+	} else if c.Code != nil {
+		return AuthTypeCode
+	} else if c.Session != nil || c.Credential != nil || c.Response != nil {
+		return AuthTypeWebAuthn
 	}
-	return "", ""
+	return ""
 }
 
-func (c *phoneCreds) setCredential(value string, credType string) {
-	if credType == AuthTypeCode {
+func (c *phoneCreds) getCredential(key string) string {
+	if key == credentialKeyCode && c.Code != nil {
+		return *c.Code
+	} else if key == credentialKeyPassword && c.Password != nil {
+		return *c.Password
+	} else if key == credentialKeyResponse && c.Response != nil {
+		return *c.Response
+	} else if key == credentialKeySession && c.Session != nil {
+		return *c.Session
+	} else if key == credentialKeyCredential && c.Credential != nil {
+		return *c.Credential
+	}
+	return ""
+}
+
+func (c *phoneCreds) setCredential(value string, key string) {
+	if key == credentialKeyCode {
 		c.Code = &value
-	} else if credType == AuthTypePassword {
+	} else if key == credentialKeyPassword {
 		c.Password = &value
-	} else if credType == AuthTypeWebAuthn {
+	} else if key == credentialKeyResponse {
 		c.Response = &value
+	} else if key == credentialKeySession {
+		c.Session = &value
+	} else if key == credentialKeyCredential {
+		c.Credential = &value
 	}
 }
 
@@ -154,9 +167,15 @@ func (a *phoneIdentifierImpl) mapToCreds(credsMap map[string]interface{}) (authC
 	return &creds, nil
 }
 
-func (a *phoneIdentifierImpl) buildCredential(identifier string, credential string, credType string) authCreds {
-	if credType == AuthTypePassword {
+func (a *phoneIdentifierImpl) buildCredential(identifier string, credential string, key string) authCreds {
+	if key == credentialKeyCode {
 		return &phoneCreds{Phone: identifier, Code: &credential}
+	} else if key == credentialKeyPassword {
+		return &phoneCreds{Phone: identifier, Password: &credential}
+	} else if key == credentialKeySession {
+		return &phoneCreds{Phone: identifier, Session: &credential}
+	} else if key == credentialKeyCredential {
+		return &phoneCreds{Phone: identifier, Credential: &credential}
 	}
 	return nil
 }
@@ -166,7 +185,7 @@ func (a *phoneIdentifierImpl) verifyCredential(credential authCreds, verificatio
 }
 
 func (a *phoneIdentifierImpl) sendVerifyCredential(credential authCreds, appName string, credID string) (map[string]interface{}, bool, error) {
-	return nil, false, errors.New(logutils.Unimplemented)
+	return nil, false, nil
 }
 
 func (a *phoneIdentifierImpl) restartCredentialVerification(credential authCreds, appName string, credID string) (map[string]interface{}, error) {

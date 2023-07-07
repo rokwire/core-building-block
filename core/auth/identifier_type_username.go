@@ -33,34 +33,55 @@ const (
 
 // userNameCreds represents the creds struct for username identifier
 type usernameCreds struct {
-	Username string  `json:"username" bson:"username" validate:"required"`
-	Password *string `json:"password" bson:"password,omitempty"`
-	Response *string `json:"response"`
-	Code     *string `json:"code" bson:"code,omitempty"`
+	Username   string  `json:"username" bson:"username" validate:"required"`
+	Password   *string `json:"password" bson:"password,omitempty"`
+	Session    *string `json:"session" bson:"session,omitempty"`
+	Credential *string `json:"credential" bson:"credential,omitempty"`
+	Response   *string `json:"response"`
+	Code       *string `json:"code" bson:"code,omitempty"`
 }
 
 func (c *usernameCreds) identifier() string {
 	return c.Username
 }
 
-func (c *usernameCreds) getCredential() (string, string) {
+func (c *usernameCreds) getAuthType() string {
 	if c.Password != nil {
-		return AuthTypePassword, *c.Password
-	} else if c.Response != nil {
-		return AuthTypeWebAuthn, *c.Response
+		return AuthTypePassword
 	} else if c.Code != nil {
-		return AuthTypeCode, *c.Code
+		return AuthTypeCode
+	} else if c.Session != nil || c.Credential != nil || c.Response != nil {
+		return AuthTypeWebAuthn
 	}
-	return "", ""
+	return ""
 }
 
-func (c *usernameCreds) setCredential(value string, credType string) {
-	if credType == AuthTypePassword {
-		c.Password = &value
-	} else if credType == AuthTypeWebAuthn {
-		c.Response = &value
-	} else if credType == AuthTypeCode {
+func (c *usernameCreds) getCredential(key string) string {
+	if key == credentialKeyCode && c.Code != nil {
+		return *c.Code
+	} else if key == credentialKeyPassword && c.Password != nil {
+		return *c.Password
+	} else if key == credentialKeyResponse && c.Response != nil {
+		return *c.Response
+	} else if key == credentialKeySession && c.Session != nil {
+		return *c.Session
+	} else if key == credentialKeyCredential && c.Credential != nil {
+		return *c.Credential
+	}
+	return ""
+}
+
+func (c *usernameCreds) setCredential(value string, key string) {
+	if key == credentialKeyCode {
 		c.Code = &value
+	} else if key == credentialKeyPassword {
+		c.Password = &value
+	} else if key == credentialKeyResponse {
+		c.Response = &value
+	} else if key == credentialKeySession {
+		c.Session = &value
+	} else if key == credentialKeyCredential {
+		c.Credential = &value
 	}
 }
 
@@ -94,13 +115,13 @@ type usernameParams struct {
 	DisplayName     *string `json:"display_name"`
 }
 
-func (p *usernameParams) parameter() (string, string) {
-	if p.ConfirmPassword != nil {
-		return AuthTypePassword, *p.ConfirmPassword
-	} else if p.DisplayName != nil {
-		return AuthTypeWebAuthn, *p.DisplayName
+func (p *usernameParams) parameter(key string) string {
+	if key == parameterKeyPassword && p.ConfirmPassword != nil {
+		return *p.ConfirmPassword
+	} else if key == parameterKeyDisplayName && p.DisplayName != nil {
+		return *p.DisplayName
 	}
-	return "", ""
+	return ""
 }
 
 // Username implementation of identifierType
@@ -140,10 +161,6 @@ func (a *usernameIdentifierImpl) parseParams(params string) (authParams, error) 
 		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeUsernameParams, nil, err)
 	}
 
-	if paramType, param := parameters.parameter(); len(paramType) == 0 || len(param) == 0 {
-		return nil, errors.ErrorData(logutils.StatusMissing, typeUsernameParams, logutils.StringArgs("parameter"))
-	}
-
 	return &parameters, nil
 }
 
@@ -160,9 +177,15 @@ func (a *usernameIdentifierImpl) mapToCreds(credsMap map[string]interface{}) (au
 	return &creds, nil
 }
 
-func (a *usernameIdentifierImpl) buildCredential(identifier string, credential string, credType string) authCreds {
-	if credType == AuthTypePassword {
+func (a *usernameIdentifierImpl) buildCredential(identifier string, credential string, key string) authCreds {
+	if key == credentialKeyCode {
+		return &usernameCreds{Username: identifier, Code: &credential}
+	} else if key == credentialKeyPassword {
 		return &usernameCreds{Username: identifier, Password: &credential}
+	} else if key == credentialKeySession {
+		return &usernameCreds{Username: identifier, Session: &credential}
+	} else if key == credentialKeyCredential {
+		return &usernameCreds{Username: identifier, Credential: &credential}
 	}
 	return nil
 }
@@ -172,7 +195,7 @@ func (a *usernameIdentifierImpl) verifyCredential(credential authCreds, verifica
 }
 
 func (a *usernameIdentifierImpl) sendVerifyCredential(credential authCreds, appName string, credID string) (map[string]interface{}, bool, error) {
-	return nil, false, errors.New(logutils.Unimplemented)
+	return nil, false, nil
 }
 
 func (a *usernameIdentifierImpl) restartCredentialVerification(credential authCreds, appName string, credID string) (map[string]interface{}, error) {
