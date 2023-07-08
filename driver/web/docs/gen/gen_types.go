@@ -550,8 +550,7 @@ type Privacy struct {
 
 // PrivacyNullable defines model for PrivacyNullable.
 type PrivacyNullable struct {
-	Id     *string `json:"id"`
-	Public *bool   `json:"public"`
+	Public *bool `json:"public"`
 }
 
 // Profile defines model for Profile.
