@@ -283,15 +283,7 @@ func (m *database) applyAccountsChecks(accounts *collectionWrapper) error {
 		return err
 	}
 
-	indexModel := mongo.IndexModel{
-		Keys: bson.D{
-			{Key: "username", Value: "text"},
-			{Key: "profile.first_name", Value: "text"},
-			{Key: "profile.last_name", Value: "text"},
-		},
-	}
-
-	_, err = accounts.coll.Indexes().CreateOne(context.TODO(), indexModel)
+	err = accounts.AddIndex(bson.D{primitive.E{Key: "username", Value: "text"}, primitive.E{Key: "profile.first_name", Value: "text"}, primitive.E{Key: "profile.last_name", Value: "text"}}, false)
 	if err != nil {
 		return err
 	}

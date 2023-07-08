@@ -3,17 +3,26 @@ put:
   - Admin
   summary: Update account verified flag
   description: |
-    Update the verified flag associated with the user's account
+    Update the verified flag associated with the specified user's account
 
-    **Auth:** Requires user access token
+    **Auth:** Requires admin access token with `update_account-verified` permission
   security:
     - bearerAuth: []
+  parameters:
+    - name: id
+      in: path
+      description: The account ID
+      required: true
+      style: simple
+      explode: false
+      schema:
+        type: string
   requestBody:
-    description: Verfied
+    description: Verified
     content:
       application/json:
         schema:
-          $ref: "../../../schemas/user/Verified.yaml"
+          $ref: "../../../../schemas/apis/admin/application/accounts/verified/Request.yaml"
     required: true
   responses:
     200:

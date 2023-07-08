@@ -1,9 +1,4 @@
-required:
-  - id
 type: object
 properties:
-  id:
-    readOnly: true
-    type: string
   public:
     type: boolean

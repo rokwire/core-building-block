@@ -29,29 +29,3 @@ post:
       description: Unauthorized
     500:
       description: Internal error
-delete:
-  tags:
-  - Services
-  summary: Delete a follow relationship
-  description: |
-    Delete a follow where subject follows userID
-
-    **Auth:** Requires user auth token
-  security:
-    - bearerAuth: []
-  requestBody:
-    description: ID of the followee
-    content:
-      application/json:
-        schema:
-          $ref: "../../../schemas/user/AccountID.yaml"
-    required: true
-  responses:
-    200:
-      description: Success
-    400:
-      description: Bad request
-    401:
-      description: Unauthorized
-    500:
-      description: Internal error

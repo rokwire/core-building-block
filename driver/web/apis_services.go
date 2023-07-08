@@ -25,6 +25,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/gorilla/mux"
 	"github.com/rokwire/core-auth-library-go/v3/authorization"
 	"github.com/rokwire/core-auth-library-go/v3/tokenauth"
 	"github.com/rokwire/logging-library-go/v2/errors"
@@ -925,7 +926,8 @@ func (h ServicesApisHandler) getPublicAccounts(l *logs.Log, r *http.Request, cla
 		followerID = &followerIDParam
 	}
 
-	accounts, err := h.coreAPIs.Services.SerGetPublicAccounts(claims.AppID, claims.OrgID, limit, offset, search, firstName, lastName, username, followingID, followerID, &claims.Subject)
+	accounts, err := h.coreAPIs.Services.SerGetPublicAccounts(claims.AppID, claims.OrgID, limit, offset, search,
+		firstName, lastName, username, followingID, followerID, claims.Subject)
 	if err != nil {
 		return l.HTTPResponseErrorAction("error finding accounts", model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}
@@ -984,13 +986,13 @@ func (h ServicesApisHandler) addFollow(l *logs.Log, r *http.Request, claims *tok
 }
 
 func (h ServicesApisHandler) deleteFollow(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	var followingID Def.AccountID
-	err := json.NewDecoder(r.Body).Decode(&followingID)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, model.TypeFollow, nil, err, http.StatusBadRequest, true)
+	params := mux.Vars(r)
+	followingID := params["id"]
+	if len(followingID) <= 0 {
+		return l.HTTPResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
 	}
 
-	err = h.coreAPIs.Services.SerDeleteFollow(claims.AppID, claims.OrgID, followingID.Id, claims.Subject)
+	err := h.coreAPIs.Services.SerDeleteFollow(claims.AppID, claims.OrgID, followingID, claims.Subject)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionDelete, model.TypeFollow, nil, err, http.StatusInternalServerError, true)
 	}

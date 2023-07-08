@@ -320,7 +320,8 @@ func (s *servicesImpl) SerGetAccounts(limit int, offset int, appID string, orgID
 	return s.app.serGetAccounts(limit, offset, appID, orgID, accountID, firstName, lastName, authType, authTypeIdentifier, anonymous, hasPermissions, permissions, roleIDs, groupIDs)
 }
 
-func (s *servicesImpl) SerGetPublicAccounts(appID string, orgID string, limit int, offset int, search *string, firstName *string, lastName *string, username *string, followingID *string, followerID *string, userID *string) ([]model.PublicAccount, error) {
+func (s *servicesImpl) SerGetPublicAccounts(appID string, orgID string, limit int, offset int, search *string,
+	firstName *string, lastName *string, username *string, followingID *string, followerID *string, userID string) ([]model.PublicAccount, error) {
 	return s.app.serGetPublicAccounts(appID, orgID, limit, offset, search, firstName, lastName, username, followingID, followerID, userID)
 }
 
@@ -437,8 +438,8 @@ func (s *administrationImpl) AdmUpdateAccountUsername(accountID string, appID st
 	return s.app.sharedUpdateAccountUsername(accountID, appID, orgID, username)
 }
 
-func (s *administrationImpl) AdmUpdateAccountVerified(accountID string, verified bool) error {
-	return s.app.admUpdateAccountVerified(accountID, verified)
+func (s *administrationImpl) AdmUpdateAccountVerified(accountID string, appID string, orgID string, verified bool) error {
+	return s.app.admUpdateAccountVerified(accountID, appID, orgID, verified)
 }
 
 func (s *administrationImpl) AdmGetAccountSystemConfigs(appID string, orgID string, accountID string, l *logs.Log) (map[string]interface{}, error) {

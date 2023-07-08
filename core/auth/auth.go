@@ -1467,9 +1467,6 @@ func (a *Auth) constructAccount(context storage.TransactionContext, authType mod
 	accountID, _ := uuid.NewUUID()
 	authTypes := []model.AccountAuthType{*accountAuthType}
 
-	//create privacy id
-	privacy.ID = uuid.NewString()
-
 	//assumes admin creator permissions are always non-nil
 	adminSet := assignerPermissions != nil
 	var permissions []model.Permission

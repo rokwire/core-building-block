@@ -912,14 +912,8 @@ func (app *application) admUpdateAccountSystemConfigs(appID string, orgID string
 	return created, err
 }
 
-func (app *application) admUpdateAccountVerified(accountID string, verified bool) error {
-	account, err := app.storage.FindAccountByID(nil, accountID)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionGet, model.TypeAccount, nil, err)
-	}
-	account.Verified = verified
-	app.storage.UpdateAccountVerified(nil, accountID, verified)
-
+func (app *application) admUpdateAccountVerified(accountID string, appID string, orgID string, verified bool) error {
+	err := app.storage.UpdateAccountVerified(nil, accountID, appID, orgID, verified)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeProfile, nil, err)
 	}

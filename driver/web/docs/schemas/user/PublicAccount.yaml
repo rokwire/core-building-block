@@ -6,9 +6,11 @@ properties:
     type: string
   username:
     type: string
-  firstname:
+  first_name:
     type: string
-  lastname:
+  last_name:
     type: string
+  verified:
+    type: boolean
   is_following:
-    type: bool
+    type: boolean

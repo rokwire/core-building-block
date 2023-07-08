@@ -133,7 +133,7 @@ func (we Adapter) Start() {
 	servicesSubRouter.HandleFunc("/account/system-configs", we.wrapFunc(we.servicesApisHandler.getAccountSystemConfigs, we.auth.services.Standard)).Methods("GET")
 	servicesSubRouter.HandleFunc("/account/username", we.wrapFunc(we.servicesApisHandler.updateAccountUsername, we.auth.services.User)).Methods("PUT")
 	servicesSubRouter.HandleFunc("/account/follow", we.wrapFunc(we.servicesApisHandler.addFollow, we.auth.services.User)).Methods("POST")
-	servicesSubRouter.HandleFunc("/account/follow", we.wrapFunc(we.servicesApisHandler.deleteFollow, we.auth.services.User)).Methods("DELETE")
+	servicesSubRouter.HandleFunc("/account/follow/{id}", we.wrapFunc(we.servicesApisHandler.deleteFollow, we.auth.services.User)).Methods("DELETE")
 	servicesSubRouter.HandleFunc("/test", we.wrapFunc(we.servicesApisHandler.getTest, nil)).Methods("GET")                       //Public
 	servicesSubRouter.HandleFunc("/app-configs", we.wrapFunc(we.servicesApisHandler.getApplicationConfigs, nil)).Methods("POST") //Requires API key in request
 	servicesSubRouter.HandleFunc("/app-configs/organization", we.wrapFunc(we.servicesApisHandler.getApplicationOrgConfigs, we.auth.services.Standard)).Methods("POST")
@@ -162,7 +162,6 @@ func (we Adapter) Start() {
 	adminSubrouter.HandleFunc("/account/mfa", we.wrapFunc(we.adminApisHandler.addMFAType, we.auth.admin.Authenticated)).Methods("POST")
 	adminSubrouter.HandleFunc("/account/mfa", we.wrapFunc(we.adminApisHandler.removeMFAType, we.auth.admin.Authenticated)).Methods("DELETE")
 	adminSubrouter.HandleFunc("/account/username", we.wrapFunc(we.adminApisHandler.updateAccountUsername, we.auth.admin.User)).Methods("PUT")
-	adminSubrouter.HandleFunc("/account/verified", we.wrapFunc(we.adminApisHandler.updateAccountVerified, we.auth.admin.User)).Methods("PUT")
 
 	adminSubrouter.HandleFunc("/app-configs", we.wrapFunc(we.adminApisHandler.getAppConfigs, nil)).Methods("POST") //Requires API key in request
 	adminSubrouter.HandleFunc("/app-configs/organization", we.wrapFunc(we.adminApisHandler.getAppConfigsForOrganization, we.auth.admin.User)).Methods("POST")
@@ -202,6 +201,7 @@ func (we Adapter) Start() {
 	adminSubrouter.HandleFunc("/application/accounts/{id}/roles", we.wrapFunc(we.adminApisHandler.revokeAccountRoles, we.auth.admin.Permissions)).Methods("DELETE")
 	adminSubrouter.HandleFunc("/application/accounts/{id}/system-configs", we.wrapFunc(we.adminApisHandler.getAccountSystemConfigs, we.auth.admin.Permissions)).Methods("GET")
 	adminSubrouter.HandleFunc("/application/accounts/{id}/system-configs", we.wrapFunc(we.adminApisHandler.updateAccountSystemConfigs, we.auth.admin.Permissions)).Methods("PUT")
+	adminSubrouter.HandleFunc("/application/accounts/{id}/verified", we.wrapFunc(we.adminApisHandler.updateAccountVerified, we.auth.admin.Permissions)).Methods("PUT")
 	///
 
 	///enc ///

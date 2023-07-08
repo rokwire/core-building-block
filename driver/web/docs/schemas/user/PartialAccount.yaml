@@ -55,6 +55,10 @@ properties:
     nullable: true
   anonymous:
     type: boolean
+  privacy:
+    $ref: "./Privacy.yaml"
+  verified:
+    type: boolean
   date_created:
     readOnly: true
     type: string

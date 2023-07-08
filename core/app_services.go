@@ -86,17 +86,7 @@ func (app *application) serUpdateAccountProfile(accountID string, profile model.
 }
 
 func (app *application) serUpdateAccountPrivacy(accountID string, privacy model.Privacy) error {
-	//1. find the account
-	account, err := app.storage.FindAccountByID(nil, accountID)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionFind, model.TypePrivacy, nil, err)
-	}
-
-	//2. get the privacy ID from the account
-	privacy.ID = account.Privacy.ID
-
-	//3. update privacy
-	err = app.storage.UpdateAccountPrivacy(nil, privacy)
+	err := app.storage.UpdateAccountPrivacy(nil, accountID, privacy)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypePrivacy, nil, err)
 	}
@@ -155,7 +145,8 @@ func (app *application) serGetAccounts(limit int, offset int, appID string, orgI
 	return accounts, nil
 }
 
-func (app *application) serGetPublicAccounts(appID string, orgID string, limit int, offset int, search *string, firstName *string, lastName *string, username *string, followingID *string, followerID *string, userID *string) ([]model.PublicAccount, error) {
+func (app *application) serGetPublicAccounts(appID string, orgID string, limit int, offset int, search *string, firstName *string,
+	lastName *string, username *string, followingID *string, followerID *string, userID string) ([]model.PublicAccount, error) {
 	//find the accounts
 	accounts, err := app.storage.FindPublicAccounts(nil, appID, orgID, &limit, &offset, search, firstName, lastName, username, followingID, followerID, userID)
 	if err != nil {

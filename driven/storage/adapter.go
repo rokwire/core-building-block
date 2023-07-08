@@ -1211,7 +1211,7 @@ func (sa *Adapter) FindAccounts(context TransactionContext, limit *int, offset *
 
 // FindPublicAccounts finds accounts and returns name and username
 func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, orgID string, limit *int, offset *int,
-	search *string, firstName *string, lastName *string, username *string, followingID *string, followerID *string, userID *string) ([]model.PublicAccount, error) {
+	search *string, firstName *string, lastName *string, username *string, followingID *string, followerID *string, userID string) ([]model.PublicAccount, error) {
 	appOrg, err := sa.FindApplicationOrganization(appID, orgID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
@@ -1270,10 +1270,7 @@ func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, 
 	}
 
 	// adds boolean value whether API calling user is following account
-	pipeline = append(pipeline, bson.M{"$addFields": 
-		bson.M{"is_following": 
-			bson.D{{"$in", 
-				bson.A{*userID, "$followings.follower_id"}}}}})
+	pipeline = append(pipeline, bson.M{"$addFields": bson.M{"is_following": bson.M{"$in": bson.A{userID, "$followings.follower_id"}}}})
 
 	if offset != nil {
 		pipeline = append(pipeline, bson.M{"$skip": *offset})
@@ -1296,6 +1293,7 @@ func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, 
 			Username:    account.Username,
 			FirstName:   account.Profile.FirstName,
 			LastName:    account.Profile.LastName,
+			Verified:    account.Verified,
 			IsFollowing: account.IsFollowing,
 		})
 	}
@@ -1852,8 +1850,13 @@ func (sa *Adapter) UpdateAccountUsername(context TransactionContext, accountID s
 }
 
 // UpdateAccountVerified updates an account's username
-func (sa *Adapter) UpdateAccountVerified(context TransactionContext, accountID string, verified bool) error {
-	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
+func (sa *Adapter) UpdateAccountVerified(context TransactionContext, accountID string, appID string, orgID string, verified bool) error {
+	appOrg, err := sa.FindApplicationOrganization(appID, orgID)
+	if err != nil || appOrg == nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": appID, "org_id": orgID}, err)
+	}
+
+	filter := bson.M{"_id": accountID, "app_org_id": appOrg.ID}
 	update := bson.D{
 		primitive.E{Key: "$set", Value: bson.D{
 			primitive.E{Key: "verified", Value: verified},
@@ -1863,7 +1866,7 @@ func (sa *Adapter) UpdateAccountVerified(context TransactionContext, accountID s
 
 	res, err := sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"id": accountID}, err)
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"id": accountID, "app_id": appID, "org_id": orgID}, err)
 	}
 	if res.ModifiedCount != 1 {
 		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"id": accountID, "modified": res.ModifiedCount, "expected": 1})
@@ -3060,12 +3063,12 @@ func (sa *Adapter) UpdateAccountProfile(context TransactionContext, profile mode
 }
 
 // UpdateAccountPrivacy updates the privacy settings for an account
-func (sa *Adapter) UpdateAccountPrivacy(context TransactionContext, privacy model.Privacy) error {
-	filter := bson.D{primitive.E{Key: "privacy.id", Value: privacy.ID}}
+func (sa *Adapter) UpdateAccountPrivacy(context TransactionContext, accountID string, privacy model.Privacy) error {
+	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
 
 	privacyUpdate := bson.D{
 		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "privacy.public", Value: privacy.Public},
+			primitive.E{Key: "privacy", Value: privacy},
 		}},
 	}
 

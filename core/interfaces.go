@@ -36,7 +36,8 @@ type Services interface {
 	SerGetAccounts(limit int, offset int, appID string, orgID string, accountID *string, firstName *string, lastName *string, authType *string,
 		authTypeIdentifier *string, anonymous *bool, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error)
 
-	SerGetPublicAccounts(appID string, orgID string, limit int, offset int, search *string, firstName *string, lastName *string, username *string, followingID *string, followerID *string, userID *string) ([]model.PublicAccount, error)
+	SerGetPublicAccounts(appID string, orgID string, limit int, offset int, search *string, firstName *string, lastName *string,
+		username *string, followingID *string, followerID *string, userID string) ([]model.PublicAccount, error)
 
 	SerAddFollow(follow model.Follow) error
 	SerDeleteFollow(appID string, orgID string, followingID string, followerID string) error
@@ -77,7 +78,7 @@ type Administration interface {
 	AdmGetFilterAccountsCount(searchParams map[string]interface{}, appID string, orgID string) (int64, error)
 
 	AdmUpdateAccountUsername(accountID string, appID string, orgID string, username string) error
-	AdmUpdateAccountVerified(accountID string, verified bool) error
+	AdmUpdateAccountVerified(accountID string, appID string, orgID string, verified bool) error
 
 	AdmGetAccountSystemConfigs(appID string, orgID string, accountID string, l *logs.Log) (map[string]interface{}, error)
 	AdmUpdateAccountSystemConfigs(appID string, orgID string, accountID string, configs map[string]interface{}, createAnonymous bool, l *logs.Log) (bool, error)
@@ -166,7 +167,7 @@ type Storage interface {
 	FindAccounts(context storage.TransactionContext, limit *int, offset *int, appID string, orgID string, accountID *string, firstName *string, lastName *string, authType *string,
 		authTypeIdentifier *string, anonymous *bool, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error)
 	FindPublicAccounts(context storage.TransactionContext, appID string, orgID string, limit *int, offset *int,
-		search *string, firstName *string, lastName *string, username *string, followingID *string, followerID *string, userID *string) ([]model.PublicAccount, error)
+		search *string, firstName *string, lastName *string, username *string, followingID *string, followerID *string, userID string) ([]model.PublicAccount, error)
 	FindAccountsByParams(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]map[string]interface{}, error)
 	CountAccountsByParams(searchParams map[string]interface{}, appID string, orgID string) (int64, error)
 	FindAccountsByAccountID(context storage.TransactionContext, appID string, orgID string, accountIDs []string) ([]model.Account, error)
@@ -177,7 +178,7 @@ type Storage interface {
 	InsertAccountPermissions(context storage.TransactionContext, accountID string, permissions []model.Permission) error
 	DeleteAccountPermissions(context storage.TransactionContext, accountID string, permissionNames []string) error
 	UpdateAccountUsername(context storage.TransactionContext, accountID, username string) error
-	UpdateAccountVerified(context storage.TransactionContext, accountID string, verified bool) error
+	UpdateAccountVerified(context storage.TransactionContext, accountID string, appID string, orgID string, verified bool) error
 	InsertAccountRoles(context storage.TransactionContext, accountID string, appOrgID string, roles []model.AccountRole) error
 	DeleteAccountRoles(context storage.TransactionContext, accountID string, roleIDs []string) error
 	InsertAccountsGroup(context storage.TransactionContext, group model.AccountGroup, accountIDs []string) error
@@ -186,7 +187,7 @@ type Storage interface {
 	CountAccountsByGroupID(groupID string) (*int64, error)
 
 	UpdateAccountProfile(context storage.TransactionContext, profile model.Profile) error
-	UpdateAccountPrivacy(context storage.TransactionContext, privacy model.Privacy) error
+	UpdateAccountPrivacy(context storage.TransactionContext, accountID string, privacy model.Privacy) error
 
 	FindLoginSessionsByParams(appID string, orgID string, sessionID *string, identifier *string, accountAuthTypeIdentifier *string,
 		appTypeID *string, appTypeIdentifier *string, anonymous *bool, deviceID *string, ipAddress *string) ([]model.LoginSession, error)

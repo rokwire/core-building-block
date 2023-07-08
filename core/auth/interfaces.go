@@ -484,9 +484,6 @@ type Storage interface {
 	DeleteAccount(context storage.TransactionContext, id string) error
 	UpdateAccountUsageInfo(context storage.TransactionContext, accountID string, updateLoginTime bool, updateAccessTokenTime bool, clientVersion *string) error
 
-	// Privacy
-	UpdateAccountPrivacy(context storage.TransactionContext, privacy model.Privacy) error
-
 	//Profiles
 	UpdateAccountProfile(context storage.TransactionContext, profile model.Profile) error
 	FindAccountProfiles(appID string, authTypeID string, accountAuthTypeIdentifier string) ([]model.Profile, error)

@@ -90,10 +90,6 @@ PrivacyNullable:
   $ref: "./user/PrivacyNullable.yaml"
 Username:
   $ref: "./user/Username.yaml"
-AccountID:
-  $ref: "./user/AccountID.yaml"
-Verified:
-  $ref: "./user/Verified.yaml"
 AccountAuthType:
   $ref: "./user/AccountAuthType.yaml"
 Device:
@@ -249,6 +245,10 @@ _admin_req_revoke-permissions:
 ### grant permissions to role API
 _admin_req_grant-permissions-to-role:
   $ref: "./apis/admin/application/roles/permissions/grant/request/Request.yaml"
+
+### verify account
+_admin_req_verified:
+  $ref: "./apis/admin/application/accounts/verified/Request.yaml"
 ## end ADMIN section
 
 ## SYSTEM section

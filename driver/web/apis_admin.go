@@ -868,13 +868,19 @@ func (h AdminApisHandler) updateAccountUsername(l *logs.Log, r *http.Request, cl
 }
 
 func (h AdminApisHandler) updateAccountVerified(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	var verified bool
+	params := mux.Vars(r)
+	accountID := params["id"]
+	if len(accountID) <= 0 {
+		return l.HTTPResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
+	}
+
+	var verified Def.AdminReqVerified
 	err := json.NewDecoder(r.Body).Decode(&verified)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, model.TypeAccountUsername, nil, err, http.StatusBadRequest, true)
 	}
 
-	err = h.coreAPIs.Administration.AdmUpdateAccountVerified(claims.Subject, verified)
+	err = h.coreAPIs.Administration.AdmUpdateAccountVerified(accountID, claims.AppID, claims.OrgID, verified.Verified)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUpdate, model.TypeAccountUsername, nil, err, http.StatusInternalServerError, true)
 	}
