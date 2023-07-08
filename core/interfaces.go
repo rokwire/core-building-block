@@ -30,11 +30,18 @@ type Services interface {
 	SerGetPreferences(accountID string) (map[string]interface{}, error)
 	SerGetAccountSystemConfigs(accountID string) (map[string]interface{}, error)
 	SerUpdateAccountPreferences(id string, appID string, orgID string, anonymous bool, preferences map[string]interface{}, l *logs.Log) (bool, error)
-	SerUpdateProfile(accountID string, profile model.Profile) error
+	SerUpdateAccountProfile(accountID string, profile model.Profile) error
+	SerUpdateAccountPrivacy(accountID string, privacy model.Privacy) error
 	SerUpdateAccountUsername(accountID string, appID string, orgID string, username string) error
 
 	SerGetAccounts(limit int, offset int, appID string, orgID string, accountID *string, firstName *string, lastName *string, authType *string,
 		authTypeIdentifier *string, anonymous *bool, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error)
+
+	SerGetPublicAccounts(appID string, orgID string, limit int, offset int, search *string, firstName *string, lastName *string,
+		username *string, followingID *string, followerID *string, userID string) ([]model.PublicAccount, error)
+
+	SerAddFollow(follow model.Follow) error
+	SerDeleteFollow(appID string, orgID string, followingID string, followerID string) error
 
 	SerGetAuthTest(l *logs.Log) string
 	SerGetCommonTest(l *logs.Log) string
@@ -78,6 +85,7 @@ type Administration interface {
 	AdmGetFilterAccountsCount(searchParams map[string]interface{}, appID string, orgID string) (int64, error)
 
 	AdmUpdateAccountUsername(accountID string, appID string, orgID string, username string) error
+	AdmUpdateAccountVerified(accountID string, appID string, orgID string, verified bool) error
 
 	AdmGetAccountSystemConfigs(appID string, orgID string, accountID string, l *logs.Log) (map[string]interface{}, error)
 	AdmUpdateAccountSystemConfigs(appID string, orgID string, accountID string, configs map[string]interface{}, createAnonymous bool, l *logs.Log) (bool, error)
@@ -95,6 +103,11 @@ type Administration interface {
 	AdmGetApplicationAccountDevices(appID string, orgID string, accountID string, l *logs.Log) ([]model.Device, error)
 
 	AdmGetAppConfig(appTypeIdentifier string, orgID *string, versionNumbers model.VersionNumbers, apiKey *string) (*model.ApplicationConfig, error)
+	AdmGetAppConfigs(appTypeID string, orgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error)
+	AdmGetAppConfigByID(id string) (*model.ApplicationConfig, error)
+	AdmCreateAppConfig(appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error)
+	AdmUpdateAppConfig(id string, appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) error
+	AdmDeleteAppConfig(id string) error
 }
 
 // Encryption exposes APIs for the Encryption building block
@@ -136,12 +149,6 @@ type System interface {
 	SysCreatePermission(name string, description *string, serviceID *string, assigners *[]string) (*model.Permission, error)
 	SysUpdatePermission(name string, description *string, serviceID *string, assigners *[]string) (*model.Permission, error)
 
-	SysGetAppConfigs(appTypeID string, orgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error)
-	SysGetAppConfig(id string) (*model.ApplicationConfig, error)
-	SysCreateAppConfig(appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error)
-	SysUpdateAppConfig(id string, appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) error
-	SysDeleteAppConfig(id string) error
-
 	SysCreateAuthTypes(code string, description string, isExternal bool, isAnonymous bool, useCredentials bool, ignoreMFA bool, params map[string]interface{}) (*model.AuthType, error)
 	SysGetAuthTypes() ([]model.AuthType, error)
 	SysUpdateAuthTypes(ID string, code string, description string, isExternal bool, isAnonymous bool, useCredentials bool, ignoreMFA bool, params map[string]interface{}) error
@@ -155,9 +162,14 @@ type Storage interface {
 
 	FindAuthType(codeOrID string) (*model.AuthType, error)
 
+	InsertFollow(context storage.TransactionContext, follow model.Follow) error
+	DeleteFollow(context storage.TransactionContext, appID string, orgID string, followingID string, followerID string) error
+
 	FindAccountByID(context storage.TransactionContext, id string) (*model.Account, error)
 	FindAccounts(context storage.TransactionContext, limit *int, offset *int, appID string, orgID string, accountID *string, firstName *string, lastName *string, authType *string,
 		authTypeIdentifier *string, anonymous *bool, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error)
+	FindPublicAccounts(context storage.TransactionContext, appID string, orgID string, limit *int, offset *int,
+		search *string, firstName *string, lastName *string, username *string, followingID *string, followerID *string, userID string) ([]model.PublicAccount, error)
 	FindAccountsByParams(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]map[string]interface{}, error)
 	CountAccountsByParams(searchParams map[string]interface{}, appID string, orgID string) (int64, error)
 	FindAccountsByAccountID(context storage.TransactionContext, appID string, orgID string, accountIDs []string) ([]model.Account, error)
@@ -168,6 +180,7 @@ type Storage interface {
 	InsertAccountPermissions(context storage.TransactionContext, accountID string, permissions []model.Permission) error
 	DeleteAccountPermissions(context storage.TransactionContext, accountID string, permissionNames []string) error
 	UpdateAccountUsername(context storage.TransactionContext, accountID, username string) error
+	UpdateAccountVerified(context storage.TransactionContext, accountID string, appID string, orgID string, verified bool) error
 	InsertAccountRoles(context storage.TransactionContext, accountID string, appOrgID string, roles []model.AccountRole) error
 	DeleteAccountRoles(context storage.TransactionContext, accountID string, roleIDs []string) error
 	InsertAccountsGroup(context storage.TransactionContext, group model.AccountGroup, accountIDs []string) error
@@ -175,7 +188,8 @@ type Storage interface {
 	CountAccountsByRoleID(roleID string) (*int64, error)
 	CountAccountsByGroupID(groupID string) (*int64, error)
 
-	UpdateProfile(context storage.TransactionContext, profile model.Profile) error
+	UpdateAccountProfile(context storage.TransactionContext, profile model.Profile) error
+	UpdateAccountPrivacy(context storage.TransactionContext, accountID string, privacy model.Privacy) error
 
 	FindLoginSessionsByParams(appID string, orgID string, sessionID *string, identifier *string, accountAuthTypeIdentifier *string,
 		appTypeID *string, appTypeIdentifier *string, anonymous *bool, deviceID *string, ipAddress *string) ([]model.LoginSession, error)

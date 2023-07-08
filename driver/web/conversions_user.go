@@ -24,6 +24,8 @@ import (
 func accountToDef(item model.Account) *Def.Account {
 	//profile
 	profile := profileToDef(&item.Profile)
+	//privacy
+	privacy := privacyToDef(&item.Privacy)
 	//preferences
 	preferences := &item.Preferences
 	//systemConfigs
@@ -56,7 +58,7 @@ func accountToDef(item model.Account) *Def.Account {
 	}
 
 	return &Def.Account{Id: &item.ID, Anonymous: &item.Anonymous, System: &item.AppOrg.Organization.System, Permissions: &permissions, Roles: &roles, Groups: &groups,
-		Scopes: &scopes, AuthTypes: &authTypes, Username: username, Profile: profile, Preferences: preferences, SystemConfigs: systemConfigs,
+		Privacy: privacy, Verified: &item.Verified, Scopes: &scopes, AuthTypes: &authTypes, Username: username, Profile: profile, Preferences: preferences, SystemConfigs: systemConfigs,
 		LastLoginDate: &lastLoginDate, LastAccessTokenDate: &lastAccessTokenDate, MostRecentClientVersion: item.MostRecentClientVersion, ExternalIds: &externalIds}
 }
 
@@ -113,9 +115,12 @@ func partialAccountToDef(item model.Account, params map[string]interface{}) *Def
 		externalIds[k] = v
 	}
 
+	privacy := privacyToDef(&item.Privacy)
+
 	return &Def.PartialAccount{Id: &item.ID, Anonymous: item.Anonymous, AppId: item.AppOrg.Application.ID, OrgId: item.AppOrg.Organization.ID, FirstName: item.Profile.FirstName,
 		LastName: item.Profile.LastName, Username: username, System: &item.AppOrg.Organization.System, Permissions: permissions, Roles: roles, Groups: groups,
-		Scopes: &scopes, SystemConfigs: systemConfigs, AuthTypes: authTypes, DateCreated: &dateCreated, DateUpdated: dateUpdated, Params: paramsData, ExternalIds: &externalIds}
+		Privacy: privacy, Verified: &item.Verified, Scopes: &scopes, SystemConfigs: systemConfigs, AuthTypes: authTypes, DateCreated: &dateCreated,
+		DateUpdated: dateUpdated, Params: paramsData, ExternalIds: &externalIds}
 }
 
 func partialAccountsToDef(items []model.Account) []Def.PartialAccount {
@@ -316,6 +321,42 @@ func profileFromDefNullable(item *Def.ProfileNullable) model.Profile {
 	return model.Profile{PhotoURL: photoURL, FirstName: firstName, LastName: lastName,
 		Email: email, Phone: phone, BirthYear: int16(birthYear), Address: address, ZipCode: zipCode,
 		State: state, Country: country, UnstructuredProperties: unstructuredProperties}
+}
+
+func privacyToDef(item *model.Privacy) *Def.Privacy {
+	if item == nil {
+		return nil
+	}
+
+	return &Def.Privacy{
+		Public: &item.Public,
+	}
+}
+
+func privacyFromDef(item *Def.Privacy) model.Privacy {
+	if item == nil {
+		return model.Privacy{}
+	}
+
+	var public bool
+	if item.Public != nil {
+		public = *item.Public
+	}
+
+	return model.Privacy{Public: public}
+}
+
+func privacyFromDefNullable(item *Def.PrivacyNullable) model.Privacy {
+	if item == nil {
+		return model.Privacy{}
+	}
+
+	var public bool
+	if item.Public != nil {
+		public = *item.Public
+	}
+
+	return model.Privacy{Public: public}
 }
 
 // MFA

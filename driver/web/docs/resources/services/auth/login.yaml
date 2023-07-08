@@ -53,6 +53,8 @@ post:
                 photo_url: photo url
                 state: state
                 zip_code: zip code
+              privacy:
+                public: false
               device:
                 type: mobile
                 device_id: "5555"
@@ -81,6 +83,8 @@ post:
                 photo_url: photo url
                 state: state
                 zip_code: zip code
+              privacy:
+                public: false
               device:
                 type: mobile
                 device_id: "5555"
@@ -110,6 +114,8 @@ post:
                 photo_url: photo url
                 state: state
                 zip_code: zip code
+              privacy:
+                public: false
               device:
                 type: mobile
                 device_id: "5555"
@@ -168,6 +174,8 @@ post:
                 photo_url: photo url
                 state: state
                 zip_code: zip code
+              privacy:
+                public: false
               device:
                 type: mobile
                 device_id: "5555"

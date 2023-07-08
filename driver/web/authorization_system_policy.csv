@@ -24,15 +24,6 @@ p, all_app_orgs, /core/system/app-orgs/*, (GET)|(POST)|(DELETE)|(PUT),
 p, all_permissions, /core/system/permissions, (GET)|(POST)|(DELETE)|(PUT), All permission actions
 p, update_permissions, /core/system/permissions, (POST)|(PUT), Update and create permissions
 
-p, all_app-configs, /core/system/application/configs, (GET)|(POST)|(PUT)|(DELETE), All app config actions
-p, all_app-configs, /core/system/application/configs/*, (GET)|(POST)|(PUT)|(DELETE), All app config actions
-p, get_app-configs, /core/system/application/configs, (GET), Get app configs
-p, get_app-configs, /core/system/application/configs/*, (GET),
-p, update_app-configs, /core/system/application/configs, (GET)|(POST), Update and create app configs
-p, update_app-configs, /core/system/application/configs/*, (GET)|(PUT),
-p, delete_app-config, /core/system/application/configs/*, (GET)|(DELETE), Delete app configs
-p, delete_app-config, /core/system/application/configs, (GET),
-
 p, all_service-regs, /core/system/service-regs, (GET)|(POST)|(DELETE)|(PUT), All service registration actions
 p, get_service-regs, /core/system/service-regs, (GET), Get service registrations
 p, update_service-regs, /core/system/service-regs, (GET)|(POST)|(PUT), Update and create service registrations
