@@ -18,6 +18,7 @@ import (
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
 
+	"github.com/rokwire/core-auth-library-go/v3/tokenauth"
 	"github.com/rokwire/logging-library-go/v2/logs"
 )
 
@@ -52,6 +53,12 @@ type Services interface {
 type Administration interface {
 	AdmGetTest() string
 	AdmGetTestModel() string
+
+	AdmGetConfig(id string, claims *tokenauth.Claims) (*model.Config, error)
+	AdmGetConfigs(configType *string, claims *tokenauth.Claims) ([]model.Config, error)
+	AdmCreateConfig(config model.Config, claims *tokenauth.Claims) (*model.Config, error)
+	AdmUpdateConfig(config model.Config, claims *tokenauth.Claims) error
+	AdmDeleteConfig(id string, claims *tokenauth.Claims) error
 
 	AdmGetApplications(orgID string) ([]model.Application, error)
 
@@ -96,6 +103,11 @@ type Administration interface {
 	AdmGetApplicationAccountDevices(appID string, orgID string, accountID string, l *logs.Log) ([]model.Device, error)
 
 	AdmGetAppConfig(appTypeIdentifier string, orgID *string, versionNumbers model.VersionNumbers, apiKey *string) (*model.ApplicationConfig, error)
+	AdmGetAppConfigs(appTypeID string, orgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error)
+	AdmGetAppConfigByID(id string) (*model.ApplicationConfig, error)
+	AdmCreateAppConfig(appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error)
+	AdmUpdateAppConfig(id string, appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) error
+	AdmDeleteAppConfig(id string) error
 }
 
 // Encryption exposes APIs for the Encryption building block
@@ -119,10 +131,6 @@ type TPS interface {
 
 // System exposes system APIs for the driver adapters
 type System interface {
-	SysCreateGlobalConfig(setting string) (*model.GlobalConfig, error)
-	SysGetGlobalConfig() (*model.GlobalConfig, error)
-	SysUpdateGlobalConfig(setting string) error
-
 	SysGetApplicationOrganization(ID string) (*model.ApplicationOrganization, error)
 	SysGetApplicationOrganizations(appID *string, orgID *string) ([]model.ApplicationOrganization, error)
 	SysCreateApplicationOrganization(appID string, orgID string, appOrg model.ApplicationOrganization) (*model.ApplicationOrganization, error)
@@ -140,12 +148,6 @@ type System interface {
 
 	SysCreatePermission(name string, description *string, serviceID *string, assigners *[]string) (*model.Permission, error)
 	SysUpdatePermission(name string, description *string, serviceID *string, assigners *[]string) (*model.Permission, error)
-
-	SysGetAppConfigs(appTypeID string, orgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error)
-	SysGetAppConfig(id string) (*model.ApplicationConfig, error)
-	SysCreateAppConfig(appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error)
-	SysUpdateAppConfig(id string, appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) error
-	SysDeleteAppConfig(id string) error
 
 	SysCreateAuthTypes(code string, description string, isExternal bool, isAnonymous bool, useCredentials bool, ignoreMFA bool, params map[string]interface{}) (*model.AuthType, error)
 	SysGetAuthTypes() ([]model.AuthType, error)
@@ -197,9 +199,12 @@ type Storage interface {
 	SaveDevice(context storage.TransactionContext, device *model.Device) error
 	DeleteDevice(context storage.TransactionContext, id string) error
 
-	CreateGlobalConfig(context storage.TransactionContext, globalConfig *model.GlobalConfig) error
-	GetGlobalConfig() (*model.GlobalConfig, error)
-	DeleteGlobalConfig(context storage.TransactionContext) error
+	FindConfig(configType string, appID string, orgID string) (*model.Config, error)
+	FindConfigByID(id string) (*model.Config, error)
+	FindConfigs(configType *string) ([]model.Config, error)
+	InsertConfig(config model.Config) error
+	UpdateConfig(config model.Config) error
+	DeleteConfig(id string) error
 
 	FindPermissionsByName(context storage.TransactionContext, names []string) ([]model.Permission, error)
 	FindPermissionsByServiceIDs(serviceIDs []string) ([]model.Permission, error)

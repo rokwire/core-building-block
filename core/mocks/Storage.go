@@ -117,20 +117,6 @@ func (_m *Storage) CountGroupsByRoleID(roleID string) (*int64, error) {
 	return r0, r1
 }
 
-// CreateGlobalConfig provides a mock function with given fields: context, globalConfig
-func (_m *Storage) CreateGlobalConfig(context storage.TransactionContext, globalConfig *model.GlobalConfig) error {
-	ret := _m.Called(context, globalConfig)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(storage.TransactionContext, *model.GlobalConfig) error); ok {
-		r0 = rf(context, globalConfig)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
 // DeleteAccountPermissions provides a mock function with given fields: context, accountID, permissionNames
 func (_m *Storage) DeleteAccountPermissions(context storage.TransactionContext, accountID string, permissionNames []string) error {
 	ret := _m.Called(context, accountID, permissionNames)
@@ -201,6 +187,20 @@ func (_m *Storage) DeleteAppOrgRole(id string) error {
 	return r0
 }
 
+// DeleteConfig provides a mock function with given fields: id
+func (_m *Storage) DeleteConfig(id string) error {
+	ret := _m.Called(id)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string) error); ok {
+		r0 = rf(id)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // DeleteDevice provides a mock function with given fields: context, id
 func (_m *Storage) DeleteDevice(context storage.TransactionContext, id string) error {
 	ret := _m.Called(context, id)
@@ -222,20 +222,6 @@ func (_m *Storage) DeleteFollow(context storage.TransactionContext, appID string
 	var r0 error
 	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, string, string, string) error); ok {
 		r0 = rf(context, appID, orgID, followingID, followerID)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// DeleteGlobalConfig provides a mock function with given fields: context
-func (_m *Storage) DeleteGlobalConfig(context storage.TransactionContext) error {
-	ret := _m.Called(context)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(storage.TransactionContext) error); ok {
-		r0 = rf(context)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -883,6 +869,84 @@ func (_m *Storage) FindAuthTypes() ([]model.AuthType, error) {
 	return r0, r1
 }
 
+// FindConfig provides a mock function with given fields: configType, appID, orgID
+func (_m *Storage) FindConfig(configType string, appID string, orgID string) (*model.Config, error) {
+	ret := _m.Called(configType, appID, orgID)
+
+	var r0 *model.Config
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string, string, string) (*model.Config, error)); ok {
+		return rf(configType, appID, orgID)
+	}
+	if rf, ok := ret.Get(0).(func(string, string, string) *model.Config); ok {
+		r0 = rf(configType, appID, orgID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.Config)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(string, string, string) error); ok {
+		r1 = rf(configType, appID, orgID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// FindConfigByID provides a mock function with given fields: id
+func (_m *Storage) FindConfigByID(id string) (*model.Config, error) {
+	ret := _m.Called(id)
+
+	var r0 *model.Config
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string) (*model.Config, error)); ok {
+		return rf(id)
+	}
+	if rf, ok := ret.Get(0).(func(string) *model.Config); ok {
+		r0 = rf(id)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.Config)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// FindConfigs provides a mock function with given fields: configType
+func (_m *Storage) FindConfigs(configType *string) ([]model.Config, error) {
+	ret := _m.Called(configType)
+
+	var r0 []model.Config
+	var r1 error
+	if rf, ok := ret.Get(0).(func(*string) ([]model.Config, error)); ok {
+		return rf(configType)
+	}
+	if rf, ok := ret.Get(0).(func(*string) []model.Config); ok {
+		r0 = rf(configType)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]model.Config)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(*string) error); ok {
+		r1 = rf(configType)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // FindLoginSessionsByParams provides a mock function with given fields: appID, orgID, sessionID, identifier, accountAuthTypeIdentifier, appTypeID, appTypeIdentifier, anonymous, deviceID, ipAddress
 func (_m *Storage) FindLoginSessionsByParams(appID string, orgID string, sessionID *string, identifier *string, accountAuthTypeIdentifier *string, appTypeID *string, appTypeIdentifier *string, anonymous *bool, deviceID *string, ipAddress *string) ([]model.LoginSession, error) {
 	ret := _m.Called(appID, orgID, sessionID, identifier, accountAuthTypeIdentifier, appTypeID, appTypeIdentifier, anonymous, deviceID, ipAddress)
@@ -1053,32 +1117,6 @@ func (_m *Storage) FindSystemOrganization() (*model.Organization, error) {
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*model.Organization)
-		}
-	}
-
-	if rf, ok := ret.Get(1).(func() error); ok {
-		r1 = rf()
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// GetGlobalConfig provides a mock function with given fields:
-func (_m *Storage) GetGlobalConfig() (*model.GlobalConfig, error) {
-	ret := _m.Called()
-
-	var r0 *model.GlobalConfig
-	var r1 error
-	if rf, ok := ret.Get(0).(func() (*model.GlobalConfig, error)); ok {
-		return rf()
-	}
-	if rf, ok := ret.Get(0).(func() *model.GlobalConfig); ok {
-		r0 = rf()
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*model.GlobalConfig)
 		}
 	}
 
@@ -1303,6 +1341,20 @@ func (_m *Storage) InsertAuthType(context storage.TransactionContext, authType m
 	}
 
 	return r0, r1
+}
+
+// InsertConfig provides a mock function with given fields: config
+func (_m *Storage) InsertConfig(config model.Config) error {
+	ret := _m.Called(config)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(model.Config) error); ok {
+		r0 = rf(config)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
 }
 
 // InsertFollow provides a mock function with given fields: context, follow
@@ -1581,6 +1633,20 @@ func (_m *Storage) UpdateAuthTypes(ID string, code string, description string, i
 	var r0 error
 	if rf, ok := ret.Get(0).(func(string, string, string, bool, bool, bool, bool, map[string]interface{}) error); ok {
 		r0 = rf(ID, code, description, isExternal, isAnonymous, useCredentials, ignoreMFA, params)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// UpdateConfig provides a mock function with given fields: config
+func (_m *Storage) UpdateConfig(config model.Config) error {
+	ret := _m.Called(config)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(model.Config) error); ok {
+		r0 = rf(config)
 	} else {
 		r0 = ret.Error(0)
 	}

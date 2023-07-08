@@ -39,7 +39,7 @@ func (a *Auth) Start() {
 	storageListener := StorageListener{auth: a}
 	a.storage.RegisterStorageListener(&storageListener)
 
-	go a.setupDeleteSessionsTimer()
+	go utils.StartTimer(a.deleteSessionsTimer, a.deleteSessionsTimerDone, time.Hour*time.Duration(sessionDeletePeriod), a.deleteSessions, "delete sessions", a.logger)
 }
 
 // GetHost returns the host/issuer of the auth service

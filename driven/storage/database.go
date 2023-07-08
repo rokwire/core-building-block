@@ -42,7 +42,7 @@ type database struct {
 	devices                         *collectionWrapper
 	credentials                     *collectionWrapper
 	loginsSessions                  *collectionWrapper
-	globalConfig                    *collectionWrapper
+	configs                         *collectionWrapper
 	serviceRegs                     *collectionWrapper
 	serviceRegistrations            *collectionWrapper
 	serviceAccounts                 *collectionWrapper
@@ -142,8 +142,8 @@ func (m *database) start() error {
 		return err
 	}
 
-	globalConfig := &collectionWrapper{database: m, coll: db.Collection("global_config")}
-	err = m.applyGlobalConfigChecks(globalConfig)
+	configs := &collectionWrapper{database: m, coll: db.Collection("configs")}
+	err = m.applyConfigsChecks(configs)
 	if err != nil {
 		return err
 	}
@@ -212,7 +212,7 @@ func (m *database) start() error {
 	m.devices = devices
 	m.credentials = credentials
 	m.loginsSessions = loginsSessions
-	m.globalConfig = globalConfig
+	m.configs = configs
 	m.apiKeys = apiKeys
 	m.serviceRegs = serviceRegs
 	m.serviceRegistrations = serviceRegistrations
@@ -235,6 +235,7 @@ func (m *database) start() error {
 	go m.applications.Watch(nil, m.logger)
 	go m.applicationsOrganizations.Watch(nil, m.logger)
 	go m.applicationConfigs.Watch(nil, m.logger)
+	go m.configs.Watch(nil, m.logger)
 
 	m.listeners = []Listener{}
 
@@ -354,10 +355,15 @@ func (m *database) applyAPIKeysChecks(apiKeys *collectionWrapper) error {
 	return nil
 }
 
-func (m *database) applyGlobalConfigChecks(configs *collectionWrapper) error {
-	m.logger.Info("apply global config checks.....")
+func (m *database) applyConfigsChecks(configs *collectionWrapper) error {
+	m.logger.Info("apply configs checks.....")
 
-	m.logger.Info("global config checks passed")
+	err := configs.AddIndex(bson.D{primitive.E{Key: "type", Value: 1}, primitive.E{Key: "app_id", Value: 1}, primitive.E{Key: "org_id", Value: 1}}, true)
+	if err != nil {
+		return err
+	}
+
+	m.logger.Info("configs checks passed")
 	return nil
 }
 
@@ -640,6 +646,12 @@ func (m *database) onDataChanged(changeDoc map[string]interface{}) {
 
 		for _, listener := range m.listeners {
 			go listener.OnApplicationConfigsUpdated()
+		}
+	case "configs":
+		m.logger.Info("configs collection changed")
+
+		for _, listener := range m.listeners {
+			go listener.OnConfigsUpdated()
 		}
 	}
 }

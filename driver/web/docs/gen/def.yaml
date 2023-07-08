@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Rokwire Core Building Block API
   description: Core Building Block API Documentation
-  version: 1.33.0
+  version: 1.34.0
 servers:
   - url: 'https://api.rokwire.illinois.edu/core'
     description: Production server
@@ -2685,6 +2685,195 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+  /admin/application/configs:
+    get:
+      tags:
+        - Admin
+      summary: Reads app configs
+      description: |
+        If version is provided, the app config for the highest version that is equal to or less than this value will be returned as the only item in the list.
+        Otherwise it will return a list of all app config versions for the given app_type_id. If org_id is provided, the configs for that organization will
+        be returned, otherwise the default configs will be returned.
+
+        **Auth:** Requires admin access token with `get_app-configs`, `update_app-configs`, `delete_app-configs`, or `all_app-configs` permission
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: app_type_id
+          in: query
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+        - name: org_id
+          in: query
+          style: form
+          explode: false
+          schema:
+            type: string
+        - name: version
+          in: query
+          style: form
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successfully read app configuration
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ApplicationConfig'
+        '400':
+          description: Bad request.
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+    post:
+      tags:
+        - Admin
+      summary: Creates app configs
+      description: |
+        Creates a new app config
+
+        **Auth:** Requires admin access token with `update_app-configs` or `all_app-configs` permission
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: New app configs
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApplicationConfig'
+            example:
+              version: 1.0.1
+              app_type_id: 7e037f2d-b423-4b4d-a1bc-18507f81c6d1
+              org_id: 0a2eff20-e2cd-11eb-af68-60f81db5ecc0
+              data: {}
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  '/admin/application/configs/{id}':
+    get:
+      tags:
+        - Admin
+      summary: Reads app configs by ID
+      description: |
+        Get app configs for the provided ID
+
+        **Auth:** Requires admin access token with `get_app-configs`, `update_app-configs`, `delete_app-configs`, or `all_app-configs` permission
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: app config id to read
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationConfig'
+        '400':
+          description: Bad request.
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+    put:
+      tags:
+        - Admin
+      summary: Updates app config by ID
+      description: |
+        Updates app config with the provided ID
+
+        **Auth:** Requires admin access token with `update_app-configs` or `all_app-configs` permission
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+      requestBody:
+        description: updated app config
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApplicationConfig'
+            example:
+              version: 1.0.1
+              app_type_id: 7e037f2d-b423-4b4d-a1bc-18507f81c6d1
+              org_id: 0a2eff20-e2cd-11eb-af68-60f81db5ecc0
+              data:
+                url: rokmetro.dev
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+    delete:
+      tags:
+        - Admin
+      summary: Deletes app config by ID
+      description: |
+        Deletes app config with the provided ID
+
+        **Auth:** Requires admin access token with `delete_app-configs` or `all_app-configs` permission
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   /admin/application/filter/accounts:
     post:
       tags:
@@ -3308,6 +3497,244 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Application'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /admin/configs:
+    get:
+      tags:
+        - Admin
+      summary: Get configs
+      description: |
+        Get existing configs by search parameters
+
+        **Auth:** Requires admin access token with `get_configs_core`, `update_configs_core`, `delete_configs_core`, or `all_configs_core` permission:
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: type
+          in: query
+          description: config type
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Config'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+    post:
+      tags:
+        - Admin
+      summary: Create config
+      description: |
+        Creates a new config
+
+        **Auth:** Requires admin access token with `update_configs_core` or `all_configs_core` permission
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_admin_req_create-update-config'
+            examples:
+              system:
+                summary: System-wide config
+                value:
+                  type: config_type
+                  all_apps: true
+                  all_orgs: true
+                  system: true
+                  data:
+                    cors_allowed_origins:
+                      - origin1
+                      - origin2
+              org_admin:
+                summary: Organization-wide config
+                value:
+                  type: config_type
+                  all_apps: true
+                  all_orgs: false
+                  system: false
+                  data:
+                    cors_allowed_origins:
+                      - origin1
+                      - origin2
+              app_org_specific:
+                summary: Application organization specific config
+                value:
+                  type: config_type
+                  all_apps: false
+                  all_orgs: false
+                  system: false
+                  data:
+                    cors_allowed_origins:
+                      - origin1
+                      - origin2
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Config'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  '/admin/configs/{id}':
+    get:
+      tags:
+        - Admin
+      summary: Get config
+      description: |
+        Get an existing config
+
+        **Auth:** Requires admin access token with `get_configs_core`, `update_configs_core`, `delete_configs_core`, or `all_configs_core` permission
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: ID of config to retrieve
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Config'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+    put:
+      tags:
+        - Admin
+      summary: Update config
+      description: |
+        Updates an existing config
+
+        **Auth:** Requires admin access token with `update_configs_core` or `all_configs_core` permission
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: ID of config to update
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+      requestBody:
+        description: New config content
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_admin_req_create-update-config'
+            examples:
+              system:
+                summary: System-wide config
+                value:
+                  type: config_type
+                  all_apps: true
+                  all_orgs: true
+                  system: true
+                  data:
+                    cors_allowed_origins:
+                      - origin1
+                      - origin2
+              org_admin:
+                summary: Organization-wide config
+                value:
+                  type: config_type
+                  all_apps: true
+                  all_orgs: false
+                  system: false
+                  data:
+                    cors_allowed_origins:
+                      - origin1
+                      - origin2
+              app_org_specific:
+                summary: Application organization specific config
+                value:
+                  type: config_type
+                  all_apps: false
+                  all_orgs: false
+                  system: false
+                  data:
+                    cors_allowed_origins:
+                      - origin1
+                      - origin2
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+    delete:
+      tags:
+        - Admin
+      summary: Delete config
+      description: |
+        Deletes a config
+
+        **Auth:** Requires admin access token with `delete_configs_core` or `all_configs_core` permission
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: ID of config to delete
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
         '400':
           description: Bad request
         '401':
@@ -4037,90 +4464,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AdminToken'
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal error
-  /system/global-config:
-    get:
-      tags:
-        - System
-      summary: Get global config
-      description: |
-        Gives the system global config
-
-        **Auth:** Requires system access token with `get_global-config`, `update_global-config`, or `all_global-config` permission
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GlobalConfig'
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal error
-    post:
-      tags:
-        - System
-      summary: Create global config
-      description: |
-        Creates the system global config
-
-        **Auth:** Requires system access token with `update_global-config` or `all_global-config` permission
-      security:
-        - bearerAuth: []
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/GlobalConfig'
-        required: true
-      responses:
-        '200':
-          description: Success
-          content:
-            text/plain:
-              schema:
-                type: string
-                example: Success
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal error
-    put:
-      tags:
-        - System
-      summary: Update global config
-      description: |
-        Updates the system global config
-
-        **Auth:** Requires system access token with `update_global-config` or `all_global-config` permission
-      security:
-        - bearerAuth: []
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/GlobalConfig'
-        required: true
-      responses:
-        '200':
-          description: Success
-          content:
-            text/plain:
-              schema:
-                type: string
-                example: Success
         '400':
           description: Bad request
         '401':
@@ -5038,195 +5381,6 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /system/application/configs:
-    get:
-      tags:
-        - System
-      summary: Reads app configs
-      description: |
-        If version is provided, the app config for the highest version that is equal to or less than this value will be returned as the only item in the list.
-        Otherwise it will return a list of all app config versions for the given app_type_id. If org_id is provided, the configs for that organization will
-        be returned, otherwise the default configs will be returned.
-
-        **Auth:** Requires system access token with `get_app-configs`, `update_app-configs`, `delete_app-configs`, or `all_app-configs` permission
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: app_type_id
-          in: query
-          required: true
-          style: form
-          explode: false
-          schema:
-            type: string
-        - name: org_id
-          in: query
-          style: form
-          explode: false
-          schema:
-            type: string
-        - name: version
-          in: query
-          style: form
-          explode: false
-          schema:
-            type: string
-      responses:
-        '200':
-          description: successfully read app configuration
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ApplicationConfig'
-        '400':
-          description: Bad request.
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal error
-    post:
-      tags:
-        - System
-      summary: Creates app configs
-      description: |
-        Creates a new app config
-
-        **Auth:** Requires system access token with `update_app-configs` or `all_app-configs` permission
-      security:
-        - bearerAuth: []
-      requestBody:
-        description: New app configs
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ApplicationConfig'
-            example:
-              version: 1.0.1
-              app_type_id: 7e037f2d-b423-4b4d-a1bc-18507f81c6d1
-              org_id: 0a2eff20-e2cd-11eb-af68-60f81db5ecc0
-              data: {}
-        required: true
-      responses:
-        '200':
-          description: Success
-          content:
-            text/plain:
-              schema:
-                type: string
-                example: Success
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal error
-  '/system/application/configs/{id}':
-    get:
-      tags:
-        - System
-      summary: Reads app configs by ID
-      description: |
-        Get app configs for the provided ID
-
-        **Auth:** Requires system access token with `get_app-configs`, `update_app-configs`, `delete_app-configs`, or `all_app-configs` permission
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          description: app config id to read
-          required: true
-          style: simple
-          explode: false
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApplicationConfig'
-        '400':
-          description: Bad request.
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal error
-    put:
-      tags:
-        - System
-      summary: Updates app config by ID
-      description: |
-        Updates app config with the provided ID
-
-        **Auth:** Requires system access token with `update_app-configs` or `all_app-configs` permission
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          style: simple
-          explode: false
-          schema:
-            type: string
-      requestBody:
-        description: updated app config
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ApplicationConfig'
-            example:
-              version: 1.0.1
-              app_type_id: 7e037f2d-b423-4b4d-a1bc-18507f81c6d1
-              org_id: 0a2eff20-e2cd-11eb-af68-60f81db5ecc0
-              data:
-                url: rokmetro.dev
-        required: true
-      responses:
-        '200':
-          description: Success
-          content:
-            text/plain:
-              schema:
-                type: string
-                example: Success
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal error
-    delete:
-      tags:
-        - System
-      summary: Deletes app config by ID
-      description: |
-        Deletes app config with the provided ID
-
-        **Auth:** Requires system access token with `delete_app-configs` or `all_app-configs` permission
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          style: simple
-          explode: false
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Success
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal error
   /system/api-keys:
     get:
       tags:
@@ -5708,13 +5862,54 @@ components:
       scheme: bearer
       bearerFormat: JWT
   schemas:
-    GlobalConfig:
+    Config:
       required:
-        - setting
+        - id
+        - type
+        - app_id
+        - org_id
+        - system
+        - data
+        - date_created
+        - date_updated
       type: object
       properties:
-        setting:
+        id:
+          readOnly: true
           type: string
+        type:
+          type: string
+        app_id:
+          readOnly: true
+          type: string
+        org_id:
+          readOnly: true
+          type: string
+        system:
+          type: boolean
+        data:
+          anyOf:
+            - $ref: '#/components/schemas/EnvConfigData'
+        date_created:
+          readOnly: true
+          type: string
+        date_updated:
+          readOnly: true
+          type: string
+          nullable: true
+    EnvConfigData:
+      type: object
+      properties:
+        cors_allowed_origins:
+          type: array
+          items:
+            type: string
+          nullable: true
+        cors_allowed_headers:
+          type: array
+          items:
+            type: string
+          nullable: true
     Application:
       required:
         - id
@@ -7444,6 +7639,26 @@ components:
       properties:
         verified:
           type: boolean
+    _admin_req_create-update-config:
+      required:
+        - type
+        - system
+        - data
+      type: object
+      properties:
+        type:
+          type: string
+        all_apps:
+          type: boolean
+          nullable: true
+        all_orgs:
+          type: boolean
+          nullable: true
+        system:
+          type: boolean
+        data:
+          anyOf:
+            - $ref: '#/components/schemas/EnvConfigData'
     _system_req_update_service-account:
       type: object
       properties:

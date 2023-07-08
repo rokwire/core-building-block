@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Rokwire Core Building Block API
   description: Core Building Block API Documentation
-  version: 1.33.0
+  version: 1.34.0
 servers:
   - url: https://api.rokwire.illinois.edu/core
     description: Production server
@@ -133,6 +133,10 @@ paths:
     $ref: "./resources/admin/application/accounts/system-configs.yaml"
   /admin/application/accounts/{id}/verified:
     $ref: "./resources/admin/application/accounts/verified.yaml"
+  /admin/application/configs:
+    $ref: "./resources/admin/application/configs.yaml"
+  /admin/application/configs/{id}:
+    $ref: "./resources/admin/application/configsId.yaml"
   /admin/application/filter/accounts:
     $ref: "./resources/admin/application/filter/accounts.yaml"
   /admin/application/filter/accounts/count:
@@ -155,7 +159,11 @@ paths:
     $ref: "./resources/admin/application/roles/permissions.yaml"
   /admin/organization/applications:
     $ref: "./resources/admin/organization/applications.yaml"
- 
+  /admin/configs:
+    $ref: "./resources/admin/configs.yaml"
+  /admin/configs/{id}:
+    $ref: "./resources/admin/configsId.yaml"
+  
   #enc
   /enc/test:
     $ref: "./resources/enc/test.yaml"
@@ -195,8 +203,6 @@ paths:
   #system
   /system/auth/app-org-token:
     $ref: "./resources/system/auth/app-org-token.yaml"
-  /system/global-config:
-    $ref: "./resources/system/global-config.yaml"
   /system/organizations/{id}:
     $ref: "./resources/system/organizationsId.yaml"
   /system/organizations:
@@ -215,10 +221,6 @@ paths:
     $ref: "./resources/system/applications.yaml"
   /system/permissions:
     $ref: "./resources/system/permissions.yaml"
-  /system/application/configs:
-    $ref: "./resources/system/application-configs.yaml"
-  /system/application/configs/{id}:
-    $ref: "./resources/system/application-configsId.yaml"
   /system/api-keys:
     $ref: "./resources/system/api-keys.yaml"
   /system/auth-types:
