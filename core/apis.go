@@ -304,8 +304,12 @@ func (s *servicesImpl) SerUpdateAccountPreferences(id string, appID string, orgI
 	return s.app.serUpdateAccountPreferences(id, appID, orgID, anonymous, preferences, l)
 }
 
-func (s *servicesImpl) SerUpdateProfile(accountID string, profile model.Profile) error {
-	return s.app.serUpdateProfile(accountID, profile)
+func (s *servicesImpl) SerUpdateAccountProfile(accountID string, profile model.Profile) error {
+	return s.app.serUpdateAccountProfile(accountID, profile)
+}
+
+func (s *servicesImpl) SerUpdateAccountPrivacy(accountID string, privacy model.Privacy) error {
+	return s.app.serUpdateAccountPrivacy(accountID, privacy)
 }
 
 func (s *servicesImpl) SerUpdateAccountUsername(accountID string, appID string, orgID string, username string) error {
@@ -315,6 +319,19 @@ func (s *servicesImpl) SerUpdateAccountUsername(accountID string, appID string, 
 func (s *servicesImpl) SerGetAccounts(limit int, offset int, appID string, orgID string, accountID *string, firstName *string, lastName *string, authType *string,
 	authTypeIdentifier *string, anonymous *bool, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error) {
 	return s.app.serGetAccounts(limit, offset, appID, orgID, accountID, firstName, lastName, authType, authTypeIdentifier, anonymous, hasPermissions, permissions, roleIDs, groupIDs)
+}
+
+func (s *servicesImpl) SerGetPublicAccounts(appID string, orgID string, limit int, offset int, search *string,
+	firstName *string, lastName *string, username *string, followingID *string, followerID *string, userID string) ([]model.PublicAccount, error) {
+	return s.app.serGetPublicAccounts(appID, orgID, limit, offset, search, firstName, lastName, username, followingID, followerID, userID)
+}
+
+func (s *servicesImpl) SerAddFollow(follow model.Follow) error {
+	return s.app.serAddFollow(follow)
+}
+
+func (s *servicesImpl) SerDeleteFollow(appID string, orgID string, FolloweeID string, userID string) error {
+	return s.app.serDeleteFollow(appID, orgID, FolloweeID, userID)
 }
 
 func (s *servicesImpl) SerGetAuthTest(l *logs.Log) string {
@@ -367,6 +384,26 @@ func (s *administrationImpl) AdmGetTestModel() string {
 
 func (s *administrationImpl) AdmGetAppConfig(appTypeIdentifier string, orgID *string, versionNumbers model.VersionNumbers, apiKey *string) (*model.ApplicationConfig, error) {
 	return s.app.adminGetAppConfig(appTypeIdentifier, orgID, versionNumbers, apiKey)
+}
+
+func (s *administrationImpl) AdmGetAppConfigs(appTypeID string, orgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error) {
+	return s.app.admGetAppConfigs(appTypeID, orgID, versionNumbers)
+}
+
+func (s *administrationImpl) AdmGetAppConfigByID(id string) (*model.ApplicationConfig, error) {
+	return s.app.admGetAppConfigByID(id)
+}
+
+func (s *administrationImpl) AdmCreateAppConfig(appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error) {
+	return s.app.admCreateAppConfig(appTypeID, orgID, data, versionNumbers)
+}
+
+func (s *administrationImpl) AdmUpdateAppConfig(id string, appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) error {
+	return s.app.admUpdateAppConfig(id, appTypeID, orgID, data, versionNumbers)
+}
+
+func (s *administrationImpl) AdmDeleteAppConfig(id string) error {
+	return s.app.admDeleteAppConfig(id)
 }
 
 func (s *administrationImpl) AdmGetApplications(orgID string) ([]model.Application, error) {
@@ -440,6 +477,10 @@ func (s *administrationImpl) AdmGetFilterAccountsCount(searchParams map[string]i
 
 func (s *administrationImpl) AdmUpdateAccountUsername(accountID string, appID string, orgID string, username string) error {
 	return s.app.sharedUpdateAccountUsername(accountID, appID, orgID, username)
+}
+
+func (s *administrationImpl) AdmUpdateAccountVerified(accountID string, appID string, orgID string, verified bool) error {
+	return s.app.admUpdateAccountVerified(accountID, appID, orgID, verified)
 }
 
 func (s *administrationImpl) AdmGetAccountSystemConfigs(appID string, orgID string, accountID string, l *logs.Log) (map[string]interface{}, error) {
@@ -589,26 +630,6 @@ func (s *systemImpl) SysCreatePermission(name string, description *string, servi
 
 func (s *systemImpl) SysUpdatePermission(name string, description *string, serviceID *string, assigners *[]string) (*model.Permission, error) {
 	return s.app.sysUpdatePermission(name, description, serviceID, assigners)
-}
-
-func (s *systemImpl) SysGetAppConfigs(appTypeID string, orgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error) {
-	return s.app.sysGetAppConfigs(appTypeID, orgID, versionNumbers)
-}
-
-func (s *systemImpl) SysGetAppConfig(id string) (*model.ApplicationConfig, error) {
-	return s.app.sysGetAppConfig(id)
-}
-
-func (s *systemImpl) SysCreateAppConfig(appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error) {
-	return s.app.sysCreateAppConfig(appTypeID, orgID, data, versionNumbers)
-}
-
-func (s *systemImpl) SysUpdateAppConfig(id string, appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) error {
-	return s.app.sysUpdateAppConfig(id, appTypeID, orgID, data, versionNumbers)
-}
-
-func (s *systemImpl) SysDeleteAppConfig(id string) error {
-	return s.app.sysDeleteAppConfig(id)
 }
 
 func (s *systemImpl) SysCreateAuthTypes(code string, description string, isExternal bool, isAnonymous bool, useCredentials bool, ignoreMFA bool, params map[string]interface{}) (*model.AuthType, error) {

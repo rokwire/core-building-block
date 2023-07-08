@@ -40,7 +40,9 @@ properties:
   device:
     $ref: "../../../../user/Device.yaml"
   profile:
-    $ref:  "../../../../user/ProfileNullable.yaml"  
+    $ref:  "../../../../user/ProfileNullable.yaml"
+  privacy:
+    $ref:  "../../../../user/PrivacyNullable.yaml"
   preferences:
     type: object
     nullable: true
