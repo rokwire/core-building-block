@@ -98,6 +98,9 @@ func (h AdminApisHandler) login(l *logs.Log, r *http.Request, claims *tokenauth.
 	//profile ////
 	requestProfile := profileFromDefNullable(requestData.Profile)
 
+	//privacy
+	requestPrivacy := privacyFromDefNullable(requestData.Privacy)
+
 	username := ""
 	if requestData.Username != nil {
 		username = *requestData.Username
@@ -107,7 +110,7 @@ func (h AdminApisHandler) login(l *logs.Log, r *http.Request, claims *tokenauth.
 	requestDevice := requestData.Device
 
 	message, loginSession, mfaTypes, err := h.coreAPIs.Auth.Login(ip, string(requestDevice.Type), requestDevice.Os, *requestDevice.DeviceId, string(requestData.AuthType),
-		requestCreds, requestData.ApiKey, requestData.AppTypeIdentifier, requestData.OrgId, requestParams, &clientVersion, requestProfile, requestPreferences, username, true, l)
+		requestCreds, requestData.ApiKey, requestData.AppTypeIdentifier, requestData.OrgId, requestParams, &clientVersion, requestProfile, requestPrivacy, requestPreferences, username, true, l)
 	if err != nil {
 		loggingErr, ok := err.(*errors.Error)
 		if ok && loggingErr.Status() != "" {
@@ -937,6 +940,7 @@ func (h AdminApisHandler) createAdminAccount(l *logs.Log, r *http.Request, claim
 		scopes = *requestData.Scopes
 	}
 	profile := profileFromDefNullable(requestData.Profile)
+	privacy := privacyFromDefNullable(requestData.Privacy)
 
 	username := ""
 	if requestData.Username != nil {
@@ -945,7 +949,7 @@ func (h AdminApisHandler) createAdminAccount(l *logs.Log, r *http.Request, claim
 
 	creatorPermissions := strings.Split(claims.Permissions, ",")
 	account, params, err := h.coreAPIs.Auth.CreateAdminAccount(string(requestData.AuthType), claims.AppID, claims.OrgID,
-		requestData.Identifier, profile, username, permissions, roleIDs, groupIDs, scopes, creatorPermissions, &clientVersion, l)
+		requestData.Identifier, profile, privacy, username, permissions, roleIDs, groupIDs, scopes, creatorPermissions, &clientVersion, l)
 	if err != nil || account == nil {
 		return l.HTTPResponseErrorAction(logutils.ActionCreate, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}
@@ -1117,6 +1121,27 @@ func (h AdminApisHandler) updateAccountUsername(l *logs.Log, r *http.Request, cl
 	}
 
 	err = h.coreAPIs.Administration.AdmUpdateAccountUsername(claims.Subject, claims.AppID, claims.OrgID, username.Username)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionUpdate, model.TypeAccountUsername, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HTTPResponseSuccess()
+}
+
+func (h AdminApisHandler) updateAccountVerified(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
+	params := mux.Vars(r)
+	accountID := params["id"]
+	if len(accountID) <= 0 {
+		return l.HTTPResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
+	}
+
+	var verified Def.AdminReqVerified
+	err := json.NewDecoder(r.Body).Decode(&verified)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, model.TypeAccountUsername, nil, err, http.StatusBadRequest, true)
+	}
+
+	err = h.coreAPIs.Administration.AdmUpdateAccountVerified(accountID, claims.AppID, claims.OrgID, verified.Verified)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUpdate, model.TypeAccountUsername, nil, err, http.StatusInternalServerError, true)
 	}

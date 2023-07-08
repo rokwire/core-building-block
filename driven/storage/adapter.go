@@ -836,6 +836,34 @@ func (sa *Adapter) FindAuthTypes() ([]model.AuthType, error) {
 	return sa.getCachedAuthTypes()
 }
 
+// InsertFollow inserts a follow to specified user
+func (sa *Adapter) InsertFollow(context TransactionContext, follow model.Follow) error {
+	_, err := sa.db.follows.InsertOneWithContext(context, follow)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeFollow, nil, err)
+	}
+
+	return nil
+}
+
+// DeleteFollow deletes a specified follow relationship
+func (sa *Adapter) DeleteFollow(context TransactionContext, appID string, orgID string, followingID string, followerID string) error {
+	filter := bson.D{primitive.E{Key: "app_id", Value: appID},
+		primitive.E{Key: "org_id", Value: orgID},
+		primitive.E{Key: "following_id", Value: followingID},
+		primitive.E{Key: "follower_id", Value: followerID}}
+
+	res, err := sa.db.follows.DeleteOneWithContext(context, filter, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeFollow, nil, err)
+	}
+	if res.DeletedCount != 1 {
+		return errors.ErrorAction(logutils.ActionDelete, model.TypeFollow, logutils.StringArgs("unexpected deleted count"))
+	}
+
+	return nil
+}
+
 // InsertLoginSession inserts login session
 func (sa *Adapter) InsertLoginSession(context TransactionContext, session model.LoginSession) error {
 	storageLoginSession := loginSessionToStorage(session)
@@ -1296,6 +1324,97 @@ func (sa *Adapter) FindAccounts(context TransactionContext, limit *int, offset *
 
 	accounts := accountsFromStorage(list, *appOrg)
 	return accounts, nil
+}
+
+// FindPublicAccounts finds accounts and returns name and username
+func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, orgID string, limit *int, offset *int,
+	search *string, firstName *string, lastName *string, username *string, followingID *string, followerID *string, userID string) ([]model.PublicAccount, error) {
+	appOrg, err := sa.FindApplicationOrganization(appID, orgID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
+	}
+
+	pipeline := []bson.M{}
+
+	var searchStr, firstNameStr, lastNameStr, usernameStr, followingIDStr, followerIDStr string
+	if search != nil {
+		searchStr = *search
+		pipeline = append(pipeline,
+			bson.M{
+				"$match": bson.M{
+					"$text": bson.M{
+						"$search": search,
+						// "$caseSensitive": false,
+					}},
+			})
+	}
+
+	pipeline = append(pipeline, bson.M{"$match": bson.M{"app_org_id": appOrg.ID, "privacy.public": true}})
+	pipeline = append(pipeline, bson.M{"$lookup": bson.M{
+		"from":         "follows",
+		"localField":   "_id",
+		"foreignField": "following_id",
+		"as":           "followings",
+	}})
+	pipeline = append(pipeline, bson.M{"$lookup": bson.M{
+		"from":         "follows",
+		"localField":   "_id",
+		"foreignField": "follower_id",
+		"as":           "followers",
+	}})
+
+	if firstName != nil {
+		firstNameStr = *firstName
+		pipeline = append(pipeline, bson.M{"$match": bson.M{"profile.first_name": *firstName}})
+	}
+	if lastName != nil {
+		lastNameStr = *lastName
+		pipeline = append(pipeline, bson.M{"$match": bson.M{"profile.last_name": *lastName}})
+	}
+	if username != nil {
+		usernameStr = *username
+		pipeline = append(pipeline, bson.M{"$match": bson.M{"username": *username}})
+	}
+
+	if followingID != nil {
+		followingIDStr = *followingID
+		pipeline = append(pipeline, bson.M{"$match": bson.M{"followers.following_id": *followingID}})
+	}
+
+	if followerID != nil {
+		followerIDStr = *followerID
+		pipeline = append(pipeline, bson.M{"$match": bson.M{"followings.follower_id": *followerID}})
+	}
+
+	// adds boolean value whether API calling user is following account
+	pipeline = append(pipeline, bson.M{"$addFields": bson.M{"is_following": bson.M{"$in": bson.A{userID, "$followings.follower_id"}}}})
+
+	if offset != nil {
+		pipeline = append(pipeline, bson.M{"$skip": *offset})
+	}
+
+	if limit != nil {
+		pipeline = append(pipeline, bson.M{"$limit": *limit})
+	}
+
+	var accounts []account
+	err = sa.db.accounts.Aggregate(pipeline, &accounts, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"app_id": appID, "org_id": orgID, "search": searchStr, "first_name": firstNameStr, "last_name": lastNameStr, "username": usernameStr, "following_id": followingIDStr, "follower_id": followerIDStr}, err)
+	}
+
+	var publicAccounts []model.PublicAccount
+	for _, account := range accounts {
+		publicAccounts = append(publicAccounts, model.PublicAccount{
+			ID:          account.ID,
+			Username:    account.Username,
+			FirstName:   account.Profile.FirstName,
+			LastName:    account.Profile.LastName,
+			Verified:    account.Verified,
+			IsFollowing: account.IsFollowing,
+		})
+	}
+	return publicAccounts, nil
 }
 
 // FindAccountsByParams finds accounts by an arbitrary set of search params
@@ -1839,6 +1958,32 @@ func (sa *Adapter) UpdateAccountUsername(context TransactionContext, accountID s
 	res, err := sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"id": accountID}, err)
+	}
+	if res.ModifiedCount != 1 {
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"id": accountID, "modified": res.ModifiedCount, "expected": 1})
+	}
+
+	return nil
+}
+
+// UpdateAccountVerified updates an account's username
+func (sa *Adapter) UpdateAccountVerified(context TransactionContext, accountID string, appID string, orgID string, verified bool) error {
+	appOrg, err := sa.FindApplicationOrganization(appID, orgID)
+	if err != nil || appOrg == nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": appID, "org_id": orgID}, err)
+	}
+
+	filter := bson.M{"_id": accountID, "app_org_id": appOrg.ID}
+	update := bson.D{
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "verified", Value: verified},
+			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
+		}},
+	}
+
+	res, err := sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"id": accountID, "app_id": appID, "org_id": orgID}, err)
 	}
 	if res.ModifiedCount != 1 {
 		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"id": accountID, "modified": res.ModifiedCount, "expected": 1})
@@ -3003,8 +3148,8 @@ func (sa *Adapter) LoadIdentityProviders() ([]model.IdentityProvider, error) {
 
 }
 
-// UpdateProfile updates a profile
-func (sa *Adapter) UpdateProfile(context TransactionContext, profile model.Profile) error {
+// UpdateAccountProfile updates a profile
+func (sa *Adapter) UpdateAccountProfile(context TransactionContext, profile model.Profile) error {
 	filter := bson.D{primitive.E{Key: "profile.id", Value: profile.ID}}
 
 	now := time.Now().UTC()
@@ -3034,8 +3179,27 @@ func (sa *Adapter) UpdateProfile(context TransactionContext, profile model.Profi
 	return nil
 }
 
-// FindProfiles finds profiles by app id, authtype id and account auth type identifier
-func (sa *Adapter) FindProfiles(appID string, authTypeID string, accountAuthTypeIdentifier string) ([]model.Profile, error) {
+// UpdateAccountPrivacy updates the privacy settings for an account
+func (sa *Adapter) UpdateAccountPrivacy(context TransactionContext, accountID string, privacy model.Privacy) error {
+	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
+
+	privacyUpdate := bson.D{
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "privacy", Value: privacy},
+		}},
+	}
+
+	res, err := sa.db.accounts.UpdateManyWithContext(context, filter, privacyUpdate, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypePrivacy, nil, err)
+	}
+	sa.logger.Infof("modified %d privacy copies", res.ModifiedCount)
+
+	return nil
+}
+
+// FindAccountProfiles finds profiles by app id, authtype id and account auth type identifier
+func (sa *Adapter) FindAccountProfiles(appID string, authTypeID string, accountAuthTypeIdentifier string) ([]model.Profile, error) {
 	pipeline := []bson.M{
 		{"$match": bson.M{"auth_types.auth_type_id": authTypeID, "auth_types.identifier": accountAuthTypeIdentifier}},
 		{"$lookup": bson.M{

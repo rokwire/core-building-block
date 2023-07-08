@@ -1148,6 +1148,14 @@ func (app *application) admUpdateAccountSystemConfigs(appID string, orgID string
 	return created, err
 }
 
+func (app *application) admUpdateAccountVerified(accountID string, appID string, orgID string, verified bool) error {
+	err := app.storage.UpdateAccountVerified(nil, accountID, appID, orgID, verified)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeProfile, nil, err)
+	}
+	return nil
+}
+
 func (app *application) admGetApplicationLoginSessions(appID string, orgID string, identifier *string, accountAuthTypeIdentifier *string,
 	appTypeID *string, appTypeIdentifier *string, anonymous *bool, deviceID *string, ipAddress *string) ([]model.LoginSession, error) {
 	//find the login sessions

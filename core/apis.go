@@ -304,8 +304,12 @@ func (s *servicesImpl) SerUpdateAccountPreferences(id string, appID string, orgI
 	return s.app.serUpdateAccountPreferences(id, appID, orgID, anonymous, preferences, l)
 }
 
-func (s *servicesImpl) SerUpdateProfile(accountID string, profile model.Profile) error {
-	return s.app.serUpdateProfile(accountID, profile)
+func (s *servicesImpl) SerUpdateAccountProfile(accountID string, profile model.Profile) error {
+	return s.app.serUpdateAccountProfile(accountID, profile)
+}
+
+func (s *servicesImpl) SerUpdateAccountPrivacy(accountID string, privacy model.Privacy) error {
+	return s.app.serUpdateAccountPrivacy(accountID, privacy)
 }
 
 func (s *servicesImpl) SerUpdateAccountUsername(accountID string, appID string, orgID string, username string) error {
@@ -315,6 +319,19 @@ func (s *servicesImpl) SerUpdateAccountUsername(accountID string, appID string, 
 func (s *servicesImpl) SerGetAccounts(limit int, offset int, appID string, orgID string, accountID *string, firstName *string, lastName *string, authType *string,
 	authTypeIdentifier *string, anonymous *bool, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error) {
 	return s.app.serGetAccounts(limit, offset, appID, orgID, accountID, firstName, lastName, authType, authTypeIdentifier, anonymous, hasPermissions, permissions, roleIDs, groupIDs)
+}
+
+func (s *servicesImpl) SerGetPublicAccounts(appID string, orgID string, limit int, offset int, search *string,
+	firstName *string, lastName *string, username *string, followingID *string, followerID *string, userID string) ([]model.PublicAccount, error) {
+	return s.app.serGetPublicAccounts(appID, orgID, limit, offset, search, firstName, lastName, username, followingID, followerID, userID)
+}
+
+func (s *servicesImpl) SerAddFollow(follow model.Follow) error {
+	return s.app.serAddFollow(follow)
+}
+
+func (s *servicesImpl) SerDeleteFollow(appID string, orgID string, FolloweeID string, userID string) error {
+	return s.app.serDeleteFollow(appID, orgID, FolloweeID, userID)
 }
 
 func (s *servicesImpl) SerGetAuthTest(l *logs.Log) string {
@@ -460,6 +477,10 @@ func (s *administrationImpl) AdmGetFilterAccountsCount(searchParams map[string]i
 
 func (s *administrationImpl) AdmUpdateAccountUsername(accountID string, appID string, orgID string, username string) error {
 	return s.app.sharedUpdateAccountUsername(accountID, appID, orgID, username)
+}
+
+func (s *administrationImpl) AdmUpdateAccountVerified(accountID string, appID string, orgID string, verified bool) error {
+	return s.app.admUpdateAccountVerified(accountID, appID, orgID, verified)
 }
 
 func (s *administrationImpl) AdmGetAccountSystemConfigs(appID string, orgID string, accountID string, l *logs.Log) (map[string]interface{}, error) {

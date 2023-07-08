@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+### Added
+- Support following accounts [#667](https://github.com/rokwire/core-building-block/issues/667)
+
 ## [1.34.0] - 2023-07-06
 ### Added
 - Enable CORS [#632](https://github.com/rokwire/core-building-block/issues/632)

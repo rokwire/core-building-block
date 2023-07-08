@@ -42,10 +42,14 @@ type account struct {
 
 	Devices []userDevice `bson:"devices,omitempty"`
 
-	Anonymous bool `bson:"anonymous"`
+	Anonymous bool          `bson:"anonymous"`
+	Privacy   model.Privacy `bson:"privacy"`
+	Verified  bool          `bson:"verified"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
+
+	IsFollowing bool `bson:"is_following"`
 
 	LastLoginDate           *time.Time `bson:"last_login_date"`
 	LastAccessTokenDate     *time.Time `bson:"last_access_token_date"`
@@ -145,4 +149,13 @@ type mfaType struct {
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
+}
+
+type follow struct {
+	ID string `bson:"_id"`
+
+	AppOrgID string `bson:"app_org_id,omitempty"`
+
+	FollowerID  string `bson:"follower_id"`
+	FollowingID string `bson:"following_id"`
 }
