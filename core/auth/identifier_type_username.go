@@ -130,6 +130,10 @@ type usernameIdentifierImpl struct {
 	identifierType string
 }
 
+func (a *usernameIdentifierImpl) getType() string {
+	return IdentifierTypeUsername
+}
+
 func (a *usernameIdentifierImpl) getUserIdentifier(creds string) (string, error) {
 	var requestCreds usernameCreds
 	err := json.Unmarshal([]byte(creds), &requestCreds)
@@ -195,7 +199,11 @@ func (a *usernameIdentifierImpl) verifyCredential(credential authCreds, verifica
 }
 
 func (a *usernameIdentifierImpl) sendVerifyCredential(credential authCreds, appName string, credID string) (map[string]interface{}, bool, error) {
-	return nil, false, nil
+	credsMap, err := credential.toMap()
+	if err != nil {
+		return nil, false, errors.WrapErrorAction(logutils.ActionCast, "map from username creds", nil, err)
+	}
+	return credsMap, false, nil
 }
 
 func (a *usernameIdentifierImpl) restartCredentialVerification(credential authCreds, appName string, credID string) (map[string]interface{}, error) {

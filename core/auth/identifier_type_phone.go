@@ -118,6 +118,10 @@ type phoneIdentifierImpl struct {
 	identifierType string
 }
 
+func (a *phoneIdentifierImpl) getType() string {
+	return IdentifierTypePhone
+}
+
 func (a *phoneIdentifierImpl) getUserIdentifier(creds string) (string, error) {
 	var requestCreds phoneCreds
 	err := json.Unmarshal([]byte(creds), &requestCreds)

@@ -623,11 +623,16 @@ func (a *Auth) applyAuthType(supportedAuthType model.SupportedAuthType, appOrg m
 	}
 
 	if userIdentifier != "" {
-		if strings.Contains(supportedAuthType.AuthType.Code, IdentifierTypePhone) && regProfile.Phone == "" {
-			regProfile.Phone = userIdentifier
-		} else if supportedAuthType.AuthType.Code == IdentifierTypeEmail && regProfile.Email == "" {
-			regProfile.Email = userIdentifier
-		} else if supportedAuthType.AuthType.Code == IdentifierTypeUsername || supportedAuthType.AuthType.Code == AuthTypeWebAuthn {
+		switch identifierImpl.getType() {
+		case IdentifierTypePhone:
+			if regProfile.Phone == "" {
+				regProfile.Phone = userIdentifier
+			}
+		case IdentifierTypeEmail:
+			if regProfile.Email == "" {
+				regProfile.Email = userIdentifier
+			}
+		case IdentifierTypeUsername:
 			username = userIdentifier
 		}
 	}
@@ -2163,7 +2168,7 @@ func (a *Auth) getIdentifierTypeImpl(credential *model.Credential, creds *string
 		} else if creds != nil && strings.Contains(*creds, code) {
 			identifierCreds, err = identifierImpl.parseCreds(*creds)
 		}
-		if err == nil && identifierCreds.identifier() != "" {
+		if err == nil && identifierCreds != nil && identifierCreds.identifier() != "" {
 			return identifierImpl, identifierCreds, nil
 		}
 	}

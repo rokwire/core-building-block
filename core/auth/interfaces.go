@@ -29,10 +29,7 @@ import (
 
 // identifierType is the interface for auth identifiers that are not external to the system
 type identifierType interface {
-	//getUserIdentifier parses the credentials and returns the user identifier
-	// Returns:
-	//	userIdentifier (string): User identifier
-	getUserIdentifier(creds string) (string, error)
+	getType() string
 
 	parseCreds(creds string) (authCreds, error)
 	parseParams(params string) (authParams, error)
@@ -40,6 +37,11 @@ type identifierType interface {
 	mapToCreds(credsMap map[string]interface{}) (authCreds, error)
 
 	buildCredential(identifier string, credential string, key string) authCreds
+
+	//getUserIdentifier parses the credentials and returns the user identifier
+	// Returns:
+	//	userIdentifier (string): User identifier
+	getUserIdentifier(creds string) (string, error)
 
 	//verifies credential (checks the verification code generated on email signup for email auth type)
 	// Returns:

@@ -146,6 +146,10 @@ type emailIdentifierImpl struct {
 	identifierType string
 }
 
+func (a *emailIdentifierImpl) getType() string {
+	return IdentifierTypeEmail
+}
+
 func (a *emailIdentifierImpl) getUserIdentifier(creds string) (string, error) {
 	var requestCreds emailCreds
 	err := json.Unmarshal([]byte(creds), &requestCreds)
