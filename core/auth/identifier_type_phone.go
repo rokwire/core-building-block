@@ -189,7 +189,18 @@ func (a *phoneIdentifierImpl) verifyCredential(credential authCreds, verificatio
 }
 
 func (a *phoneIdentifierImpl) sendVerifyCredential(credential authCreds, appName string, credID string) (map[string]interface{}, bool, error) {
-	return nil, false, nil
+	//send verification code
+	if _, err := a.sendCode(credential.identifier(), appName, "", typeVerificationCode, credID); err != nil {
+		return nil, false, errors.WrapErrorAction(logutils.ActionSend, "verification phone", nil, err)
+	}
+
+	//Update verification data in credential value
+	credsMap, err := credential.toMap()
+	if err != nil {
+		return nil, true, errors.WrapErrorAction(logutils.ActionCast, "map from phone creds", nil, err)
+	}
+
+	return credsMap, true, nil
 }
 
 func (a *phoneIdentifierImpl) restartCredentialVerification(credential authCreds, appName string, credID string) (map[string]interface{}, error) {
@@ -197,7 +208,8 @@ func (a *phoneIdentifierImpl) restartCredentialVerification(credential authCreds
 }
 
 func (a *phoneIdentifierImpl) isCredentialVerified(credential *model.Credential) (*bool, *bool, error) {
-	return nil, nil, errors.New(logutils.Unimplemented)
+	verified := credential.Verified
+	return &verified, nil, nil
 }
 
 func (a *phoneIdentifierImpl) sendCode(identifier string, appName string, code string, codeType string, credID string) (string, error) {
