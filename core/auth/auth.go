@@ -2157,10 +2157,10 @@ func (a *Auth) getIdentifierTypeImpl(credential *model.Credential, creds *string
 
 	var identifierCreds authCreds
 	var err error
-	for _, identifierImpl := range a.identifierTypes {
-		if credential != nil {
+	for code, identifierImpl := range a.identifierTypes {
+		if credential != nil && credential.Value[code] != nil {
 			identifierCreds, err = identifierImpl.mapToCreds(credential.Value)
-		} else if creds != nil {
+		} else if creds != nil && strings.Contains(*creds, code) {
 			identifierCreds, err = identifierImpl.parseCreds(*creds)
 		}
 		if err == nil && identifierCreds.identifier() != "" {
