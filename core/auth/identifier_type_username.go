@@ -34,11 +34,11 @@ const (
 // userNameCreds represents the creds struct for username identifier
 type usernameCreds struct {
 	Username   string  `json:"username" bson:"username" validate:"required"`
-	Password   *string `json:"password" bson:"password,omitempty"`
-	Session    *string `json:"session" bson:"session,omitempty"`
-	Credential *string `json:"credential" bson:"credential,omitempty"`
-	Response   *string `json:"response"`
-	Code       *string `json:"code" bson:"code,omitempty"`
+	Password   *string `json:"password,omitempty" bson:"password,omitempty"`
+	Session    *string `json:"session,omitempty" bson:"session,omitempty"`
+	Credential *string `json:"credential,omitempty" bson:"credential,omitempty"`
+	Response   *string `json:"response,omitempty"`
+	Code       *string `json:"code,omitempty" bson:"code,omitempty"`
 }
 
 func (c *usernameCreds) identifier() string {

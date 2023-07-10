@@ -36,11 +36,11 @@ const (
 
 type phoneCreds struct {
 	Phone      string  `json:"phone" bson:"phone" validate:"required"`
-	Code       *string `json:"code"`
-	Password   *string `json:"password" bson:"password,omitempty"`
-	Session    *string `json:"session" bson:"session,omitempty"`
-	Credential *string `json:"credential" bson:"credential,omitempty"`
-	Response   *string `json:"response"`
+	Code       *string `json:"code,omitempty"`
+	Password   *string `json:"password,omitempty" bson:"password,omitempty"`
+	Session    *string `json:"session,omitempty" bson:"session,omitempty"`
+	Credential *string `json:"credential,omitempty" bson:"credential,omitempty"`
+	Response   *string `json:"response,omitempty"`
 }
 
 func (c *phoneCreds) identifier() string {
