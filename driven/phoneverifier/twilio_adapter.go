@@ -78,11 +78,6 @@ type checkStatusResponse struct {
 	DateUpdated time.Time   `json:"date_updated"`
 }
 
-// Identifier returns an identifying string for the adapter
-func (a *TwilioAdapter) Identifier() string {
-	return string(typeTwilio)
-}
-
 // StartVerification begins the phone verification process
 func (a *TwilioAdapter) StartVerification(phone string, data url.Values) error {
 	ctx, cancel := context.WithCancel(context.Background())

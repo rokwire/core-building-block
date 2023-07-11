@@ -639,7 +639,6 @@ type Emailer interface {
 
 // PhoneVerifier is used by core to verify phone numbers
 type PhoneVerifier interface {
-	Identifier() string
 	StartVerification(phone string, data url.Values) error
 	CheckVerification(phone string, data url.Values) error
 }
