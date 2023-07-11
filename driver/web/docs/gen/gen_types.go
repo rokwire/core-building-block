@@ -68,6 +68,7 @@ const (
 	ServicesReqAccountAuthTypeLinkAuthTypeIllinoisOidc ServicesReqAccountAuthTypeLinkAuthType = "illinois_oidc"
 	ServicesReqAccountAuthTypeLinkAuthTypeTwilioPhone  ServicesReqAccountAuthTypeLinkAuthType = "twilio_phone"
 	ServicesReqAccountAuthTypeLinkAuthTypeUsername     ServicesReqAccountAuthTypeLinkAuthType = "username"
+	ServicesReqAccountAuthTypeLinkAuthTypeWebauthn     ServicesReqAccountAuthTypeLinkAuthType = "webauthn"
 )
 
 // Defines values for ServicesReqAccountAuthTypeUnlinkAuthType.
@@ -76,6 +77,7 @@ const (
 	ServicesReqAccountAuthTypeUnlinkAuthTypeIllinoisOidc ServicesReqAccountAuthTypeUnlinkAuthType = "illinois_oidc"
 	ServicesReqAccountAuthTypeUnlinkAuthTypeTwilioPhone  ServicesReqAccountAuthTypeUnlinkAuthType = "twilio_phone"
 	ServicesReqAccountAuthTypeUnlinkAuthTypeUsername     ServicesReqAccountAuthTypeUnlinkAuthType = "username"
+	ServicesReqAccountAuthTypeUnlinkAuthTypeWebauthn     ServicesReqAccountAuthTypeUnlinkAuthType = "webauthn"
 )
 
 // Defines values for ServicesReqCredentialForgotInitiateAuthType.
@@ -1872,6 +1874,32 @@ func (t *AdminReqCreateUpdateConfig_Data) UnmarshalJSON(b []byte) error {
 	return err
 }
 
+// AsSharedReqCredsWebAuthn returns the union data inside the ServicesReqAccountAuthTypeLink_Creds as a SharedReqCredsWebAuthn
+func (t ServicesReqAccountAuthTypeLink_Creds) AsSharedReqCredsWebAuthn() (SharedReqCredsWebAuthn, error) {
+	var body SharedReqCredsWebAuthn
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromSharedReqCredsWebAuthn overwrites any union data inside the ServicesReqAccountAuthTypeLink_Creds as the provided SharedReqCredsWebAuthn
+func (t *ServicesReqAccountAuthTypeLink_Creds) FromSharedReqCredsWebAuthn(v SharedReqCredsWebAuthn) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeSharedReqCredsWebAuthn performs a merge with any union data inside the ServicesReqAccountAuthTypeLink_Creds, using the provided SharedReqCredsWebAuthn
+func (t *ServicesReqAccountAuthTypeLink_Creds) MergeSharedReqCredsWebAuthn(v SharedReqCredsWebAuthn) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
 // AsSharedReqCredsEmail returns the union data inside the ServicesReqAccountAuthTypeLink_Creds as a SharedReqCredsEmail
 func (t ServicesReqAccountAuthTypeLink_Creds) AsSharedReqCredsEmail() (SharedReqCredsEmail, error) {
 	var body SharedReqCredsEmail
@@ -1957,6 +1985,32 @@ func (t ServicesReqAccountAuthTypeLink_Creds) MarshalJSON() ([]byte, error) {
 
 func (t *ServicesReqAccountAuthTypeLink_Creds) UnmarshalJSON(b []byte) error {
 	err := t.union.UnmarshalJSON(b)
+	return err
+}
+
+// AsSharedReqParamsWebAuthn returns the union data inside the ServicesReqAccountAuthTypeLink_Params as a SharedReqParamsWebAuthn
+func (t ServicesReqAccountAuthTypeLink_Params) AsSharedReqParamsWebAuthn() (SharedReqParamsWebAuthn, error) {
+	var body SharedReqParamsWebAuthn
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromSharedReqParamsWebAuthn overwrites any union data inside the ServicesReqAccountAuthTypeLink_Params as the provided SharedReqParamsWebAuthn
+func (t *ServicesReqAccountAuthTypeLink_Params) FromSharedReqParamsWebAuthn(v SharedReqParamsWebAuthn) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeSharedReqParamsWebAuthn performs a merge with any union data inside the ServicesReqAccountAuthTypeLink_Params, using the provided SharedReqParamsWebAuthn
+func (t *ServicesReqAccountAuthTypeLink_Params) MergeSharedReqParamsWebAuthn(v SharedReqParamsWebAuthn) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(t.union, b)
+	t.union = merged
 	return err
 }
 

@@ -7080,16 +7080,19 @@ components:
             - twilio_phone
             - illinois_oidc
             - username
+            - webauthn
         app_type_identifier:
           type: string
         creds:
           anyOf:
+            - $ref: '#/components/schemas/_shared_req_CredsWebAuthn'
             - $ref: '#/components/schemas/_shared_req_CredsEmail'
             - $ref: '#/components/schemas/_shared_req_CredsTwilioPhone'
             - $ref: '#/components/schemas/_shared_req_CredsOIDC'
         params:
           type: object
           anyOf:
+            - $ref: '#/components/schemas/_shared_req_ParamsWebAuthn'
             - $ref: '#/components/schemas/_shared_req_ParamsEmail'
             - $ref: '#/components/schemas/_shared_req_ParamsOIDC'
             - $ref: '#/components/schemas/_shared_req_ParamsNone'
@@ -7107,6 +7110,7 @@ components:
             - twilio_phone
             - illinois_oidc
             - username
+            - webauthn
         app_type_identifier:
           type: string
         identifier:
