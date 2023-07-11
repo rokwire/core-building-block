@@ -1337,16 +1337,30 @@ func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, 
 	pipeline := []bson.M{}
 
 	var searchStr, firstNameStr, lastNameStr, usernameStr, followingIDStr, followerIDStr string
+
+	// search for matching using text search. No substring matches
+	// if search != nil {
+	// 	searchStr = *search
+	// 	pipeline = append(pipeline,
+	// 		bson.M{
+	// 			"$match": bson.M{
+	// 				"$text": bson.M{
+	// 					"$search": search,
+	// 					// "$caseSensitive": false,
+	// 				}},
+	// 		})
+	// }
+
 	if search != nil {
 		searchStr = *search
-		pipeline = append(pipeline,
-			bson.M{
-				"$match": bson.M{
-					"$text": bson.M{
-						"$search": search,
-						// "$caseSensitive": false,
-					}},
-			})
+		regexFilter := bson.M{
+			"$or": []bson.M{
+				{"username": primitive.Regex{Pattern: *search, Options: "i"}},
+				{"profile.first_name": primitive.Regex{Pattern: *search, Options: "i"}},
+				{"profile.last_name": primitive.Regex{Pattern: *search, Options: "i"}},
+			},
+		}
+		pipeline = append(pipeline, bson.M{"$match": regexFilter})
 	}
 
 	pipeline = append(pipeline, bson.M{"$match": bson.M{"app_org_id": appOrg.ID, "privacy.public": true}})
