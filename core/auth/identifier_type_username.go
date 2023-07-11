@@ -15,7 +15,6 @@
 package auth
 
 import (
-	"core-building-block/core/model"
 	"encoding/json"
 	"time"
 
@@ -192,33 +191,6 @@ func (a *usernameIdentifierImpl) buildCredential(identifier string, credential s
 		return &usernameCreds{Username: identifier, Credential: &credential}
 	}
 	return nil
-}
-
-func (a *usernameIdentifierImpl) verifyCredential(credential authCreds, verification string) (map[string]interface{}, error) {
-	return nil, errors.New(logutils.Unimplemented)
-}
-
-func (a *usernameIdentifierImpl) sendVerifyCredential(credential authCreds, appName string, credID string) (map[string]interface{}, bool, error) {
-	credsMap, err := credential.toMap()
-	if err != nil {
-		return nil, false, errors.WrapErrorAction(logutils.ActionCast, "map from username creds", nil, err)
-	}
-	return credsMap, false, nil
-}
-
-func (a *usernameIdentifierImpl) restartCredentialVerification(credential authCreds, appName string, credID string) (map[string]interface{}, error) {
-	return nil, errors.New(logutils.Unimplemented)
-}
-
-func (a *usernameIdentifierImpl) isCredentialVerified(credential *model.Credential) (*bool, *bool, error) {
-	//TODO verification process for usernames
-	verified := true
-	expired := false
-	return &verified, &expired, nil
-}
-
-func (a *usernameIdentifierImpl) sendCode(identifier string, appName string, code string, codeType string, credID string) (string, error) {
-	return "", errors.New(logutils.Unimplemented)
 }
 
 // initUsernameIdentifier initializes and registers a new username identifier instance

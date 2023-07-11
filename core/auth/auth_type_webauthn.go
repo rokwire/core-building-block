@@ -236,10 +236,19 @@ func (a *webAuthnAuthImpl) beginRegistration(identifierImpl identifierType, auth
 		return "", nil, false, errors.WrapErrorAction(logutils.ActionMarshal, "session", nil, err)
 	}
 
+	var credData map[string]interface{}
 	credValue := identifierImpl.buildCredential(user.Name, string(sessionData), credentialKeySession)
-	credData, sent, err := identifierImpl.sendVerifyCredential(credValue, appName, user.ID)
-	if err != nil {
-		return "", nil, false, errors.WrapErrorAction(logutils.ActionSend, "identifier verification", nil, err)
+	sent := false
+	if identifierChannel, ok := identifierImpl.(authCommunicationChannel); ok {
+		credData, sent, err = identifierChannel.sendVerifyCredential(credValue, appName, user.ID)
+		if err != nil {
+			return "", nil, false, errors.WrapErrorAction(logutils.ActionSend, "identifier verification", nil, err)
+		}
+	} else {
+		credData, err = credValue.toMap()
+		if err != nil {
+			return "", nil, false, errors.WrapErrorAction(logutils.ActionCast, "map from creds", nil, err)
+		}
 	}
 
 	optionData, err := json.Marshal(options)

@@ -692,10 +692,22 @@ func (a *Auth) applySignIn(identifierImpl identifierType, supportedAuthType mode
 }
 
 func (a *Auth) checkCredentialVerified(identifierImpl identifierType, credential *model.Credential, credValue authCreds, appName string) error {
-	verified, expired, err := identifierImpl.isCredentialVerified(credential)
-	if err != nil || verified == nil {
-		return errors.WrapErrorAction(logutils.ActionVerify, "credential verified", nil, err)
+	var verified *bool
+	var expired *bool
+	var err error
+	identifierChannel, hasChannel := identifierImpl.(authCommunicationChannel)
+	if hasChannel {
+		verified, expired, err = identifierChannel.isCredentialVerified(credential)
+		if err != nil || verified == nil {
+			return errors.WrapErrorAction(logutils.ActionVerify, "credential verified", nil, err)
+		}
+	} else {
+		isVerified := true
+		verified = &isVerified
+		isExpired := false
+		expired = &isExpired
 	}
+
 	if !*verified {
 		//it is unverified
 		if expired == nil || !*expired {
@@ -705,9 +717,17 @@ func (a *Auth) checkCredentialVerified(identifierImpl identifierType, credential
 		//expired, first restart the verification and then notify the client that it is unverified and verification is restarted
 
 		//restart credential verification
-		credMap, err := identifierImpl.restartCredentialVerification(credValue, appName, credential.ID)
-		if err != nil {
-			return errors.WrapErrorAction("restarting", "credential verification", nil, err)
+		var credMap map[string]interface{}
+		if hasChannel {
+			credMap, err = identifierChannel.restartCredentialVerification(credValue, appName, credential.ID)
+			if err != nil {
+				return errors.WrapErrorAction("restarting", "credential verification", nil, err)
+			}
+		} else {
+			credMap, err = credValue.toMap()
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionCast, "map from creds", nil, err)
+			}
 		}
 
 		err = a.storage.UpdateCredentialValue(credential.ID, credMap)
@@ -723,7 +743,8 @@ func (a *Auth) checkCredentialVerified(identifierImpl identifierType, credential
 }
 
 func (a *Auth) checkCredentials(identifierImpl identifierType, accountAuthType model.AccountAuthType, creds string, auth model.AuthType) (string, error) {
-	authImpl, identifierCreds, err := a.getAuthTypeImpl(identifierImpl, accountAuthType.Credential, nil, &auth)
+	// get auth type implmentation from incoming creds if there are no stored creds
+	authImpl, identifierCreds, err := a.getAuthTypeImpl(identifierImpl, accountAuthType.Credential, &creds, &auth)
 	if err != nil {
 		return "", errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeAuthType, nil, err)
 	}

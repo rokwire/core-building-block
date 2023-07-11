@@ -16,6 +16,9 @@ package auth
 
 import (
 	"core-building-block/core/model"
+	"core-building-block/utils"
+	"strconv"
+	"strings"
 
 	"github.com/rokwire/logging-library-go/v2/errors"
 	"github.com/rokwire/logging-library-go/v2/logutils"
@@ -36,12 +39,23 @@ type codeAuthImpl struct {
 }
 
 func (a *codeAuthImpl) signUp(identifierImpl identifierType, appName string, creds authCreds, params string, config map[string]interface{}, newCredentialID string) (string, map[string]interface{}, bool, error) {
-	cred := creds.getCredential(credentialKeyCode)
-	if cred == "" {
-		return "", nil, false, errors.ErrorData(logutils.StatusMissing, logutils.MessageDataType(credentialKeyCode), nil)
+	identifierChannel, _ := identifierImpl.(authCommunicationChannel)
+	if identifierChannel == nil {
+		return "", nil, false, errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, logutils.StringArgs(identifierImpl.getType()))
 	}
 
-	message, err := identifierImpl.sendCode(creds.identifier(), appName, cred, typeAuthenticationCode, newCredentialID)
+	code := ""
+	if identifierChannel.requiresCodeGeneration() {
+		code = strconv.Itoa(utils.GenerateRandomInt(1000000))
+		padLen := 6 - len(code)
+		if padLen > 0 {
+			code = strings.Repeat("0", padLen) + code
+		}
+
+		//TODO: store generated codes in credentials collection?
+	}
+
+	message, err := identifierChannel.sendCode(creds.identifier(), appName, code, typeAuthenticationCode, newCredentialID)
 	if err != nil {
 		return "", nil, false, err
 	}
@@ -62,6 +76,11 @@ func (a *codeAuthImpl) resetCredential(credential authCreds, resetCode *string, 
 }
 
 func (a *codeAuthImpl) checkCredential(identifierImpl identifierType, credential *model.Credential, incomingCreds authCreds, displayName string, appName string, config map[string]interface{}) (string, error) {
+	identifierChannel, _ := identifierImpl.(authCommunicationChannel)
+	if identifierChannel == nil {
+		return "", errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, logutils.StringArgs(identifierImpl.getType()))
+	}
+
 	var credID string
 	var storedCred string
 	if credential != nil {
@@ -78,18 +97,20 @@ func (a *codeAuthImpl) checkCredential(identifierImpl identifierType, credential
 	}
 
 	incomingCred := incomingCreds.getCredential(credentialKeyCode)
-	if incomingCred == "" {
-		return "", errors.ErrorData(logutils.StatusMissing, logutils.MessageDataType(credentialKeyCode), nil)
-	}
-	if incomingCred != storedCred {
-		return "", errors.ErrorData(logutils.StatusInvalid, "credential", logutils.StringArgs(incomingCred))
+	if identifierChannel.requiresCodeGeneration() {
+		if incomingCred == "" {
+			return "", errors.ErrorData(logutils.StatusMissing, logutils.MessageDataType(credentialKeyCode), nil)
+		}
+		if incomingCred != storedCred {
+			return "", errors.ErrorData(logutils.StatusInvalid, "credential", logutils.StringArgs(incomingCred))
+		}
+		return "", nil
 	}
 
-	message, err := identifierImpl.sendCode(incomingCreds.identifier(), appName, incomingCred, typeAuthenticationCode, credID)
+	message, err := identifierChannel.sendCode(incomingCreds.identifier(), appName, incomingCred, typeAuthenticationCode, credID)
 	if err != nil {
 		return "", err
 	}
-
 	return message, nil
 }
 

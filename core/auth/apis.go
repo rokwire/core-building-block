@@ -889,9 +889,14 @@ func (a *Auth) VerifyCredential(id string, verification string, l *logs.Log) err
 		}
 	}
 
-	authTypeCreds, err := identifierImpl.verifyCredential(identifierCreds, verification)
-	if err != nil || authTypeCreds == nil {
-		return errors.WrapErrorAction(logutils.ActionValidate, "verification code", nil, err)
+	var authTypeCreds map[string]interface{}
+	if identifierChannel, ok := identifierImpl.(authCommunicationChannel); ok {
+		authTypeCreds, err = identifierChannel.verifyCredential(identifierCreds, verification)
+		if err != nil || authTypeCreds == nil {
+			return errors.WrapErrorAction(logutils.ActionValidate, "verification code", nil, err)
+		}
+	} else {
+		return errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, logutils.StringArgs(identifierImpl.getType()))
 	}
 
 	credential.Verified = true
@@ -1118,10 +1123,15 @@ func (a *Auth) SendVerifyCredential(authenticationType string, appTypeIdentifier
 		}
 	}
 
-	credential.Value, _, err = identifierImpl.sendVerifyCredential(identifierCreds, appOrg.Application.Name, credential.ID)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionSend, "verification code", nil, err)
+	if identifierChannel, ok := identifierImpl.(authCommunicationChannel); ok {
+		credential.Value, _, err = identifierChannel.sendVerifyCredential(identifierCreds, appOrg.Application.Name, credential.ID)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionSend, "verification code", nil, err)
+		}
+	} else {
+		return errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, logutils.StringArgs(identifierImpl.getType()))
 	}
+
 	if err = a.storage.UpdateCredential(nil, credential); err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
 	}

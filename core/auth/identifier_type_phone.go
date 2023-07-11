@@ -51,12 +51,10 @@ func (c *phoneCreds) identifier() string {
 func (c *phoneCreds) getAuthType() string {
 	if c.Password != nil {
 		return AuthTypePassword
-	} else if c.Code != nil {
-		return AuthTypeCode
 	} else if c.Session != nil || c.Credential != nil || c.Response != nil {
 		return AuthTypeWebAuthn
 	}
-	return ""
+	return AuthTypeCode // default
 }
 
 func (c *phoneCreds) getCredential(key string) string {
@@ -201,6 +199,8 @@ func (a *phoneIdentifierImpl) buildCredential(identifier string, credential stri
 	return nil
 }
 
+// authCommunicationChannel interface
+
 func (a *phoneIdentifierImpl) verifyCredential(credential authCreds, verification string) (map[string]interface{}, error) {
 	_, err := a.sendCode(credential.identifier(), "", verification, "", "")
 	if err != nil {
@@ -231,6 +231,7 @@ func (a *phoneIdentifierImpl) sendVerifyCredential(credential authCreds, appName
 }
 
 func (a *phoneIdentifierImpl) restartCredentialVerification(credential authCreds, appName string, credID string) (map[string]interface{}, error) {
+	//TODO: do twilio/other phone verifiers have verification timeouts?
 	return nil, errors.New(logutils.Unimplemented)
 }
 
@@ -257,6 +258,10 @@ func (a *phoneIdentifierImpl) sendCode(identifier string, appName string, code s
 		message = "verification code sent successfully"
 	}
 	return message, err
+}
+
+func (a *phoneIdentifierImpl) requiresCodeGeneration() bool {
+	return false
 }
 
 // initPhoneIdentifier initializes and registers a new phone identifier instance

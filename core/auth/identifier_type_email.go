@@ -197,6 +197,8 @@ func (a *emailIdentifierImpl) mapToCreds(credsMap map[string]interface{}) (authC
 	return &creds, nil
 }
 
+// authCommunicationChannel interface
+
 func (a *emailIdentifierImpl) buildCredential(identifier string, credential string, key string) authCreds {
 	if key == credentialKeyCode {
 		return &emailCreds{Email: identifier, Code: &credential}
@@ -292,7 +294,7 @@ func (a *emailIdentifierImpl) restartCredentialVerification(credential authCreds
 	credential.setVerificationParams(newCode, &expiry)
 	credValueMap, err := credential.toMap()
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionCast, "map from creds", nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionCast, "map from email creds", nil, err)
 	}
 
 	return credValueMap, nil
@@ -355,6 +357,10 @@ func (a *emailIdentifierImpl) sendCode(identifier string, appName string, code s
 	default:
 		return "", errors.ErrorData(logutils.StatusInvalid, "code type", logutils.StringArgs(codeType))
 	}
+}
+
+func (a *emailIdentifierImpl) requiresCodeGeneration() bool {
+	return true
 }
 
 // Helpers

@@ -95,6 +95,11 @@ func (a *passwordAuthImpl) signUpAdmin(identifierImpl identifierType, appName st
 }
 
 func (a *passwordAuthImpl) forgotCredential(identifierImpl identifierType, credential authCreds, appName string, credID string) (map[string]interface{}, error) {
+	identifierChannel, _ := identifierImpl.(authCommunicationChannel)
+	if identifierChannel == nil {
+		return nil, errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, logutils.StringArgs(identifierImpl.getType()))
+	}
+
 	//TODO: turn length of reset code into a setting
 	resetCode, err := utils.GenerateRandomString(64)
 	if err != nil {
@@ -108,10 +113,11 @@ func (a *passwordAuthImpl) forgotCredential(identifierImpl identifierType, crede
 
 	resetExpiry := time.Now().Add(time.Hour * 24)
 	credential.setResetParams(string(hashedResetCode), &resetExpiry)
-	_, err = identifierImpl.sendCode(credential.identifier(), appName, resetCode, typePasswordResetCode, credID)
+	_, err = identifierChannel.sendCode(credential.identifier(), appName, resetCode, typePasswordResetCode, credID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionSend, "password reset code", nil, err)
 	}
+
 	credsMap, err := credential.toMap()
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCast, "map from creds", nil, err)
@@ -200,11 +206,20 @@ func (a *passwordAuthImpl) generateCredential(identifierImpl identifierType, app
 		return "", nil, false, errors.WrapErrorAction(logutils.ActionGenerate, "password hash", nil, err)
 	}
 
+	var credValueMap map[string]interface{}
 	message := ""
+	sent := false
 	credValue := identifierImpl.buildCredential(identifier, string(hashedPassword), credentialKeyPassword)
-	credValueMap, sent, err := identifierImpl.sendVerifyCredential(credValue, appName, credID)
-	if err != nil {
-		return "", nil, false, errors.WrapErrorAction(logutils.ActionSend, "identifier verification", nil, err)
+	if identifierChannel, ok := identifierImpl.(authCommunicationChannel); ok {
+		credValueMap, sent, err = identifierChannel.sendVerifyCredential(credValue, appName, credID)
+		if err != nil {
+			return "", nil, false, errors.WrapErrorAction(logutils.ActionSend, "identifier verification", nil, err)
+		}
+	} else {
+		credValueMap, err = credValue.toMap()
+		if err != nil {
+			return "", nil, false, errors.WrapErrorAction(logutils.ActionCast, "map from creds", nil, err)
+		}
 	}
 
 	if sent {
