@@ -31,6 +31,7 @@ const (
 	IdentifierTypePhone string = "phone"
 
 	typePhoneCreds  logutils.MessageDataType = "phone creds"
+	typePhoneParams logutils.MessageDataType = "phone params"
 	typePhoneNumber logutils.MessageDataType = "E.164 phone number"
 )
 
@@ -112,6 +113,17 @@ func (c *phoneCreds) toMap() (map[string]interface{}, error) {
 	return credsMap, nil
 }
 
+type phoneParams struct {
+	DisplayName *string `json:"display_name"`
+}
+
+func (p *phoneParams) parameter(key string) string {
+	if key == parameterKeyDisplayName && p.DisplayName != nil {
+		return *p.DisplayName
+	}
+	return ""
+}
+
 // Phone implementation of identifierType
 type phoneIdentifierImpl struct {
 	auth           *Auth
@@ -145,17 +157,22 @@ func (a *phoneIdentifierImpl) parseCreds(creds string) (authCreds, error) {
 		return nil, errors.WrapErrorAction(logutils.ActionValidate, typePhoneCreds, nil, err)
 	}
 
-	phone := credential.Phone
 	validPhone := regexp.MustCompile(`^\+[1-9]\d{1,14}$`)
-	if !validPhone.MatchString(phone) {
-		return nil, errors.ErrorData(logutils.StatusInvalid, typePhoneNumber, &logutils.FieldArgs{"phone": phone})
+	if !validPhone.MatchString(credential.Phone) {
+		return nil, errors.ErrorData(logutils.StatusInvalid, typePhoneNumber, &logutils.FieldArgs{"phone": credential.Phone})
 	}
 
 	return &credential, nil
 }
 
 func (a *phoneIdentifierImpl) parseParams(params string) (authParams, error) {
-	return nil, nil
+	var parameters phoneParams
+	err := json.Unmarshal([]byte(params), &parameters)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typePhoneParams, nil, err)
+	}
+
+	return &parameters, nil
 }
 
 func (a *phoneIdentifierImpl) mapToCreds(credsMap map[string]interface{}) (authCreds, error) {
@@ -185,7 +202,17 @@ func (a *phoneIdentifierImpl) buildCredential(identifier string, credential stri
 }
 
 func (a *phoneIdentifierImpl) verifyCredential(credential authCreds, verification string) (map[string]interface{}, error) {
-	return nil, errors.New(logutils.Unimplemented)
+	_, err := a.sendCode(credential.identifier(), "", verification, "", "")
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionSend, "verification code", nil, err)
+	}
+
+	credsMap, err := credential.toMap()
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionCast, "map from phone creds", nil, err)
+	}
+
+	return credsMap, nil
 }
 
 func (a *phoneIdentifierImpl) sendVerifyCredential(credential authCreds, appName string, credID string) (map[string]interface{}, bool, error) {

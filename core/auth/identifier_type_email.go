@@ -223,7 +223,7 @@ func (a *emailIdentifierImpl) verifyCredential(credential authCreds, verificatio
 	credential.setVerificationParams("", nil)
 	credsMap, err := credential.toMap()
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionCast, "map from creds", nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionCast, "map from email creds", nil, err)
 	}
 
 	return credsMap, nil

@@ -2173,7 +2173,7 @@ func (a *Auth) getIdentifierTypeImpl(credential *model.Credential, creds *string
 		}
 	}
 
-	return nil, nil, errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, logutils.StringArgs(key))
+	return nil, nil, errors.WrapErrorAction(logutils.ActionGet, typeIdentifierType, logutils.StringArgs(key), err)
 }
 
 func (a *Auth) getAuthTypeImpl(identifierImpl identifierType, credential *model.Credential, creds *string, authType *model.AuthType) (authType, authCreds, error) {
