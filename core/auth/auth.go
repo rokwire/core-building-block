@@ -633,7 +633,9 @@ func (a *Auth) applyAuthType(supportedAuthType model.SupportedAuthType, appOrg m
 				regProfile.Email = userIdentifier
 			}
 		case IdentifierTypeUsername:
-			username = userIdentifier
+			if username == "" {
+				username = userIdentifier
+			}
 		}
 	}
 
