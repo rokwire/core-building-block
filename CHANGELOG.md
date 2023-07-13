@@ -7,9 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Added
-- Enable CORS [#632](https://github.com/rokwire/core-building-block/issues/632)
+- Support following accounts [#667](https://github.com/rokwire/core-building-block/issues/667)
 - WebAuthn authentication [#659](https://github.com/rokwire/core-building-block/issues/659)
 - Decouple authentication and verification mechanisms [#665](https://github.com/rokwire/core-building-block/issues/665)
+
+## [1.34.0] - 2023-07-06
+### Added
+- Enable CORS [#632](https://github.com/rokwire/core-building-block/issues/632)
+- Move the app config management APIs to the /admin subrouter from /system [#652](https://github.com/rokwire/core-building-block/issues/652)
 
 ## [1.33.0] - 2023-05-02
 ### Added
@@ -399,7 +404,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Users authentication polish [#155](https://github.com/rokwire/core-building-block/issues/155)
 - Optimise the Mongo DB collections indexes usage [#146](https://github.com/rokwire/core-building-block/issues/146)
 
-[Unreleased]: https://github.com/rokwire/core-building-block/compare/v1.33.0...HEAD
+[Unreleased]: https://github.com/rokwire/core-building-block/compare/v1.34.0...HEAD
+[1.34.0]: https://github.com/rokwire/core-building-block/compare/v1.33.0...v1.34.0
 [1.33.0]: https://github.com/rokwire/core-building-block/compare/v1.32.2...v1.33.0
 [1.32.2]: https://github.com/rokwire/core-building-block/compare/v1.32.1...v1.32.2
 [1.32.1]: https://github.com/rokwire/core-building-block/compare/v1.32.0...v1.32.1

@@ -54,6 +54,7 @@ type database struct {
 	applicationsOrganizationsRoles  *collectionWrapper
 	applicationConfigs              *collectionWrapper
 	permissions                     *collectionWrapper
+	follows                         *collectionWrapper
 
 	listeners []Listener
 }
@@ -189,6 +190,12 @@ func (m *database) start() error {
 		return err
 	}
 
+	follows := &collectionWrapper{database: m, coll: db.Collection("follows")}
+	err = m.applyFollowsChecks(follows)
+	if err != nil {
+		return err
+	}
+
 	applicationConfigs := &collectionWrapper{database: m, coll: db.Collection("application_configs")}
 	err = m.applyApplicationConfigsChecks(applicationConfigs)
 	if err != nil {
@@ -218,6 +225,7 @@ func (m *database) start() error {
 	m.applicationsOrganizationsGroups = applicationsOrganizationsGroups
 	m.applicationsOrganizationsRoles = applicationsOrganizationsRoles
 	m.permissions = permissions
+	m.follows = follows
 
 	go m.apiKeys.Watch(nil, m.logger)
 	go m.authTypes.Watch(nil, m.logger)
@@ -272,6 +280,11 @@ func (m *database) applyAccountsChecks(accounts *collectionWrapper) error {
 
 	//add auth types index
 	err = accounts.AddIndex(bson.D{primitive.E{Key: "auth_types.id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	err = accounts.AddIndex(bson.D{primitive.E{Key: "username", Value: "text"}, primitive.E{Key: "profile.first_name", Value: "text"}, primitive.E{Key: "profile.last_name", Value: "text"}}, false)
 	if err != nil {
 		return err
 	}
@@ -538,6 +551,25 @@ func (m *database) applyPermissionsChecks(permissions *collectionWrapper) error 
 	}
 
 	m.logger.Info("applications permissions checks passed")
+	return nil
+}
+
+func (m *database) applyFollowsChecks(follows *collectionWrapper) error {
+	m.logger.Info("apply applications follows checks.....")
+
+	//add follower index
+	err := follows.AddIndex(bson.D{primitive.E{Key: "app_id", Value: 1}, primitive.E{Key: "org_id", Value: 1}, primitive.E{Key: "follower_id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	//add following index
+	err = follows.AddIndex(bson.D{primitive.E{Key: "app_id", Value: 1}, primitive.E{Key: "org_id", Value: 1}, primitive.E{Key: "following_id", Value: 1}, primitive.E{Key: "follower_id", Value: 1}}, true)
+	if err != nil {
+		return err
+	}
+
+	m.logger.Info("applications follows checks passed")
 	return nil
 }
 
