@@ -771,7 +771,7 @@ func (a *Auth) checkCredentials(identifierImpl identifierType, accountAuthType m
 	}
 
 	//if sign in was completed successfully, set auth type to verified
-	if message == "" && accountAuthType.Unverified {
+	if accountAuthType.Unverified {	// && message != ""
 		accountAuthType.SetUnverified(false)
 		err := a.storage.UpdateAccountAuthType(accountAuthType)
 		if err != nil {
@@ -1666,9 +1666,9 @@ func (a *Auth) linkAccountAuthType(account model.Account, supportedAuthType mode
 			if err != nil {
 				return "", nil, err
 			}
-			if message != "" {
-				return "", nil, errors.ErrorData("incomplete", "verification", nil).SetStatus(utils.ErrorStatusUnverified)
-			}
+			// if message != "" {
+			// 	return "", nil, errors.ErrorData("incomplete", "verification", nil).SetStatus(utils.ErrorStatusUnverified)
+			// }
 			if aat != nil {
 				for i, accAuthType := range account.AuthTypes {
 					if accAuthType.ID == aat.ID {
@@ -1677,7 +1677,7 @@ func (a *Auth) linkAccountAuthType(account model.Account, supportedAuthType mode
 					}
 				}
 			}
-			return "", nil, nil
+			return message, nil, nil
 		}
 
 		err = a.handleAccountAuthTypeConflict(*newCredsAccount, supportedAuthType.AuthType.ID, userIdentifier, false)
