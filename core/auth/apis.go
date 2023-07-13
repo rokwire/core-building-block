@@ -128,7 +128,6 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 		accountAuthType, responseParams, mfaTypes, externalIDs, err = a.applyExternalAuthType(*authType, *appType, *appOrg, creds, params, clientVersion, profile, privacy, preferences, username, admin, l)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionApply, typeExternalAuthType, logutils.StringArgs("user"), err)
-
 		}
 
 		sub = accountAuthType.Account.ID
