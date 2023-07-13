@@ -122,6 +122,17 @@ func (a Account) GetAccountAuthType(authTypeID string, identifier string) *Accou
 	return nil
 }
 
+// GetVerifiedAccountAuthTypes returns a list of only verified auth types for this account
+func (a Account) GetVerifiedAccountAuthTypes() []AccountAuthType {
+	authTypes := make([]AccountAuthType, 0)
+	for _, auth := range a.AuthTypes {
+		if !auth.Unverified {
+			authTypes = append(authTypes, auth)
+		}
+	}
+	return authTypes
+}
+
 // SortAccountAuthTypes sorts account auth types by matching the given uid
 func (a Account) SortAccountAuthTypes(uid string) {
 	sort.Slice(a.AuthTypes, func(i, _ int) bool {

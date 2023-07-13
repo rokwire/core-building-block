@@ -109,7 +109,7 @@ func (h AdminApisHandler) login(l *logs.Log, r *http.Request, claims *tokenauth.
 	//device
 	requestDevice := requestData.Device
 
-	message, loginSession, mfaTypes, err := h.coreAPIs.Auth.Login(ip, string(requestDevice.Type), requestDevice.Os, *requestDevice.DeviceId, string(requestData.AuthType),
+	noLoginParams, loginSession, mfaTypes, err := h.coreAPIs.Auth.Login(ip, string(requestDevice.Type), requestDevice.Os, *requestDevice.DeviceId, string(requestData.AuthType),
 		requestCreds, requestData.ApiKey, requestData.AppTypeIdentifier, requestData.OrgId, requestParams, &clientVersion, requestProfile, requestPrivacy, requestPreferences, username, true, l)
 	if err != nil {
 		loggingErr, ok := err.(*errors.Error)
@@ -121,9 +121,26 @@ func (h AdminApisHandler) login(l *logs.Log, r *http.Request, claims *tokenauth.
 
 	///prepare response
 
-	//message
-	if message != nil {
-		responseData := &Def.SharedResLogin{Message: message}
+	//noLoginParams
+	if noLoginParams != nil {
+		var message *string
+		if messageVal, _ := noLoginParams["message"].(string); messageVal != "" {
+			message = &messageVal
+		}
+
+		var paramsRes Def.SharedResLogin_Params
+		delete(noLoginParams, "message")
+		paramsBytes, err := json.Marshal(noLoginParams)
+		if err != nil {
+			return l.HTTPResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("no login response params"), nil, err, http.StatusInternalServerError, false)
+		}
+
+		err = json.Unmarshal(paramsBytes, &paramsRes)
+		if err != nil {
+			return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("no login response params"), nil, err, http.StatusInternalServerError, false)
+		}
+
+		responseData := &Def.SharedResLogin{Message: message, Params: &paramsRes}
 		respData, err := json.Marshal(responseData)
 		if err != nil {
 			return l.HTTPResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("auth login response"), nil, err, http.StatusInternalServerError, false)

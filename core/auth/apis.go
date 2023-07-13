@@ -77,7 +77,7 @@ func (a *Auth) GetHost() string {
 //		MFA types ([]model.MFAType): list of MFA types account is enrolled in
 func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, deviceID string, authenticationType string, creds string, apiKey string,
 	appTypeIdentifier string, orgID string, params string, clientVersion *string, profile model.Profile, privacy model.Privacy, preferences map[string]interface{},
-	username string, admin bool, l *logs.Log) (*string, *model.LoginSession, []model.MFAType, error) {
+	username string, admin bool, l *logs.Log) (map[string]interface{}, *model.LoginSession, []model.MFAType, error) {
 	//TODO - analyse what should go in one transaction
 
 	//validate if the provided auth type is supported by the provided application and organization
@@ -102,7 +102,6 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 	anonymous := false
 	sub := ""
 
-	var message string
 	var accountAuthType *model.AccountAuthType
 	var responseParams map[string]interface{}
 	var externalIDs map[string]string
@@ -132,13 +131,13 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 
 		sub = accountAuthType.Account.ID
 	} else {
-		message, accountAuthType, mfaTypes, externalIDs, err = a.applyAuthType(*authType, *appOrg, creds, params, clientVersion, profile, privacy, preferences, username, admin, l)
+		responseParams, accountAuthType, mfaTypes, externalIDs, err = a.applyAuthType(*authType, *appOrg, creds, params, clientVersion, profile, privacy, preferences, username, admin, l)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionApply, model.TypeAuthType, logutils.StringArgs("user"), err)
 		}
 		//message
-		if len(message) > 0 {
-			return &message, nil, nil, nil
+		if responseParams != nil {
+			return responseParams, nil, nil, nil
 		}
 
 		sub = accountAuthType.Account.ID

@@ -180,7 +180,7 @@ type APIs interface {
 	//		admin (bool): Is this an admin login?
 	//		l (*logs.Log): Log object pointer for request
 	//	Returns:
-	//		Message (*string): message
+	//		Response parameters (map): any messages or parameters to send in response when requiring identifier verification and/or NOT logging in the user
 	//		Login session (*LoginSession): Signed ROKWIRE access token to be used to authorize future requests
 	//			Access token (string): Signed ROKWIRE access token to be used to authorize future requests
 	//			Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
@@ -190,7 +190,7 @@ type APIs interface {
 	//		MFA types ([]model.MFAType): list of MFA types account is enrolled in
 	Login(ipAddress string, deviceType string, deviceOS *string, deviceID string, authenticationType string, creds string, apiKey string,
 		appTypeIdentifier string, orgID string, params string, clientVersion *string, profile model.Profile, privacy model.Privacy, preferences map[string]interface{},
-		username string, admin bool, l *logs.Log) (*string, *model.LoginSession, []model.MFAType, error)
+		username string, admin bool, l *logs.Log) (map[string]interface{}, *model.LoginSession, []model.MFAType, error)
 
 	//Logout logouts an account from app/org
 	//	Input:

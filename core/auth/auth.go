@@ -608,18 +608,18 @@ func (a *Auth) applyAnonymousAuthType(authType model.AuthType, creds string) (st
 }
 
 func (a *Auth) applyAuthType(supportedAuthType model.SupportedAuthType, appOrg model.ApplicationOrganization, creds string, params string, clientVersion *string, regProfile model.Profile,
-	privacy model.Privacy, regPreferences map[string]interface{}, username string, admin bool, l *logs.Log) (string, *model.AccountAuthType, []model.MFAType, map[string]string, error) {
+	privacy model.Privacy, regPreferences map[string]interface{}, username string, admin bool, l *logs.Log) (map[string]interface{}, *model.AccountAuthType, []model.MFAType, map[string]string, error) {
 
 	//identifier type
 	identifierImpl, _, err := a.getIdentifierTypeImpl(nil, &creds, supportedAuthType.AuthType)
 	if err != nil {
-		return "", nil, nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeIdentifierType, nil, err)
+		return nil, nil, nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeIdentifierType, nil, err)
 	}
 
 	//check if the user exists check
 	userIdentifier, err := identifierImpl.getUserIdentifier(creds)
 	if err != nil {
-		return "", nil, nil, nil, errors.WrapErrorAction(logutils.ActionGet, "user identifier", nil, err)
+		return nil, nil, nil, nil, errors.WrapErrorAction(logutils.ActionGet, "user identifier", nil, err)
 	}
 
 	if userIdentifier != "" {
@@ -641,7 +641,7 @@ func (a *Auth) applyAuthType(supportedAuthType model.SupportedAuthType, appOrg m
 
 	account, err := a.storage.FindAccount(nil, appOrg.ID, supportedAuthType.AuthType.ID, userIdentifier)
 	if err != nil {
-		return "", nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err) //TODO add args..
+		return nil, nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err) //TODO add args..
 	}
 	a.setLogContext(account, l)
 
@@ -650,47 +650,64 @@ func (a *Auth) applyAuthType(supportedAuthType model.SupportedAuthType, appOrg m
 	//check if it is sign in or sign up
 	isSignUp, err := a.isSignUp(canSignIn, params, l)
 	if err != nil {
-		return "", nil, nil, nil, errors.WrapErrorAction(logutils.ActionVerify, "is sign up", nil, err)
+		return nil, nil, nil, nil, errors.WrapErrorAction(logutils.ActionVerify, "is sign up", nil, err)
 	}
 	if isSignUp {
 		if admin {
-			return "", nil, nil, nil, errors.ErrorData(logutils.StatusInvalid, "sign up", &logutils.FieldArgs{"identifier": userIdentifier,
+			return nil, nil, nil, nil, errors.ErrorData(logutils.StatusInvalid, "sign up", &logutils.FieldArgs{"identifier": userIdentifier,
 				"auth_type": supportedAuthType.AuthType.Code, "app_org_id": appOrg.ID, "admin": true}).SetStatus(utils.ErrorStatusNotAllowed)
 		}
-		message, accountAuthType, err := a.applySignUp(identifierImpl, account, supportedAuthType, appOrg, userIdentifier, creds, params, clientVersion,
+		retParams, accountAuthType, err := a.applySignUp(identifierImpl, account, supportedAuthType, appOrg, userIdentifier, creds, params, clientVersion,
 			regProfile, privacy, regPreferences, username, l)
 		if err != nil {
-			return "", nil, nil, nil, err
+			return nil, nil, nil, nil, err
 		}
-		return message, accountAuthType, nil, nil, nil
+		return retParams, accountAuthType, nil, nil, nil
 	}
 	///apply sign in
-	return a.applySignIn(identifierImpl, supportedAuthType, account, userIdentifier, creds, l)
+	return a.applySignIn(identifierImpl, supportedAuthType, &appOrg, account, userIdentifier, creds, username, l)
 }
 
-func (a *Auth) applySignIn(identifierImpl identifierType, supportedAuthType model.SupportedAuthType, account *model.Account, userIdentifier string,
-	creds string, l *logs.Log) (string, *model.AccountAuthType, []model.MFAType, map[string]string, error) {
+func (a *Auth) applySignIn(identifierImpl identifierType, supportedAuthType model.SupportedAuthType, appOrg *model.ApplicationOrganization, account *model.Account,
+	userIdentifier string, creds string, username string, l *logs.Log) (map[string]interface{}, *model.AccountAuthType, []model.MFAType, map[string]string, error) {
 	if account == nil {
-		return "", nil, nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, nil).SetStatus(utils.ErrorStatusNotFound)
+		if strings.Contains(userIdentifier, username) {
+			// search for accounts by username to check if account exists (userIdentifier may have platform code appended, e.g., when using passkeys)
+			usernameMatches, err := a.storage.FindAccountsByUsername(nil, appOrg, username)
+			if err != nil {
+				return nil, nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"username": username}, err)
+			}
+			if len(usernameMatches) > 0 {
+				retParams := map[string]interface{}{"message": "missing account auth type"}
+				verifiedAccountAuthTypes := make([]map[string]string, 0)
+				for _, vaat := range usernameMatches[0].GetVerifiedAccountAuthTypes() {
+					verifiedAccountAuthTypes = append(verifiedAccountAuthTypes, map[string]string{"code": vaat.SupportedAuthType.AuthType.Code, "identifier": vaat.Identifier})
+				}
+				retParams["auth_types"] = verifiedAccountAuthTypes
+				return retParams, nil, nil, nil, nil
+			}
+		}
+		return nil, nil, nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, nil).SetStatus(utils.ErrorStatusNotFound)
 	}
 
 	//find account auth type
 	accountAuthType, err := a.findAccountAuthType(account, supportedAuthType, userIdentifier)
 	if accountAuthType == nil {
-		return "", nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountAuthType, nil, err)
+		return nil, nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountAuthType, nil, err)
 	}
 
 	if accountAuthType.Unverified && accountAuthType.Linked {
-		return "", nil, nil, nil, errors.ErrorData(logutils.StatusInvalid, model.TypeAccountAuthType, &logutils.FieldArgs{"verified": false, "linked": true})
+		return nil, nil, nil, nil, errors.ErrorData(logutils.StatusInvalid, model.TypeAccountAuthType, &logutils.FieldArgs{"verified": false, "linked": true})
 	}
 
 	var message string
 	message, err = a.checkCredentials(identifierImpl, *accountAuthType, creds, supportedAuthType.AuthType)
 	if err != nil {
-		return "", nil, nil, nil, errors.WrapErrorAction(logutils.ActionVerify, model.TypeCredential, nil, err)
+		return nil, nil, nil, nil, errors.WrapErrorAction(logutils.ActionVerify, model.TypeCredential, nil, err)
 	}
 
-	return message, accountAuthType, account.GetVerifiedMFATypes(), account.ExternalIDs, nil
+	retParams := map[string]interface{}{"message": message}
+	return retParams, accountAuthType, account.GetVerifiedMFATypes(), account.ExternalIDs, nil
 }
 
 func (a *Auth) checkCredentialVerified(identifierImpl identifierType, credential *model.Credential, credValue authCreds, appName string) error {
@@ -783,28 +800,27 @@ func (a *Auth) checkCredentials(identifierImpl identifierType, accountAuthType m
 }
 
 func (a *Auth) applySignUp(identifierImpl identifierType, account *model.Account, supportedAuthType model.SupportedAuthType, appOrg model.ApplicationOrganization, userIdentifier string, creds string,
-	params string, clientVersion *string, regProfile model.Profile, privacy model.Privacy, regPreferences map[string]interface{}, username string, l *logs.Log) (string, *model.AccountAuthType, error) {
+	params string, clientVersion *string, regProfile model.Profile, privacy model.Privacy, regPreferences map[string]interface{}, username string, l *logs.Log) (map[string]interface{}, *model.AccountAuthType, error) {
 	if account != nil {
 		err := a.handleAccountAuthTypeConflict(*account, supportedAuthType.AuthType.ID, userIdentifier, true)
 		if err != nil {
-			return "", nil, err
+			return nil, nil, err
 		}
 	}
 
 	if username != "" {
 		err := a.checkUsername(nil, &appOrg, username)
 		if err != nil {
-			return "", nil, err
+			return nil, nil, err
 		}
 	}
 
 	retParams, accountAuthType, err := a.signUpNewAccount(nil, identifierImpl, supportedAuthType, appOrg, userIdentifier, creds, params, clientVersion, regProfile, privacy, regPreferences, username, nil, nil, nil, nil, nil, l)
 	if err != nil {
-		return "", nil, err
+		return nil, nil, err
 	}
 
-	message, _ := retParams["message"].(string)
-	return message, accountAuthType, nil
+	return retParams, accountAuthType, nil
 }
 
 func (a *Auth) applySignUpAdmin(context storage.TransactionContext, account *model.Account, authType model.AuthType, appOrg model.ApplicationOrganization, identifier string, password string, regProfile model.Profile,
