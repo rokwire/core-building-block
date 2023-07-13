@@ -700,13 +700,15 @@ func (a *Auth) applySignIn(identifierImpl identifierType, supportedAuthType mode
 		return nil, nil, nil, nil, errors.ErrorData(logutils.StatusInvalid, model.TypeAccountAuthType, &logutils.FieldArgs{"verified": false, "linked": true})
 	}
 
-	var message string
-	message, err = a.checkCredentials(identifierImpl, *accountAuthType, creds, supportedAuthType.AuthType)
+	message, err := a.checkCredentials(identifierImpl, *accountAuthType, creds, supportedAuthType.AuthType)
 	if err != nil {
 		return nil, nil, nil, nil, errors.WrapErrorAction(logutils.ActionVerify, model.TypeCredential, nil, err)
 	}
 
-	retParams := map[string]interface{}{"message": message}
+	var retParams map[string]interface{}
+	if message != "" {
+		retParams = map[string]interface{}{"message": message}
+	}
 	return retParams, accountAuthType, account.GetVerifiedMFATypes(), account.ExternalIDs, nil
 }
 
@@ -921,6 +923,8 @@ func (a *Auth) signUpNewAccount(context storage.TransactionContext, identifierIm
 		}
 	}
 
+	// make sure account auth type code matches identifier type
+	supportedAuthType.AuthType.Code = identifierImpl.getType()
 	accountAuthType, err := a.registerUser(context, supportedAuthType.AuthType, userIdentifier, nil, appOrg, credential, useSharedProfile,
 		nil, profile, privacy, preferences, username, permissions, roles, groups, scopes, creatorPermissions, clientVersion, l)
 	if err != nil {
@@ -1715,6 +1719,8 @@ func (a *Auth) linkAccountAuthType(account model.Account, supportedAuthType mode
 			AuthType: supportedAuthType.AuthType, DateCreated: now, DateUpdated: &now}
 	}
 
+	// make sure account auth type code matches identifier type
+	supportedAuthType.AuthType.Code = identifierImpl.getType()
 	accountAuthType, credential, err := a.prepareAccountAuthType(supportedAuthType.AuthType, userIdentifier, nil, credential, true, true)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeAccountAuthType, nil, err)

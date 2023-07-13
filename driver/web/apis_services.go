@@ -109,7 +109,6 @@ func (h ServicesApisHandler) login(l *logs.Log, r *http.Request, claims *tokenau
 		}
 
 		var paramsRes Def.SharedResLogin_Params
-		delete(noLoginParams, "message")
 		paramsBytes, err := json.Marshal(noLoginParams)
 		if err != nil {
 			return l.HTTPResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("no login response params"), nil, err, http.StatusInternalServerError, false)
