@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Added
 - Support following accounts [#667](https://github.com/rokwire/core-building-block/issues/667)
+- Device ID not nullable [#672](https://github.com/rokwire/core-building-block/issues/672)
 
 ## [1.34.0] - 2023-07-06
 ### Added
