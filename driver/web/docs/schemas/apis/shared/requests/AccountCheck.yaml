@@ -11,6 +11,7 @@ properties:
     enum:
       - username
       - email
+      - phone
       - twilio_phone
       - illinois_oidc
       - anonymous

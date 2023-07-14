@@ -66,6 +66,7 @@ const (
 const (
 	ServicesReqAccountAuthTypeLinkAuthTypeEmail        ServicesReqAccountAuthTypeLinkAuthType = "email"
 	ServicesReqAccountAuthTypeLinkAuthTypeIllinoisOidc ServicesReqAccountAuthTypeLinkAuthType = "illinois_oidc"
+	ServicesReqAccountAuthTypeLinkAuthTypePhone        ServicesReqAccountAuthTypeLinkAuthType = "phone"
 	ServicesReqAccountAuthTypeLinkAuthTypeTwilioPhone  ServicesReqAccountAuthTypeLinkAuthType = "twilio_phone"
 	ServicesReqAccountAuthTypeLinkAuthTypeUsername     ServicesReqAccountAuthTypeLinkAuthType = "username"
 	ServicesReqAccountAuthTypeLinkAuthTypeWebauthn     ServicesReqAccountAuthTypeLinkAuthType = "webauthn"
@@ -75,6 +76,7 @@ const (
 const (
 	ServicesReqAccountAuthTypeUnlinkAuthTypeEmail        ServicesReqAccountAuthTypeUnlinkAuthType = "email"
 	ServicesReqAccountAuthTypeUnlinkAuthTypeIllinoisOidc ServicesReqAccountAuthTypeUnlinkAuthType = "illinois_oidc"
+	ServicesReqAccountAuthTypeUnlinkAuthTypePhone        ServicesReqAccountAuthTypeUnlinkAuthType = "phone"
 	ServicesReqAccountAuthTypeUnlinkAuthTypeTwilioPhone  ServicesReqAccountAuthTypeUnlinkAuthType = "twilio_phone"
 	ServicesReqAccountAuthTypeUnlinkAuthTypeUsername     ServicesReqAccountAuthTypeUnlinkAuthType = "username"
 	ServicesReqAccountAuthTypeUnlinkAuthTypeWebauthn     ServicesReqAccountAuthTypeUnlinkAuthType = "webauthn"
@@ -118,6 +120,7 @@ const (
 	SharedReqAccountCheckAuthTypeAnonymous    SharedReqAccountCheckAuthType = "anonymous"
 	SharedReqAccountCheckAuthTypeEmail        SharedReqAccountCheckAuthType = "email"
 	SharedReqAccountCheckAuthTypeIllinoisOidc SharedReqAccountCheckAuthType = "illinois_oidc"
+	SharedReqAccountCheckAuthTypePhone        SharedReqAccountCheckAuthType = "phone"
 	SharedReqAccountCheckAuthTypeTwilioPhone  SharedReqAccountCheckAuthType = "twilio_phone"
 	SharedReqAccountCheckAuthTypeUsername     SharedReqAccountCheckAuthType = "username"
 	SharedReqAccountCheckAuthTypeWebauthn     SharedReqAccountCheckAuthType = "webauthn"
@@ -134,6 +137,7 @@ const (
 	SharedReqLoginAuthTypeAnonymous    SharedReqLoginAuthType = "anonymous"
 	SharedReqLoginAuthTypeEmail        SharedReqLoginAuthType = "email"
 	SharedReqLoginAuthTypeIllinoisOidc SharedReqLoginAuthType = "illinois_oidc"
+	SharedReqLoginAuthTypePhone        SharedReqLoginAuthType = "phone"
 	SharedReqLoginAuthTypeTwilioPhone  SharedReqLoginAuthType = "twilio_phone"
 	SharedReqLoginAuthTypeUsername     SharedReqLoginAuthType = "username"
 	SharedReqLoginAuthTypeWebauthn     SharedReqLoginAuthType = "webauthn"
@@ -1897,7 +1901,7 @@ func (t *Config_Data) MergeEnvConfigData(v EnvConfigData) error {
 		return err
 	}
 
-	merged, err := runtime.JsonMerge(t.union, b)
+	merged, err := runtime.JsonMerge(b, t.union)
 	t.union = merged
 	return err
 }
@@ -1933,7 +1937,7 @@ func (t *AdminReqCreateUpdateConfig_Data) MergeEnvConfigData(v EnvConfigData) er
 		return err
 	}
 
-	merged, err := runtime.JsonMerge(t.union, b)
+	merged, err := runtime.JsonMerge(b, t.union)
 	t.union = merged
 	return err
 }
@@ -1969,7 +1973,7 @@ func (t *ServicesReqAccountAuthTypeLink_Creds) MergeSharedReqCredsWebAuthn(v Sha
 		return err
 	}
 
-	merged, err := runtime.JsonMerge(t.union, b)
+	merged, err := runtime.JsonMerge(b, t.union)
 	t.union = merged
 	return err
 }
@@ -2083,7 +2087,7 @@ func (t *ServicesReqAccountAuthTypeLink_Params) MergeSharedReqParamsWebAuthn(v S
 		return err
 	}
 
-	merged, err := runtime.JsonMerge(t.union, b)
+	merged, err := runtime.JsonMerge(b, t.union)
 	t.union = merged
 	return err
 }
@@ -2269,7 +2273,7 @@ func (t *SharedReqLogin_Creds) MergeSharedReqCredsWebAuthn(v SharedReqCredsWebAu
 		return err
 	}
 
-	merged, err := runtime.JsonMerge(t.union, b)
+	merged, err := runtime.JsonMerge(b, t.union)
 	t.union = merged
 	return err
 }
@@ -2435,7 +2439,7 @@ func (t *SharedReqLogin_Params) MergeSharedReqParamsWebAuthn(v SharedReqParamsWe
 		return err
 	}
 
-	merged, err := runtime.JsonMerge(t.union, b)
+	merged, err := runtime.JsonMerge(b, t.union)
 	t.union = merged
 	return err
 }
