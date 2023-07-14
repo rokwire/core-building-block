@@ -47,6 +47,8 @@ type APIs struct {
 	systemAccountEmail      string
 	systemAccountPassword   string
 
+	verifyEmail bool
+
 	logger *logs.Logger
 }
 
@@ -89,8 +91,9 @@ func (c *APIs) storeSystemData() error {
 		}
 		if emailAuthType == nil {
 			newDocuments["auth_type"] = uuid.NewString()
+			params := map[string]interface{}{"verify_email": c.verifyEmail}
 			emailAuthType = &model.AuthType{ID: newDocuments["auth_type"], Code: auth.IdentifierTypeEmail, Description: "Authentication type relying on email and password",
-				IsExternal: false, IsAnonymous: false, UseCredentials: true, IgnoreMFA: false}
+				IsExternal: false, IsAnonymous: false, UseCredentials: true, IgnoreMFA: false, Params: params}
 			_, err = c.app.storage.InsertAuthType(context, *emailAuthType)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAuthType, nil, err)
@@ -251,7 +254,7 @@ func (c *APIs) storeSystemData() error {
 }
 
 // NewCoreAPIs creates new CoreAPIs
-func NewCoreAPIs(env string, version string, build string, serviceID string, storage Storage, auth auth.APIs, systemInitSettings map[string]string, logger *logs.Logger) *APIs {
+func NewCoreAPIs(env string, version string, build string, serviceID string, storage Storage, auth auth.APIs, systemInitSettings map[string]string, verifyEmail bool, logger *logs.Logger) *APIs {
 	//add application instance
 	listeners := []ApplicationListener{}
 	application := application{env: env, version: version, build: build, serviceID: serviceID, storage: storage, listeners: listeners, auth: auth}
@@ -268,7 +271,7 @@ func NewCoreAPIs(env string, version string, build string, serviceID string, sto
 	coreAPIs := APIs{Services: servicesImpl, Administration: administrationImpl, Encryption: encryptionImpl,
 		BBs: bbsImpl, TPS: tpsImpl, System: systemImpl, Auth: auth, app: &application, systemAppTypeIdentifier: systemInitSettings["app_type_id"],
 		systemAppTypeName: systemInitSettings["app_type_name"], systemAPIKey: systemInitSettings["api_key"],
-		systemAccountEmail: systemInitSettings["email"], systemAccountPassword: systemInitSettings["password"], logger: logger}
+		systemAccountEmail: systemInitSettings["email"], systemAccountPassword: systemInitSettings["password"], verifyEmail: verifyEmail, logger: logger}
 
 	return &coreAPIs
 }
