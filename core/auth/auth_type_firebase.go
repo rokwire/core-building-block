@@ -18,7 +18,6 @@ import (
 	"core-building-block/core/model"
 
 	"github.com/rokwire/logging-library-go/v2/errors"
-	"github.com/rokwire/logging-library-go/v2/logs"
 	"github.com/rokwire/logging-library-go/v2/logutils"
 )
 
@@ -33,44 +32,24 @@ type firebaseAuthImpl struct {
 	authType string
 }
 
-func (a *firebaseAuthImpl) signUp(supportedAuthType model.SupportedAuthType, appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error) {
-	return "", nil, nil
+func (a *firebaseAuthImpl) signUp(identifierImpl identifierType, appName string, creds authCreds, params string, config map[string]interface{}, newCredentialID string) (string, map[string]interface{}, bool, error) {
+	return "", nil, false, nil
 }
 
-func (a *firebaseAuthImpl) signUpAdmin(authType model.AuthType, appOrg model.ApplicationOrganization, identifier string, password string, newCredentialID string) (map[string]interface{}, map[string]interface{}, error) {
+func (a *firebaseAuthImpl) signUpAdmin(identifierImpl identifierType, appName string, creds authCreds, newCredentialID string) (map[string]interface{}, map[string]interface{}, error) {
 	return nil, nil, nil
 }
 
-func (a *firebaseAuthImpl) getUserIdentifier(creds string) (string, error) {
-	return "", nil
-}
-
-func (a *firebaseAuthImpl) verifyCredential(credential *model.Credential, verification string, l *logs.Log) (map[string]interface{}, error) {
-	return nil, errors.New(logutils.Unimplemented)
-}
-
-func (a *firebaseAuthImpl) sendVerifyCredential(credential *model.Credential, appName string, l *logs.Log) error {
-	return nil
-}
-
-func (a *firebaseAuthImpl) restartCredentialVerification(credential *model.Credential, appName string, l *logs.Log) error {
-	return nil
-}
-
-func (a *firebaseAuthImpl) isCredentialVerified(credential *model.Credential, l *logs.Log) (*bool, *bool, error) {
-	return nil, nil, nil
-}
-
-func (a *firebaseAuthImpl) checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, error) {
-	return "", nil
-}
-
-func (a *firebaseAuthImpl) resetCredential(credential *model.Credential, resetCode *string, params string, l *logs.Log) (map[string]interface{}, error) {
+func (a *firebaseAuthImpl) forgotCredential(identifierImpl identifierType, credential authCreds, appName string, credID string) (map[string]interface{}, error) {
 	return nil, nil
 }
 
-func (a *firebaseAuthImpl) forgotCredential(credential *model.Credential, identifier string, appName string, l *logs.Log) (map[string]interface{}, error) {
+func (a *firebaseAuthImpl) resetCredential(credential authCreds, resetCode *string, params string) (map[string]interface{}, error) {
 	return nil, nil
+}
+
+func (a *firebaseAuthImpl) checkCredential(identifierImpl identifierType, storedCreds *model.Credential, incomingCreds authCreds, displayName string, appName string, config map[string]interface{}) (string, error) {
+	return "", nil
 }
 
 // initFirebaseAuth initializes and registers a new Firebase auth instance

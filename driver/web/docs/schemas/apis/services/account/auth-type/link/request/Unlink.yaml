@@ -8,9 +8,11 @@ properties:
     type: string
     enum:
       - email
+      - phone
       - twilio_phone
       - illinois_oidc
       - username
+      - webauthn
   app_type_identifier:
     type: string
   identifier:

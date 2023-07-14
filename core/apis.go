@@ -83,13 +83,13 @@ func (c *APIs) storeSystemData() error {
 		createAccount := false
 
 		//1. insert email auth type if does not exist
-		emailAuthType, err := c.app.storage.FindAuthType(auth.AuthTypeEmail)
+		emailAuthType, err := c.app.storage.FindAuthType(auth.IdentifierTypeEmail)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthType, nil, err)
 		}
 		if emailAuthType == nil {
 			newDocuments["auth_type"] = uuid.NewString()
-			emailAuthType = &model.AuthType{ID: newDocuments["auth_type"], Code: auth.AuthTypeEmail, Description: "Authentication type relying on email and password",
+			emailAuthType = &model.AuthType{ID: newDocuments["auth_type"], Code: auth.IdentifierTypeEmail, Description: "Authentication type relying on email and password",
 				IsExternal: false, IsAnonymous: false, UseCredentials: true, IgnoreMFA: false}
 			_, err = c.app.storage.InsertAuthType(context, *emailAuthType)
 			if err != nil {
@@ -242,7 +242,7 @@ func (c *APIs) storeSystemData() error {
 			}
 			fields := logutils.Fields{key: data}
 			if doc == "auth_type" {
-				fields["code"] = auth.AuthTypeEmail
+				fields["code"] = auth.IdentifierTypeEmail
 			}
 			c.logger.InfoWithFields(fmt.Sprintf("new system %s created", doc), fields)
 		}
