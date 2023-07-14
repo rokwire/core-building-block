@@ -3716,11 +3716,14 @@ func (sa *Adapter) UpdateApplicationOrganization(context TransactionContext, app
 }
 
 // FindDevice finds a device by device id and account id
-func (sa *Adapter) FindDevice(context TransactionContext, deviceID string, accountID string) (*model.Device, error) {
-	filter := bson.D{primitive.E{Key: "device_id", Value: deviceID},
-		primitive.E{Key: "account_id", Value: accountID}}
-	var result []device
+func (sa *Adapter) FindDevice(context TransactionContext, deviceID *string, accountID string) (*model.Device, error) {
+	filter := bson.D{primitive.E{Key: "account_id", Value: accountID}}
 
+	if deviceID != nil {
+		filter = append(filter, primitive.E{Key: "device_id", Value: *deviceID})
+	}
+
+	var result []device
 	err := sa.db.devices.FindWithContext(context, filter, &result, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeDevice, nil, err)

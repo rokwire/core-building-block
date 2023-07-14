@@ -16,6 +16,7 @@ package auth
 
 import (
 	"encoding/json"
+	"strings"
 	"time"
 
 	"github.com/rokwire/logging-library-go/v2/errors"
@@ -41,7 +42,7 @@ type usernameCreds struct {
 }
 
 func (c *usernameCreds) identifier() string {
-	return c.Username
+	return strings.TrimSpace(strings.ToLower(c.Username))
 }
 
 func (c *usernameCreds) getAuthType() string {
@@ -140,7 +141,7 @@ func (a *usernameIdentifierImpl) getUserIdentifier(creds string) (string, error)
 		return "", errors.WrapErrorAction(logutils.ActionUnmarshal, typeUsernameCreds, nil, err)
 	}
 
-	return requestCreds.Username, nil
+	return strings.TrimSpace(strings.ToLower(requestCreds.Username)), nil
 }
 
 func (a *usernameIdentifierImpl) parseCreds(creds string) (authCreds, error) {
