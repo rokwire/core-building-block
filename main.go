@@ -103,6 +103,13 @@ func main() {
 	smtpFrom := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SMTP_EMAIL_FROM", false, false)
 	smtpPortNum, _ := strconv.Atoi(smtpPort)
 
+	verifyEmailRaw := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_VERIFY_EMAIL", false, false)
+	verifyEmail, err := strconv.ParseBool(verifyEmailRaw)
+	if err != nil {
+		logger.Infof("Error parsing ROKWIRE_CORE_VERIFY_EMAIL, applying defaults: %v", err)
+		verifyEmail = true
+	}
+
 	emailer := emailer.NewEmailerAdapter(smtpHost, smtpPortNum, smtpUser, smtpPassword, smtpFrom)
 
 	supportLegacySigsStr := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SUPPORT_LEGACY_SIGNATURES", false, false)
@@ -195,7 +202,7 @@ func main() {
 	}
 
 	//core
-	coreAPIs := core.NewCoreAPIs(env, Version, Build, serviceID, storageAdapter, authImpl, systemInitSettings, logger)
+	coreAPIs := core.NewCoreAPIs(env, Version, Build, serviceID, storageAdapter, authImpl, systemInitSettings, verifyEmail, logger)
 	coreAPIs.Start()
 
 	// read CORS parameters from stored env config
