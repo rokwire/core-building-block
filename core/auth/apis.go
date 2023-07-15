@@ -99,6 +99,8 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 		return nil, nil, nil, errors.WrapErrorData(logutils.StatusInvalid, model.TypeAPIKey, nil, err)
 	}
 
+	username = strings.TrimSpace(strings.ToLower(username))
+
 	anonymous := false
 	sub := ""
 
