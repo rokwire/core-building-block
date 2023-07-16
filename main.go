@@ -101,7 +101,7 @@ func main() {
 
 	twilioPhoneVerifier, err := phoneverifier.NewTwilioAdapter(twilioAccountSID, twilioToken, twilioServiceSID)
 	if err != nil {
-		logger.Fatalf("Cannot start the twilio phone verifier: %v", err)
+		logger.Warnf("Cannot start the twilio phone verifier: %v", err)
 	}
 
 	smtpHost := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SMTP_HOST", false, false)

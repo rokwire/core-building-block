@@ -55,7 +55,7 @@ func (a *Auth) GetHost() string {
 //		ipAddress (string): Client's IP address
 //		deviceType (string): "mobile" or "web" or "desktop" etc
 //		deviceOS (*string): Device OS
-//		deviceID (string): Device ID
+//		deviceID (*string): Device ID
 //		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
 //		creds (string): Credentials/JSON encoded credential structure defined for the specified auth type
 //		apiKey (string): API key to validate the specified app
@@ -75,7 +75,7 @@ func (a *Auth) GetHost() string {
 //			Params (interface{}): authType-specific set of parameters passed back to client
 //			State (string): login state used if account is enrolled in MFA
 //		MFA types ([]model.MFAType): list of MFA types account is enrolled in
-func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, deviceID string, authenticationType string, creds string, apiKey string,
+func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, deviceID *string, authenticationType string, creds string, apiKey string,
 	appTypeIdentifier string, orgID string, params string, clientVersion *string, profile model.Profile, privacy model.Privacy, preferences map[string]interface{},
 	username string, admin bool, l *logs.Log) (map[string]interface{}, *model.LoginSession, []model.MFAType, error) {
 	//TODO - analyse what should go in one transaction
@@ -98,6 +98,8 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 	if err != nil {
 		return nil, nil, nil, errors.WrapErrorData(logutils.StatusInvalid, model.TypeAPIKey, nil, err)
 	}
+
+	username = strings.TrimSpace(strings.ToLower(username))
 
 	anonymous := false
 	sub := ""

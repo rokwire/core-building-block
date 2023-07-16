@@ -135,14 +135,13 @@ func (a *webAuthnAuthImpl) signUp(identifierImpl identifierType, appName string,
 	if creds.identifier() == "" {
 		return "", nil, false, errors.ErrorData(logutils.StatusMissing, "identifier", nil)
 	}
-	identifier := strings.TrimSpace(strings.ToLower(creds.identifier()))
 
 	passkeyParams, err := identifierImpl.parseParams(params)
 	if err != nil {
 		return "", nil, false, errors.ErrorData(logutils.StatusInvalid, typeWebAuthnParams, nil)
 	}
 
-	user := webAuthnUser{ID: newCredentialID, Name: identifier, DisplayName: passkeyParams.parameter(parameterKeyDisplayName)}
+	user := webAuthnUser{ID: newCredentialID, Name: creds.identifier(), DisplayName: passkeyParams.parameter(parameterKeyDisplayName)}
 	return a.beginRegistration(identifierImpl, auth, user, appName)
 }
 

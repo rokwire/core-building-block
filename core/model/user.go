@@ -572,7 +572,7 @@ func ProfileFromMap(profileMap map[string]interface{}) Profile {
 type Device struct {
 	ID string
 
-	DeviceID string //provided by client
+	DeviceID *string //provided by client
 	Account  Account
 
 	Type string //mobile, web, desktop, other
