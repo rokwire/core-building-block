@@ -1353,11 +1353,19 @@ func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, 
 
 	if search != nil {
 		searchStr = *search
+		searchStrParts := strings.Split(searchStr, " ")
+		searchStr = ""
+		for _, part := range searchStrParts {
+			if searchStr != "" {
+				searchStr += "|"
+			}
+			searchStr += "(" + part + ")"
+		}
 		regexFilter := bson.M{
 			"$or": []bson.M{
-				{"username": primitive.Regex{Pattern: *search, Options: "i"}},
-				{"profile.first_name": primitive.Regex{Pattern: *search, Options: "i"}},
-				{"profile.last_name": primitive.Regex{Pattern: *search, Options: "i"}},
+				{"username": primitive.Regex{Pattern: searchStr, Options: "i"}},
+				{"profile.first_name": primitive.Regex{Pattern: searchStr, Options: "i"}},
+				{"profile.last_name": primitive.Regex{Pattern: searchStr, Options: "i"}},
 			},
 		}
 		pipeline = append(pipeline, bson.M{"$match": regexFilter})
