@@ -564,6 +564,7 @@ type Storage interface {
 	//Credentials
 	InsertCredential(context storage.TransactionContext, creds *model.Credential) error
 	FindCredential(context storage.TransactionContext, ID string) (*model.Credential, error)
+	FindCredentials(context storage.TransactionContext, ids []string) ([]model.Credential, error)
 	UpdateCredential(context storage.TransactionContext, creds *model.Credential) error
 	UpdateCredentialValue(ID string, value map[string]interface{}) error
 	DeleteCredential(context storage.TransactionContext, ID string) error

@@ -161,8 +161,8 @@ func (a *webAuthnAuthImpl) checkCredential(identifierImpl identifierType, stored
 	user := webAuthnUser{ID: storedCreds.ID, Name: incomingCreds.identifier(), DisplayName: displayName}
 
 	var credential *webauthn.Credential
-	if storedCreds.Value["credential"] != nil {
-		credentialJSON, ok := storedCreds.Value["credential"].(string)
+	if storedCreds.Value[credentialKeyCredential] != nil {
+		credentialJSON, ok := storedCreds.Value[credentialKeyCredential].(string)
 		if !ok {
 			return "", errors.ErrorData(logutils.StatusInvalid, "credential param", nil)
 		}
@@ -198,7 +198,7 @@ func (a *webAuthnAuthImpl) checkCredential(identifierImpl identifierType, stored
 		return a.beginLogin(auth, storedCreds, user)
 	}
 
-	sessionJSON, ok := storedCreds.Value["session"].(string)
+	sessionJSON, ok := storedCreds.Value[credentialKeySession].(string)
 	if !ok {
 		return "", errors.ErrorData(logutils.StatusInvalid, "session param", nil)
 	}
@@ -275,10 +275,9 @@ func (a *webAuthnAuthImpl) completeRegistration(auth *webauthn.WebAuthn, session
 		return errors.WrapErrorAction(logutils.ActionMarshal, "credential", nil, err)
 	}
 
-	storedCreds.Value = map[string]interface{}{
-		"credential": string(credentialData),
-	}
-	// storedCreds.Verified = true
+	storedCreds.Value[credentialKeyCredential] = string(credentialData)
+	storedCreds.Value[credentialKeySession] = nil
+
 	err = a.auth.storage.UpdateCredential(nil, storedCreds)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
@@ -298,7 +297,7 @@ func (a *webAuthnAuthImpl) beginLogin(auth *webauthn.WebAuthn, storedCreds *mode
 		return "", errors.WrapErrorAction(logutils.ActionMarshal, "session", nil, err)
 	}
 
-	storedCreds.Value["session"] = string(sessionData)
+	storedCreds.Value[credentialKeySession] = string(sessionData)
 	err = a.auth.storage.UpdateCredential(nil, storedCreds)
 	if err != nil {
 		return "", errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
@@ -329,9 +328,8 @@ func (a *webAuthnAuthImpl) completeLogin(auth *webauthn.WebAuthn, session webaut
 		return errors.WrapErrorAction(logutils.ActionMarshal, "credential", nil, err)
 	}
 
-	storedCreds.Value = map[string]interface{}{
-		"credential": string(credentialData),
-	}
+	storedCreds.Value[credentialKeyCredential] = string(credentialData)
+	storedCreds.Value[credentialKeySession] = nil
 	storedCreds.Verified = true
 	err = a.auth.storage.UpdateCredential(nil, storedCreds)
 	if err != nil {
@@ -345,11 +343,13 @@ func (a *webAuthnAuthImpl) signUpAdmin(identifierImpl identifierType, appName st
 }
 
 func (a *webAuthnAuthImpl) forgotCredential(identifierImpl identifierType, credential authCreds, appName string, credID string) (map[string]interface{}, error) {
-	return nil, nil
+	//TODO: implement
+	return nil, errors.New(logutils.Unimplemented)
 }
 
 func (a *webAuthnAuthImpl) resetCredential(credential authCreds, resetCode *string, params string) (map[string]interface{}, error) {
-	return nil, nil
+	//TODO: implement
+	return nil, errors.New(logutils.Unimplemented)
 }
 
 // initWebAuthnAuth initializes and registers a new webauthn auth instance

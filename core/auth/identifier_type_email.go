@@ -37,7 +37,7 @@ const (
 
 // enailCreds represents the creds struct for email identifier
 type emailCreds struct {
-	Email              string     `json:"email" bson:"email" validate:"required"`
+	Email              string     `json:"email" bson:"-" validate:"required"`
 	Password           *string    `json:"password,omitempty" bson:"password,omitempty"`
 	Session            *string    `json:"session,omitempty" bson:"session,omitempty"`
 	Credential         *string    `json:"credential,omitempty" bson:"credential,omitempty"`

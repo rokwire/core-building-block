@@ -291,6 +291,14 @@ func credentialFromStorage(item credential) model.Credential {
 		Value: item.Value, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
+func credentialsFromStorage(items []credential) []model.Credential {
+	res := make([]model.Credential, len(items))
+	for i, cred := range items {
+		res[i] = credentialFromStorage(cred)
+	}
+	return res
+}
+
 func credentialToStorage(item *model.Credential) *credential {
 	if item == nil {
 		return nil

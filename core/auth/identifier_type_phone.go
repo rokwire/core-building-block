@@ -36,7 +36,7 @@ const (
 )
 
 type phoneCreds struct {
-	Phone      string  `json:"phone" bson:"phone" validate:"required"`
+	Phone      string  `json:"phone" bson:"-" validate:"required"`
 	Code       *string `json:"code,omitempty"`
 	Password   *string `json:"password,omitempty" bson:"password,omitempty"`
 	Session    *string `json:"session,omitempty" bson:"session,omitempty"`

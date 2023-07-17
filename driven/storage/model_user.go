@@ -30,7 +30,8 @@ type account struct {
 	Groups      []accountGroup     `bson:"groups,omitempty"`
 	Scopes      []string           `bson:"scopes,omitempty"`
 
-	AuthTypes []accountAuthType `bson:"auth_types,omitempty"`
+	Identifiers []accountIdentifier `bson:"identifiers,omitempty"`
+	AuthTypes   []accountAuthType   `bson:"auth_types,omitempty"`
 
 	MFATypes []mfaType `bson:"mfa_types,omitempty"`
 
@@ -72,12 +73,22 @@ type accountAuthType struct {
 	ID           string                 `bson:"id"`
 	AuthTypeID   string                 `bson:"auth_type_id"`
 	AuthTypeCode string                 `bson:"auth_type_code"`
-	Identifier   string                 `bson:"identifier"`
+	Identifier   *string                `bson:"identifier,omitempty"`
 	Params       map[string]interface{} `bson:"params"`
 	CredentialID *string                `bson:"credential_id"`
 	Active       bool                   `bson:"active"`
-	Unverified   bool                   `bson:"unverified"`
-	Linked       bool                   `bson:"linked"`
+	Unverified   *bool                  `bson:"unverified,omitempty"`
+	Linked       *bool                  `bson:"linked,omitempty"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
+}
+
+type accountIdentifier struct {
+	Code       string `bson:"code"`
+	Identifier string `bson:"identifier"`
+	Verified   bool   `bson:"verified"`
+	Linked     bool   `bson:"linked"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`

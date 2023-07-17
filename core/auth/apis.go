@@ -647,8 +647,8 @@ func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID
 
 		//2. check if the user's auth type is verified
 		accountAuthType := account.GetAccountAuthType(supportedAuthType.AuthType.ID, identifier)
-		if accountAuthType == nil || accountAuthType.Unverified {
-			return errors.ErrorData("Unverified", model.TypeAccountAuthType, &logutils.FieldArgs{"app_org_id": appOrg.ID, "auth_type": supportedAuthType.AuthType.Code, "identifier": identifier}).SetStatus(utils.ErrorStatusUnverified)
+		if accountAuthType == nil {
+			return errors.ErrorData(logutils.StatusMissing, model.TypeAccountAuthType, &logutils.FieldArgs{"app_org_id": appOrg.ID, "auth_type": supportedAuthType.AuthType.Code, "identifier": identifier}).SetStatus(utils.ErrorStatusNotFound)
 		}
 
 		//3. update account permissions

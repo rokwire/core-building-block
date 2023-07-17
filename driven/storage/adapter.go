@@ -2286,7 +2286,7 @@ func (sa *Adapter) DeleteAccountAuthType(context TransactionContext, item model.
 	filter := bson.M{"_id": item.Account.ID}
 	update := bson.D{
 		primitive.E{Key: "$pull", Value: bson.D{
-			primitive.E{Key: "auth_types", Value: bson.M{"auth_type_code": item.SupportedAuthType.AuthType.Code, "identifier": item.Identifier}},
+			primitive.E{Key: "auth_types", Value: bson.M{"id": item.ID, "auth_type_code": item.SupportedAuthType.AuthType.Code}},
 		}},
 	}
 
@@ -2379,6 +2379,19 @@ func (sa *Adapter) FindCredential(context TransactionContext, ID string) (*model
 
 	modelCreds := credentialFromStorage(creds)
 	return &modelCreds, nil
+}
+
+// FindCredentials finds a list of credentials by a list of IDs
+func (sa *Adapter) FindCredentials(context TransactionContext, ids []string) ([]model.Credential, error) {
+	filter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
+
+	var creds []credential
+	err := sa.db.credentials.FindWithContext(context, filter, &creds, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, &logutils.FieldArgs{"ids": ids}, err)
+	}
+
+	return credentialsFromStorage(creds), nil
 }
 
 // InsertCredential inserts a set of credential

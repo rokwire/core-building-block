@@ -33,7 +33,7 @@ const (
 
 // userNameCreds represents the creds struct for username identifier
 type usernameCreds struct {
-	Username   string  `json:"username" bson:"username" validate:"required"`
+	Username   string  `json:"username" bson:"-" validate:"required"`
 	Password   *string `json:"password,omitempty" bson:"password,omitempty"`
 	Session    *string `json:"session,omitempty" bson:"session,omitempty"`
 	Credential *string `json:"credential,omitempty" bson:"credential,omitempty"`

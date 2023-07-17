@@ -76,7 +76,8 @@ type Account struct {
 	Groups      []AccountGroup
 	Scopes      []string
 
-	AuthTypes []AccountAuthType
+	Identifiers []AccountIdentifier
+	AuthTypes   []AccountAuthType
 
 	MFATypes []MFAType
 
@@ -111,32 +112,44 @@ func (a Account) GetAccountAuthTypeByID(ID string) *AccountAuthType {
 	return nil
 }
 
-// GetAccountAuthType finds account auth type
-func (a Account) GetAccountAuthType(authTypeID string, identifier string) *AccountAuthType {
-	for _, aat := range a.AuthTypes {
-		if aat.SupportedAuthType.AuthType.ID == authTypeID && aat.Identifier == identifier {
-			aat.Account = a
-			return &aat
-		}
-	}
-	return nil
-}
-
-// GetVerifiedAccountAuthTypes returns a list of only verified auth types for this account
-func (a Account) GetVerifiedAccountAuthTypes() []AccountAuthType {
+// GetAccountAuthTypes finds account auth types
+func (a Account) GetAccountAuthTypes(authTypeID string, identifier string) []AccountAuthType {
 	authTypes := make([]AccountAuthType, 0)
-	for _, auth := range a.AuthTypes {
-		if !auth.Unverified {
-			authTypes = append(authTypes, auth)
+	for _, aat := range a.AuthTypes {
+		if aat.SupportedAuthType.AuthType.ID == authTypeID && (aat.Identifier == nil || *aat.Identifier == identifier) {
+			aat.Account = a
+			authTypes = append(authTypes, aat)
 		}
 	}
 	return authTypes
 }
 
-// SortAccountAuthTypes sorts account auth types by matching the given uid
-func (a Account) SortAccountAuthTypes(uid string) {
-	sort.Slice(a.AuthTypes, func(i, _ int) bool {
-		return a.AuthTypes[i].Identifier == uid
+// GetAccountIdentifier finds account identifier
+func (a Account) GetAccountIdentifier(identifier string) *AccountIdentifier {
+	for _, id := range a.Identifiers {
+		if id.Identifier == identifier {
+			id.Account = a
+			return &id
+		}
+	}
+	return nil
+}
+
+// GetVerifiedAccountIdentifiers returns a list of only verified identifiers for this account
+func (a Account) GetVerifiedAccountIdentifiers() []AccountIdentifier {
+	identifiers := make([]AccountIdentifier, 0)
+	for _, id := range a.Identifiers {
+		if id.Verified {
+			identifiers = append(identifiers, id)
+		}
+	}
+	return identifiers
+}
+
+// SortAccountIdentifiers sorts account identifiers by matching the given uid
+func (a Account) SortAccountIdentifiers(uid string) {
+	sort.Slice(a.Identifiers, func(i, _ int) bool {
+		return a.Identifiers[i].Identifier == uid
 	})
 }
 
@@ -348,51 +361,32 @@ type AccountAuthType struct {
 	SupportedAuthType SupportedAuthType //one of the supported auth type
 	Account           Account
 
-	Identifier string
+	Identifier *string
 	Params     map[string]interface{}
 
 	Credential *Credential //this can be nil as the external auth types authenticates the users outside the system
 
-	Active     bool
-	Unverified bool
-	Linked     bool
+	Active bool
 
 	DateCreated time.Time
 	DateUpdated *time.Time
 }
 
-// SetUnverified sets the Unverified flag to value in the account auth type itself and the appropriate account auth type within the account member
-func (aat *AccountAuthType) SetUnverified(value bool) {
-	if aat == nil {
-		return
-	}
-
-	aat.Unverified = false
-	for i := 0; i < len(aat.Account.AuthTypes); i++ {
-		if aat.Account.AuthTypes[i].ID == aat.ID {
-			aat.Account.AuthTypes[i].Unverified = false
-		}
-	}
-}
-
 // Equals checks if two account auth types are equal
 func (aat *AccountAuthType) Equals(other AccountAuthType) bool {
-	if aat.Identifier != other.Identifier {
-		return false
-	}
 	if aat.Account.ID != other.Account.ID {
 		return false
 	}
 	if aat.SupportedAuthType.AuthType.Code != other.SupportedAuthType.AuthType.Code {
 		return false
 	}
+	if (aat.Identifier != nil) || (other.Identifier != nil) {
+		if aat.Identifier != nil && other.Identifier != nil && *aat.Identifier != *other.Identifier {
+			return false
+		}
+		return false
+	}
 	if aat.Active != other.Active {
-		return false
-	}
-	if aat.Unverified != other.Unverified {
-		return false
-	}
-	if aat.Linked != other.Linked {
 		return false
 	}
 	if !utils.DeepEqual(aat.Params, other.Params) {
@@ -404,6 +398,51 @@ func (aat *AccountAuthType) Equals(other AccountAuthType) bool {
 	if (thisCred != nil) != (otherCred != nil) {
 		return false
 	} else if thisCred != nil && otherCred != nil && (thisCred.ID != otherCred.ID) {
+		return false
+	}
+
+	return true
+}
+
+// AccountIdentifier represents account identifiers
+type AccountIdentifier struct {
+	Code       string
+	Identifier string
+	Verified   bool
+	Linked     bool
+
+	Account Account
+
+	DateCreated time.Time
+	DateUpdated *time.Time
+}
+
+// SetVerified sets the Verified flag to value in the account auth type itself and the appropriate account auth type within the account member
+func (ai *AccountIdentifier) SetVerified(value bool) {
+	if ai == nil {
+		return
+	}
+
+	ai.Verified = value
+	for i := 0; i < len(ai.Account.Identifiers); i++ {
+		if ai.Account.Identifiers[i].Identifier == ai.Identifier {
+			ai.Account.Identifiers[i].Verified = value
+		}
+	}
+}
+
+// Equals checks if two account identifiers are equal
+func (ai *AccountIdentifier) Equals(other AccountIdentifier) bool {
+	if ai.Identifier != other.Identifier {
+		return false
+	}
+	if ai.Account.ID != other.Account.ID {
+		return false
+	}
+	if ai.Verified != other.Verified {
+		return false
+	}
+	if ai.Linked != other.Linked {
 		return false
 	}
 
