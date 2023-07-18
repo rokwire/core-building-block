@@ -17,20 +17,28 @@ package auth
 import (
 	"core-building-block/core/model"
 	"core-building-block/utils"
+	"encoding/json"
 	"strconv"
 	"strings"
 
 	"github.com/rokwire/logging-library-go/v2/errors"
 	"github.com/rokwire/logging-library-go/v2/logutils"
+	"gopkg.in/go-playground/validator.v9"
 )
 
 const (
 	//AuthTypeCode code auth type
 	AuthTypeCode string = "code"
 
-	credentialKeyCode      string = "code"
 	typeAuthenticationCode string = "authentication code"
+
+	typeCodeCreds logutils.MessageDataType = "code creds"
 )
+
+// codeCreds represents the creds struct for code authentication
+type codeCreds struct {
+	Code *string `json:"code,omitempty"`
+}
 
 // Code implementation of authType
 type codeAuthImpl struct {
@@ -38,10 +46,10 @@ type codeAuthImpl struct {
 	authType string
 }
 
-func (a *codeAuthImpl) signUp(identifierImpl identifierType, appName string, creds authCreds, params string, config map[string]interface{}, newCredentialID string) (string, map[string]interface{}, bool, error) {
+func (a *codeAuthImpl) signUp(identifierImpl identifierType, appName string, creds string, params string, config map[string]interface{}, newCredentialID string) (string, map[string]interface{}, bool, error) {
 	identifierChannel, _ := identifierImpl.(authCommunicationChannel)
 	if identifierChannel == nil {
-		return "", nil, false, errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, logutils.StringArgs(identifierImpl.getType()))
+		return "", nil, false, errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, logutils.StringArgs(identifierImpl.getCode()))
 	}
 
 	code := ""
@@ -52,10 +60,10 @@ func (a *codeAuthImpl) signUp(identifierImpl identifierType, appName string, cre
 			code = strings.Repeat("0", padLen) + code
 		}
 
-		//TODO: store generated codes in credentials collection?
+		//TODO: store generated codes in login state collection or auth types in account?
 	}
 
-	message, err := identifierChannel.sendCode(creds.identifier(), appName, code, typeAuthenticationCode, newCredentialID)
+	message, err := identifierChannel.sendCode(appName, code, typeAuthenticationCode, newCredentialID)
 	if err != nil {
 		return "", nil, false, err
 	}
@@ -63,55 +71,90 @@ func (a *codeAuthImpl) signUp(identifierImpl identifierType, appName string, cre
 	return message, nil, false, nil
 }
 
-func (a *codeAuthImpl) signUpAdmin(identifierImpl identifierType, appName string, creds authCreds, newCredentialID string) (map[string]interface{}, map[string]interface{}, error) {
+func (a *codeAuthImpl) signUpAdmin(identifierImpl identifierType, appName string, creds string, newCredentialID string) (map[string]interface{}, map[string]interface{}, error) {
 	return nil, nil, errors.New(logutils.Unimplemented)
 }
 
-func (a *codeAuthImpl) forgotCredential(identifierImpl identifierType, credential authCreds, appName string, credID string) (map[string]interface{}, error) {
+func (a *codeAuthImpl) forgotCredential(identifierImpl identifierType, credential *model.Credential, appName string, credID string) (map[string]interface{}, error) {
 	return nil, errors.New(logutils.Unimplemented)
 }
 
-func (a *codeAuthImpl) resetCredential(credential authCreds, resetCode *string, params string) (map[string]interface{}, error) {
+func (a *codeAuthImpl) resetCredential(credential *model.Credential, resetCode *string, params string) (map[string]interface{}, error) {
 	return nil, errors.New(logutils.Unimplemented)
 }
 
-func (a *codeAuthImpl) checkCredential(identifierImpl identifierType, credential *model.Credential, incomingCreds authCreds, displayName string, appName string, config map[string]interface{}) (string, error) {
+func (a *codeAuthImpl) checkCredential(identifierImpl identifierType, credential *model.Credential, creds string, displayName string, appName string, config map[string]interface{}) (string, error) {
 	identifierChannel, _ := identifierImpl.(authCommunicationChannel)
 	if identifierChannel == nil {
-		return "", errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, logutils.StringArgs(identifierImpl.getType()))
+		return "", errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, logutils.StringArgs(identifierImpl.getCode()))
 	}
 
 	var credID string
 	var storedCred string
 	if credential != nil {
 		credID = credential.ID
-		storedCreds, err := identifierImpl.mapToCreds(credential.Value)
+		storedCreds, err := a.mapToCreds(credential.Value)
 		if err != nil {
 			return "", errors.WrapErrorAction(logutils.ActionCast, "map to code creds", nil, err)
 		}
-
-		storedCred := storedCreds.getCredential(credentialKeyCode)
-		if storedCred == "" {
-			return "", errors.ErrorData(logutils.StatusMissing, logutils.MessageDataType(credentialKeyCode), nil)
+		if storedCreds.Code == nil {
+			return "", errors.ErrorData(logutils.StatusMissing, "stored code", nil)
 		}
+		storedCred = *storedCreds.Code
 	}
 
-	incomingCred := incomingCreds.getCredential(credentialKeyCode)
+	incomingCreds, err := a.parseCreds(creds)
+	if err != nil {
+		return "", errors.WrapErrorAction(logutils.ActionParse, typeCodeCreds, nil, err)
+	}
+	if incomingCreds.Code == nil {
+		return "", errors.ErrorData(logutils.StatusMissing, "incoming code", nil)
+	}
 	if identifierChannel.requiresCodeGeneration() {
-		if incomingCred == "" {
-			return "", errors.ErrorData(logutils.StatusMissing, logutils.MessageDataType(credentialKeyCode), nil)
-		}
-		if incomingCred != storedCred {
-			return "", errors.ErrorData(logutils.StatusInvalid, "credential", logutils.StringArgs(incomingCred))
+		if *incomingCreds.Code != storedCred {
+			return "", errors.ErrorData(logutils.StatusInvalid, "credential", logutils.StringArgs(*incomingCreds.Code))
 		}
 		return "", nil
 	}
 
-	message, err := identifierChannel.sendCode(incomingCreds.identifier(), appName, incomingCred, typeAuthenticationCode, credID)
+	message, err := identifierChannel.sendCode(appName, *incomingCreds.Code, typeAuthenticationCode, credID)
 	if err != nil {
 		return "", err
 	}
 	return message, nil
+}
+
+// Helpers
+
+func (a *codeAuthImpl) parseCreds(creds string) (*codeCreds, error) {
+	var credential codeCreds
+	err := json.Unmarshal([]byte(creds), &credential)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeCodeCreds, nil, err)
+	}
+	err = validator.New().Struct(credential)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionValidate, typeCodeCreds, nil, err)
+	}
+	return &credential, nil
+}
+
+func (a *codeAuthImpl) mapToCreds(credsMap map[string]interface{}) (*codeCreds, error) {
+	credBytes, err := json.Marshal(credsMap)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionMarshal, "webauthn creds map", nil, err)
+	}
+	var creds codeCreds
+	err = json.Unmarshal(credBytes, &creds)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeCodeCreds, nil, err)
+	}
+
+	err = validator.New().Struct(creds)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionValidate, typeCodeCreds, nil, err)
+	}
+	return &creds, nil
 }
 
 // initCodeAuth initializes and registers a new code auth instance

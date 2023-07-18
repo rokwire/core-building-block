@@ -446,6 +446,10 @@ func (sa *Adapter) setCachedAuthTypes(authProviders []model.AuthType) {
 			//we will get it by id and code as well
 			sa.cachedAuthTypes.Store(authType.ID, authType)
 			sa.cachedAuthTypes.Store(authType.Code, authType)
+			for _, alias := range authType.Aliases {
+				//TODO: cache by alias IDs too?
+				sa.cachedAuthTypes.Store(alias, authType)
+			}
 		} else {
 			sa.logger.Errorf("failed to validate and cache auth type with code %s: %s", authType.Code, err.Error())
 		}

@@ -90,6 +90,9 @@ type accountIdentifier struct {
 	Verified   bool   `bson:"verified"`
 	Linked     bool   `bson:"linked"`
 
+	VerificationCode   *string    `bson:"verification_code,omitempty"`
+	VerificationExpiry *time.Time `bson:"verification_expiry,omitempty"`
+
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
 }
@@ -144,7 +147,6 @@ type credential struct {
 
 	AuthTypeID        string                 `bson:"auth_type_id"`
 	AccountsAuthTypes []string               `bson:"account_auth_types"`
-	Verified          bool                   `bson:"verified"`
 	Value             map[string]interface{} `bson:"value"`
 
 	DateCreated time.Time  `bson:"date_created"`

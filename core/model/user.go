@@ -33,6 +33,8 @@ const (
 	TypeAccountSystemConfigs logutils.MessageDataType = "account system configs"
 	//TypeAccountAuthType account auth type
 	TypeAccountAuthType logutils.MessageDataType = "account auth type"
+	//TypeAccountIdentifier account identifier
+	TypeAccountIdentifier logutils.MessageDataType = "account identifier"
 	//TypeAccountPermissions account permissions
 	TypeAccountPermissions logutils.MessageDataType = "account permissions"
 	//TypeAccountRoles account roles
@@ -413,6 +415,9 @@ type AccountIdentifier struct {
 
 	Account Account
 
+	VerificationCode   *string
+	VerificationExpiry *time.Time
+
 	DateCreated time.Time
 	DateUpdated *time.Time
 }
@@ -454,8 +459,7 @@ type Credential struct {
 	ID string
 
 	AuthType          AuthType
-	AccountsAuthTypes []AccountAuthType //one credential can be used for more than one account auth type
-	Verified          bool
+	AccountsAuthTypes []AccountAuthType      //one credential can be used for more than one account auth type
 	Value             map[string]interface{} //credential value
 
 	DateCreated time.Time

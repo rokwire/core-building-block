@@ -937,9 +937,14 @@ func (a *Auth) UpdateCredential(accountID string, accountAuthTypeID string, para
 		return errors.ErrorData(logutils.StatusInvalid, model.TypeAuthType, logutils.StringArgs("reset password"))
 	}
 
-	_, authImpl, identifierCreds, err := a.getIdentifierAndAuthTypeImpls(credential, nil, accountAuthType.SupportedAuthType.AuthType)
+	identifierImpl, err := a.getIdentifierTypeImpl(creds)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionGet, "identifier and auth types", nil, err)
+		return nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeIdentifierType, nil, err)
+	}
+
+	authImpl, err := a.getAuthTypeImpl(authType)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeAuthType, nil, err)
 	}
 
 	authTypeCreds, err := authImpl.resetCredential(identifierCreds, nil, params)
@@ -982,9 +987,14 @@ func (a *Auth) ResetForgotCredential(credsID string, resetCode string, params st
 		return errors.ErrorData(logutils.StatusInvalid, model.TypeAuthType, logutils.StringArgs("reset forgot credential"))
 	}
 
-	_, authImpl, identifierCreds, err := a.getIdentifierAndAuthTypeImpls(credential, nil, *authType)
+	identifierImpl, err := a.getIdentifierTypeImpl(creds)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionGet, "identifier and auth types", nil, err)
+		return nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeIdentifierType, nil, err)
+	}
+
+	authImpl, err := a.getAuthTypeImpl(authType)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeAuthType, nil, err)
 	}
 
 	authTypeCreds, err := authImpl.resetCredential(identifierCreds, &resetCode, params)
@@ -1052,9 +1062,14 @@ func (a *Auth) ForgotCredential(authenticationType string, appTypeIdentifier str
 	}
 	a.setLogContext(account, l)
 
-	identifierImpl, authImpl, identifierCreds, err := a.getIdentifierAndAuthTypeImpls(credential, nil, authType.AuthType)
+	identifierImpl, err := a.getIdentifierTypeImpl(creds)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionGet, "identifier and auth types", nil, err)
+		return nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeIdentifierType, nil, err)
+	}
+
+	authImpl, err := a.getAuthTypeImpl(authType)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeAuthType, nil, err)
 	}
 	//do not allow to reset credential for unverified credentials
 	err = a.checkCredentialVerified(identifierImpl, credential, identifierCreds, appOrg.Application.Name)
@@ -1789,10 +1804,10 @@ func (a *Auth) InitializeSystemAccount(context storage.TransactionContext, authT
 	privacy := model.Privacy{Public: false}
 	permissions := []string{allSystemPermission}
 
-	creds := emailCreds{Email: email, Password: &password}
+	creds := passwordCreds{Password: password}
 	credsBytes, err := json.Marshal(creds)
 	if err != nil {
-		return "", errors.WrapErrorAction(logutils.ActionMarshal, typeEmailCreds, nil, err)
+		return "", errors.WrapErrorAction(logutils.ActionMarshal, typePasswordCreds, nil, err)
 	}
 	_, accountAuthType, err := a.applySignUpAdmin(context, nil, authType, appOrg, email, string(credsBytes), profile, privacy, "", permissions, nil, nil, nil, permissions, &clientVersion, l)
 	if err != nil {

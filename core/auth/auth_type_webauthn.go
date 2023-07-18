@@ -18,9 +18,11 @@ import (
 	"core-building-block/core/model"
 	"encoding/json"
 	"strings"
+	"time"
 
 	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/go-webauthn/webauthn/webauthn"
+	"gopkg.in/go-playground/validator.v9"
 
 	"github.com/rokwire/logging-library-go/v2/errors"
 	"github.com/rokwire/logging-library-go/v2/logutils"
@@ -33,7 +35,6 @@ const (
 	credentialKeyResponse   string = "response"
 	credentialKeySession    string = "session"
 	credentialKeyCredential string = "credential"
-	parameterKeyDisplayName string = "display name"
 
 	typeWebAuthnCreds  logutils.MessageDataType = "webauthn creds"
 	typeWebAuthnParams logutils.MessageDataType = "webauthn params"
@@ -69,6 +70,65 @@ func (u webAuthnUser) WebAuthnCredentials() []webauthn.Credential {
 // WebAuthnIcon deprecated
 func (u webAuthnUser) WebAuthnIcon() string {
 	return ""
+}
+
+// webauthnCreds represents the creds struct for webauthn authentication
+type webauthnCreds struct {
+	Session    *string `json:"session,omitempty"`
+	Credential *string `json:"credential,omitempty"`
+	Response   *string `json:"response,omitempty"`
+}
+
+func (c *webauthnCreds) getCredential(key string) string {
+	switch key {
+	case credentialKeyResponse:
+		if c.Response != nil {
+			return *c.Response
+		}
+	case credentialKeySession:
+		if c.Session != nil {
+			return *c.Session
+		}
+	case credentialKeyCredential:
+		if c.Credential != nil {
+			return *c.Credential
+		}
+	}
+	return ""
+}
+
+func (c *webauthnCreds) setCredential(value string, key string) {
+	switch key {
+	case credentialKeyResponse:
+		c.Response = &value
+	case credentialKeySession:
+		c.Session = &value
+	case credentialKeyCredential:
+		c.Credential = &value
+	}
+}
+
+func (c *webauthnCreds) getResetParams() (*string, *time.Time) {
+	return nil, nil
+}
+
+func (c *webauthnCreds) setResetParams(code *string, expiry *time.Time) {}
+
+func (c *webauthnCreds) toMap() (map[string]interface{}, error) {
+	credBytes, err := json.Marshal(c)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionMarshal, typeWebAuthnCreds, nil, err)
+	}
+	var credsMap map[string]interface{}
+	err = json.Unmarshal(credBytes, &credsMap)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, "webauthn creds map", nil, err)
+	}
+	return credsMap, nil
+}
+
+type webauthnParams struct {
+	DisplayName *string `json:"display_name"`
 }
 
 // WebAuthn implementation of authType
@@ -126,26 +186,32 @@ func buildWebAuthn(config map[string]interface{}, appName string) (*webauthn.Web
 	return auth, nil
 }
 
-func (a *webAuthnAuthImpl) signUp(identifierImpl identifierType, appName string, creds authCreds, params string, config map[string]interface{}, newCredentialID string) (string, map[string]interface{}, bool, error) {
+func (a *webAuthnAuthImpl) signUp(identifierImpl identifierType, appName string, creds string, params string, config map[string]interface{}, newCredentialID string) (string, map[string]interface{}, bool, error) {
 	auth, err := buildWebAuthn(config, appName)
 	if err != nil {
 		return "", nil, false, errors.WrapErrorAction(logutils.ActionInitialize, logutils.MessageDataType(AuthTypeWebAuthn), nil, err)
 	}
 
-	if creds.identifier() == "" {
-		return "", nil, false, errors.ErrorData(logutils.StatusMissing, "identifier", nil)
-	}
-
-	passkeyParams, err := identifierImpl.parseParams(params)
+	identifier, err := identifierImpl.getUserIdentifier(creds)
 	if err != nil {
-		return "", nil, false, errors.ErrorData(logutils.StatusInvalid, typeWebAuthnParams, nil)
+		return "", nil, false, errors.WrapErrorAction(logutils.ActionGet, "identifier", nil, err)
 	}
 
-	user := webAuthnUser{ID: newCredentialID, Name: creds.identifier(), DisplayName: passkeyParams.parameter(parameterKeyDisplayName)}
+	parameters, err := a.parseParams(params)
+	if err != nil {
+		return "", nil, false, errors.WrapErrorAction(logutils.ActionParse, typeWebAuthnParams, nil, err)
+	}
+
+	displayName := ""
+	if parameters.DisplayName != nil {
+		displayName = *parameters.DisplayName
+	}
+
+	user := webAuthnUser{ID: newCredentialID, Name: identifier, DisplayName: displayName}
 	return a.beginRegistration(identifierImpl, auth, user, appName)
 }
 
-func (a *webAuthnAuthImpl) checkCredential(identifierImpl identifierType, storedCreds *model.Credential, incomingCreds authCreds, displayName string, appName string, config map[string]interface{}) (string, error) {
+func (a *webAuthnAuthImpl) checkCredential(identifierImpl identifierType, storedCreds *model.Credential, creds string, displayName string, appName string, config map[string]interface{}) (string, error) {
 	if storedCreds == nil {
 		return "", errors.ErrorData(logutils.StatusMissing, model.TypeCredential, nil)
 	}
@@ -158,7 +224,17 @@ func (a *webAuthnAuthImpl) checkCredential(identifierImpl identifierType, stored
 		return "", errors.WrapErrorAction(logutils.ActionInitialize, logutils.MessageDataType(AuthTypeWebAuthn), nil, err)
 	}
 
-	user := webAuthnUser{ID: storedCreds.ID, Name: incomingCreds.identifier(), DisplayName: displayName}
+	identifier, err := identifierImpl.getUserIdentifier(creds)
+	if err != nil {
+		return "", errors.WrapErrorAction(logutils.ActionGet, "identifier", nil, err)
+	}
+
+	user := webAuthnUser{ID: storedCreds.ID, Name: identifier, DisplayName: displayName}
+
+	credentials, err := a.parseCreds(creds)
+	if err != nil {
+		return "", errors.WrapErrorAction(logutils.ActionParse, typeWebAuthnCreds, nil, err)
+	}
 
 	var credential *webauthn.Credential
 	if storedCreds.Value[credentialKeyCredential] != nil {
@@ -176,7 +252,7 @@ func (a *webAuthnAuthImpl) checkCredential(identifierImpl identifierType, stored
 		user.Credentials = []webauthn.Credential{credentialVal}
 	}
 
-	response := incomingCreds.getCredential(credentialKeyResponse)
+	response := credentials.getCredential(credentialKeyResponse)
 	if response == "" {
 		if credential == nil {
 			if !storedCreds.Verified {
@@ -235,19 +311,18 @@ func (a *webAuthnAuthImpl) beginRegistration(identifierImpl identifierType, auth
 		return "", nil, false, errors.WrapErrorAction(logutils.ActionMarshal, "session", nil, err)
 	}
 
-	var credData map[string]interface{}
-	credValue := identifierImpl.buildCredential(user.Name, string(sessionData), credentialKeySession)
+	sessionStr := string(sessionData)
+	credValue := &webauthnCreds{Session: &sessionStr}
 	sent := false
 	if identifierChannel, ok := identifierImpl.(authCommunicationChannel); ok {
-		credData, sent, err = identifierChannel.sendVerifyCredential(credValue, appName, user.ID)
+		sent, err = identifierChannel.sendVerifyIdentifier(credValue, appName, user.ID)
 		if err != nil {
 			return "", nil, false, errors.WrapErrorAction(logutils.ActionSend, "identifier verification", nil, err)
 		}
-	} else {
-		credData, err = credValue.toMap()
-		if err != nil {
-			return "", nil, false, errors.WrapErrorAction(logutils.ActionCast, "map from creds", nil, err)
-		}
+	}
+	credData, err := credValue.toMap()
+	if err != nil {
+		return "", nil, false, errors.WrapErrorAction(logutils.ActionCast, "map from creds", nil, err)
 	}
 
 	optionData, err := json.Marshal(options)
@@ -338,18 +413,64 @@ func (a *webAuthnAuthImpl) completeLogin(auth *webauthn.WebAuthn, session webaut
 	return nil
 }
 
-func (a *webAuthnAuthImpl) signUpAdmin(identifierImpl identifierType, appName string, creds authCreds, newCredentialID string) (map[string]interface{}, map[string]interface{}, error) {
+func (a *webAuthnAuthImpl) signUpAdmin(identifierImpl identifierType, appName string, creds string, newCredentialID string) (map[string]interface{}, map[string]interface{}, error) {
 	return nil, nil, nil
 }
 
-func (a *webAuthnAuthImpl) forgotCredential(identifierImpl identifierType, credential authCreds, appName string, credID string) (map[string]interface{}, error) {
+func (a *webAuthnAuthImpl) forgotCredential(identifierImpl identifierType, credential *model.Credential, appName string, credID string) (map[string]interface{}, error) {
 	//TODO: implement
 	return nil, errors.New(logutils.Unimplemented)
 }
 
-func (a *webAuthnAuthImpl) resetCredential(credential authCreds, resetCode *string, params string) (map[string]interface{}, error) {
+func (a *webAuthnAuthImpl) resetCredential(credential *model.Credential, resetCode *string, params string) (map[string]interface{}, error) {
 	//TODO: implement
 	return nil, errors.New(logutils.Unimplemented)
+}
+
+// Helpers
+
+func (a *webAuthnAuthImpl) parseCreds(creds string) (*webauthnCreds, error) {
+	var credential webauthnCreds
+	err := json.Unmarshal([]byte(creds), &credential)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeWebAuthnCreds, nil, err)
+	}
+	err = validator.New().Struct(credential)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionValidate, typeWebAuthnCreds, nil, err)
+	}
+	return &credential, nil
+}
+
+func (a *webAuthnAuthImpl) parseParams(params string) (*webauthnParams, error) {
+	var parameters webauthnParams
+	err := json.Unmarshal([]byte(params), &parameters)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeWebAuthnParams, nil, err)
+	}
+	err = validator.New().Struct(parameters)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionValidate, typeWebAuthnParams, nil, err)
+	}
+	return &parameters, nil
+}
+
+func (a *webAuthnAuthImpl) mapToCreds(credsMap map[string]interface{}) (*webauthnCreds, error) {
+	credBytes, err := json.Marshal(credsMap)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionMarshal, "webauthn creds map", nil, err)
+	}
+	var creds webauthnCreds
+	err = json.Unmarshal(credBytes, &creds)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeWebAuthnCreds, nil, err)
+	}
+
+	err = validator.New().Struct(creds)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionValidate, typeWebAuthnCreds, nil, err)
+	}
+	return &creds, nil
 }
 
 // initWebAuthnAuth initializes and registers a new webauthn auth instance

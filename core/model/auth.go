@@ -239,6 +239,7 @@ type AuthType struct {
 	UseCredentials bool                   `bson:"use_credentials"` //says if the auth type uses credentials
 	IgnoreMFA      bool                   `bson:"ignore_mfa"`      //says if login using this auth type may bypass account MFA
 	Params         map[string]interface{} `bson:"params"`
+	Aliases        []string               `bson:"aliases,omitempty"`
 }
 
 // IdentityProvider represents identity provider entity
