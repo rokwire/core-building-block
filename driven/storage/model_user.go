@@ -85,6 +85,7 @@ type accountAuthType struct {
 }
 
 type accountIdentifier struct {
+	ID         string `bson:"id"`
 	Code       string `bson:"code"`
 	Identifier string `bson:"identifier"`
 	Verified   bool   `bson:"verified"`

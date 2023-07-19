@@ -408,6 +408,7 @@ func (aat *AccountAuthType) Equals(other AccountAuthType) bool {
 
 // AccountIdentifier represents account identifiers
 type AccountIdentifier struct {
+	ID         string
 	Code       string
 	Identifier string
 	Verified   bool

@@ -15,6 +15,7 @@
 package auth
 
 import (
+	"core-building-block/core/model"
 	"encoding/json"
 	"net/url"
 	"regexp"
@@ -79,41 +80,34 @@ func (a *phoneIdentifierImpl) withIdentifier(identifier string) identifierType {
 
 // authCommunicationChannel interface
 
-func (a *phoneIdentifierImpl) verifyCredential(credential authCreds, verification string) (map[string]interface{}, error) {
+func (a *phoneIdentifierImpl) verifyIdentifier(accountIdentifier *model.AccountIdentifier, verification string) error {
 	_, err := a.sendCode("", verification, "", "")
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionSend, "verification code", nil, err)
+		return errors.WrapErrorAction(logutils.ActionSend, "verification code", nil, err)
 	}
 
-	credsMap, err := credential.toMap()
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionCast, "map from phone creds", nil, err)
-	}
-
-	return credsMap, nil
+	return nil
 }
 
-func (a *phoneIdentifierImpl) sendVerifyCredential(credential authCreds, appName string, credID string) (map[string]interface{}, bool, error) {
+func (a *phoneIdentifierImpl) sendVerifyCredential(accountIdentifier *model.AccountIdentifier, appName string) (bool, error) {
+	if accountIdentifier == nil {
+		return false, errors.ErrorData(logutils.StatusMissing, model.TypeAccountIdentifier, nil)
+	}
+
 	//send verification code
-	if _, err := a.sendCode(appName, "", typeVerificationCode, credID); err != nil {
-		return nil, false, errors.WrapErrorAction(logutils.ActionSend, "verification phone", nil, err)
+	if _, err := a.sendCode(appName, "", typeVerificationCode, accountIdentifier.ID); err != nil {
+		return false, errors.WrapErrorAction(logutils.ActionSend, "verification phone", nil, err)
 	}
 
-	//Update verification data in credential value
-	credsMap, err := credential.toMap()
-	if err != nil {
-		return nil, true, errors.WrapErrorAction(logutils.ActionCast, "map from phone creds", nil, err)
-	}
-
-	return credsMap, true, nil
+	return true, nil
 }
 
-func (a *phoneIdentifierImpl) restartCredentialVerification(credential authCreds, appName string, credID string) (map[string]interface{}, error) {
+func (a *phoneIdentifierImpl) restartCredentialVerification(accountIdentifier *model.AccountIdentifier, appName string) error {
 	//TODO: do twilio/other phone verifiers have verification timeouts?
-	return nil, errors.New(logutils.Unimplemented)
+	return errors.New(logutils.Unimplemented)
 }
 
-func (a *phoneIdentifierImpl) sendCode(appName string, code string, codeType string, credID string) (string, error) {
+func (a *phoneIdentifierImpl) sendCode(appName string, code string, codeType string, itemID string) (string, error) {
 	if a.identifier == nil {
 		return "", errors.ErrorData(logutils.StatusMissing, typeEmailIdentifier, nil)
 	}

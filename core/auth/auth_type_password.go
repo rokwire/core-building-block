@@ -272,20 +272,18 @@ func (a *passwordAuthImpl) buildCredential(identifierImpl identifierType, appNam
 		return "", nil, false, errors.WrapErrorAction(logutils.ActionGenerate, "password hash", nil, err)
 	}
 
-	var credValueMap map[string]interface{}
 	message := ""
 	sent := false
 	credValue := &passwordCreds{Password: string(hashedPassword)}
 	if identifierChannel, ok := identifierImpl.(authCommunicationChannel); ok {
-		credValueMap, sent, err = identifierChannel.sendVerifyCredential(credValue, appName, credID)
+		sent, err = identifierChannel.sendVerifyIdentifier(credValue, appName, credID)
 		if err != nil {
 			return "", nil, false, errors.WrapErrorAction(logutils.ActionSend, "identifier verification", nil, err)
 		}
-	} else {
-		credValueMap, err = credValue.toMap()
-		if err != nil {
-			return "", nil, false, errors.WrapErrorAction(logutils.ActionCast, "map from creds", nil, err)
-		}
+	}
+	credValueMap, err := credValue.toMap()
+	if err != nil {
+		return "", nil, false, errors.WrapErrorAction(logutils.ActionCast, "map from creds", nil, err)
 	}
 
 	if sent {

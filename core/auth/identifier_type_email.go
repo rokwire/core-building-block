@@ -23,6 +23,7 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/rokwire/core-auth-library-go/v3/authutils"
 	"github.com/rokwire/logging-library-go/v2/errors"
 	"github.com/rokwire/logging-library-go/v2/logutils"
 	"gopkg.in/go-playground/validator.v9"
@@ -98,7 +99,7 @@ func (a *emailIdentifierImpl) verifyIdentifier(accountIdentifier *model.AccountI
 	return nil
 }
 
-func (a *emailIdentifierImpl) sendVerifyIdentifier(accountIdentifier *model.AccountIdentifier, appName string, credID string) (bool, error) {
+func (a *emailIdentifierImpl) sendVerifyIdentifier(accountIdentifier *model.AccountIdentifier, appName string) (bool, error) {
 	if accountIdentifier == nil {
 		return false, errors.ErrorData(logutils.StatusMissing, model.TypeAccountIdentifier, nil)
 	}
@@ -128,7 +129,7 @@ func (a *emailIdentifierImpl) sendVerifyIdentifier(accountIdentifier *model.Acco
 	}
 
 	//send verification email
-	if _, err = a.sendCode(appName, code, typeVerificationCode, credID); err != nil {
+	if _, err = a.sendCode(appName, code, typeVerificationCode, accountIdentifier.ID); err != nil {
 		return false, errors.WrapErrorAction(logutils.ActionSend, "verification email", nil, err)
 	}
 
@@ -139,7 +140,7 @@ func (a *emailIdentifierImpl) sendVerifyIdentifier(accountIdentifier *model.Acco
 	return true, nil
 }
 
-func (a *emailIdentifierImpl) restartIdentifierVerification(accountIdentifier *model.AccountIdentifier, appName string, credID string) error {
+func (a *emailIdentifierImpl) restartIdentifierVerification(accountIdentifier *model.AccountIdentifier, appName string) error {
 	if accountIdentifier == nil {
 		return errors.ErrorData(logutils.StatusMissing, model.TypeAccountIdentifier, nil)
 	}
@@ -152,7 +153,7 @@ func (a *emailIdentifierImpl) restartIdentifierVerification(accountIdentifier *m
 
 	}
 	//send new verification code for future
-	if _, err = a.sendCode(appName, newCode, typeVerificationCode, credID); err != nil {
+	if _, err = a.sendCode(appName, newCode, typeVerificationCode, accountIdentifier.ID); err != nil {
 		return errors.WrapErrorAction(logutils.ActionSend, "verification email", nil, err)
 	}
 	//update new verification data in credential value
@@ -162,13 +163,13 @@ func (a *emailIdentifierImpl) restartIdentifierVerification(accountIdentifier *m
 	return nil
 }
 
-func (a *emailIdentifierImpl) sendCode(appName string, code string, codeType string, credID string) (string, error) {
+func (a *emailIdentifierImpl) sendCode(appName string, code string, codeType string, itemID string) (string, error) {
 	if a.identifier == nil {
 		return "", errors.ErrorData(logutils.StatusMissing, typeEmailIdentifier, nil)
 	}
 
 	params := url.Values{}
-	params.Add("id", credID)
+	params.Add("id", itemID)
 	params.Add("code", code)
 	switch codeType {
 	case typePasswordResetCode:
@@ -199,30 +200,34 @@ func (a *emailIdentifierImpl) requiresCodeGeneration() bool {
 
 // Helpers
 
-func (a *emailIdentifierImpl) getVerificationSettings(params map[string]interface{}) (*int, *int, error) {
-	//TODO: get from configs collection
-	if params == nil {
-		return nil, nil, errors.ErrorData(logutils.StatusMissing, "verification params", logutils.StringArgs(a.code))
-	}
-
-	// Should email addresses be verified (default is true)
-	shouldVerify, ok := params["verify_email"].(bool)
-	if ok && !shouldVerify {
-		return nil, nil, nil
-	}
-
+func (a *emailIdentifierImpl) getVerificationSettings() (*int, *int, error) {
 	// Time in seconds to wait before sending another auth code (default is 30)
 	verifyWaitTime := 30
-	verifyWaitTimeParam, ok := params["verify_wait_time"].(int)
-	if ok {
-		verifyWaitTime = verifyWaitTimeParam
-	}
-
 	// Time in hours before auth code expires (default is 24)
 	verifyExpiry := 24
-	verifyExpiryParam, ok := params["verify_expiry"].(int)
-	if ok {
-		verifyExpiry = verifyExpiryParam
+
+	config, err := a.auth.storage.FindConfig(model.ConfigTypeAuth, authutils.AllApps, authutils.AllOrgs)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeConfig, &logutils.FieldArgs{"type": model.ConfigTypeAuth, "app_id": authutils.AllApps, "org_id": authutils.AllOrgs}, err)
+	}
+	if config != nil {
+		authConfigData, err := model.GetConfigData[model.AuthConfigData](*config)
+		if err != nil {
+			return nil, nil, errors.WrapErrorAction(logutils.ActionParse, model.TypeAuthConfigData, nil, err)
+		}
+
+		// Should email addresses be verified (default is true)
+		if authConfigData.EmailShouldVerify != nil && !*authConfigData.EmailShouldVerify {
+			return nil, nil, nil
+		}
+
+		if authConfigData.EmailVerifyWaitTime != nil {
+			verifyWaitTime = *authConfigData.EmailVerifyWaitTime
+		}
+
+		if authConfigData.EmailVerifyExpiry != nil {
+			verifyExpiry = *authConfigData.EmailVerifyExpiry
+		}
 	}
 
 	return &verifyWaitTime, &verifyExpiry, nil

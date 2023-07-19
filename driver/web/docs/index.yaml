@@ -39,10 +39,15 @@ paths:
     $ref: "./resources/services/auth/login-url.yaml"
   /services/auth/logout:
     $ref: "./resources/services/auth/logout.yaml"
-  /services/auth/credential/verify:
-    $ref: "./resources/services/auth/credential/verify.yaml"
+  /services/auth/identifier/verify:
+    $ref: "./resources/services/auth/identifier/verify.yaml"
+  /services/auth/identifier/send-verify:
+    $ref: "./resources/services/auth/identifier/send-verify.yaml"
+
+  # DEPRECATED
   /services/auth/credential/send-verify:
     $ref: "./resources/services/auth/credential/send-verify.yaml"
+
   /services/auth/credential/forgot/initiate:
     $ref: "./resources/services/auth/credential/forgot/initiate.yaml"
   /services/auth/credential/forgot/complete:

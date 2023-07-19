@@ -736,6 +736,8 @@ func (sa *Adapter) setCachedConfigs(configs []model.Config) {
 		switch config.Type {
 		case model.ConfigTypeEnv:
 			err = parseConfigsData[model.EnvConfigData](&config)
+		case model.ConfigTypeAuth:
+			err = parseConfigsData[model.AuthConfigData](&config)
 		default:
 			err = parseConfigsData[map[string]interface{}](&config)
 		}
@@ -1212,7 +1214,7 @@ func (sa *Adapter) FindSessionsLazy(appID string, orgID string) ([]model.LoginSe
 func (sa *Adapter) FindAccount(context TransactionContext, appOrgID string, authTypeID string, accountAuthTypeIdentifier string) (*model.Account, error) {
 	filter := bson.D{primitive.E{Key: "app_org_id", Value: appOrgID},
 		primitive.E{Key: "auth_types.auth_type_id", Value: authTypeID},
-		primitive.E{Key: "auth_types.identifier", Value: accountAuthTypeIdentifier}}
+		primitive.E{Key: "identifiers.identifier", Value: accountAuthTypeIdentifier}}
 	var accounts []account
 	err := sa.db.accounts.FindWithContext(context, filter, &accounts, nil)
 	if err != nil {
@@ -1274,7 +1276,7 @@ func (sa *Adapter) FindAccounts(context TransactionContext, limit *int, offset *
 		filter = append(filter, primitive.E{Key: "auth_types.auth_type_id", Value: cachedAuthType.ID})
 	}
 	if authTypeIdentifier != nil {
-		filter = append(filter, primitive.E{Key: "auth_types.identifier", Value: *authTypeIdentifier})
+		filter = append(filter, primitive.E{Key: "identifiers.identifier", Value: *authTypeIdentifier})
 	}
 	if anonymous != nil {
 		filter = append(filter, primitive.E{Key: "anonymous", Value: *anonymous})
@@ -2213,7 +2215,7 @@ func (sa *Adapter) InsertAccountAuthType(item model.AccountAuthType) error {
 		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAccountAuthType, nil, err)
 	}
 	if res.ModifiedCount != 1 {
-		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccountAuthType, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
 	}
 
 	return nil
@@ -2297,6 +2299,29 @@ func (sa *Adapter) DeleteAccountAuthType(context TransactionContext, item model.
 	res, err := sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccountAuthType, nil, err)
+	}
+	if res.ModifiedCount != 1 {
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
+	}
+
+	return nil
+}
+
+// InsertAccountIdentifier inserts am account auth type
+func (sa *Adapter) InsertAccountIdentifier(item model.AccountIdentifier) error {
+	storageItem := accountIdentifierToStorage(item)
+
+	//3. first find the account record
+	filter := bson.M{"_id": item.Account.ID}
+	update := bson.D{
+		primitive.E{Key: "$push", Value: bson.D{
+			primitive.E{Key: "identifiers", Value: storageItem},
+		}},
+	}
+
+	res, err := sa.db.accounts.UpdateOne(filter, update, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAccountIdentifier, nil, err)
 	}
 	if res.ModifiedCount != 1 {
 		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})

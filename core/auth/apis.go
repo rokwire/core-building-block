@@ -228,7 +228,7 @@ func (a *Auth) CanSignIn(authenticationType string, userIdentifier string, apiKe
 		return false, errors.WrapErrorAction(logutils.ActionGet, model.TypeAccount, nil, err)
 	}
 
-	return a.canSignIn(account, authTypeID, userIdentifier), nil
+	return a.canSignIn(account, userIdentifier), nil
 }
 
 // CanLink checks if a user can link a new auth type
@@ -856,8 +856,8 @@ func (a *Auth) CreateAnonymousAccount(context storage.TransactionContext, appID 
 	return newAccount, nil
 }
 
-// VerifyCredential verifies credential (checks the verification code in the credentials collection)
-func (a *Auth) VerifyCredential(id string, verification string, l *logs.Log) error {
+// VerifyIdentifier verifies credential (checks the verification code in the credentials collection)
+func (a *Auth) VerifyIdentifier(id string, verification string, l *logs.Log) error {
 	credential, err := a.storage.FindCredential(nil, id)
 	if err != nil || credential == nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
@@ -889,7 +889,7 @@ func (a *Auth) VerifyCredential(id string, verification string, l *logs.Log) err
 
 	var authTypeCreds map[string]interface{}
 	if identifierChannel, ok := identifierImpl.(authCommunicationChannel); ok {
-		authTypeCreds, err = identifierChannel.verifyCredential(identifierCreds, verification)
+		authTypeCreds, err = identifierChannel.verifyIdentifier(identifierCreds, verification)
 		if err != nil || authTypeCreds == nil {
 			return errors.WrapErrorAction(logutils.ActionValidate, "verification code", nil, err)
 		}
@@ -899,6 +899,65 @@ func (a *Auth) VerifyCredential(id string, verification string, l *logs.Log) err
 
 	credential.Verified = true
 	credential.Value = authTypeCreds
+	if err = a.storage.UpdateCredential(nil, credential); err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
+	}
+
+	return nil
+}
+
+// SendVerifyIdentifier sends the verification code to the identifier
+func (a *Auth) SendVerifyIdentifier(appTypeIdentifier string, orgID string, apiKey string, identifier string, l *logs.Log) error {
+	//validate if the provided auth type is supported by the provided application and organization
+	_, appOrg, err := a.validateAppOrg(&appTypeIdentifier, nil, orgID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionValidate, model.TypeApplicationOrganization, nil, err)
+	}
+
+	//validate api key before making db calls
+	err = a.validateAPIKey(apiKey, appOrg.Application.ID)
+	if err != nil {
+		return errors.WrapErrorData(logutils.StatusInvalid, model.TypeAPIKey, nil, err)
+	}
+
+	account, err := a.storage.FindAccount(nil, appOrg.ID, authType.AuthType.ID, identifier)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+	accountAuthType, err := a.findAccountAuthType(account, *authType, identifier)
+	if accountAuthType == nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountAuthType, nil, err)
+	}
+	a.setLogContext(account, l)
+	credential := accountAuthType.Credential
+	if credential == nil {
+		return errors.ErrorData(logutils.StatusMissing, model.TypeCredential, logutils.StringArgs("credential verification code"))
+	}
+
+	if credential.Verified {
+		return errors.ErrorData(logutils.StatusInvalid, "credential verification status", &logutils.FieldArgs{"verified": true})
+	}
+
+	identifierImpl, identifierCreds, err := a.getIdentifierTypeImpl(credential, nil, authType.AuthType)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionLoadCache, typeIdentifierType, nil, err)
+	}
+	if identifierCreds == nil {
+		identifierCreds, err = identifierImpl.mapToCreds(credential.Value)
+		if err != nil {
+			return errors.ErrorData(logutils.StatusInvalid, "credential value", logutils.StringArgs(credential.AuthType.Code))
+		}
+	}
+
+	if identifierChannel, ok := identifierImpl.(authCommunicationChannel); ok {
+		credential.Value, _, err = identifierChannel.sendVerifyCredential(identifierCreds, appOrg.Application.Name, credential.ID)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionSend, "verification code", nil, err)
+		}
+	} else {
+		return errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, logutils.StringArgs(identifierImpl.getType()))
+	}
+
 	if err = a.storage.UpdateCredential(nil, credential); err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
 	}
@@ -1087,68 +1146,6 @@ func (a *Auth) ForgotCredential(authenticationType string, appTypeIdentifier str
 	if err = a.storage.UpdateCredential(nil, credential); err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
 	}
-	return nil
-}
-
-// SendVerifyCredential sends the verification code to the identifier
-func (a *Auth) SendVerifyCredential(authenticationType string, appTypeIdentifier string, orgID string, apiKey string, identifier string, l *logs.Log) error {
-	//validate if the provided auth type is supported by the provided application and organization
-	authType, _, appOrg, err := a.validateAuthType(authenticationType, &appTypeIdentifier, nil, orgID)
-	if err != nil || authType == nil || appOrg == nil {
-		return errors.WrapErrorAction(logutils.ActionValidate, model.TypeAuthType, nil, err)
-	}
-	//validate api key before making db calls
-	err = a.validateAPIKey(apiKey, appOrg.Application.ID)
-	if err != nil {
-		return errors.WrapErrorData(logutils.StatusInvalid, model.TypeAPIKey, nil, err)
-	}
-
-	if !authType.AuthType.UseCredentials {
-		return errors.ErrorData(logutils.StatusInvalid, model.TypeAuthType, logutils.StringArgs("credential verification code"))
-	}
-
-	account, err := a.storage.FindAccount(nil, appOrg.ID, authType.AuthType.ID, identifier)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
-	}
-	accountAuthType, err := a.findAccountAuthType(account, *authType, identifier)
-	if accountAuthType == nil {
-		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountAuthType, nil, err)
-	}
-	a.setLogContext(account, l)
-	credential := accountAuthType.Credential
-	if credential == nil {
-		return errors.ErrorData(logutils.StatusMissing, model.TypeCredential, logutils.StringArgs("credential verification code"))
-	}
-
-	if credential.Verified {
-		return errors.ErrorData(logutils.StatusInvalid, "credential verification status", &logutils.FieldArgs{"verified": true})
-	}
-
-	identifierImpl, identifierCreds, err := a.getIdentifierTypeImpl(credential, nil, authType.AuthType)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionLoadCache, typeIdentifierType, nil, err)
-	}
-	if identifierCreds == nil {
-		identifierCreds, err = identifierImpl.mapToCreds(credential.Value)
-		if err != nil {
-			return errors.ErrorData(logutils.StatusInvalid, "credential value", logutils.StringArgs(credential.AuthType.Code))
-		}
-	}
-
-	if identifierChannel, ok := identifierImpl.(authCommunicationChannel); ok {
-		credential.Value, _, err = identifierChannel.sendVerifyCredential(identifierCreds, appOrg.Application.Name, credential.ID)
-		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionSend, "verification code", nil, err)
-		}
-	} else {
-		return errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, logutils.StringArgs(identifierImpl.getType()))
-	}
-
-	if err = a.storage.UpdateCredential(nil, credential); err != nil {
-		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
-	}
-
 	return nil
 }
 

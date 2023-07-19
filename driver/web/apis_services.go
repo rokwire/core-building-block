@@ -1023,7 +1023,7 @@ func (h ServicesApisHandler) getTest(l *logs.Log, r *http.Request, claims *token
 }
 
 // Handler for verify endpoint
-func (h ServicesApisHandler) verifyCredential(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
+func (h ServicesApisHandler) verifyIdentifier(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
 	id := r.URL.Query().Get("id")
 	if id == "" {
 		return l.HTTPResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)

@@ -1,0 +1,15 @@
+required:
+  - app_type_identifier
+  - org_id
+  - api_key
+  - identifier
+type: object
+properties:
+  identifier:
+    type: string
+  org_id:
+    type: string
+  api_key:
+    type: string
+  app_type_identifier:
+    type: string

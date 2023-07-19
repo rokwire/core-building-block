@@ -3,11 +3,11 @@ get:
     - Services
   summary: Validate verification code
   description: |
-    Validates verification code to verify account ownership
+    Validates verification code to verify account identifier ownership
   parameters:
     - name: id
       in: query
-      description: Credential ID
+      description: Account identifier ID
       required: true
       style: form
       explode: false

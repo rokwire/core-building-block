@@ -2184,30 +2184,10 @@ func (a *Auth) validateAuthType(authenticationType string, appTypeIdentifier *st
 		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeAuthType, logutils.StringArgs(authenticationType), err)
 	}
 
-	//get the app type
-	var applicationID string
-	var applicationType *model.ApplicationType
-	if appID != nil {
-		applicationID = *appID
-	} else if appTypeIdentifier != nil {
-		applicationType, err = a.storage.FindApplicationType(*appTypeIdentifier)
-		if err != nil {
-			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationType, logutils.StringArgs(*appTypeIdentifier), err)
-
-		}
-		if applicationType == nil {
-			return nil, nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationType, logutils.StringArgs(*appTypeIdentifier))
-		}
-		applicationID = applicationType.Application.ID
-	}
-
-	//get the app org
-	appOrg, err := a.storage.FindApplicationOrganization(applicationID, orgID)
+	//get the app type and app org
+	applicationType, appOrg, err := a.validateAppOrg(appTypeIdentifier, appID, orgID)
 	if err != nil {
-		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": applicationID, "org_id": orgID}, err)
-	}
-	if appOrg == nil {
-		return nil, nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": applicationID, "org_id": orgID})
+		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeApplicationOrganization, nil, err)
 	}
 
 	//check if the auth type is supported for this application and organization
@@ -2227,6 +2207,35 @@ func (a *Auth) validateAuthType(authenticationType string, appTypeIdentifier *st
 		}
 	}
 	return nil, nil, nil, errors.ErrorData(logutils.StatusInvalid, model.TypeAuthType, &logutils.FieldArgs{"app_org_id": appOrg.ID, "auth_type": authenticationType})
+}
+
+func (a *Auth) validateAppOrg(appTypeIdentifier *string, appID *string, orgID string) (*model.ApplicationType, *model.ApplicationOrganization, error) {
+	var applicationID string
+	var applicationType *model.ApplicationType
+	if appID != nil {
+		applicationID = *appID
+	} else if appTypeIdentifier != nil {
+		applicationType, err := a.storage.FindApplicationType(*appTypeIdentifier)
+		if err != nil {
+			return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationType, logutils.StringArgs(*appTypeIdentifier), err)
+
+		}
+		if applicationType == nil {
+			return nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationType, logutils.StringArgs(*appTypeIdentifier))
+		}
+		applicationID = applicationType.Application.ID
+	}
+
+	//get the app org
+	appOrg, err := a.storage.FindApplicationOrganization(applicationID, orgID)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": applicationID, "org_id": orgID}, err)
+	}
+	if appOrg == nil {
+		return nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": applicationID, "org_id": orgID})
+	}
+
+	return applicationType, appOrg, nil
 }
 
 func (a *Auth) getIdentifierTypeImpl(creds string) (identifierType, error) {

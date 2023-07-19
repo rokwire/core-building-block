@@ -406,17 +406,17 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /services/auth/credential/verify:
+  /services/auth/identifier/verify:
     get:
       tags:
         - Services
       summary: Validate verification code
       description: |
-        Validates verification code to verify account ownership
+        Validates verification code to verify account identifier ownership
       parameters:
         - name: id
           in: query
-          description: Credential ID
+          description: Account identifier ID
           required: true
           style: form
           explode: false
@@ -444,6 +444,35 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+  /services/auth/identifier/send-verify:
+    post:
+      tags:
+        - Services
+      summary: Send verification code to identifier
+      description: |
+        Sends verification code to identifier to verify account ownership
+      requestBody:
+        description: |
+          Account information to be checked
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_services_req_identifier_send-verify'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Successfully sent verification code
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   /services/auth/credential/send-verify:
     post:
       tags:
@@ -451,6 +480,7 @@ paths:
       summary: Send verification code to identifier
       description: |
         Sends verification code to identifier to verify account ownership
+      deprecated: true
       requestBody:
         description: |
           Account information to be checked
@@ -5919,6 +5949,7 @@ components:
         data:
           anyOf:
             - $ref: '#/components/schemas/EnvConfigData'
+            - $ref: '#/components/schemas/AuthConfigData'
         date_created:
           readOnly: true
           type: string
@@ -5938,6 +5969,18 @@ components:
           type: array
           items:
             type: string
+          nullable: true
+    AuthConfigData:
+      type: object
+      properties:
+        email_should_verify:
+          type: boolean
+          nullable: true
+        email_verify_wait_time:
+          type: integer
+          nullable: true
+        email_verify_expiry:
+          type: integer
           nullable: true
     Application:
       required:
@@ -7415,6 +7458,22 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AccountAuthType'
+    _services_req_identifier_send-verify:
+      required:
+        - app_type_identifier
+        - org_id
+        - api_key
+        - identifier
+      type: object
+      properties:
+        identifier:
+          type: string
+        org_id:
+          type: string
+        api_key:
+          type: string
+        app_type_identifier:
+          type: string
     _services_req_credential_update:
       required:
         - account_auth_type_id
@@ -7715,6 +7774,7 @@ components:
         data:
           anyOf:
             - $ref: '#/components/schemas/EnvConfigData'
+            - $ref: '#/components/schemas/AuthConfigData'
     _system_req_update_service-account:
       type: object
       properties:

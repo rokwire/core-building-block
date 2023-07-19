@@ -3,6 +3,8 @@ Config:
   $ref: "./config/Config.yaml"
 EnvConfigData:
   $ref: "./config/EnvConfigData.yaml"
+AuthConfigData:
+  $ref: "./config/AuthConfigData.yaml"
 
 # application
 Application:
@@ -181,6 +183,10 @@ _services_req_account_auth-type-unlink:
   $ref: "./apis/services/account/auth-type/link/request/Unlink.yaml"
 _services_res_account_auth-type-link:
   $ref: "./apis/services/account/auth-type/link/response/Response.yaml"
+
+### identifier_send-verify API
+_services_req_identifier_send-verify:
+  $ref: "./apis/services/identifier/send-verify/request/Request.yaml"
 
 ### credential_update API
 _services_req_credential_update:
