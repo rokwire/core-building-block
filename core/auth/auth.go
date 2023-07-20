@@ -714,7 +714,7 @@ func (a *Auth) applySignIn(identifierImpl identifierType, supportedAuthType mode
 	return retParams, accountAuthType, account.GetVerifiedMFATypes(), account.ExternalIDs, nil
 }
 
-func (a *Auth) checkCredentialVerified(identifierImpl identifierType, credential *model.Credential, credValue authCreds, appName string) error {
+func (a *Auth) checkIdentifierVerified(identifierImpl identifierType, credential *model.Credential, credValue authCreds, appName string) error {
 	var verified *bool
 	var expired *bool
 	var err error
@@ -1094,31 +1094,31 @@ func (a *Auth) isSignUp(accountExists bool, params string, l *logs.Log) (bool, e
 	return true, nil
 }
 
-func (a *Auth) getAccount(authenticationType string, userIdentifier string, apiKey string, appTypeIdentifier string, orgID string) (*model.Account, string, error) {
-	//validate if the provided auth type is supported by the provided application and organization
-	authType, _, appOrg, err := a.validateAuthType(authenticationType, &appTypeIdentifier, nil, orgID)
+func (a *Auth) getAccount(userIdentifier string, apiKey string, appTypeIdentifier string, orgID string) (*model.Account, error) {
+	//validate if the provided app type is supported by the provided application and organization
+	_, appOrg, err := a.validateAppOrg(&appTypeIdentifier, nil, orgID)
 	if err != nil {
-		return nil, "", errors.WrapErrorAction(logutils.ActionValidate, model.TypeAuthType, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeAuthType, nil, err)
 	}
 
 	//do not allow for admins
 	if appOrg.Application.Admin {
-		return nil, "", errors.ErrorData(logutils.StatusInvalid, model.TypeApplication, logutils.StringArgs("not allowed for admins"))
+		return nil, errors.ErrorData(logutils.StatusInvalid, model.TypeApplication, logutils.StringArgs("not allowed for admins"))
 	}
 
 	//TODO: Ideally we would not make many database calls before validating the API key. Currently needed to get app ID
 	err = a.validateAPIKey(apiKey, appOrg.Application.ID)
 	if err != nil {
-		return nil, "", errors.WrapErrorData(logutils.StatusInvalid, model.TypeAPIKey, nil, err)
+		return nil, errors.WrapErrorData(logutils.StatusInvalid, model.TypeAPIKey, nil, err)
 	}
 
 	//check if the account exists check
-	account, err := a.storage.FindAccount(nil, appOrg.ID, authType.AuthType.ID, userIdentifier)
+	account, err := a.storage.FindAccount(nil, appOrg.ID, userIdentifier)
 	if err != nil {
-		return nil, "", errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
 
-	return account, authType.AuthType.ID, nil
+	return account, nil
 }
 
 func (a *Auth) findAccountAuthTypes(account *model.Account, supportedAuthType model.SupportedAuthType, identifier string) ([]model.AccountAuthType, error) {
@@ -1180,6 +1180,33 @@ func (a *Auth) findAccountAuthTypeByID(account *model.Account, accountAuthTypeID
 		accountAuthType.Credential = credential
 	}
 	return accountAuthType, nil
+}
+
+func (a *Auth) updateAccountIdentifier(context storage.TransactionContext, account *model.Account, accountIdentifier *model.AccountIdentifier) error {
+	if account == nil {
+		return errors.ErrorData(logutils.StatusMissing, model.TypeAccount, nil)
+	}
+	if accountIdentifier == nil {
+		return errors.ErrorData(logutils.StatusMissing, model.TypeAccountIdentifier, nil)
+	}
+
+	newAccountIdentifiers := make([]model.AccountIdentifier, len(account.Identifiers))
+	for j, aIdentifier := range account.Identifiers {
+		if aIdentifier.ID == accountIdentifier.ID {
+			newAccountIdentifiers[j] = *accountIdentifier
+		} else {
+			newAccountIdentifiers[j] = aIdentifier
+		}
+	}
+	account.Identifiers = newAccountIdentifiers
+
+	// update account
+	err := a.storage.SaveAccount(context, account)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionSave, model.TypeAccount, nil, err)
+	}
+
+	return nil
 }
 
 func (a *Auth) clearExpiredSessions(identifier string, l *logs.Log) error {
@@ -2238,12 +2265,20 @@ func (a *Auth) validateAppOrg(appTypeIdentifier *string, appID *string, orgID st
 	return applicationType, appOrg, nil
 }
 
-func (a *Auth) getIdentifierTypeImpl(creds string) (identifierType, error) {
-	for code, identifierImpl := range a.identifierTypes {
-		if strings.Contains(creds, code) {
-			identifier, err := identifierImpl.getUserIdentifier(creds)
-			if err == nil && identifier != "" {
-				return identifierImpl.withIdentifier(identifier), nil
+func (a *Auth) getIdentifierTypeImpl(code string, creds string) (identifierType, error) {
+	if code != "" {
+		if identifierImpl, ok := a.identifierTypes[code]; ok {
+			return identifierImpl, nil
+		}
+	}
+
+	if creds != "" {
+		for code, identifierImpl := range a.identifierTypes {
+			if strings.Contains(creds, code) {
+				identifier, err := identifierImpl.getUserIdentifier(creds)
+				if err == nil && identifier != "" {
+					return identifierImpl.withIdentifier(identifier), nil
+				}
 			}
 		}
 	}

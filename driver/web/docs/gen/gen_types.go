@@ -87,11 +87,6 @@ const (
 	ServicesReqCredentialForgotInitiateAuthTypeEmail ServicesReqCredentialForgotInitiateAuthType = "email"
 )
 
-// Defines values for ServicesReqCredentialSendVerifyAuthType.
-const (
-	ServicesReqCredentialSendVerifyAuthTypeEmail ServicesReqCredentialSendVerifyAuthType = "email"
-)
-
 // Defines values for ServicesReqServiceAccountsAccessTokenAuthType.
 const (
 	ServicesReqServiceAccountsAccessTokenAuthTypeSignature   ServicesReqServiceAccountsAccessTokenAuthType = "signature"
@@ -113,17 +108,6 @@ const (
 // Defines values for ServicesResAuthorizeServiceTokenType.
 const (
 	ServicesResAuthorizeServiceTokenTypeBearer ServicesResAuthorizeServiceTokenType = "Bearer"
-)
-
-// Defines values for SharedReqAccountCheckAuthType.
-const (
-	SharedReqAccountCheckAuthTypeAnonymous    SharedReqAccountCheckAuthType = "anonymous"
-	SharedReqAccountCheckAuthTypeEmail        SharedReqAccountCheckAuthType = "email"
-	SharedReqAccountCheckAuthTypeIllinoisOidc SharedReqAccountCheckAuthType = "illinois_oidc"
-	SharedReqAccountCheckAuthTypePhone        SharedReqAccountCheckAuthType = "phone"
-	SharedReqAccountCheckAuthTypeTwilioPhone  SharedReqAccountCheckAuthType = "twilio_phone"
-	SharedReqAccountCheckAuthTypeUsername     SharedReqAccountCheckAuthType = "username"
-	SharedReqAccountCheckAuthTypeWebauthn     SharedReqAccountCheckAuthType = "webauthn"
 )
 
 // Defines values for SharedReqCreateAccountAuthType.
@@ -828,18 +812,6 @@ type ServicesReqCredentialForgotInitiate struct {
 // ServicesReqCredentialForgotInitiateAuthType defines model for ServicesReqCredentialForgotInitiate.AuthType.
 type ServicesReqCredentialForgotInitiateAuthType string
 
-// ServicesReqCredentialSendVerify defines model for _services_req_credential_send-verify.
-type ServicesReqCredentialSendVerify struct {
-	ApiKey            string                                  `json:"api_key"`
-	AppTypeIdentifier string                                  `json:"app_type_identifier"`
-	AuthType          ServicesReqCredentialSendVerifyAuthType `json:"auth_type"`
-	Identifier        string                                  `json:"identifier"`
-	OrgId             string                                  `json:"org_id"`
-}
-
-// ServicesReqCredentialSendVerifyAuthType defines model for ServicesReqCredentialSendVerify.AuthType.
-type ServicesReqCredentialSendVerifyAuthType string
-
 // ServicesReqCredentialUpdate defines model for _services_req_credential_update.
 type ServicesReqCredentialUpdate struct {
 	AccountAuthTypeId string                              `json:"account_auth_type_id"`
@@ -931,15 +903,11 @@ type ServicesServiceAccountsCredsStaticToken struct {
 
 // SharedReqAccountCheck defines model for _shared_req_AccountCheck.
 type SharedReqAccountCheck struct {
-	ApiKey            string                        `json:"api_key"`
-	AppTypeIdentifier string                        `json:"app_type_identifier"`
-	AuthType          SharedReqAccountCheckAuthType `json:"auth_type"`
-	OrgId             string                        `json:"org_id"`
-	UserIdentifier    string                        `json:"user_identifier"`
+	ApiKey            string `json:"api_key"`
+	AppTypeIdentifier string `json:"app_type_identifier"`
+	OrgId             string `json:"org_id"`
+	UserIdentifier    string `json:"user_identifier"`
 }
-
-// SharedReqAccountCheckAuthType defines model for SharedReqAccountCheck.AuthType.
-type SharedReqAccountCheckAuthType string
 
 // SharedReqCreateAccount defines model for _shared_req_CreateAccount.
 type SharedReqCreateAccount struct {
@@ -1806,7 +1774,7 @@ type PostServicesAuthCredentialForgotCompleteJSONRequestBody = ServicesReqCreden
 type PostServicesAuthCredentialForgotInitiateJSONRequestBody = ServicesReqCredentialForgotInitiate
 
 // PostServicesAuthCredentialSendVerifyJSONRequestBody defines body for PostServicesAuthCredentialSendVerify for application/json ContentType.
-type PostServicesAuthCredentialSendVerifyJSONRequestBody = ServicesReqCredentialSendVerify
+type PostServicesAuthCredentialSendVerifyJSONRequestBody = ServicesReqIdentifierSendVerify
 
 // PostServicesAuthCredentialUpdateJSONRequestBody defines body for PostServicesAuthCredentialUpdate for application/json ContentType.
 type PostServicesAuthCredentialUpdateJSONRequestBody = ServicesReqCredentialUpdate

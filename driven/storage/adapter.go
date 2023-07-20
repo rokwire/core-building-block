@@ -1210,11 +1210,12 @@ func (sa *Adapter) FindSessionsLazy(appID string, orgID string) ([]model.LoginSe
 	return sessions, nil
 }
 
-// FindAccount finds an account for app, org, auth type and account auth type identifier
-func (sa *Adapter) FindAccount(context TransactionContext, appOrgID string, authTypeID string, accountAuthTypeIdentifier string) (*model.Account, error) {
-	filter := bson.D{primitive.E{Key: "app_org_id", Value: appOrgID},
-		primitive.E{Key: "auth_types.auth_type_id", Value: authTypeID},
-		primitive.E{Key: "identifiers.identifier", Value: accountAuthTypeIdentifier}}
+// FindAccount finds an account for app, org, auth type and identifier
+func (sa *Adapter) FindAccount(context TransactionContext, appOrgID string, identifier string) (*model.Account, error) {
+	filter := bson.M{"app_org_id": appOrgID, "$or": bson.A{
+		bson.M{"auth_types.identifier": identifier},
+		bson.M{"identifiers.identifier": identifier},
+	}}
 	var accounts []account
 	err := sa.db.accounts.FindWithContext(context, filter, &accounts, nil)
 	if err != nil {
@@ -1540,6 +1541,11 @@ func (sa *Adapter) FindAccountByID(context TransactionContext, id string) (*mode
 // FindAccountByAuthTypeID finds an account by auth type id
 func (sa *Adapter) FindAccountByAuthTypeID(context TransactionContext, id string) (*model.Account, error) {
 	return sa.findAccount(context, "auth_types.id", id)
+}
+
+// FindAccountByIdentifierID finds an account by identifier id
+func (sa *Adapter) FindAccountByIdentifierID(context TransactionContext, id string) (*model.Account, error) {
+	return sa.findAccount(context, "identifiers.id", id)
 }
 
 func (sa *Adapter) findAccount(context TransactionContext, key string, id string) (*model.Account, error) {
@@ -2216,72 +2222,6 @@ func (sa *Adapter) InsertAccountAuthType(item model.AccountAuthType) error {
 	}
 	if res.ModifiedCount != 1 {
 		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
-	}
-
-	return nil
-}
-
-// UpdateAccountAuthType updates account auth type
-func (sa *Adapter) UpdateAccountAuthType(item model.AccountAuthType) error {
-	// transaction
-	err := sa.db.dbClient.UseSession(context.Background(), func(sessionContext mongo.SessionContext) error {
-		err := sessionContext.StartTransaction()
-		if err != nil {
-			sa.abortTransaction(sessionContext)
-			return errors.WrapErrorAction(logutils.ActionStart, logutils.TypeTransaction, nil, err)
-		}
-
-		//1. set time updated to the item
-		now := time.Now()
-		item.DateUpdated = &now
-
-		//2 convert to storage item
-		storageItem := accountAuthTypeToStorage(item)
-
-		//3. first find the account record
-		findFilter := bson.M{"auth_types.id": item.ID}
-		var accounts []account
-		err = sa.db.accounts.FindWithContext(sessionContext, findFilter, &accounts, nil)
-		if err != nil {
-			sa.abortTransaction(sessionContext)
-			return errors.WrapErrorAction(logutils.ActionFind, model.TypeUserAuth, &logutils.FieldArgs{"account auth type id": item.ID}, err)
-		}
-		if len(accounts) == 0 {
-			sa.abortTransaction(sessionContext)
-			return errors.ErrorAction(logutils.ActionFind, "for some reasons account is nil for account auth type", &logutils.FieldArgs{"acccount auth type id": item.ID})
-		}
-		account := accounts[0]
-
-		//4. update the account auth type in the account record
-		accountAuthTypes := account.AuthTypes
-		newAccountAuthTypes := make([]accountAuthType, len(accountAuthTypes))
-		for j, aAuthType := range accountAuthTypes {
-			if aAuthType.ID == storageItem.ID {
-				newAccountAuthTypes[j] = storageItem
-			} else {
-				newAccountAuthTypes[j] = aAuthType
-			}
-		}
-		account.AuthTypes = newAccountAuthTypes
-
-		//4. update the account record
-		replaceFilter := bson.M{"_id": account.ID}
-		err = sa.db.accounts.ReplaceOneWithContext(sessionContext, replaceFilter, account, nil)
-		if err != nil {
-			sa.abortTransaction(sessionContext)
-			return errors.WrapErrorAction(logutils.ActionReplace, model.TypeAccount, nil, err)
-		}
-
-		//commit the transaction
-		err = sessionContext.CommitTransaction(sessionContext)
-		if err != nil {
-			sa.abortTransaction(sessionContext)
-			return errors.WrapErrorAction(logutils.ActionCommit, logutils.TypeTransaction, nil, err)
-		}
-		return nil
-	})
-	if err != nil {
-		return err
 	}
 
 	return nil

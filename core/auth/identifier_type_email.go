@@ -94,8 +94,11 @@ func (a *emailIdentifierImpl) verifyIdentifier(accountIdentifier *model.AccountI
 	}
 
 	//Update verification data
+	now := time.Now().UTC()
+	accountIdentifier.Verified = true
 	accountIdentifier.VerificationCode = nil
 	accountIdentifier.VerificationExpiry = nil
+	accountIdentifier.DateUpdated = &now
 	return nil
 }
 
@@ -134,9 +137,11 @@ func (a *emailIdentifierImpl) sendVerifyIdentifier(accountIdentifier *model.Acco
 	}
 
 	//Update verification data in credential value
-	newExpiry := time.Now().Add(time.Hour * time.Duration(*verifyExpiryTime))
+	now := time.Now().UTC()
+	newExpiry := now.Add(time.Hour * time.Duration(*verifyExpiryTime))
 	accountIdentifier.VerificationCode = &code
 	accountIdentifier.VerificationExpiry = &newExpiry
+	accountIdentifier.DateUpdated = &now
 	return true, nil
 }
 

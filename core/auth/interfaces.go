@@ -73,18 +73,20 @@ type authType interface {
 	//signUp applies sign up operation
 	// Returns:
 	//	message (string): Success message if verification is required. If verification is not required, return ""
+	//	accountIdentifier (*model.AccountIdentifier): new account identifier
 	//	credentialValue (map): Credential value
 	//	verified (bool): Whether the credential is verified
-	signUp(identifierImpl identifierType, appName string, creds string, params string, config map[string]interface{}, newCredentialID string) (string, map[string]interface{}, bool, error)
+	signUp(identifierImpl identifierType, appName string, creds string, params string, config map[string]interface{}, newCredentialID string) (string, *model.AccountIdentifier, map[string]interface{}, bool, error)
 
 	//signUpAdmin signs up a new admin user
 	// Returns:
+	//	accountIdentifier (*model.AccountIdentifier): new account identifier
 	//	credentialParams (map): newly generated credential parameters
 	//	credentialValue (map): Credential value
-	signUpAdmin(identifierImpl identifierType, appName string, creds string, newCredentialID string) (map[string]interface{}, map[string]interface{}, error)
+	signUpAdmin(identifierImpl identifierType, appName string, creds string, newCredentialID string) (*model.AccountIdentifier, map[string]interface{}, map[string]interface{}, error)
 
 	//apply forgot credential for the auth type (generates a reset password link with code and expiry and sends it to given identifier for email auth type)
-	forgotCredential(identifierImpl identifierType, credential *model.Credential, appName string, credID string) (map[string]interface{}, error)
+	forgotCredential(identifierImpl identifierType, credential *model.Credential, appName string) (map[string]interface{}, error)
 
 	//updates the value of the credential object with new value
 	// Returns:
@@ -92,7 +94,7 @@ type authType interface {
 	resetCredential(credential *model.Credential, resetCode *string, params string) (map[string]interface{}, error)
 
 	//checkCredential checks if the incoming credentials are valid for the stored credentials
-	checkCredential(identifierImpl identifierType, storedCreds *model.Credential, creds string, displayName string, appName string, config map[string]interface{}) (string, error)
+	checkCredential(identifierImpl identifierType, accountIdentifier *model.AccountIdentifier, storedCreds *model.Credential, creds string, displayName string, appName string, config map[string]interface{}) (string, error)
 }
 
 type authCreds interface {
@@ -182,40 +184,34 @@ type APIs interface {
 	Logout(appID string, orgID string, currentAccountID string, sessionID string, allSessions bool, l *logs.Log) error
 
 	//AccountExists checks if a user is already registered
-	//The authentication method must be one of the supported for the application.
 	//	Input:
-	//		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
 	//		userIdentifier (string): User identifier for the specified auth type
 	//		apiKey (string): API key to validate the specified app
 	//		appTypeIdentifier (string): identifier of the app type/client that the user is logging in from
 	//		orgID (string): ID of the organization that the user is logging in
 	//	Returns:
 	//		accountExisted (bool): valid when error is nil
-	AccountExists(authenticationType string, userIdentifier string, apiKey string, appTypeIdentifier string, orgID string) (bool, error)
+	AccountExists(userIdentifier string, apiKey string, appTypeIdentifier string, orgID string) (bool, error)
 
 	//CanSignIn checks if a user can sign in
-	//The authentication method must be one of the supported for the application.
 	//	Input:
-	//		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
 	//		userIdentifier (string): User identifier for the specified auth type
 	//		apiKey (string): API key to validate the specified app
 	//		appTypeIdentifier (string): identifier of the app type/client being used
 	//		orgID (string): ID of the organization being used
 	//	Returns:
 	//		canSignIn (bool): valid when error is nil
-	CanSignIn(authenticationType string, userIdentifier string, apiKey string, appTypeIdentifier string, orgID string) (bool, error)
+	CanSignIn(userIdentifier string, apiKey string, appTypeIdentifier string, orgID string) (bool, error)
 
 	//CanLink checks if a user can link a new auth type
-	//The authentication method must be one of the supported for the application.
 	//	Input:
-	//		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
 	//		userIdentifier (string): User identifier for the specified auth type
 	//		apiKey (string): API key to validate the specified app
 	//		appTypeIdentifier (string): identifier of the app type/client being used
 	//		orgID (string): ID of the organization being used
 	//	Returns:
 	//		canLink (bool): valid when error is nil
-	CanLink(authenticationType string, userIdentifier string, apiKey string, appTypeIdentifier string, orgID string) (bool, error)
+	CanLink(userIdentifier string, apiKey string, appTypeIdentifier string, orgID string) (bool, error)
 
 	//Refresh refreshes an access token using a refresh token
 	//	Input:
@@ -508,7 +504,7 @@ type Storage interface {
 	///
 
 	//Accounts
-	FindAccount(context storage.TransactionContext, appOrgID string, authTypeID string, accountAuthTypeIdentifier string) (*model.Account, error)
+	FindAccount(context storage.TransactionContext, appOrgID string, identifier string) (*model.Account, error)
 	FindAccountByID(context storage.TransactionContext, id string) (*model.Account, error)
 	FindAccountsByUsername(context storage.TransactionContext, appOrg *model.ApplicationOrganization, username string) ([]model.Account, error)
 	InsertAccount(context storage.TransactionContext, account model.Account) (*model.Account, error)
@@ -535,8 +531,11 @@ type Storage interface {
 	//AccountAuthTypes
 	FindAccountByAuthTypeID(context storage.TransactionContext, id string) (*model.Account, error)
 	InsertAccountAuthType(item model.AccountAuthType) error
-	UpdateAccountAuthType(item model.AccountAuthType) error
 	DeleteAccountAuthType(context storage.TransactionContext, item model.AccountAuthType) error
+
+	//AccountIdentifiers
+	FindAccountByIdentifierID(context storage.TransactionContext, id string) (*model.Account, error)
+	InsertAccountIdentifier(item model.AccountIdentifier) error
 
 	//ExternalIDs
 	UpdateAccountExternalIDs(accountID string, externalIDs map[string]string) error

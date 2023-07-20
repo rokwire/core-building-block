@@ -487,7 +487,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_services_req_credential_send-verify'
+              $ref: '#/components/schemas/_services_req_identifier_send-verify'
         required: true
       responses:
         '200':
@@ -7128,23 +7128,12 @@ components:
             type: string
     _shared_req_AccountCheck:
       required:
-        - auth_type
         - app_type_identifier
         - org_id
         - api_key
         - user_identifier
       type: object
       properties:
-        auth_type:
-          type: string
-          enum:
-            - username
-            - email
-            - phone
-            - twilio_phone
-            - illinois_oidc
-            - anonymous
-            - webauthn
         app_type_identifier:
           type: string
         org_id:
@@ -7485,27 +7474,6 @@ components:
           type: object
           anyOf:
             - $ref: '#/components/schemas/_shared_req_ParamsSetEmailCredential'
-    _services_req_credential_send-verify:
-      required:
-        - auth_type
-        - app_type_identifier
-        - org_id
-        - api_key
-        - identifier
-      type: object
-      properties:
-        identifier:
-          type: string
-        org_id:
-          type: string
-        api_key:
-          type: string
-        app_type_identifier:
-          type: string
-        auth_type:
-          type: string
-          enum:
-            - email
     _services_req_credential_forgot_initiate:
       required:
         - auth_type

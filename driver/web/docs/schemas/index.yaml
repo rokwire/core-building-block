@@ -192,10 +192,6 @@ _services_req_identifier_send-verify:
 _services_req_credential_update:
   $ref: "./apis/services/credential/update/request/Request.yaml"
 
-### credential_send-verify API
-_services_req_credential_send-verify:
-  $ref: "./apis/services/credential/send-verify/request/Request.yaml"
-
 ### credential_forgot_initiate API
 _services_req_credential_forgot_initiate:
   $ref: "./apis/services/credential/forgot/initiate/request/Request.yaml"

@@ -20,7 +20,9 @@ import (
 	"encoding/json"
 	"strconv"
 	"strings"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/rokwire/logging-library-go/v2/errors"
 	"github.com/rokwire/logging-library-go/v2/logutils"
 	"gopkg.in/go-playground/validator.v9"
@@ -46,10 +48,10 @@ type codeAuthImpl struct {
 	authType string
 }
 
-func (a *codeAuthImpl) signUp(identifierImpl identifierType, appName string, creds string, params string, config map[string]interface{}, newCredentialID string) (string, map[string]interface{}, bool, error) {
+func (a *codeAuthImpl) signUp(identifierImpl identifierType, appName string, creds string, params string, config map[string]interface{}, newCredentialID string) (string, *model.AccountIdentifier, map[string]interface{}, bool, error) {
 	identifierChannel, _ := identifierImpl.(authCommunicationChannel)
 	if identifierChannel == nil {
-		return "", nil, false, errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, logutils.StringArgs(identifierImpl.getCode()))
+		return "", nil, nil, false, errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, logutils.StringArgs(identifierImpl.getCode()))
 	}
 
 	code := ""
@@ -63,19 +65,25 @@ func (a *codeAuthImpl) signUp(identifierImpl identifierType, appName string, cre
 		//TODO: store generated codes in login state collection or auth types in account?
 	}
 
+	identifier, err := identifierImpl.getUserIdentifier("")
+	if err != nil {
+		return "", nil, nil, false, errors.WrapErrorAction(logutils.ActionGet, "identifier", logutils.StringArgs(identifierImpl.getCode()), err)
+	}
+	accountIdentifier := model.AccountIdentifier{ID: uuid.NewString(), Code: identifierImpl.getCode(), Identifier: identifier, DateCreated: time.Now().UTC()}
+
 	message, err := identifierChannel.sendCode(appName, code, typeAuthenticationCode, newCredentialID)
 	if err != nil {
-		return "", nil, false, err
+		return "", nil, nil, false, err
 	}
 
-	return message, nil, false, nil
+	return message, &accountIdentifier, nil, false, nil
 }
 
-func (a *codeAuthImpl) signUpAdmin(identifierImpl identifierType, appName string, creds string, newCredentialID string) (map[string]interface{}, map[string]interface{}, error) {
-	return nil, nil, errors.New(logutils.Unimplemented)
+func (a *codeAuthImpl) signUpAdmin(identifierImpl identifierType, appName string, creds string, newCredentialID string) (*model.AccountIdentifier, map[string]interface{}, map[string]interface{}, error) {
+	return nil, nil, nil, errors.New(logutils.Unimplemented)
 }
 
-func (a *codeAuthImpl) forgotCredential(identifierImpl identifierType, credential *model.Credential, appName string, credID string) (map[string]interface{}, error) {
+func (a *codeAuthImpl) forgotCredential(identifierImpl identifierType, credential *model.Credential, appName string) (map[string]interface{}, error) {
 	return nil, errors.New(logutils.Unimplemented)
 }
 
@@ -83,7 +91,7 @@ func (a *codeAuthImpl) resetCredential(credential *model.Credential, resetCode *
 	return nil, errors.New(logutils.Unimplemented)
 }
 
-func (a *codeAuthImpl) checkCredential(identifierImpl identifierType, credential *model.Credential, creds string, displayName string, appName string, config map[string]interface{}) (string, error) {
+func (a *codeAuthImpl) checkCredential(identifierImpl identifierType, accountIdentifier *model.AccountIdentifier, credential *model.Credential, creds string, displayName string, appName string, config map[string]interface{}) (string, error) {
 	identifierChannel, _ := identifierImpl.(authCommunicationChannel)
 	if identifierChannel == nil {
 		return "", errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, logutils.StringArgs(identifierImpl.getCode()))
@@ -114,6 +122,8 @@ func (a *codeAuthImpl) checkCredential(identifierImpl identifierType, credential
 		if *incomingCreds.Code != storedCred {
 			return "", errors.ErrorData(logutils.StatusInvalid, "credential", logutils.StringArgs(*incomingCreds.Code))
 		}
+
+		accountIdentifier.Verified = true
 		return "", nil
 	}
 
@@ -121,6 +131,8 @@ func (a *codeAuthImpl) checkCredential(identifierImpl identifierType, credential
 	if err != nil {
 		return "", err
 	}
+
+	accountIdentifier.Verified = true
 	return message, nil
 }
 

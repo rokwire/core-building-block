@@ -83,9 +83,11 @@ func (a *phoneIdentifierImpl) withIdentifier(identifier string) identifierType {
 func (a *phoneIdentifierImpl) verifyIdentifier(accountIdentifier *model.AccountIdentifier, verification string) error {
 	_, err := a.sendCode("", verification, "", "")
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionSend, "verification code", nil, err)
+		return errors.WrapErrorAction(logutils.ActionVerify, "verification code", nil, err)
 	}
 
+	//TODO: do twilio/other phone verifiers have verification timeouts?
+	accountIdentifier.Verified = true
 	return nil
 }
 
@@ -99,6 +101,7 @@ func (a *phoneIdentifierImpl) sendVerifyCredential(accountIdentifier *model.Acco
 		return false, errors.WrapErrorAction(logutils.ActionSend, "verification phone", nil, err)
 	}
 
+	//TODO: do twilio/other phone verifiers have verification timeouts?
 	return true, nil
 }
 
