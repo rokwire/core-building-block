@@ -1121,12 +1121,12 @@ func (a *Auth) getAccount(userIdentifier string, apiKey string, appTypeIdentifie
 	return account, nil
 }
 
-func (a *Auth) findAccountAuthTypes(account *model.Account, supportedAuthType model.SupportedAuthType, identifier string) ([]model.AccountAuthType, error) {
+func (a *Auth) findAccountAuthTypes(account *model.Account, supportedAuthType model.SupportedAuthType) ([]model.AccountAuthType, error) {
 	if account == nil {
 		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, nil)
 	}
 
-	accountAuthTypes := account.GetAccountAuthTypes(supportedAuthType.AuthType.ID, identifier)
+	accountAuthTypes := account.GetAccountAuthTypes(supportedAuthType.AuthType.ID)
 	if len(accountAuthTypes) == 0 {
 		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccountAuthType, nil)
 	}

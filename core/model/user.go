@@ -115,10 +115,10 @@ func (a Account) GetAccountAuthTypeByID(ID string) *AccountAuthType {
 }
 
 // GetAccountAuthTypes finds account auth types
-func (a Account) GetAccountAuthTypes(authTypeID string, identifier string) []AccountAuthType {
+func (a Account) GetAccountAuthTypes(authTypeID string) []AccountAuthType {
 	authTypes := make([]AccountAuthType, 0)
 	for _, aat := range a.AuthTypes {
-		if aat.SupportedAuthType.AuthType.ID == authTypeID && (aat.Identifier == nil || *aat.Identifier == identifier) {
+		if aat.SupportedAuthType.AuthType.ID == authTypeID {
 			aat.Account = a
 			authTypes = append(authTypes, aat)
 		}
@@ -363,8 +363,7 @@ type AccountAuthType struct {
 	SupportedAuthType SupportedAuthType //one of the supported auth type
 	Account           Account
 
-	Identifier *string
-	Params     map[string]interface{}
+	Params map[string]interface{}
 
 	Credential *Credential //this can be nil as the external auth types authenticates the users outside the system
 
@@ -380,12 +379,6 @@ func (aat *AccountAuthType) Equals(other AccountAuthType) bool {
 		return false
 	}
 	if aat.SupportedAuthType.AuthType.Code != other.SupportedAuthType.AuthType.Code {
-		return false
-	}
-	if (aat.Identifier != nil) || (other.Identifier != nil) {
-		if aat.Identifier != nil && other.Identifier != nil && *aat.Identifier != *other.Identifier {
-			return false
-		}
 		return false
 	}
 	if aat.Active != other.Active {
@@ -413,6 +406,8 @@ type AccountIdentifier struct {
 	Identifier string
 	Verified   bool
 	Linked     bool
+	//TODO: should we include this and remove account externalIDs (code becomes externalID key)
+	// External   bool
 
 	Account Account
 

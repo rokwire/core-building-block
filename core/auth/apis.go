@@ -1073,7 +1073,7 @@ func (a *Auth) ForgotCredential(authenticationType string, appTypeIdentifier str
 		return errors.ErrorData(logutils.StatusMissing, model.TypeAccountIdentifier, &logutils.FieldArgs{"identifier": identifier})
 	}
 
-	accountAuthTypes, err := a.findAccountAuthTypes(account, *authType, identifier)
+	accountAuthTypes, err := a.findAccountAuthTypes(account, *authType)
 	if len(accountAuthTypes) == 0 {
 		return errors.ErrorData(logutils.StatusMissing, model.TypeAccountAuthType, &logutils.FieldArgs{"auth_type": authType.AuthType.Code, "identifier": identifier})
 	}

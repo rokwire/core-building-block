@@ -212,7 +212,7 @@ func (a *webAuthnAuthImpl) signUp(identifierImpl identifierType, appName string,
 	return a.beginRegistration(identifierImpl, auth, user, appName)
 }
 
-func (a *webAuthnAuthImpl) checkCredential(identifierImpl identifierType, accountIdentifier *model.AccountIdentifier, storedCreds *model.Credential, creds string, displayName string, appName string, config map[string]interface{}) (string, error) {
+func (a *webAuthnAuthImpl) checkCredential(identifierImpl identifierType, accountIdentifier *model.AccountIdentifier, credentials []model.Credential, creds string, displayName string, appName string, config map[string]interface{}) (string, error) {
 	if storedCreds == nil {
 		return "", errors.ErrorData(logutils.StatusMissing, model.TypeCredential, nil)
 	}
@@ -365,7 +365,7 @@ func (a *webAuthnAuthImpl) completeRegistration(auth *webauthn.WebAuthn, session
 	return nil
 }
 
-func (a *webAuthnAuthImpl) beginLogin(auth *webauthn.WebAuthn, storedCreds *model.Credential, user webAuthnUser) (string, error) {
+func (a *webAuthnAuthImpl) beginLogin(auth *webauthn.WebAuthn, credentials []model.Credential, user webAuthnUser) (string, error) {
 	options, session, err := auth.BeginLogin(user)
 	if err != nil {
 		return "", errors.WrapErrorAction(logutils.ActionStart, "login", nil, err)

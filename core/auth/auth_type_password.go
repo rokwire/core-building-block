@@ -238,7 +238,7 @@ func (a *passwordAuthImpl) resetCredential(credential *model.Credential, resetCo
 	return credsMap, nil
 }
 
-func (a *passwordAuthImpl) checkCredential(identifierImpl identifierType, accountIdentifier *model.AccountIdentifier, credential *model.Credential, creds string, displayName string, appName string, config map[string]interface{}) (string, error) {
+func (a *passwordAuthImpl) checkCredential(identifierImpl identifierType, accountIdentifier *model.AccountIdentifier, credentials []model.Credential, creds string, displayName string, appName string, config map[string]interface{}) (string, error) {
 	if credential == nil {
 		return "", errors.ErrorData(logutils.StatusMissing, model.TypeCredential, nil)
 	}

@@ -94,7 +94,7 @@ type authType interface {
 	resetCredential(credential *model.Credential, resetCode *string, params string) (map[string]interface{}, error)
 
 	//checkCredential checks if the incoming credentials are valid for the stored credentials
-	checkCredential(identifierImpl identifierType, accountIdentifier *model.AccountIdentifier, storedCreds *model.Credential, creds string, displayName string, appName string, config map[string]interface{}) (string, error)
+	checkCredential(identifierImpl identifierType, accountIdentifier *model.AccountIdentifier, credentials []model.Credential, creds string, displayName string, appName string, config map[string]interface{}) (string, error)
 }
 
 type authCreds interface {

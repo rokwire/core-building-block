@@ -48,7 +48,7 @@ func (a *firebaseAuthImpl) resetCredential(credential *model.Credential, resetCo
 	return nil, nil
 }
 
-func (a *firebaseAuthImpl) checkCredential(identifierImpl identifierType, accountIdentifier *model.AccountIdentifier, storedCreds *model.Credential, creds string, displayName string, appName string, config map[string]interface{}) (string, error) {
+func (a *firebaseAuthImpl) checkCredential(identifierImpl identifierType, accountIdentifier *model.AccountIdentifier, credentials []model.Credential, creds string, displayName string, appName string, config map[string]interface{}) (string, error) {
 	return "", nil
 }
 

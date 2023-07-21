@@ -91,7 +91,7 @@ func (a *codeAuthImpl) resetCredential(credential *model.Credential, resetCode *
 	return nil, errors.New(logutils.Unimplemented)
 }
 
-func (a *codeAuthImpl) checkCredential(identifierImpl identifierType, accountIdentifier *model.AccountIdentifier, credential *model.Credential, creds string, displayName string, appName string, config map[string]interface{}) (string, error) {
+func (a *codeAuthImpl) checkCredential(identifierImpl identifierType, accountIdentifier *model.AccountIdentifier, credentials []model.Credential, creds string, displayName string, appName string, config map[string]interface{}) (string, error) {
 	identifierChannel, _ := identifierImpl.(authCommunicationChannel)
 	if identifierChannel == nil {
 		return "", errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, logutils.StringArgs(identifierImpl.getCode()))
