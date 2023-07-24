@@ -239,11 +239,11 @@ func (a *passwordAuthImpl) resetCredential(credential *model.Credential, resetCo
 }
 
 func (a *passwordAuthImpl) checkCredential(identifierImpl identifierType, accountIdentifier *model.AccountIdentifier, credentials []model.Credential, creds string, displayName string, appName string, config map[string]interface{}) (string, error) {
-	if credential == nil {
-		return "", errors.ErrorData(logutils.StatusMissing, model.TypeCredential, nil)
+	if len(credentials) != 1 {
+		return "", errors.ErrorData(logutils.StatusInvalid, "credential list", &logutils.FieldArgs{"count": len(credentials)})
 	}
 
-	storedCreds, err := a.mapToCreds(credential.Value)
+	storedCreds, err := a.mapToCreds(credentials[0].Value)
 	if err != nil {
 		return "", errors.WrapErrorAction(logutils.ActionCast, "map to password creds", nil, err)
 	}
@@ -255,7 +255,7 @@ func (a *passwordAuthImpl) checkCredential(identifierImpl identifierType, accoun
 	}
 	incomingCred := incomingCreds.getCredential(credentialKeyPassword)
 
-	//compare stored and requets ones
+	//compare stored and request passwords
 	err = bcrypt.CompareHashAndPassword([]byte(storedCred), []byte(incomingCred))
 	if err != nil {
 		return "", errors.WrapErrorAction(logutils.ActionValidate, model.TypeCredential, nil, err).SetStatus(utils.ErrorStatusInvalid)

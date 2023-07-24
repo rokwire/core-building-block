@@ -99,9 +99,9 @@ func (a *codeAuthImpl) checkCredential(identifierImpl identifierType, accountIde
 
 	var credID string
 	var storedCred string
-	if credential != nil {
-		credID = credential.ID
-		storedCreds, err := a.mapToCreds(credential.Value)
+	if len(credentials) == 1 {
+		credID = credentials[0].ID
+		storedCreds, err := a.mapToCreds(credentials[0].Value)
 		if err != nil {
 			return "", errors.WrapErrorAction(logutils.ActionCast, "map to code creds", nil, err)
 		}
@@ -109,6 +109,8 @@ func (a *codeAuthImpl) checkCredential(identifierImpl identifierType, accountIde
 			return "", errors.ErrorData(logutils.StatusMissing, "stored code", nil)
 		}
 		storedCred = *storedCreds.Code
+	} else if len(credentials) > 1 {
+		return "", errors.ErrorData(logutils.StatusInvalid, "credentials list", &logutils.FieldArgs{"count": len(credentials)})
 	}
 
 	incomingCreds, err := a.parseCreds(creds)

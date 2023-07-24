@@ -367,7 +367,12 @@ type AccountAuthType struct {
 
 	Credential *Credential //this can be nil as the external auth types authenticates the users outside the system
 
-	Active bool
+	Active bool //TODO: needed?
+
+	// DEPRECATED
+	Identifier *string
+	Unverified *bool
+	Linked     *bool
 
 	DateCreated time.Time
 	DateUpdated *time.Time

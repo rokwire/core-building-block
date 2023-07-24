@@ -186,7 +186,7 @@ func (a *emailIdentifierImpl) sendCode(appName string, code string, codeType str
 		body := "Please click the link below to reset your password:<br><a href=" + passwordResetLink + ">" + passwordResetLink + "</a><br><br>If you did not request a password reset, please ignore this message."
 		return "", a.auth.emailer.Send(*a.identifier, subject, body, nil)
 	case typeVerificationCode:
-		verificationLink := a.auth.host + fmt.Sprintf("/ui/credential/verify?%s", params.Encode())
+		verificationLink := a.auth.host + fmt.Sprintf("/ui/identifier/verify?%s", params.Encode())
 		subject := "Verify your email address"
 		if appName != "" {
 			subject += " for " + appName
