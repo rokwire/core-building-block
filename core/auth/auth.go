@@ -354,6 +354,7 @@ func (a *Auth) applySignUpExternal(context storage.TransactionContext, supported
 	}
 
 	//5. register the account
+	//External and anonymous auth is automatically verified, otherwise verified if credential has been verified previously
 	accountAuthType, err = a.registerUser(context, supportedAuthType.AuthType, identifier, aatParams, appOrg, nil, useSharedProfile,
 		externalUser.ExternalIDs, *profile, privacy, preferences, username, nil, externalRoles, externalGroups, nil, nil, clientVersion, l)
 	if err != nil {
@@ -382,6 +383,7 @@ func (a *Auth) applySignUpAdminExternal(context storage.TransactionContext, auth
 	}
 
 	//3. register the account
+	//External and anonymous auth is automatically verified, otherwise verified if credential has been verified previously
 	accountAuthType, err = a.registerUser(context, authType, identifier, aatParams, appOrg, nil, useSharedProfile, nil, *profile, privacy, nil,
 		username, permissions, roleIDs, groupIDs, scopes, creatorPermissions, clientVersion, l)
 	if err != nil {
@@ -883,6 +885,7 @@ func (a *Auth) signUpNewAccount(context storage.TransactionContext, identifierIm
 	creds string, params string, clientVersion *string, regProfile model.Profile, privacy model.Privacy, regPreferences map[string]interface{}, username string, permissions []string,
 	roles []string, groups []string, scopes []string, creatorPermissions []string, l *logs.Log) (map[string]interface{}, *model.AccountAuthType, error) {
 	var retParams map[string]interface{}
+	var accountIdentifier *model.AccountIdentifier
 	var credential *model.Credential
 	var profile model.Profile
 	var preferences map[string]interface{}
@@ -907,7 +910,7 @@ func (a *Auth) signUpNewAccount(context storage.TransactionContext, identifierIm
 		preferences = regPreferences
 
 		credential = sharedCredential
-		retParams = map[string]interface{}{"message": "successfuly registered"}
+		retParams = map[string]interface{}{"message": "successfully registered"}
 	} else {
 		l.Infof("%s does not use a shared profile", userIdentifier)
 
@@ -921,41 +924,33 @@ func (a *Auth) signUpNewAccount(context storage.TransactionContext, identifierIm
 		profile = *preparedProfile
 		preferences = preparedPreferences
 
-		credID := uuid.NewString()
-
 		//apply sign up
-		var credentialValue map[string]interface{}
-		verified := false
 		authImpl, err := a.getAuthTypeImpl(supportedAuthType.AuthType)
 		if err != nil {
 			return nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeAuthType, nil, err)
 		}
 		if creatorPermissions == nil {
 			var message string
-			message, credentialValue, verified, err = authImpl.signUp(identifierImpl, appOrg.Application.Name, creds, params, supportedAuthType.Params, credID)
+			message, accountIdentifier, credential, err = authImpl.signUp(identifierImpl, appOrg, creds, params, supportedAuthType.Params)
 			if err != nil {
 				return nil, nil, errors.WrapErrorAction("signing up", "user", nil, err)
 			}
 
 			retParams = map[string]interface{}{"message": message}
 		} else {
-			retParams, credentialValue, err = authImpl.signUpAdmin(identifierImpl, appOrg.Application.Name, creds, credID)
+			retParams, accountIdentifier, credential, err = authImpl.signUpAdmin(identifierImpl, appOrg, creds)
 			if err != nil {
 				return nil, nil, errors.WrapErrorAction("signing up", "admin user", nil, err)
 			}
 		}
 
-		//credential
-		if credentialValue != nil {
-			now := time.Now()
-			credential = &model.Credential{ID: credID, AccountsAuthTypes: nil, Value: credentialValue, Verified: verified,
-				AuthType: supportedAuthType.AuthType, DateCreated: now, DateUpdated: &now}
+		if credential != nil {
+			credential.AuthType.ID = supportedAuthType.AuthType.ID
 		}
 	}
 
-	// make sure account auth type code matches identifier type
-	supportedAuthType.AuthType.Code = identifierImpl.getType()
-	accountAuthType, err := a.registerUser(context, supportedAuthType.AuthType, userIdentifier, nil, appOrg, credential, useSharedProfile,
+	//External and anonymous auth is automatically verified, otherwise verified if credential has been verified previously
+	accountAuthType, err := a.registerUser(context, accountIdentifier, supportedAuthType.AuthType, nil, appOrg, credential, useSharedProfile,
 		nil, profile, privacy, preferences, username, permissions, roles, groups, scopes, creatorPermissions, clientVersion, l)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
@@ -1474,15 +1469,14 @@ func (a *Auth) prepareRegistrationData(authType model.AuthType, identifier strin
 	return &readyProfile, readyPreferences, nil
 }
 
-func (a *Auth) prepareAccountAuthType(authType model.AuthType, identifier string, accountAuthTypeParams map[string]interface{},
-	credential *model.Credential, unverified bool, linked bool) (*model.AccountAuthType, *model.Credential, error) {
+func (a *Auth) prepareAccountAuthType(authType model.AuthType, accountAuthTypeParams map[string]interface{}, credential *model.Credential) (*model.AccountAuthType, *model.Credential, error) {
 	now := time.Now()
 
 	//account auth type
-	accountAuthTypeID, _ := uuid.NewUUID()
+	accountAuthTypeID := uuid.NewString()
 	active := true
-	accountAuthType := &model.AccountAuthType{ID: accountAuthTypeID.String(), SupportedAuthType: model.SupportedAuthType{AuthType: authType},
-		Identifier: identifier, Params: accountAuthTypeParams, Credential: credential, Unverified: unverified, Linked: linked, Active: active, DateCreated: now}
+	accountAuthType := &model.AccountAuthType{ID: accountAuthTypeID, SupportedAuthType: model.SupportedAuthType{AuthType: authType},
+		Params: accountAuthTypeParams, Credential: credential, Active: active, DateCreated: now}
 
 	//credential
 	if credential != nil {
@@ -1569,22 +1563,15 @@ func (a *Auth) getProfileBBData(authType model.AuthType, identifier string, l *l
 //		l (*logs.Log): Log object pointer for request
 //	Returns:
 //		Registered account (AccountAuthType): Registered Account object
-func (a *Auth) registerUser(context storage.TransactionContext, authType model.AuthType, userIdentifier string, accountAuthTypeParams map[string]interface{},
+func (a *Auth) registerUser(context storage.TransactionContext, accountIdentifier *model.AccountIdentifier, authType model.AuthType, accountAuthTypeParams map[string]interface{},
 	appOrg model.ApplicationOrganization, credential *model.Credential, useSharedProfile bool, externalIDs map[string]string, profile model.Profile, privacy model.Privacy, preferences map[string]interface{},
 	username string, permissionNames []string, roleIDs []string, groupIDs []string, scopes []string, creatorPermissions []string, clientVersion *string, l *logs.Log) (*model.AccountAuthType, error) {
-
-	//External and anonymous auth is automatically verified, otherwise verified if credential has been verified previously
-	unverified := true
-	if creatorPermissions == nil {
-		if authType.IsExternal || authType.IsAnonymous {
-			unverified = false
-		} else if credential != nil {
-			unverified = !credential.Verified
-		}
+	if accountIdentifier == nil {
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccountIdentifier, nil)
 	}
 
 	accountAuthType, err := a.constructAccount(context, authType, userIdentifier, accountAuthTypeParams, appOrg, credential,
-		unverified, externalIDs, profile, privacy, preferences, username, permissionNames, roleIDs, groupIDs, scopes, creatorPermissions, clientVersion, l)
+		externalIDs, profile, privacy, preferences, username, permissionNames, roleIDs, groupIDs, scopes, creatorPermissions, clientVersion, l)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeAccount, nil, err)
 	}
@@ -1597,17 +1584,18 @@ func (a *Auth) registerUser(context storage.TransactionContext, authType model.A
 	return accountAuthType, nil
 }
 
-func (a *Auth) constructAccount(context storage.TransactionContext, authType model.AuthType, userIdentifier string, accountAuthTypeParams map[string]interface{},
-	appOrg model.ApplicationOrganization, credential *model.Credential, unverified bool, externalIDs map[string]string, profile model.Profile, privacy model.Privacy, preferences map[string]interface{},
+func (a *Auth) constructAccount(context storage.TransactionContext, accountIdentifier *model.AccountIdentifier, authType model.AuthType, accountAuthTypeParams map[string]interface{},
+	appOrg model.ApplicationOrganization, credential *model.Credential, externalIDs map[string]string, profile model.Profile, privacy model.Privacy, preferences map[string]interface{},
 	username string, permissionNames []string, roleIDs []string, groupIDs []string, scopes []string, assignerPermissions []string, clientVersion *string, l *logs.Log) (*model.AccountAuthType, error) {
 	//create account auth type
-	accountAuthType, _, err := a.prepareAccountAuthType(authType, userIdentifier, accountAuthTypeParams, credential, unverified, false)
+	accountAuthType, _, err := a.prepareAccountAuthType(authType, accountAuthTypeParams, credential)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeAccountAuthType, nil, err)
 	}
 
 	//create account object
-	accountID, _ := uuid.NewUUID()
+	accountID := accountIdentifier.Account.ID
+	identifiers := []model.AccountIdentifier{accountIdentifier}
 	authTypes := []model.AccountAuthType{*accountAuthType}
 
 	//assumes admin creator permissions are always non-nil
@@ -1669,11 +1657,12 @@ func (a *Auth) constructAccount(context storage.TransactionContext, authType mod
 		scopes = nil
 	}
 
-	account := model.Account{ID: accountID.String(), AppOrg: appOrg, Permissions: permissions,
-		Roles: model.AccountRolesFromAppOrgRoles(roles, true, adminSet), Groups: model.AccountGroupsFromAppOrgGroups(groups, true, adminSet), Scopes: scopes, AuthTypes: authTypes,
+	account := model.Account{ID: accountID, AppOrg: appOrg, AuthTypes: authTypes, Identifiers: identifiers, Permissions: permissions,
+		Roles: model.AccountRolesFromAppOrgRoles(roles, true, adminSet), Groups: model.AccountGroupsFromAppOrgGroups(groups, true, adminSet), Scopes: scopes,
 		ExternalIDs: externalIDs, Preferences: preferences, Profile: profile, Privacy: privacy, Username: username, DateCreated: time.Now(), MostRecentClientVersion: clientVersion}
 
 	accountAuthType.Account = account
+	accountIdentifier.Account = account
 	return accountAuthType, nil
 }
 

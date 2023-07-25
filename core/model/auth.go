@@ -27,6 +27,8 @@ import (
 const (
 	//TypeLoginSession login session type
 	TypeLoginSession logutils.MessageDataType = "login session"
+	//TypeLoginState login state type
+	TypeLoginState logutils.MessageDataType = "login state"
 	//TypeAuthType auth type
 	TypeAuthType logutils.MessageDataType = "auth type"
 	//TypeIdentityProvider identity provider type
@@ -218,6 +220,18 @@ func (ls LoginSession) LogInfo() string {
 		"state expires:%s,mfa attempts:%d, date refreshed:%s, date updated:%s, date created:%s]",
 		ls.ID, ls.Anonymous, identifier, accessToken, refreshTokens, state,
 		ls.StateExpires, ls.MfaAttempts, ls.DateRefreshed, ls.DateUpdated, ls.DateCreated)
+}
+
+// LoginState represents a state variable generated during a login request and used to complete that request (by generating a LoginSession)
+type LoginState struct {
+	ID    string `bson:"_id"`
+	AppID string `bson:"app_id"`
+	OrgID string `bson:"org_id"`
+
+	AccountID *string `bson:"account_id"`
+
+	State       map[string]interface{} `bson:"state"`
+	DateCreated time.Time              `bson:"date_created"`
 }
 
 // APIKey represents an API key entity

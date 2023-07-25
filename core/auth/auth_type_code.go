@@ -48,10 +48,10 @@ type codeAuthImpl struct {
 	authType string
 }
 
-func (a *codeAuthImpl) signUp(identifierImpl identifierType, appName string, creds string, params string, config map[string]interface{}, newCredentialID string) (string, *model.AccountIdentifier, map[string]interface{}, bool, error) {
+func (a *codeAuthImpl) signUp(identifierImpl identifierType, appOrg model.ApplicationOrganization, creds string, params string, config map[string]interface{}) (string, *model.AccountIdentifier, *model.Credential, error) {
 	identifierChannel, _ := identifierImpl.(authCommunicationChannel)
 	if identifierChannel == nil {
-		return "", nil, nil, false, errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, logutils.StringArgs(identifierImpl.getCode()))
+		return "", nil, nil, errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, logutils.StringArgs(identifierImpl.getCode()))
 	}
 
 	code := ""
@@ -62,28 +62,28 @@ func (a *codeAuthImpl) signUp(identifierImpl identifierType, appName string, cre
 			code = strings.Repeat("0", padLen) + code
 		}
 
-		//TODO: store generated codes in login state collection or auth types in account?
+		//TODO: store generated codes in login state collection
 	}
 
 	identifier, err := identifierImpl.getUserIdentifier("")
 	if err != nil {
-		return "", nil, nil, false, errors.WrapErrorAction(logutils.ActionGet, "identifier", logutils.StringArgs(identifierImpl.getCode()), err)
+		return "", nil, nil, errors.WrapErrorAction(logutils.ActionGet, "identifier", logutils.StringArgs(identifierImpl.getCode()), err)
 	}
 	accountIdentifier := model.AccountIdentifier{ID: uuid.NewString(), Code: identifierImpl.getCode(), Identifier: identifier, DateCreated: time.Now().UTC()}
 
-	message, err := identifierChannel.sendCode(appName, code, typeAuthenticationCode, newCredentialID)
+	message, err := identifierChannel.sendCode(appOrg.Application.Name, code, typeAuthenticationCode, newCredentialID)
 	if err != nil {
-		return "", nil, nil, false, err
+		return "", nil, nil, err
 	}
 
-	return message, &accountIdentifier, nil, false, nil
+	return message, &accountIdentifier, nil, nil
 }
 
-func (a *codeAuthImpl) signUpAdmin(identifierImpl identifierType, appName string, creds string, newCredentialID string) (*model.AccountIdentifier, map[string]interface{}, map[string]interface{}, error) {
+func (a *codeAuthImpl) signUpAdmin(identifierImpl identifierType, appOrg model.ApplicationOrganization, creds string) (map[string]interface{}, *model.AccountIdentifier, *model.Credential, error) {
 	return nil, nil, nil, errors.New(logutils.Unimplemented)
 }
 
-func (a *codeAuthImpl) forgotCredential(identifierImpl identifierType, credential *model.Credential, appName string) (map[string]interface{}, error) {
+func (a *codeAuthImpl) forgotCredential(identifierImpl identifierType, credential *model.Credential, appOrg model.ApplicationOrganization) (map[string]interface{}, error) {
 	return nil, errors.New(logutils.Unimplemented)
 }
 
@@ -91,7 +91,7 @@ func (a *codeAuthImpl) resetCredential(credential *model.Credential, resetCode *
 	return nil, errors.New(logutils.Unimplemented)
 }
 
-func (a *codeAuthImpl) checkCredential(identifierImpl identifierType, accountIdentifier *model.AccountIdentifier, credentials []model.Credential, creds string, displayName string, appName string, config map[string]interface{}) (string, error) {
+func (a *codeAuthImpl) checkCredential(identifierImpl identifierType, accountIdentifier *model.AccountIdentifier, credentials []model.Credential, creds string, displayName string, appOrg model.ApplicationOrganization, config map[string]interface{}) (string, error) {
 	identifierChannel, _ := identifierImpl.(authCommunicationChannel)
 	if identifierChannel == nil {
 		return "", errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, logutils.StringArgs(identifierImpl.getCode()))
@@ -121,6 +121,7 @@ func (a *codeAuthImpl) checkCredential(identifierImpl identifierType, accountIde
 		return "", errors.ErrorData(logutils.StatusMissing, "incoming code", nil)
 	}
 	if identifierChannel.requiresCodeGeneration() {
+		//TODO:
 		if *incomingCreds.Code != storedCred {
 			return "", errors.ErrorData(logutils.StatusInvalid, "credential", logutils.StringArgs(*incomingCreds.Code))
 		}
@@ -129,7 +130,7 @@ func (a *codeAuthImpl) checkCredential(identifierImpl identifierType, accountIde
 		return "", nil
 	}
 
-	message, err := identifierChannel.sendCode(appName, *incomingCreds.Code, typeAuthenticationCode, credID)
+	message, err := identifierChannel.sendCode(appOrg.Application.Name, *incomingCreds.Code, typeAuthenticationCode, credID)
 	if err != nil {
 		return "", err
 	}

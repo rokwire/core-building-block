@@ -74,19 +74,18 @@ type authType interface {
 	// Returns:
 	//	message (string): Success message if verification is required. If verification is not required, return ""
 	//	accountIdentifier (*model.AccountIdentifier): new account identifier
-	//	credentialValue (map): Credential value
-	//	verified (bool): Whether the credential is verified
-	signUp(identifierImpl identifierType, appName string, creds string, params string, config map[string]interface{}, newCredentialID string) (string, *model.AccountIdentifier, map[string]interface{}, bool, error)
+	//	credential (*model.Credential): new credential
+	signUp(identifierImpl identifierType, appOrg model.ApplicationOrganization, creds string, params string, config map[string]interface{}) (string, *model.AccountIdentifier, *model.Credential, error)
 
 	//signUpAdmin signs up a new admin user
 	// Returns:
-	//	accountIdentifier (*model.AccountIdentifier): new account identifier
 	//	credentialParams (map): newly generated credential parameters
-	//	credentialValue (map): Credential value
-	signUpAdmin(identifierImpl identifierType, appName string, creds string, newCredentialID string) (*model.AccountIdentifier, map[string]interface{}, map[string]interface{}, error)
+	//	accountIdentifier (*model.AccountIdentifier): new account identifier
+	//	credential (*model.Credential): new credential
+	signUpAdmin(identifierImpl identifierType, appOrg model.ApplicationOrganization, creds string) (map[string]interface{}, *model.AccountIdentifier, *model.Credential, error)
 
 	//apply forgot credential for the auth type (generates a reset password link with code and expiry and sends it to given identifier for email auth type)
-	forgotCredential(identifierImpl identifierType, credential *model.Credential, appName string) (map[string]interface{}, error)
+	forgotCredential(identifierImpl identifierType, credential *model.Credential, appOrg model.ApplicationOrganization) (map[string]interface{}, error)
 
 	//updates the value of the credential object with new value
 	// Returns:
@@ -94,7 +93,7 @@ type authType interface {
 	resetCredential(credential *model.Credential, resetCode *string, params string) (map[string]interface{}, error)
 
 	//checkCredential checks if the incoming credentials are valid for the stored credentials
-	checkCredential(identifierImpl identifierType, accountIdentifier *model.AccountIdentifier, credentials []model.Credential, creds string, displayName string, appName string, config map[string]interface{}) (string, error)
+	checkCredential(identifierImpl identifierType, accountIdentifier *model.AccountIdentifier, credentials []model.Credential, creds string, displayName string, appOrg model.ApplicationOrganization, config map[string]interface{}) (string, error)
 }
 
 type authCreds interface {
@@ -502,6 +501,10 @@ type Storage interface {
 	DeleteMFAExpiredSessions() error
 	FindSessionsLazy(appID string, orgID string) ([]model.LoginSession, error)
 	///
+
+	//LoginStates
+	FindLoginState(appID string, orgID string, accountID *string, stateParams map[string]interface{}) (*model.LoginState, error)
+	InsertLoginState(loginState model.LoginState) error
 
 	//Accounts
 	FindAccount(context storage.TransactionContext, appOrgID string, identifier string) (*model.Account, error)
