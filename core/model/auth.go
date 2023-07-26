@@ -92,8 +92,7 @@ type LoginSession struct {
 
 	Anonymous bool
 
-	Identifier      string //it is the account id(anonymous id for anonymous logins)
-	ExternalIDs     map[string]string
+	Identifier      string           //it is the account id(anonymous id for anonymous logins)
 	AccountAuthType *AccountAuthType //it may be nil for anonymous logins
 
 	Device *Device

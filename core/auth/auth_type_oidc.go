@@ -337,7 +337,7 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 		}
 	}
 	//external ids
-	externalIDs := make(map[string]string)
+	externalIDs := map[string]string{identityProviderSetting.UserIdentifierField: identifier}
 	for k, v := range identityProviderSetting.ExternalIDFields {
 		externalID, ok := userClaims[v].(string)
 		if !ok {

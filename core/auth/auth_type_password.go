@@ -238,30 +238,30 @@ func (a *passwordAuthImpl) resetCredential(credential *model.Credential, resetCo
 	return credsMap, nil
 }
 
-func (a *passwordAuthImpl) checkCredential(identifierImpl identifierType, accountIdentifier *model.AccountIdentifier, credentials []model.Credential, creds string, displayName string, appOrg model.ApplicationOrganization, config map[string]interface{}) (string, error) {
+func (a *passwordAuthImpl) checkCredentials(identifierImpl identifierType, accountIdentifier *model.AccountIdentifier, credentials []model.Credential, creds string, displayName string, appOrg model.ApplicationOrganization, config map[string]interface{}) (string, string, error) {
 	if len(credentials) != 1 {
-		return "", errors.ErrorData(logutils.StatusInvalid, "credential list", &logutils.FieldArgs{"count": len(credentials)})
+		return "", "", errors.ErrorData(logutils.StatusInvalid, "credential list", &logutils.FieldArgs{"count": len(credentials)})
 	}
 
 	storedCreds, err := a.mapToCreds(credentials[0].Value)
 	if err != nil {
-		return "", errors.WrapErrorAction(logutils.ActionCast, "map to password creds", nil, err)
+		return "", "", errors.WrapErrorAction(logutils.ActionCast, "map to password creds", nil, err)
 	}
 	storedCred := storedCreds.getCredential(credentialKeyPassword)
 
 	incomingCreds, err := a.parseCreds(creds, true)
 	if err != nil {
-		return "", errors.WrapErrorAction(logutils.ActionParse, typePasswordCreds, nil, err)
+		return "", "", errors.WrapErrorAction(logutils.ActionParse, typePasswordCreds, nil, err)
 	}
 	incomingCred := incomingCreds.getCredential(credentialKeyPassword)
 
 	//compare stored and request passwords
 	err = bcrypt.CompareHashAndPassword([]byte(storedCred), []byte(incomingCred))
 	if err != nil {
-		return "", errors.WrapErrorAction(logutils.ActionValidate, model.TypeCredential, nil, err).SetStatus(utils.ErrorStatusInvalid)
+		return "", "", errors.WrapErrorAction(logutils.ActionValidate, model.TypeCredential, nil, err).SetStatus(utils.ErrorStatusInvalid)
 	}
 
-	return "", nil
+	return "", credentials[0].ID, nil
 }
 
 // Helpers
@@ -300,7 +300,7 @@ func (a *passwordAuthImpl) buildCredential(identifierImpl identifierType, appNam
 	}
 
 	now := time.Now()
-	credential := &model.Credential{ID: uuid.NewString(), AccountsAuthTypes: nil, Value: credValueMap, AuthType: model.AuthType{Code: a.authType}, DateCreated: now}
+	credential := &model.Credential{ID: uuid.NewString(), Value: credValueMap, AuthType: model.AuthType{Code: a.authType}, DateCreated: now}
 
 	return message, &accountIdentifier, credential, nil
 }

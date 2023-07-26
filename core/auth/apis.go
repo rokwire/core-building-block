@@ -104,7 +104,6 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 
 	var accountAuthType *model.AccountAuthType
 	var responseParams map[string]interface{}
-	var externalIDs map[string]string
 	var mfaTypes []model.MFAType
 	var state string
 
@@ -124,14 +123,14 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 			accountAuthType = &model.AccountAuthType{Account: *account}
 		}
 	} else if authType.AuthType.IsExternal {
-		accountAuthType, responseParams, mfaTypes, externalIDs, err = a.applyExternalAuthType(*authType, *appType, *appOrg, creds, params, clientVersion, profile, privacy, preferences, username, admin, l)
+		responseParams, accountAuthType, mfaTypes, err = a.applyExternalAuthType(*authType, *appType, *appOrg, creds, params, clientVersion, profile, privacy, preferences, username, admin, l)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionApply, typeExternalAuthType, logutils.StringArgs("user"), err)
 		}
 
 		sub = accountAuthType.Account.ID
 	} else {
-		responseParams, accountAuthType, mfaTypes, externalIDs, err = a.applyAuthType(*authType, *appOrg, creds, params, clientVersion, profile, privacy, preferences, username, admin, l)
+		responseParams, accountAuthType, mfaTypes, err = a.applyAuthType(*authType, *appOrg, creds, params, clientVersion, profile, privacy, preferences, username, admin, l)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionApply, model.TypeAuthType, logutils.StringArgs("user"), err)
 		}
@@ -160,7 +159,7 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 	}
 
 	//now we are ready to apply login for the user or anonymous
-	loginSession, err := a.applyLogin(anonymous, sub, authType.AuthType, *appOrg, accountAuthType, *appType, externalIDs, ipAddress, deviceType, deviceOS, deviceID, clientVersion, responseParams, state, l)
+	loginSession, err := a.applyLogin(anonymous, sub, authType.AuthType, *appOrg, accountAuthType, *appType, ipAddress, deviceType, deviceOS, deviceID, clientVersion, responseParams, state, l)
 	if err != nil {
 		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionApply, "login", logutils.StringArgs("user"), err)
 	}
@@ -325,11 +324,11 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 	authType := loginSession.AuthType.Code
 
 	anonymous := loginSession.Anonymous
-	uid := ""
 	name := ""
 	email := ""
 	phone := ""
 	permissions := []string{}
+	externalIDs := make(map[string]string)
 
 	// - generate new params and update the account if needed(if external auth type)
 	if loginSession.AuthType.IsExternal {
@@ -353,7 +352,9 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 
 		loginSession.Params = refreshedData //assign the refreshed data
 		if newAccount != nil {
-			loginSession.ExternalIDs = newAccount.ExternalIDs
+			for _, external := range newAccount.GetExternalAccountIdentifiers() {
+				externalIDs[external.Code] = external.Identifier
+			}
 		}
 	}
 
@@ -364,14 +365,18 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 			l.Infof("for some reasons account auth type is null for not anonymous login - %s", loginSession.ID)
 			return nil, errors.ErrorAction("for some reasons account auth type is null for not anonymous login", "", nil)
 		}
-		uid = accountAuthType.Identifier
 		name = accountAuthType.Account.Profile.GetFullName()
 		email = accountAuthType.Account.Profile.Email
 		phone = accountAuthType.Account.Profile.Phone
 		permissions = accountAuthType.Account.GetPermissionNames()
 		scopes = append(scopes, accountAuthType.Account.GetScopes()...)
+		if len(externalIDs) == 0 {
+			for _, external := range accountAuthType.Account.GetExternalAccountIdentifiers() {
+				externalIDs[external.Code] = external.Identifier
+			}
+		}
 	}
-	claims := a.getStandardClaims(sub, uid, name, email, phone, rokwireTokenAud, orgID, appID, authType, loginSession.ExternalIDs, nil, anonymous, false, loginSession.AppOrg.Application.Admin, loginSession.AppOrg.Organization.System, false, true, loginSession.ID)
+	claims := a.getStandardClaims(sub, name, email, phone, rokwireTokenAud, orgID, appID, authType, externalIDs, nil, anonymous, false, loginSession.AppOrg.Application.Admin, loginSession.AppOrg.Organization.System, false, true, loginSession.ID)
 	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), strings.Join(scopes, " "))
 	if err != nil {
 		l.Infof("error generating acccess token on refresh - %s", refreshToken)
@@ -589,7 +594,13 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appID string, orgID
 		//2. account does not exist, so apply sign up
 		profile.DateCreated = time.Now().UTC()
 		if supportedAuthType.AuthType.IsExternal {
-			externalUser := model.ExternalSystemUser{Identifier: identifier}
+			identityProviderID, _ := supportedAuthType.AuthType.Params["identity_provider"].(string)
+			identityProviderSetting := appOrg.FindIdentityProviderSetting(identityProviderID)
+			if identityProviderSetting == nil {
+				return errors.ErrorData(logutils.StatusMissing, model.TypeIdentityProviderConfig, &logutils.FieldArgs{"app_org": appOrg.ID, "identity_provider_id": identityProviderID})
+			}
+
+			externalUser := model.ExternalSystemUser{ExternalIDs: map[string]string{identityProviderSetting.UserIdentifierField: identifier}}
 			accountAuthType, err = a.applySignUpAdminExternal(context, supportedAuthType.AuthType, *appOrg, externalUser, profile, privacy, username, permissions, roleIDs, groupIDs, scopes, creatorPermissions, clientVersion, l)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionRegister, "admin user", &logutils.FieldArgs{"auth_type": supportedAuthType.AuthType.Code, "identifier": identifier}, err)
@@ -1096,13 +1107,13 @@ func (a *Auth) ForgotCredential(authenticationType string, appTypeIdentifier str
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeAuthType, nil, err)
 	}
-	//TODO: do not allow to reset credential without a verified identifier
-	err = a.checkIdentifierVerified(identifierImpl, credential, identifierCreds, appOrg.Application.Name)
+
+	err = a.checkIdentifierVerified(identifierImpl, accountIdentifier, appOrg.Application.Name)
 	if err != nil {
 		return err
 	}
 
-	authTypeCreds, err := authImpl.forgotCredential(identifierImpl, credential, appOrg.Application.Name)
+	authTypeCreds, err := authImpl.forgotCredential(identifierImpl, credential, *appOrg)
 	if err != nil || authTypeCreds == nil {
 		return errors.WrapErrorAction(logutils.ActionValidate, "forgot password", nil, err)
 	}
@@ -1664,7 +1675,7 @@ func (a *Auth) GetAdminToken(claims tokenauth.Claims, appID string, orgID string
 		return "", errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"org_id": orgID, "app_id": appID})
 	}
 
-	adminClaims := a.getStandardClaims(claims.Subject, claims.UID, claims.Name, claims.Email, claims.Phone, claims.Audience, orgID, appID, claims.AuthType,
+	adminClaims := a.getStandardClaims(claims.Subject, claims.Name, claims.Email, claims.Phone, claims.Audience, orgID, appID, claims.AuthType,
 		claims.ExternalIDs, &claims.ExpiresAt, false, false, true, claims.System, claims.Service, claims.FirstParty, claims.SessionID)
 	return a.buildAccessToken(adminClaims, claims.Permissions, claims.Scope)
 }

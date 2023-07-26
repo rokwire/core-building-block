@@ -34,6 +34,8 @@ const (
 
 	typeAuthenticationCode string = "authentication code"
 
+	stateKeyCode string = "code"
+
 	typeCodeCreds logutils.MessageDataType = "code creds"
 )
 
@@ -55,6 +57,7 @@ func (a *codeAuthImpl) signUp(identifierImpl identifierType, appOrg model.Applic
 	}
 
 	code := ""
+	accountID := uuid.NewString()
 	if identifierChannel.requiresCodeGeneration() {
 		code = strconv.Itoa(utils.GenerateRandomInt(1000000))
 		padLen := 6 - len(code)
@@ -62,16 +65,23 @@ func (a *codeAuthImpl) signUp(identifierImpl identifierType, appOrg model.Applic
 			code = strings.Repeat("0", padLen) + code
 		}
 
-		//TODO: store generated codes in login state collection
+		// store generated codes in login state collection
+		state := map[string]interface{}{stateKeyCode: code}
+		loginState := model.LoginState{ID: uuid.NewString(), AppID: appOrg.Application.ID, OrgID: appOrg.Organization.ID, AccountID: &accountID, State: state, DateCreated: time.Now().UTC()}
+		err := a.auth.storage.InsertLoginState(loginState)
+		if err != nil {
+			return "", nil, nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeLoginState, nil, err)
+		}
 	}
 
 	identifier, err := identifierImpl.getUserIdentifier("")
 	if err != nil {
 		return "", nil, nil, errors.WrapErrorAction(logutils.ActionGet, "identifier", logutils.StringArgs(identifierImpl.getCode()), err)
 	}
-	accountIdentifier := model.AccountIdentifier{ID: uuid.NewString(), Code: identifierImpl.getCode(), Identifier: identifier, DateCreated: time.Now().UTC()}
+	accountIdentifier := model.AccountIdentifier{ID: uuid.NewString(), Code: identifierImpl.getCode(), Identifier: identifier,
+		Account: model.Account{ID: accountID}, DateCreated: time.Now().UTC()}
 
-	message, err := identifierChannel.sendCode(appOrg.Application.Name, code, typeAuthenticationCode, newCredentialID)
+	message, err := identifierChannel.sendCode(appOrg.Application.Name, code, typeAuthenticationCode, "")
 	if err != nil {
 		return "", nil, nil, err
 	}
@@ -91,52 +101,49 @@ func (a *codeAuthImpl) resetCredential(credential *model.Credential, resetCode *
 	return nil, errors.New(logutils.Unimplemented)
 }
 
-func (a *codeAuthImpl) checkCredential(identifierImpl identifierType, accountIdentifier *model.AccountIdentifier, credentials []model.Credential, creds string, displayName string, appOrg model.ApplicationOrganization, config map[string]interface{}) (string, error) {
+func (a *codeAuthImpl) checkCredentials(identifierImpl identifierType, accountIdentifier *model.AccountIdentifier, credentials []model.Credential, creds string, displayName string, appOrg model.ApplicationOrganization, config map[string]interface{}) (string, string, error) {
 	identifierChannel, _ := identifierImpl.(authCommunicationChannel)
 	if identifierChannel == nil {
-		return "", errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, logutils.StringArgs(identifierImpl.getCode()))
-	}
-
-	var credID string
-	var storedCred string
-	if len(credentials) == 1 {
-		credID = credentials[0].ID
-		storedCreds, err := a.mapToCreds(credentials[0].Value)
-		if err != nil {
-			return "", errors.WrapErrorAction(logutils.ActionCast, "map to code creds", nil, err)
-		}
-		if storedCreds.Code == nil {
-			return "", errors.ErrorData(logutils.StatusMissing, "stored code", nil)
-		}
-		storedCred = *storedCreds.Code
-	} else if len(credentials) > 1 {
-		return "", errors.ErrorData(logutils.StatusInvalid, "credentials list", &logutils.FieldArgs{"count": len(credentials)})
+		return "", "", errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, logutils.StringArgs(identifierImpl.getCode()))
 	}
 
 	incomingCreds, err := a.parseCreds(creds)
 	if err != nil {
-		return "", errors.WrapErrorAction(logutils.ActionParse, typeCodeCreds, nil, err)
+		return "", "", errors.WrapErrorAction(logutils.ActionParse, typeCodeCreds, nil, err)
 	}
 	if incomingCreds.Code == nil {
-		return "", errors.ErrorData(logutils.StatusMissing, "incoming code", nil)
+		return "", "", errors.ErrorData(logutils.StatusMissing, "incoming code", nil)
 	}
 	if identifierChannel.requiresCodeGeneration() {
-		//TODO:
-		if *incomingCreds.Code != storedCred {
-			return "", errors.ErrorData(logutils.StatusInvalid, "credential", logutils.StringArgs(*incomingCreds.Code))
+		var accountID *string
+		if accountIdentifier != nil {
+			accountIDVal := string(accountIdentifier.Account.ID)
+			accountID = &accountIDVal
+		}
+
+		params := map[string]interface{}{
+			stateKeyCode: *incomingCreds.Code,
+		}
+		loginState, err := a.auth.storage.FindLoginState(appOrg.Application.ID, appOrg.Organization.ID, accountID, params)
+		if err != nil {
+			return "", "", errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginState, nil, err)
+		}
+
+		if loginState == nil {
+			return "", "", errors.ErrorData(logutils.StatusInvalid, "code", logutils.StringArgs(*incomingCreds.Code))
 		}
 
 		accountIdentifier.Verified = true
-		return "", nil
+		return "", "", nil
 	}
 
-	message, err := identifierChannel.sendCode(appOrg.Application.Name, *incomingCreds.Code, typeAuthenticationCode, credID)
+	message, err := identifierChannel.sendCode(appOrg.Application.Name, *incomingCreds.Code, typeAuthenticationCode, "")
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	accountIdentifier.Verified = true
-	return message, nil
+	return message, "", nil
 }
 
 // Helpers

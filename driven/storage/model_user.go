@@ -73,12 +73,14 @@ type accountAuthType struct {
 	ID           string                 `bson:"id"`
 	AuthTypeID   string                 `bson:"auth_type_id"`
 	AuthTypeCode string                 `bson:"auth_type_code"`
-	Identifier   *string                `bson:"identifier,omitempty"`
 	Params       map[string]interface{} `bson:"params"`
 	CredentialID *string                `bson:"credential_id"`
 	Active       bool                   `bson:"active"`
-	Unverified   *bool                  `bson:"unverified,omitempty"`
-	Linked       *bool                  `bson:"linked,omitempty"`
+
+	// DEPRECATED
+	Identifier *string `bson:"identifier,omitempty"`
+	Unverified *bool   `bson:"unverified,omitempty"`
+	Linked     *bool   `bson:"linked,omitempty"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`

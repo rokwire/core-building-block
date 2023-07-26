@@ -84,7 +84,6 @@ type Account struct {
 	MFATypes []MFAType
 
 	Username      string
-	ExternalIDs   map[string]string
 	Preferences   map[string]interface{}
 	SystemConfigs map[string]interface{}
 	Profile       Profile //one account has one profile, one profile can be shared between many accounts
@@ -142,6 +141,17 @@ func (a Account) GetVerifiedAccountIdentifiers() []AccountIdentifier {
 	identifiers := make([]AccountIdentifier, 0)
 	for _, id := range a.Identifiers {
 		if id.Verified {
+			identifiers = append(identifiers, id)
+		}
+	}
+	return identifiers
+}
+
+// GetExternalAccountIdentifiers returns a list of only external identifiers for this account
+func (a Account) GetExternalAccountIdentifiers() []AccountIdentifier {
+	identifiers := make([]AccountIdentifier, 0)
+	for _, id := range a.Identifiers {
+		if id.External {
 			identifiers = append(identifiers, id)
 		}
 	}
@@ -369,11 +379,6 @@ type AccountAuthType struct {
 
 	Active bool //TODO: needed?
 
-	// DEPRECATED
-	Identifier *string
-	Unverified *bool
-	Linked     *bool
-
 	DateCreated time.Time
 	DateUpdated *time.Time
 }
@@ -409,10 +414,10 @@ type AccountIdentifier struct {
 	ID         string
 	Code       string
 	Identifier string
-	Verified   bool
-	Linked     bool
-	//TODO: should we include this and remove account externalIDs (code becomes externalID key)
-	// External   bool
+
+	Verified bool
+	Linked   bool
+	External bool
 
 	Account Account
 

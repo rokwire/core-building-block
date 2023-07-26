@@ -93,7 +93,10 @@ type authType interface {
 	resetCredential(credential *model.Credential, resetCode *string, params string) (map[string]interface{}, error)
 
 	//checkCredential checks if the incoming credentials are valid for the stored credentials
-	checkCredential(identifierImpl identifierType, accountIdentifier *model.AccountIdentifier, credentials []model.Credential, creds string, displayName string, appOrg model.ApplicationOrganization, config map[string]interface{}) (string, error)
+	// Returns:
+	//	message (string): information required to complete login, if applicable
+	//	credentialID (string): the ID of the credential used to validate the login
+	checkCredentials(identifierImpl identifierType, accountIdentifier *model.AccountIdentifier, credentials []model.Credential, creds string, displayName string, appOrg model.ApplicationOrganization, config map[string]interface{}) (string, string, error)
 }
 
 type authCreds interface {
@@ -517,7 +520,7 @@ type Storage interface {
 
 	//Profiles
 	UpdateAccountProfile(context storage.TransactionContext, profile model.Profile) error
-	FindAccountProfiles(appID string, authTypeID string, accountAuthTypeIdentifier string) ([]model.Profile, error)
+	FindAccountProfiles(appID string, authTypeID string, accountIdentifier string) ([]model.Profile, error)
 
 	//ServiceAccounts
 	FindServiceAccount(context storage.TransactionContext, accountID string, appID string, orgID string) (*model.ServiceAccount, error)
@@ -539,6 +542,7 @@ type Storage interface {
 	//AccountIdentifiers
 	FindAccountByIdentifierID(context storage.TransactionContext, id string) (*model.Account, error)
 	InsertAccountIdentifier(item model.AccountIdentifier) error
+	UpdateAccountIdentifier(item model.AccountIdentifier) error
 
 	//ExternalIDs
 	UpdateAccountExternalIDs(accountID string, externalIDs map[string]string) error

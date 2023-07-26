@@ -193,7 +193,15 @@ func (a *emailIdentifierImpl) sendCode(appName string, code string, codeType str
 		}
 		body := "Please click the link below to verify your email address:<br><a href=" + verificationLink + ">" + verificationLink + "</a><br><br>If you did not request this verification link, please ignore this message."
 		return "", a.auth.emailer.Send(*a.identifier, subject, body, nil)
-	//TODO: typeAuthenticationCode
+	case typeAuthenticationCode:
+		subject := "Your authentication code"
+		body := "Please use the code " + code + " to login"
+		if appName != "" {
+			subject += " for " + appName
+			body += " to " + appName
+		}
+		body += ". If you did not request this authentication code, please ignore this message."
+		return "", a.auth.emailer.Send(*a.identifier, subject, body, nil)
 	default:
 		return "", errors.ErrorData(logutils.StatusInvalid, "code type", logutils.StringArgs(codeType))
 	}

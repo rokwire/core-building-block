@@ -1212,10 +1212,7 @@ func (sa *Adapter) FindSessionsLazy(appID string, orgID string) ([]model.LoginSe
 
 // FindAccount finds an account for app, org, auth type and identifier
 func (sa *Adapter) FindAccount(context TransactionContext, appOrgID string, identifier string) (*model.Account, error) {
-	filter := bson.M{"app_org_id": appOrgID, "$or": bson.A{
-		bson.M{"auth_types.identifier": identifier},
-		bson.M{"identifiers.identifier": identifier},
-	}}
+	filter := bson.M{"app_org_id": appOrgID, "identifiers.identifier": identifier}
 	var accounts []account
 	err := sa.db.accounts.FindWithContext(context, filter, &accounts, nil)
 	if err != nil {
@@ -1242,7 +1239,7 @@ func (sa *Adapter) FindAccount(context TransactionContext, appOrgID string, iden
 
 // FindAccounts finds accounts
 func (sa *Adapter) FindAccounts(context TransactionContext, limit *int, offset *int, appID string, orgID string, accountID *string, firstName *string, lastName *string, authType *string,
-	authTypeIdentifier *string, anonymous *bool, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error) {
+	identifier *string, anonymous *bool, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error) {
 	//find app org id
 	appOrg, err := sa.getCachedApplicationOrganization(appID, orgID)
 	if err != nil {
@@ -1276,8 +1273,8 @@ func (sa *Adapter) FindAccounts(context TransactionContext, limit *int, offset *
 		}
 		filter = append(filter, primitive.E{Key: "auth_types.auth_type_id", Value: cachedAuthType.ID})
 	}
-	if authTypeIdentifier != nil {
-		filter = append(filter, primitive.E{Key: "identifiers.identifier", Value: *authTypeIdentifier})
+	if identifier != nil {
+		filter = append(filter, primitive.E{Key: "identifiers.identifier", Value: *identifier})
 	}
 	if anonymous != nil {
 		filter = append(filter, primitive.E{Key: "anonymous", Value: *anonymous})
@@ -3180,10 +3177,10 @@ func (sa *Adapter) UpdateAccountPrivacy(context TransactionContext, accountID st
 	return nil
 }
 
-// FindAccountProfiles finds profiles by app id, authtype id and account auth type identifier
-func (sa *Adapter) FindAccountProfiles(appID string, authTypeID string, accountAuthTypeIdentifier string) ([]model.Profile, error) {
+// FindAccountProfiles finds profiles by app id, authtype id and account identifier
+func (sa *Adapter) FindAccountProfiles(appID string, authTypeID string, accountIdentifier string) ([]model.Profile, error) {
 	pipeline := []bson.M{
-		{"$match": bson.M{"auth_types.auth_type_id": authTypeID, "auth_types.identifier": accountAuthTypeIdentifier}},
+		{"$match": bson.M{"auth_types.auth_type_id": authTypeID, "identifiers.identifier": accountIdentifier}},
 		{"$lookup": bson.M{
 			"from":         "applications_organizations",
 			"localField":   "app_org_id",
@@ -3195,7 +3192,7 @@ func (sa *Adapter) FindAccountProfiles(appID string, authTypeID string, accountA
 	var accounts []account
 	err := sa.db.accounts.Aggregate(pipeline, &accounts, nil)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"app_id": appID, "auth_types.id": authTypeID, "auth_types.identifier": accountAuthTypeIdentifier}, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"app_id": appID, "auth_types.id": authTypeID, "identifiers.identifier": accountIdentifier}, err)
 	}
 	if len(accounts) == 0 {
 		//not found
