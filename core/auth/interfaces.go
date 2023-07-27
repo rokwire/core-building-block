@@ -520,7 +520,7 @@ type Storage interface {
 
 	//Profiles
 	UpdateAccountProfile(context storage.TransactionContext, profile model.Profile) error
-	FindAccountProfiles(appID string, authTypeID string, accountIdentifier string) ([]model.Profile, error)
+	FindAccountProfiles(appID string, accountIdentifier string) ([]model.Profile, error)
 
 	//ServiceAccounts
 	FindServiceAccount(context storage.TransactionContext, accountID string, appID string, orgID string) (*model.ServiceAccount, error)

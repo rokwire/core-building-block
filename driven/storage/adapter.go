@@ -3178,9 +3178,9 @@ func (sa *Adapter) UpdateAccountPrivacy(context TransactionContext, accountID st
 }
 
 // FindAccountProfiles finds profiles by app id, authtype id and account identifier
-func (sa *Adapter) FindAccountProfiles(appID string, authTypeID string, accountIdentifier string) ([]model.Profile, error) {
+func (sa *Adapter) FindAccountProfiles(appID string, accountIdentifier string) ([]model.Profile, error) {
 	pipeline := []bson.M{
-		{"$match": bson.M{"auth_types.auth_type_id": authTypeID, "identifiers.identifier": accountIdentifier}},
+		{"$match": bson.M{"identifiers.identifier": accountIdentifier}},
 		{"$lookup": bson.M{
 			"from":         "applications_organizations",
 			"localField":   "app_org_id",
@@ -3192,7 +3192,7 @@ func (sa *Adapter) FindAccountProfiles(appID string, authTypeID string, accountI
 	var accounts []account
 	err := sa.db.accounts.Aggregate(pipeline, &accounts, nil)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"app_id": appID, "auth_types.id": authTypeID, "identifiers.identifier": accountIdentifier}, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"app_id": appID, "identifiers.identifier": accountIdentifier}, err)
 	}
 	if len(accounts) == 0 {
 		//not found

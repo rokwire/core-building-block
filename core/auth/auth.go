@@ -895,12 +895,12 @@ func (a *Auth) signUpNewAccount(context storage.TransactionContext, identifierIm
 	return retParams, accountAuthType, nil
 }
 
-func (a *Auth) applySharedProfile(appOrg model.ApplicationOrganization, userIdentifier string, l *logs.Log) (bool, *model.Profile, []model.Credential, error) {
-	if appOrg.Application.SharedIdentities {
+func (a *Auth) applySharedProfile(app model.Application, userIdentifier string, l *logs.Log) (bool, *model.Profile, []model.Credential, error) {
+	if app.SharedIdentities {
 		//the application uses shared profiles
-		l.Infof("%s uses shared identities", appOrg.Application.Name)
+		l.Infof("%s uses shared identities", app.Name)
 
-		hasSharedProfile, sharedProfile, sharedCredential, err := a.hasSharedProfile(appOrg, userIdentifier, l)
+		hasSharedProfile, sharedProfile, sharedCredential, err := a.hasSharedProfile(app, userIdentifier, l)
 		if err != nil {
 			return false, nil, nil, errors.WrapErrorAction(logutils.ActionVerify, "shared profile", nil, err)
 		}
@@ -912,18 +912,21 @@ func (a *Auth) applySharedProfile(appOrg model.ApplicationOrganization, userIden
 		return hasSharedProfile, sharedProfile, sharedCredential, nil
 	}
 
-	l.Infof("%s does not use shared identities", appOrg.Application.Name)
+	l.Infof("%s does not use shared identities", app.Name)
 	return false, nil, nil, nil
 }
 
-func (a *Auth) hasSharedProfile(appOrg model.ApplicationOrganization, userIdentifier string, l *logs.Log) (bool, *model.Profile, []model.Credential, error) {
+func (a *Auth) hasSharedProfile(app model.Application, userIdentifier string, l *logs.Log) (bool, *model.Profile, []model.Credential, error) {
 	l.Info("hasSharedProfile")
 
 	//find if already there is a profile for the application
-	account, err := a.storage.FindAccount(nil, appOrg.ID, userIdentifier)
+	accounts, err := a.storage.FindAccountProfiles(app.ID, userIdentifier)
 	if err != nil {
 		return false, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeProfile, nil, err)
 	}
+	//TODO: which account's profile to use?
+	//TODO: what if a different individual is using this identifier in another app org (e.g., username)? profile should not be shared
+	//TODO: may need to get profile ID from client (or entire copy of the shared profile on sign up)
 	if account == nil {
 		l.Info("there is no profile yet")
 		return false, nil, nil, nil
