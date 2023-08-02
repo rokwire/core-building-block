@@ -907,7 +907,9 @@ func (a *Auth) signUpNewAccount(context storage.TransactionContext, identifierIm
 				return nil, nil, errors.WrapErrorAction("signing up", "user", nil, err)
 			}
 
-			retParams = map[string]interface{}{"message": message}
+			if message != "" {
+				retParams = map[string]interface{}{"message": message}
+			}
 		} else {
 			retParams, credentialValue, err = authImpl.signUpAdmin(identifierImpl, appOrg.Application.Name, identifierCreds, credID)
 			if err != nil {
