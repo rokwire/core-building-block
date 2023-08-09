@@ -125,6 +125,13 @@ func (a Account) GetAccountAuthTypes(authTypeIDorCode string) []AccountAuthType 
 	return authTypes
 }
 
+// SortAccountAuthTypes sorts account auth types by matching the given id
+func (a Account) SortAccountAuthTypes(id string) {
+	sort.Slice(a.AuthTypes, func(i, _ int) bool {
+		return a.AuthTypes[i].ID == id
+	})
+}
+
 // GetAccountIdentifier finds account identifier
 func (a Account) GetAccountIdentifier(identifier string) *AccountIdentifier {
 	for _, id := range a.Identifiers {
@@ -158,10 +165,10 @@ func (a Account) GetExternalAccountIdentifiers() []AccountIdentifier {
 	return identifiers
 }
 
-// SortAccountIdentifiers sorts account identifiers by matching the given uid
-func (a Account) SortAccountIdentifiers(uid string) {
+// SortAccountIdentifiers sorts account identifiers by matching the given identifier
+func (a Account) SortAccountIdentifiers(identifier string) {
 	sort.Slice(a.Identifiers, func(i, _ int) bool {
-		return a.Identifiers[i].Identifier == uid
+		return a.Identifiers[i].Identifier == identifier
 	})
 }
 

@@ -277,7 +277,7 @@ func (a *Auth) applySignInExternal(account *model.Account, supportedAuthType mod
 	var accountAuthTypes []model.AccountAuthType
 	var err error
 
-	//find account auth type
+	//find account auth type (there should only be one account auth type with matching auth type code)
 	accountAuthTypes, err = a.findAccountAuthTypes(account, supportedAuthType)
 	if err != nil {
 		return nil, err
@@ -293,11 +293,14 @@ func (a *Auth) applySignInExternal(account *model.Account, supportedAuthType mod
 		return nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeExternalSystemUser, nil, err)
 	}
 
+	aat := &accountAuthTypes[0]
 	if newAccount != nil {
-		accountAuthTypes[0].Account = *newAccount
+		aat.Account = *newAccount
+		aat.Account.SortAccountAuthTypes(aat.ID)
+		aat.Account.SortAccountIdentifiers(externalUser.Identifier)
 	}
 
-	return &accountAuthTypes[0], nil
+	return aat, nil
 }
 
 func (a *Auth) applySignUpExternal(context storage.TransactionContext, supportedAuthType model.SupportedAuthType, appOrg model.ApplicationOrganization, externalUser model.ExternalSystemUser,
@@ -305,7 +308,7 @@ func (a *Auth) applySignUpExternal(context storage.TransactionContext, supported
 	var accountAuthType *model.AccountAuthType
 
 	//1. prepare external admin user data
-	identifiers, aatParams, useSharedProfile, profile, preferences, err := a.prepareExternalUserData(supportedAuthType.AuthType, appOrg, externalUser, regProfile, nil, l)
+	identifiers, aatParams, profile, preferences, err := a.prepareExternalUserData(supportedAuthType.AuthType, appOrg, externalUser, regProfile, nil, l)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionPrepare, "external admin user data", nil, err)
 	}
@@ -352,8 +355,8 @@ func (a *Auth) applySignUpExternal(context storage.TransactionContext, supported
 
 	//5. register the account
 	//External and anonymous auth is automatically verified, otherwise verified if credential has been verified previously
-	accountAuthType, err = a.registerUser(context, identifiers, supportedAuthType.AuthType, aatParams, appOrg, nil, useSharedProfile,
-		externalUser.ExternalIDs, *profile, privacy, preferences, username, nil, externalRoles, externalGroups, nil, nil, clientVersion, l)
+	accountAuthType, err = a.registerUser(context, identifiers, supportedAuthType.AuthType, aatParams, appOrg, nil, externalUser.ExternalIDs,
+		*profile, privacy, preferences, username, nil, externalRoles, externalGroups, nil, nil, clientVersion, l)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
 	}
@@ -366,7 +369,7 @@ func (a *Auth) applySignUpAdminExternal(context storage.TransactionContext, auth
 	var accountAuthType *model.AccountAuthType
 
 	//1. prepare external admin user data
-	identifiers, aatParams, useSharedProfile, profile, _, err := a.prepareExternalUserData(authType, appOrg, externalUser, regProfile, nil, l)
+	identifiers, aatParams, profile, _, err := a.prepareExternalUserData(authType, appOrg, externalUser, regProfile, nil, l)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionPrepare, "external admin user data", nil, err)
 	}
@@ -381,7 +384,7 @@ func (a *Auth) applySignUpAdminExternal(context storage.TransactionContext, auth
 
 	//3. register the account
 	//External and anonymous auth is automatically verified, otherwise verified if credential has been verified previously
-	accountAuthType, err = a.registerUser(context, identifiers, authType, aatParams, appOrg, nil, useSharedProfile, nil, *profile, privacy, nil,
+	accountAuthType, err = a.registerUser(context, identifiers, authType, aatParams, appOrg, nil, nil, *profile, privacy, nil,
 		username, permissions, roleIDs, groupIDs, scopes, creatorPermissions, clientVersion, l)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionRegister, "admin account", nil, err)
@@ -391,36 +394,38 @@ func (a *Auth) applySignUpAdminExternal(context storage.TransactionContext, auth
 }
 
 func (a *Auth) prepareExternalUserData(authType model.AuthType, appOrg model.ApplicationOrganization, externalUser model.ExternalSystemUser, regProfile model.Profile,
-	regPreferences map[string]interface{}, l *logs.Log) ([]model.AccountIdentifier, map[string]interface{}, bool, *model.Profile, map[string]interface{}, error) {
+	regPreferences map[string]interface{}, l *logs.Log) ([]model.AccountIdentifier, map[string]interface{}, *model.Profile, map[string]interface{}, error) {
 	var profile model.Profile
 	var preferences map[string]interface{}
 
-	//1. check if needs to use shared profile
-	useSharedProfile, sharedProfile, _, err := a.applySharedProfile(appOrg, externalUser.Identifier, l)
-	if err != nil {
-		return nil, nil, false, nil, nil, errors.WrapErrorAction(logutils.ActionApply, "shared profile", nil, err)
-	}
-
-	if useSharedProfile {
-		l.Infof("%s uses a shared profile", externalUser.Identifier)
-
-		//merge client profile and shared profile
-		profile = a.mergeProfiles(regProfile, sharedProfile, true)
-		preferences = regPreferences
-	} else {
-		l.Infof("%s does not use a shared profile", externalUser.Identifier)
-
-		profile = regProfile
-		preferences = regPreferences
-
-		//prepare profile and preferences
-		preparedProfile, preparedPreferences, err := a.prepareRegistrationData(authType, externalUser.Identifier, profile, preferences, l)
+	/*
+		//1. check if needs to use shared profile
+		useSharedProfile, sharedProfile, _, err := a.applySharedProfile(appOrg, externalUser.Identifier, l)
 		if err != nil {
-			return nil, nil, false, nil, nil, errors.WrapErrorAction(logutils.ActionPrepare, "user registration data", nil, err)
+			return nil, nil, false, nil, nil, errors.WrapErrorAction(logutils.ActionApply, "shared profile", nil, err)
 		}
-		profile = *preparedProfile
-		preferences = preparedPreferences
+
+		if useSharedProfile {
+			l.Infof("%s uses a shared profile", externalUser.Identifier)
+
+			//merge client profile and shared profile
+			profile = a.mergeProfiles(regProfile, sharedProfile, true)
+			preferences = regPreferences
+		}
+
+		l.Infof("%s does not use a shared profile", externalUser.Identifier)
+	*/
+
+	profile = regProfile
+	preferences = regPreferences
+
+	//prepare profile and preferences
+	preparedProfile, preparedPreferences, err := a.prepareRegistrationData(authType, externalUser.Identifier, profile, preferences, l)
+	if err != nil {
+		return nil, nil, nil, nil, errors.WrapErrorAction(logutils.ActionPrepare, "user registration data", nil, err)
 	}
+	profile = *preparedProfile
+	preferences = preparedPreferences
 
 	//2. prepare the registration data
 	params := map[string]interface{}{"user": externalUser}
@@ -433,7 +438,7 @@ func (a *Auth) prepareExternalUserData(authType model.AuthType, appOrg model.App
 			Verified: true, External: true, Account: model.Account{ID: accountID}, DateCreated: time.Now().UTC()})
 	}
 
-	return accountIdentifiers, params, useSharedProfile, &profile, preferences, nil
+	return accountIdentifiers, params, &profile, preferences, nil
 }
 
 func (a *Auth) applyProfileDataFromExternalUser(profile model.Profile, newExternalUser model.ExternalSystemUser,
@@ -532,13 +537,14 @@ func (a *Auth) updateExternalUserIfNeeded(accountAuthType model.AccountAuthType,
 
 		// 3. update external ids
 		for k, v := range externalUser.ExternalIDs {
-			if account.ExternalIDs == nil {
-				account.ExternalIDs = make(map[string]string)
+			accountIdentifier := account.GetAccountIdentifier(v)
+			if accountIdentifier == nil {
+				newIdentifier := model.AccountIdentifier{ID: uuid.NewString(), Code: k, Identifier: v, Verified: true, External: true, DateCreated: time.Now().UTC()}
+				account.Identifiers = append(account.Identifiers, newIdentifier)
 			}
-			if account.ExternalIDs[k] != v {
-				updatedExternalUser = true
-				account.ExternalIDs[k] = v
-			}
+
+			//TODO: this may not work (will pointer be correct?)
+			accountIdentifier.Identifier = v
 		}
 
 		// 4. update profile
@@ -705,6 +711,9 @@ func (a *Auth) applySignIn(identifierImpl identifierType, supportedAuthType mode
 	for _, aat := range accountAuthTypes {
 		if aat.Credential != nil && aat.Credential.ID == credID {
 			accountAuthType = &aat
+			accountAuthType.Account.SortAccountIdentifiers(userIdentifier)
+			accountAuthType.Account.SortAccountAuthTypes(aat.ID)
+			break
 		}
 	}
 
@@ -826,67 +835,72 @@ func (a *Auth) signUpNewAccount(context storage.TransactionContext, identifierIm
 	var profile model.Profile
 	var preferences map[string]interface{}
 
-	//check if needs to use shared profile
-	useSharedProfile, sharedProfile, sharedCredential, err := a.applySharedProfile(appOrg, userIdentifier, l)
+	/*
+		//check if needs to use shared profile
+		useSharedProfile, sharedProfile, sharedCredential, err := a.applySharedProfile(appOrg, userIdentifier, l)
+		if err != nil {
+			return nil, nil, errors.WrapErrorAction(logutils.ActionApply, "shared profile", nil, err)
+		}
+
+		if useSharedProfile {
+			l.Infof("%s uses a shared profile", userIdentifier)
+
+			//allow sign up only if the shared credential is verified
+			if credential != nil && !credential.Verified {
+				l.Infof("trying to sign up in %s with unverified shared credentials", appOrg.Organization.Name)
+				return nil, nil, errors.ErrorData("unverified", model.TypeCredential, nil).SetStatus(utils.ErrorStatusSharedCredentialUnverified)
+			}
+
+			//merge client profile and shared profile
+			profile = a.mergeProfiles(regProfile, sharedProfile, true)
+			preferences = regPreferences
+
+			credential = sharedCredential
+			retParams = map[string]interface{}{"message": "successfully registered"}
+		}
+
+		l.Infof("%s does not use a shared profile", userIdentifier)
+	*/
+
+	profile = regProfile
+	preferences = regPreferences
+
+	preparedProfile, preparedPreferences, err := a.prepareRegistrationData(supportedAuthType.AuthType, userIdentifier, profile, preferences, l)
 	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionApply, "shared profile", nil, err)
+		return nil, nil, errors.WrapErrorAction(logutils.ActionPrepare, "user registration data", nil, err)
+	}
+	profile = *preparedProfile
+	preferences = preparedPreferences
+
+	//apply sign up
+	authImpl, err := a.getAuthTypeImpl(supportedAuthType.AuthType)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeAuthType, nil, err)
+	}
+	if creatorPermissions == nil {
+		var message string
+		message, accountIdentifier, credential, err = authImpl.signUp(identifierImpl, appOrg, creds, params, supportedAuthType.Params)
+		if err != nil {
+			return nil, nil, errors.WrapErrorAction("signing up", "user", nil, err)
+		}
+
+		retParams = map[string]interface{}{"message": message}
+	} else {
+		retParams, accountIdentifier, credential, err = authImpl.signUpAdmin(identifierImpl, appOrg, creds)
+		if err != nil {
+			return nil, nil, errors.WrapErrorAction("signing up", "admin user", nil, err)
+		}
+	}
+	if accountIdentifier == nil {
+		return nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccountIdentifier, nil)
 	}
 
-	if useSharedProfile {
-		l.Infof("%s uses a shared profile", userIdentifier)
-
-		//allow sign up only if the shared credential is verified
-		if credential != nil && !credential.Verified {
-			l.Infof("trying to sign up in %s with unverified shared credentials", appOrg.Organization.Name)
-			return nil, nil, errors.ErrorData("unverified", model.TypeCredential, nil).SetStatus(utils.ErrorStatusSharedCredentialUnverified)
-		}
-
-		//merge client profile and shared profile
-		profile = a.mergeProfiles(regProfile, sharedProfile, true)
-		preferences = regPreferences
-
-		credential = sharedCredential
-		retParams = map[string]interface{}{"message": "successfully registered"}
-	} else {
-		l.Infof("%s does not use a shared profile", userIdentifier)
-
-		profile = regProfile
-		preferences = regPreferences
-
-		preparedProfile, preparedPreferences, err := a.prepareRegistrationData(supportedAuthType.AuthType, userIdentifier, profile, preferences, l)
-		if err != nil {
-			return nil, nil, errors.WrapErrorAction(logutils.ActionPrepare, "user registration data", nil, err)
-		}
-		profile = *preparedProfile
-		preferences = preparedPreferences
-
-		//apply sign up
-		authImpl, err := a.getAuthTypeImpl(supportedAuthType.AuthType)
-		if err != nil {
-			return nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeAuthType, nil, err)
-		}
-		if creatorPermissions == nil {
-			var message string
-			message, accountIdentifier, credential, err = authImpl.signUp(identifierImpl, appOrg, creds, params, supportedAuthType.Params)
-			if err != nil {
-				return nil, nil, errors.WrapErrorAction("signing up", "user", nil, err)
-			}
-
-			retParams = map[string]interface{}{"message": message}
-		} else {
-			retParams, accountIdentifier, credential, err = authImpl.signUpAdmin(identifierImpl, appOrg, creds)
-			if err != nil {
-				return nil, nil, errors.WrapErrorAction("signing up", "admin user", nil, err)
-			}
-		}
-
-		if credential != nil {
-			credential.AuthType.ID = supportedAuthType.AuthType.ID
-		}
+	if credential != nil {
+		credential.AuthType.ID = supportedAuthType.AuthType.ID
 	}
 
 	//External and anonymous auth is automatically verified, otherwise verified if credential has been verified previously
-	accountAuthType, err := a.registerUser(context, accountIdentifier, supportedAuthType.AuthType, nil, appOrg, credential, useSharedProfile,
+	accountAuthType, err := a.registerUser(context, []model.AccountIdentifier{*accountIdentifier}, supportedAuthType.AuthType, nil, appOrg, credential,
 		nil, profile, privacy, preferences, username, permissions, roles, groups, scopes, creatorPermissions, clientVersion, l)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
@@ -895,6 +909,7 @@ func (a *Auth) signUpNewAccount(context storage.TransactionContext, identifierIm
 	return retParams, accountAuthType, nil
 }
 
+/*
 func (a *Auth) applySharedProfile(app model.Application, userIdentifier string, l *logs.Log) (bool, *model.Profile, []model.Credential, error) {
 	if app.SharedIdentities {
 		//the application uses shared profiles
@@ -956,6 +971,7 @@ func (a *Auth) hasSharedProfile(app model.Application, userIdentifier string, l 
 
 	return true, &account.Profile, credentials, nil
 }
+*/
 
 // validateAPIKey checks if the given API key is valid for the given app ID
 func (a *Auth) validateAPIKey(apiKey string, appID string) error {
@@ -1255,14 +1271,7 @@ func (a *Auth) createLoginSession(anonymous bool, sub string, authType model.Aut
 	appType model.ApplicationType, ipAddress string, params map[string]interface{}, state string, device *model.Device, l *logs.Log) (*model.LoginSession, error) {
 
 	//id
-	idUUID, _ := uuid.NewUUID()
-	id := idUUID.String()
-
-	//account auth type
-	if !anonymous {
-		//sort account auth types by the one used for login
-		accountAuthType.Account.SortAccountAuthTypes(accountAuthType.Identifier)
-	}
+	id := uuid.NewString()
 
 	//access token
 	orgID := appOrg.Organization.ID
@@ -1283,7 +1292,7 @@ func (a *Auth) createLoginSession(anonymous bool, sub string, authType model.Aut
 			externalIDs[external.Code] = external.Identifier
 		}
 	}
-	claims := a.getStandardClaims(sub, name, email, phone, rokwireTokenAud, orgID, appID, authType.Code, externalIDs, nil, anonymous, true, appOrg.Application.Admin, appOrg.Organization.System, false, true, idUUID.String())
+	claims := a.getStandardClaims(sub, name, email, phone, rokwireTokenAud, orgID, appID, authType.Code, externalIDs, nil, anonymous, true, appOrg.Application.Admin, appOrg.Organization.System, false, true, id)
 	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), strings.Join(scopes, " "))
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
@@ -1303,7 +1312,7 @@ func (a *Auth) createLoginSession(anonymous bool, sub string, authType model.Aut
 	}
 
 	loginSession := model.LoginSession{ID: id, AppOrg: appOrg, AuthType: authType,
-		AppType: appType, Anonymous: anonymous, Identifier: sub, ExternalIDs: externalIDs, AccountAuthType: accountAuthType,
+		AppType: appType, Anonymous: anonymous, Identifier: sub, AccountAuthType: accountAuthType,
 		Device: device, IPAddress: ipAddress, AccessToken: accessToken, RefreshTokens: []string{refreshToken}, Params: params,
 		State: state, StateExpires: stateExpires, DateCreated: now}
 
@@ -1482,7 +1491,7 @@ func (a *Auth) getProfileBBData(authType model.AuthType, identifier string, l *l
 //	Returns:
 //		Registered account (AccountAuthType): Registered Account object
 func (a *Auth) registerUser(context storage.TransactionContext, accountIdentifiers []model.AccountIdentifier, authType model.AuthType, accountAuthTypeParams map[string]interface{},
-	appOrg model.ApplicationOrganization, credential *model.Credential, useSharedProfile bool, externalIDs map[string]string, profile model.Profile, privacy model.Privacy, preferences map[string]interface{},
+	appOrg model.ApplicationOrganization, credential *model.Credential, externalIDs map[string]string, profile model.Profile, privacy model.Privacy, preferences map[string]interface{},
 	username string, permissionNames []string, roleIDs []string, groupIDs []string, scopes []string, creatorPermissions []string, clientVersion *string, l *logs.Log) (*model.AccountAuthType, error) {
 	if len(accountIdentifiers) == 0 {
 		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccountIdentifier, nil)
@@ -1494,7 +1503,7 @@ func (a *Auth) registerUser(context storage.TransactionContext, accountIdentifie
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeAccount, nil, err)
 	}
 
-	err = a.storeNewAccountInfo(context, accountAuthType.Account, credential, useSharedProfile, profile)
+	err = a.storeNewAccountInfo(context, accountAuthType.Account, credential, profile)
 	if err != nil {
 		return nil, errors.WrapErrorAction("storing", "new account information", nil, err)
 	}
@@ -1576,7 +1585,7 @@ func (a *Auth) constructAccount(context storage.TransactionContext, accountIdent
 
 	account := model.Account{ID: accountID, AppOrg: appOrg, AuthTypes: authTypes, Identifiers: accountIdentifiers, Permissions: permissions,
 		Roles: model.AccountRolesFromAppOrgRoles(roles, true, adminSet), Groups: model.AccountGroupsFromAppOrgGroups(groups, true, adminSet), Scopes: scopes,
-		ExternalIDs: externalIDs, Preferences: preferences, Profile: profile, Privacy: privacy, Username: username, DateCreated: time.Now(), MostRecentClientVersion: clientVersion}
+		Preferences: preferences, Profile: profile, Privacy: privacy, Username: username, DateCreated: time.Now(), MostRecentClientVersion: clientVersion}
 
 	accountAuthType.Account = account
 	for i := range accountIdentifiers {
@@ -1585,7 +1594,7 @@ func (a *Auth) constructAccount(context storage.TransactionContext, accountIdent
 	return accountAuthType, nil
 }
 
-func (a *Auth) storeNewAccountInfo(context storage.TransactionContext, account model.Account, credential *model.Credential, useSharedProfile bool, profile model.Profile) error {
+func (a *Auth) storeNewAccountInfo(context storage.TransactionContext, account model.Account, credential *model.Credential, profile model.Profile) error {
 	//insert account object - it includes the account auth type
 	_, err := a.storage.InsertAccount(context, account)
 	if err != nil {
@@ -1594,28 +1603,28 @@ func (a *Auth) storeNewAccountInfo(context storage.TransactionContext, account m
 
 	//insert or update credential
 	if credential != nil {
-		if useSharedProfile {
-			//update credential
-			err = a.storage.UpdateCredential(context, credential)
-			if err != nil {
-				return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
-			}
-		} else {
-			//create credential
-			err = a.storage.InsertCredential(context, credential)
-			if err != nil {
-				return errors.WrapErrorAction(logutils.ActionInsert, model.TypeCredential, nil, err)
-			}
+		// if useSharedProfile {
+		// 	//update credential
+		// 	err = a.storage.UpdateCredential(context, credential)
+		// 	if err != nil {
+		// 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
+		// 	}
+		// }
+
+		//create credential
+		err = a.storage.InsertCredential(context, credential)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionInsert, model.TypeCredential, nil, err)
 		}
 	}
 
 	//update profile if shared
-	if useSharedProfile {
-		err = a.storage.UpdateAccountProfile(context, profile)
-		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeProfile, nil, err)
-		}
-	}
+	// if useSharedProfile {
+	// 	err = a.storage.UpdateAccountProfile(context, profile)
+	// 	if err != nil {
+	// 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeProfile, nil, err)
+	// 	}
+	// }
 
 	return nil
 }
