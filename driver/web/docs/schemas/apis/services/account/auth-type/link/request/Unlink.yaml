@@ -10,9 +10,12 @@ properties:
       - email
       - phone
       - twilio_phone
+      - oidc
       - illinois_oidc
       - username
+      - password
       - webauthn
+      - code
   app_type_identifier:
     type: string
   identifier:

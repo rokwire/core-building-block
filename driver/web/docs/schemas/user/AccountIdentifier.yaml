@@ -1,6 +1,10 @@
 required:
   - id
   - code
+  - identifier
+  - verified
+  - linked
+  - external
 type: object
 properties:
   id:
@@ -9,9 +13,9 @@ properties:
     type: string
   identifier:
     type: string
-  params:  
-    type: object
-    additionalProperties: true
-    nullable: true
-  active:
+  verified:
+    type: boolean
+  linked:
+    type: boolean
+  external:
     type: boolean

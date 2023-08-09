@@ -1,9 +1,9 @@
 post:
   tags:
   - Services
-  summary: Link credentials
+  summary: Link identifier
   description: |
-    Link credentials to an existing account
+    Link identifier to an existing account
 
     **Auth:** Requires "authenticated" auth token
   security:
@@ -12,34 +12,26 @@ post:
     content:
       application/json:
         schema:
-          $ref: "../../../../../schemas/apis/services/account/auth-type/link/request/Link.yaml"
+          $ref: "../../../../../schemas/apis/services/account/identifier/link/request/Link.yaml"
         examples:
-          email-sign_up:
+          email:
             summary: Email
             value:
-              auth_type: email
               app_type_identifier: edu.illinois.rokwire
-              creds:
+              identifier:
                 email: test@example.com 
-                password: test12345
-              params:
-                confirm_password: test12345
           phone:
             summary: Phone
             value:
-              auth_type: twilio_phone
               app_type_identifier: edu.illinois.rokwire
-              creds:
+              identifier:
                 phone: "+12223334444"
-          illinois_oidc:
-            summary: Illinois OIDC
+          username:
+            summary: Username
             value:
-              auth_type: illinois_oidc
               app_type_identifier: edu.illinois.rokwire
-              creds: https://redirect.example.com?code=ai324uith8gSEefesEguorgwsf43
-              params:
-                redirect_uri: https://redirect.example.com
-                pkce_verifier: w4iuhfq0u43hfq38ghn3gnSFSFiqp3ugnpugnqiprgUGNPINfsdoirpgia
+              identifier:
+                username: username
     required: true
   responses:
     200:
@@ -47,7 +39,7 @@ post:
       content:
         application/json:
           schema:
-            $ref: "../../../../../schemas/apis/services/account/auth-type/link/response/Response.yaml"
+            $ref: "../../../../../schemas/apis/services/account/identifier/link/response/Response.yaml"
     400:
       description: Bad request
     401:
@@ -64,13 +56,15 @@ post:
                 enum:
                   - invalid
                   - unverified
+                  - verification-expired
                   - already-exists
                   - not-found
                   - internal-server-error
                 description: |
-                  - `invalid`: Invalid credentials
-                  - `unverified`: Unverified credentials
-                  - `already-exists`: Auth type already exists
+                  - `invalid`: Invalid identifier
+                  - `unverified`: Unverified identifier
+                  - `verification-expired`: Identifier verification expired. The verification is restarted
+                  - `already-exists`: Auth type identifier already exists
                   - `not-found`: Account could not be found when `sign-up=false`
                   - `internal-server-error`: An undefined error occurred
               message:
@@ -78,9 +72,9 @@ post:
 delete:
   tags:
   - Services
-  summary: Unlink credentials
+  summary: Unlink identifier
   description: |
-    Unlink credentials from an existing account
+    Unlink identifier from an existing account
 
     **Auth:** Requires "authenticated" auth token
   security:
@@ -89,26 +83,26 @@ delete:
     content:
       application/json:
         schema:
-          $ref: "../../../../../schemas/apis/services/account/auth-type/link/request/Unlink.yaml"
+          $ref: "../../../../../schemas/apis/services/account/identifier/link/request/Unlink.yaml"
         examples:
           email:
             summary: Email
             value:
-              auth_type: email
               app_type_identifier: edu.illinois.rokwire
-              identifier: test@example.com
+              identifier:
+                email: test@example.com 
           phone:
             summary: Phone
-            value: 
-              auth_type: twilio_phone
-              app_type_identifier: edu.illinois.rokwire
-              identifier: "+12223334444"
-          illinois_oidc:
-            summary: Illinois OIDC
             value:
-              auth_type: illinois_oidc
               app_type_identifier: edu.illinois.rokwire
-              identifier: "123456789"
+              identifier:
+                phone: "+12223334444"
+          username:
+            summary: Username
+            value:
+              app_type_identifier: edu.illinois.rokwire
+              identifier:
+                username: username
     required: true
   responses:
     200:
@@ -116,7 +110,7 @@ delete:
       content:
         application/json:
           schema:
-            $ref: "../../../../../schemas/apis/services/account/auth-type/link/response/Response.yaml"
+            $ref: "../../../../../schemas/apis/services/account/identifier/link/response/Response.yaml"
     400:
       description: Bad request
     401:

@@ -1,7 +1,7 @@
 type: object
-description: Auth login creds for auth_type="webauthn"
+description: Auth login creds for auth_type="code"
 allOf:
   - $ref: "./Identifiers.yaml"
   - properties:
-      response:
+      code:
         type: string

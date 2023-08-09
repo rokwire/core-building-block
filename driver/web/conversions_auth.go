@@ -33,10 +33,8 @@ import (
 // LoginSession
 func loginSessionToDef(item model.LoginSession) Def.LoginSession {
 	var accountAuthTypeID *string
-	var accountAuthTypeIdentifier *string
 	if item.AccountAuthType != nil {
 		accountAuthTypeID = &item.AccountAuthType.ID
-		accountAuthTypeIdentifier = &item.AccountAuthType.Identifier
 	}
 	var deviceID *string
 	if item.Device != nil {
@@ -53,10 +51,10 @@ func loginSessionToDef(item model.LoginSession) Def.LoginSession {
 	dateUpdated := utils.FormatTime(item.DateUpdated)
 	dateCreated := utils.FormatTime(&item.DateCreated)
 	return Def.LoginSession{Id: &item.ID, Anonymous: &item.Anonymous, AuthTypeCode: &authTypeCode, AppOrgId: &appOrgID,
-		AccountAuthTypeId: accountAuthTypeID, AccountAuthTypeIdentifier: accountAuthTypeIdentifier, AppTypeId: &appTypeID,
-		AppTypeIdentifier: &appTypeIdentifier, DeviceId: deviceID, Identifier: &item.Identifier, IpAddress: &item.IPAddress,
-		RefreshTokensCount: &refreshTokensCount, State: &item.State, MfaAttempts: &item.MfaAttempts, StateExpires: &stateExpires,
-		DateRefreshed: &dateRefreshed, DateUpdated: &dateUpdated, DateCreated: &dateCreated,
+		AccountAuthTypeId: accountAuthTypeID, AppTypeId: &appTypeID, AppTypeIdentifier: &appTypeIdentifier,
+		DeviceId: deviceID, Identifier: &item.Identifier, IpAddress: &item.IPAddress, RefreshTokensCount: &refreshTokensCount,
+		State: &item.State, MfaAttempts: &item.MfaAttempts, StateExpires: &stateExpires, DateRefreshed: &dateRefreshed,
+		DateUpdated: &dateUpdated, DateCreated: &dateCreated,
 	}
 }
 

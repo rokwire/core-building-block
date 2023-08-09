@@ -1,0 +1,9 @@
+type: object
+description: Allowed identifier types
+properties:
+  username:
+    type: string
+  email:
+    type: string
+  phone:
+    type: string

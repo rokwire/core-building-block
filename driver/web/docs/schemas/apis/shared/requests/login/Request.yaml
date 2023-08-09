@@ -12,10 +12,13 @@ properties:
       - email
       - phone
       - twilio_phone
+      - oidc
       - illinois_oidc
       - anonymous
       - username
+      - password
       - webauthn
+      - code
   app_type_identifier:
     type: string
   org_id:
@@ -24,20 +27,18 @@ properties:
     type: string
   creds:
     anyOf:
-      - $ref: "../CredsWebAuthn.yaml"
-      - $ref: "../CredsEmail.yaml"
-      - $ref: "../CredsTwilioPhone.yaml"
+      - $ref: "../CredsAnonymous.yaml"
+      - $ref: "../CredsCode.yaml"
       - $ref: "../CredsOIDC.yaml"
-      - $ref: "../CredsAPIKey.yaml"
-      - $ref: "../CredsUsername.yaml"
+      - $ref: "../CredsPassword.yaml"
+      - $ref: "../CredsWebAuthn.yaml"
   params:
     type: object
     anyOf:
-      - $ref: "../ParamsWebAuthn.yaml"
-      - $ref: "../ParamsEmail.yaml"
       - $ref: "../ParamsOIDC.yaml"
+      - $ref: "../ParamsPassword.yaml"
+      - $ref: "../ParamsWebAuthn.yaml"
       - $ref: "../ParamsNone.yaml"
-      - $ref: "../ParamsUsername.yaml"
   device:
     $ref: "../../../../user/Device.yaml"
   profile:

@@ -96,6 +96,8 @@ Username:
   $ref: "./user/Username.yaml"
 AccountAuthType:
   $ref: "./user/AccountAuthType.yaml"
+AccountIdentifier:
+  $ref: "./user/AccountIdentifier.yaml"
 Device:
   $ref: "./user/Device.yaml"
 Follow:
@@ -122,30 +124,28 @@ _shared_req_UpdateAccount:
   $ref: "./apis/shared/requests/update-account/Request.yaml"
 _shared_req_AccountCheck:
   $ref: "./apis/shared/requests/AccountCheck.yaml"
-_shared_req_CredsEmail:
-  $ref: "./apis/shared/requests/CredsEmail.yaml"
-_shared_req_CredsTwilioPhone:
-  $ref: "./apis/shared/requests/CredsTwilioPhone.yaml"
+_shared_req_CredsAnonymous:
+  $ref: "./apis/shared/requests/CredsAnonymous.yaml"
+_shared_req_CredsCode:
+  $ref: "./apis/shared/requests/CredsCode.yaml"
 _shared_req_CredsOIDC:
   $ref: "./apis/shared/requests/CredsOIDC.yaml"
-_shared_req_CredsUsername:
-  $ref: "./apis/shared/requests/CredsUsername.yaml"
+_shared_req_CredsPassword:
+  $ref: "./apis/shared/requests/CredsPassword.yaml"
 _shared_req_CredsWebAuthn:
   $ref: "./apis/shared/requests/CredsWebAuthn.yaml"
-_shared_req_CredsAPIKey:
-  $ref: "./apis/shared/requests/CredsAPIKey.yaml"
-_shared_req_ParamsEmail:
-  $ref: "./apis/shared/requests/ParamsEmail.yaml"
-_shared_req_ParamsOIDC:
-  $ref: "./apis/shared/requests/ParamsOIDC.yaml"
-_shared_req_ParamsUsername:
-  $ref: "./apis/shared/requests/ParamsUsername.yaml"
-_shared_req_ParamsWebAuthn:
-  $ref: "./apis/shared/requests/ParamsWebAuthn.yaml"
+_shared_req_Identifiers:
+  $ref: "./apis/shared/requests/Identifiers.yaml"
 _shared_req_ParamsNone:
   $ref: "./apis/shared/requests/ParamsNone.yaml"
-_shared_req_ParamsSetEmailCredential:
-  $ref: "./apis/shared/requests/ParamsSetEmailCredential.yaml"
+_shared_req_ParamsOIDC:
+  $ref: "./apis/shared/requests/ParamsOIDC.yaml"
+_shared_req_ParamsPassword:
+  $ref: "./apis/shared/requests/ParamsPassword.yaml"
+_shared_req_ParamsResetPassword:
+  $ref: "./apis/shared/requests/ParamsResetPassword.yaml"
+_shared_req_ParamsWebAuthn:
+  $ref: "./apis/shared/requests/ParamsWebAuthn.yaml"
 _shared_req_app-configs:
   $ref: "./apis/shared/requests/app-configs/Request.yaml"
 _shared_req_app-configs-org:
@@ -164,12 +164,12 @@ _shared_res_Mfa:
   $ref: "./apis/shared/responses/mfa/Response.yaml"
 _shared_res_AccountCheck:
   $ref: "./apis/shared/responses/AccountCheck.yaml"
-_shared_res_ParamsAPIKey:
-  $ref: "./apis/shared/responses/ParamsAPIKey.yaml"
-_shared_res_ParamsOIDC:
-  $ref: "./apis/shared/responses/ParamsOIDC.yaml"
+_shared_res_ParamsAnonymous:
+  $ref: "./apis/shared/responses/ParamsAnonymous.yaml"
 _shared_res_ParamsNone:
   $ref: "./apis/shared/responses/ParamsNone.yaml"
+_shared_res_ParamsOIDC:
+  $ref: "./apis/shared/responses/ParamsOIDC.yaml"
 _shared_res_RokwireToken:
   $ref: "./apis/shared/responses/RokwireToken.yaml"
 ## end SHARED requests and responses
@@ -183,6 +183,14 @@ _services_req_account_auth-type-unlink:
   $ref: "./apis/services/account/auth-type/link/request/Unlink.yaml"
 _services_res_account_auth-type-link:
   $ref: "./apis/services/account/auth-type/link/response/Response.yaml"
+
+### account identifier link API
+_services_req_account_identifier-link:
+  $ref: "./apis/services/account/identifier/link/request/Link.yaml"
+_services_req_account_identifier-unlink:
+  $ref: "./apis/services/account/identifier/link/request/Unlink.yaml"
+_services_res_account_identifier-link:
+  $ref: "./apis/services/account/identifier/link/response/Response.yaml"
 
 ### identifier_send-verify API
 _services_req_identifier_send-verify:

@@ -314,13 +314,8 @@ func (h ServicesApisHandler) canLink(l *logs.Log, r *http.Request, claims *token
 }
 
 func (h ServicesApisHandler) linkAccountAuthType(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
-
 	var requestData Def.ServicesReqAccountAuthTypeLink
-	err = json.Unmarshal(data, &requestData)
+	err := json.NewDecoder(r.Body).Decode(&requestData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("account auth type link request"), nil, err, http.StatusBadRequest, true)
 	}
@@ -344,8 +339,7 @@ func (h ServicesApisHandler) linkAccountAuthType(l *logs.Log, r *http.Request, c
 
 	authTypes := make([]Def.AccountAuthType, 0)
 	if account != nil {
-		account.SortAccountAuthTypes(claims.UID)
-		authTypes = accountAuthTypesToDef(account.AuthTypes)
+		authTypes = legacyAccountAuthTypesToDef(account, claims.UID, claims.AuthType)
 	}
 
 	responseData := &Def.ServicesResAccountAuthTypeLink{AuthTypes: authTypes, Message: message}
@@ -358,13 +352,8 @@ func (h ServicesApisHandler) linkAccountAuthType(l *logs.Log, r *http.Request, c
 }
 
 func (h ServicesApisHandler) unlinkAccountAuthType(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
-
 	var requestData Def.ServicesReqAccountAuthTypeUnlink
-	err = json.Unmarshal(data, &requestData)
+	err := json.NewDecoder(r.Body).Decode(&requestData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("account auth type unlink request"), nil, err, http.StatusBadRequest, true)
 	}
@@ -381,14 +370,71 @@ func (h ServicesApisHandler) unlinkAccountAuthType(l *logs.Log, r *http.Request,
 
 	authTypes := make([]Def.AccountAuthType, 0)
 	if account != nil {
-		account.SortAccountAuthTypes(claims.UID)
-		authTypes = accountAuthTypesToDef(account.AuthTypes)
+		authTypes = legacyAccountAuthTypesToDef(account, claims.UID, claims.AuthType)
 	}
 
 	responseData := &Def.ServicesResAccountAuthTypeLink{AuthTypes: authTypes}
 	respData, err := json.Marshal(responseData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionMarshal, "unlink account auth type response", nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HTTPResponseSuccessJSON(respData)
+}
+
+func (h ServicesApisHandler) linkAccountIdentifier(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
+	var requestData Def.ServicesReqAccountIdentifierLink
+	err := json.NewDecoder(r.Body).Decode(&requestData)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("account identifier link request"), nil, err, http.StatusBadRequest, true)
+	}
+
+	//identifier
+	requestIdentifier, err := interfaceToJSON(requestData.Identifier)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeCreds, nil, err, http.StatusBadRequest, true)
+	}
+
+	message, account, err := h.coreAPIs.Auth.LinkAccountIdentifier(claims.Subject, requestData.AppTypeIdentifier, requestIdentifier, l)
+	if err != nil {
+		return l.HTTPResponseError("Error linking account identifier", err, http.StatusInternalServerError, true)
+	}
+
+	identifiers := make([]Def.AccountIdentifier, 0)
+	if account != nil {
+		identifiers = accountIdentifiersToDef(account.Identifiers)
+	}
+
+	responseData := &Def.ServicesResAccountIdentifierLink{Identifiers: identifiers, Message: message}
+	respData, err := json.Marshal(responseData)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionMarshal, "link account identifier response", nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HTTPResponseSuccessJSON(respData)
+}
+
+func (h ServicesApisHandler) unlinkAccountIdentifier(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
+	var requestData Def.ServicesReqAccountAuthTypeUnlink
+	err := json.NewDecoder(r.Body).Decode(&requestData)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("account identifier unlink request"), nil, err, http.StatusBadRequest, true)
+	}
+
+	account, err := h.coreAPIs.Auth.UnlinkAccountIdentifier(claims.Subject, string(requestData.AuthType), requestData.AppTypeIdentifier, requestData.Identifier, l)
+	if err != nil {
+		return l.HTTPResponseError("Error unlinking account identifier", err, http.StatusInternalServerError, true)
+	}
+
+	identifiers := make([]Def.AccountIdentifier, 0)
+	if account != nil {
+		identifiers = accountIdentifiersToDef(account.Identifiers)
+	}
+
+	responseData := &Def.ServicesResAccountIdentifierLink{Identifiers: identifiers}
+	respData, err := json.Marshal(responseData)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionMarshal, "unlink account identifier response", nil, err, http.StatusInternalServerError, false)
 	}
 
 	return l.HTTPResponseSuccessJSON(respData)

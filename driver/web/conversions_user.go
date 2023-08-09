@@ -18,6 +18,7 @@ import (
 	"core-building-block/core/model"
 	Def "core-building-block/driver/web/docs/gen"
 	"core-building-block/utils"
+	"sort"
 )
 
 // Account
@@ -135,13 +136,45 @@ func partialAccountsToDef(items []model.Account) []Def.PartialAccount {
 func accountAuthTypeToDef(item model.AccountAuthType) Def.AccountAuthType {
 	params := item.Params
 
-	return Def.AccountAuthType{Id: item.ID, Code: item.SupportedAuthType.AuthType.Code, Identifier: item.Identifier, Active: &item.Active, Unverified: &item.Unverified, Params: &params}
+	return Def.AccountAuthType{Id: item.ID, Code: item.SupportedAuthType.AuthType.Code, Active: &item.Active, Params: &params}
 }
 
 func accountAuthTypesToDef(items []model.AccountAuthType) []Def.AccountAuthType {
 	result := make([]Def.AccountAuthType, len(items))
 	for i, item := range items {
 		result[i] = accountAuthTypeToDef(item)
+	}
+	return result
+}
+
+func legacyAccountAuthTypesToDef(account *model.Account, uid string, authTypeCode string) []Def.AccountAuthType {
+	aats := make([]Def.AccountAuthType, 0)
+
+	// every auth type can be used with every identifier
+	for _, aat := range account.AuthTypes {
+		for _, id := range account.Identifiers {
+			legacyAat := accountAuthTypeToDef(aat)
+			identifier := id.Identifier
+			legacyAat.Identifier = &identifier
+			aats = append(aats, legacyAat)
+		}
+	}
+
+	sort.Slice(aats, func(i, _ int) bool {
+		return aats[i].Identifier != nil && *aats[i].Identifier == uid && aats[i].Code == authTypeCode
+	})
+	return aats
+}
+
+// AccountIdentifier
+func accountIdentifierToDef(item model.AccountIdentifier) Def.AccountIdentifier {
+	return Def.AccountIdentifier{Id: item.ID, Code: item.Code, Identifier: item.Identifier, Linked: item.Linked, Verified: item.Verified, External: item.External}
+}
+
+func accountIdentifiersToDef(items []model.AccountIdentifier) []Def.AccountIdentifier {
+	result := make([]Def.AccountIdentifier, len(items))
+	for i, item := range items {
+		result[i] = accountIdentifierToDef(item)
 	}
 	return result
 }
