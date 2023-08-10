@@ -18,7 +18,6 @@ import (
 	"core-building-block/core/model"
 	Def "core-building-block/driver/web/docs/gen"
 	"core-building-block/utils"
-	"sort"
 )
 
 // Account
@@ -38,12 +37,9 @@ func accountToDef(item model.Account) *Def.Account {
 	//groups
 	groups := accountGroupsToDef(item.GetActiveGroups())
 	//account auth types
-	authTypes := accountAuthTypesToDef(item.AuthTypes)
-	//external ids
-	externalIds := map[string]interface{}{}
-	for k, v := range item.ExternalIDs {
-		externalIds[k] = v
-	}
+	authTypes := accountAuthTypesToDef(&item)
+	//account identifiers
+	identifiers := accountIdentifiersToDef(item.Identifiers)
 	//username
 	var username *string
 	if item.Username != "" {
@@ -59,8 +55,8 @@ func accountToDef(item model.Account) *Def.Account {
 	}
 
 	return &Def.Account{Id: &item.ID, Anonymous: &item.Anonymous, System: &item.AppOrg.Organization.System, Permissions: &permissions, Roles: &roles, Groups: &groups,
-		Privacy: privacy, Verified: &item.Verified, Scopes: &scopes, AuthTypes: &authTypes, Username: username, Profile: profile, Preferences: preferences, SystemConfigs: systemConfigs,
-		LastLoginDate: &lastLoginDate, LastAccessTokenDate: &lastAccessTokenDate, MostRecentClientVersion: item.MostRecentClientVersion, ExternalIds: &externalIds}
+		Privacy: privacy, Verified: &item.Verified, Scopes: &scopes, Identifiers: &identifiers, AuthTypes: &authTypes, Username: username, Profile: profile, Preferences: preferences,
+		SystemConfigs: systemConfigs, LastLoginDate: &lastLoginDate, LastAccessTokenDate: &lastAccessTokenDate, MostRecentClientVersion: item.MostRecentClientVersion}
 }
 
 func accountsToDef(items []model.Account) []Def.Account {
@@ -86,8 +82,10 @@ func partialAccountToDef(item model.Account, params map[string]interface{}) *Def
 
 	//systemConfigs
 	systemConfigs := &item.SystemConfigs
+	//account identifiers
+	identifiers := accountIdentifiersToDef(item.Identifiers)
 	//account auth types
-	authTypes := accountAuthTypesToDef(item.AuthTypes)
+	authTypes := accountAuthTypesToDef(&item)
 	for i := 0; i < len(authTypes); i++ {
 		authTypes[i].Params = nil
 	}
@@ -110,18 +108,12 @@ func partialAccountToDef(item model.Account, params map[string]interface{}) *Def
 		paramsData = &params
 	}
 
-	//external ids
-	externalIds := map[string]interface{}{}
-	for k, v := range item.ExternalIDs {
-		externalIds[k] = v
-	}
-
 	privacy := privacyToDef(&item.Privacy)
 
 	return &Def.PartialAccount{Id: &item.ID, Anonymous: item.Anonymous, AppId: item.AppOrg.Application.ID, OrgId: item.AppOrg.Organization.ID, FirstName: item.Profile.FirstName,
 		LastName: item.Profile.LastName, Username: username, System: &item.AppOrg.Organization.System, Permissions: permissions, Roles: roles, Groups: groups,
-		Privacy: privacy, Verified: &item.Verified, Scopes: &scopes, SystemConfigs: systemConfigs, AuthTypes: authTypes, DateCreated: &dateCreated,
-		DateUpdated: dateUpdated, Params: paramsData, ExternalIds: &externalIds}
+		Privacy: privacy, Verified: &item.Verified, Scopes: &scopes, SystemConfigs: systemConfigs, Identifiers: identifiers, AuthTypes: authTypes,
+		DateCreated: &dateCreated, DateUpdated: dateUpdated, Params: paramsData}
 }
 
 func partialAccountsToDef(items []model.Account) []Def.PartialAccount {
@@ -136,33 +128,31 @@ func partialAccountsToDef(items []model.Account) []Def.PartialAccount {
 func accountAuthTypeToDef(item model.AccountAuthType) Def.AccountAuthType {
 	params := item.Params
 
-	return Def.AccountAuthType{Id: item.ID, Code: item.SupportedAuthType.AuthType.Code, Active: &item.Active, Params: &params}
+	return Def.AccountAuthType{Id: item.ID, AuthTypeCode: item.SupportedAuthType.AuthType.Code, Active: &item.Active, Params: &params}
 }
 
-func accountAuthTypesToDef(items []model.AccountAuthType) []Def.AccountAuthType {
-	result := make([]Def.AccountAuthType, len(items))
-	for i, item := range items {
-		result[i] = accountAuthTypeToDef(item)
+func accountAuthTypesToDef(account *model.Account) []Def.AccountAuthType {
+	if account == nil {
+		return nil
 	}
-	return result
-}
 
-func legacyAccountAuthTypesToDef(account *model.Account, uid string, authTypeCode string) []Def.AccountAuthType {
 	aats := make([]Def.AccountAuthType, 0)
-
-	// every auth type can be used with every identifier
 	for _, aat := range account.AuthTypes {
 		for _, id := range account.Identifiers {
-			legacyAat := accountAuthTypeToDef(aat)
-			identifier := id.Identifier
-			legacyAat.Identifier = &identifier
-			aats = append(aats, legacyAat)
+			// create the account auth type and set the identifier if the account has an identifier code matching an alias
+			if utils.Contains(aat.SupportedAuthType.AuthType.Aliases, id.Code) {
+				legacyAat := accountAuthTypeToDef(aat)
+
+				code := &id.Code
+				legacyAat.Code = code // old clients will not understand new auth type codes
+				identifier := id.Identifier
+				legacyAat.Identifier = &identifier // old clients expect the identifier in the auth types
+
+				aats = append(aats, legacyAat)
+			}
 		}
 	}
 
-	sort.Slice(aats, func(i, _ int) bool {
-		return aats[i].Identifier != nil && *aats[i].Identifier == uid && aats[i].Code == authTypeCode
-	})
 	return aats
 }
 

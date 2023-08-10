@@ -25,9 +25,10 @@ properties:
     type: boolean
   system:
     type: boolean
-  external_ids:
-    type: object
-    nullable: true
+  identifiers:
+    type: array
+    items:
+      $ref: "./AccountIdentifier.yaml"
   auth_types:
     type: array
     items:

@@ -126,9 +126,9 @@ func (a Account) GetAccountAuthTypes(authTypeIDorCode string) []AccountAuthType 
 }
 
 // SortAccountAuthTypes sorts account auth types by matching the given id
-func (a Account) SortAccountAuthTypes(id string) {
+func (a Account) SortAccountAuthTypes(id string, authType string) {
 	sort.Slice(a.AuthTypes, func(i, _ int) bool {
-		return a.AuthTypes[i].ID == id
+		return (id != "" && a.AuthTypes[i].ID == id) || (authType != "" && a.AuthTypes[i].SupportedAuthType.AuthType.Code == authType)
 	})
 }
 

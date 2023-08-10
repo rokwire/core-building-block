@@ -913,7 +913,7 @@ func (h AdminApisHandler) getAccount(l *logs.Log, r *http.Request, claims *token
 
 	var accountData *Def.Account
 	if account != nil {
-		account.SortAccountAuthTypes(claims.UID)
+		account.SortAccountAuthTypes("", claims.AuthType)
 		accountData = accountToDef(*account)
 	}
 

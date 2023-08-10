@@ -1,9 +1,11 @@
 required:
   - id
-  - code
+  - auth_type_code
 type: object
 properties:
   id:
+    type: string
+  auth_type_code:
     type: string
   code:
     type: string

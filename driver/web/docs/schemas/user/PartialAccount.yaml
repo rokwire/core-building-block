@@ -8,6 +8,7 @@ required:
   - roles
   - groups
   - anonymous
+  - identifiers
   - auth_types
   - date_created
 type: object
@@ -43,10 +44,14 @@ properties:
     type: array
     items:
       type: string
+  identifiers:
+    type: array
+    items:
+      $ref: "./AccountIdentifier.yaml"
   auth_types:
     type: array
     items:
-      $ref: "../user/AccountAuthType.yaml"
+      $ref: "./AccountAuthType.yaml"
   system_configs:
     type: object
     nullable: true
@@ -64,7 +69,4 @@ properties:
     type: string
   date_updated:
     type: string
-    nullable: true
-  external_ids:
-    type: object
     nullable: true

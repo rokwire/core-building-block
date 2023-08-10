@@ -1747,6 +1747,14 @@ func (a *Auth) UnlinkAccountAuthType(accountID string, authenticationType string
 	return a.unlinkAccountAuthType(accountID, authenticationType, appTypeIdentifier, identifier, l)
 }
 
+func (a *Auth) LinkAccountIdentifier(accountID string, appTypeIdentifier string, identifierCreds string, l *logs.Log) (*string, *model.Account, error) {
+	return nil, nil, errors.New(logutils.Unimplemented)
+}
+
+func (a *Auth) UnlinkAccountIdentifier(accountID string, appTypeIdentifier string, identifierCreds string, l *logs.Log) (*model.Account, error) {
+	return nil, errors.New(logutils.Unimplemented)
+}
+
 // DeleteAccount deletes an account for the given id
 func (a *Auth) DeleteAccount(id string) error {
 	transaction := func(context storage.TransactionContext) error {

@@ -6770,9 +6770,10 @@ components:
           type: boolean
         system:
           type: boolean
-        external_ids:
-          type: object
-          nullable: true
+        identifiers:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccountIdentifier'
         auth_types:
           type: array
           items:
@@ -6831,6 +6832,7 @@ components:
         - roles
         - groups
         - anonymous
+        - identifiers
         - auth_types
         - date_created
       type: object
@@ -6866,6 +6868,10 @@ components:
           type: array
           items:
             type: string
+        identifiers:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccountIdentifier'
         auth_types:
           type: array
           items:
@@ -6887,9 +6893,6 @@ components:
           type: string
         date_updated:
           type: string
-          nullable: true
-        external_ids:
-          type: object
           nullable: true
     Profile:
       required:
@@ -6988,10 +6991,12 @@ components:
     AccountAuthType:
       required:
         - id
-        - code
+        - auth_type_code
       type: object
       properties:
         id:
+          type: string
+        auth_type_code:
           type: string
         code:
           type: string

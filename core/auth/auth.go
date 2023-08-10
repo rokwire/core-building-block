@@ -296,7 +296,7 @@ func (a *Auth) applySignInExternal(account *model.Account, supportedAuthType mod
 	aat := &accountAuthTypes[0]
 	if newAccount != nil {
 		aat.Account = *newAccount
-		aat.Account.SortAccountAuthTypes(aat.ID)
+		aat.Account.SortAccountAuthTypes(aat.ID, "")
 		aat.Account.SortAccountIdentifiers(externalUser.Identifier)
 	}
 
@@ -712,7 +712,7 @@ func (a *Auth) applySignIn(identifierImpl identifierType, supportedAuthType mode
 		if aat.Credential != nil && aat.Credential.ID == credID {
 			accountAuthType = &aat
 			accountAuthType.Account.SortAccountIdentifiers(userIdentifier)
-			accountAuthType.Account.SortAccountAuthTypes(aat.ID)
+			accountAuthType.Account.SortAccountAuthTypes(aat.ID, "")
 			break
 		}
 	}

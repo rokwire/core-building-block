@@ -38,7 +38,7 @@ type loginSession struct {
 	AccountAuthTypeID *string `bson:"account_auth_type_id"`
 
 	// DEPRECATED
-	ExternalIDs map[string]string `bson:"external_ids"`
+	ExternalIDs map[string]string `bson:"external_ids,omitempty"`
 
 	DeviceID *string `bson:"device_id"`
 

@@ -180,9 +180,9 @@ type Account struct {
 	AppOrg                  *ApplicationOrganization `json:"app_org"`
 	AuthTypes               *[]AccountAuthType       `json:"auth_types,omitempty"`
 	Devices                 *[]Device                `json:"devices,omitempty"`
-	ExternalIds             *map[string]interface{}  `json:"external_ids"`
 	Groups                  *[]AppOrgGroup           `json:"groups,omitempty"`
 	Id                      *string                  `json:"id,omitempty"`
+	Identifiers             *[]AccountIdentifier     `json:"identifiers,omitempty"`
 	LastAccessTokenDate     *string                  `json:"last_access_token_date,omitempty"`
 	LastLoginDate           *string                  `json:"last_login_date,omitempty"`
 	MostRecentClientVersion *string                  `json:"most_recent_client_version,omitempty"`
@@ -200,11 +200,12 @@ type Account struct {
 
 // AccountAuthType defines model for AccountAuthType.
 type AccountAuthType struct {
-	Active     *bool                   `json:"active,omitempty"`
-	Code       string                  `json:"code"`
-	Id         string                  `json:"id"`
-	Identifier *string                 `json:"identifier,omitempty"`
-	Params     *map[string]interface{} `json:"params"`
+	Active       *bool                   `json:"active,omitempty"`
+	AuthTypeCode string                  `json:"auth_type_code"`
+	Code         *string                 `json:"code,omitempty"`
+	Id           string                  `json:"id"`
+	Identifier   *string                 `json:"identifier,omitempty"`
+	Params       *map[string]interface{} `json:"params"`
 }
 
 // AccountIdentifier defines model for AccountIdentifier.
@@ -531,10 +532,10 @@ type PartialAccount struct {
 	AuthTypes     []AccountAuthType       `json:"auth_types"`
 	DateCreated   *string                 `json:"date_created,omitempty"`
 	DateUpdated   *string                 `json:"date_updated"`
-	ExternalIds   *map[string]interface{} `json:"external_ids"`
 	FirstName     string                  `json:"first_name"`
 	Groups        []AppOrgGroup           `json:"groups"`
 	Id            *string                 `json:"id,omitempty"`
+	Identifiers   []AccountIdentifier     `json:"identifiers"`
 	LastName      string                  `json:"last_name"`
 	OrgId         string                  `json:"org_id"`
 	Params        *map[string]interface{} `json:"params"`
