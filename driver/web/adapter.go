@@ -403,11 +403,14 @@ func (we Adapter) wrapFunc(handler handlerFunc, authorization tokenauth.Handler)
 
 		//1. validate request
 		var response logs.HTTPResponse
-		requestValidationInput, err := we.validateRequest(req)
-		if err != nil {
-			response = logObj.HTTPResponseErrorAction(logutils.ActionValidate, logutils.TypeRequest, nil, err, http.StatusBadRequest, true)
-			we.completeResponse(w, response, logObj)
-			return
+		var requestValidationInput *openapi3filter.RequestValidationInput
+		if we.env == "local" {
+			requestValidationInput, err = we.validateRequest(req)
+			if err != nil {
+				response = logObj.HTTPResponseErrorAction(logutils.ActionValidate, logutils.TypeRequest, nil, err, http.StatusBadRequest, true)
+				we.completeResponse(w, response, logObj)
+				return
+			}
 		}
 
 		//2. process it
@@ -426,7 +429,7 @@ func (we Adapter) wrapFunc(handler handlerFunc, authorization tokenauth.Handler)
 		}
 
 		//3. validate the response
-		if we.env != "production" {
+		if we.env == "local" {
 			err = we.validateResponse(requestValidationInput, response)
 			if err != nil {
 				response = logObj.HTTPResponseErrorAction(logutils.ActionValidate, logutils.TypeResponse, &logutils.FieldArgs{"code": response.ResponseCode, "headers": response.Headers, "body": string(response.Body)}, err, http.StatusInternalServerError, true)
