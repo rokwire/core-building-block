@@ -472,7 +472,6 @@ type JWKS struct {
 
 // LoginSession defines model for LoginSession.
 type LoginSession struct {
-	AccountAuthTypeId  *string `json:"account_auth_type_id,omitempty"`
 	Anonymous          *bool   `json:"anonymous,omitempty"`
 	AppOrgId           *string `json:"app_org_id,omitempty"`
 	AppTypeId          *string `json:"app_type_id,omitempty"`

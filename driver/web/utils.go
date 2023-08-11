@@ -35,9 +35,8 @@ func authBuildLoginResponse(l *logs.Log, loginSession *model.LoginSession) logs.
 
 	//account
 	var accountData *Def.Account
-	if loginSession.AccountAuthType != nil {
-		account := loginSession.AccountAuthType.Account
-		accountData = accountToDef(account)
+	if loginSession.Account != nil {
+		accountData = accountToDef(*loginSession.Account)
 	}
 
 	//params

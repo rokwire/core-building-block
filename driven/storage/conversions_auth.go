@@ -31,10 +31,6 @@ func loginSessionFromStorage(item loginSession, authType model.AuthType, account
 
 	anonymous := item.Anonymous
 	identifier := item.Identifier
-	var accountAuthType *model.AccountAuthType
-	if item.AccountAuthTypeID != nil && account != nil {
-		accountAuthType = account.GetAccountAuthTypeByID(*item.AccountAuthTypeID)
-	}
 	var deviceID string
 	if item.DeviceID != nil {
 		deviceID = *item.DeviceID
@@ -61,7 +57,7 @@ func loginSessionFromStorage(item loginSession, authType model.AuthType, account
 	dateCreated := item.DateCreated
 
 	return model.LoginSession{ID: id, AppOrg: appOrg, AuthType: authType, AppType: appType, Anonymous: anonymous,
-		Identifier: identifier, AccountAuthType: accountAuthType, Device: device, IPAddress: idAddress, AccessToken: accessToken,
+		Identifier: identifier, Account: account, Device: device, IPAddress: idAddress, AccessToken: accessToken,
 		RefreshTokens: refreshTokens, Params: params, State: state, StateExpires: stateExpires, MfaAttempts: mfaAttempts,
 		DateRefreshed: dateRefreshed, DateUpdated: dateUpdated, DateCreated: dateCreated}
 }
@@ -79,10 +75,6 @@ func loginSessionToStorage(item model.LoginSession) *loginSession {
 
 	anonymous := item.Anonymous
 	identifier := item.Identifier
-	var accountAuthTypeID *string
-	if item.AccountAuthType != nil && len(item.AccountAuthType.ID) != 0 {
-		accountAuthTypeID = &item.AccountAuthType.ID
-	}
 	var deviceID *string
 	if item.Device != nil {
 		deviceID = &item.Device.ID
@@ -108,9 +100,9 @@ func loginSessionToStorage(item model.LoginSession) *loginSession {
 	dateCreated := item.DateCreated
 
 	return &loginSession{ID: id, AppID: appID, OrgID: orgID, AuthTypeCode: authTypeCode, AppTypeID: appTypeID, AppTypeIdentifier: appTypeIdentifier,
-		Anonymous: anonymous, Identifier: identifier, AccountAuthTypeID: accountAuthTypeID, DeviceID: deviceID, IPAddress: ipAddress,
-		AccessToken: accessToken, RefreshTokens: refreshTokens, Params: params, State: state, StateExpires: stateExpires, MfaAttempts: mfaAttempts,
-		DateRefreshed: dateRefreshed, DateUpdated: dateUpdated, DateCreated: dateCreated}
+		Anonymous: anonymous, Identifier: identifier, DeviceID: deviceID, IPAddress: ipAddress, AccessToken: accessToken, RefreshTokens: refreshTokens,
+		Params: params, State: state, StateExpires: stateExpires, MfaAttempts: mfaAttempts, DateRefreshed: dateRefreshed,
+		DateUpdated: dateUpdated, DateCreated: dateCreated}
 }
 
 // ServiceAccount

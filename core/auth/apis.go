@@ -102,7 +102,7 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 	anonymous := false
 	sub := ""
 
-	var accountAuthType *model.AccountAuthType
+	var account *model.Account
 	var responseParams map[string]interface{}
 	var mfaTypes []model.MFAType
 	var state string
@@ -112,25 +112,20 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 		anonymous = true
 
 		anonymousID := ""
-		var account *model.Account
 		anonymousID, account, responseParams, err = a.applyAnonymousAuthType(authType.AuthType, creds)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionApply, typeAnonymousAuthType, logutils.StringArgs("user"), err)
 		}
 		sub = anonymousID
-
-		if account != nil {
-			accountAuthType = &model.AccountAuthType{Account: *account}
-		}
 	} else if authType.AuthType.IsExternal {
-		responseParams, accountAuthType, mfaTypes, err = a.applyExternalAuthType(*authType, *appType, *appOrg, creds, params, clientVersion, profile, privacy, preferences, username, admin, l)
+		responseParams, account, mfaTypes, err = a.applyExternalAuthType(*authType, *appType, *appOrg, creds, params, clientVersion, profile, privacy, preferences, username, admin, l)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionApply, typeExternalAuthType, logutils.StringArgs("user"), err)
 		}
 
-		sub = accountAuthType.Account.ID
+		sub = account.ID
 	} else {
-		responseParams, accountAuthType, mfaTypes, err = a.applyAuthType(*authType, *appOrg, creds, params, clientVersion, profile, privacy, preferences, username, admin, l)
+		responseParams, account, mfaTypes, err = a.applyAuthType(*authType, *appOrg, creds, params, clientVersion, profile, privacy, preferences, username, admin, l)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionApply, model.TypeAuthType, logutils.StringArgs("user"), err)
 		}
@@ -139,7 +134,7 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 			return responseParams, nil, nil, nil
 		}
 
-		sub = accountAuthType.Account.ID
+		sub = account.ID
 
 		//the credentials are valid
 	}
@@ -159,7 +154,7 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 	}
 
 	//now we are ready to apply login for the user or anonymous
-	loginSession, err := a.applyLogin(anonymous, sub, authType.AuthType, *appOrg, accountAuthType, *appType, ipAddress, deviceType, deviceOS, deviceID, clientVersion, responseParams, state, l)
+	loginSession, err := a.applyLogin(anonymous, sub, authType.AuthType, *appOrg, account, *appType, ipAddress, deviceType, deviceOS, deviceID, clientVersion, responseParams, state, l)
 	if err != nil {
 		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionApply, "login", logutils.StringArgs("user"), err)
 	}
@@ -344,8 +339,17 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 			return nil, errors.WrapErrorAction(logutils.ActionRefresh, "external auth type", nil, err)
 		}
 
+		if loginSession.Account == nil {
+			return nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, &logutils.FieldArgs{"session_id": loginSession.ID, "anonymous": false})
+		}
+
+		aats := loginSession.Account.GetAccountAuthTypes(loginSession.AuthType.Code)
+		if len(aats) != 1 {
+			return nil, errors.ErrorData(logutils.StatusInvalid, model.TypeAccountAuthType, &logutils.FieldArgs{"code": loginSession.AuthType.Code, "count": len(aats)})
+		}
+
 		//check if need to update the account data
-		newAccount, err := a.updateExternalUserIfNeeded(*loginSession.AccountAuthType, *externalUser, loginSession.AuthType, loginSession.AppOrg, externalCreds, l)
+		newAccount, err := a.updateExternalUserIfNeeded(aats[0], *externalUser, loginSession.AuthType, loginSession.AppOrg, externalCreds, l)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeExternalSystemUser, logutils.StringArgs("refresh"), err)
 		}
@@ -360,18 +364,16 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 
 	scopes := []string{authorization.ScopeGlobal}
 	if !anonymous {
-		accountAuthType := loginSession.AccountAuthType
-		if accountAuthType == nil {
-			l.Infof("for some reasons account auth type is null for not anonymous login - %s", loginSession.ID)
-			return nil, errors.ErrorAction("for some reasons account auth type is null for not anonymous login", "", nil)
+		if loginSession.Account == nil {
+			return nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, &logutils.FieldArgs{"session_id": loginSession.ID, "anonymous": false})
 		}
-		name = accountAuthType.Account.Profile.GetFullName()
-		email = accountAuthType.Account.Profile.Email
-		phone = accountAuthType.Account.Profile.Phone
-		permissions = accountAuthType.Account.GetPermissionNames()
-		scopes = append(scopes, accountAuthType.Account.GetScopes()...)
+		name = loginSession.Account.Profile.GetFullName()
+		email = loginSession.Account.Profile.Email
+		phone = loginSession.Account.Profile.Phone
+		permissions = loginSession.Account.GetPermissionNames()
+		scopes = append(scopes, loginSession.Account.GetScopes()...)
 		if len(externalIDs) == 0 {
-			for _, external := range accountAuthType.Account.GetExternalAccountIdentifiers() {
+			for _, external := range loginSession.Account.GetExternalAccountIdentifiers() {
 				externalIDs[external.Code] = external.Identifier
 			}
 		}
@@ -578,7 +580,6 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appID string, orgID
 	}
 
 	// create account
-	var accountAuthType *model.AccountAuthType
 	var newAccount *model.Account
 	var params map[string]interface{}
 	transaction := func(context storage.TransactionContext) error {
@@ -601,19 +602,18 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appID string, orgID
 			}
 
 			externalUser := model.ExternalSystemUser{ExternalIDs: map[string]string{identityProviderSetting.UserIdentifierField: identifier}}
-			accountAuthType, err = a.applySignUpAdminExternal(context, supportedAuthType.AuthType, *appOrg, externalUser, profile, privacy, username, permissions, roleIDs, groupIDs, scopes, creatorPermissions, clientVersion, l)
+			newAccount, err = a.applySignUpAdminExternal(context, supportedAuthType.AuthType, *appOrg, externalUser, profile, privacy, username, permissions, roleIDs, groupIDs, scopes, creatorPermissions, clientVersion, l)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionRegister, "admin user", &logutils.FieldArgs{"auth_type": supportedAuthType.AuthType.Code, "identifier": identifier}, err)
 			}
 		} else {
 			profile.Email = identifier
-			params, accountAuthType, err = a.applySignUpAdmin(context, account, supportedAuthType.AuthType, *appOrg, identifier, "", profile, privacy, username, permissions, roleIDs, groupIDs, scopes, creatorPermissions, clientVersion, l)
+			params, newAccount, err = a.applySignUpAdmin(context, account, supportedAuthType.AuthType, *appOrg, identifier, "", profile, privacy, username, permissions, roleIDs, groupIDs, scopes, creatorPermissions, clientVersion, l)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionRegister, "admin user", &logutils.FieldArgs{"auth_type": supportedAuthType.AuthType.Code, "identifier": identifier}, err)
 			}
 		}
 
-		newAccount = &accountAuthType.Account
 		return nil
 	}
 
@@ -1791,12 +1791,12 @@ func (a *Auth) InitializeSystemAccount(context storage.TransactionContext, authT
 	if err != nil {
 		return "", errors.WrapErrorAction(logutils.ActionMarshal, typePasswordCreds, nil, err)
 	}
-	_, accountAuthType, err := a.applySignUpAdmin(context, nil, authType, appOrg, email, string(credsBytes), profile, privacy, "", permissions, nil, nil, nil, permissions, &clientVersion, l)
+	_, account, err := a.applySignUpAdmin(context, nil, authType, appOrg, email, string(credsBytes), profile, privacy, "", permissions, nil, nil, nil, permissions, &clientVersion, l)
 	if err != nil {
 		return "", errors.WrapErrorAction(logutils.ActionRegister, "initial system user", &logutils.FieldArgs{"email": email}, err)
 	}
 
-	return accountAuthType.Account.ID, nil
+	return account.ID, nil
 }
 
 // GrantAccountPermissions grants new permissions to an account after validating the assigner has required permissions

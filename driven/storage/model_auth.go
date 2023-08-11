@@ -34,8 +34,7 @@ type loginSession struct {
 
 	Anonymous bool `bson:"anonymous"`
 
-	Identifier        string  `bson:"identifier"`
-	AccountAuthTypeID *string `bson:"account_auth_type_id"`
+	Identifier string `bson:"identifier"`
 
 	// DEPRECATED
 	ExternalIDs map[string]string `bson:"external_ids,omitempty"`
