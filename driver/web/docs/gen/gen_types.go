@@ -791,9 +791,10 @@ type ServicesReqAccountAuthTypeLink_Params struct {
 
 // ServicesReqAccountAuthTypeUnlink defines model for _services_req_account_auth-type-unlink.
 type ServicesReqAccountAuthTypeUnlink struct {
-	AppTypeIdentifier string                                   `json:"app_type_identifier"`
-	AuthType          ServicesReqAccountAuthTypeUnlinkAuthType `json:"auth_type"`
-	Identifier        string                                   `json:"identifier"`
+	AppTypeIdentifier string                                    `json:"app_type_identifier"`
+	AuthType          *ServicesReqAccountAuthTypeUnlinkAuthType `json:"auth_type,omitempty"`
+	AuthTypeId        *string                                   `json:"auth_type_id,omitempty"`
+	Identifier        *string                                   `json:"identifier,omitempty"`
 }
 
 // ServicesReqAccountAuthTypeUnlinkAuthType defines model for ServicesReqAccountAuthTypeUnlink.AuthType.

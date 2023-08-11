@@ -7514,15 +7514,15 @@ components:
         auth_type:
           type: string
           enum:
-            - email
-            - phone
-            - twilio_phone
             - oidc
-            - illinois_oidc
-            - username
             - password
             - webauthn
             - code
+            - email
+            - phone
+            - twilio_phone
+            - illinois_oidc
+            - username
         app_type_identifier:
           type: string
         creds:
@@ -7540,11 +7540,13 @@ components:
             - $ref: '#/components/schemas/_shared_req_ParamsNone'
     _services_req_account_auth-type-unlink:
       required:
-        - auth_type
         - app_type_identifier
-        - identifier
       type: object
       properties:
+        app_type_identifier:
+          type: string
+        auth_type_id:
+          type: string
         auth_type:
           type: string
           enum:
@@ -7557,8 +7559,6 @@ components:
             - password
             - webauthn
             - code
-        app_type_identifier:
-          type: string
         identifier:
           type: string
     _services_res_account_auth-type-link:

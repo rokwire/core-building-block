@@ -1821,7 +1821,7 @@ func (a *Auth) registerAccountAuthType(accountAuthType model.AccountAuthType, cr
 	return nil
 }
 
-func (a *Auth) unlinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, identifier string, l *logs.Log) (*model.Account, error) {
+func (a *Auth) unlinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, identifier *string, l *logs.Log) (*model.Account, error) {
 	account, err := a.storage.FindAccountByID(nil, accountID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)

@@ -410,11 +410,11 @@ type APIs interface {
 	//		accountID (string): ID of the account to unlink creds from
 	//		authenticationType (string): Name of the authentication method of account auth type to unlink
 	//		appTypeIdentifier (string): Identifier of the app type/client that the user is logging in from
-	//		identifier (string): Identifier of account auth type to unlink
+	//		identifier (string): Identifier to unlink
 	//		l (*logs.Log): Log object pointer for request
 	//	Returns:
 	//		account (*model.Account): account data after the operation
-	UnlinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, identifier string, l *logs.Log) (*model.Account, error)
+	UnlinkAccountAuthType(accountID string, appTypeIdentifier string, accountAuthTypeID *string, authenticationType *string, identifier *string, l *logs.Log) (*model.Account, error)
 
 	LinkAccountIdentifier(accountID string, appTypeIdentifier string, identifierCreds string, l *logs.Log) (*string, *model.Account, error)
 

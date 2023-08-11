@@ -100,22 +100,17 @@ func accountDeviceToStorage(item model.Device) userDevice {
 func accountAuthTypeFromStorage(item accountAuthType) model.AccountAuthType {
 	id := item.ID
 	authType := model.AuthType{ID: item.AuthTypeID, Code: item.AuthTypeCode}
-	identifier := item.Identifier
 	params := item.Params
 	var credential *model.Credential
 	if item.CredentialID != nil {
 		credential = &model.Credential{ID: *item.CredentialID}
 	}
 	active := item.Active
-	return model.AccountAuthType{ID: id, SupportedAuthType: model.SupportedAuthType{AuthType: authType}, Identifier: identifier, Params: params, Credential: credential,
-		Active: active, Unverified: item.Unverified, Linked: item.Linked, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+	return model.AccountAuthType{ID: id, SupportedAuthType: model.SupportedAuthType{AuthType: authType}, Params: params, Credential: credential,
+		Active: active, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
 func accountAuthTypesFromStorage(items []accountAuthType) []model.AccountAuthType {
-	if len(items) == 0 {
-		return make([]model.AccountAuthType, 0)
-	}
-
 	res := make([]model.AccountAuthType, len(items))
 	for i, aat := range items {
 		res[i] = accountAuthTypeFromStorage(aat)
@@ -128,15 +123,11 @@ func accountAuthTypeToStorage(item model.AccountAuthType) accountAuthType {
 	if item.Credential != nil {
 		credentialID = &item.Credential.ID
 	}
-	return accountAuthType{ID: item.ID, AuthTypeID: item.SupportedAuthType.AuthType.ID, AuthTypeCode: item.SupportedAuthType.AuthType.Code, Identifier: item.Identifier,
-		Params: item.Params, CredentialID: credentialID, Active: item.Active, Unverified: item.Unverified, Linked: item.Linked, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+	return accountAuthType{ID: item.ID, AuthTypeID: item.SupportedAuthType.AuthType.ID, AuthTypeCode: item.SupportedAuthType.AuthType.Code,
+		Params: item.Params, CredentialID: credentialID, Active: item.Active, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
 func accountAuthTypesToStorage(items []model.AccountAuthType) []accountAuthType {
-	if len(items) == 0 {
-		return make([]accountAuthType, 0)
-	}
-
 	res := make([]accountAuthType, len(items))
 	for i, aat := range items {
 		res[i] = accountAuthTypeToStorage(aat)
@@ -150,9 +141,25 @@ func accountIdentifierFromStorage(item accountIdentifier) model.AccountIdentifie
 		VerificationCode: item.VerificationCode, VerificationExpiry: item.VerificationExpiry, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
+func accountIdentifiersFromStorage(items []accountIdentifier) []model.AccountIdentifier {
+	res := make([]model.AccountIdentifier, len(items))
+	for i, aat := range items {
+		res[i] = accountIdentifierFromStorage(aat)
+	}
+	return res
+}
+
 func accountIdentifierToStorage(item model.AccountIdentifier) accountIdentifier {
 	return accountIdentifier{ID: item.ID, Code: item.Code, Identifier: item.Identifier, Verified: item.Verified, Linked: item.Linked,
 		VerificationCode: item.VerificationCode, VerificationExpiry: item.VerificationExpiry, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+}
+
+func accountIdentifiersToStorage(items []model.AccountIdentifier) []accountIdentifier {
+	res := make([]accountIdentifier, len(items))
+	for i, aat := range items {
+		res[i] = accountIdentifierToStorage(aat)
+	}
+	return res
 }
 
 // AccountRole
@@ -301,7 +308,7 @@ func credentialFromStorage(item credential) model.Credential {
 		accountAuthTypes[i] = model.AccountAuthType{ID: id}
 	}
 	authType := model.AuthType{ID: item.AuthTypeID}
-	return model.Credential{ID: item.ID, AuthType: authType, AccountsAuthTypes: accountAuthTypes, Verified: item.Verified,
+	return model.Credential{ID: item.ID, AuthType: authType, AccountsAuthTypes: accountAuthTypes,
 		Value: item.Value, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
@@ -322,7 +329,7 @@ func credentialToStorage(item *model.Credential) *credential {
 	for i, aat := range item.AccountsAuthTypes {
 		accountAuthTypes[i] = aat.ID
 	}
-	return &credential{ID: item.ID, AuthTypeID: item.AuthType.ID, AccountsAuthTypes: accountAuthTypes, Verified: item.Verified,
+	return &credential{ID: item.ID, AuthTypeID: item.AuthType.ID, AccountsAuthTypes: accountAuthTypes,
 		Value: item.Value, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 

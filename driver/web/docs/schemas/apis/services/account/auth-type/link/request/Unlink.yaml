@@ -1,9 +1,11 @@
 required:
-  - auth_type
   - app_type_identifier
-  - identifier
 type: object
 properties:
+  app_type_identifier:
+    type: string
+  auth_type_id:
+    type: string
   auth_type:
     type: string
     enum:
@@ -16,7 +18,5 @@ properties:
       - password
       - webauthn
       - code
-  app_type_identifier:
-    type: string
   identifier:
     type: string
