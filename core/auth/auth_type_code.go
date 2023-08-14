@@ -146,6 +146,10 @@ func (a *codeAuthImpl) checkCredentials(identifierImpl identifierType, accountId
 	return message, "", nil
 }
 
+func (a *codeAuthImpl) allowMultiple() bool {
+	return false
+}
+
 // Helpers
 
 func (a *codeAuthImpl) parseCreds(creds string) (*codeCreds, error) {

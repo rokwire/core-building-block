@@ -43,6 +43,11 @@ type identifierType interface {
 	// Returns:
 	//	identifierImpl (identifierType): Copy of calling identifierType with cached identifier
 	withIdentifier(identifier string) identifierType
+
+	//allowMultiple says whether an account may have multiple identifiers of this type
+	// Returns:
+	//	allowed (bool): whether mulitple identifier types are allowed
+	allowMultiple() bool
 }
 
 type authCommunicationChannel interface {
@@ -97,6 +102,11 @@ type authType interface {
 	//	message (string): information required to complete login, if applicable
 	//	credentialID (string): the ID of the credential used to validate the login
 	checkCredentials(identifierImpl identifierType, accountIdentifier *model.AccountIdentifier, credentials []model.Credential, creds string, displayName string, appOrg model.ApplicationOrganization, config map[string]interface{}) (string, string, error)
+
+	//allowMultiple says whether an account may have multiple auth types of this type
+	// Returns:
+	//	allowed (bool): whether mulitple auth types are allowed
+	allowMultiple() bool
 }
 
 type authCreds interface {
@@ -547,10 +557,7 @@ type Storage interface {
 	FindAccountByIdentifierID(context storage.TransactionContext, id string) (*model.Account, error)
 	InsertAccountIdentifier(item model.AccountIdentifier) error
 	UpdateAccountIdentifier(item model.AccountIdentifier) error
-
-	//ExternalIDs
-	UpdateAccountExternalIDs(accountID string, externalIDs map[string]string) error
-	UpdateLoginSessionExternalIDs(accountID string, externalIDs map[string]string) error
+	UpdateAccountIdentifiers(items []model.AccountIdentifier) error
 
 	//Applications
 	FindApplication(context storage.TransactionContext, ID string) (*model.Application, error)

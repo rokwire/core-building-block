@@ -240,7 +240,7 @@ func (a *Auth) CanLink(userIdentifier string, apiKey string, appTypeIdentifier s
 	}
 
 	if account != nil {
-		ai := account.GetAccountIdentifier(userIdentifier)
+		ai := account.GetAccountIdentifier(userIdentifier, "")
 		return (ai != nil && !ai.Verified), nil
 	}
 
@@ -869,7 +869,7 @@ func (a *Auth) VerifyIdentifier(id string, verification string, l *logs.Log) err
 	}
 	a.setLogContext(account, l)
 
-	accountIdentifier := account.GetAccountIdentifier(id)
+	accountIdentifier := account.GetAccountIdentifier(id, "")
 	if accountIdentifier == nil {
 		return errors.ErrorData(logutils.StatusMissing, model.TypeAccountIdentifier, &logutils.FieldArgs{"id": id})
 	}
@@ -917,7 +917,7 @@ func (a *Auth) SendVerifyIdentifier(appTypeIdentifier string, orgID string, apiK
 	}
 	a.setLogContext(account, l)
 
-	accountIdentifier := account.GetAccountIdentifier(identifier)
+	accountIdentifier := account.GetAccountIdentifier(identifier, "")
 	if accountIdentifier == nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountIdentifier, &logutils.FieldArgs{"identifier": identifier}, err)
 	}
@@ -1079,7 +1079,7 @@ func (a *Auth) ForgotCredential(authenticationType string, appTypeIdentifier str
 	}
 	a.setLogContext(account, l)
 
-	accountIdentifier := account.GetAccountIdentifier(identifier)
+	accountIdentifier := account.GetAccountIdentifier(identifier, "")
 	if accountIdentifier == nil {
 		return errors.ErrorData(logutils.StatusMissing, model.TypeAccountIdentifier, &logutils.FieldArgs{"identifier": identifier})
 	}
@@ -1714,12 +1714,17 @@ func (a *Auth) LinkAccountAuthType(accountID string, authenticationType string, 
 	if authType.AuthType.IsAnonymous {
 		return nil, nil, errors.ErrorData(logutils.StatusInvalid, model.TypeAuthType, &logutils.FieldArgs{"anonymous": true})
 	} else if authType.AuthType.IsExternal {
-		newAccountAuthType, err = a.linkAccountAuthTypeExternal(*account, *authType, *appType, *appOrg, creds, params, l)
+		// only one account auth type per each external auth type is allowed
+		if len(account.GetAccountAuthTypes(authType.AuthType.Code)) > 0 {
+			return nil, nil, errors.ErrorData(logutils.StatusFound, model.TypeAuthType, &logutils.FieldArgs{"allow_multiple": false, "code": authType.AuthType.Code})
+		}
+
+		newAccountAuthType, err = a.linkAccountAuthTypeExternal(account, *authType, *appType, *appOrg, creds, params)
 		if err != nil {
 			return nil, nil, errors.WrapErrorAction("linking", model.TypeCredential, nil, err)
 		}
 	} else {
-		message, newAccountAuthType, err = a.linkAccountAuthType(*account, *authType, *appOrg, creds, params, l)
+		message, newAccountAuthType, err = a.linkAccountAuthType(account, *authType, *appOrg, creds, params, l)
 		if err != nil {
 			return nil, nil, errors.WrapErrorAction("linking", model.TypeCredential, nil, err)
 		}
@@ -1748,6 +1753,43 @@ func (a *Auth) UnlinkAccountAuthType(accountID string, appTypeIdentifier string,
 }
 
 func (a *Auth) LinkAccountIdentifier(accountID string, appTypeIdentifier string, identifierCreds string, l *logs.Log) (*string, *model.Account, error) {
+	//2. check if the user exists
+	newCredsAccount, err := a.storage.FindAccount(nil, appOrg.ID, userIdentifier)
+	if err != nil {
+		return "", nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+	if newCredsAccount != nil {
+		//if account is current account, attempt sign-in. Otherwise, handle conflict
+		if newCredsAccount.ID == account.ID {
+			message, aat, err := a.applyLinkVerify(identifierImpl, supportedAuthType, &account, userIdentifier, creds, l)
+			if err != nil {
+				return "", nil, err
+			}
+			if aat != nil {
+				for i, accAuthType := range account.AuthTypes {
+					if accAuthType.ID == aat.ID {
+						account.AuthTypes[i] = *aat
+						break
+					}
+				}
+			}
+			return message, nil, nil
+		}
+
+		err = a.handleAccountAuthTypeConflict(*newCredsAccount, supportedAuthType.AuthType.ID, userIdentifier, false)
+		if err != nil {
+			return "", nil, err
+		}
+	}
+
+	credID := uuid.NewString()
+
+	//apply sign up
+	message, credentialValue, verified, err := authImpl.signUp(identifierImpl, appOrg.Application.Name, creds, params, supportedAuthType.Params, credID)
+	if err != nil {
+		return "", nil, errors.WrapErrorAction("signing up", "user", nil, err)
+	}
+
 	return nil, nil, errors.New(logutils.Unimplemented)
 }
 

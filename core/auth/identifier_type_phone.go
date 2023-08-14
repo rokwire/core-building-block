@@ -138,6 +138,10 @@ func (a *phoneIdentifierImpl) requiresCodeGeneration() bool {
 	return false
 }
 
+func (a *phoneIdentifierImpl) allowMultiple() bool {
+	return true
+}
+
 // initPhoneIdentifier initializes and registers a new phone identifier instance
 func initPhoneIdentifier(auth *Auth) (*phoneIdentifierImpl, error) {
 	phone := &phoneIdentifierImpl{auth: auth, code: IdentifierTypePhone}

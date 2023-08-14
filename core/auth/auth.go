@@ -530,16 +530,7 @@ func (a *Auth) updateExternalUserIfNeeded(accountAuthType model.AccountAuthType,
 		account.AuthTypes = newAccountAuthTypes
 
 		// 3. update external ids
-		for k, v := range externalUser.ExternalIDs {
-			accountIdentifier := account.GetAccountIdentifier(v)
-			if accountIdentifier == nil {
-				newIdentifier := model.AccountIdentifier{ID: uuid.NewString(), Code: k, Identifier: v, Verified: true, External: true, DateCreated: time.Now().UTC()}
-				account.Identifiers = append(account.Identifiers, newIdentifier)
-			}
-
-			//TODO: this may not work (will pointer be correct?)
-			accountIdentifier.Identifier = v
-		}
+		a.updateExternalIdentifiers(account, &externalUser)
 
 		// 4. update profile
 		profileUpdated := false
@@ -678,7 +669,7 @@ func (a *Auth) applySignIn(identifierImpl identifierType, supportedAuthType mode
 	}
 
 	//find account identifier
-	accountIdentifier := account.GetAccountIdentifier(userIdentifier)
+	accountIdentifier := account.GetAccountIdentifier(userIdentifier, "")
 	if !accountIdentifier.Verified && accountIdentifier.Linked {
 		return nil, nil, errors.ErrorData(logutils.StatusInvalid, model.TypeAccountAuthType, &logutils.FieldArgs{"verified": false, "linked": true})
 	}
@@ -978,7 +969,7 @@ func (a *Auth) validateAPIKey(apiKey string, appID string) error {
 
 func (a *Auth) canSignIn(account *model.Account, userIdentifier string) bool {
 	if account != nil {
-		aat := account.GetAccountIdentifier(userIdentifier)
+		aat := account.GetAccountIdentifier(userIdentifier, "")
 		return aat == nil || !aat.Linked || !aat.Verified
 	}
 
@@ -1636,11 +1627,13 @@ func (a *Auth) checkUsername(context storage.TransactionContext, appOrg *model.A
 	return nil
 }
 
-func (a *Auth) linkAccountAuthType(account model.Account, supportedAuthType model.SupportedAuthType, appOrg model.ApplicationOrganization,
+func (a *Auth) linkAccountAuthType(account *model.Account, supportedAuthType model.SupportedAuthType, appOrg model.ApplicationOrganization,
 	creds string, params string, l *logs.Log) (string, *model.AccountAuthType, error) {
-	identifierImpl, err := a.getIdentifierTypeImpl(creds)
-	if err != nil {
-		return "", nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeIdentifierType, nil, err)
+	identifierImpl, _ := a.getIdentifierTypeImpl("", creds)
+	if identifierImpl != nil {
+		//TODO: link the identifier
+		// For old clients, link only identifier if auth_type is username or email because only passwords are used currently, and can only have one
+		// For old clients, link identifier and auth type if auth_type is phone or twilio_phone
 	}
 
 	authImpl, err := a.getAuthTypeImpl(supportedAuthType.AuthType)
@@ -1648,13 +1641,12 @@ func (a *Auth) linkAccountAuthType(account model.Account, supportedAuthType mode
 		return "", nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeAuthType, nil, err)
 	}
 
-	userIdentifier, err := identifierImpl.getUserIdentifier(creds)
-	if err != nil {
-		return "", nil, errors.WrapErrorAction(logutils.ActionGet, "user identifier", nil, err)
+	if !authImpl.allowMultiple() && len(account.GetAccountAuthTypes(supportedAuthType.AuthType.Code)) > 0 {
+		return "", nil, errors.ErrorData(logutils.StatusInvalid, model.TypeAuthType, &logutils.FieldArgs{"allow_multiple": false, "code": supportedAuthType.AuthType.Code})
 	}
 
 	//2. check if the user exists
-	newCredsAccount, err := a.storage.FindAccount(nil, appOrg.ID, supportedAuthType.AuthType.ID, userIdentifier)
+	newCredsAccount, err := a.storage.FindAccount(nil, appOrg.ID, userIdentifier)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
@@ -1739,8 +1731,8 @@ func (a *Auth) applyLinkVerify(identifierImpl identifierType, supportedAuthType 
 	return message, accountAuthType, nil
 }
 
-func (a *Auth) linkAccountAuthTypeExternal(account model.Account, supportedAuthType model.SupportedAuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization,
-	creds string, params string, l *logs.Log) (*model.AccountAuthType, error) {
+func (a *Auth) linkAccountAuthTypeExternal(account *model.Account, supportedAuthType model.SupportedAuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization,
+	creds string, params string) (*model.AccountAuthType, error) {
 	authImpl, err := a.getExternalAuthTypeImpl(supportedAuthType.AuthType)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeAuthType, nil, err)
@@ -1752,7 +1744,7 @@ func (a *Auth) linkAccountAuthTypeExternal(account model.Account, supportedAuthT
 	}
 
 	//2. check if the user exists
-	newCredsAccount, err := a.storage.FindAccount(nil, appOrg.ID, supportedAuthType.AuthType.ID, externalUser.Identifier)
+	newCredsAccount, err := a.storage.FindAccount(nil, appOrg.ID, externalUser.Identifier)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
@@ -1764,22 +1756,14 @@ func (a *Auth) linkAccountAuthTypeExternal(account model.Account, supportedAuthT
 	accountAuthTypeParams := map[string]interface{}{}
 	accountAuthTypeParams["user"] = externalUser
 
-	accountAuthType, credential, err := a.prepareAccountAuthType(supportedAuthType.AuthType, externalUser.Identifier, accountAuthTypeParams, nil, false, true)
+	accountAuthType, credential, err := a.prepareAccountAuthType(supportedAuthType.AuthType, accountAuthTypeParams, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeAccountAuthType, nil, err)
 	}
-	accountAuthType.Account = account
 
-	for k, v := range externalUser.ExternalIDs {
-		if account.ExternalIDs == nil {
-			account.ExternalIDs = make(map[string]string)
-		}
-		if account.ExternalIDs[k] == "" {
-			account.ExternalIDs[k] = v
-		}
-	}
+	updatedIdentifiers := a.updateExternalIdentifiers(account, externalUser)
 
-	err = a.registerAccountAuthType(*accountAuthType, credential, account.ExternalIDs, l)
+	err = a.registerAccountAuthType(*accountAuthType, credential, account.Identifiers, updatedIdentifiers)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccountAuthType, nil, err)
 	}
@@ -1787,7 +1771,7 @@ func (a *Auth) linkAccountAuthTypeExternal(account model.Account, supportedAuthT
 	return accountAuthType, nil
 }
 
-func (a *Auth) registerAccountAuthType(accountAuthType model.AccountAuthType, credential *model.Credential, externalIDs map[string]string, l *logs.Log) error {
+func (a *Auth) registerAccountAuthType(accountAuthType model.AccountAuthType, credential *model.Credential, accountIdentifiers []model.AccountIdentifier, updatedIdentifiers bool) error {
 	var err error
 	if credential != nil {
 		//TODO - in one transaction
@@ -1801,15 +1785,10 @@ func (a *Auth) registerAccountAuthType(accountAuthType model.AccountAuthType, cr
 		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAccount, nil, err)
 	}
 
-	if externalIDs != nil {
-		err = a.storage.UpdateAccountExternalIDs(accountAuthType.Account.ID, externalIDs)
+	if updatedIdentifiers {
+		err = a.storage.UpdateAccountIdentifiers(accountIdentifiers)
 		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionUpdate, "account external IDs", nil, err)
-		}
-
-		err = a.storage.UpdateLoginSessionExternalIDs(accountAuthType.Account.ID, externalIDs)
-		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionUpdate, "login session external IDs", nil, err)
+			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountIdentifier, nil, err)
 		}
 	}
 
@@ -2418,6 +2397,23 @@ func (a *Auth) updateExternalAccountGroups(account *model.Account, newExternalGr
 
 	account.Groups = newGroups
 	return updated, nil
+}
+
+func (a *Auth) updateExternalIdentifiers(account *model.Account, externalUser *model.ExternalSystemUser) bool {
+	updated := false
+	for k, v := range externalUser.ExternalIDs {
+		accountIdentifier := account.GetAccountIdentifier("", k)
+		if accountIdentifier == nil {
+			newIdentifier := model.AccountIdentifier{ID: uuid.NewString(), Code: k, Identifier: v, Verified: true, External: true, DateCreated: time.Now().UTC()}
+			account.Identifiers = append(account.Identifiers, newIdentifier)
+			updated = true
+		} else if accountIdentifier.Identifier != v {
+			accountIdentifier.Identifier = v
+			updated = true
+		}
+	}
+
+	return updated
 }
 
 func (a *Auth) setLogContext(account *model.Account, l *logs.Log) {

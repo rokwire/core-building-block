@@ -52,6 +52,10 @@ func (a *signatureAuthImpl) checkCredentials(identifierImpl identifierType, acco
 	return "", "", nil
 }
 
+func (a *signatureAuthImpl) allowMultiple() bool {
+	return false
+}
+
 // initSignatureAuth initializes and registers a new signature auth instance
 func initSignatureAuth(auth *Auth) (*signatureAuthImpl, error) {
 	signature := &signatureAuthImpl{auth: auth, authType: AuthTypeSignature}

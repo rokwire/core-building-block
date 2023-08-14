@@ -52,6 +52,10 @@ func (a *firebaseAuthImpl) checkCredentials(identifierImpl identifierType, accou
 	return "", "", nil
 }
 
+func (a *firebaseAuthImpl) allowMultiple() bool {
+	return false
+}
+
 // initFirebaseAuth initializes and registers a new Firebase auth instance
 func initFirebaseAuth(auth *Auth) (*firebaseAuthImpl, error) {
 	firebase := &firebaseAuthImpl{auth: auth, authType: AuthTypeFirebase}

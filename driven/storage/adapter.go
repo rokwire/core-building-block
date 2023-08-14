@@ -2267,47 +2267,6 @@ func (sa *Adapter) InsertAccountIdentifier(item model.AccountIdentifier) error {
 	return nil
 }
 
-// UpdateAccountExternalIDs updates account external IDs
-func (sa *Adapter) UpdateAccountExternalIDs(accountID string, externalIDs map[string]string) error {
-	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
-	now := time.Now().UTC()
-	update := bson.D{
-		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "external_ids", Value: externalIDs},
-			primitive.E{Key: "date_updated", Value: &now},
-		}},
-	}
-
-	res, err := sa.db.accounts.UpdateOne(filter, update, nil)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUpdate, "account external IDs", &logutils.FieldArgs{"_id": accountID}, err)
-	}
-	if res.ModifiedCount != 1 {
-		return errors.ErrorAction(logutils.ActionUpdate, "account external IDs", &logutils.FieldArgs{"_id": accountID, "unexpected modified count": res.ModifiedCount})
-	}
-
-	return nil
-}
-
-// UpdateLoginSessionExternalIDs updates login session external IDs
-func (sa *Adapter) UpdateLoginSessionExternalIDs(accountID string, externalIDs map[string]string) error {
-	filter := bson.D{primitive.E{Key: "identifier", Value: accountID}}
-	now := time.Now().UTC()
-	update := bson.D{
-		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "external_ids", Value: externalIDs},
-			primitive.E{Key: "date_updated", Value: &now},
-		}},
-	}
-
-	_, err := sa.db.loginsSessions.UpdateMany(filter, update, nil)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUpdate, "login session external IDs", &logutils.FieldArgs{"identifier": accountID}, err)
-	}
-
-	return nil
-}
-
 // CountAccountsByRoleID counts how many accounts there are with the passed role id
 func (sa *Adapter) CountAccountsByRoleID(roleID string) (*int64, error) {
 	filter := bson.D{primitive.E{Key: "roles.role._id", Value: roleID}}

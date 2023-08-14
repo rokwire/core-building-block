@@ -72,6 +72,10 @@ func (a *usernameIdentifierImpl) withIdentifier(identifier string) identifierTyp
 	return &usernameIdentifierImpl{auth: a.auth, code: a.code, identifier: &identifier}
 }
 
+func (a *usernameIdentifierImpl) allowMultiple() bool {
+	return false
+}
+
 // initUsernameIdentifier initializes and registers a new username identifier instance
 func initUsernameIdentifier(auth *Auth) (*usernameIdentifierImpl, error) {
 	username := &usernameIdentifierImpl{auth: auth, code: IdentifierTypeUsername}

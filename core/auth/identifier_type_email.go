@@ -211,6 +211,10 @@ func (a *emailIdentifierImpl) requiresCodeGeneration() bool {
 	return true
 }
 
+func (a *emailIdentifierImpl) allowMultiple() bool {
+	return true
+}
+
 // Helpers
 
 func (a *emailIdentifierImpl) getVerificationSettings() (*int, *int, error) {

@@ -264,6 +264,10 @@ func (a *passwordAuthImpl) checkCredentials(identifierImpl identifierType, accou
 	return "", credentials[0].ID, nil
 }
 
+func (a *passwordAuthImpl) allowMultiple() bool {
+	return false
+}
+
 // Helpers
 
 func (a *passwordAuthImpl) buildCredential(identifierImpl identifierType, appName string, password string) (string, *model.AccountIdentifier, *model.Credential, error) {

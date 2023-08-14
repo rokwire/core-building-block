@@ -530,6 +530,10 @@ func (a *webAuthnAuthImpl) resetCredential(credential *model.Credential, resetCo
 	return nil, errors.New(logutils.Unimplemented)
 }
 
+func (a *webAuthnAuthImpl) allowMultiple() bool {
+	return true
+}
+
 // Helpers
 
 func (a *webAuthnAuthImpl) parseCreds(creds string) (*webauthnCreds, error) {
