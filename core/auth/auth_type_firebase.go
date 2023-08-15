@@ -32,7 +32,7 @@ type firebaseAuthImpl struct {
 	authType string
 }
 
-func (a *firebaseAuthImpl) signUp(identifierImpl identifierType, appOrg model.ApplicationOrganization, creds string, params string, config map[string]interface{}) (string, *model.AccountIdentifier, *model.Credential, error) {
+func (a *firebaseAuthImpl) signUp(identifierImpl identifierType, appOrg model.ApplicationOrganization, creds string, params string, link bool, config map[string]interface{}) (string, *model.AccountIdentifier, *model.Credential, error) {
 	return "", nil, nil, nil
 }
 

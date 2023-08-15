@@ -771,8 +771,12 @@ type AdminReqVerified struct {
 type ServicesReqAccountAuthTypeLink struct {
 	AppTypeIdentifier string                                 `json:"app_type_identifier"`
 	AuthType          ServicesReqAccountAuthTypeLinkAuthType `json:"auth_type"`
+	AuthTypeId        *string                                `json:"auth_type_id,omitempty"`
 	Creds             ServicesReqAccountAuthTypeLink_Creds   `json:"creds"`
-	Params            *ServicesReqAccountAuthTypeLink_Params `json:"params,omitempty"`
+
+	// Identifier Allowed identifier types
+	Identifier *SharedReqIdentifiers                  `json:"identifier,omitempty"`
+	Params     *ServicesReqAccountAuthTypeLink_Params `json:"params,omitempty"`
 }
 
 // ServicesReqAccountAuthTypeLinkAuthType defines model for ServicesReqAccountAuthTypeLink.AuthType.

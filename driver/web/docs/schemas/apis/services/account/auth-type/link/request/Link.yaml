@@ -18,6 +18,8 @@ properties:
       - username
   app_type_identifier:
     type: string
+  auth_type_id:
+    type: string
   creds:
     anyOf:
       - $ref: "../../../../../shared/requests/CredsCode.yaml"
@@ -31,3 +33,5 @@ properties:
       - $ref: "../../../../../shared/requests/ParamsPassword.yaml"
       - $ref: "../../../../../shared/requests/ParamsWebAuthn.yaml"
       - $ref: "../../../../../shared/requests/ParamsNone.yaml"
+  identifier:
+    $ref: "../../../../../shared/requests/Identifiers.yaml"

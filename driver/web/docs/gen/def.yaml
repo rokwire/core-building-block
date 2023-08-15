@@ -7523,6 +7523,8 @@ components:
             - username
         app_type_identifier:
           type: string
+        auth_type_id:
+          type: string
         creds:
           anyOf:
             - $ref: '#/components/schemas/_shared_req_CredsCode'
@@ -7536,6 +7538,8 @@ components:
             - $ref: '#/components/schemas/_shared_req_ParamsPassword'
             - $ref: '#/components/schemas/_shared_req_ParamsWebAuthn'
             - $ref: '#/components/schemas/_shared_req_ParamsNone'
+        identifier:
+          $ref: '#/components/schemas/_shared_req_Identifiers'
     _services_req_account_auth-type-unlink:
       required:
         - app_type_identifier

@@ -50,7 +50,7 @@ type codeAuthImpl struct {
 	authType string
 }
 
-func (a *codeAuthImpl) signUp(identifierImpl identifierType, appOrg model.ApplicationOrganization, creds string, params string, config map[string]interface{}) (string, *model.AccountIdentifier, *model.Credential, error) {
+func (a *codeAuthImpl) signUp(identifierImpl identifierType, appOrg model.ApplicationOrganization, creds string, params string, link bool, config map[string]interface{}) (string, *model.AccountIdentifier, *model.Credential, error) {
 	identifierChannel, _ := identifierImpl.(authCommunicationChannel)
 	if identifierChannel == nil {
 		return "", nil, nil, errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, logutils.StringArgs(identifierImpl.getCode()))
@@ -74,19 +74,22 @@ func (a *codeAuthImpl) signUp(identifierImpl identifierType, appOrg model.Applic
 		}
 	}
 
-	identifier, err := identifierImpl.getUserIdentifier("")
-	if err != nil {
-		return "", nil, nil, errors.WrapErrorAction(logutils.ActionGet, "identifier", logutils.StringArgs(identifierImpl.getCode()), err)
+	var accountIdentifier *model.AccountIdentifier
+	if !link {
+		identifier, err := identifierImpl.getUserIdentifier("")
+		if err != nil {
+			return "", nil, nil, errors.WrapErrorAction(logutils.ActionGet, "identifier", logutils.StringArgs(identifierImpl.getCode()), err)
+		}
+		accountIdentifier = &model.AccountIdentifier{ID: uuid.NewString(), Code: identifierImpl.getCode(), Identifier: identifier,
+			Account: model.Account{ID: accountID}, DateCreated: time.Now().UTC()}
 	}
-	accountIdentifier := model.AccountIdentifier{ID: uuid.NewString(), Code: identifierImpl.getCode(), Identifier: identifier,
-		Account: model.Account{ID: accountID}, DateCreated: time.Now().UTC()}
 
 	message, err := identifierChannel.sendCode(appOrg.Application.Name, code, typeAuthenticationCode, "")
 	if err != nil {
 		return "", nil, nil, err
 	}
 
-	return message, &accountIdentifier, nil, nil
+	return message, accountIdentifier, nil, nil
 }
 
 func (a *codeAuthImpl) signUpAdmin(identifierImpl identifierType, appOrg model.ApplicationOrganization, creds string) (map[string]interface{}, *model.AccountIdentifier, *model.Credential, error) {

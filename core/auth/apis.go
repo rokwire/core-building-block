@@ -1687,13 +1687,15 @@ func (a *Auth) GetAdminToken(claims tokenauth.Claims, appID string, orgID string
 //		accountID (string): ID of the account to link the creds to
 //		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
 //		appTypeIdentifier (string): identifier of the app type/client that the user is logging in from
+//		accountAuthTypeID (*string): Account auth type to link
 //		creds (string): Credentials/JSON encoded credential structure defined for the specified auth type
 //		params (string): JSON encoded params defined by specified auth type
 //		l (*logs.Log): Log object pointer for request
 //	Returns:
 //		message (*string): response message
 //		account (*model.Account): account data after the operation
-func (a *Auth) LinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, creds string, params string, l *logs.Log) (*string, *model.Account, error) {
+func (a *Auth) LinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, accountAuthTypeID *string, creds string, params string,
+	identifierCreds string, l *logs.Log) (*string, *model.Account, error) {
 	message := ""
 	var newAccountAuthType *model.AccountAuthType
 
@@ -1721,12 +1723,12 @@ func (a *Auth) LinkAccountAuthType(accountID string, authenticationType string, 
 
 		newAccountAuthType, err = a.linkAccountAuthTypeExternal(account, *authType, *appType, *appOrg, creds, params)
 		if err != nil {
-			return nil, nil, errors.WrapErrorAction("linking", model.TypeCredential, nil, err)
+			return nil, nil, errors.WrapErrorAction("linking", model.TypeAccountAuthType, nil, err)
 		}
 	} else {
-		message, newAccountAuthType, err = a.linkAccountAuthType(account, *authType, *appOrg, creds, params, l)
+		message, newAccountAuthType, err = a.linkAccountAuthType(account, accountAuthTypeID, *authType, *appOrg, creds, params, identifierCreds)
 		if err != nil {
-			return nil, nil, errors.WrapErrorAction("linking", model.TypeCredential, nil, err)
+			return nil, nil, errors.WrapErrorAction("linking", model.TypeAccountAuthType, nil, err)
 		}
 	}
 
@@ -1744,7 +1746,8 @@ func (a *Auth) LinkAccountAuthType(accountID string, authenticationType string, 
 //		accountID (string): ID of the account to unlink creds from
 //		authenticationType (string): Name of the authentication method of account auth type to unlink
 //		appTypeIdentifier (string): Identifier of the app type/client that the user is logging in from
-//		identifier (string): Identifier to unlink
+//		accountAuthTypeID (*string): Account auth type to unlink
+//		identifier (*string): Identifier to unlink
 //		l (*logs.Log): Log object pointer for request
 //	Returns:
 //		account (*model.Account): account data after the operation
