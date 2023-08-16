@@ -1757,10 +1757,10 @@ func (a *Auth) UnlinkAccountAuthType(accountID string, accountAuthTypeID *string
 }
 
 // LinkAccountIdentifier links an identifier to an existing account.
-func (a *Auth) LinkAccountIdentifier(accountID string, appTypeIdentifier string, identifierCreds string, l *logs.Log) (string, *model.Account, error) {
+func (a *Auth) LinkAccountIdentifier(accountID string, appTypeIdentifier string, identifierCreds string, l *logs.Log) (*string, *model.Account, error) {
 	identifierImpl, err := a.getIdentifierTypeImpl("", identifierCreds)
 	if err != nil {
-		return "", nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeIdentifierType, nil, err)
+		return nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeIdentifierType, nil, err)
 	}
 
 	userIdentifier, _ := identifierImpl.getUserIdentifier("")
@@ -1768,35 +1768,35 @@ func (a *Auth) LinkAccountIdentifier(accountID string, appTypeIdentifier string,
 	//2. check if the user exists
 	account, err := a.storage.FindAccountByID(nil, accountID)
 	if err != nil {
-		return "", nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
 	if account == nil {
-		return "", nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, nil)
+		return nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, nil)
 	}
 
 	existingIdentifierAccount, err := a.storage.FindAccount(nil, account.AppOrg.ID, userIdentifier)
 	if err != nil {
-		return "", nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
 	if existingIdentifierAccount != nil {
 		err = a.handleAccountIdentifierConflict(*existingIdentifierAccount, userIdentifier, false)
 		if err != nil {
-			return "", nil, err
+			return nil, nil, err
 		}
 	}
 
 	message, accountIdentifier, err := identifierImpl.buildIdentifier(&account.ID, account.AppOrg.Application.Name)
 	if err != nil {
-		return "", nil, errors.WrapErrorAction("building", model.TypeAccountIdentifier, &logutils.FieldArgs{"account_id": account.ID, "identifier": userIdentifier}, err)
+		return nil, nil, errors.WrapErrorAction("building", model.TypeAccountIdentifier, &logutils.FieldArgs{"account_id": account.ID, "identifier": userIdentifier}, err)
 	}
 
 	account.Identifiers = append(account.Identifiers, *accountIdentifier)
 	err = a.storage.InsertAccountIdentifier(*accountIdentifier)
 	if err != nil {
-		return "", nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeAccountIdentifier, &logutils.FieldArgs{"account_id": account.ID, "identifier": userIdentifier}, err)
+		return nil, nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeAccountIdentifier, &logutils.FieldArgs{"account_id": account.ID, "identifier": userIdentifier}, err)
 	}
 
-	return message, account, nil
+	return &message, account, nil
 }
 
 // UnlinkAccountIdentifier unlinks an identifier from an existing account.
