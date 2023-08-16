@@ -1123,11 +1123,6 @@ func (sa *Adapter) DeleteLoginSessionByID(context TransactionContext, id string)
 	return sa.deleteLoginSessions(context, "_id", id, true)
 }
 
-// DeleteLoginSessionsByAccountAuthTypeID deletes login sessions by account auth type ID
-func (sa *Adapter) DeleteLoginSessionsByAccountAuthTypeID(context TransactionContext, id string) error {
-	return sa.deleteLoginSessions(context, "account_auth_type_id", id, false)
-}
-
 func (sa *Adapter) deleteLoginSessions(context TransactionContext, key string, value string, checkDeletedCount bool) error {
 	filter := bson.M{key: value}
 

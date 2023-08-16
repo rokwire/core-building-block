@@ -338,8 +338,8 @@ func (h ServicesApisHandler) linkAccountAuthType(l *logs.Log, r *http.Request, c
 		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeCreds, nil, err, http.StatusBadRequest, true)
 	}
 
-	message, account, err := h.coreAPIs.Auth.LinkAccountAuthType(claims.Subject, string(requestData.AuthType), requestData.AppTypeIdentifier, requestData.AuthTypeId,
-		requestCreds, requestParams, requestIdentifier, l)
+	message, account, err := h.coreAPIs.Auth.LinkAccountAuthType(claims.Subject, string(requestData.AuthType), requestData.AppTypeIdentifier, requestCreds, requestParams,
+		requestIdentifier, l)
 	if err != nil {
 		return l.HTTPResponseError("Error linking account auth type", err, http.StatusInternalServerError, true)
 	}
@@ -371,7 +371,7 @@ func (h ServicesApisHandler) unlinkAccountAuthType(l *logs.Log, r *http.Request,
 		authTypeStr := string(*requestData.AuthType)
 		authType = &authTypeStr
 	}
-	account, err := h.coreAPIs.Auth.UnlinkAccountAuthType(claims.Subject, requestData.AppTypeIdentifier, requestData.AuthTypeId, authType, requestData.Identifier, l)
+	account, err := h.coreAPIs.Auth.UnlinkAccountAuthType(claims.Subject, requestData.AuthTypeId, authType, requestData.Identifier, l)
 	if err != nil {
 		return l.HTTPResponseError("Error unlinking account auth type", err, http.StatusInternalServerError, true)
 	}

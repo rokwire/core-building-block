@@ -18,8 +18,6 @@ properties:
       - username
   app_type_identifier:
     type: string
-  auth_type_id:
-    type: string
   creds:
     anyOf:
       - $ref: "../../../../../shared/requests/CredsCode.yaml"

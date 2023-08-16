@@ -771,7 +771,6 @@ type AdminReqVerified struct {
 type ServicesReqAccountAuthTypeLink struct {
 	AppTypeIdentifier string                                 `json:"app_type_identifier"`
 	AuthType          ServicesReqAccountAuthTypeLinkAuthType `json:"auth_type"`
-	AuthTypeId        *string                                `json:"auth_type_id,omitempty"`
 	Creds             ServicesReqAccountAuthTypeLink_Creds   `json:"creds"`
 
 	// Identifier Allowed identifier types
@@ -794,10 +793,9 @@ type ServicesReqAccountAuthTypeLink_Params struct {
 
 // ServicesReqAccountAuthTypeUnlink defines model for _services_req_account_auth-type-unlink.
 type ServicesReqAccountAuthTypeUnlink struct {
-	AppTypeIdentifier string                                    `json:"app_type_identifier"`
-	AuthType          *ServicesReqAccountAuthTypeUnlinkAuthType `json:"auth_type,omitempty"`
-	AuthTypeId        *string                                   `json:"auth_type_id,omitempty"`
-	Identifier        *string                                   `json:"identifier,omitempty"`
+	AuthType   *ServicesReqAccountAuthTypeUnlinkAuthType `json:"auth_type,omitempty"`
+	AuthTypeId *string                                   `json:"auth_type_id,omitempty"`
+	Identifier *string                                   `json:"identifier,omitempty"`
 }
 
 // ServicesReqAccountAuthTypeUnlinkAuthType defines model for ServicesReqAccountAuthTypeUnlink.AuthType.

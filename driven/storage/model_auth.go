@@ -36,9 +36,6 @@ type loginSession struct {
 
 	Identifier string `bson:"identifier"`
 
-	// DEPRECATED
-	ExternalIDs map[string]string `bson:"external_ids,omitempty"`
-
 	DeviceID *string `bson:"device_id"`
 
 	IPAddress     string                 `bson:"ip_address"`

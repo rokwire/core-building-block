@@ -19,7 +19,9 @@ import (
 	"encoding/json"
 	"net/url"
 	"regexp"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/rokwire/logging-library-go/v2/errors"
 	"github.com/rokwire/logging-library-go/v2/logutils"
 	"gopkg.in/go-playground/validator.v9"
@@ -78,6 +80,36 @@ func (a *phoneIdentifierImpl) withIdentifier(identifier string) identifierType {
 	return &phoneIdentifierImpl{auth: a.auth, code: a.code, identifier: &identifier}
 }
 
+func (a *phoneIdentifierImpl) buildIdentifier(accountID *string, appName string) (string, *model.AccountIdentifier, error) {
+	if a.identifier == nil {
+		return "", nil, errors.ErrorData(logutils.StatusMissing, "phone identifier", nil)
+	}
+
+	accountIDStr := ""
+	if accountID != nil {
+		accountIDStr = *accountID
+	} else {
+		accountIDStr = uuid.NewString()
+	}
+
+	message := ""
+	accountIdentifier := model.AccountIdentifier{ID: uuid.NewString(), Code: a.code, Identifier: *a.identifier, Verified: false,
+		Account: model.Account{ID: accountIDStr}, DateCreated: time.Now().UTC()}
+	sent, err := a.sendVerifyIdentifier(&accountIdentifier, appName)
+	if err != nil {
+		return "", nil, errors.WrapErrorAction(logutils.ActionSend, "phone verification", nil, err)
+	}
+	if sent {
+		message = "verification code sent successfully"
+	}
+
+	return message, &accountIdentifier, nil
+}
+
+func (a *phoneIdentifierImpl) allowMultiple() bool {
+	return true
+}
+
 // authCommunicationChannel interface
 
 func (a *phoneIdentifierImpl) verifyIdentifier(accountIdentifier *model.AccountIdentifier, verification string) error {
@@ -91,7 +123,7 @@ func (a *phoneIdentifierImpl) verifyIdentifier(accountIdentifier *model.AccountI
 	return nil
 }
 
-func (a *phoneIdentifierImpl) sendVerifyCredential(accountIdentifier *model.AccountIdentifier, appName string) (bool, error) {
+func (a *phoneIdentifierImpl) sendVerifyIdentifier(accountIdentifier *model.AccountIdentifier, appName string) (bool, error) {
 	if accountIdentifier == nil {
 		return false, errors.ErrorData(logutils.StatusMissing, model.TypeAccountIdentifier, nil)
 	}
@@ -105,7 +137,7 @@ func (a *phoneIdentifierImpl) sendVerifyCredential(accountIdentifier *model.Acco
 	return true, nil
 }
 
-func (a *phoneIdentifierImpl) restartCredentialVerification(accountIdentifier *model.AccountIdentifier, appName string) error {
+func (a *phoneIdentifierImpl) restartIdentifierVerification(accountIdentifier *model.AccountIdentifier, appName string) error {
 	//TODO: do twilio/other phone verifiers have verification timeouts?
 	return errors.New(logutils.Unimplemented)
 }
@@ -136,10 +168,6 @@ func (a *phoneIdentifierImpl) sendCode(appName string, code string, codeType str
 
 func (a *phoneIdentifierImpl) requiresCodeGeneration() bool {
 	return false
-}
-
-func (a *phoneIdentifierImpl) allowMultiple() bool {
-	return true
 }
 
 // initPhoneIdentifier initializes and registers a new phone identifier instance

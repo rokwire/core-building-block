@@ -1,9 +1,5 @@
-required:
-  - app_type_identifier
 type: object
 properties:
-  app_type_identifier:
-    type: string
   auth_type_id:
     type: string
   auth_type:

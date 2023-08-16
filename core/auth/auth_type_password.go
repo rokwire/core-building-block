@@ -97,7 +97,7 @@ type passwordAuthImpl struct {
 	authType string
 }
 
-func (a *passwordAuthImpl) signUp(identifierImpl identifierType, appOrg model.ApplicationOrganization, creds string, params string, link bool, config map[string]interface{}) (string, *model.AccountIdentifier, *model.Credential, error) {
+func (a *passwordAuthImpl) signUp(identifierImpl identifierType, accountID *string, appOrg model.ApplicationOrganization, creds string, params string, config map[string]interface{}) (string, *model.AccountIdentifier, *model.Credential, error) {
 	credentials, err := a.parseCreds(creds, true)
 	if err != nil {
 		return "", nil, nil, errors.WrapErrorAction(logutils.ActionParse, typePasswordCreds, nil, err)
@@ -114,8 +114,9 @@ func (a *passwordAuthImpl) signUp(identifierImpl identifierType, appOrg model.Ap
 
 	message := ""
 	var accountIdentifier *model.AccountIdentifier
-	if !link {
-		message, accountIdentifier, err = a.buildIdentifier(identifierImpl, appOrg.Application.Name)
+	if accountID == nil {
+		// we are not linking a password credential, so use the accountID generated for the identifier
+		message, accountIdentifier, err = identifierImpl.buildIdentifier(nil, appOrg.Application.Name)
 		if err != nil {
 			return "", nil, nil, errors.WrapErrorAction("building", "identifier", logutils.StringArgs(identifierImpl.getCode()), err)
 		}
@@ -139,7 +140,7 @@ func (a *passwordAuthImpl) signUpAdmin(identifierImpl identifierType, appOrg mod
 		credentials.Password = utils.GenerateRandomPassword(12)
 	}
 
-	_, accountIdentifier, err := a.buildIdentifier(identifierImpl, appOrg.Application.Name)
+	_, accountIdentifier, err := identifierImpl.buildIdentifier(nil, appOrg.Application.Name)
 	if err != nil {
 		return nil, nil, nil, errors.WrapErrorAction("building", "identifier", logutils.StringArgs(identifierImpl.getCode()), err)
 	}
@@ -252,9 +253,16 @@ func (a *passwordAuthImpl) resetCredential(credential *model.Credential, resetCo
 	return credsMap, nil
 }
 
-func (a *passwordAuthImpl) checkCredentials(identifierImpl identifierType, accountIdentifier *model.AccountIdentifier, credentials []model.Credential, creds string, displayName string, appOrg model.ApplicationOrganization, config map[string]interface{}) (string, string, error) {
+func (a *passwordAuthImpl) checkCredentials(identifierImpl identifierType, accountIdentifier *model.AccountIdentifier, accountID *string, credentials []model.Credential, creds string, appOrg model.ApplicationOrganization, config map[string]interface{}) (string, string, error) {
 	if len(credentials) != 1 {
 		return "", "", errors.ErrorData(logutils.StatusInvalid, "credential list", &logutils.FieldArgs{"count": len(credentials)})
+	}
+
+	if accountIdentifier != nil {
+		err := a.auth.checkIdentifierVerified(identifierImpl, accountIdentifier, appOrg.Application.Name)
+		if err != nil {
+			return "", "", errors.WrapErrorData(logutils.StatusInvalid, model.TypeAccountIdentifier, &logutils.FieldArgs{"verified": false}, err)
+		}
 	}
 
 	storedCreds, err := a.mapToCreds(credentials[0].Value)
@@ -283,31 +291,6 @@ func (a *passwordAuthImpl) allowMultiple() bool {
 }
 
 // Helpers
-
-func (a *passwordAuthImpl) buildIdentifier(identifierImpl identifierType, appName string) (string, *model.AccountIdentifier, error) {
-	identifier, err := identifierImpl.getUserIdentifier("")
-	if err != nil {
-		return "", nil, errors.WrapErrorAction(logutils.ActionGet, "identifier", logutils.StringArgs(identifierImpl.getCode()), err)
-	}
-
-	message := ""
-	accountIdentifier := model.AccountIdentifier{ID: uuid.NewString(), Code: identifierImpl.getCode(), Identifier: identifier,
-		Account: model.Account{ID: uuid.NewString()}, DateCreated: time.Now().UTC()}
-	sent := false
-	if identifierChannel, ok := identifierImpl.(authCommunicationChannel); ok {
-		sent, err = identifierChannel.sendVerifyIdentifier(&accountIdentifier, appName)
-		if err != nil {
-			return "", nil, errors.WrapErrorAction(logutils.ActionSend, "identifier verification", nil, err)
-		}
-	}
-
-	accountIdentifier.Verified = !sent
-	if sent {
-		message = "verification code sent successfully"
-	}
-
-	return message, &accountIdentifier, nil
-}
 
 func (a *passwordAuthImpl) buildCredential(password string) (*model.Credential, error) {
 	//password hash

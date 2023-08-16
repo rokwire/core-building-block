@@ -15,9 +15,12 @@
 package auth
 
 import (
+	"core-building-block/core/model"
 	"encoding/json"
 	"strings"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/rokwire/logging-library-go/v2/errors"
 	"github.com/rokwire/logging-library-go/v2/logutils"
 	"gopkg.in/go-playground/validator.v9"
@@ -70,6 +73,24 @@ func (a *usernameIdentifierImpl) getUserIdentifier(creds string) (string, error)
 
 func (a *usernameIdentifierImpl) withIdentifier(identifier string) identifierType {
 	return &usernameIdentifierImpl{auth: a.auth, code: a.code, identifier: &identifier}
+}
+
+func (a *usernameIdentifierImpl) buildIdentifier(accountID *string, appName string) (string, *model.AccountIdentifier, error) {
+	if a.identifier == nil {
+		return "", nil, errors.ErrorData(logutils.StatusMissing, "username identifier", nil)
+	}
+
+	accountIDStr := ""
+	if accountID != nil {
+		accountIDStr = *accountID
+	} else {
+		accountIDStr = uuid.NewString()
+	}
+
+	accountIdentifier := model.AccountIdentifier{ID: uuid.NewString(), Code: a.code, Identifier: *a.identifier, Verified: true,
+		Account: model.Account{ID: accountIDStr}, DateCreated: time.Now().UTC()}
+
+	return "", &accountIdentifier, nil
 }
 
 func (a *usernameIdentifierImpl) allowMultiple() bool {

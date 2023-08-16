@@ -32,7 +32,7 @@ type signatureAuthImpl struct {
 	authType string
 }
 
-func (a *signatureAuthImpl) signUp(identifierImpl identifierType, appOrg model.ApplicationOrganization, creds string, params string, link bool, config map[string]interface{}) (string, *model.AccountIdentifier, *model.Credential, error) {
+func (a *signatureAuthImpl) signUp(identifierImpl identifierType, accountID *string, appOrg model.ApplicationOrganization, creds string, params string, config map[string]interface{}) (string, *model.AccountIdentifier, *model.Credential, error) {
 	return "", nil, nil, nil
 }
 
@@ -48,7 +48,7 @@ func (a *signatureAuthImpl) resetCredential(credential *model.Credential, resetC
 	return nil, nil
 }
 
-func (a *signatureAuthImpl) checkCredentials(identifierImpl identifierType, accountIdentifier *model.AccountIdentifier, credentials []model.Credential, creds string, displayName string, appOrg model.ApplicationOrganization, config map[string]interface{}) (string, string, error) {
+func (a *signatureAuthImpl) checkCredentials(identifierImpl identifierType, accountIdentifier *model.AccountIdentifier, accountID *string, credentials []model.Credential, creds string, appOrg model.ApplicationOrganization, config map[string]interface{}) (string, string, error) {
 	return "", "", nil
 }
 

@@ -44,6 +44,12 @@ type identifierType interface {
 	//	identifierImpl (identifierType): Copy of calling identifierType with cached identifier
 	withIdentifier(identifier string) identifierType
 
+	//buildIdentifier creates a new account identifier
+	// Returns:
+	//	message (string): response message
+	//	accountIdentifier (*model.AccountIdentifier): the new account identifier
+	buildIdentifier(accountID *string, appName string) (string, *model.AccountIdentifier, error)
+
 	//allowMultiple says whether an account may have multiple identifiers of this type
 	// Returns:
 	//	allowed (bool): whether mulitple identifier types are allowed
@@ -80,7 +86,7 @@ type authType interface {
 	//	message (string): Success message if verification is required. If verification is not required, return ""
 	//	accountIdentifier (*model.AccountIdentifier): new account identifier
 	//	credential (*model.Credential): new credential
-	signUp(identifierImpl identifierType, appOrg model.ApplicationOrganization, creds string, params string, link bool, config map[string]interface{}) (string, *model.AccountIdentifier, *model.Credential, error)
+	signUp(identifierImpl identifierType, accountID *string, appOrg model.ApplicationOrganization, creds string, params string, config map[string]interface{}) (string, *model.AccountIdentifier, *model.Credential, error)
 
 	//signUpAdmin signs up a new admin user
 	// Returns:
@@ -101,7 +107,7 @@ type authType interface {
 	// Returns:
 	//	message (string): information required to complete login, if applicable
 	//	credentialID (string): the ID of the credential used to validate the login
-	checkCredentials(identifierImpl identifierType, accountIdentifier *model.AccountIdentifier, credentials []model.Credential, creds string, displayName string, appOrg model.ApplicationOrganization, config map[string]interface{}) (string, string, error)
+	checkCredentials(identifierImpl identifierType, accountIdentifier *model.AccountIdentifier, accountID *string, credentials []model.Credential, creds string, appOrg model.ApplicationOrganization, config map[string]interface{}) (string, string, error)
 
 	//allowMultiple says whether an account may have multiple auth types of this type
 	// Returns:
@@ -406,27 +412,25 @@ type APIs interface {
 	//		accountID (string): ID of the account to link the creds to
 	//		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
 	//		appTypeIdentifier (string): identifier of the app type/client that the user is logging in from
-	//		accountAuthTypeID (*string): Account auth type to link
 	//		creds (string): Credentials/JSON encoded credential structure defined for the specified auth type
 	//		params (string): JSON encoded params defined by specified auth type
 	//		l (*logs.Log): Log object pointer for request
 	//	Returns:
 	//		message (*string): response message
 	//		account (*model.Account): account data after the operation
-	LinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, accountAuthTypeID *string, creds string, params string, identifierCreds string, l *logs.Log) (*string, *model.Account, error)
+	LinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, creds string, params string, identifierCreds string, l *logs.Log) (*string, *model.Account, error)
 
 	//UnlinkAccountAuthType unlinks credentials from an existing account.
 	//The authentication method must be one of the supported for the application.
 	//	Input:
 	//		accountID (string): ID of the account to unlink creds from
-	//		authenticationType (string): Name of the authentication method of account auth type to unlink
-	//		appTypeIdentifier (string): Identifier of the app type/client that the user is logging in from
 	//		accountAuthTypeID (*string): Account auth type to unlink
+	//		authenticationType (*string): Name of the authentication method of account auth type to unlink
 	//		identifier (*string): Identifier to unlink
 	//		l (*logs.Log): Log object pointer for request
 	//	Returns:
 	//		account (*model.Account): account data after the operation
-	UnlinkAccountAuthType(accountID string, appTypeIdentifier string, accountAuthTypeID *string, authenticationType *string, identifier *string, l *logs.Log) (*model.Account, error)
+	UnlinkAccountAuthType(accountID string, accountAuthTypeID *string, authenticationType *string, identifier *string, l *logs.Log) (*model.Account, error)
 
 	LinkAccountIdentifier(accountID string, appTypeIdentifier string, identifierCreds string, l *logs.Log) (*string, *model.Account, error)
 
@@ -513,7 +517,6 @@ type Storage interface {
 	UpdateLoginSession(context storage.TransactionContext, loginSession model.LoginSession) error
 	DeleteLoginSession(context storage.TransactionContext, id string) error
 	DeleteLoginSessionsByIDs(context storage.TransactionContext, ids []string) error
-	DeleteLoginSessionsByAccountAuthTypeID(context storage.TransactionContext, id string) error
 	DeleteLoginSessionsByIdentifier(context storage.TransactionContext, identifier string) error
 
 	//LoginsSessions - predefined queries for manage deletion logic
@@ -553,6 +556,7 @@ type Storage interface {
 	//AccountAuthTypes
 	FindAccountByAuthTypeID(context storage.TransactionContext, id string) (*model.Account, error)
 	InsertAccountAuthType(item model.AccountAuthType) error
+	UpdateAccountAuthType(item model.AccountAuthType) error
 	DeleteAccountAuthType(context storage.TransactionContext, item model.AccountAuthType) error
 
 	//AccountIdentifiers
@@ -560,6 +564,7 @@ type Storage interface {
 	InsertAccountIdentifier(item model.AccountIdentifier) error
 	UpdateAccountIdentifier(item model.AccountIdentifier) error
 	UpdateAccountIdentifiers(items []model.AccountIdentifier) error
+	DeleteAccountIdentifier(item model.AccountIdentifier) error
 
 	//Applications
 	FindApplication(context storage.TransactionContext, ID string) (*model.Application, error)

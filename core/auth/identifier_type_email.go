@@ -23,6 +23,7 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/rokwire/core-auth-library-go/v3/authutils"
 	"github.com/rokwire/logging-library-go/v2/errors"
 	"github.com/rokwire/logging-library-go/v2/logutils"
@@ -74,6 +75,32 @@ func (a *emailIdentifierImpl) getUserIdentifier(creds string) (string, error) {
 
 func (a *emailIdentifierImpl) withIdentifier(identifier string) identifierType {
 	return &emailIdentifierImpl{auth: a.auth, code: a.code, identifier: &identifier}
+}
+
+func (a *emailIdentifierImpl) buildIdentifier(accountID *string, appName string) (string, *model.AccountIdentifier, error) {
+	if a.identifier == nil {
+		return "", nil, errors.ErrorData(logutils.StatusMissing, "email identifier", nil)
+	}
+
+	accountIDStr := ""
+	if accountID != nil {
+		accountIDStr = *accountID
+	} else {
+		accountIDStr = uuid.NewString()
+	}
+
+	message := ""
+	accountIdentifier := model.AccountIdentifier{ID: uuid.NewString(), Code: a.code, Identifier: *a.identifier, Verified: false,
+		Account: model.Account{ID: accountIDStr}, DateCreated: time.Now().UTC()}
+	sent, err := a.sendVerifyIdentifier(&accountIdentifier, appName)
+	if err != nil {
+		return "", nil, errors.WrapErrorAction(logutils.ActionSend, "identifier verification", nil, err)
+	}
+	if sent {
+		message = "verification code sent successfully"
+	}
+
+	return message, &accountIdentifier, nil
 }
 
 // authCommunicationChannel interface

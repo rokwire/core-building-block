@@ -114,10 +114,10 @@ func (a Account) GetAccountAuthTypeByID(ID string) *AccountAuthType {
 }
 
 // GetAccountAuthTypes finds account auth types
-func (a Account) GetAccountAuthTypes(authTypeIDorCode string) []AccountAuthType {
+func (a Account) GetAccountAuthTypes(authTypeIDorCode string, active *bool) []AccountAuthType {
 	authTypes := make([]AccountAuthType, 0)
 	for _, aat := range a.AuthTypes {
-		if aat.SupportedAuthType.AuthType.ID == authTypeIDorCode || aat.SupportedAuthType.AuthType.Code == authTypeIDorCode {
+		if aat.SupportedAuthType.AuthType.ID == authTypeIDorCode || aat.SupportedAuthType.AuthType.Code == authTypeIDorCode && (active != nil && aat.Active == *active) {
 			aat.Account = a
 			authTypes = append(authTypes, aat)
 		}
@@ -384,7 +384,7 @@ type AccountAuthType struct {
 
 	Credential *Credential //this can be nil as the external auth types authenticates the users outside the system
 
-	Active bool //TODO: needed?
+	Active bool
 
 	DateCreated time.Time
 	DateUpdated *time.Time

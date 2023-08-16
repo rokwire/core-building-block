@@ -183,7 +183,7 @@ func buildWebAuthn(config map[string]interface{}, appName string) (*webauthn.Web
 	return auth, nil
 }
 
-func (a *webAuthnAuthImpl) signUp(identifierImpl identifierType, appOrg model.ApplicationOrganization, creds string, params string, link bool, config map[string]interface{}) (string, *model.AccountIdentifier, *model.Credential, error) {
+func (a *webAuthnAuthImpl) signUp(identifierImpl identifierType, accountID *string, appOrg model.ApplicationOrganization, creds string, params string, config map[string]interface{}) (string, *model.AccountIdentifier, *model.Credential, error) {
 	auth, err := buildWebAuthn(config, appOrg.Application.Name)
 	if err != nil {
 		return "", nil, nil, errors.WrapErrorAction(logutils.ActionInitialize, logutils.MessageDataType(AuthTypeWebAuthn), nil, err)
@@ -194,19 +194,23 @@ func (a *webAuthnAuthImpl) signUp(identifierImpl identifierType, appOrg model.Ap
 		return "", nil, nil, errors.WrapErrorAction(logutils.ActionParse, typeWebAuthnParams, nil, err)
 	}
 
-	user := webAuthnUser{ID: uuid.NewString()}
-
+	user := webAuthnUser{}
 	var accountIdentifier *model.AccountIdentifier
-	if !link {
-		accountIdentifier, err = a.buildIdentifier(identifierImpl, appOrg.Application.Name, user)
+	if accountID != nil {
+		// we are linking a webauthn credential, so use the existing accountID
+		user.ID = *accountID
+	} else {
+		_, accountIdentifier, err = identifierImpl.buildIdentifier(nil, appOrg.Application.Name)
 		if err != nil {
 			return "", nil, nil, errors.WrapErrorAction("building", "identifier", logutils.StringArgs(identifierImpl.getCode()), err)
 		}
+
+		user.ID = accountIdentifier.Account.ID
 	}
 
 	if parameters.DisplayName != nil {
 		user.DisplayName = *parameters.DisplayName
-	} else if !link {
+	} else if accountIdentifier != nil {
 		user.DisplayName = accountIdentifier.Identifier
 	}
 
@@ -232,9 +236,17 @@ func (a *webAuthnAuthImpl) resetCredential(credential *model.Credential, resetCo
 	return nil, errors.New(logutils.Unimplemented)
 }
 
-func (a *webAuthnAuthImpl) checkCredentials(identifierImpl identifierType, accountIdentifier *model.AccountIdentifier, credentials []model.Credential, creds string, displayName string, appOrg model.ApplicationOrganization, config map[string]interface{}) (string, string, error) {
+func (a *webAuthnAuthImpl) checkCredentials(identifierImpl identifierType, accountIdentifier *model.AccountIdentifier, accountID *string, credentials []model.Credential, creds string, appOrg model.ApplicationOrganization, config map[string]interface{}) (string, string, error) {
 	if len(credentials) == 0 {
 		return "", "", errors.ErrorData(logutils.StatusMissing, model.TypeCredential, nil)
+	}
+
+	if accountIdentifier != nil {
+		err := a.auth.checkIdentifierVerified(identifierImpl, accountIdentifier, appOrg.Application.Name)
+		if err != nil {
+			return "", "", errors.WrapErrorData(logutils.StatusInvalid, model.TypeAccountIdentifier, &logutils.FieldArgs{"verified": false}, err)
+		}
+		accountID = &accountIdentifier.Account.ID
 	}
 
 	auth, err := buildWebAuthn(config, appOrg.Application.Name)
@@ -258,11 +270,8 @@ func (a *webAuthnAuthImpl) checkCredentials(identifierImpl identifierType, accou
 
 			// have at least one valid webauthn credential, so initiate login
 			if webAuthnCred != nil {
-				if accountIdentifier != nil {
-					if !accountIdentifier.Verified {
-						return "", "", errors.ErrorData(logutils.StatusInvalid, model.TypeAccountIdentifier, &logutils.FieldArgs{"verified": false})
-					}
-					user = webAuthnUser{ID: accountIdentifier.Account.ID, DisplayName: displayName}
+				if accountID != nil {
+					user = webAuthnUser{ID: *accountID}
 				}
 
 				optionData, err := a.beginLogin(auth, user, appOrg)
@@ -287,12 +296,8 @@ func (a *webAuthnAuthImpl) checkCredentials(identifierImpl identifierType, accou
 		// return message, nil
 	}
 
-	if accountIdentifier != nil {
-		if !accountIdentifier.Verified {
-			return "", "", errors.ErrorData(logutils.StatusInvalid, model.TypeAccountIdentifier, &logutils.FieldArgs{"verified": false})
-		}
-
-		user = webAuthnUser{ID: accountIdentifier.Account.ID, DisplayName: displayName}
+	if accountID != nil {
+		user = webAuthnUser{ID: *accountID}
 
 		// complete registration
 		if response, err := protocol.ParseCredentialCreationResponseBody(strings.NewReader(creds)); err == nil {
@@ -491,7 +496,9 @@ func (a *webAuthnAuthImpl) completeLogin(auth *webauthn.WebAuthn, response *prot
 			}
 
 			// find matching credential by rawId (should match a credential ID)
-			for _, aat := range account.GetAccountAuthTypes(a.authType) {
+			active := true
+			aats, err := a.auth.findAccountAuthTypesAndCredentials(account, model.SupportedAuthType{AuthType: model.AuthType{Code: a.authType}}, &active)
+			for _, aat := range aats {
 				if aat.Credential != nil {
 					webAuthnCred, err := a.parseWebAuthnCredential(aat.Credential.Value)
 					if err != nil {
@@ -530,26 +537,6 @@ func (a *webAuthnAuthImpl) completeLogin(auth *webauthn.WebAuthn, response *prot
 	}
 
 	return credID, nil
-}
-
-func (a *webAuthnAuthImpl) buildIdentifier(identifierImpl identifierType, appName string, user webAuthnUser) (*model.AccountIdentifier, error) {
-	identifier, err := identifierImpl.getUserIdentifier("")
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionGet, "identifier", nil, err)
-	}
-
-	accountIdentifier := model.AccountIdentifier{ID: uuid.NewString(), Code: identifierImpl.getCode(), Identifier: identifier,
-		Account: model.Account{ID: user.ID}, DateCreated: time.Now().UTC()}
-	sent := false
-	if identifierChannel, ok := identifierImpl.(authCommunicationChannel); ok {
-		sent, err = identifierChannel.sendVerifyIdentifier(&accountIdentifier, appName)
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionSend, "identifier verification", nil, err)
-		}
-	}
-	accountIdentifier.Verified = !sent
-
-	return &accountIdentifier, nil
 }
 
 func (a *webAuthnAuthImpl) parseCreds(creds string) (*webauthnCreds, error) {

@@ -50,43 +50,21 @@ type codeAuthImpl struct {
 	authType string
 }
 
-func (a *codeAuthImpl) signUp(identifierImpl identifierType, appOrg model.ApplicationOrganization, creds string, params string, link bool, config map[string]interface{}) (string, *model.AccountIdentifier, *model.Credential, error) {
+func (a *codeAuthImpl) signUp(identifierImpl identifierType, accountID *string, appOrg model.ApplicationOrganization, creds string, params string, config map[string]interface{}) (string, *model.AccountIdentifier, *model.Credential, error) {
 	identifierChannel, _ := identifierImpl.(authCommunicationChannel)
 	if identifierChannel == nil {
 		return "", nil, nil, errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, logutils.StringArgs(identifierImpl.getCode()))
 	}
 
-	code := ""
-	accountID := uuid.NewString()
-	if identifierChannel.requiresCodeGeneration() {
-		code = strconv.Itoa(utils.GenerateRandomInt(1000000))
-		padLen := 6 - len(code)
-		if padLen > 0 {
-			code = strings.Repeat("0", padLen) + code
-		}
-
-		// store generated codes in login state collection
-		state := map[string]interface{}{stateKeyCode: code}
-		loginState := model.LoginState{ID: uuid.NewString(), AppID: appOrg.Application.ID, OrgID: appOrg.Organization.ID, AccountID: &accountID, State: state, DateCreated: time.Now().UTC()}
-		err := a.auth.storage.InsertLoginState(loginState)
-		if err != nil {
-			return "", nil, nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeLoginState, nil, err)
-		}
-	}
-
+	message := ""
 	var accountIdentifier *model.AccountIdentifier
-	if !link {
-		identifier, err := identifierImpl.getUserIdentifier("")
+	var err error
+	if accountID == nil {
+		// we are not linking a code credential, so use the accountID generated for the identifier
+		message, accountIdentifier, err = identifierImpl.buildIdentifier(nil, appOrg.Application.Name)
 		if err != nil {
-			return "", nil, nil, errors.WrapErrorAction(logutils.ActionGet, "identifier", logutils.StringArgs(identifierImpl.getCode()), err)
+			return "", nil, nil, errors.WrapErrorAction("building", "identifier", logutils.StringArgs(identifierImpl.getCode()), err)
 		}
-		accountIdentifier = &model.AccountIdentifier{ID: uuid.NewString(), Code: identifierImpl.getCode(), Identifier: identifier,
-			Account: model.Account{ID: accountID}, DateCreated: time.Now().UTC()}
-	}
-
-	message, err := identifierChannel.sendCode(appOrg.Application.Name, code, typeAuthenticationCode, "")
-	if err != nil {
-		return "", nil, nil, err
 	}
 
 	return message, accountIdentifier, nil, nil
@@ -104,7 +82,7 @@ func (a *codeAuthImpl) resetCredential(credential *model.Credential, resetCode *
 	return nil, errors.New(logutils.Unimplemented)
 }
 
-func (a *codeAuthImpl) checkCredentials(identifierImpl identifierType, accountIdentifier *model.AccountIdentifier, credentials []model.Credential, creds string, displayName string, appOrg model.ApplicationOrganization, config map[string]interface{}) (string, string, error) {
+func (a *codeAuthImpl) checkCredentials(identifierImpl identifierType, accountIdentifier *model.AccountIdentifier, accountID *string, credentials []model.Credential, creds string, appOrg model.ApplicationOrganization, config map[string]interface{}) (string, string, error) {
 	identifierChannel, _ := identifierImpl.(authCommunicationChannel)
 	if identifierChannel == nil {
 		return "", "", errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, logutils.StringArgs(identifierImpl.getCode()))
@@ -114,38 +92,53 @@ func (a *codeAuthImpl) checkCredentials(identifierImpl identifierType, accountId
 	if err != nil {
 		return "", "", errors.WrapErrorAction(logutils.ActionParse, typeCodeCreds, nil, err)
 	}
-	if incomingCreds.Code == nil {
-		return "", "", errors.ErrorData(logutils.StatusMissing, "incoming code", nil)
-	}
+	incomingCode := *incomingCreds.Code
 	if identifierChannel.requiresCodeGeneration() {
-		var accountID *string
 		if accountIdentifier != nil {
 			accountIDVal := string(accountIdentifier.Account.ID)
 			accountID = &accountIDVal
 		}
 
-		params := map[string]interface{}{
-			stateKeyCode: *incomingCreds.Code,
-		}
-		loginState, err := a.auth.storage.FindLoginState(appOrg.Application.ID, appOrg.Organization.ID, accountID, params)
-		if err != nil {
-			return "", "", errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginState, nil, err)
-		}
+		if incomingCode == "" {
+			// generate a new code
+			code := strconv.Itoa(utils.GenerateRandomInt(1000000))
+			padLen := 6 - len(code)
+			if padLen > 0 {
+				code = strings.Repeat("0", padLen) + code
+			}
 
-		if loginState == nil {
-			return "", "", errors.ErrorData(logutils.StatusInvalid, "code", logutils.StringArgs(*incomingCreds.Code))
-		}
+			// store generated codes in login state collection
+			state := map[string]interface{}{stateKeyCode: code}
+			loginState := model.LoginState{ID: uuid.NewString(), AppID: appOrg.Application.ID, OrgID: appOrg.Organization.ID, AccountID: accountID, State: state, DateCreated: time.Now().UTC()}
+			err := a.auth.storage.InsertLoginState(loginState)
+			if err != nil {
+				return "", "", errors.WrapErrorAction(logutils.ActionCreate, model.TypeLoginState, nil, err)
+			}
+		} else {
+			params := map[string]interface{}{
+				stateKeyCode: *incomingCreds.Code,
+			}
+			loginState, err := a.auth.storage.FindLoginState(appOrg.Application.ID, appOrg.Organization.ID, accountID, params)
+			if err != nil {
+				return "", "", errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginState, nil, err)
+			}
 
-		accountIdentifier.Verified = true
-		return "", "", nil
+			if loginState == nil {
+				return "", "", errors.ErrorData(logutils.StatusInvalid, "code", logutils.StringArgs(*incomingCreds.Code))
+			}
+
+			accountIdentifier.Verified = true
+			return "", "", nil
+		}
 	}
 
-	message, err := identifierChannel.sendCode(appOrg.Application.Name, *incomingCreds.Code, typeAuthenticationCode, "")
+	message, err := identifierChannel.sendCode(appOrg.Application.Name, incomingCode, typeAuthenticationCode, "")
 	if err != nil {
 		return "", "", err
 	}
 
-	accountIdentifier.Verified = true
+	// sendCode returns a message if starting verification, but not when checking verification
+	accountIdentifier.Verified = (message == "")
 	return message, "", nil
 }
 

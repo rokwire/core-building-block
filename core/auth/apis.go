@@ -343,7 +343,8 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 			return nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, &logutils.FieldArgs{"session_id": loginSession.ID, "anonymous": false})
 		}
 
-		aats := loginSession.Account.GetAccountAuthTypes(loginSession.AuthType.Code)
+		active := true
+		aats := loginSession.Account.GetAccountAuthTypes(loginSession.AuthType.Code, &active)
 		if len(aats) != 1 {
 			return nil, errors.ErrorData(logutils.StatusInvalid, model.TypeAccountAuthType, &logutils.FieldArgs{"code": loginSession.AuthType.Code, "count": len(aats)})
 		}
@@ -1084,7 +1085,8 @@ func (a *Auth) ForgotCredential(authenticationType string, appTypeIdentifier str
 		return errors.ErrorData(logutils.StatusMissing, model.TypeAccountIdentifier, &logutils.FieldArgs{"identifier": identifier})
 	}
 
-	accountAuthTypes, err := a.findAccountAuthTypes(account, *authType)
+	active := true
+	accountAuthTypes, err := a.findAccountAuthTypesAndCredentials(account, *authType, &active)
 	if len(accountAuthTypes) == 0 {
 		return errors.ErrorData(logutils.StatusMissing, model.TypeAccountAuthType, &logutils.FieldArgs{"auth_type": authType.AuthType.Code, "identifier": identifier})
 	}
@@ -1687,15 +1689,13 @@ func (a *Auth) GetAdminToken(claims tokenauth.Claims, appID string, orgID string
 //		accountID (string): ID of the account to link the creds to
 //		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
 //		appTypeIdentifier (string): identifier of the app type/client that the user is logging in from
-//		accountAuthTypeID (*string): Account auth type to link
 //		creds (string): Credentials/JSON encoded credential structure defined for the specified auth type
 //		params (string): JSON encoded params defined by specified auth type
 //		l (*logs.Log): Log object pointer for request
 //	Returns:
 //		message (*string): response message
 //		account (*model.Account): account data after the operation
-func (a *Auth) LinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, accountAuthTypeID *string, creds string, params string,
-	identifierCreds string, l *logs.Log) (*string, *model.Account, error) {
+func (a *Auth) LinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, creds string, params string, identifierCreds string, l *logs.Log) (*string, *model.Account, error) {
 	message := ""
 	var newAccountAuthType *model.AccountAuthType
 
@@ -1717,16 +1717,18 @@ func (a *Auth) LinkAccountAuthType(accountID string, authenticationType string, 
 		return nil, nil, errors.ErrorData(logutils.StatusInvalid, model.TypeAuthType, &logutils.FieldArgs{"anonymous": true})
 	} else if authType.AuthType.IsExternal {
 		// only one account auth type per each external auth type is allowed
-		if len(account.GetAccountAuthTypes(authType.AuthType.Code)) > 0 {
+		active := true
+		externalAats := account.GetAccountAuthTypes(authType.AuthType.Code, &active)
+		if len(externalAats) > 0 {
 			return nil, nil, errors.ErrorData(logutils.StatusFound, model.TypeAuthType, &logutils.FieldArgs{"allow_multiple": false, "code": authType.AuthType.Code})
 		}
 
-		newAccountAuthType, err = a.linkAccountAuthTypeExternal(account, *authType, *appType, *appOrg, creds, params)
+		newAccountAuthType, err = a.linkAccountAuthTypeExternal(account, *authType, *appType, *appOrg, creds, params, l)
 		if err != nil {
 			return nil, nil, errors.WrapErrorAction("linking", model.TypeAccountAuthType, nil, err)
 		}
 	} else {
-		message, newAccountAuthType, err = a.linkAccountAuthType(account, accountAuthTypeID, *authType, *appOrg, creds, params, identifierCreds)
+		message, newAccountAuthType, err = a.linkAccountAuthType(account, *authType, *appOrg, creds, params, identifierCreds)
 		if err != nil {
 			return nil, nil, errors.WrapErrorAction("linking", model.TypeAccountAuthType, nil, err)
 		}
@@ -1744,58 +1746,60 @@ func (a *Auth) LinkAccountAuthType(accountID string, authenticationType string, 
 //
 //	Input:
 //		accountID (string): ID of the account to unlink creds from
-//		authenticationType (string): Name of the authentication method of account auth type to unlink
-//		appTypeIdentifier (string): Identifier of the app type/client that the user is logging in from
 //		accountAuthTypeID (*string): Account auth type to unlink
+//		authenticationType (*string): Name of the authentication method of account auth type to unlink
 //		identifier (*string): Identifier to unlink
 //		l (*logs.Log): Log object pointer for request
 //	Returns:
 //		account (*model.Account): account data after the operation
-func (a *Auth) UnlinkAccountAuthType(accountID string, appTypeIdentifier string, accountAuthTypeID *string, authenticationType *string, identifier *string, l *logs.Log) (*model.Account, error) {
-	return a.unlinkAccountAuthType(accountID, authenticationType, appTypeIdentifier, identifier, l)
+func (a *Auth) UnlinkAccountAuthType(accountID string, accountAuthTypeID *string, authenticationType *string, identifier *string, l *logs.Log) (*model.Account, error) {
+	return a.unlinkAccountAuthType(accountID, accountAuthTypeID, authenticationType, identifier)
 }
 
-func (a *Auth) LinkAccountIdentifier(accountID string, appTypeIdentifier string, identifierCreds string, l *logs.Log) (*string, *model.Account, error) {
+// LinkAccountIdentifier links an identifier to an existing account.
+func (a *Auth) LinkAccountIdentifier(accountID string, appTypeIdentifier string, identifierCreds string, l *logs.Log) (string, *model.Account, error) {
+	identifierImpl, err := a.getIdentifierTypeImpl("", identifierCreds)
+	if err != nil {
+		return "", nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeIdentifierType, nil, err)
+	}
+
+	userIdentifier, _ := identifierImpl.getUserIdentifier("")
+
 	//2. check if the user exists
-	newCredsAccount, err := a.storage.FindAccount(nil, appOrg.ID, userIdentifier)
+	account, err := a.storage.FindAccountByID(nil, accountID)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
-	if newCredsAccount != nil {
-		//if account is current account, attempt sign-in. Otherwise, handle conflict
-		if newCredsAccount.ID == account.ID {
-			message, aat, err := a.applyLinkVerify(identifierImpl, supportedAuthType, &account, userIdentifier, creds, l)
-			if err != nil {
-				return "", nil, err
-			}
-			if aat != nil {
-				for i, accAuthType := range account.AuthTypes {
-					if accAuthType.ID == aat.ID {
-						account.AuthTypes[i] = *aat
-						break
-					}
-				}
-			}
-			return message, nil, nil
-		}
+	if account == nil {
+		return "", nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, nil)
+	}
 
-		err = a.handleAccountAuthTypeConflict(*newCredsAccount, supportedAuthType.AuthType.ID, userIdentifier, false)
+	existingIdentifierAccount, err := a.storage.FindAccount(nil, account.AppOrg.ID, userIdentifier)
+	if err != nil {
+		return "", nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+	if existingIdentifierAccount != nil {
+		err = a.handleAccountIdentifierConflict(*existingIdentifierAccount, userIdentifier, false)
 		if err != nil {
 			return "", nil, err
 		}
 	}
 
-	credID := uuid.NewString()
-
-	//apply sign up
-	message, credentialValue, verified, err := authImpl.signUp(identifierImpl, appOrg.Application.Name, creds, params, supportedAuthType.Params, credID)
+	message, accountIdentifier, err := identifierImpl.buildIdentifier(&account.ID, account.AppOrg.Application.Name)
 	if err != nil {
-		return "", nil, errors.WrapErrorAction("signing up", "user", nil, err)
+		return "", nil, errors.WrapErrorAction("building", model.TypeAccountIdentifier, &logutils.FieldArgs{"account_id": account.ID, "identifier": userIdentifier}, err)
 	}
 
-	return nil, nil, errors.New(logutils.Unimplemented)
+	account.Identifiers = append(account.Identifiers, *accountIdentifier)
+	err = a.storage.InsertAccountIdentifier(*accountIdentifier)
+	if err != nil {
+		return "", nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeAccountIdentifier, &logutils.FieldArgs{"account_id": account.ID, "identifier": userIdentifier}, err)
+	}
+
+	return message, account, nil
 }
 
+// UnlinkAccountIdentifier unlinks an identifier from an existing account.
 func (a *Auth) UnlinkAccountIdentifier(accountID string, appTypeIdentifier string, identifierCreds string, l *logs.Log) (*model.Account, error) {
 	return nil, errors.New(logutils.Unimplemented)
 }
