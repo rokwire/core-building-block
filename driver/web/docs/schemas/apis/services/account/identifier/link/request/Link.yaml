@@ -1,9 +1,6 @@
 required:
-  - app_type_identifier
   - identifier
 type: object
 properties:
-  app_type_identifier:
-    type: string
   identifier:
     $ref: "../../../../../shared/requests/Identifiers.yaml"

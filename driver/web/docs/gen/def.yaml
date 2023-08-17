@@ -7013,7 +7013,6 @@ components:
         - identifier
         - verified
         - linked
-        - external
       type: object
       properties:
         id:
@@ -7026,8 +7025,9 @@ components:
           type: boolean
         linked:
           type: boolean
-        external:
-          type: boolean
+        account_auth_type_id:
+          type: string
+          nullable: true
     Device:
       required:
         - id
@@ -7571,12 +7571,9 @@ components:
             $ref: '#/components/schemas/AccountAuthType'
     _services_req_account_identifier-link:
       required:
-        - app_type_identifier
         - identifier
       type: object
       properties:
-        app_type_identifier:
-          type: string
         identifier:
           $ref: '#/components/schemas/_shared_req_Identifiers'
     _services_req_account_identifier-unlink:

@@ -42,6 +42,7 @@ type database struct {
 	devices                         *collectionWrapper
 	credentials                     *collectionWrapper
 	loginsSessions                  *collectionWrapper
+	loginStates                     *collectionWrapper
 	configs                         *collectionWrapper
 	serviceRegs                     *collectionWrapper
 	serviceRegistrations            *collectionWrapper
@@ -132,6 +133,12 @@ func (m *database) start() error {
 
 	loginsSessions := &collectionWrapper{database: m, coll: db.Collection("logins_sessions")}
 	err = m.applyLoginsSessionsChecks(loginsSessions)
+	if err != nil {
+		return err
+	}
+
+	loginStates := &collectionWrapper{database: m, coll: db.Collection("login_states")}
+	err = m.applyLoginStatesChecks(loginStates)
 	if err != nil {
 		return err
 	}
@@ -259,9 +266,12 @@ func (m *database) applyIdentityProvidersChecks(identityProviders *collectionWra
 func (m *database) applyAccountsChecks(accounts *collectionWrapper) error {
 	m.logger.Info("apply accounts checks.....")
 
+	// remove old index
+	accounts.DropIndex("auth_types.identifier_1_auth_types.auth_type_id_1_app_org_id_1")
+
 	//add compound index - auth_type identifier + auth_type_id
 	// Can't be unique because of anonymous accounts
-	err := accounts.AddIndex(bson.D{primitive.E{Key: "auth_types.identifier", Value: 1}, primitive.E{Key: "auth_types.auth_type_id", Value: 1}, primitive.E{Key: "app_org_id", Value: 1}}, false)
+	err := accounts.AddIndex(bson.D{primitive.E{Key: "identifiers.identifier", Value: 1}, primitive.E{Key: "app_org_id", Value: 1}}, true)
 	if err != nil {
 		return err
 	}
@@ -280,6 +290,12 @@ func (m *database) applyAccountsChecks(accounts *collectionWrapper) error {
 
 	//add auth types index
 	err = accounts.AddIndex(bson.D{primitive.E{Key: "auth_types.id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	//add identifiers index
+	err = accounts.AddIndex(bson.D{primitive.E{Key: "identifiers.id", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
@@ -319,20 +335,45 @@ func (m *database) applyCredentialChecks(credentials *collectionWrapper) error {
 	return nil
 }
 
-func (m *database) applyLoginsSessionsChecks(refreshTokens *collectionWrapper) error {
+func (m *database) applyLoginsSessionsChecks(loginSessions *collectionWrapper) error {
 	m.logger.Info("apply logins sessions checks.....")
 
-	err := refreshTokens.AddIndex(bson.D{primitive.E{Key: "refresh_token", Value: 1}}, false)
+	err := loginSessions.AddIndex(bson.D{primitive.E{Key: "refresh_token", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
 
-	err = refreshTokens.AddIndex(bson.D{primitive.E{Key: "expires", Value: 1}}, false)
+	err = loginSessions.AddIndex(bson.D{primitive.E{Key: "expires", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
 
 	m.logger.Info("logins sessions check passed")
+	return nil
+}
+
+func (m *database) applyLoginStatesChecks(loginStates *collectionWrapper) error {
+	m.logger.Info("apply logins states checks.....")
+
+	err := loginStates.AddIndex(bson.D{primitive.E{Key: "app_id", Value: 1}, primitive.E{Key: "org_id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	err = loginStates.AddIndex(bson.D{primitive.E{Key: "account_id", Value: 1}}, true)
+	if err != nil {
+		return err
+	}
+
+	// create TTL index which auto-deletes login state documents after 5 minutes
+	opts := options.IndexOptions{}
+	opts.SetExpireAfterSeconds(5 * 60)
+	err = loginStates.AddIndexWithOptions(bson.D{primitive.E{Key: "date_created", Value: 1}}, &opts)
+	if err != nil {
+		return err
+	}
+
+	m.logger.Info("logins states check passed")
 	return nil
 }
 

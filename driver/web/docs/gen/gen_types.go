@@ -210,12 +210,12 @@ type AccountAuthType struct {
 
 // AccountIdentifier defines model for AccountIdentifier.
 type AccountIdentifier struct {
-	Code       string `json:"code"`
-	External   bool   `json:"external"`
-	Id         string `json:"id"`
-	Identifier string `json:"identifier"`
-	Linked     bool   `json:"linked"`
-	Verified   bool   `json:"verified"`
+	AccountAuthTypeId *string `json:"account_auth_type_id"`
+	Code              string  `json:"code"`
+	Id                string  `json:"id"`
+	Identifier        string  `json:"identifier"`
+	Linked            bool    `json:"linked"`
+	Verified          bool    `json:"verified"`
 }
 
 // AdminToken defines model for AdminToken.
@@ -803,8 +803,6 @@ type ServicesReqAccountAuthTypeUnlinkAuthType string
 
 // ServicesReqAccountIdentifierLink defines model for _services_req_account_identifier-link.
 type ServicesReqAccountIdentifierLink struct {
-	AppTypeIdentifier string `json:"app_type_identifier"`
-
 	// Identifier Allowed identifier types
 	Identifier SharedReqIdentifiers `json:"identifier"`
 }

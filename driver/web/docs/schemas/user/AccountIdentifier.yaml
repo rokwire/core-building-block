@@ -4,7 +4,6 @@ required:
   - identifier
   - verified
   - linked
-  - external
 type: object
 properties:
   id:
@@ -17,5 +16,6 @@ properties:
     type: boolean
   linked:
     type: boolean
-  external:
-    type: boolean
+  account_auth_type_id:
+    type: string
+    nullable: true

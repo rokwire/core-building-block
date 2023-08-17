@@ -158,7 +158,7 @@ func accountAuthTypesToDef(account *model.Account) []Def.AccountAuthType {
 
 // AccountIdentifier
 func accountIdentifierToDef(item model.AccountIdentifier) Def.AccountIdentifier {
-	return Def.AccountIdentifier{Id: item.ID, Code: item.Code, Identifier: item.Identifier, Linked: item.Linked, Verified: item.Verified, External: item.External}
+	return Def.AccountIdentifier{Id: item.ID, Code: item.Code, Identifier: item.Identifier, Linked: item.Linked, Verified: item.Verified, AccountAuthTypeId: item.AccountAuthTypeID}
 }
 
 func accountIdentifiersToDef(items []model.AccountIdentifier) []Def.AccountIdentifier {

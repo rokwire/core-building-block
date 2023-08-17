@@ -158,7 +158,7 @@ func (a Account) GetVerifiedAccountIdentifiers() []AccountIdentifier {
 func (a Account) GetExternalAccountIdentifiers() []AccountIdentifier {
 	identifiers := make([]AccountIdentifier, 0)
 	for _, id := range a.Identifiers {
-		if id.External {
+		if id.AccountAuthTypeID != nil {
 			identifiers = append(identifiers, id)
 		}
 	}
@@ -424,7 +424,8 @@ type AccountIdentifier struct {
 
 	Verified bool
 	Linked   bool
-	External bool
+
+	AccountAuthTypeID *string
 
 	Account Account
 

@@ -93,6 +93,8 @@ type accountIdentifier struct {
 	Verified   bool   `bson:"verified"`
 	Linked     bool   `bson:"linked"`
 
+	AccountAuthTypeID *string `bson:"account_auth_type_id"`
+
 	VerificationCode   *string    `bson:"verification_code,omitempty"`
 	VerificationExpiry *time.Time `bson:"verification_expiry,omitempty"`
 

@@ -404,7 +404,7 @@ func (h ServicesApisHandler) linkAccountIdentifier(l *logs.Log, r *http.Request,
 		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeCreds, nil, err, http.StatusBadRequest, true)
 	}
 
-	message, account, err := h.coreAPIs.Auth.LinkAccountIdentifier(claims.Subject, requestData.AppTypeIdentifier, requestIdentifier, l)
+	message, account, err := h.coreAPIs.Auth.LinkAccountIdentifier(claims.Subject, requestIdentifier, l)
 	if err != nil {
 		return l.HTTPResponseError("Error linking account identifier", err, http.StatusInternalServerError, true)
 	}

@@ -432,7 +432,7 @@ type APIs interface {
 	//		account (*model.Account): account data after the operation
 	UnlinkAccountAuthType(accountID string, accountAuthTypeID *string, authenticationType *string, identifier *string, l *logs.Log) (*model.Account, error)
 
-	LinkAccountIdentifier(accountID string, appTypeIdentifier string, identifierCreds string, l *logs.Log) (*string, *model.Account, error)
+	LinkAccountIdentifier(accountID string, identifierCreds string, l *logs.Log) (*string, *model.Account, error)
 
 	UnlinkAccountIdentifier(accountID string, appTypeIdentifier string, identifierCreds string, l *logs.Log) (*model.Account, error)
 
@@ -565,6 +565,7 @@ type Storage interface {
 	UpdateAccountIdentifier(item model.AccountIdentifier) error
 	UpdateAccountIdentifiers(items []model.AccountIdentifier) error
 	DeleteAccountIdentifier(item model.AccountIdentifier) error
+	DeleteExternalAccountIdentifiers(context storage.TransactionContext, aat model.AccountAuthType) error
 
 	//Applications
 	FindApplication(context storage.TransactionContext, ID string) (*model.Application, error)
