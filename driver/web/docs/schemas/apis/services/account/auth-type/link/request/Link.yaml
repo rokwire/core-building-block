@@ -16,6 +16,8 @@ properties:
       - twilio_phone
       - illinois_oidc
       - username
+  identifier:
+    $ref: "../../../../../shared/requests/Identifiers.yaml"
   app_type_identifier:
     type: string
   creds:
@@ -31,5 +33,3 @@ properties:
       - $ref: "../../../../../shared/requests/ParamsPassword.yaml"
       - $ref: "../../../../../shared/requests/ParamsWebAuthn.yaml"
       - $ref: "../../../../../shared/requests/ParamsNone.yaml"
-  identifier:
-    $ref: "../../../../../shared/requests/Identifiers.yaml"

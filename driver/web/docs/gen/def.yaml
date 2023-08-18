@@ -7203,10 +7203,10 @@ components:
         auth_type:
           type: string
           enum:
-            - email
-            - illinois_oidc
+            - password
+            - oidc
         identifier:
-          type: string
+          $ref: '#/components/schemas/_shared_req_Identifiers'
         permissions:
           type: array
           items:
@@ -7239,10 +7239,10 @@ components:
         auth_type:
           type: string
           enum:
-            - email
-            - illinois_oidc
+            - password
+            - oidc
         identifier:
-          type: string
+          $ref: '#/components/schemas/_shared_req_Identifiers'
         permissions:
           type: array
           items:
@@ -7264,7 +7264,6 @@ components:
         - app_type_identifier
         - org_id
         - api_key
-        - user_identifier
       type: object
       properties:
         app_type_identifier:
@@ -7273,6 +7272,18 @@ components:
           type: string
         api_key:
           type: string
+        identifier:
+          $ref: '#/components/schemas/_shared_req_Identifiers'
+        auth_type:
+          type: string
+          enum:
+            - username
+            - email
+            - phone
+            - oidc
+            - anonymous
+            - twilio_phone
+            - illinois_oidc
         user_identifier:
           type: string
     _shared_req_CredsAnonymous:
@@ -7322,6 +7333,29 @@ components:
           type: string
         phone:
           type: string
+      additionalProperties:
+        type: string
+      examples:
+        email:
+          summary: Email - sign in
+          value:
+            email: test@example.com
+        phone:
+          summary: Phone - sign in OR sign up
+          value:
+            phone: '+12223334444'
+        username:
+          summary: Username
+          value:
+            username: test
+        illinois_netid:
+          summary: Illinois Net ID
+          value:
+            net_id: netid2
+        illinois_uin:
+          summary: Illinois UIN
+          value:
+            uin: '123456789'
     _shared_req_ParamsNone:
       type: object
       description: Auth login request params for unlisted auth_types (None)
@@ -7521,6 +7555,8 @@ components:
             - twilio_phone
             - illinois_oidc
             - username
+        identifier:
+          $ref: '#/components/schemas/_shared_req_Identifiers'
         app_type_identifier:
           type: string
         creds:
@@ -7536,8 +7572,6 @@ components:
             - $ref: '#/components/schemas/_shared_req_ParamsPassword'
             - $ref: '#/components/schemas/_shared_req_ParamsWebAuthn'
             - $ref: '#/components/schemas/_shared_req_ParamsNone'
-        identifier:
-          $ref: '#/components/schemas/_shared_req_Identifiers'
     _services_req_account_auth-type-unlink:
       type: object
       properties:
@@ -7631,13 +7665,15 @@ components:
         - app_type_identifier
         - org_id
         - api_key
-        - identifier
       type: object
       properties:
         auth_type:
           type: string
           enum:
+            - password
             - email
+        verified_identifier:
+          $ref: '#/components/schemas/_shared_req_Identifiers'
         app_type_identifier:
           type: string
         org_id:

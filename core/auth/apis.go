@@ -189,14 +189,21 @@ func (a *Auth) Logout(appID string, orgID string, currentAccountID string, sessi
 // The authentication method must be one of the supported for the application.
 //
 //	Input:
-//		userIdentifier (string): User identifier for the specified auth type
+//		identifierJSON (string): json string representing the user identifier and its type
 //		apiKey (string): API key to validate the specified app
 //		appTypeIdentifier (string): identifier of the app type/client that the user is logging in from
 //		orgID (string): ID of the organization that the user is logging in
+//		authenticationType (*string): Optional authentication type (for backwards compatibility)
+//		userIdentifier (*string): Optional identifier for the given authentication type (for backwards compatibility)
 //	Returns:
 //		accountExisted (bool): valid when error is nil
-func (a *Auth) AccountExists(userIdentifier string, apiKey string, appTypeIdentifier string, orgID string) (bool, error) {
-	account, err := a.getAccount(userIdentifier, apiKey, appTypeIdentifier, orgID)
+func (a *Auth) AccountExists(identifierJSON string, apiKey string, appTypeIdentifier string, orgID string, authenticationType *string, userIdentifier *string) (bool, error) {
+	code, identifier, err := a.getCodeAndIdentifierForAccount(identifierJSON, authenticationType, userIdentifier)
+	if err != nil {
+		return false, errors.WrapErrorAction(logutils.ActionGet, "code and identifier", nil, err)
+	}
+
+	account, err := a.getAccount(code, identifier, apiKey, appTypeIdentifier, orgID)
 	if err != nil {
 		return false, errors.WrapErrorAction(logutils.ActionGet, model.TypeAccount, nil, err)
 	}
@@ -208,39 +215,53 @@ func (a *Auth) AccountExists(userIdentifier string, apiKey string, appTypeIdenti
 // The authentication method must be one of the supported for the application.
 //
 //	Input:
-//		userIdentifier (string): User identifier for the specified auth type
+//		identifierJSON (string): json string representing the user identifier and its type
 //		apiKey (string): API key to validate the specified app
-//		appTypeIdentifier (string): identifier of the app type/client being used
-//		orgID (string): ID of the organization being used
+//		appTypeIdentifier (string): identifier of the app type/client that the user is logging in from
+//		orgID (string): ID of the organization that the user is logging in
+//		authenticationType (*string): Optional authentication type (for backwards compatibility)
+//		userIdentifier (*string): Optional identifier for the given authentication type (for backwards compatibility)
 //	Returns:
 //		canSignIn (bool): valid when error is nil
-func (a *Auth) CanSignIn(userIdentifier string, apiKey string, appTypeIdentifier string, orgID string) (bool, error) {
-	account, err := a.getAccount(userIdentifier, apiKey, appTypeIdentifier, orgID)
+func (a *Auth) CanSignIn(identifierJSON string, apiKey string, appTypeIdentifier string, orgID string, authenticationType *string, userIdentifier *string) (bool, error) {
+	code, identifier, err := a.getCodeAndIdentifierForAccount(identifierJSON, authenticationType, userIdentifier)
+	if err != nil {
+		return false, errors.WrapErrorAction(logutils.ActionGet, "code and identifier", nil, err)
+	}
+
+	account, err := a.getAccount(code, identifier, apiKey, appTypeIdentifier, orgID)
 	if err != nil {
 		return false, errors.WrapErrorAction(logutils.ActionGet, model.TypeAccount, nil, err)
 	}
 
-	return a.canSignIn(account, userIdentifier), nil
+	return a.canSignIn(account, code, identifier), nil
 }
 
 // CanLink checks if a user can link a new auth type
 // The authentication method must be one of the supported for the application.
 //
 //	Input:
-//		userIdentifier (string): User identifier for the specified auth type
+//		identifierJSON (string): json string representing the user identifier and its type
 //		apiKey (string): API key to validate the specified app
-//		appTypeIdentifier (string): identifier of the app type/client being used
-//		orgID (string): ID of the organization being used
+//		appTypeIdentifier (string): identifier of the app type/client that the user is logging in from
+//		orgID (string): ID of the organization that the user is logging in
+//		authenticationType (*string): Optional authentication type (for backwards compatibility)
+//		userIdentifier (*string): Optional identifier for the given authentication type (for backwards compatibility)
 //	Returns:
 //		canLink (bool): valid when error is nil
-func (a *Auth) CanLink(userIdentifier string, apiKey string, appTypeIdentifier string, orgID string) (bool, error) {
-	account, err := a.getAccount(userIdentifier, apiKey, appTypeIdentifier, orgID)
+func (a *Auth) CanLink(identifierJSON string, apiKey string, appTypeIdentifier string, orgID string, authenticationType *string, userIdentifier *string) (bool, error) {
+	code, identifier, err := a.getCodeAndIdentifierForAccount(identifierJSON, authenticationType, userIdentifier)
+	if err != nil {
+		return false, errors.WrapErrorAction(logutils.ActionGet, "code and identifier", nil, err)
+	}
+
+	account, err := a.getAccount(code, identifier, apiKey, appTypeIdentifier, orgID)
 	if err != nil {
 		return false, errors.WrapErrorAction(logutils.ActionGet, model.TypeAccount, nil, err)
 	}
 
 	if account != nil {
-		ai := account.GetAccountIdentifier(userIdentifier, "")
+		ai := account.GetAccountIdentifier(code, identifier)
 		return (ai != nil && !ai.Verified), nil
 	}
 
@@ -567,7 +588,7 @@ func (a *Auth) LoginMFA(apiKey string, accountID string, sessionID string, ident
 }
 
 // CreateAdminAccount creates an account for a new admin user
-func (a *Auth) CreateAdminAccount(authenticationType string, appID string, orgID string, identifier string, profile model.Profile, privacy model.Privacy, username string,
+func (a *Auth) CreateAdminAccount(authenticationType string, appID string, orgID string, identifierJSON string, profile model.Profile, privacy model.Privacy, username string,
 	permissions []string, roleIDs []string, groupIDs []string, scopes []string, creatorPermissions []string, clientVersion *string, l *logs.Log) (*model.Account, map[string]interface{}, error) {
 	// check if the provided auth type is supported by the provided application and organization
 	supportedAuthType, _, appOrg, err := a.validateAuthType(authenticationType, nil, &appID, orgID)
@@ -627,7 +648,7 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appID string, orgID
 }
 
 // UpdateAdminAccount updates an existing user's account with new permissions, roles, and groups
-func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID string, identifier string, permissions []string, roleIDs []string,
+func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID string, identifierJSON string, permissions []string, roleIDs []string,
 	groupIDs []string, scopes []string, updaterPermissions []string, l *logs.Log) (*model.Account, map[string]interface{}, error) {
 	// check if the provided auth type is supported by the provided application and organization
 	supportedAuthType, _, appOrg, err := a.validateAuthType(authenticationType, nil, &appID, orgID)
@@ -870,7 +891,7 @@ func (a *Auth) VerifyIdentifier(id string, verification string, l *logs.Log) err
 	}
 	a.setLogContext(account, l)
 
-	accountIdentifier := account.GetAccountIdentifier(id, "")
+	accountIdentifier := account.GetAccountIdentifier(id)
 	if accountIdentifier == nil {
 		return errors.ErrorData(logutils.StatusMissing, model.TypeAccountIdentifier, &logutils.FieldArgs{"id": id})
 	}
@@ -918,7 +939,7 @@ func (a *Auth) SendVerifyIdentifier(appTypeIdentifier string, orgID string, apiK
 	}
 	a.setLogContext(account, l)
 
-	accountIdentifier := account.GetAccountIdentifier(identifier, "")
+	accountIdentifier := account.GetAccountIdentifier(identifier)
 	if accountIdentifier == nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountIdentifier, &logutils.FieldArgs{"identifier": identifier}, err)
 	}
@@ -1080,7 +1101,7 @@ func (a *Auth) ForgotCredential(authenticationType string, appTypeIdentifier str
 	}
 	a.setLogContext(account, l)
 
-	accountIdentifier := account.GetAccountIdentifier(identifier, "")
+	accountIdentifier := account.GetAccountIdentifier(identifier)
 	if accountIdentifier == nil {
 		return errors.ErrorData(logutils.StatusMissing, model.TypeAccountIdentifier, &logutils.FieldArgs{"identifier": identifier})
 	}
@@ -1695,7 +1716,7 @@ func (a *Auth) GetAdminToken(claims tokenauth.Claims, appID string, orgID string
 //	Returns:
 //		message (*string): response message
 //		account (*model.Account): account data after the operation
-func (a *Auth) LinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, creds string, params string, identifierCreds string, l *logs.Log) (*string, *model.Account, error) {
+func (a *Auth) LinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, creds string, params string, identifierJSON string, l *logs.Log) (*string, *model.Account, error) {
 	var message *string
 	var newAccountAuthType *model.AccountAuthType
 
@@ -1728,7 +1749,7 @@ func (a *Auth) LinkAccountAuthType(accountID string, authenticationType string, 
 			return nil, nil, errors.WrapErrorAction("linking", model.TypeAccountAuthType, nil, err)
 		}
 	} else {
-		message, newAccountAuthType, err = a.linkAccountAuthType(account, *authType, *appOrg, creds, params, identifierCreds)
+		message, newAccountAuthType, err = a.linkAccountAuthType(account, *authType, *appOrg, creds, params, identifierJSON)
 		if err != nil {
 			return nil, nil, errors.WrapErrorAction("linking", model.TypeAccountAuthType, nil, err)
 		}
@@ -1757,10 +1778,14 @@ func (a *Auth) UnlinkAccountAuthType(accountID string, accountAuthTypeID *string
 }
 
 // LinkAccountIdentifier links an identifier to an existing account.
-func (a *Auth) LinkAccountIdentifier(accountID string, identifierCreds string, l *logs.Log) (*string, *model.Account, error) {
-	identifierImpl, err := a.getIdentifierTypeImpl("", identifierCreds)
+func (a *Auth) LinkAccountIdentifier(accountID string, identifierJSON string, admin bool, l *logs.Log) (*string, *model.Account, error) {
+	identifierImpl, err := a.getIdentifierTypeImpl("", identifierJSON)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeIdentifierType, nil, err)
+	}
+
+	if identifierImpl.getCode() == IdentifierTypeExternal && !admin {
+		return nil, nil, errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, logutils.StringArgs(IdentifierTypeExternal))
 	}
 
 	account, err := a.storage.FindAccountByID(nil, accountID)
@@ -1780,10 +1805,14 @@ func (a *Auth) LinkAccountIdentifier(accountID string, identifierCreds string, l
 }
 
 // UnlinkAccountIdentifier unlinks an identifier from an existing account.
-func (a *Auth) UnlinkAccountIdentifier(accountID string, appTypeIdentifier string, identifierCreds string, l *logs.Log) (*model.Account, error) {
-	identifierImpl, err := a.getIdentifierTypeImpl("", identifierCreds)
+func (a *Auth) UnlinkAccountIdentifier(accountID string, appTypeIdentifier string, identifierJSON string, admin bool, l *logs.Log) (*model.Account, error) {
+	identifierImpl, err := a.getIdentifierTypeImpl("", identifierJSON)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeIdentifierType, nil, err)
+	}
+
+	if identifierImpl.getCode() == IdentifierTypeExternal && !admin {
+		return nil, errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, logutils.StringArgs(IdentifierTypeExternal))
 	}
 
 	userIdentifier, _ := identifierImpl.getUserIdentifier("")

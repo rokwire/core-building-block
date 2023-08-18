@@ -31,7 +31,6 @@ const (
 	IdentifierTypeUsername string = "username"
 
 	typeUsernameIdentifier logutils.MessageDataType = "username identifier"
-	typeUsernameParams     logutils.MessageDataType = "username params"
 )
 
 type usernameIdentifier struct {

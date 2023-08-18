@@ -7,3 +7,26 @@ properties:
     type: string
   phone:
     type: string
+additionalProperties:
+  type: string
+examples:
+  email:
+    summary: Email - sign in
+    value:
+      email: test@example.com
+  phone:
+    summary: Phone - sign in OR sign up
+    value:
+      phone: "+12223334444"
+  username:
+    summary: Username
+    value:
+      username: test
+  illinois_netid:
+    summary: Illinois Net ID
+    value:
+      net_id: netid2
+  illinois_uin:
+    summary: Illinois UIN
+    value:
+      uin: "123456789"

@@ -133,9 +133,17 @@ func (a Account) SortAccountAuthTypes(id string, authType string) {
 }
 
 // GetAccountIdentifier finds account identifier
-func (a Account) GetAccountIdentifier(identifier string, code string) *AccountIdentifier {
+func (a Account) GetAccountIdentifier(code string, identifier string) *AccountIdentifier {
 	for _, id := range a.Identifiers {
-		if id.Identifier == identifier || id.Code == code {
+		if code != "" && id.Code == code && identifier != "" && id.Identifier == identifier {
+			id.Account = a
+			return &id
+		}
+		if code != "" && id.Code == code {
+			id.Account = a
+			return &id
+		}
+		if identifier != "" && id.Identifier == identifier {
 			id.Account = a
 			return &id
 		}

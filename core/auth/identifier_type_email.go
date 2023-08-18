@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -69,8 +70,9 @@ func (a *emailIdentifierImpl) getUserIdentifier(creds string) (string, error) {
 		return "", errors.WrapErrorAction(logutils.ActionValidate, typeEmailIdentifier, nil, err)
 	}
 
-	a.identifier = &requestCreds.Email
-	return requestCreds.Email, nil
+	email := strings.TrimSpace(requestCreds.Email)
+	a.identifier = &email
+	return email, nil
 }
 
 func (a *emailIdentifierImpl) withIdentifier(identifier string) identifierType {

@@ -2,7 +2,6 @@ required:
   - app_type_identifier
   - org_id
   - api_key
-  - user_identifier
 type: object
 properties:
   app_type_identifier:
@@ -11,5 +10,18 @@ properties:
     type: string
   api_key:
     type: string
+  identifier:
+    $ref: "./Identifiers.yaml"
+  auth_type:
+    type: string
+    enum:
+      - username
+      - email
+      - phone
+      - oidc
+      - anonymous
+      - twilio_phone
+      - illinois_oidc
   user_identifier:
     type: string
+  

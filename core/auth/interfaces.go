@@ -209,7 +209,7 @@ type APIs interface {
 	//		orgID (string): ID of the organization that the user is logging in
 	//	Returns:
 	//		accountExisted (bool): valid when error is nil
-	AccountExists(userIdentifier string, apiKey string, appTypeIdentifier string, orgID string) (bool, error)
+	AccountExists(identifierJSON string, apiKey string, appTypeIdentifier string, orgID string, authenticationType *string, userIdentifier *string) (bool, error)
 
 	//CanSignIn checks if a user can sign in
 	//	Input:
@@ -219,7 +219,7 @@ type APIs interface {
 	//		orgID (string): ID of the organization being used
 	//	Returns:
 	//		canSignIn (bool): valid when error is nil
-	CanSignIn(userIdentifier string, apiKey string, appTypeIdentifier string, orgID string) (bool, error)
+	CanSignIn(identifierJSON string, apiKey string, appTypeIdentifier string, orgID string, authenticationType *string, userIdentifier *string) (bool, error)
 
 	//CanLink checks if a user can link a new auth type
 	//	Input:
@@ -229,7 +229,7 @@ type APIs interface {
 	//		orgID (string): ID of the organization being used
 	//	Returns:
 	//		canLink (bool): valid when error is nil
-	CanLink(userIdentifier string, apiKey string, appTypeIdentifier string, orgID string) (bool, error)
+	CanLink(identifierJSON string, apiKey string, appTypeIdentifier string, orgID string, authenticationType *string, userIdentifier *string) (bool, error)
 
 	//Refresh refreshes an access token using a refresh token
 	//	Input:
@@ -277,11 +277,11 @@ type APIs interface {
 	LoginMFA(apiKey string, accountID string, sessionID string, identifier string, mfaType string, mfaCode string, state string, l *logs.Log) (*string, *model.LoginSession, error)
 
 	//CreateAdminAccount creates an account for a new admin user
-	CreateAdminAccount(authenticationType string, appID string, orgID string, identifier string, profile model.Profile, privacy model.Privacy, username string, permissions []string,
+	CreateAdminAccount(authenticationType string, appID string, orgID string, identifierJSON string, profile model.Profile, privacy model.Privacy, username string, permissions []string,
 		roleIDs []string, groupIDs []string, scopes []string, creatorPermissions []string, clientVersion *string, l *logs.Log) (*model.Account, map[string]interface{}, error)
 
 	//UpdateAdminAccount updates an existing user's account with new permissions, roles, and groups
-	UpdateAdminAccount(authenticationType string, appID string, orgID string, identifier string, permissions []string, roleIDs []string,
+	UpdateAdminAccount(authenticationType string, appID string, orgID string, identifierJSON string, permissions []string, roleIDs []string,
 		groupIDs []string, scopes []string, updaterPermissions []string, l *logs.Log) (*model.Account, map[string]interface{}, error)
 
 	//CreateAnonymousAccount creates a new anonymous account
@@ -312,7 +312,7 @@ type APIs interface {
 	//		apiKey (string): API key to validate the specified app
 	//	Returns:
 	//		error: if any
-	ForgotCredential(authenticationType string, appTypeIdentifier string, orgID string, apiKey string, identifier string, l *logs.Log) error
+	ForgotCredential(authenticationType string, appTypeIdentifier string, orgID string, apiKey string, identifierJSON string, userIdentifier *string, l *logs.Log) error
 
 	//ResetForgotCredential resets forgot credential
 	//	Input:
@@ -418,7 +418,7 @@ type APIs interface {
 	//	Returns:
 	//		message (*string): response message
 	//		account (*model.Account): account data after the operation
-	LinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, creds string, params string, identifierCreds string, l *logs.Log) (*string, *model.Account, error)
+	LinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, creds string, params string, identifierJSON string, l *logs.Log) (*string, *model.Account, error)
 
 	//UnlinkAccountAuthType unlinks credentials from an existing account.
 	//The authentication method must be one of the supported for the application.
@@ -432,9 +432,9 @@ type APIs interface {
 	//		account (*model.Account): account data after the operation
 	UnlinkAccountAuthType(accountID string, accountAuthTypeID *string, authenticationType *string, identifier *string, l *logs.Log) (*model.Account, error)
 
-	LinkAccountIdentifier(accountID string, identifierCreds string, l *logs.Log) (*string, *model.Account, error)
+	LinkAccountIdentifier(accountID string, identifierJSON string, admin bool, l *logs.Log) (*string, *model.Account, error)
 
-	UnlinkAccountIdentifier(accountID string, appTypeIdentifier string, identifierCreds string, l *logs.Log) (*model.Account, error)
+	UnlinkAccountIdentifier(accountID string, appTypeIdentifier string, identifierJSON string, admin bool, l *logs.Log) (*model.Account, error)
 
 	//InitializeSystemAccount initializes the first system account
 	InitializeSystemAccount(context storage.TransactionContext, authType model.AuthType, appOrg model.ApplicationOrganization, allSystemPermission string, email string, password string, clientVersion string, l *logs.Log) (string, error)
@@ -529,7 +529,7 @@ type Storage interface {
 	InsertLoginState(loginState model.LoginState) error
 
 	//Accounts
-	FindAccount(context storage.TransactionContext, appOrgID string, identifier string) (*model.Account, error)
+	FindAccount(context storage.TransactionContext, appOrgID string, code string, identifier string) (*model.Account, error)
 	FindAccountByID(context storage.TransactionContext, id string) (*model.Account, error)
 	FindAccountsByUsername(context storage.TransactionContext, appOrg *model.ApplicationOrganization, username string) ([]model.Account, error)
 	InsertAccount(context storage.TransactionContext, account model.Account) (*model.Account, error)

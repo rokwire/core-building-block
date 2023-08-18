@@ -250,7 +250,20 @@ func (h ServicesApisHandler) accountExists(l *logs.Log, r *http.Request, claims 
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.TypeRequest, nil, err, http.StatusBadRequest, true)
 	}
 
-	accountExists, err := h.coreAPIs.Auth.AccountExists(requestData.UserIdentifier, requestData.ApiKey, requestData.AppTypeIdentifier, requestData.OrgId)
+	//identifier
+	requestIdentifier, err := interfaceToJSON(requestData.Identifier)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeCreds, nil, err, http.StatusBadRequest, true)
+	}
+
+	//auth type
+	var authType *string
+	if requestData.AuthType != nil {
+		authTypeStr := string(*requestData.AuthType)
+		authType = &authTypeStr
+	}
+
+	accountExists, err := h.coreAPIs.Auth.AccountExists(requestIdentifier, requestData.ApiKey, requestData.AppTypeIdentifier, requestData.OrgId, authType, requestData.UserIdentifier)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionGet, logutils.MessageDataType("account exists"), nil, err, http.StatusInternalServerError, false)
 	}
@@ -275,7 +288,20 @@ func (h ServicesApisHandler) canSignIn(l *logs.Log, r *http.Request, claims *tok
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.TypeRequest, nil, err, http.StatusBadRequest, true)
 	}
 
-	canSignIn, err := h.coreAPIs.Auth.CanSignIn(requestData.UserIdentifier, requestData.ApiKey, requestData.AppTypeIdentifier, requestData.OrgId)
+	//identifier
+	requestIdentifier, err := interfaceToJSON(requestData.Identifier)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeCreds, nil, err, http.StatusBadRequest, true)
+	}
+
+	//auth type
+	var authType *string
+	if requestData.AuthType != nil {
+		authTypeStr := string(*requestData.AuthType)
+		authType = &authTypeStr
+	}
+
+	canSignIn, err := h.coreAPIs.Auth.CanSignIn(requestIdentifier, requestData.ApiKey, requestData.AppTypeIdentifier, requestData.OrgId, authType, requestData.UserIdentifier)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionGet, logutils.MessageDataType("can sign in"), nil, err, http.StatusInternalServerError, false)
 	}
@@ -300,7 +326,20 @@ func (h ServicesApisHandler) canLink(l *logs.Log, r *http.Request, claims *token
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.TypeRequest, nil, err, http.StatusBadRequest, true)
 	}
 
-	canLink, err := h.coreAPIs.Auth.CanLink(requestData.UserIdentifier, requestData.ApiKey, requestData.AppTypeIdentifier, requestData.OrgId)
+	//identifier
+	requestIdentifier, err := interfaceToJSON(requestData.Identifier)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeCreds, nil, err, http.StatusBadRequest, true)
+	}
+
+	//auth type
+	var authType *string
+	if requestData.AuthType != nil {
+		authTypeStr := string(*requestData.AuthType)
+		authType = &authTypeStr
+	}
+
+	canLink, err := h.coreAPIs.Auth.CanLink(requestIdentifier, requestData.ApiKey, requestData.AppTypeIdentifier, requestData.OrgId, authType, requestData.UserIdentifier)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionGet, logutils.MessageDataType("can link"), nil, err, http.StatusInternalServerError, false)
 	}
@@ -404,7 +443,7 @@ func (h ServicesApisHandler) linkAccountIdentifier(l *logs.Log, r *http.Request,
 		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeCreds, nil, err, http.StatusBadRequest, true)
 	}
 
-	message, account, err := h.coreAPIs.Auth.LinkAccountIdentifier(claims.Subject, requestIdentifier, l)
+	message, account, err := h.coreAPIs.Auth.LinkAccountIdentifier(claims.Subject, requestIdentifier, false, l)
 	if err != nil {
 		return l.HTTPResponseError("Error linking account identifier", err, http.StatusInternalServerError, true)
 	}
@@ -436,7 +475,7 @@ func (h ServicesApisHandler) unlinkAccountIdentifier(l *logs.Log, r *http.Reques
 		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeCreds, nil, err, http.StatusBadRequest, true)
 	}
 
-	account, err := h.coreAPIs.Auth.UnlinkAccountIdentifier(claims.Subject, requestData.AppTypeIdentifier, requestIdentifier, l)
+	account, err := h.coreAPIs.Auth.UnlinkAccountIdentifier(claims.Subject, requestData.AppTypeIdentifier, requestIdentifier, false, l)
 	if err != nil {
 		return l.HTTPResponseError("Error unlinking account identifier", err, http.StatusInternalServerError, true)
 	}
@@ -579,9 +618,15 @@ func (h ServicesApisHandler) createAdminAccount(l *logs.Log, r *http.Request, cl
 		username = *requestData.Username
 	}
 
+	//identifier
+	requestIdentifier, err := interfaceToJSON(requestData.Identifier)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeCreds, nil, err, http.StatusBadRequest, true)
+	}
+
 	creatorPermissions := strings.Split(claims.Permissions, ",")
 	account, params, err := h.coreAPIs.Auth.CreateAdminAccount(string(requestData.AuthType), claims.AppID, claims.OrgID,
-		requestData.Identifier, profile, privacy, username, permissions, roleIDs, groupIDs, scopes, creatorPermissions, &clientVersion, l)
+		requestIdentifier, profile, privacy, username, permissions, roleIDs, groupIDs, scopes, creatorPermissions, &clientVersion, l)
 	if err != nil || account == nil {
 		return l.HTTPResponseErrorAction(logutils.ActionCreate, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}
@@ -624,8 +669,15 @@ func (h ServicesApisHandler) updateAdminAccount(l *logs.Log, r *http.Request, cl
 	if requestData.Scopes != nil {
 		scopes = *requestData.Scopes
 	}
+
+	//identifier
+	requestIdentifier, err := interfaceToJSON(requestData.Identifier)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeCreds, nil, err, http.StatusBadRequest, true)
+	}
+
 	updaterPermissions := strings.Split(claims.Permissions, ",")
-	account, params, err := h.coreAPIs.Auth.UpdateAdminAccount(string(requestData.AuthType), claims.AppID, claims.OrgID, requestData.Identifier,
+	account, params, err := h.coreAPIs.Auth.UpdateAdminAccount(string(requestData.AuthType), claims.AppID, claims.OrgID, requestIdentifier,
 		permissions, roleIDs, groupIDs, scopes, updaterPermissions, l)
 	if err != nil || account == nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUpdate, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
@@ -1214,8 +1266,14 @@ func (h ServicesApisHandler) forgotCredentialInitiate(l *logs.Log, r *http.Reque
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth reset password request"), nil, err, http.StatusBadRequest, true)
 	}
 
+	//identifier
+	requestIdentifier, err := interfaceToJSON(requestData.VerifiedIdentifier)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeCreds, nil, err, http.StatusBadRequest, true)
+	}
+
 	if err := h.coreAPIs.Auth.ForgotCredential(string(requestData.AuthType), requestData.AppTypeIdentifier,
-		requestData.OrgId, requestData.ApiKey, requestData.Identifier, l); err != nil {
+		requestData.OrgId, requestData.ApiKey, requestIdentifier, requestData.Identifier, l); err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionSend, "forgot password link", nil, err, http.StatusInternalServerError, false)
 	}
 

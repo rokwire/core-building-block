@@ -1241,8 +1241,13 @@ func (sa *Adapter) InsertLoginState(loginState model.LoginState) error {
 }
 
 // FindAccount finds an account for app, org, auth type and identifier
-func (sa *Adapter) FindAccount(context TransactionContext, appOrgID string, identifier string) (*model.Account, error) {
-	filter := bson.M{"app_org_id": appOrgID, "identifiers.identifier": identifier}
+func (sa *Adapter) FindAccount(context TransactionContext, appOrgID string, code string, identifier string) (*model.Account, error) {
+	filter := bson.M{"app_org_id": appOrgID, "identifiers": bson.M{
+		"$elemMatch": bson.M{
+			"code":       code,
+			"identifier": identifier,
+		},
+	}}
 	var accounts []account
 	err := sa.db.accounts.FindWithContext(context, filter, &accounts, nil)
 	if err != nil {
