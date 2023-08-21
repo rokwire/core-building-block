@@ -82,16 +82,16 @@ func (c *APIs) storeSystemData() error {
 	transaction := func(context storage.TransactionContext) error {
 		createAccount := false
 
-		//1. insert email auth type if does not exist
-		emailAuthType, err := c.app.storage.FindAuthType(auth.IdentifierTypeEmail)
+		//1. insert password auth type if does not exist
+		passwordAuthType, err := c.app.storage.FindAuthType(auth.AuthTypePassword)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthType, nil, err)
 		}
-		if emailAuthType == nil {
+		if passwordAuthType == nil {
 			newDocuments["auth_type"] = uuid.NewString()
-			emailAuthType = &model.AuthType{ID: newDocuments["auth_type"], Code: auth.IdentifierTypeEmail, Description: "Authentication type relying on email and password",
-				IsExternal: false, IsAnonymous: false, UseCredentials: true, IgnoreMFA: false}
-			_, err = c.app.storage.InsertAuthType(context, *emailAuthType)
+			passwordAuthType = &model.AuthType{ID: newDocuments["auth_type"], Code: auth.AuthTypePassword, Description: "Authentication type relying on password",
+				IsExternal: false, IsAnonymous: false, UseCredentials: true, IgnoreMFA: false, Aliases: []string{auth.IdentifierTypeEmail, auth.IdentifierTypeUsername}}
+			_, err = c.app.storage.InsertAuthType(context, *passwordAuthType)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAuthType, nil, err)
 			}
@@ -139,7 +139,7 @@ func (c *APIs) storeSystemData() error {
 			//insert system admin apporg
 			supportedAuthTypes := make([]model.AuthTypesSupport, len(systemAdminApp.Types))
 			for i, appType := range systemAdminApp.Types {
-				supportedAuthTypes[i] = model.AuthTypesSupport{AppTypeID: appType.ID, SupportedAuthTypes: []model.SupportedAuthType{{AuthTypeID: emailAuthType.ID, Params: nil}}}
+				supportedAuthTypes[i] = model.AuthTypesSupport{AppTypeID: appType.ID, SupportedAuthTypes: []model.SupportedAuthType{{AuthTypeID: passwordAuthType.ID, Params: nil}}}
 			}
 
 			newDocuments["application_organization"] = uuid.NewString()
@@ -224,7 +224,7 @@ func (c *APIs) storeSystemData() error {
 			if c.systemAccountEmail == "" || c.systemAccountPassword == "" {
 				return errors.ErrorData(logutils.StatusMissing, "initial system account email or password", nil)
 			}
-			newDocuments["account"], err = c.Auth.InitializeSystemAccount(context, *emailAuthType, systemAppOrg, model.PermissionAllSystemCore, c.systemAccountEmail, c.systemAccountPassword, "", c.logger.NewRequestLog(nil))
+			newDocuments["account"], err = c.Auth.InitializeSystemAccount(context, *passwordAuthType, systemAppOrg, model.PermissionAllSystemCore, c.systemAccountEmail, c.systemAccountPassword, "", c.logger.NewRequestLog(nil))
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionInitialize, "system account", nil, err)
 			}

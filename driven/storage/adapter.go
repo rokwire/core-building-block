@@ -25,6 +25,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/rokwire/core-auth-library-go/v3/authutils"
 	"github.com/rokwire/logging-library-go/v2/errors"
 	"github.com/rokwire/logging-library-go/v2/logs"
@@ -97,10 +98,20 @@ func (sa *Adapter) Start() error {
 		return errors.WrapErrorAction(logutils.ActionCache, model.TypeApplication, nil, err)
 	}
 
+	err = sa.migrateAuthTypes()
+	if err != nil {
+		return errors.WrapErrorAction("migrating", model.TypeAuthType, nil, err)
+	}
+
 	//cache the auth types
 	err = sa.cacheAuthTypes()
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionCache, model.TypeAuthType, nil, err)
+	}
+
+	err = sa.migrateAccountData()
+	if err != nil {
+		return errors.WrapErrorAction("migrating", "account data", nil, err)
 	}
 
 	//cache the application organization
@@ -4085,6 +4096,40 @@ func (sa *Adapter) DeleteDevice(context TransactionContext, id string) error {
 	}
 
 	return nil
+}
+
+// Migration functions
+
+func (sa *Adapter) migrateAuthTypes() error {
+	//TODO: insert password, code auth types and remove email, phone, username auth types
+
+	transaction := func(context TransactionContext) error {
+		//1. insert new auth types
+		codeAuthType := model.AuthType{ID: uuid.NewString(), Code: "code", Description: "Authentication type relying on codes sent over a communication channel",
+			UseCredentials: true, Aliases: []string{"phone", "twilio_phone"}}
+		_, err := sa.InsertAuthType(context, codeAuthType)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAuthType, logutils.StringArgs("code"), err)
+		}
+
+		webauthnAuthType := model.AuthType{ID: uuid.NewString(), Code: "webauthn", Description: "Authentication type relying on WebAuthn", UseCredentials: true}
+		sa.InsertAuthType(context, webauthnAuthType) // this auth type may already exist
+
+		//2. remove old auth types
+		sa.db.authTypes.DeleteOneWithContext(context, bson.M{"code": "email"}, nil)
+		sa.db.authTypes.DeleteOneWithContext(context, bson.M{"code": "phone"}, nil)
+		sa.db.authTypes.DeleteOneWithContext(context, bson.M{"code": "twilio_phone"}, nil)
+		sa.db.authTypes.DeleteOneWithContext(context, bson.M{"code": "username"}, nil)
+
+		return nil
+	}
+
+	return sa.PerformTransaction(transaction)
+}
+
+func (sa *Adapter) migrateAccountData() error {
+	//TODO: migrate account auth type data, credentials, app org supported auth types
+	return errors.New(logutils.Unimplemented)
 }
 
 func (sa *Adapter) getFilterForParams(params map[string]interface{}) bson.M {
