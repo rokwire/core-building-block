@@ -117,7 +117,7 @@ func (a *oidcAuthImpl) externalLogin(authType model.AuthType, appType model.Appl
 		return nil, nil, "", errors.WrapErrorAction(logutils.ActionValidate, typeOidcLoginParams, nil, err)
 	}
 
-	oidcConfig, err := a.getOidcAuthConfig(authType, appType)
+	oidcConfig, err := a.getOidcAuthConfig(authType, appType.ID)
 	if err != nil {
 		return nil, nil, "", errors.WrapErrorAction(logutils.ActionGet, typeOidcAuthConfig, nil, err)
 	}
@@ -142,7 +142,7 @@ func (a *oidcAuthImpl) refresh(params map[string]interface{}, authType model.Aut
 		return nil, nil, "", errors.WrapErrorAction(logutils.ActionParse, typeAuthRefreshParams, nil, err)
 	}
 
-	oidcConfig, err := a.getOidcAuthConfig(authType, appType)
+	oidcConfig, err := a.getOidcAuthConfig(authType, appType.ID)
 	if err != nil {
 		return nil, nil, "", errors.WrapErrorAction(logutils.ActionGet, typeOidcAuthConfig, nil, err)
 	}
@@ -151,7 +151,7 @@ func (a *oidcAuthImpl) refresh(params map[string]interface{}, authType model.Aut
 }
 
 func (a *oidcAuthImpl) getLoginURL(authType model.AuthType, appType model.ApplicationType, redirectURI string, l *logs.Log) (string, map[string]interface{}, error) {
-	oidcConfig, err := a.getOidcAuthConfig(authType, appType)
+	oidcConfig, err := a.getOidcAuthConfig(authType, appType.ID)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionGet, typeOidcAuthConfig, nil, err)
 	}
@@ -202,7 +202,7 @@ func (a *oidcAuthImpl) getLoginURL(authType model.AuthType, appType model.Applic
 func (a *oidcAuthImpl) checkToken(idToken string, authType model.AuthType, appType model.ApplicationType, oidcConfig *oidcAuthConfig, l *logs.Log) (string, error) {
 	var err error
 	if oidcConfig == nil {
-		oidcConfig, err = a.getOidcAuthConfig(authType, appType)
+		oidcConfig, err = a.getOidcAuthConfig(authType, appType.ID)
 		if err != nil {
 			return "", errors.WrapErrorAction(logutils.ActionGet, typeOidcAuthConfig, nil, err)
 		}
@@ -461,14 +461,13 @@ func (a *oidcAuthImpl) loadOidcUserInfo(token *oidcToken, url string) ([]byte, e
 	return body, nil
 }
 
-func (a *oidcAuthImpl) getOidcAuthConfig(authType model.AuthType, appType model.ApplicationType) (*oidcAuthConfig, error) {
-	errFields := &logutils.FieldArgs{"auth_type_id": authType.ID, "app_type_id": appType.ID}
+func (a *oidcAuthImpl) getOidcAuthConfig(authType model.AuthType, appTypeID string) (*oidcAuthConfig, error) {
+	errFields := &logutils.FieldArgs{"auth_type_id": authType.ID, "app_type_id": appTypeID}
 
 	identityProviderID, ok := authType.Params["identity_provider"].(string)
 	if !ok {
 		return nil, errors.ErrorData(logutils.StatusInvalid, "identity provider", errFields)
 	}
-	appTypeID := appType.ID
 	authConfig, err := a.auth.getCachedIdentityProviderConfig(identityProviderID, appTypeID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeIdentityProviderConfig, errFields, err)

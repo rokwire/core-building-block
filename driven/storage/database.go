@@ -271,7 +271,7 @@ func (m *database) applyAccountsChecks(accounts *collectionWrapper) error {
 
 	//add compound index - auth_type identifier + auth_type_id
 	// Can't be unique because of anonymous accounts
-	err := accounts.AddIndex(bson.D{primitive.E{Key: "identifiers.identifier", Value: 1}, primitive.E{Key: "app_org_id", Value: 1}}, true)
+	err := accounts.AddIndex(bson.D{primitive.E{Key: "identifiers.identifier", Value: 1}, primitive.E{Key: "identifiers.code", Value: 1}, primitive.E{Key: "app_org_id", Value: 1}}, true)
 	if err != nil {
 		return err
 	}
@@ -325,11 +325,8 @@ func (m *database) applyDevicesChecks(devices *collectionWrapper) error {
 func (m *database) applyCredentialChecks(credentials *collectionWrapper) error {
 	m.logger.Info("apply credentials checks.....")
 
-	// Add user_auth_type_id index
-	err := credentials.AddIndex(bson.D{primitive.E{Key: "user_auth_type_id", Value: 1}}, false)
-	if err != nil {
-		return err
-	}
+	// remove unused index
+	credentials.DropIndex("user_auth_type_id_1")
 
 	m.logger.Info("credentials check passed")
 	return nil
