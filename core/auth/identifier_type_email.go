@@ -47,40 +47,34 @@ type emailIdentifierImpl struct {
 	auth *Auth
 	code string
 
-	identifier *string
+	identifier string
 }
 
 func (a *emailIdentifierImpl) getCode() string {
 	return a.code
 }
 
-func (a *emailIdentifierImpl) getUserIdentifier(creds string) (string, error) {
-	if a.identifier != nil {
-		return *a.identifier, nil
-	}
+func (a *emailIdentifierImpl) getIdentifier() string {
+	return a.identifier
+}
 
+func (a *emailIdentifierImpl) withIdentifier(creds string) (identifierType, error) {
 	var requestCreds emailIdentifier
 	err := json.Unmarshal([]byte(creds), &requestCreds)
 	if err != nil {
-		return "", errors.WrapErrorAction(logutils.ActionUnmarshal, typeEmailIdentifier, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeEmailIdentifier, nil, err)
 	}
 
 	err = validator.New().Struct(requestCreds)
 	if err != nil {
-		return "", errors.WrapErrorAction(logutils.ActionValidate, typeEmailIdentifier, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionValidate, typeEmailIdentifier, nil, err)
 	}
 
-	email := strings.TrimSpace(requestCreds.Email)
-	a.identifier = &email
-	return email, nil
-}
-
-func (a *emailIdentifierImpl) withIdentifier(identifier string) identifierType {
-	return &emailIdentifierImpl{auth: a.auth, code: a.code, identifier: &identifier}
+	return &emailIdentifierImpl{auth: a.auth, code: a.code, identifier: strings.TrimSpace(requestCreds.Email)}, nil
 }
 
 func (a *emailIdentifierImpl) buildIdentifier(accountID *string, appName string) (string, *model.AccountIdentifier, error) {
-	if a.identifier == nil {
+	if a.identifier == "" {
 		return "", nil, errors.ErrorData(logutils.StatusMissing, "email identifier", nil)
 	}
 
@@ -92,7 +86,7 @@ func (a *emailIdentifierImpl) buildIdentifier(accountID *string, appName string)
 	}
 
 	message := ""
-	accountIdentifier := model.AccountIdentifier{ID: uuid.NewString(), Code: a.code, Identifier: *a.identifier, Verified: false,
+	accountIdentifier := model.AccountIdentifier{ID: uuid.NewString(), Code: a.code, Identifier: a.identifier, Verified: false,
 		Account: model.Account{ID: accountIDStr}, DateCreated: time.Now().UTC()}
 	sent, err := a.sendVerifyIdentifier(&accountIdentifier, appName)
 	if err != nil {
@@ -198,7 +192,7 @@ func (a *emailIdentifierImpl) restartIdentifierVerification(accountIdentifier *m
 }
 
 func (a *emailIdentifierImpl) sendCode(appName string, code string, codeType string, itemID string) (string, error) {
-	if a.identifier == nil {
+	if a.identifier == "" {
 		return "", errors.ErrorData(logutils.StatusMissing, typeEmailIdentifier, nil)
 	}
 
@@ -213,7 +207,7 @@ func (a *emailIdentifierImpl) sendCode(appName string, code string, codeType str
 			subject += " for " + appName
 		}
 		body := "Please click the link below to reset your password:<br><a href=" + passwordResetLink + ">" + passwordResetLink + "</a><br><br>If you did not request a password reset, please ignore this message."
-		return "", a.auth.emailer.Send(*a.identifier, subject, body, nil)
+		return "", a.auth.emailer.Send(a.identifier, subject, body, nil)
 	case typeVerificationCode:
 		verificationLink := a.auth.host + fmt.Sprintf("/ui/identifier/verify?%s", params.Encode())
 		subject := "Verify your email address"
@@ -221,7 +215,7 @@ func (a *emailIdentifierImpl) sendCode(appName string, code string, codeType str
 			subject += " for " + appName
 		}
 		body := "Please click the link below to verify your email address:<br><a href=" + verificationLink + ">" + verificationLink + "</a><br><br>If you did not request this verification link, please ignore this message."
-		return "", a.auth.emailer.Send(*a.identifier, subject, body, nil)
+		return "", a.auth.emailer.Send(a.identifier, subject, body, nil)
 	case typeAuthenticationCode:
 		subject := "Your authentication code"
 		body := "Please use the code " + code + " to login"
@@ -230,7 +224,7 @@ func (a *emailIdentifierImpl) sendCode(appName string, code string, codeType str
 			body += " to " + appName
 		}
 		body += ". If you did not request this authentication code, please ignore this message."
-		return "", a.auth.emailer.Send(*a.identifier, subject, body, nil)
+		return "", a.auth.emailer.Send(a.identifier, subject, body, nil)
 	default:
 		return "", errors.ErrorData(logutils.StatusInvalid, "code type", logutils.StringArgs(codeType))
 	}

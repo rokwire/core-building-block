@@ -42,40 +42,34 @@ type usernameIdentifierImpl struct {
 	auth *Auth
 	code string
 
-	identifier *string
+	identifier string
 }
 
 func (a *usernameIdentifierImpl) getCode() string {
 	return a.code
 }
 
-func (a *usernameIdentifierImpl) getUserIdentifier(creds string) (string, error) {
-	if a.identifier != nil {
-		return *a.identifier, nil
-	}
+func (a *usernameIdentifierImpl) getIdentifier() string {
+	return a.identifier
+}
 
+func (a *usernameIdentifierImpl) withIdentifier(creds string) (identifierType, error) {
 	var requestCreds usernameIdentifier
 	err := json.Unmarshal([]byte(creds), &requestCreds)
 	if err != nil {
-		return "", errors.WrapErrorAction(logutils.ActionUnmarshal, typeUsernameIdentifier, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeUsernameIdentifier, nil, err)
 	}
 
 	err = validator.New().Struct(requestCreds)
 	if err != nil {
-		return "", errors.WrapErrorAction(logutils.ActionValidate, typeUsernameIdentifier, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionValidate, typeUsernameIdentifier, nil, err)
 	}
 
-	username := strings.TrimSpace(strings.ToLower(requestCreds.Username))
-	a.identifier = &username
-	return username, nil
-}
-
-func (a *usernameIdentifierImpl) withIdentifier(identifier string) identifierType {
-	return &usernameIdentifierImpl{auth: a.auth, code: a.code, identifier: &identifier}
+	return &usernameIdentifierImpl{auth: a.auth, code: a.code, identifier: strings.TrimSpace(strings.ToLower(requestCreds.Username))}, nil
 }
 
 func (a *usernameIdentifierImpl) buildIdentifier(accountID *string, appName string) (string, *model.AccountIdentifier, error) {
-	if a.identifier == nil {
+	if a.identifier == "" {
 		return "", nil, errors.ErrorData(logutils.StatusMissing, "username identifier", nil)
 	}
 
@@ -86,7 +80,7 @@ func (a *usernameIdentifierImpl) buildIdentifier(accountID *string, appName stri
 		accountIDStr = uuid.NewString()
 	}
 
-	accountIdentifier := model.AccountIdentifier{ID: uuid.NewString(), Code: a.code, Identifier: *a.identifier, Verified: true,
+	accountIdentifier := model.AccountIdentifier{ID: uuid.NewString(), Code: a.code, Identifier: a.identifier, Verified: true,
 		Account: model.Account{ID: accountIDStr}, DateCreated: time.Now().UTC()}
 
 	return "", &accountIdentifier, nil

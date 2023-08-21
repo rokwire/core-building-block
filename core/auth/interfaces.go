@@ -34,15 +34,15 @@ type identifierType interface {
 	//	identifierCode (string): identifier code
 	getCode() string
 
-	//getUserIdentifier parses the credentials and returns the user identifier
+	//getIdentifier returns the user identifier
 	// Returns:
 	//	userIdentifier (string): User identifier
-	getUserIdentifier(creds string) (string, error)
+	getIdentifier() string
 
-	//withIdentifier copies the calling identifierType while caching the identifier
+	//withIdentifier parses the credentials and copies the calling identifierType while caching the identifier
 	// Returns:
 	//	identifierImpl (identifierType): Copy of calling identifierType with cached identifier
-	withIdentifier(identifier string) identifierType
+	withIdentifier(creds string) (identifierType, error)
 
 	//buildIdentifier creates a new account identifier
 	// Returns:
@@ -292,7 +292,7 @@ type APIs interface {
 	VerifyIdentifier(id string, verification string, l *logs.Log) error
 
 	//SendVerifyIdentifier sends verification code to identifier
-	SendVerifyIdentifier(appTypeIdentifier string, orgID string, apiKey string, identifier string, l *logs.Log) error
+	SendVerifyIdentifier(appTypeIdentifier string, orgID string, apiKey string, identifierJSON string, l *logs.Log) error
 
 	//UpdateCredential updates the credential object with the new value
 	//	Input:
@@ -306,13 +306,14 @@ type APIs interface {
 	//ForgotCredential initiate forgot credential process (generates a reset link and sends to the given identifier for email auth type)
 	//	Input:
 	//		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
-	//		identifier: identifier of the account auth type
+	//		identifierJSON (string): JSON string of the user's identifier and the identifier code
 	//		appTypeIdentifier (string): Identifier of the app type/client that the user is logging in from
 	//		orgID (string): ID of the organization that the user is logging in
 	//		apiKey (string): API key to validate the specified app
+	//		userIdentifier (*string): Optional user identifier for backwards compatibility
 	//	Returns:
 	//		error: if any
-	ForgotCredential(authenticationType string, appTypeIdentifier string, orgID string, apiKey string, identifierJSON string, userIdentifier *string, l *logs.Log) error
+	ForgotCredential(authenticationType string, identifierJSON string, appTypeIdentifier string, orgID string, apiKey string, userIdentifier *string, l *logs.Log) error
 
 	//ResetForgotCredential resets forgot credential
 	//	Input:

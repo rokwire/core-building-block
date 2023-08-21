@@ -44,44 +44,39 @@ type phoneIdentifierImpl struct {
 	auth *Auth
 	code string
 
-	identifier *string
+	identifier string
 }
 
 func (a *phoneIdentifierImpl) getCode() string {
 	return a.code
 }
 
-func (a *phoneIdentifierImpl) getUserIdentifier(creds string) (string, error) {
-	if a.identifier != nil {
-		return *a.identifier, nil
-	}
+func (a *phoneIdentifierImpl) getIdentifier() string {
+	return a.identifier
+}
 
+func (a *phoneIdentifierImpl) withIdentifier(creds string) (identifierType, error) {
 	var requestCreds phoneIdentifier
 	err := json.Unmarshal([]byte(creds), &requestCreds)
 	if err != nil {
-		return "", errors.WrapErrorAction(logutils.ActionUnmarshal, typePhoneIdentifier, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typePhoneIdentifier, nil, err)
 	}
 
 	err = validator.New().Struct(requestCreds)
 	if err != nil {
-		return "", errors.WrapErrorAction(logutils.ActionValidate, typePhoneIdentifier, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionValidate, typePhoneIdentifier, nil, err)
 	}
 
 	validPhone := regexp.MustCompile(`^\+[1-9]\d{1,14}$`)
 	if !validPhone.MatchString(requestCreds.Phone) {
-		return "", errors.ErrorData(logutils.StatusInvalid, typePhoneNumber, &logutils.FieldArgs{"phone": requestCreds.Phone})
+		return nil, errors.ErrorData(logutils.StatusInvalid, typePhoneNumber, &logutils.FieldArgs{"phone": requestCreds.Phone})
 	}
 
-	a.identifier = &requestCreds.Phone
-	return requestCreds.Phone, nil
-}
-
-func (a *phoneIdentifierImpl) withIdentifier(identifier string) identifierType {
-	return &phoneIdentifierImpl{auth: a.auth, code: a.code, identifier: &identifier}
+	return &phoneIdentifierImpl{auth: a.auth, code: a.code, identifier: requestCreds.Phone}, nil
 }
 
 func (a *phoneIdentifierImpl) buildIdentifier(accountID *string, appName string) (string, *model.AccountIdentifier, error) {
-	if a.identifier == nil {
+	if a.identifier == "" {
 		return "", nil, errors.ErrorData(logutils.StatusMissing, "phone identifier", nil)
 	}
 
@@ -93,7 +88,7 @@ func (a *phoneIdentifierImpl) buildIdentifier(accountID *string, appName string)
 	}
 
 	message := ""
-	accountIdentifier := model.AccountIdentifier{ID: uuid.NewString(), Code: a.code, Identifier: *a.identifier, Verified: false,
+	accountIdentifier := model.AccountIdentifier{ID: uuid.NewString(), Code: a.code, Identifier: a.identifier, Verified: false,
 		Account: model.Account{ID: accountIDStr}, DateCreated: time.Now().UTC()}
 	sent, err := a.sendVerifyIdentifier(&accountIdentifier, appName)
 	if err != nil {
@@ -143,23 +138,23 @@ func (a *phoneIdentifierImpl) restartIdentifierVerification(accountIdentifier *m
 }
 
 func (a *phoneIdentifierImpl) sendCode(appName string, code string, codeType string, itemID string) (string, error) {
-	if a.identifier == nil {
+	if a.identifier == "" {
 		return "", errors.ErrorData(logutils.StatusMissing, typeEmailIdentifier, nil)
 	}
 
 	data := url.Values{}
-	data.Add("To", *a.identifier)
+	data.Add("To", a.identifier)
 	if code != "" {
 		// check verification
 		data.Add("Code", code)
-		return "", a.auth.phoneVerifier.CheckVerification(*a.identifier, data)
+		return "", a.auth.phoneVerifier.CheckVerification(a.identifier, data)
 	}
 
 	// start verification
 	data.Add("Channel", "sms")
 
 	message := ""
-	err := a.auth.phoneVerifier.StartVerification(*a.identifier, data)
+	err := a.auth.phoneVerifier.StartVerification(a.identifier, data)
 	if err == nil {
 		message = "verification code sent successfully"
 	}

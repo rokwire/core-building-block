@@ -877,8 +877,10 @@ type ServicesReqCredentialUpdate_Params struct {
 type ServicesReqIdentifierSendVerify struct {
 	ApiKey            string `json:"api_key"`
 	AppTypeIdentifier string `json:"app_type_identifier"`
-	Identifier        string `json:"identifier"`
-	OrgId             string `json:"org_id"`
+
+	// Identifier Allowed identifier types
+	Identifier SharedReqIdentifiers `json:"identifier"`
+	OrgId      string               `json:"org_id"`
 }
 
 // ServicesReqServiceAccountsAccessToken defines model for _services_req_service-accounts_access-token.

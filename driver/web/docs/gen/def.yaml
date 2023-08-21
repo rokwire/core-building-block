@@ -7641,7 +7641,7 @@ components:
       type: object
       properties:
         identifier:
-          type: string
+          $ref: '#/components/schemas/_shared_req_Identifiers'
         org_id:
           type: string
         api_key:

@@ -151,6 +151,17 @@ func (a Account) GetAccountIdentifier(code string, identifier string) *AccountId
 	return nil
 }
 
+// GetAccountIdentifierByID finds account identifier by its ID
+func (a Account) GetAccountIdentifierByID(id string) *AccountIdentifier {
+	for _, ai := range a.Identifiers {
+		if ai.ID == id {
+			ai.Account = a
+			return &ai
+		}
+	}
+	return nil
+}
+
 // GetVerifiedAccountIdentifiers returns a list of only verified identifiers for this account
 func (a Account) GetVerifiedAccountIdentifiers() []AccountIdentifier {
 	identifiers := make([]AccountIdentifier, 0)

@@ -1255,13 +1255,8 @@ func (h ServicesApisHandler) forgotCredentialComplete(l *logs.Log, r *http.Reque
 
 // Handler for forgot credential endpoint
 func (h ServicesApisHandler) forgotCredentialInitiate(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
-
 	var requestData Def.ServicesReqCredentialForgotInitiate
-	err = json.Unmarshal(data, &requestData)
+	err := json.NewDecoder(r.Body).Decode(&requestData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth reset password request"), nil, err, http.StatusBadRequest, true)
 	}
@@ -1272,8 +1267,8 @@ func (h ServicesApisHandler) forgotCredentialInitiate(l *logs.Log, r *http.Reque
 		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeCreds, nil, err, http.StatusBadRequest, true)
 	}
 
-	if err := h.coreAPIs.Auth.ForgotCredential(string(requestData.AuthType), requestData.AppTypeIdentifier,
-		requestData.OrgId, requestData.ApiKey, requestIdentifier, requestData.Identifier, l); err != nil {
+	if err := h.coreAPIs.Auth.ForgotCredential(string(requestData.AuthType), requestIdentifier, requestData.AppTypeIdentifier,
+		requestData.OrgId, requestData.ApiKey, requestData.Identifier, l); err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionSend, "forgot password link", nil, err, http.StatusInternalServerError, false)
 	}
 
@@ -1301,18 +1296,19 @@ func (h ServicesApisHandler) verifyIdentifier(l *logs.Log, r *http.Request, clai
 
 // Handler for resending verify code
 func (h ServicesApisHandler) sendVerifyIdentifier(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
-
 	var requestData Def.ServicesReqIdentifierSendVerify
-	err = json.Unmarshal(data, &requestData)
+	err := json.NewDecoder(r.Body).Decode(&requestData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth resend verify code request"), nil, err, http.StatusBadRequest, true)
 	}
 
-	if err := h.coreAPIs.Auth.SendVerifyIdentifier(requestData.AppTypeIdentifier, requestData.OrgId, requestData.ApiKey, requestData.Identifier, l); err != nil {
+	//identifier
+	requestIdentifier, err := interfaceToJSON(requestData.Identifier)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeCreds, nil, err, http.StatusBadRequest, true)
+	}
+
+	if err := h.coreAPIs.Auth.SendVerifyIdentifier(requestData.AppTypeIdentifier, requestData.OrgId, requestData.ApiKey, requestIdentifier, l); err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionSend, "code", nil, err, http.StatusInternalServerError, false)
 	}
 

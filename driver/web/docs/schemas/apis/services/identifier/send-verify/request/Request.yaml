@@ -6,7 +6,7 @@ required:
 type: object
 properties:
   identifier:
-    type: string
+    $ref: "../../../../shared/requests/Identifiers.yaml"
   org_id:
     type: string
   api_key:

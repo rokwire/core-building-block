@@ -35,37 +35,29 @@ type externalIdentifierImpl struct {
 	auth *Auth
 	code string
 
-	identifier *string
+	identifier string
 }
 
 func (a *externalIdentifierImpl) getCode() string {
 	return a.code
 }
 
-func (a *externalIdentifierImpl) getUserIdentifier(creds string) (string, error) {
-	if a.identifier != nil {
-		return *a.identifier, nil
-	}
+func (a *externalIdentifierImpl) getIdentifier() string {
+	return a.identifier
+}
 
+func (a *externalIdentifierImpl) withIdentifier(creds string) (identifierType, error) {
 	var requestCreds map[string]string
 	err := json.Unmarshal([]byte(creds), &requestCreds)
 	if err != nil {
-		return "", errors.WrapErrorAction(logutils.ActionUnmarshal, typeExternalIdentifier, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeExternalIdentifier, nil, err)
 	}
 
-	external := ""
 	for k, id := range requestCreds {
-		external = strings.TrimSpace(id)
-		a.identifier = &external
-		a.code = k
-		return external, nil
+		return &externalIdentifierImpl{auth: a.auth, code: k, identifier: strings.TrimSpace(id)}, nil
 	}
 
-	return "", errors.ErrorData(logutils.StatusMissing, typeExternalIdentifier, nil)
-}
-
-func (a *externalIdentifierImpl) withIdentifier(identifier string) identifierType {
-	return &externalIdentifierImpl{auth: a.auth, code: a.code, identifier: &identifier}
+	return nil, errors.ErrorData(logutils.StatusMissing, "external identifier", nil)
 }
 
 func (a *externalIdentifierImpl) buildIdentifier(accountID *string, appName string) (string, *model.AccountIdentifier, error) {
