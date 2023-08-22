@@ -98,20 +98,10 @@ func (sa *Adapter) Start() error {
 		return errors.WrapErrorAction(logutils.ActionCache, model.TypeApplication, nil, err)
 	}
 
-	err = sa.migrateAuthTypes()
-	if err != nil {
-		return errors.WrapErrorAction("migrating", model.TypeAuthType, nil, err)
-	}
-
 	//cache the auth types
 	err = sa.cacheAuthTypes()
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionCache, model.TypeAuthType, nil, err)
-	}
-
-	err = sa.migrateAccountData()
-	if err != nil {
-		return errors.WrapErrorAction("migrating", "account data", nil, err)
 	}
 
 	//cache the application organization
@@ -131,6 +121,16 @@ func (sa *Adapter) Start() error {
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionCache, model.TypeConfig, nil, err)
 	}
+
+	err = sa.migrateAuthTypes()
+	if err != nil {
+		return errors.WrapErrorAction("migrating", model.TypeAuthType, nil, err)
+	}
+
+	// err = sa.migrateLoginSessions()
+	// if err != nil {
+	// 	return errors.WrapErrorAction("migrating", model.TypeLoginSession, nil, err)
+	// }
 
 	return err
 }
@@ -458,7 +458,6 @@ func (sa *Adapter) setCachedAuthTypes(authProviders []model.AuthType) {
 			sa.cachedAuthTypes.Store(authType.ID, authType)
 			sa.cachedAuthTypes.Store(authType.Code, authType)
 			for _, alias := range authType.Aliases {
-				//TODO: cache by alias IDs too?
 				sa.cachedAuthTypes.Store(alias, authType)
 			}
 		} else {
@@ -4101,25 +4100,78 @@ func (sa *Adapter) DeleteDevice(context TransactionContext, id string) error {
 // Migration functions
 
 func (sa *Adapter) migrateAuthTypes() error {
-	//TODO: insert password, code auth types and remove email, phone, username auth types
-
 	transaction := func(context TransactionContext) error {
 		//1. insert new auth types
-		codeAuthType := model.AuthType{ID: uuid.NewString(), Code: "code", Description: "Authentication type relying on codes sent over a communication channel",
-			UseCredentials: true, Aliases: []string{"phone", "twilio_phone"}}
-		_, err := sa.InsertAuthType(context, codeAuthType)
-		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAuthType, logutils.StringArgs("code"), err)
+		newAuthTypes := map[string]model.AuthType{
+			"password": {ID: uuid.NewString(), Code: "password", Description: "Authentication type relying on password", UseCredentials: true, Aliases: []string{"email", "username"}},
+			"code":     {ID: uuid.NewString(), Code: "code", Description: "Authentication type relying on codes sent over a communication channel", Aliases: []string{"phone", "twilio_phone"}},
+			"webauthn": {ID: uuid.NewString(), Code: "webauthn", Description: "Authentication type relying on WebAuthn", UseCredentials: true},
+		}
+		inserted := false
+		for code, authType := range newAuthTypes {
+			existing, err := sa.FindAuthType(code)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthType, logutils.StringArgs(code), err)
+			}
+			if existing == nil {
+				_, err = sa.InsertAuthType(context, authType)
+				if err != nil {
+					return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAuthType, logutils.StringArgs(code), err)
+				}
+
+				inserted = true
+			}
+		}
+		// if all already exist, migration is done so return no error
+		if !inserted {
+			return nil
 		}
 
-		webauthnAuthType := model.AuthType{ID: uuid.NewString(), Code: "webauthn", Description: "Authentication type relying on WebAuthn", UseCredentials: true}
-		sa.InsertAuthType(context, webauthnAuthType) // this auth type may already exist
+		//2. remove old auth types if they exist
+		removedAuthTypes := make(map[string]string)
+		remove := map[string]string{
+			"email":        newAuthTypes["password"].ID,
+			"username":     newAuthTypes["password"].ID,
+			"phone":        newAuthTypes["code"].ID,
+			"twilio_phone": newAuthTypes["code"].ID,
+		}
+		for old, new := range remove {
+			// need to load auth type directly from DB so that we do not get one of the new auth types by alias
+			var authTypes []model.AuthType
+			err := sa.db.authTypes.FindWithContext(context, bson.M{"code": old}, &authTypes, nil)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthType, logutils.StringArgs(old), err)
+			}
+			if len(authTypes) == 0 {
+				continue
+			}
 
-		//2. remove old auth types
-		sa.db.authTypes.DeleteOneWithContext(context, bson.M{"code": "email"}, nil)
-		sa.db.authTypes.DeleteOneWithContext(context, bson.M{"code": "phone"}, nil)
-		sa.db.authTypes.DeleteOneWithContext(context, bson.M{"code": "twilio_phone"}, nil)
-		sa.db.authTypes.DeleteOneWithContext(context, bson.M{"code": "username"}, nil)
+			removedAuthTypes[authTypes[0].ID] = new
+
+			// remove the unwanted auth type, which also updates the cache
+			_, err = sa.db.authTypes.DeleteOneWithContext(context, bson.M{"code": old}, nil)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAuthType, logutils.StringArgs(old), err)
+			}
+		}
+
+		//3. migrate app orgs
+		err := sa.migrateAppOrgs(context, removedAuthTypes)
+		if err != nil {
+			return errors.WrapErrorAction("migrating", model.TypeApplicationOrganization, nil, err)
+		}
+
+		//4. migrate accounts
+		// err = sa.migrateAccounts(context, removedAuthTypes)
+		// if err != nil {
+		// 	return errors.WrapErrorAction("migrating", model.TypeAccount, nil, err)
+		// }
+
+		//5. migrate credentials
+		// err = sa.migrateCredentials(context, removedAuthTypes)
+		// if err != nil {
+		// 	return errors.WrapErrorAction("migrating", model.TypeCredential, nil, err)
+		// }
 
 		return nil
 	}
@@ -4127,8 +4179,57 @@ func (sa *Adapter) migrateAuthTypes() error {
 	return sa.PerformTransaction(transaction)
 }
 
-func (sa *Adapter) migrateAccountData() error {
-	//TODO: migrate account auth type data, credentials, app org supported auth types
+func (sa *Adapter) migrateAppOrgs(context TransactionContext, removedAuthTypes map[string]string) error {
+	appOrgs, err := sa.FindApplicationsOrganizations()
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
+	}
+
+	for _, appOrg := range appOrgs {
+		updated := false
+		for i, appType := range appOrg.SupportedAuthTypes {
+			updatedIDs := make([]string, 0)
+			for j, authType := range appType.SupportedAuthTypes {
+				if newID := removedAuthTypes[authType.AuthTypeID]; newID != "" {
+					if !utils.Contains(updatedIDs, newID) {
+						appType.SupportedAuthTypes[j] = model.SupportedAuthType{AuthTypeID: newID}
+						updatedIDs = append(updatedIDs, newID)
+					} else {
+						// remove the obsolete supported auth type if the newID is already included in the list
+						appType.SupportedAuthTypes = append(appType.SupportedAuthTypes[:j], appType.SupportedAuthTypes[j+1:]...)
+					}
+				}
+			}
+
+			if len(updatedIDs) > 0 {
+				appOrg.SupportedAuthTypes[i] = appType
+				updated = true
+			}
+		}
+
+		if updated {
+			err = sa.UpdateApplicationOrganization(context, appOrg)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeApplicationOrganization, &logutils.FieldArgs{"id": appOrg.ID}, err)
+			}
+		}
+	}
+
+	return nil
+}
+
+func (sa *Adapter) migrateAccounts(context TransactionContext, removedAuthTypes map[string]string) error {
+	//TODO: migrate account auth type data
+	return errors.New(logutils.Unimplemented)
+}
+
+func (sa *Adapter) migrateCredentials(context TransactionContext, removedAuthTypes map[string]string) error {
+	//TODO: migrate credentials
+	return errors.New(logutils.Unimplemented)
+}
+
+func (sa *Adapter) migrateLoginSessions() error {
+	//TODO: migrate login sessions
 	return errors.New(logutils.Unimplemented)
 }
 

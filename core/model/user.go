@@ -114,10 +114,10 @@ func (a Account) GetAccountAuthTypeByID(ID string) *AccountAuthType {
 }
 
 // GetAccountAuthTypes finds account auth types
-func (a Account) GetAccountAuthTypes(authTypeIDorCode string, active *bool) []AccountAuthType {
+func (a Account) GetAccountAuthTypes(authTypeIDorCode string) []AccountAuthType {
 	authTypes := make([]AccountAuthType, 0)
 	for _, aat := range a.AuthTypes {
-		if aat.SupportedAuthType.AuthType.ID == authTypeIDorCode || aat.SupportedAuthType.AuthType.Code == authTypeIDorCode && (active != nil && aat.Active == *active) {
+		if aat.SupportedAuthType.AuthType.ID == authTypeIDorCode || aat.SupportedAuthType.AuthType.Code == authTypeIDorCode {
 			aat.Account = a
 			authTypes = append(authTypes, aat)
 		}

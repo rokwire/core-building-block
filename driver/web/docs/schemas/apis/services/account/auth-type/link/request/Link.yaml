@@ -1,7 +1,6 @@
 required:
   - auth_type
   - app_type_identifier
-  - creds
 type: object
 properties:
   auth_type:
@@ -15,8 +14,6 @@ properties:
       - phone
       - twilio_phone
       - username
-  identifier:
-    $ref: "../../../../../shared/requests/Identifiers.yaml"
   app_type_identifier:
     type: string
   creds:
@@ -25,6 +22,7 @@ properties:
       - $ref: "../../../../../shared/requests/CredsOIDC.yaml"
       - $ref: "../../../../../shared/requests/CredsPassword.yaml"
       - $ref: "../../../../../shared/requests/CredsWebAuthn.yaml"
+      - $ref: "../../../../../shared/requests/CredsNone.yaml"
   params:
     type: object
     anyOf:

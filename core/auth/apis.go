@@ -368,8 +368,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 			return nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, &logutils.FieldArgs{"session_id": loginSession.ID, "anonymous": false})
 		}
 
-		active := true
-		aats := loginSession.Account.GetAccountAuthTypes(loginSession.AuthType.Code, &active)
+		aats := loginSession.Account.GetAccountAuthTypes(loginSession.AuthType.Code)
 		if len(aats) != 1 {
 			return nil, errors.ErrorData(logutils.StatusInvalid, model.TypeAccountAuthType, &logutils.FieldArgs{"code": loginSession.AuthType.Code, "count": len(aats)})
 		}
@@ -1132,8 +1131,7 @@ func (a *Auth) ForgotCredential(authenticationType string, identifierJSON string
 		return errors.ErrorData(logutils.StatusMissing, model.TypeAccountIdentifier, &logutils.FieldArgs{"identifier": identifier})
 	}
 
-	active := true
-	accountAuthTypes, err := a.findAccountAuthTypesAndCredentials(account, *authType, &active)
+	accountAuthTypes, err := a.findAccountAuthTypesAndCredentials(account, *authType)
 	if len(accountAuthTypes) == 0 {
 		return errors.ErrorData(logutils.StatusMissing, model.TypeAccountAuthType, &logutils.FieldArgs{"auth_type": authType.AuthType.Code, "identifier": identifier})
 	}
@@ -1737,7 +1735,7 @@ func (a *Auth) GetAdminToken(claims tokenauth.Claims, appID string, orgID string
 //	Returns:
 //		message (*string): response message
 //		account (*model.Account): account data after the operation
-func (a *Auth) LinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, creds string, params string, identifierJSON string, l *logs.Log) (*string, *model.Account, error) {
+func (a *Auth) LinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, creds string, params string, l *logs.Log) (*string, *model.Account, error) {
 	var message *string
 	var newAccountAuthType *model.AccountAuthType
 
@@ -1759,8 +1757,7 @@ func (a *Auth) LinkAccountAuthType(accountID string, authenticationType string, 
 		return nil, nil, errors.ErrorData(logutils.StatusInvalid, model.TypeAuthType, &logutils.FieldArgs{"anonymous": true})
 	} else if authType.AuthType.IsExternal {
 		// only one account auth type per each external auth type is allowed
-		active := true
-		externalAats := account.GetAccountAuthTypes(authType.AuthType.Code, &active)
+		externalAats := account.GetAccountAuthTypes(authType.AuthType.Code)
 		if len(externalAats) > 0 {
 			return nil, nil, errors.ErrorData(logutils.StatusFound, model.TypeAuthType, &logutils.FieldArgs{"allow_multiple": false, "code": authType.AuthType.Code})
 		}
@@ -1770,7 +1767,7 @@ func (a *Auth) LinkAccountAuthType(accountID string, authenticationType string, 
 			return nil, nil, errors.WrapErrorAction("linking", model.TypeAccountAuthType, nil, err)
 		}
 	} else {
-		message, newAccountAuthType, err = a.linkAccountAuthType(account, *authType, *appOrg, creds, params, identifierJSON)
+		message, newAccountAuthType, err = a.linkAccountAuthType(account, *authType, *appOrg, creds, params)
 		if err != nil {
 			return nil, nil, errors.WrapErrorAction("linking", model.TypeAccountAuthType, nil, err)
 		}

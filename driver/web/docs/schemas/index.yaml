@@ -124,6 +124,8 @@ _shared_req_UpdateAccount:
   $ref: "./apis/shared/requests/update-account/Request.yaml"
 _shared_req_AccountCheck:
   $ref: "./apis/shared/requests/AccountCheck.yaml"
+_shared_req_CredsNone:
+  $ref: "./apis/shared/requests/CredsNone.yaml"
 _shared_req_CredsAnonymous:
   $ref: "./apis/shared/requests/CredsAnonymous.yaml"
 _shared_req_CredsCode:

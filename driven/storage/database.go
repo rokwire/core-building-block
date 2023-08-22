@@ -252,6 +252,11 @@ func (m *database) start() error {
 func (m *database) applyAuthTypesChecks(authenticationTypes *collectionWrapper) error {
 	m.logger.Info("apply auth types checks.....")
 
+	err := authenticationTypes.AddIndex(bson.D{primitive.E{Key: "code", Value: 1}}, true)
+	if err != nil {
+		return err
+	}
+
 	m.logger.Info("auth types check passed")
 	return nil
 }
@@ -266,12 +271,13 @@ func (m *database) applyIdentityProvidersChecks(identityProviders *collectionWra
 func (m *database) applyAccountsChecks(accounts *collectionWrapper) error {
 	m.logger.Info("apply accounts checks.....")
 
-	// remove old index
+	// remove old indexes
 	accounts.DropIndex("auth_types.identifier_1_auth_types.auth_type_id_1_app_org_id_1")
+	accounts.DropIndex("auth_types.identifier_1_auth_types.auth_type_code_1_app_org_id_1")
 
-	//add compound index - auth_type identifier + auth_type_id
+	//add compound index - identifier identifier + identifier code
 	// Can't be unique because of anonymous accounts
-	err := accounts.AddIndex(bson.D{primitive.E{Key: "identifiers.identifier", Value: 1}, primitive.E{Key: "identifiers.code", Value: 1}, primitive.E{Key: "app_org_id", Value: 1}}, true)
+	err := accounts.AddIndex(bson.D{primitive.E{Key: "identifiers.identifier", Value: 1}, primitive.E{Key: "identifiers.code", Value: 1}, primitive.E{Key: "app_org_id", Value: 1}}, false)
 	if err != nil {
 		return err
 	}

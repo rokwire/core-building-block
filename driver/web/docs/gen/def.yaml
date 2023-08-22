@@ -853,23 +853,38 @@ paths:
             schema:
               $ref: '#/components/schemas/_services_req_account_auth-type-link'
             examples:
-              email-sign_up:
-                summary: Email
+              password:
+                summary: Password
                 value:
-                  auth_type: email
+                  auth_type: password
                   app_type_identifier: edu.illinois.rokwire
                   creds:
-                    email: test@example.com
                     password: test12345
                   params:
                     confirm_password: test12345
-              phone:
-                summary: Phone
+              code:
+                summary: Code
                 value:
-                  auth_type: twilio_phone
+                  auth_type: code
                   app_type_identifier: edu.illinois.rokwire
                   creds:
                     phone: '+12223334444'
+              webauthn-begin_registration:
+                summary: Webauthn begin registration
+                value:
+                  auth_type: webauthn
+                  app_type_identifier: edu.illinois.rokwire
+                  params:
+                    display_name: Name
+              webauthn-complete_registration:
+                summary: Webauthn complete registration
+                value:
+                  auth_type: webauthn
+                  app_type_identifier: edu.illinois.rokwire
+                  creds:
+                    response: <create credential response>
+                  params:
+                    display_name: Name
               illinois_oidc:
                 summary: Illinois OIDC
                 value:
@@ -929,25 +944,8 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/_services_req_account_auth-type-unlink'
-            examples:
-              email:
-                summary: Email
-                value:
-                  auth_type: email
-                  app_type_identifier: edu.illinois.rokwire
-                  identifier: test@example.com
-              phone:
-                summary: Phone
-                value:
-                  auth_type: twilio_phone
-                  app_type_identifier: edu.illinois.rokwire
-                  identifier: '+12223334444'
-              illinois_oidc:
-                summary: Illinois OIDC
-                value:
-                  auth_type: illinois_oidc
-                  app_type_identifier: edu.illinois.rokwire
-                  identifier: '123456789'
+            example:
+              auth_type_id: <account auth type ID>
         required: true
       responses:
         '200':
@@ -7097,6 +7095,7 @@ components:
             - $ref: '#/components/schemas/_shared_req_CredsOIDC'
             - $ref: '#/components/schemas/_shared_req_CredsPassword'
             - $ref: '#/components/schemas/_shared_req_CredsWebAuthn'
+            - $ref: '#/components/schemas/_shared_req_CredsNone'
         params:
           type: object
           anyOf:
@@ -7284,6 +7283,10 @@ components:
             - illinois_oidc
         user_identifier:
           type: string
+    _shared_req_CredsNone:
+      type: object
+      description: Auth login request creds for unlisted auth_types (None)
+      nullable: true
     _shared_req_CredsAnonymous:
       type: object
       description: Auth login creds for auth_type="anonymous"
@@ -7333,27 +7336,6 @@ components:
           type: string
       additionalProperties:
         type: string
-      examples:
-        email:
-          summary: Email - sign in
-          value:
-            email: test@example.com
-        phone:
-          summary: Phone - sign in OR sign up
-          value:
-            phone: '+12223334444'
-        username:
-          summary: Username
-          value:
-            username: test
-        illinois_netid:
-          summary: Illinois Net ID
-          value:
-            net_id: netid2
-        illinois_uin:
-          summary: Illinois UIN
-          value:
-            uin: '123456789'
     _shared_req_ParamsNone:
       type: object
       description: Auth login request params for unlisted auth_types (None)
@@ -7538,7 +7520,6 @@ components:
       required:
         - auth_type
         - app_type_identifier
-        - creds
       type: object
       properties:
         auth_type:
@@ -7552,8 +7533,6 @@ components:
             - phone
             - twilio_phone
             - username
-        identifier:
-          $ref: '#/components/schemas/_shared_req_Identifiers'
         app_type_identifier:
           type: string
         creds:
@@ -7562,6 +7541,7 @@ components:
             - $ref: '#/components/schemas/_shared_req_CredsOIDC'
             - $ref: '#/components/schemas/_shared_req_CredsPassword'
             - $ref: '#/components/schemas/_shared_req_CredsWebAuthn'
+            - $ref: '#/components/schemas/_shared_req_CredsNone'
         params:
           type: object
           anyOf:

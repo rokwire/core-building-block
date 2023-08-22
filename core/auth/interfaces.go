@@ -419,7 +419,7 @@ type APIs interface {
 	//	Returns:
 	//		message (*string): response message
 	//		account (*model.Account): account data after the operation
-	LinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, creds string, params string, identifierJSON string, l *logs.Log) (*string, *model.Account, error)
+	LinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, creds string, params string, l *logs.Log) (*string, *model.Account, error)
 
 	//UnlinkAccountAuthType unlinks credentials from an existing account.
 	//The authentication method must be one of the supported for the application.

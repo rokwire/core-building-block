@@ -14,23 +14,38 @@ post:
         schema:
           $ref: "../../../../../schemas/apis/services/account/auth-type/link/request/Link.yaml"
         examples:
-          email-sign_up:
-            summary: Email
+          password:
+            summary: Password
             value:
-              auth_type: email
+              auth_type: password
               app_type_identifier: edu.illinois.rokwire
               creds:
-                email: test@example.com 
                 password: test12345
               params:
                 confirm_password: test12345
-          phone:
-            summary: Phone
+          code:
+            summary: Code
             value:
-              auth_type: twilio_phone
+              auth_type: code
               app_type_identifier: edu.illinois.rokwire
               creds:
                 phone: "+12223334444"
+          webauthn-begin_registration:
+            summary: Webauthn begin registration
+            value:
+              auth_type: webauthn
+              app_type_identifier: edu.illinois.rokwire
+              params:
+                display_name: Name
+          webauthn-complete_registration:
+            summary: Webauthn complete registration
+            value:
+              auth_type: webauthn
+              app_type_identifier: edu.illinois.rokwire
+              creds:
+                response: <create credential response>
+              params:
+                display_name: Name
           illinois_oidc:
             summary: Illinois OIDC
             value:
@@ -90,25 +105,8 @@ delete:
       application/json:
         schema:
           $ref: "../../../../../schemas/apis/services/account/auth-type/link/request/Unlink.yaml"
-        examples:
-          email:
-            summary: Email
-            value:
-              auth_type: email
-              app_type_identifier: edu.illinois.rokwire
-              identifier: test@example.com
-          phone:
-            summary: Phone
-            value: 
-              auth_type: twilio_phone
-              app_type_identifier: edu.illinois.rokwire
-              identifier: "+12223334444"
-          illinois_oidc:
-            summary: Illinois OIDC
-            value:
-              auth_type: illinois_oidc
-              app_type_identifier: edu.illinois.rokwire
-              identifier: "123456789"
+        example:
+          auth_type_id: <account auth type ID>
     required: true
   responses:
     200:

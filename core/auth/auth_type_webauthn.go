@@ -496,8 +496,7 @@ func (a *webAuthnAuthImpl) completeLogin(auth *webauthn.WebAuthn, response *prot
 			}
 
 			// find matching credential by rawId (should match a credential ID)
-			active := true
-			aats, err := a.auth.findAccountAuthTypesAndCredentials(account, model.SupportedAuthType{AuthType: model.AuthType{Code: a.authType}}, &active)
+			aats, err := a.auth.findAccountAuthTypesAndCredentials(account, model.SupportedAuthType{AuthType: model.AuthType{Code: a.authType}})
 			for _, aat := range aats {
 				if aat.Credential != nil {
 					webAuthnCred, err := a.parseWebAuthnCredential(aat.Credential.Value)

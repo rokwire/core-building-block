@@ -780,11 +780,8 @@ type AdminReqVerified struct {
 type ServicesReqAccountAuthTypeLink struct {
 	AppTypeIdentifier string                                 `json:"app_type_identifier"`
 	AuthType          ServicesReqAccountAuthTypeLinkAuthType `json:"auth_type"`
-	Creds             ServicesReqAccountAuthTypeLink_Creds   `json:"creds"`
-
-	// Identifier Allowed identifier types
-	Identifier *SharedReqIdentifiers                  `json:"identifier,omitempty"`
-	Params     *ServicesReqAccountAuthTypeLink_Params `json:"params,omitempty"`
+	Creds             *ServicesReqAccountAuthTypeLink_Creds  `json:"creds,omitempty"`
+	Params            *ServicesReqAccountAuthTypeLink_Params `json:"params,omitempty"`
 }
 
 // ServicesReqAccountAuthTypeLinkAuthType defines model for ServicesReqAccountAuthTypeLink.AuthType.
@@ -1001,6 +998,9 @@ type SharedReqCredsCode struct {
 	Username             *string           `json:"username,omitempty"`
 	AdditionalProperties map[string]string `json:"-"`
 }
+
+// SharedReqCredsNone Auth login request creds for unlisted auth_types (None)
+type SharedReqCredsNone = map[string]interface{}
 
 // SharedReqCredsOIDC Auth login creds for auth_type="oidc" (or variants)
 //   - full redirect URI received from OIDC provider
@@ -2604,6 +2604,32 @@ func (t *ServicesReqAccountAuthTypeLink_Creds) MergeSharedReqCredsWebAuthn(v Sha
 	return err
 }
 
+// AsSharedReqCredsNone returns the union data inside the ServicesReqAccountAuthTypeLink_Creds as a SharedReqCredsNone
+func (t ServicesReqAccountAuthTypeLink_Creds) AsSharedReqCredsNone() (SharedReqCredsNone, error) {
+	var body SharedReqCredsNone
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromSharedReqCredsNone overwrites any union data inside the ServicesReqAccountAuthTypeLink_Creds as the provided SharedReqCredsNone
+func (t *ServicesReqAccountAuthTypeLink_Creds) FromSharedReqCredsNone(v SharedReqCredsNone) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeSharedReqCredsNone performs a merge with any union data inside the ServicesReqAccountAuthTypeLink_Creds, using the provided SharedReqCredsNone
+func (t *ServicesReqAccountAuthTypeLink_Creds) MergeSharedReqCredsNone(v SharedReqCredsNone) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
 func (t ServicesReqAccountAuthTypeLink_Creds) MarshalJSON() ([]byte, error) {
 	b, err := t.union.MarshalJSON()
 	return b, err
@@ -2920,6 +2946,32 @@ func (t *SharedReqLogin_Creds) FromSharedReqCredsWebAuthn(v SharedReqCredsWebAut
 
 // MergeSharedReqCredsWebAuthn performs a merge with any union data inside the SharedReqLogin_Creds, using the provided SharedReqCredsWebAuthn
 func (t *SharedReqLogin_Creds) MergeSharedReqCredsWebAuthn(v SharedReqCredsWebAuthn) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsSharedReqCredsNone returns the union data inside the SharedReqLogin_Creds as a SharedReqCredsNone
+func (t SharedReqLogin_Creds) AsSharedReqCredsNone() (SharedReqCredsNone, error) {
+	var body SharedReqCredsNone
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromSharedReqCredsNone overwrites any union data inside the SharedReqLogin_Creds as the provided SharedReqCredsNone
+func (t *SharedReqLogin_Creds) FromSharedReqCredsNone(v SharedReqCredsNone) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeSharedReqCredsNone performs a merge with any union data inside the SharedReqLogin_Creds, using the provided SharedReqCredsNone
+func (t *SharedReqLogin_Creds) MergeSharedReqCredsNone(v SharedReqCredsNone) error {
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
