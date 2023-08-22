@@ -7,14 +7,13 @@ properties:
   auth_type:
     type: string
     enum:
-      - oidc
       - password
       - webauthn
       - code
+      - illinois_oidc
       - email
       - phone
       - twilio_phone
-      - illinois_oidc
       - username
   identifier:
     $ref: "../../../../../shared/requests/Identifiers.yaml"

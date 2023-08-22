@@ -7078,7 +7078,6 @@ components:
             - email
             - phone
             - twilio_phone
-            - oidc
             - illinois_oidc
             - anonymous
             - username
@@ -7204,7 +7203,7 @@ components:
           type: string
           enum:
             - password
-            - oidc
+            - illinois_oidc
         identifier:
           $ref: '#/components/schemas/_shared_req_Identifiers'
         permissions:
@@ -7240,7 +7239,7 @@ components:
           type: string
           enum:
             - password
-            - oidc
+            - illinois_oidc
         identifier:
           $ref: '#/components/schemas/_shared_req_Identifiers'
         permissions:
@@ -7280,7 +7279,6 @@ components:
             - username
             - email
             - phone
-            - oidc
             - anonymous
             - twilio_phone
             - illinois_oidc
@@ -7546,14 +7544,13 @@ components:
         auth_type:
           type: string
           enum:
-            - oidc
             - password
             - webauthn
             - code
+            - illinois_oidc
             - email
             - phone
             - twilio_phone
-            - illinois_oidc
             - username
         identifier:
           $ref: '#/components/schemas/_shared_req_Identifiers'
@@ -7580,15 +7577,14 @@ components:
         auth_type:
           type: string
           enum:
-            - email
-            - phone
-            - twilio_phone
-            - oidc
-            - illinois_oidc
-            - username
             - password
             - webauthn
             - code
+            - illinois_oidc
+            - email
+            - phone
+            - twilio_phone
+            - username
         identifier:
           type: string
     _services_res_account_auth-type-link:

@@ -5,14 +5,13 @@ properties:
   auth_type:
     type: string
     enum:
-      - email
-      - phone
-      - twilio_phone
-      - oidc
-      - illinois_oidc
-      - username
       - password
       - webauthn
       - code
+      - illinois_oidc
+      - email
+      - phone
+      - twilio_phone
+      - username
   identifier:
     type: string

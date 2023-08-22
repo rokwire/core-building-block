@@ -68,7 +68,6 @@ const (
 	ServicesReqAccountAuthTypeLinkAuthTypeCode         ServicesReqAccountAuthTypeLinkAuthType = "code"
 	ServicesReqAccountAuthTypeLinkAuthTypeEmail        ServicesReqAccountAuthTypeLinkAuthType = "email"
 	ServicesReqAccountAuthTypeLinkAuthTypeIllinoisOidc ServicesReqAccountAuthTypeLinkAuthType = "illinois_oidc"
-	ServicesReqAccountAuthTypeLinkAuthTypeOidc         ServicesReqAccountAuthTypeLinkAuthType = "oidc"
 	ServicesReqAccountAuthTypeLinkAuthTypePassword     ServicesReqAccountAuthTypeLinkAuthType = "password"
 	ServicesReqAccountAuthTypeLinkAuthTypePhone        ServicesReqAccountAuthTypeLinkAuthType = "phone"
 	ServicesReqAccountAuthTypeLinkAuthTypeTwilioPhone  ServicesReqAccountAuthTypeLinkAuthType = "twilio_phone"
@@ -81,7 +80,6 @@ const (
 	ServicesReqAccountAuthTypeUnlinkAuthTypeCode         ServicesReqAccountAuthTypeUnlinkAuthType = "code"
 	ServicesReqAccountAuthTypeUnlinkAuthTypeEmail        ServicesReqAccountAuthTypeUnlinkAuthType = "email"
 	ServicesReqAccountAuthTypeUnlinkAuthTypeIllinoisOidc ServicesReqAccountAuthTypeUnlinkAuthType = "illinois_oidc"
-	ServicesReqAccountAuthTypeUnlinkAuthTypeOidc         ServicesReqAccountAuthTypeUnlinkAuthType = "oidc"
 	ServicesReqAccountAuthTypeUnlinkAuthTypePassword     ServicesReqAccountAuthTypeUnlinkAuthType = "password"
 	ServicesReqAccountAuthTypeUnlinkAuthTypePhone        ServicesReqAccountAuthTypeUnlinkAuthType = "phone"
 	ServicesReqAccountAuthTypeUnlinkAuthTypeTwilioPhone  ServicesReqAccountAuthTypeUnlinkAuthType = "twilio_phone"
@@ -123,7 +121,6 @@ const (
 	SharedReqAccountCheckAuthTypeAnonymous    SharedReqAccountCheckAuthType = "anonymous"
 	SharedReqAccountCheckAuthTypeEmail        SharedReqAccountCheckAuthType = "email"
 	SharedReqAccountCheckAuthTypeIllinoisOidc SharedReqAccountCheckAuthType = "illinois_oidc"
-	SharedReqAccountCheckAuthTypeOidc         SharedReqAccountCheckAuthType = "oidc"
 	SharedReqAccountCheckAuthTypePhone        SharedReqAccountCheckAuthType = "phone"
 	SharedReqAccountCheckAuthTypeTwilioPhone  SharedReqAccountCheckAuthType = "twilio_phone"
 	SharedReqAccountCheckAuthTypeUsername     SharedReqAccountCheckAuthType = "username"
@@ -131,8 +128,8 @@ const (
 
 // Defines values for SharedReqCreateAccountAuthType.
 const (
-	SharedReqCreateAccountAuthTypeOidc     SharedReqCreateAccountAuthType = "oidc"
-	SharedReqCreateAccountAuthTypePassword SharedReqCreateAccountAuthType = "password"
+	SharedReqCreateAccountAuthTypeIllinoisOidc SharedReqCreateAccountAuthType = "illinois_oidc"
+	SharedReqCreateAccountAuthTypePassword     SharedReqCreateAccountAuthType = "password"
 )
 
 // Defines values for SharedReqLoginAuthType.
@@ -141,7 +138,6 @@ const (
 	SharedReqLoginAuthTypeCode         SharedReqLoginAuthType = "code"
 	SharedReqLoginAuthTypeEmail        SharedReqLoginAuthType = "email"
 	SharedReqLoginAuthTypeIllinoisOidc SharedReqLoginAuthType = "illinois_oidc"
-	SharedReqLoginAuthTypeOidc         SharedReqLoginAuthType = "oidc"
 	SharedReqLoginAuthTypePassword     SharedReqLoginAuthType = "password"
 	SharedReqLoginAuthTypePhone        SharedReqLoginAuthType = "phone"
 	SharedReqLoginAuthTypeTwilioPhone  SharedReqLoginAuthType = "twilio_phone"
@@ -151,7 +147,7 @@ const (
 
 // Defines values for SharedReqLoginUrlAuthType.
 const (
-	IllinoisOidc SharedReqLoginUrlAuthType = "illinois_oidc"
+	SharedReqLoginUrlAuthTypeIllinoisOidc SharedReqLoginUrlAuthType = "illinois_oidc"
 )
 
 // Defines values for SharedReqLoginMfaType.
@@ -171,8 +167,8 @@ const (
 
 // Defines values for SharedReqUpdateAccountAuthType.
 const (
-	Oidc     SharedReqUpdateAccountAuthType = "oidc"
-	Password SharedReqUpdateAccountAuthType = "password"
+	SharedReqUpdateAccountAuthTypeIllinoisOidc SharedReqUpdateAccountAuthType = "illinois_oidc"
+	SharedReqUpdateAccountAuthTypePassword     SharedReqUpdateAccountAuthType = "password"
 )
 
 // Defines values for SharedResRokwireTokenTokenType.

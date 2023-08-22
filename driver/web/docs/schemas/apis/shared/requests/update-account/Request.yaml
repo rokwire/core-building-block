@@ -7,7 +7,7 @@ properties:
     type: string
     enum:
       - password
-      - oidc
+      - illinois_oidc
   identifier:
     $ref: "../Identifiers.yaml"
   permissions:

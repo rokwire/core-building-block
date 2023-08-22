@@ -18,7 +18,6 @@ properties:
       - username
       - email
       - phone
-      - oidc
       - anonymous
       - twilio_phone
       - illinois_oidc

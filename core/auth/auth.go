@@ -58,6 +58,7 @@ const (
 	UpdateScopesPermission string = "update_auth_scopes"
 
 	defaultIllinoisOIDCIdentifier string = "uin"
+	illinoisOIDCCode              string = "illinois_oidc"
 
 	typeMail              logutils.MessageDataType = "mail"
 	typeIdentifierType    logutils.MessageDataType = "identifier type"
@@ -2262,7 +2263,7 @@ func (a *Auth) getIdentifierTypeImpl(identifierJSON string, authenticationType *
 		}
 
 		code := authType.Code
-		if code == AuthTypeOidc {
+		if code == illinoisOIDCCode {
 			code = defaultIllinoisOIDCIdentifier // backwards compatibility: if an OIDC auth type is used, illinois_oidc was provided, so use uin as the identifier code
 		}
 
@@ -2309,8 +2310,8 @@ func (a *Auth) getExternalAuthTypeImpl(authType model.AuthType) (externalAuthTyp
 	key := authType.Code
 
 	//illinois_oidc, other_oidc
-	if strings.HasSuffix(authType.Code, "_oidc") {
-		key = "oidc"
+	if strings.HasSuffix(authType.Code, "_"+AuthTypeOidc) {
+		key = AuthTypeOidc
 	}
 
 	if auth, ok := a.externalAuthTypes[key]; ok {
