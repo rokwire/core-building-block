@@ -19,7 +19,8 @@ import (
 	"testing"
 
 	core "core-building-block/core"
-	genmocks "core-building-block/core/mocks"
+	"core-building-block/core/interfaces"
+	genmocks "core-building-block/core/interfaces/mocks"
 	"core-building-block/core/model"
 
 	"github.com/rokwire/core-auth-library-go/v3/tokenauth"
@@ -28,7 +29,7 @@ import (
 	"gotest.tools/assert"
 )
 
-func buildTestCoreAPIs(storage core.Storage) *core.APIs {
+func buildTestCoreAPIs(storage interfaces.Storage) *core.APIs {
 	return core.NewCoreAPIs("local", "1.1.1", "build", "core", storage, nil, nil, false, nil)
 }
 
@@ -162,7 +163,7 @@ func TestSysGetOrganizations(t *testing.T) {
 
 func TestSysGetApplication(t *testing.T) {
 	storage := genmocks.Storage{}
-	storage.On("FindApplication", nil, "_id").Return(&model.Application{ID: "_id"}, nil)
+	storage.On("FindApplication", "_id").Return(&model.Application{ID: "_id"}, nil)
 	coreAPIs := buildTestCoreAPIs(&storage)
 
 	getApplication, _ := coreAPIs.System.SysGetApplication("_id")

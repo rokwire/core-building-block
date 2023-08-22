@@ -15,8 +15,8 @@
 package auth
 
 import (
+	"core-building-block/core/interfaces"
 	"core-building-block/core/model"
-	"core-building-block/driven/storage"
 	"core-building-block/utils"
 	"encoding/json"
 	"fmt"
@@ -83,8 +83,8 @@ const (
 
 // Auth represents the auth functionality unit
 type Auth struct {
-	storage Storage
-	emailer Emailer
+	storage interfaces.Storage
+	emailer interfaces.Emailer
 
 	logger *logs.Logger
 
@@ -104,8 +104,8 @@ type Auth struct {
 	minTokenExp int64  //Minimum access token expiration time in minutes
 	maxTokenExp int64  //Maximum access token expiration time in minutes
 
-	profileBB  ProfileBuildingBlock
-	identityBB IdentityBuildingBlock
+	profileBB  interfaces.ProfileBuildingBlock
+	identityBB interfaces.IdentityBuildingBlock
 
 	emailFrom   string
 	emailDialer *gomail.Dialer
@@ -122,8 +122,8 @@ type Auth struct {
 }
 
 // NewAuth creates a new auth instance
-func NewAuth(serviceID string, host string, authPrivKey *keys.PrivKey, authService *authservice.AuthService, storage Storage, emailer Emailer, minTokenExp *int64, maxTokenExp *int64, supportLegacySigs bool, twilioAccountSID string,
-	twilioToken string, twilioServiceSID string, profileBB ProfileBuildingBlock, smtpHost string, smtpPortNum int, smtpUser string, smtpPassword string, smtpFrom string, logger *logs.Logger) (*Auth, error) {
+func NewAuth(serviceID string, host string, authPrivKey *keys.PrivKey, authService *authservice.AuthService, storage interfaces.Storage, emailer interfaces.Emailer, minTokenExp *int64, maxTokenExp *int64, supportLegacySigs bool,
+	twilioAccountSID string, twilioToken string, twilioServiceSID string, profileBB interfaces.ProfileBuildingBlock, smtpHost string, smtpPortNum int, smtpUser string, smtpPassword string, smtpFrom string, logger *logs.Logger) (*Auth, error) {
 	if minTokenExp == nil {
 		var minTokenExpVal int64 = 5
 		minTokenExp = &minTokenExpVal
@@ -212,7 +212,7 @@ func NewAuth(serviceID string, host string, authPrivKey *keys.PrivKey, authServi
 }
 
 // SetIdentityBB sets the identity BB adapter
-func (a *Auth) SetIdentityBB(identityBB IdentityBuildingBlock) {
+func (a *Auth) SetIdentityBB(identityBB interfaces.IdentityBuildingBlock) {
 	a.identityBB = identityBB
 }
 
@@ -236,7 +236,7 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 	}
 
 	//2. check if the user exists
-	account, err := a.storage.FindAccount(nil, appOrg.ID, authType.ID, externalUser.Identifier)
+	account, err := a.storage.FindAccount(appOrg.ID, authType.ID, externalUser.Identifier)
 	if err != nil {
 		return nil, nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
@@ -253,7 +253,7 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 		externalIDs = account.ExternalIDs
 	} else if !admin {
 		//user does not exist, we need to register it
-		accountAuthType, err = a.applySignUpExternal(nil, authType, appOrg, *externalUser, externalCreds, regProfile, privacy, regPreferences, username, clientVersion, l)
+		accountAuthType, err = a.applySignUpExternal(authType, appOrg, *externalUser, externalCreds, regProfile, privacy, regPreferences, username, clientVersion, l)
 		if err != nil {
 			return nil, nil, nil, nil, errors.WrapErrorAction(logutils.ActionApply, "external sign up", nil, err)
 		}
@@ -289,17 +289,17 @@ func (a *Auth) applySignInExternal(account *model.Account, authType model.AuthTy
 
 	if accountAuthType.Unverified {
 		accountAuthType.SetUnverified(false)
-		err := a.storage.UpdateAccountAuthType(*accountAuthType)
+		err := a.updateAccountAuthType(accountAuthType)
 		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountAuthType, nil, err)
+			return nil, err
 		}
 	}
 
 	return accountAuthType, nil
 }
 
-func (a *Auth) applySignUpExternal(context storage.TransactionContext, authType model.AuthType, appOrg model.ApplicationOrganization, externalUser model.ExternalSystemUser,
-	externalCreds string, regProfile model.Profile, privacy model.Privacy, regPreferences map[string]interface{}, username string, clientVersion *string, l *logs.Log) (*model.AccountAuthType, error) {
+func (a *Auth) applySignUpExternal(authType model.AuthType, appOrg model.ApplicationOrganization, externalUser model.ExternalSystemUser, externalCreds string,
+	regProfile model.Profile, privacy model.Privacy, regPreferences map[string]interface{}, username string, clientVersion *string, l *logs.Log) (*model.AccountAuthType, error) {
 	var accountAuthType *model.AccountAuthType
 
 	//1. prepare external admin user data
@@ -342,14 +342,14 @@ func (a *Auth) applySignUpExternal(context storage.TransactionContext, authType 
 
 	//4. check username
 	if username != "" {
-		err = a.checkUsername(nil, &appOrg, username)
+		err = a.checkUsername(a.storage, &appOrg, username)
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	//5. register the account
-	accountAuthType, err = a.registerUser(context, authType, identifier, aatParams, appOrg, nil, useSharedProfile,
+	accountAuthType, err = a.registerUser(a.storage, authType, identifier, aatParams, appOrg, nil, useSharedProfile,
 		externalUser.ExternalIDs, *profile, privacy, preferences, username, nil, externalRoles, externalGroups, nil, nil, clientVersion, l)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
@@ -358,7 +358,7 @@ func (a *Auth) applySignUpExternal(context storage.TransactionContext, authType 
 	return accountAuthType, nil
 }
 
-func (a *Auth) applySignUpAdminExternal(context storage.TransactionContext, authType model.AuthType, appOrg model.ApplicationOrganization, externalUser model.ExternalSystemUser, regProfile model.Profile,
+func (a *Auth) applySignUpAdminExternal(storage interfaces.Storage, authType model.AuthType, appOrg model.ApplicationOrganization, externalUser model.ExternalSystemUser, regProfile model.Profile,
 	privacy model.Privacy, username string, permissions []string, roleIDs []string, groupIDs []string, scopes []string, creatorPermissions []string, clientVersion *string, l *logs.Log) (*model.AccountAuthType, error) {
 	var accountAuthType *model.AccountAuthType
 
@@ -370,14 +370,14 @@ func (a *Auth) applySignUpAdminExternal(context storage.TransactionContext, auth
 
 	//2. check username
 	if username != "" {
-		err = a.checkUsername(nil, &appOrg, username)
+		err = a.checkUsername(storage, &appOrg, username)
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	//3. register the account
-	accountAuthType, err = a.registerUser(context, authType, identifier, aatParams, appOrg, nil, useSharedProfile, nil, *profile, privacy, nil,
+	accountAuthType, err = a.registerUser(storage, authType, identifier, aatParams, appOrg, nil, useSharedProfile, nil, *profile, privacy, nil,
 		username, permissions, roleIDs, groupIDs, scopes, creatorPermissions, clientVersion, l)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionRegister, "admin account", nil, err)
@@ -498,9 +498,9 @@ func (a *Auth) updateExternalUserIfNeeded(accountAuthType model.AccountAuthType,
 	now := time.Now()
 	accountAuthType.DateUpdated = &now
 
-	transaction := func(context storage.TransactionContext) error {
+	transaction := func(storage interfaces.Storage) error {
 		//1. first find the account record
-		account, err := a.storage.FindAccountByAuthTypeID(context, accountAuthType.ID)
+		account, err := storage.FindAccountByAuthTypeID(accountAuthType.ID)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 		}
@@ -558,7 +558,7 @@ func (a *Auth) updateExternalUserIfNeeded(accountAuthType model.AccountAuthType,
 
 		// 6. update account if needed
 		if updatedExternalUser || profileUpdated || rolesUpdated || groupsUpdated {
-			err = a.storage.SaveAccount(context, account)
+			err = storage.SaveAccount(account)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionSave, model.TypeAccount, nil, err)
 			}
@@ -587,7 +587,7 @@ func (a *Auth) applyAnonymousAuthType(authType model.AuthType, creds string) (st
 		return "", nil, nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeCreds, nil, err)
 	}
 
-	account, err := a.storage.FindAccountByID(nil, anonymousID)
+	account, err := a.storage.FindAccountByID(anonymousID)
 	if err != nil {
 		return "", nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"id": anonymousID}, err)
 	}
@@ -623,7 +623,7 @@ func (a *Auth) applyAuthType(authType model.AuthType, appOrg model.ApplicationOr
 		}
 	}
 
-	account, err := a.storage.FindAccount(nil, appOrg.ID, authType.ID, userIdentifier)
+	account, err := a.storage.FindAccount(appOrg.ID, authType.ID, userIdentifier)
 	if err != nil {
 		return "", nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err) //TODO add args..
 	}
@@ -721,9 +721,9 @@ func (a *Auth) checkCredentials(authImpl authType, authType model.AuthType, acco
 	//if sign in was completed successfully, set auth type to verified
 	if message == "" && accountAuthType.Unverified {
 		accountAuthType.SetUnverified(false)
-		err := a.storage.UpdateAccountAuthType(*accountAuthType)
+		err := a.updateAccountAuthType(accountAuthType)
 		if err != nil {
-			return "", errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountAuthType, nil, err)
+			return "", err
 		}
 	}
 
@@ -740,13 +740,13 @@ func (a *Auth) applySignUp(authImpl authType, account *model.Account, authType m
 	}
 
 	if username != "" {
-		err := a.checkUsername(nil, &appOrg, username)
+		err := a.checkUsername(a.storage, &appOrg, username)
 		if err != nil {
 			return "", nil, err
 		}
 	}
 
-	retParams, accountAuthType, err := a.signUpNewAccount(nil, authImpl, authType, appOrg, userIdentifier, creds, params, clientVersion, regProfile, privacy, regPreferences, username, nil, nil, nil, nil, nil, l)
+	retParams, accountAuthType, err := a.signUpNewAccount(a.storage, authImpl, authType, appOrg, userIdentifier, creds, params, clientVersion, regProfile, privacy, regPreferences, username, nil, nil, nil, nil, nil, l)
 	if err != nil {
 		return "", nil, err
 	}
@@ -755,26 +755,26 @@ func (a *Auth) applySignUp(authImpl authType, account *model.Account, authType m
 	return message, accountAuthType, nil
 }
 
-func (a *Auth) applySignUpAdmin(context storage.TransactionContext, authImpl authType, account *model.Account, authType model.AuthType, appOrg model.ApplicationOrganization, identifier string, password string,
-	regProfile model.Profile, privacy model.Privacy, username string, permissions []string, roles []string, groups []string, scopes []string, creatorPermissions []string, clientVersion *string, l *logs.Log) (map[string]interface{}, *model.AccountAuthType, error) {
+func (a *Auth) applySignUpAdmin(storage interfaces.Storage, authImpl authType, account *model.Account, authType model.AuthType, appOrg model.ApplicationOrganization, identifier string, password string, regProfile model.Profile,
+	privacy model.Privacy, username string, permissions []string, roles []string, groups []string, scopes []string, creatorPermissions []string, clientVersion *string, l *logs.Log) (map[string]interface{}, *model.AccountAuthType, error) {
 
 	if username != "" {
-		err := a.checkUsername(nil, &appOrg, username)
+		err := a.checkUsername(storage, &appOrg, username)
 		if err != nil {
 			return nil, nil, err
 		}
 	}
 
-	return a.signUpNewAccount(context, authImpl, authType, appOrg, identifier, password, "", clientVersion, regProfile, privacy, nil, username, permissions, roles, groups, scopes, creatorPermissions, l)
+	return a.signUpNewAccount(storage, authImpl, authType, appOrg, identifier, password, "", clientVersion, regProfile, privacy, nil, username, permissions, roles, groups, scopes, creatorPermissions, l)
 }
 
-func (a *Auth) applyCreateAnonymousAccount(context storage.TransactionContext, appOrg model.ApplicationOrganization, anonymousID string,
+func (a *Auth) applyCreateAnonymousAccount(storage interfaces.Storage, appOrg model.ApplicationOrganization, anonymousID string,
 	preferences map[string]interface{}, systemConfigs map[string]interface{}, l *logs.Log) (*model.Account, error) {
 	account := model.Account{ID: anonymousID, AppOrg: appOrg, Preferences: preferences, SystemConfigs: systemConfigs, Anonymous: true, DateCreated: time.Now()}
-	return a.storage.InsertAccount(context, account)
+	return storage.InsertAccount(account)
 }
 
-func (a *Auth) signUpNewAccount(context storage.TransactionContext, authImpl authType, authType model.AuthType, appOrg model.ApplicationOrganization, userIdentifier string,
+func (a *Auth) signUpNewAccount(storage interfaces.Storage, authImpl authType, authType model.AuthType, appOrg model.ApplicationOrganization, userIdentifier string,
 	creds string, params string, clientVersion *string, regProfile model.Profile, privacy model.Privacy, regPreferences map[string]interface{}, username string, permissions []string,
 	roles []string, groups []string, scopes []string, creatorPermissions []string, l *logs.Log) (map[string]interface{}, *model.AccountAuthType, error) {
 	var retParams map[string]interface{}
@@ -843,7 +843,7 @@ func (a *Auth) signUpNewAccount(context storage.TransactionContext, authImpl aut
 		}
 	}
 
-	accountAuthType, err := a.registerUser(context, authType, userIdentifier, nil, appOrg, credential, useSharedProfile,
+	accountAuthType, err := a.registerUser(storage, authType, userIdentifier, nil, appOrg, credential, useSharedProfile,
 		nil, profile, privacy, preferences, username, permissions, roles, groups, scopes, creatorPermissions, clientVersion, l)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
@@ -922,7 +922,7 @@ func (a *Auth) hasSharedProfile(app model.Application, authTypeID string, userId
 
 	//find the credential
 	if credentialID != nil {
-		credential, err = a.storage.FindCredential(nil, *credentialID)
+		credential, err = a.storage.FindCredential(*credentialID)
 		if err != nil {
 			return false, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
 		}
@@ -998,7 +998,7 @@ func (a *Auth) getAccount(authenticationType string, userIdentifier string, apiK
 	}
 
 	//check if the account exists check
-	account, err := a.storage.FindAccount(nil, appOrg.ID, authType.ID, userIdentifier)
+	account, err := a.storage.FindAccount(appOrg.ID, authType.ID, userIdentifier)
 	if err != nil {
 		return nil, "", errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
@@ -1024,7 +1024,7 @@ func (a *Auth) findAccountAuthType(account *model.Account, authType *model.AuthT
 
 	if accountAuthType.Credential != nil {
 		//populate credentials in accountAuthType
-		credential, err := a.storage.FindCredential(nil, accountAuthType.Credential.ID)
+		credential, err := a.storage.FindCredential(accountAuthType.Credential.ID)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
 		}
@@ -1058,7 +1058,7 @@ func (a *Auth) findAccountAuthTypeByID(account *model.Account, accountAuthTypeID
 
 	if accountAuthType.Credential != nil {
 		//populate credentials in accountAuthType
-		credential, err := a.storage.FindCredential(nil, accountAuthType.Credential.ID)
+		credential, err := a.storage.FindCredential(accountAuthType.Credential.ID)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
 		}
@@ -1068,11 +1068,51 @@ func (a *Auth) findAccountAuthTypeByID(account *model.Account, accountAuthTypeID
 	return accountAuthType, nil
 }
 
+func (a *Auth) updateAccountAuthType(accountAuthType *model.AccountAuthType) error {
+	now := time.Now()
+	accountAuthType.DateUpdated = &now
+	transaction := func(storage interfaces.Storage) error {
+		//1. first find the account record
+		account, err := storage.FindAccountByAuthTypeID(accountAuthType.ID)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+		}
+		if account == nil {
+			return errors.ErrorData(logutils.StatusMissing, model.TypeAccount, &logutils.FieldArgs{"account_auth_type_id": accountAuthType.ID})
+		}
+
+		//2. update the account auth type in the account record
+		newAccountAuthTypes := make([]model.AccountAuthType, len(account.AuthTypes))
+		for j, aAuthType := range account.AuthTypes {
+			if aAuthType.ID == accountAuthType.ID {
+				newAccountAuthTypes[j] = *accountAuthType
+			} else {
+				newAccountAuthTypes[j] = aAuthType
+			}
+		}
+		account.AuthTypes = newAccountAuthTypes
+
+		//3. update account
+		err = storage.SaveAccount(account)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionSave, model.TypeAccount, nil, err)
+		}
+
+		return nil
+	}
+
+	err := a.storage.PerformTransaction(transaction)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, "account auth type verification", nil, err)
+	}
+	return nil
+}
+
 func (a *Auth) clearExpiredSessions(identifier string, l *logs.Log) error {
 	l.Info("clearExpiredSessions")
 
 	//load the sessions for the identifier
-	loginsSessions, err := a.storage.FindLoginSessions(nil, identifier)
+	loginsSessions, err := a.storage.FindLoginSessions(identifier)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, logutils.StringArgs("clear expired"), err)
 	}
@@ -1093,7 +1133,7 @@ func (a *Auth) clearExpiredSessions(identifier string, l *logs.Log) error {
 	if len(expiredSessions) > 0 {
 		l.Info("there is expired sessions for deleting")
 
-		err = a.deleteLoginSessions(nil, expiredSessions, l)
+		err = a.deleteLoginSessions(a.storage, expiredSessions, l)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, nil, err)
 		}
@@ -1110,12 +1150,13 @@ func (a *Auth) applyLogin(anonymous bool, sub string, authType model.AuthType, a
 
 	var err error
 	var loginSession *model.LoginSession
-	transaction := func(context storage.TransactionContext) error {
+
+	transaction := func(storage interfaces.Storage) error {
 		///1. assign device to session and account
 		var device *model.Device
 		if !anonymous {
 			//1. check if the device exists
-			device, err = a.storage.FindDevice(context, deviceID, sub)
+			device, err = storage.FindDevice(deviceID, sub)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionFind, model.TypeDevice, nil, err)
 			}
@@ -1128,7 +1169,7 @@ func (a *Auth) applyLogin(anonymous bool, sub string, authType model.AuthType, a
 				if err != nil {
 					return errors.WrapErrorAction(logutils.ActionCreate, model.TypeDevice, nil, err)
 				}
-				_, err := a.storage.InsertDevice(context, *device)
+				_, err := storage.InsertDevice(*device)
 				if err != nil {
 					return errors.WrapErrorAction(logutils.ActionInsert, model.TypeDevice, nil, err)
 				}
@@ -1143,7 +1184,7 @@ func (a *Auth) applyLogin(anonymous bool, sub string, authType model.AuthType, a
 		}
 
 		//1. store login session
-		err = a.storage.InsertLoginSession(context, *loginSession)
+		err = storage.InsertLoginSession(*loginSession)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionInsert, model.TypeLoginSession, nil, err)
 		}
@@ -1151,7 +1192,7 @@ func (a *Auth) applyLogin(anonymous bool, sub string, authType model.AuthType, a
 		//2. check session limit against number of active sessions
 		sessionLimit := appOrg.LoginsSessionsSetting.MaxConcurrentSessions
 		if sessionLimit > 0 {
-			loginSessions, err := a.storage.FindLoginSessions(context, loginSession.Identifier)
+			loginSessions, err := storage.FindLoginSessions(loginSession.Identifier)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, nil, err)
 			}
@@ -1161,7 +1202,7 @@ func (a *Auth) applyLogin(anonymous bool, sub string, authType model.AuthType, a
 
 			if len(loginSessions) > sessionLimit {
 				// delete first session in list (sorted by date created)
-				err = a.deleteLoginSession(context, loginSessions[0], l)
+				err = a.deleteLoginSession(storage, loginSessions[0], l)
 				if err != nil {
 					return errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, nil, err)
 				}
@@ -1170,7 +1211,7 @@ func (a *Auth) applyLogin(anonymous bool, sub string, authType model.AuthType, a
 		// update account usage information
 		// TODO: Handle anonymous accounts if needed in the future
 		if !anonymous {
-			err = a.storage.UpdateAccountUsageInfo(context, sub, true, true, clientVersion)
+			err = storage.UpdateAccountUsageInfo(sub, true, true, clientVersion)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountUsageInfo, nil, err)
 			}
@@ -1256,11 +1297,11 @@ func (a *Auth) createLoginSession(anonymous bool, sub string, authType model.Aut
 	return &loginSession, nil
 }
 
-func (a *Auth) deleteLoginSession(context storage.TransactionContext, loginSession model.LoginSession, l *logs.Log) error {
+func (a *Auth) deleteLoginSession(storage interfaces.Storage, loginSession model.LoginSession, l *logs.Log) error {
 	//always log what session has been deleted
 	l.Info("deleting loging session - " + loginSession.LogInfo())
 
-	err := a.storage.DeleteLoginSession(context, loginSession.ID)
+	err := storage.DeleteLoginSession(loginSession.ID)
 	if err != nil {
 		l.WarnError(logutils.MessageActionError(logutils.ActionDelete, model.TypeLoginSession, nil), err)
 		return err
@@ -1268,7 +1309,7 @@ func (a *Auth) deleteLoginSession(context storage.TransactionContext, loginSessi
 	return nil
 }
 
-func (a *Auth) deleteLoginSessions(context storage.TransactionContext, loginSessions []model.LoginSession, l *logs.Log) error {
+func (a *Auth) deleteLoginSessions(storage interfaces.Storage, loginSessions []model.LoginSession, l *logs.Log) error {
 	//always log what session has been deleted, also prepare the IDs
 	ids := make([]string, len(loginSessions))
 	l.Info("expired sessions to be deleted:")
@@ -1279,7 +1320,7 @@ func (a *Auth) deleteLoginSessions(context storage.TransactionContext, loginSess
 	}
 
 	//delete the sessions from the storage
-	err := a.storage.DeleteLoginSessionsByIDs(context, ids)
+	err := storage.DeleteLoginSessionsByIDs(ids)
 	if err != nil {
 		l.WarnError(logutils.MessageActionError(logutils.ActionDelete, model.TypeLoginSession, nil), err)
 		return err
@@ -1428,7 +1469,7 @@ func (a *Auth) getProfileBBData(authType model.AuthType, identifier string, l *l
 //		l (*logs.Log): Log object pointer for request
 //	Returns:
 //		Registered account (AccountAuthType): Registered Account object
-func (a *Auth) registerUser(context storage.TransactionContext, authType model.AuthType, userIdentifier string, accountAuthTypeParams map[string]interface{},
+func (a *Auth) registerUser(storage interfaces.Storage, authType model.AuthType, userIdentifier string, accountAuthTypeParams map[string]interface{},
 	appOrg model.ApplicationOrganization, credential *model.Credential, useSharedProfile bool, externalIDs map[string]string, profile model.Profile, privacy model.Privacy, preferences map[string]interface{},
 	username string, permissionNames []string, roleIDs []string, groupIDs []string, scopes []string, creatorPermissions []string, clientVersion *string, l *logs.Log) (*model.AccountAuthType, error) {
 
@@ -1442,13 +1483,13 @@ func (a *Auth) registerUser(context storage.TransactionContext, authType model.A
 		}
 	}
 
-	accountAuthType, err := a.constructAccount(context, authType, userIdentifier, accountAuthTypeParams, appOrg, credential,
+	accountAuthType, err := a.constructAccount(storage, authType, userIdentifier, accountAuthTypeParams, appOrg, credential,
 		unverified, externalIDs, profile, privacy, preferences, username, permissionNames, roleIDs, groupIDs, scopes, creatorPermissions, clientVersion, l)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeAccount, nil, err)
 	}
 
-	err = a.storeNewAccountInfo(context, accountAuthType.Account, credential, useSharedProfile, profile)
+	err = a.storeNewAccountInfo(storage, accountAuthType.Account, credential, useSharedProfile, profile)
 	if err != nil {
 		return nil, errors.WrapErrorAction("storing", "new account information", nil, err)
 	}
@@ -1456,7 +1497,7 @@ func (a *Auth) registerUser(context storage.TransactionContext, authType model.A
 	return accountAuthType, nil
 }
 
-func (a *Auth) constructAccount(context storage.TransactionContext, authType model.AuthType, userIdentifier string, accountAuthTypeParams map[string]interface{},
+func (a *Auth) constructAccount(storage interfaces.Storage, authType model.AuthType, userIdentifier string, accountAuthTypeParams map[string]interface{},
 	appOrg model.ApplicationOrganization, credential *model.Credential, unverified bool, externalIDs map[string]string, profile model.Profile, privacy model.Privacy, preferences map[string]interface{},
 	username string, permissionNames []string, roleIDs []string, groupIDs []string, scopes []string, assignerPermissions []string, clientVersion *string, l *logs.Log) (*model.AccountAuthType, error) {
 	//create account auth type
@@ -1475,32 +1516,32 @@ func (a *Auth) constructAccount(context storage.TransactionContext, authType mod
 	var roles []model.AppOrgRole
 	var groups []model.AppOrgGroup
 	if adminSet {
-		permissions, err = a.CheckPermissions(context, []model.ApplicationOrganization{appOrg}, permissionNames, assignerPermissions, false)
+		permissions, err = a.CheckPermissions(storage, []model.ApplicationOrganization{appOrg}, permissionNames, assignerPermissions, false)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypePermission, nil, err)
 		}
 
-		roles, err = a.CheckRoles(context, &appOrg, roleIDs, assignerPermissions, false)
+		roles, err = a.CheckRoles(storage, &appOrg, roleIDs, assignerPermissions, false)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeAppOrgRole, nil, err)
 		}
 
-		groups, err = a.CheckGroups(context, &appOrg, groupIDs, assignerPermissions, false)
+		groups, err = a.CheckGroups(storage, &appOrg, groupIDs, assignerPermissions, false)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeAppOrgGroup, nil, err)
 		}
 	} else {
-		permissions, err = a.storage.FindPermissionsByName(context, permissionNames)
+		permissions, err = storage.FindPermissionsByName(permissionNames)
 		if err != nil {
 			l.WarnError(logutils.MessageAction(logutils.StatusError, logutils.ActionFind, model.TypePermission, nil), err)
 		}
 
-		roles, err = a.storage.FindAppOrgRolesByIDs(context, roleIDs, appOrg.ID)
+		roles, err = storage.FindAppOrgRolesByIDs(roleIDs, appOrg.ID)
 		if err != nil {
 			l.WarnError(logutils.MessageAction(logutils.StatusError, logutils.ActionFind, model.TypeAppOrgRole, nil), err)
 		}
 
-		groups, err = a.storage.FindAppOrgGroupsByIDs(context, groupIDs, appOrg.ID)
+		groups, err = storage.FindAppOrgGroupsByIDs(groupIDs, appOrg.ID)
 		if err != nil {
 			l.WarnError(logutils.MessageAction(logutils.StatusError, logutils.ActionFind, model.TypeAppOrgGroup, nil), err)
 		}
@@ -1536,9 +1577,9 @@ func (a *Auth) constructAccount(context storage.TransactionContext, authType mod
 	return accountAuthType, nil
 }
 
-func (a *Auth) storeNewAccountInfo(context storage.TransactionContext, account model.Account, credential *model.Credential, useSharedProfile bool, profile model.Profile) error {
+func (a *Auth) storeNewAccountInfo(storage interfaces.Storage, account model.Account, credential *model.Credential, useSharedProfile bool, profile model.Profile) error {
 	//insert account object - it includes the account auth type
-	_, err := a.storage.InsertAccount(context, account)
+	_, err := storage.InsertAccount(account)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAccount, nil, err)
 	}
@@ -1547,13 +1588,13 @@ func (a *Auth) storeNewAccountInfo(context storage.TransactionContext, account m
 	if credential != nil {
 		if useSharedProfile {
 			//update credential
-			err = a.storage.UpdateCredential(context, credential)
+			err = storage.UpdateCredential(credential)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
 			}
 		} else {
 			//create credential
-			err = a.storage.InsertCredential(context, credential)
+			err = storage.InsertCredential(credential)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionInsert, model.TypeCredential, nil, err)
 			}
@@ -1562,7 +1603,7 @@ func (a *Auth) storeNewAccountInfo(context storage.TransactionContext, account m
 
 	//update profile if shared
 	if useSharedProfile {
-		err = a.storage.UpdateAccountProfile(context, profile)
+		err = storage.UpdateAccountProfile(profile)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeProfile, nil, err)
 		}
@@ -1571,8 +1612,8 @@ func (a *Auth) storeNewAccountInfo(context storage.TransactionContext, account m
 	return nil
 }
 
-func (a *Auth) checkUsername(context storage.TransactionContext, appOrg *model.ApplicationOrganization, username string) error {
-	accounts, err := a.storage.FindAccountsByUsername(context, appOrg, username)
+func (a *Auth) checkUsername(sa interfaces.Storage, appOrg *model.ApplicationOrganization, username string) error {
+	accounts, err := sa.FindAccountsByUsername(appOrg, username)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
@@ -1596,7 +1637,7 @@ func (a *Auth) linkAccountAuthType(account model.Account, authType model.AuthTyp
 	}
 
 	//2. check if the user exists
-	newCredsAccount, err := a.storage.FindAccount(nil, appOrg.ID, authType.ID, userIdentifier)
+	newCredsAccount, err := a.storage.FindAccount(appOrg.ID, authType.ID, userIdentifier)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
@@ -1696,7 +1737,7 @@ func (a *Auth) linkAccountAuthTypeExternal(account model.Account, authType model
 	}
 
 	//2. check if the user exists
-	newCredsAccount, err := a.storage.FindAccount(nil, appOrg.ID, authType.ID, externalUser.Identifier)
+	newCredsAccount, err := a.storage.FindAccount(appOrg.ID, authType.ID, externalUser.Identifier)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
@@ -1735,7 +1776,7 @@ func (a *Auth) registerAccountAuthType(accountAuthType model.AccountAuthType, cr
 	var err error
 	if credential != nil {
 		//TODO - in one transaction
-		if err = a.storage.InsertCredential(nil, credential); err != nil {
+		if err = a.storage.InsertCredential(credential); err != nil {
 			return errors.WrapErrorAction(logutils.ActionInsert, model.TypeCredential, nil, err)
 		}
 	}
@@ -1761,7 +1802,7 @@ func (a *Auth) registerAccountAuthType(accountAuthType model.AccountAuthType, cr
 }
 
 func (a *Auth) unlinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, identifier string, l *logs.Log) (*model.Account, error) {
-	account, err := a.storage.FindAccountByID(nil, accountID)
+	account, err := a.storage.FindAccountByID(accountID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
@@ -1800,7 +1841,7 @@ func (a *Auth) handleAccountAuthTypeConflict(account model.Account, authTypeID s
 			return errors.ErrorData("existing", model.TypeAccount, nil).SetStatus(utils.ErrorStatusAlreadyExists)
 		}
 		//if linked to a different unverified account, remove whole account
-		err := a.deleteAccount(nil, account)
+		err := a.deleteAccount(a.storage, account)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
 		}
@@ -1816,16 +1857,16 @@ func (a *Auth) handleAccountAuthTypeConflict(account model.Account, authTypeID s
 }
 
 func (a *Auth) removeAccountAuthType(aat model.AccountAuthType) error {
-	transaction := func(context storage.TransactionContext) error {
+	transaction := func(storage interfaces.Storage) error {
 		//1. delete account auth type in account
-		err := a.storage.DeleteAccountAuthType(context, aat)
+		err := storage.DeleteAccountAuthType(aat)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccountAuthType, nil, err)
 		}
 
 		//2. delete credential if it exists
 		if aat.Credential != nil {
-			err = a.removeAccountAuthTypeCredential(context, aat)
+			err = a.removeAccountAuthTypeCredential(storage, aat)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionDelete, model.TypeCredential, nil, err)
 			}
@@ -1833,7 +1874,7 @@ func (a *Auth) removeAccountAuthType(aat model.AccountAuthType) error {
 
 		//3. delete login sessions using unlinked account auth type (if unverified no sessions should exist)
 		if !aat.Unverified {
-			err = a.storage.DeleteLoginSessionsByAccountAuthTypeID(context, aat.ID)
+			err = storage.DeleteLoginSessionsByAccountAuthTypeID(aat.ID)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, nil, err)
 			}
@@ -1845,8 +1886,8 @@ func (a *Auth) removeAccountAuthType(aat model.AccountAuthType) error {
 	return a.storage.PerformTransaction(transaction)
 }
 
-func (a *Auth) removeAccountAuthTypeCredential(context storage.TransactionContext, aat model.AccountAuthType) error {
-	credential, err := a.storage.FindCredential(context, aat.Credential.ID)
+func (a *Auth) removeAccountAuthTypeCredential(storage interfaces.Storage, aat model.AccountAuthType) error {
+	credential, err := storage.FindCredential(aat.Credential.ID)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
 	}
@@ -1857,7 +1898,7 @@ func (a *Auth) removeAccountAuthTypeCredential(context storage.TransactionContex
 			if credAat.ID == aat.ID {
 				credential.AccountsAuthTypes = append(credential.AccountsAuthTypes[:i], credential.AccountsAuthTypes[i+1:]...)
 				credential.DateUpdated = &now
-				err = a.storage.UpdateCredential(context, credential)
+				err = storage.UpdateCredential(credential)
 				if err != nil {
 					return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
 				}
@@ -1865,7 +1906,7 @@ func (a *Auth) removeAccountAuthTypeCredential(context storage.TransactionContex
 			}
 		}
 	} else {
-		err = a.storage.DeleteCredential(context, credential.ID)
+		err = storage.DeleteCredential(credential.ID)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeCredential, nil, err)
 		}
@@ -1874,9 +1915,9 @@ func (a *Auth) removeAccountAuthTypeCredential(context storage.TransactionContex
 	return nil
 }
 
-func (a *Auth) deleteAccount(context storage.TransactionContext, account model.Account) error {
+func (a *Auth) deleteAccount(storage interfaces.Storage, account model.Account) error {
 	//1. delete the account record
-	err := a.storage.DeleteAccount(context, account.ID)
+	err := storage.DeleteAccount(account.ID)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
 	}
@@ -1884,7 +1925,7 @@ func (a *Auth) deleteAccount(context storage.TransactionContext, account model.A
 	//2. remove account auth types from or delete credentials
 	for _, aat := range account.AuthTypes {
 		if aat.Credential != nil {
-			err = a.removeAccountAuthTypeCredential(context, aat)
+			err = a.removeAccountAuthTypeCredential(storage, aat)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionDelete, model.TypeCredential, nil, err)
 			}
@@ -1892,14 +1933,14 @@ func (a *Auth) deleteAccount(context storage.TransactionContext, account model.A
 	}
 
 	//3. delete login sessions
-	err = a.storage.DeleteLoginSessionsByIdentifier(context, account.ID)
+	err = storage.DeleteLoginSessionsByIdentifier(account.ID)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, nil, err)
 	}
 
 	//4. delete devices records
 	for _, device := range account.Devices {
-		err = a.storage.DeleteDevice(context, device.ID)
+		err = storage.DeleteDevice(device.ID)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeDevice, nil, err)
 		}
@@ -1909,7 +1950,7 @@ func (a *Auth) deleteAccount(context storage.TransactionContext, account model.A
 }
 
 func (a *Auth) constructServiceAccount(accountID string, name string, appID string, orgID string, permissions []string, scopes []authorization.Scope, firstParty bool, assignerPermissions []string) (*model.ServiceAccount, error) {
-	permissionList, err := a.storage.FindPermissionsByName(nil, permissions)
+	permissionList, err := a.storage.FindPermissionsByName(permissions)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypePermission, nil, err)
 	}
@@ -1922,7 +1963,7 @@ func (a *Auth) constructServiceAccount(accountID string, name string, appID stri
 
 	var application *model.Application
 	if appID != authutils.AllApps {
-		application, err = a.storage.FindApplication(nil, appID)
+		application, err = a.storage.FindApplication(appID)
 		if err != nil || application == nil {
 			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, nil, err)
 		}
@@ -2286,7 +2327,7 @@ func (a *Auth) updateExternalAccountRoles(account *model.Account, newExternalRol
 		}
 	}
 
-	addedRoles, err := a.storage.FindAppOrgRolesByIDs(nil, addedRoleIDs, account.AppOrg.ID)
+	addedRoles, err := a.storage.FindAppOrgRolesByIDs(addedRoleIDs, account.AppOrg.ID)
 	if err != nil {
 		return false, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountRoles, nil, err)
 	}
@@ -2320,7 +2361,7 @@ func (a *Auth) updateExternalAccountGroups(account *model.Account, newExternalGr
 		}
 	}
 
-	addedGroups, err := a.storage.FindAppOrgGroupsByIDs(nil, addedGroupIDs, account.AppOrg.ID)
+	addedGroups, err := a.storage.FindAppOrgGroupsByIDs(addedGroupIDs, account.AppOrg.ID)
 	if err != nil {
 		return false, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountGroups, nil, err)
 	}
@@ -2576,7 +2617,7 @@ func (a *Auth) deleteExpiredSessions() {
 		}
 
 		//delete the sessions from the storage
-		err = a.storage.DeleteLoginSessionsByIDs(nil, ids)
+		err = a.storage.DeleteLoginSessionsByIDs(ids)
 		if err != nil {
 			a.logger.Errorf("error on deleting logins sessions - %s", err)
 		}
@@ -2585,7 +2626,7 @@ func (a *Auth) deleteExpiredSessions() {
 
 // LocalServiceRegLoaderImpl provides a local implementation for AuthDataLoader
 type LocalServiceRegLoaderImpl struct {
-	storage Storage
+	storage interfaces.Storage
 	*authservice.ServiceRegSubscriptions
 }
 
@@ -2603,7 +2644,7 @@ func (l *LocalServiceRegLoaderImpl) LoadServices() ([]authservice.ServiceReg, er
 }
 
 // NewLocalServiceRegLoader creates and configures a new LocalServiceRegLoaderImpl instance
-func NewLocalServiceRegLoader(storage Storage) *LocalServiceRegLoaderImpl {
+func NewLocalServiceRegLoader(storage interfaces.Storage) *LocalServiceRegLoaderImpl {
 	subscriptions := authservice.NewServiceRegSubscriptions([]string{allServices})
 	return &LocalServiceRegLoaderImpl{storage: storage, ServiceRegSubscriptions: subscriptions}
 }
@@ -2615,7 +2656,7 @@ type LocalServiceAccountLoaderImpl struct {
 
 // LoadAccessToken gets an access token for appID, orgID if the implementing service is granted access
 func (l *LocalServiceAccountLoaderImpl) LoadAccessToken(appID string, orgID string) (*authservice.AccessToken, error) {
-	account, err := l.auth.storage.FindServiceAccount(nil, l.auth.serviceID, authutils.AllApps, authutils.AllOrgs)
+	account, err := l.auth.storage.FindServiceAccount(l.auth.serviceID, authutils.AllApps, authutils.AllOrgs)
 	if err != nil || account == nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeServiceAccount, logutils.StringArgs(l.auth.serviceID), err)
 	}
@@ -2641,7 +2682,7 @@ func NewLocalServiceAccountLoader(auth Auth) *LocalServiceAccountLoaderImpl {
 // StorageListener represents storage listener implementation for the auth package
 type StorageListener struct {
 	auth *Auth
-	storage.DefaultListenerImpl
+	model.DefaultStorageListener
 }
 
 // OnIdentityProvidersUpdated notifies that identity providers have been updated

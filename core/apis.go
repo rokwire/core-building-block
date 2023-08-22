@@ -16,8 +16,8 @@ package core
 
 import (
 	"core-building-block/core/auth"
+	"core-building-block/core/interfaces"
 	"core-building-block/core/model"
-	"core-building-block/driven/storage"
 	"fmt"
 	"time"
 
@@ -30,14 +30,14 @@ import (
 
 // APIs exposes to the drivers adapters access to the core functionality
 type APIs struct {
-	Services       Services       //expose to the drivers adapters
-	Administration Administration //expose to the drivers adapters
-	Encryption     Encryption     //expose to the drivers adapters
-	BBs            BBs            //expose to the drivers adapters
-	TPS            TPS            //expose to the drivers adapters
-	System         System         //expose to the drivers adapters
+	Services       interfaces.Services       //expose to the drivers adapters
+	Administration interfaces.Administration //expose to the drivers adapters
+	Encryption     interfaces.Encryption     //expose to the drivers adapters
+	BBs            interfaces.BBs            //expose to the drivers adapters
+	TPS            interfaces.TPS            //expose to the drivers adapters
+	System         interfaces.System         //expose to the drivers adapters
 
-	Auth auth.APIs //expose to the drivers auth
+	Auth interfaces.Auth //expose to the drivers auth
 
 	app *application
 
@@ -64,7 +64,7 @@ func (c *APIs) Start() {
 }
 
 // AddListener adds application listener
-func (c *APIs) AddListener(listener ApplicationListener) {
+func (c *APIs) AddListener(listener interfaces.ApplicationListener) {
 	c.app.addListener(listener)
 }
 
@@ -81,11 +81,11 @@ func (c *APIs) GetServiceID() string {
 func (c *APIs) storeSystemData() error {
 	newDocuments := make(map[string]string)
 
-	transaction := func(context storage.TransactionContext) error {
+	transaction := func(storage interfaces.Storage) error {
 		createAccount := false
 
 		//1. insert email auth type if does not exist
-		emailAuthType, err := c.app.storage.FindAuthType(auth.AuthTypeEmail)
+		emailAuthType, err := storage.FindAuthType(auth.AuthTypeEmail)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthType, nil, err)
 		}
@@ -94,14 +94,14 @@ func (c *APIs) storeSystemData() error {
 			params := map[string]interface{}{"verify_email": c.verifyEmail}
 			emailAuthType = &model.AuthType{ID: newDocuments["auth_type"], Code: auth.AuthTypeEmail, Description: "Authentication type relying on email and password",
 				IsExternal: false, IsAnonymous: false, UseCredentials: true, IgnoreMFA: false, Params: params}
-			_, err = c.app.storage.InsertAuthType(context, *emailAuthType)
+			_, err = storage.InsertAuthType(*emailAuthType)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAuthType, nil, err)
 			}
 		}
 
 		//2. insert system org if does not exist
-		systemOrg, err := c.app.storage.FindSystemOrganization()
+		systemOrg, err := storage.FindSystemOrganization()
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
 		}
@@ -109,7 +109,7 @@ func (c *APIs) storeSystemData() error {
 			newDocuments["organization"] = uuid.NewString()
 			systemOrgConfig := model.OrganizationConfig{ID: uuid.NewString(), Domains: []string{}, DateCreated: time.Now().UTC()}
 			newSystemOrg := model.Organization{ID: newDocuments["organization"], Name: "System", Type: "small", System: true, Config: systemOrgConfig, DateCreated: time.Now().UTC()}
-			_, err = c.app.storage.InsertOrganization(context, newSystemOrg)
+			_, err = storage.InsertOrganization(newSystemOrg)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionInsert, model.TypeOrganization, nil, err)
 			}
@@ -119,7 +119,7 @@ func (c *APIs) storeSystemData() error {
 		}
 
 		//3. insert system app and appOrg if they do not exist
-		systemAdminAppOrgs, err := c.app.storage.FindApplicationsOrganizationsByOrgID(systemOrg.ID)
+		systemAdminAppOrgs, err := storage.FindApplicationsOrganizationsByOrgID(systemOrg.ID)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
 		}
@@ -132,7 +132,7 @@ func (c *APIs) storeSystemData() error {
 			newAndroidAppType := model.ApplicationType{ID: uuid.NewString(), Identifier: c.systemAppTypeIdentifier, Name: c.systemAppTypeName, Versions: nil}
 			newSystemAdminApp := model.Application{ID: newDocuments["application"], Name: "System Admin application", MultiTenant: false, Admin: true,
 				SharedIdentities: false, Types: []model.ApplicationType{newAndroidAppType}, DateCreated: time.Now().UTC()}
-			_, err = c.app.storage.InsertApplication(context, newSystemAdminApp)
+			_, err = storage.InsertApplication(newSystemAdminApp)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionInsert, model.TypeApplication, nil, err)
 			}
@@ -148,7 +148,7 @@ func (c *APIs) storeSystemData() error {
 			newDocuments["application_organization"] = uuid.NewString()
 			newSystemAdminAppOrg := model.ApplicationOrganization{ID: newDocuments["application_organization"], Application: *systemAdminApp, Organization: *systemOrg,
 				SupportedAuthTypes: supportedAuthTypes, ServicesIDs: []string{model.ServiceIDCore}, DateCreated: time.Now().UTC()}
-			_, err = c.app.storage.InsertApplicationOrganization(context, newSystemAdminAppOrg)
+			_, err = storage.InsertApplicationOrganization(newSystemAdminAppOrg)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionSave, model.TypeApplicationOrganization, nil, err)
 			}
@@ -171,7 +171,7 @@ func (c *APIs) storeSystemData() error {
 			}
 			newDocuments["api_key"] = uuid.NewString()
 			newAPIKey := model.APIKey{ID: newDocuments["api_key"], AppID: systemAppOrg.Application.ID, Key: c.systemAPIKey}
-			_, err := c.app.storage.InsertAPIKey(context, newAPIKey)
+			_, err := storage.InsertAPIKey(newAPIKey)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAPIKey, nil, err)
 			}
@@ -182,7 +182,7 @@ func (c *APIs) storeSystemData() error {
 			model.PermissionAllSystemCore:       "Gives access to all admin and system APIs",
 			model.PermissionGrantAllPermissions: "Gives the ability to grant any permission",
 		}
-		existingPermissions, err := c.app.storage.FindPermissionsByName(context, []string{model.PermissionAllSystemCore, model.PermissionGrantAllPermissions})
+		existingPermissions, err := storage.FindPermissionsByName([]string{model.PermissionAllSystemCore, model.PermissionGrantAllPermissions})
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypePermission, &logutils.FieldArgs{"name": model.PermissionAllSystemCore}, err)
 		}
@@ -213,7 +213,7 @@ func (c *APIs) storeSystemData() error {
 					names += p.Name
 				}
 
-				err = c.app.storage.InsertPermissions(context, insert)
+				err = storage.InsertPermissions(insert)
 				if err != nil {
 					return errors.WrapErrorAction(logutils.ActionCreate, model.TypePermission, logutils.StringArgs(names), err)
 				}
@@ -227,7 +227,7 @@ func (c *APIs) storeSystemData() error {
 			if c.systemAccountEmail == "" || c.systemAccountPassword == "" {
 				return errors.ErrorData(logutils.StatusMissing, "initial system account email or password", nil)
 			}
-			newDocuments["account"], err = c.Auth.InitializeSystemAccount(context, *emailAuthType, systemAppOrg, model.PermissionAllSystemCore, c.systemAccountEmail, c.systemAccountPassword, "", c.logger.NewRequestLog(nil))
+			newDocuments["account"], err = c.Auth.InitializeSystemAccount(storage, *emailAuthType, systemAppOrg, model.PermissionAllSystemCore, c.systemAccountEmail, c.systemAccountPassword, "", c.logger.NewRequestLog(nil))
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionInitialize, "system account", nil, err)
 			}
@@ -254,9 +254,9 @@ func (c *APIs) storeSystemData() error {
 }
 
 // NewCoreAPIs creates new CoreAPIs
-func NewCoreAPIs(env string, version string, build string, serviceID string, storage Storage, auth auth.APIs, systemInitSettings map[string]string, verifyEmail bool, logger *logs.Logger) *APIs {
+func NewCoreAPIs(env string, version string, build string, serviceID string, storage interfaces.Storage, auth interfaces.Auth, systemInitSettings map[string]string, verifyEmail bool, logger *logs.Logger) *APIs {
 	//add application instance
-	listeners := []ApplicationListener{}
+	listeners := []interfaces.ApplicationListener{}
 	application := application{env: env, version: version, build: build, serviceID: serviceID, storage: storage, listeners: listeners, auth: auth}
 
 	//add coreAPIs instance

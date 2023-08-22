@@ -16,6 +16,7 @@ package storage
 
 import (
 	"context"
+	"core-building-block/core/interfaces"
 	"time"
 
 	"github.com/rokwire/logging-library-go/v2/logs"
@@ -56,7 +57,7 @@ type database struct {
 	permissions                     *collectionWrapper
 	follows                         *collectionWrapper
 
-	listeners []Listener
+	listeners []interfaces.StorageListener
 }
 
 func (m *database) start() error {
@@ -237,7 +238,7 @@ func (m *database) start() error {
 	go m.applicationConfigs.Watch(nil, m.logger)
 	go m.configs.Watch(nil, m.logger)
 
-	m.listeners = []Listener{}
+	m.listeners = []interfaces.StorageListener{}
 
 	return nil
 }

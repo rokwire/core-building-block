@@ -15,8 +15,8 @@
 package core
 
 import (
+	"core-building-block/core/interfaces"
 	"core-building-block/core/model"
-	"core-building-block/driven/storage"
 
 	"github.com/rokwire/logging-library-go/v2/errors"
 	"github.com/rokwire/logging-library-go/v2/logutils"
@@ -88,7 +88,7 @@ func (app *application) sharedGetAccountsCountByParams(searchParams map[string]i
 
 func (app *application) sharedUpdateAccountUsername(accountID string, appID string, orgID string, username string) error {
 	if username == "" {
-		err := app.storage.UpdateAccountUsername(nil, accountID, username)
+		err := app.storage.UpdateAccountUsername(accountID, username)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountUsername, nil, err)
 		}
@@ -96,9 +96,9 @@ func (app *application) sharedUpdateAccountUsername(accountID string, appID stri
 		return nil
 	}
 
-	transaction := func(context storage.TransactionContext) error {
+	transaction := func(storage interfaces.Storage) error {
 		//1. find the app/org
-		appOrg, err := app.storage.FindApplicationOrganization(appID, orgID)
+		appOrg, err := storage.FindApplicationOrganization(appID, orgID)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": appID, "org_id": orgID}, err)
 		}
@@ -107,7 +107,7 @@ func (app *application) sharedUpdateAccountUsername(accountID string, appID stri
 		}
 
 		//2. check if any accounts in the app/org use the username
-		accounts, err := app.storage.FindAccountsByUsername(context, appOrg, username)
+		accounts, err := storage.FindAccountsByUsername(appOrg, username)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 		}
@@ -122,7 +122,7 @@ func (app *application) sharedUpdateAccountUsername(accountID string, appID stri
 		}
 
 		//3. update the username
-		err = app.storage.UpdateAccountUsername(context, accountID, username)
+		err = storage.UpdateAccountUsername(accountID, username)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountUsername, nil, err)
 		}

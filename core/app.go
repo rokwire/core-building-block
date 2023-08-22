@@ -15,9 +15,8 @@
 package core
 
 import (
-	"core-building-block/core/auth"
+	"core-building-block/core/interfaces"
 	"core-building-block/core/model"
-	"core-building-block/driven/storage"
 	"core-building-block/utils"
 	"time"
 
@@ -32,11 +31,11 @@ type application struct {
 	build     string
 	serviceID string
 
-	storage Storage
+	storage interfaces.Storage
 
-	listeners []ApplicationListener
+	listeners []interfaces.ApplicationListener
 
-	auth auth.APIs
+	auth interfaces.Auth
 }
 
 // start starts the core part of the application
@@ -47,7 +46,7 @@ func (app *application) start() {
 }
 
 // addListener adds application listener
-func (app *application) addListener(listener ApplicationListener) {
+func (app *application) addListener(listener interfaces.ApplicationListener) {
 	//TODO
 	//logs.Println("Application -> AddListener")
 
@@ -60,9 +59,9 @@ func (app *application) notifyListeners(message string, data interface{}) {
 	}()
 }
 
-func (app *application) getAccount(context storage.TransactionContext, accountID string) (*model.Account, error) {
+func (app *application) getAccount(storage interfaces.Storage, accountID string) (*model.Account, error) {
 	//find the account
-	account, err := app.storage.FindAccountByID(context, accountID)
+	account, err := storage.FindAccountByID(accountID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
@@ -72,8 +71,8 @@ func (app *application) getAccount(context storage.TransactionContext, accountID
 	return account, nil
 }
 
-func (app *application) getApplicationOrganization(appID string, orgID string) (*model.ApplicationOrganization, error) {
-	appOrg, err := app.storage.FindApplicationOrganization(appID, orgID)
+func (app *application) getApplicationOrganization(storage interfaces.Storage, appID string, orgID string) (*model.ApplicationOrganization, error) {
+	appOrg, err := storage.FindApplicationOrganization(appID, orgID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeApplicationOrganization, nil, err)
 	}
@@ -84,8 +83,8 @@ func (app *application) getApplicationOrganization(appID string, orgID string) (
 	return appOrg, nil
 }
 
-func (app *application) getAppOrgRole(context storage.TransactionContext, id string, appOrgID string, systemAdmin bool) (*model.AppOrgRole, error) {
-	role, err := app.storage.FindAppOrgRole(context, id, appOrgID)
+func (app *application) getAppOrgRole(storage interfaces.Storage, id string, appOrgID string, systemAdmin bool) (*model.AppOrgRole, error) {
+	role, err := storage.FindAppOrgRole(id, appOrgID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgRole, &logutils.FieldArgs{"id": id}, err)
 	}
@@ -99,8 +98,8 @@ func (app *application) getAppOrgRole(context storage.TransactionContext, id str
 	return role, nil
 }
 
-func (app *application) getAppOrgGroup(context storage.TransactionContext, id string, appOrgID string, systemAdmin *bool) (*model.AppOrgGroup, error) {
-	group, err := app.storage.FindAppOrgGroup(context, id, appOrgID)
+func (app *application) getAppOrgGroup(storage interfaces.Storage, id string, appOrgID string, systemAdmin *bool) (*model.AppOrgGroup, error) {
+	group, err := storage.FindAppOrgGroup(id, appOrgID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAppOrgGroup, &logutils.FieldArgs{"id": id}, err)
 	}
@@ -117,7 +116,7 @@ func (app *application) getAppOrgGroup(context storage.TransactionContext, id st
 // grantOrRevokePermissions grants or revokes permissions after validating the assigner has required permissions
 //
 //	Expects container to be pointer to type implementing model.PermissionContainer
-func (app *application) grantOrRevokePermissions(context storage.TransactionContext, container model.PermissionContainer, permissionNames []string, assignerPermissions []string, revoke bool) error {
+func (app *application) grantOrRevokePermissions(storage interfaces.Storage, container model.PermissionContainer, permissionNames []string, assignerPermissions []string, revoke bool) error {
 	if container == nil {
 		return errors.ErrorData(logutils.StatusMissing, "permissions container", nil)
 	}
@@ -137,7 +136,7 @@ func (app *application) grantOrRevokePermissions(context storage.TransactionCont
 
 	appOrg := container.GetAppOrg()
 	//check permissions
-	permissions, err := app.auth.CheckPermissions(context, []model.ApplicationOrganization{appOrg}, checkPermissions, assignerPermissions, revoke)
+	permissions, err := app.auth.CheckPermissions(storage, []model.ApplicationOrganization{appOrg}, checkPermissions, assignerPermissions, revoke)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionValidate, model.TypePermission, nil, err)
 	}
@@ -147,19 +146,19 @@ func (app *application) grantOrRevokePermissions(context storage.TransactionCont
 		{
 			if revoke {
 				//delete permissions from an account
-				err = app.storage.DeleteAccountPermissions(context, c.ID, checkPermissions)
+				err = storage.DeleteAccountPermissions(c.ID, checkPermissions)
 				if err != nil {
 					return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccountPermissions, &logutils.FieldArgs{"names": checkPermissions}, err)
 				}
 
 				//delete all sessions for the account
-				err = app.storage.DeleteLoginSessionsByIdentifier(context, c.ID)
+				err = storage.DeleteLoginSessionsByIdentifier(c.ID)
 				if err != nil {
 					return errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, nil, err)
 				}
 			} else {
 				//add permissions to account
-				err = app.storage.InsertAccountPermissions(context, c.ID, permissions)
+				err = storage.InsertAccountPermissions(c.ID, permissions)
 				if err != nil {
 					return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAccountPermissions, &logutils.FieldArgs{"names": checkPermissions}, err)
 				}
@@ -182,7 +181,7 @@ func (app *application) grantOrRevokePermissions(context storage.TransactionCont
 			//update role
 			now := time.Now().UTC()
 			c.DateUpdated = &now
-			err = app.storage.UpdateAppOrgRole(context, *c)
+			err = storage.UpdateAppOrgRole(*c)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAppOrgRole, nil, err)
 			}
@@ -195,7 +194,7 @@ func (app *application) grantOrRevokePermissions(context storage.TransactionCont
 // grantOrRevokeRoles grants or revokes roles after validating the assigner has required permissions
 //
 //	Expects container to be pointer to type implementing model.RoleContainer
-func (app *application) grantOrRevokeRoles(context storage.TransactionContext, container model.RoleContainer, roleIDs []string, assignerPermissions []string, revoke bool) error {
+func (app *application) grantOrRevokeRoles(storage interfaces.Storage, container model.RoleContainer, roleIDs []string, assignerPermissions []string, revoke bool) error {
 	if container == nil {
 		return errors.ErrorData(logutils.StatusMissing, "roles container", nil)
 	}
@@ -215,7 +214,7 @@ func (app *application) grantOrRevokeRoles(context storage.TransactionContext, c
 
 	appOrg := container.GetAppOrg()
 	//check roles
-	roles, err := app.auth.CheckRoles(context, &appOrg, checkRoles, assignerPermissions, revoke)
+	roles, err := app.auth.CheckRoles(storage, &appOrg, checkRoles, assignerPermissions, revoke)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionValidate, model.TypeAppOrgRole, nil, err)
 	}
@@ -225,20 +224,20 @@ func (app *application) grantOrRevokeRoles(context storage.TransactionContext, c
 		{
 			if revoke {
 				//delete roles from an account
-				err = app.storage.DeleteAccountRoles(context, c.ID, checkRoles)
+				err = storage.DeleteAccountRoles(c.ID, checkRoles)
 				if err != nil {
 					return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccountRoles, &logutils.FieldArgs{"ids": checkRoles}, err)
 				}
 
 				//delete all sessions for the account
-				err = app.storage.DeleteLoginSessionsByIdentifier(context, c.ID)
+				err = storage.DeleteLoginSessionsByIdentifier(c.ID)
 				if err != nil {
 					return errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, nil, err)
 				}
 			} else {
 				//add roles to account
 				accountRoles := model.AccountRolesFromAppOrgRoles(roles, true, true)
-				err = app.storage.InsertAccountRoles(context, c.ID, c.AppOrg.ID, accountRoles)
+				err = storage.InsertAccountRoles(c.ID, c.AppOrg.ID, accountRoles)
 				if err != nil {
 					return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAccountRoles, &logutils.FieldArgs{"ids": checkRoles}, err)
 				}
@@ -261,7 +260,7 @@ func (app *application) grantOrRevokeRoles(context storage.TransactionContext, c
 			//update role
 			now := time.Now().UTC()
 			c.DateUpdated = &now
-			err = app.storage.UpdateAppOrgGroup(context, *c)
+			err = storage.UpdateAppOrgGroup(*c)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAppOrgGroup, nil, err)
 			}
@@ -269,4 +268,10 @@ func (app *application) grantOrRevokeRoles(context storage.TransactionContext, c
 	}
 
 	return nil
+}
+
+// StorageListener listenes for change data storage events
+type StorageListener struct {
+	app *application
+	model.DefaultStorageListener
 }
