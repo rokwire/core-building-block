@@ -26,6 +26,14 @@ type Storage interface {
 
 	PerformTransaction(func(adapter Storage) error) error
 
+	//Configs
+	FindConfig(configType string, appID string, orgID string) (*model.Config, error)
+	FindConfigByID(id string) (*model.Config, error)
+	FindConfigs(configType *string) ([]model.Config, error)
+	InsertConfig(config model.Config) error
+	UpdateConfig(config model.Config) error
+	DeleteConfig(id string) error
+
 	//AuthTypes
 	FindAuthType(codeOrID string) (*model.AuthType, error)
 
@@ -52,19 +60,29 @@ type Storage interface {
 	FindAccountByID(id string) (*model.Account, error)
 	FindAccounts(limit *int, offset *int, appID string, orgID string, accountID *string, firstName *string, lastName *string, authType *string,
 		authTypeIdentifier *string, anonymous *bool, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error)
+	FindPublicAccounts(appID string, orgID string, limit *int, offset *int, search *string, firstName *string, lastName *string, username *string,
+		followingID *string, followerID *string, userID string) ([]model.PublicAccount, error)
 	FindAccountsByParams(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]map[string]interface{}, error)
 	FindAccountsByAccountID(appID string, orgID string, accountIDs []string) ([]model.Account, error)
 	InsertAccount(account model.Account) (*model.Account, error)
 	SaveAccount(account *model.Account) error
 	DeleteAccount(id string) error
 	UpdateAccountUsageInfo(accountID string, updateLoginTime bool, updateAccessTokenTime bool, clientVersion *string) error
+	UpdateAccountVerified(accountID string, appID string, orgID string, verified bool) error
 	CountAccountsByParams(searchParams map[string]interface{}, appID string, orgID string) (int64, error)
 	CountAccountsByRoleID(roleID string) (*int64, error)
 	CountAccountsByGroupID(groupID string) (*int64, error)
 
+	//Follows
+	InsertFollow(follow model.Follow) error
+	DeleteFollow(appID string, orgID string, followingID string, followerID string) error
+
 	//Profiles
-	UpdateProfile(profile model.Profile) error
-	FindProfiles(appID string, authTypeID string, accountAuthTypeIdentifier string) ([]model.Profile, error)
+	UpdateAccountProfile(profile model.Profile) error
+	FindAccountProfiles(appID string, authTypeID string, accountAuthTypeIdentifier string) ([]model.Profile, error)
+
+	//Privacy
+	UpdateAccountPrivacy(accountID string, privacy model.Privacy) error
 
 	//Preferences
 	UpdateAccountPreferences(accountID string, preferences map[string]interface{}) error
@@ -213,11 +231,6 @@ type Storage interface {
 	//AccountScopes
 	UpdateAccountScopes(accountID string, scopes []string) error
 
-	//GlobalConfigs
-	CreateGlobalConfig(globalConfig *model.GlobalConfig) error
-	GetGlobalConfig() (*model.GlobalConfig, error)
-	DeleteGlobalConfig() error
-
 	//AppConfigs
 	FindAppConfigs(appTypeIdentifier string, appOrgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error)
 	FindAppConfigByVersion(appTypeIdentifier string, appOrgID *string, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error)
@@ -237,6 +250,7 @@ type StorageListener interface {
 	OnApplicationsUpdated()
 	OnApplicationsOrganizationsUpdated()
 	OnApplicationConfigsUpdated()
+	OnConfigsUpdated()
 }
 
 // ProfileBuildingBlock is used by auth to communicate with the profile building block.

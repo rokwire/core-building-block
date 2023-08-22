@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/rokwire/core-auth-library-go/v3/tokenauth"
 	"github.com/rokwire/logging-library-go/v2/errors"
 	"github.com/rokwire/logging-library-go/v2/logs"
 	"github.com/rokwire/logging-library-go/v2/logutils"
@@ -45,6 +46,8 @@ type APIs struct {
 	systemAPIKey            string
 	systemAccountEmail      string
 	systemAccountPassword   string
+
+	verifyEmail bool
 
 	logger *logs.Logger
 }
@@ -88,8 +91,9 @@ func (c *APIs) storeSystemData() error {
 		}
 		if emailAuthType == nil {
 			newDocuments["auth_type"] = uuid.NewString()
+			params := map[string]interface{}{"verify_email": c.verifyEmail}
 			emailAuthType = &model.AuthType{ID: newDocuments["auth_type"], Code: auth.AuthTypeEmail, Description: "Authentication type relying on email and password",
-				IsExternal: false, IsAnonymous: false, UseCredentials: true, IgnoreMFA: false}
+				IsExternal: false, IsAnonymous: false, UseCredentials: true, IgnoreMFA: false, Params: params}
 			_, err = storage.InsertAuthType(*emailAuthType)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAuthType, nil, err)
@@ -250,7 +254,7 @@ func (c *APIs) storeSystemData() error {
 }
 
 // NewCoreAPIs creates new CoreAPIs
-func NewCoreAPIs(env string, version string, build string, serviceID string, storage interfaces.Storage, auth interfaces.Auth, systemInitSettings map[string]string, logger *logs.Logger) *APIs {
+func NewCoreAPIs(env string, version string, build string, serviceID string, storage interfaces.Storage, auth interfaces.Auth, systemInitSettings map[string]string, verifyEmail bool, logger *logs.Logger) *APIs {
 	//add application instance
 	listeners := []interfaces.ApplicationListener{}
 	application := application{env: env, version: version, build: build, serviceID: serviceID, storage: storage, listeners: listeners, auth: auth}
@@ -267,7 +271,7 @@ func NewCoreAPIs(env string, version string, build string, serviceID string, sto
 	coreAPIs := APIs{Services: servicesImpl, Administration: administrationImpl, Encryption: encryptionImpl,
 		BBs: bbsImpl, TPS: tpsImpl, System: systemImpl, Auth: auth, app: &application, systemAppTypeIdentifier: systemInitSettings["app_type_id"],
 		systemAppTypeName: systemInitSettings["app_type_name"], systemAPIKey: systemInitSettings["api_key"],
-		systemAccountEmail: systemInitSettings["email"], systemAccountPassword: systemInitSettings["password"], logger: logger}
+		systemAccountEmail: systemInitSettings["email"], systemAccountPassword: systemInitSettings["password"], verifyEmail: verifyEmail, logger: logger}
 
 	return &coreAPIs
 }
@@ -303,8 +307,12 @@ func (s *servicesImpl) SerUpdateAccountPreferences(id string, appID string, orgI
 	return s.app.serUpdateAccountPreferences(id, appID, orgID, anonymous, preferences, l)
 }
 
-func (s *servicesImpl) SerUpdateProfile(accountID string, profile model.Profile) error {
-	return s.app.serUpdateProfile(accountID, profile)
+func (s *servicesImpl) SerUpdateAccountProfile(accountID string, profile model.Profile) error {
+	return s.app.serUpdateAccountProfile(accountID, profile)
+}
+
+func (s *servicesImpl) SerUpdateAccountPrivacy(accountID string, privacy model.Privacy) error {
+	return s.app.serUpdateAccountPrivacy(accountID, privacy)
 }
 
 func (s *servicesImpl) SerUpdateAccountUsername(accountID string, appID string, orgID string, username string) error {
@@ -314,6 +322,19 @@ func (s *servicesImpl) SerUpdateAccountUsername(accountID string, appID string, 
 func (s *servicesImpl) SerGetAccounts(limit int, offset int, appID string, orgID string, accountID *string, firstName *string, lastName *string, authType *string,
 	authTypeIdentifier *string, anonymous *bool, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error) {
 	return s.app.serGetAccounts(limit, offset, appID, orgID, accountID, firstName, lastName, authType, authTypeIdentifier, anonymous, hasPermissions, permissions, roleIDs, groupIDs)
+}
+
+func (s *servicesImpl) SerGetPublicAccounts(appID string, orgID string, limit int, offset int, search *string,
+	firstName *string, lastName *string, username *string, followingID *string, followerID *string, userID string) ([]model.PublicAccount, error) {
+	return s.app.serGetPublicAccounts(appID, orgID, limit, offset, search, firstName, lastName, username, followingID, followerID, userID)
+}
+
+func (s *servicesImpl) SerAddFollow(follow model.Follow) error {
+	return s.app.serAddFollow(follow)
+}
+
+func (s *servicesImpl) SerDeleteFollow(appID string, orgID string, FolloweeID string, userID string) error {
+	return s.app.serDeleteFollow(appID, orgID, FolloweeID, userID)
 }
 
 func (s *servicesImpl) SerGetAuthTest(l *logs.Log) string {
@@ -336,6 +357,26 @@ type administrationImpl struct {
 	app *application
 }
 
+func (s *administrationImpl) AdmGetConfig(id string, claims *tokenauth.Claims) (*model.Config, error) {
+	return s.app.admGetConfig(id, claims)
+}
+
+func (s *administrationImpl) AdmGetConfigs(configType *string, claims *tokenauth.Claims) ([]model.Config, error) {
+	return s.app.admGetConfigs(configType, claims)
+}
+
+func (s *administrationImpl) AdmCreateConfig(config model.Config, claims *tokenauth.Claims) (*model.Config, error) {
+	return s.app.admCreateConfig(config, claims)
+}
+
+func (s *administrationImpl) AdmUpdateConfig(config model.Config, claims *tokenauth.Claims) error {
+	return s.app.admUpdateConfig(config, claims)
+}
+
+func (s *administrationImpl) AdmDeleteConfig(id string, claims *tokenauth.Claims) error {
+	return s.app.admDeleteConfig(id, claims)
+}
+
 func (s *administrationImpl) AdmGetTest() string {
 	return s.app.admGetTest()
 }
@@ -346,6 +387,26 @@ func (s *administrationImpl) AdmGetTestModel() string {
 
 func (s *administrationImpl) AdmGetAppConfig(appTypeIdentifier string, orgID *string, versionNumbers model.VersionNumbers, apiKey *string) (*model.ApplicationConfig, error) {
 	return s.app.adminGetAppConfig(appTypeIdentifier, orgID, versionNumbers, apiKey)
+}
+
+func (s *administrationImpl) AdmGetAppConfigs(appTypeID string, orgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error) {
+	return s.app.admGetAppConfigs(appTypeID, orgID, versionNumbers)
+}
+
+func (s *administrationImpl) AdmGetAppConfigByID(id string) (*model.ApplicationConfig, error) {
+	return s.app.admGetAppConfigByID(id)
+}
+
+func (s *administrationImpl) AdmCreateAppConfig(appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error) {
+	return s.app.admCreateAppConfig(appTypeID, orgID, data, versionNumbers)
+}
+
+func (s *administrationImpl) AdmUpdateAppConfig(id string, appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) error {
+	return s.app.admUpdateAppConfig(id, appTypeID, orgID, data, versionNumbers)
+}
+
+func (s *administrationImpl) AdmDeleteAppConfig(id string) error {
+	return s.app.admDeleteAppConfig(id)
 }
 
 func (s *administrationImpl) AdmGetApplications(orgID string) ([]model.Application, error) {
@@ -419,6 +480,10 @@ func (s *administrationImpl) AdmGetFilterAccountsCount(searchParams map[string]i
 
 func (s *administrationImpl) AdmUpdateAccountUsername(accountID string, appID string, orgID string, username string) error {
 	return s.app.sharedUpdateAccountUsername(accountID, appID, orgID, username)
+}
+
+func (s *administrationImpl) AdmUpdateAccountVerified(accountID string, appID string, orgID string, verified bool) error {
+	return s.app.admUpdateAccountVerified(accountID, appID, orgID, verified)
 }
 
 func (s *administrationImpl) AdmGetAccountSystemConfigs(appID string, orgID string, accountID string, l *logs.Log) (map[string]interface{}, error) {
@@ -514,18 +579,6 @@ type systemImpl struct {
 	app *application
 }
 
-func (s *systemImpl) SysCreateGlobalConfig(setting string) (*model.GlobalConfig, error) {
-	return s.app.sysCreateGlobalConfig(setting)
-}
-
-func (s *systemImpl) SysGetGlobalConfig() (*model.GlobalConfig, error) {
-	return s.app.sysGetGlobalConfig()
-}
-
-func (s *systemImpl) SysUpdateGlobalConfig(setting string) error {
-	return s.app.sysUpdateGlobalConfig(setting)
-}
-
 func (s *systemImpl) SysGetApplicationOrganizations(appID *string, orgID *string) ([]model.ApplicationOrganization, error) {
 	return s.app.sysGetApplicationOrganizations(appID, orgID)
 }
@@ -580,26 +633,6 @@ func (s *systemImpl) SysCreatePermission(name string, description *string, servi
 
 func (s *systemImpl) SysUpdatePermission(name string, description *string, serviceID *string, assigners *[]string) (*model.Permission, error) {
 	return s.app.sysUpdatePermission(name, description, serviceID, assigners)
-}
-
-func (s *systemImpl) SysGetAppConfigs(appTypeID string, orgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error) {
-	return s.app.sysGetAppConfigs(appTypeID, orgID, versionNumbers)
-}
-
-func (s *systemImpl) SysGetAppConfig(id string) (*model.ApplicationConfig, error) {
-	return s.app.sysGetAppConfig(id)
-}
-
-func (s *systemImpl) SysCreateAppConfig(appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error) {
-	return s.app.sysCreateAppConfig(appTypeID, orgID, data, versionNumbers)
-}
-
-func (s *systemImpl) SysUpdateAppConfig(id string, appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) error {
-	return s.app.sysUpdateAppConfig(id, appTypeID, orgID, data, versionNumbers)
-}
-
-func (s *systemImpl) SysDeleteAppConfig(id string) error {
-	return s.app.sysDeleteAppConfig(id)
 }
 
 func (s *systemImpl) SysCreateAuthTypes(code string, description string, isExternal bool, isAnonymous bool, useCredentials bool, ignoreMFA bool, params map[string]interface{}) (*model.AuthType, error) {

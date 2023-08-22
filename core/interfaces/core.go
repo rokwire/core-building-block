@@ -17,6 +17,7 @@ package interfaces
 import (
 	"core-building-block/core/model"
 
+	"github.com/rokwire/core-auth-library-go/v3/tokenauth"
 	"github.com/rokwire/logging-library-go/v2/logs"
 )
 
@@ -28,11 +29,18 @@ type Services interface {
 	SerGetPreferences(accountID string) (map[string]interface{}, error)
 	SerGetAccountSystemConfigs(accountID string) (map[string]interface{}, error)
 	SerUpdateAccountPreferences(id string, appID string, orgID string, anonymous bool, preferences map[string]interface{}, l *logs.Log) (bool, error)
-	SerUpdateProfile(accountID string, profile model.Profile) error
+	SerUpdateAccountProfile(accountID string, profile model.Profile) error
+	SerUpdateAccountPrivacy(accountID string, privacy model.Privacy) error
 	SerUpdateAccountUsername(accountID string, appID string, orgID string, username string) error
 
 	SerGetAccounts(limit int, offset int, appID string, orgID string, accountID *string, firstName *string, lastName *string, authType *string,
 		authTypeIdentifier *string, anonymous *bool, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error)
+
+	SerGetPublicAccounts(appID string, orgID string, limit int, offset int, search *string, firstName *string, lastName *string,
+		username *string, followingID *string, followerID *string, userID string) ([]model.PublicAccount, error)
+
+	SerAddFollow(follow model.Follow) error
+	SerDeleteFollow(appID string, orgID string, followingID string, followerID string) error
 
 	SerGetAuthTest(l *logs.Log) string
 	SerGetCommonTest(l *logs.Log) string
@@ -44,6 +52,12 @@ type Services interface {
 type Administration interface {
 	AdmGetTest() string
 	AdmGetTestModel() string
+
+	AdmGetConfig(id string, claims *tokenauth.Claims) (*model.Config, error)
+	AdmGetConfigs(configType *string, claims *tokenauth.Claims) ([]model.Config, error)
+	AdmCreateConfig(config model.Config, claims *tokenauth.Claims) (*model.Config, error)
+	AdmUpdateConfig(config model.Config, claims *tokenauth.Claims) error
+	AdmDeleteConfig(id string, claims *tokenauth.Claims) error
 
 	AdmGetApplications(orgID string) ([]model.Application, error)
 
@@ -70,6 +84,7 @@ type Administration interface {
 	AdmGetFilterAccountsCount(searchParams map[string]interface{}, appID string, orgID string) (int64, error)
 
 	AdmUpdateAccountUsername(accountID string, appID string, orgID string, username string) error
+	AdmUpdateAccountVerified(accountID string, appID string, orgID string, verified bool) error
 
 	AdmGetAccountSystemConfigs(appID string, orgID string, accountID string, l *logs.Log) (map[string]interface{}, error)
 	AdmUpdateAccountSystemConfigs(appID string, orgID string, accountID string, configs map[string]interface{}, createAnonymous bool, l *logs.Log) (bool, error)
@@ -87,6 +102,11 @@ type Administration interface {
 	AdmGetApplicationAccountDevices(appID string, orgID string, accountID string, l *logs.Log) ([]model.Device, error)
 
 	AdmGetAppConfig(appTypeIdentifier string, orgID *string, versionNumbers model.VersionNumbers, apiKey *string) (*model.ApplicationConfig, error)
+	AdmGetAppConfigs(appTypeID string, orgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error)
+	AdmGetAppConfigByID(id string) (*model.ApplicationConfig, error)
+	AdmCreateAppConfig(appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error)
+	AdmUpdateAppConfig(id string, appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) error
+	AdmDeleteAppConfig(id string) error
 }
 
 // Encryption exposes APIs for the Encryption building block
@@ -110,10 +130,6 @@ type TPS interface {
 
 // System exposes system APIs for the driver adapters
 type System interface {
-	SysCreateGlobalConfig(setting string) (*model.GlobalConfig, error)
-	SysGetGlobalConfig() (*model.GlobalConfig, error)
-	SysUpdateGlobalConfig(setting string) error
-
 	SysGetApplicationOrganization(ID string) (*model.ApplicationOrganization, error)
 	SysGetApplicationOrganizations(appID *string, orgID *string) ([]model.ApplicationOrganization, error)
 	SysCreateApplicationOrganization(appID string, orgID string, appOrg model.ApplicationOrganization) (*model.ApplicationOrganization, error)
@@ -131,12 +147,6 @@ type System interface {
 
 	SysCreatePermission(name string, description *string, serviceID *string, assigners *[]string) (*model.Permission, error)
 	SysUpdatePermission(name string, description *string, serviceID *string, assigners *[]string) (*model.Permission, error)
-
-	SysGetAppConfigs(appTypeID string, orgID *string, versionNumbers *model.VersionNumbers) ([]model.ApplicationConfig, error)
-	SysGetAppConfig(id string) (*model.ApplicationConfig, error)
-	SysCreateAppConfig(appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) (*model.ApplicationConfig, error)
-	SysUpdateAppConfig(id string, appTypeID string, orgID *string, data map[string]interface{}, versionNumbers model.VersionNumbers) error
-	SysDeleteAppConfig(id string) error
 
 	SysCreateAuthTypes(code string, description string, isExternal bool, isAnonymous bool, useCredentials bool, ignoreMFA bool, params map[string]interface{}) (*model.AuthType, error)
 	SysGetAuthTypes() ([]model.AuthType, error)

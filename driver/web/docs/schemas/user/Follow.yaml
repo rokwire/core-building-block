@@ -1,0 +1,14 @@
+required:
+  - id
+  - follower_id
+  - following_id
+type: object
+properties:
+  id:
+    readOnly: true
+    type: string
+  following_id:
+    type: string
+  follower_id:
+    readOnly: true
+    type: string

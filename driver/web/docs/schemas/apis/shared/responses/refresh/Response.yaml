@@ -1,11 +1,11 @@
 type: object
 properties:
   token:
-    $ref: "../../responses/RokwireToken.yaml"
+    $ref: "../RokwireToken.yaml"
   params:
     type: object
     nullable: true
     anyOf:
-      - $ref: "../../responses/ParamsOIDC.yaml"
-      - $ref: "../../responses/ParamsAPIKey.yaml"
-      - $ref: "../../responses/ParamsNone.yaml"  
+      - $ref: "../ParamsOIDC.yaml"
+      - $ref: "../ParamsAPIKey.yaml"
+      - $ref: "../ParamsNone.yaml"  

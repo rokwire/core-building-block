@@ -47,9 +47,18 @@ const (
 	TypeAccountGroups logutils.MessageDataType = "account groups"
 	//TypeProfile profile
 	TypeProfile logutils.MessageDataType = "profile"
+	//TypePrivacy privacy
+	TypePrivacy logutils.MessageDataType = "privacy"
 	//TypeDevice device
 	TypeDevice logutils.MessageDataType = "device"
+	//TypeFollow follow
+	TypeFollow logutils.MessageDataType = "follow"
 )
+
+// Privacy represents the privacy options for each account
+type Privacy struct {
+	Public bool `json:"public" bson:"public"`
+}
 
 // Account represents account entity
 //
@@ -76,10 +85,12 @@ type Account struct {
 	Preferences   map[string]interface{}
 	SystemConfigs map[string]interface{}
 	Profile       Profile //one account has one profile, one profile can be shared between many accounts
+	Privacy       Privacy
 
 	Devices []Device
 
 	Anonymous bool
+	Verified  bool
 
 	DateCreated time.Time
 	DateUpdated *time.Time
@@ -621,4 +632,24 @@ type AccountRelations struct {
 
 	Manager Account
 	Members []Account
+}
+
+// PublicAccount shows public account information
+type PublicAccount struct {
+	ID          string `json:"id"`
+	Username    string `json:"username"`
+	FirstName   string `json:"first_name"`
+	LastName    string `json:"last_name"`
+	Verified    bool   `json:"verified"`
+	IsFollowing bool   `json:"is_following"`
+}
+
+// Follow shows the relationship between user and follower
+type Follow struct {
+	ID          string    `json:"id" bson:"_id"`
+	AppID       string    `json:"app_id" bson:"app_id"`
+	OrgID       string    `json:"org_id" bson:"org_id"`
+	FollowerID  string    `json:"follower_id" bson:"follower_id"`
+	FollowingID string    `json:"following_id" bson:"following_id"`
+	DateCreated time.Time `json:"date_created" bson:"date_created"`
 }

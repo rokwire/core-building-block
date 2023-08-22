@@ -17,6 +17,7 @@ package main
 import (
 	"core-building-block/core"
 	"core-building-block/core/auth"
+	"core-building-block/core/model"
 	"core-building-block/driven/emailer"
 	"core-building-block/driven/identitybb"
 	"core-building-block/driven/profilebb"
@@ -28,10 +29,13 @@ import (
 	"strings"
 
 	"github.com/rokwire/core-auth-library-go/v3/authservice"
+	"github.com/rokwire/core-auth-library-go/v3/authutils"
 
 	"github.com/rokwire/core-auth-library-go/v3/envloader"
 	"github.com/rokwire/core-auth-library-go/v3/keys"
+	"github.com/rokwire/logging-library-go/v2/errors"
 	"github.com/rokwire/logging-library-go/v2/logs"
+	"github.com/rokwire/logging-library-go/v2/logutils"
 )
 
 var (
@@ -98,6 +102,13 @@ func main() {
 	smtpPassword := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SMTP_PASSWORD", false, true)
 	smtpFrom := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SMTP_EMAIL_FROM", false, false)
 	smtpPortNum, _ := strconv.Atoi(smtpPort)
+
+	verifyEmailRaw := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_VERIFY_EMAIL", false, false)
+	verifyEmail, err := strconv.ParseBool(verifyEmailRaw)
+	if err != nil {
+		logger.Infof("Error parsing ROKWIRE_CORE_VERIFY_EMAIL, applying defaults: %v", err)
+		verifyEmail = true
+	}
 
 	emailer := emailer.NewEmailerAdapter(smtpHost, smtpPortNum, smtpUser, smtpPassword, smtpFrom)
 
@@ -191,10 +202,29 @@ func main() {
 	}
 
 	//core
-	coreAPIs := core.NewCoreAPIs(env, Version, Build, serviceID, storageAdapter, authImpl, systemInitSettings, logger)
+	coreAPIs := core.NewCoreAPIs(env, Version, Build, serviceID, storageAdapter, authImpl, systemInitSettings, verifyEmail, logger)
 	coreAPIs.Start()
 
+	// read CORS parameters from stored env config
+	var envData *model.EnvConfigData
+	var corsAllowedHeaders []string
+	var corsAllowedOrigins []string
+	config, err := storageAdapter.FindConfig(model.ConfigTypeEnv, authutils.AllApps, authutils.AllOrgs)
+	if err != nil {
+		logger.Fatal(errors.WrapErrorAction(logutils.ActionFind, model.TypeConfig, nil, err).Error())
+	}
+	if config != nil {
+		envData, err = model.GetConfigData[model.EnvConfigData](*config)
+		if err != nil {
+			logger.Fatal(errors.WrapErrorAction(logutils.ActionCast, model.TypeEnvConfigData, nil, err).Error())
+		}
+
+		corsAllowedHeaders = envData.CORSAllowedHeaders
+		corsAllowedOrigins = envData.CORSAllowedOrigins
+	}
+
 	//web adapter
-	webAdapter := web.NewWebAdapter(env, authImpl.ServiceRegManager, port, coreAPIs, host, baseServerURL, prodServerURL, testServerURL, devServerURL, logger)
+	webAdapter := web.NewWebAdapter(env, authImpl.ServiceRegManager, port, coreAPIs, host, corsAllowedOrigins,
+		corsAllowedHeaders, baseServerURL, prodServerURL, testServerURL, devServerURL, logger)
 	webAdapter.Start()
 }

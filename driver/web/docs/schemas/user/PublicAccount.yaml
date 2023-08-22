@@ -1,0 +1,16 @@
+required:
+  - id
+type: object
+properties:
+  id:
+    type: string
+  username:
+    type: string
+  first_name:
+    type: string
+  last_name:
+    type: string
+  verified:
+    type: boolean
+  is_following:
+    type: boolean

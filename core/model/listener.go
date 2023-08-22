@@ -40,3 +40,6 @@ func (d *DefaultStorageListener) OnApplicationsOrganizationsUpdated() {}
 
 // OnApplicationConfigsUpdated notifies application configs have been updated
 func (d *DefaultStorageListener) OnApplicationConfigsUpdated() {}
+
+// OnConfigsUpdated notifies configs have been updated
+func (d *DefaultStorageListener) OnConfigsUpdated() {}

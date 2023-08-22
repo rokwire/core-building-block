@@ -43,7 +43,7 @@ type database struct {
 	devices                         *collectionWrapper
 	credentials                     *collectionWrapper
 	loginsSessions                  *collectionWrapper
-	globalConfig                    *collectionWrapper
+	configs                         *collectionWrapper
 	serviceRegs                     *collectionWrapper
 	serviceRegistrations            *collectionWrapper
 	serviceAccounts                 *collectionWrapper
@@ -55,6 +55,7 @@ type database struct {
 	applicationsOrganizationsRoles  *collectionWrapper
 	applicationConfigs              *collectionWrapper
 	permissions                     *collectionWrapper
+	follows                         *collectionWrapper
 
 	listeners []interfaces.StorageListener
 }
@@ -142,8 +143,8 @@ func (m *database) start() error {
 		return err
 	}
 
-	globalConfig := &collectionWrapper{database: m, coll: db.Collection("global_config")}
-	err = m.applyGlobalConfigChecks(globalConfig)
+	configs := &collectionWrapper{database: m, coll: db.Collection("configs")}
+	err = m.applyConfigsChecks(configs)
 	if err != nil {
 		return err
 	}
@@ -190,6 +191,12 @@ func (m *database) start() error {
 		return err
 	}
 
+	follows := &collectionWrapper{database: m, coll: db.Collection("follows")}
+	err = m.applyFollowsChecks(follows)
+	if err != nil {
+		return err
+	}
+
 	applicationConfigs := &collectionWrapper{database: m, coll: db.Collection("application_configs")}
 	err = m.applyApplicationConfigsChecks(applicationConfigs)
 	if err != nil {
@@ -206,7 +213,7 @@ func (m *database) start() error {
 	m.devices = devices
 	m.credentials = credentials
 	m.loginsSessions = loginsSessions
-	m.globalConfig = globalConfig
+	m.configs = configs
 	m.apiKeys = apiKeys
 	m.serviceRegs = serviceRegs
 	m.serviceRegistrations = serviceRegistrations
@@ -219,6 +226,7 @@ func (m *database) start() error {
 	m.applicationsOrganizationsGroups = applicationsOrganizationsGroups
 	m.applicationsOrganizationsRoles = applicationsOrganizationsRoles
 	m.permissions = permissions
+	m.follows = follows
 
 	go m.apiKeys.Watch(nil, m.logger)
 	go m.authTypes.Watch(nil, m.logger)
@@ -228,6 +236,7 @@ func (m *database) start() error {
 	go m.applications.Watch(nil, m.logger)
 	go m.applicationsOrganizations.Watch(nil, m.logger)
 	go m.applicationConfigs.Watch(nil, m.logger)
+	go m.configs.Watch(nil, m.logger)
 
 	m.listeners = []interfaces.StorageListener{}
 
@@ -275,6 +284,11 @@ func (m *database) applyAccountsChecks(accounts *collectionWrapper) error {
 	if err != nil {
 		return err
 	}
+
+	// err = accounts.AddIndex(bson.D{primitive.E{Key: "username", Value: "text"}, primitive.E{Key: "profile.first_name", Value: "text"}, primitive.E{Key: "profile.last_name", Value: "text"}}, false)
+	// if err != nil {
+	// 	return err
+	// }
 
 	m.logger.Info("accounts check passed")
 	return nil
@@ -342,10 +356,15 @@ func (m *database) applyAPIKeysChecks(apiKeys *collectionWrapper) error {
 	return nil
 }
 
-func (m *database) applyGlobalConfigChecks(configs *collectionWrapper) error {
-	m.logger.Info("apply global config checks.....")
+func (m *database) applyConfigsChecks(configs *collectionWrapper) error {
+	m.logger.Info("apply configs checks.....")
 
-	m.logger.Info("global config checks passed")
+	err := configs.AddIndex(bson.D{primitive.E{Key: "type", Value: 1}, primitive.E{Key: "app_id", Value: 1}, primitive.E{Key: "org_id", Value: 1}}, true)
+	if err != nil {
+		return err
+	}
+
+	m.logger.Info("configs checks passed")
 	return nil
 }
 
@@ -536,6 +555,25 @@ func (m *database) applyPermissionsChecks(permissions *collectionWrapper) error 
 	return nil
 }
 
+func (m *database) applyFollowsChecks(follows *collectionWrapper) error {
+	m.logger.Info("apply applications follows checks.....")
+
+	//add follower index
+	err := follows.AddIndex(bson.D{primitive.E{Key: "app_id", Value: 1}, primitive.E{Key: "org_id", Value: 1}, primitive.E{Key: "follower_id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	//add following index
+	err = follows.AddIndex(bson.D{primitive.E{Key: "app_id", Value: 1}, primitive.E{Key: "org_id", Value: 1}, primitive.E{Key: "following_id", Value: 1}, primitive.E{Key: "follower_id", Value: 1}}, true)
+	if err != nil {
+		return err
+	}
+
+	m.logger.Info("applications follows checks passed")
+	return nil
+}
+
 func (m *database) applyApplicationConfigsChecks(applicationConfigs *collectionWrapper) error {
 	m.logger.Info("apply applications configs checks.....")
 
@@ -609,6 +647,12 @@ func (m *database) onDataChanged(changeDoc map[string]interface{}) {
 
 		for _, listener := range m.listeners {
 			go listener.OnApplicationConfigsUpdated()
+		}
+	case "configs":
+		m.logger.Info("configs collection changed")
+
+		for _, listener := range m.listeners {
+			go listener.OnConfigsUpdated()
 		}
 	}
 }

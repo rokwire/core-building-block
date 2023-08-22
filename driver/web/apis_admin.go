@@ -98,6 +98,9 @@ func (h AdminApisHandler) login(l *logs.Log, r *http.Request, claims *tokenauth.
 	//profile ////
 	requestProfile := profileFromDefNullable(requestData.Profile)
 
+	//privacy
+	requestPrivacy := privacyFromDefNullable(requestData.Privacy)
+
 	username := ""
 	if requestData.Username != nil {
 		username = *requestData.Username
@@ -107,7 +110,7 @@ func (h AdminApisHandler) login(l *logs.Log, r *http.Request, claims *tokenauth.
 	requestDevice := requestData.Device
 
 	message, loginSession, mfaTypes, err := h.coreAPIs.Auth.Login(ip, string(requestDevice.Type), requestDevice.Os, *requestDevice.DeviceId, string(requestData.AuthType),
-		requestCreds, requestData.ApiKey, requestData.AppTypeIdentifier, requestData.OrgId, requestParams, &clientVersion, requestProfile, requestPreferences, username, true, l)
+		requestCreds, requestData.ApiKey, requestData.AppTypeIdentifier, requestData.OrgId, requestParams, &clientVersion, requestProfile, requestPrivacy, requestPreferences, username, true, l)
 	if err != nil {
 		loggingErr, ok := err.(*errors.Error)
 		if ok && loggingErr.Status() != "" {
@@ -217,7 +220,6 @@ func (h AdminApisHandler) refresh(l *logs.Log, r *http.Request, claims *tokenaut
 	}
 	if loginSession == nil {
 		//if login session is null then unauthorized
-		l.Infof("trying to refresh - %s", requestData.RefreshToken)
 		return l.HTTPResponseError(http.StatusText(http.StatusUnauthorized), nil, http.StatusUnauthorized, true)
 	}
 
@@ -238,6 +240,132 @@ func (h AdminApisHandler) refresh(l *logs.Log, r *http.Request, claims *tokenaut
 	}
 
 	return l.HTTPResponseSuccessJSON(respData)
+}
+
+// getConfig gets config by id
+func (h AdminApisHandler) getConfig(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
+	params := mux.Vars(r)
+	id := params["id"]
+	if len(id) <= 0 {
+		return l.HTTPResponseErrorData(logutils.StatusMissing, logutils.TypePathParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
+	}
+
+	config, err := h.coreAPIs.Administration.AdmGetConfig(id, claims)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionGet, model.TypeConfig, nil, err, http.StatusInternalServerError, true)
+	}
+	if config == nil {
+		return l.HTTPResponseErrorData(logutils.StatusMissing, model.TypeConfig, &logutils.FieldArgs{"id": id}, nil, http.StatusNotFound, true)
+	}
+
+	configRes, err := configToDef(*config)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionCast, "config response", nil, err, http.StatusInternalServerError, false)
+	}
+	data, err := json.Marshal(configRes)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeConfig, nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HTTPResponseSuccessJSON(data)
+}
+
+// getConfig gets configs by type
+func (h AdminApisHandler) getConfigs(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
+	var configType *string
+	typeParam := r.URL.Query().Get("type")
+	if len(typeParam) > 0 {
+		configType = &typeParam
+	}
+
+	configs, err := h.coreAPIs.Administration.AdmGetConfigs(configType, claims)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionGet, model.TypeConfig, nil, err, http.StatusInternalServerError, true)
+	}
+
+	configRes, err := configsToDef(configs)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionCast, "configs response", nil, err, http.StatusInternalServerError, false)
+	}
+	data, err := json.Marshal(configRes)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeConfig, nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HTTPResponseSuccessJSON(data)
+}
+
+// createConfig creates a config by id
+func (h AdminApisHandler) createConfig(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
+	var requestData Def.AdminReqCreateUpdateConfig
+	err := json.NewDecoder(r.Body).Decode(&requestData)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, true)
+	}
+
+	config, err := configFromDef(requestData, claims)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionCast, model.TypeConfig, nil, err, http.StatusInternalServerError, false)
+	}
+
+	newConfig, err := h.coreAPIs.Administration.AdmCreateConfig(*config, claims)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionCreate, model.TypeConfig, nil, err, http.StatusInternalServerError, true)
+	}
+
+	configRes, err := configToDef(*newConfig)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionCast, "config response", nil, err, http.StatusInternalServerError, false)
+	}
+	data, err := json.Marshal(configRes)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeConfig, nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HTTPResponseSuccessJSON(data)
+}
+
+// updateConfig updates a config by id
+func (h AdminApisHandler) updateConfig(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
+	params := mux.Vars(r)
+	id := params["id"]
+	if len(id) <= 0 {
+		return l.HTTPResponseErrorData(logutils.StatusMissing, logutils.TypePathParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.AdminReqCreateUpdateConfig
+	err := json.NewDecoder(r.Body).Decode(&requestData)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, true)
+	}
+
+	config, err := configFromDef(requestData, claims)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionCast, model.TypeConfig, nil, err, http.StatusInternalServerError, false)
+	}
+
+	err = h.coreAPIs.Administration.AdmUpdateConfig(*config, claims)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionUpdate, model.TypeConfig, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HTTPResponseSuccess()
+}
+
+// deleteConfig deletes a config by id
+func (h AdminApisHandler) deleteConfig(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
+	params := mux.Vars(r)
+	id := params["id"]
+	if len(id) <= 0 {
+		return l.HTTPResponseErrorData(logutils.StatusMissing, logutils.TypePathParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
+	}
+
+	err := h.coreAPIs.Administration.AdmDeleteConfig(id, claims)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionDelete, model.TypeConfig, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HTTPResponseSuccess()
 }
 
 func (h AdminApisHandler) getAppConfigs(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
@@ -625,6 +753,142 @@ func (h AdminApisHandler) getApplicationLoginSessions(l *logs.Log, r *http.Reque
 	return l.HTTPResponseSuccessJSON(data)
 }
 
+func (h AdminApisHandler) getApplicationConfigs(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
+	appTypeIdentifier := r.URL.Query().Get("app_type_id")
+	if appTypeIdentifier == "" {
+		return l.HTTPResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("app_type_id"), nil, http.StatusBadRequest, false)
+	}
+
+	var orgIDRef *string
+	orgID := r.URL.Query().Get("org_id")
+	if len(orgID) > 0 {
+		orgIDRef = &orgID
+	}
+
+	version := r.URL.Query().Get("version")
+	versionNumbers := model.VersionNumbersFromString(version)
+	if version != "" && versionNumbers == nil {
+		return l.HTTPResponseErrorData(logutils.StatusInvalid, logutils.TypeQueryParam, logutils.StringArgs("version"), nil, http.StatusBadRequest, false)
+	}
+
+	appConfigs, err := h.coreAPIs.Administration.AdmGetAppConfigs(appTypeIdentifier, orgIDRef, versionNumbers)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionGet, model.TypeApplicationConfig, nil, err, http.StatusInternalServerError, true)
+	}
+
+	appConfigsResp := appConfigsToDef(appConfigs)
+
+	data, err := json.Marshal(appConfigsResp)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeApplicationConfig, nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HTTPResponseSuccessJSON(data)
+}
+
+func (h AdminApisHandler) getApplicationConfig(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
+	params := mux.Vars(r)
+	ID := params["id"]
+	if len(ID) <= 0 {
+		return l.HTTPResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
+	}
+
+	appConfig, err := h.coreAPIs.Administration.AdmGetAppConfigByID(ID)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionUpdate, model.TypeApplicationConfig, nil, err, http.StatusInternalServerError, true)
+	}
+	if appConfig == nil {
+		return l.HTTPResponseErrorData(logutils.StatusMissing, model.TypeApplicationConfig, &logutils.FieldArgs{"id": ID}, nil, http.StatusNotFound, false)
+	}
+
+	appConfigResp := appConfigToDef(*appConfig)
+
+	data, err := json.Marshal(appConfigResp)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeApplicationConfig, nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HTTPResponseSuccessJSON(data)
+}
+
+func (h AdminApisHandler) createApplicationConfig(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.ApplicationConfig
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("appconfig create request"), nil, err, http.StatusBadRequest, true)
+	}
+
+	version := model.VersionNumbersFromString(requestData.Version)
+	if version == nil {
+		return l.HTTPResponseErrorData(logutils.StatusInvalid, model.TypeVersionNumbers, nil, nil, http.StatusBadRequest, false)
+	}
+
+	_, err = h.coreAPIs.Administration.AdmCreateAppConfig(requestData.AppTypeId, requestData.OrgId, requestData.Data, *version)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionCreate, model.TypeApplicationConfig, nil, err, http.StatusBadRequest, true)
+	}
+
+	// data, err = json.Marshal(insertedConfig)
+	// if err != nil {
+	// 	return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeApplicationConfigs, nil, err, http.StatusInternalServerError, false)
+	// }
+
+	// return l.HTTPResponseSuccessJSON(data)
+
+	return l.HTTPResponseSuccess()
+}
+
+func (h AdminApisHandler) updateApplicationConfig(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
+	params := mux.Vars(r)
+	ID := params["id"]
+	if len(ID) <= 0 {
+		return l.HTTPResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
+	}
+
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
+
+	var requestData Def.ApplicationConfig
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("appconfig update request"), nil, err, http.StatusBadRequest, true)
+	}
+
+	version := model.VersionNumbersFromString(requestData.Version)
+	if version == nil {
+		return l.HTTPResponseErrorData(logutils.StatusInvalid, model.TypeVersionNumbers, nil, nil, http.StatusBadRequest, false)
+	}
+
+	err = h.coreAPIs.Administration.AdmUpdateAppConfig(ID, requestData.AppTypeId, requestData.OrgId, requestData.Data, *version)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionUpdate, model.TypeApplicationConfig, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HTTPResponseSuccess()
+}
+
+func (h AdminApisHandler) deleteApplicationConfig(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
+	params := mux.Vars(r)
+	ID := params["id"]
+	if len(ID) <= 0 {
+		return l.HTTPResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
+	}
+
+	err := h.coreAPIs.Administration.AdmDeleteAppConfig(ID)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionUpdate, model.TypeApplicationConfig, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HTTPResponseSuccess()
+}
+
 func (h AdminApisHandler) getAccount(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
 	account, err := h.coreAPIs.Administration.AdmGetAccount(claims.Subject)
 	if err != nil {
@@ -676,6 +940,7 @@ func (h AdminApisHandler) createAdminAccount(l *logs.Log, r *http.Request, claim
 		scopes = *requestData.Scopes
 	}
 	profile := profileFromDefNullable(requestData.Profile)
+	privacy := privacyFromDefNullable(requestData.Privacy)
 
 	username := ""
 	if requestData.Username != nil {
@@ -684,7 +949,7 @@ func (h AdminApisHandler) createAdminAccount(l *logs.Log, r *http.Request, claim
 
 	creatorPermissions := strings.Split(claims.Permissions, ",")
 	account, params, err := h.coreAPIs.Auth.CreateAdminAccount(string(requestData.AuthType), claims.AppID, claims.OrgID,
-		requestData.Identifier, profile, username, permissions, roleIDs, groupIDs, scopes, creatorPermissions, &clientVersion, l)
+		requestData.Identifier, profile, privacy, username, permissions, roleIDs, groupIDs, scopes, creatorPermissions, &clientVersion, l)
 	if err != nil || account == nil {
 		return l.HTTPResponseErrorAction(logutils.ActionCreate, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}
@@ -856,6 +1121,27 @@ func (h AdminApisHandler) updateAccountUsername(l *logs.Log, r *http.Request, cl
 	}
 
 	err = h.coreAPIs.Administration.AdmUpdateAccountUsername(claims.Subject, claims.AppID, claims.OrgID, username.Username)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionUpdate, model.TypeAccountUsername, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HTTPResponseSuccess()
+}
+
+func (h AdminApisHandler) updateAccountVerified(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
+	params := mux.Vars(r)
+	accountID := params["id"]
+	if len(accountID) <= 0 {
+		return l.HTTPResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
+	}
+
+	var verified Def.AdminReqVerified
+	err := json.NewDecoder(r.Body).Decode(&verified)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, model.TypeAccountUsername, nil, err, http.StatusBadRequest, true)
+	}
+
+	err = h.coreAPIs.Administration.AdmUpdateAccountVerified(accountID, claims.AppID, claims.OrgID, verified.Verified)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUpdate, model.TypeAccountUsername, nil, err, http.StatusInternalServerError, true)
 	}

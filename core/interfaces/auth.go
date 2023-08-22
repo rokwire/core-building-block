@@ -60,8 +60,8 @@ type Auth interface {
 	//			State (string): login state used if account is enrolled in MFA
 	//		MFA types ([]model.MFAType): list of MFA types account is enrolled in
 	Login(ipAddress string, deviceType string, deviceOS *string, deviceID string, authenticationType string, creds string, apiKey string,
-		appTypeIdentifier string, orgID string, params string, clientVersion *string, profile model.Profile, preferences map[string]interface{},
-		username string, admin bool, l *logs.Log) (*string, *model.LoginSession, []model.MFAType, error)
+		appTypeIdentifier string, orgID string, params string, clientVersion *string, profile model.Profile, privacy model.Privacy,
+		preferences map[string]interface{}, username string, admin bool, l *logs.Log) (*string, *model.LoginSession, []model.MFAType, error)
 
 	//Logout logouts an account from app/org
 	//	Input:
@@ -150,7 +150,7 @@ type Auth interface {
 	LoginMFA(apiKey string, accountID string, sessionID string, identifier string, mfaType string, mfaCode string, state string, l *logs.Log) (*string, *model.LoginSession, error)
 
 	//CreateAdminAccount creates an account for a new admin user
-	CreateAdminAccount(authenticationType string, appID string, orgID string, identifier string, profile model.Profile, username string, permissions []string,
+	CreateAdminAccount(authenticationType string, appID string, orgID string, identifier string, profile model.Profile, privacy model.Privacy, username string, permissions []string,
 		roleIDs []string, groupIDs []string, scopes []string, creatorPermissions []string, clientVersion *string, l *logs.Log) (*model.Account, map[string]interface{}, error)
 
 	//UpdateAdminAccount updates an existing user's account with new permissions, roles, and groups

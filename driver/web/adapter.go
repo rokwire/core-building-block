@@ -37,6 +37,7 @@ import (
 
 	"github.com/rokwire/core-auth-library-go/v3/authservice"
 	"github.com/rokwire/core-auth-library-go/v3/tokenauth"
+	"github.com/rokwire/core-auth-library-go/v3/webauth"
 
 	httpSwagger "github.com/swaggo/http-swagger"
 )
@@ -67,6 +68,9 @@ type Adapter struct {
 	systemApisHandler   SystemApisHandler
 
 	coreAPIs *core.APIs
+
+	corsAllowedOrigins []string
+	corsAllowedHeaders []string
 }
 
 type handlerFunc = func(*logs.Log, *http.Request, *tokenauth.Claims) logs.HTTPResponse
@@ -119,6 +123,7 @@ func (we Adapter) Start() {
 	servicesSubRouter.HandleFunc("/accounts", we.wrapFunc(we.servicesApisHandler.getAccounts, we.auth.services.Permissions)).Methods("GET")
 	servicesSubRouter.HandleFunc("/accounts", we.wrapFunc(we.servicesApisHandler.createAdminAccount, we.auth.services.Permissions)).Methods("POST")
 	servicesSubRouter.HandleFunc("/accounts", we.wrapFunc(we.servicesApisHandler.updateAdminAccount, we.auth.services.Permissions)).Methods("PUT")
+	servicesSubRouter.HandleFunc("/accounts/public", we.wrapFunc(we.servicesApisHandler.getPublicAccounts, we.auth.services.Standard)).Methods("GET")
 	servicesSubRouter.HandleFunc("/account", we.wrapFunc(we.servicesApisHandler.deleteAccount, we.auth.services.Standard)).Methods("DELETE")
 	servicesSubRouter.HandleFunc("/account", we.wrapFunc(we.servicesApisHandler.getAccount, we.auth.services.Standard)).Methods("GET")
 	servicesSubRouter.HandleFunc("/account/mfa", we.wrapFunc(we.servicesApisHandler.getMFATypes, we.auth.services.User)).Methods("GET")
@@ -128,8 +133,11 @@ func (we Adapter) Start() {
 	servicesSubRouter.HandleFunc("/account/preferences", we.wrapFunc(we.servicesApisHandler.getPreferences, we.auth.services.Standard)).Methods("GET")
 	servicesSubRouter.HandleFunc("/account/profile", we.wrapFunc(we.servicesApisHandler.getProfile, we.auth.services.User)).Methods("GET")
 	servicesSubRouter.HandleFunc("/account/profile", we.wrapFunc(we.servicesApisHandler.updateProfile, we.auth.services.User)).Methods("PUT")
+	servicesSubRouter.HandleFunc("/account/privacy", we.wrapFunc(we.servicesApisHandler.updatePrivacy, we.auth.services.User)).Methods("PUT")
 	servicesSubRouter.HandleFunc("/account/system-configs", we.wrapFunc(we.servicesApisHandler.getAccountSystemConfigs, we.auth.services.Standard)).Methods("GET")
 	servicesSubRouter.HandleFunc("/account/username", we.wrapFunc(we.servicesApisHandler.updateAccountUsername, we.auth.services.User)).Methods("PUT")
+	servicesSubRouter.HandleFunc("/account/follow", we.wrapFunc(we.servicesApisHandler.addFollow, we.auth.services.User)).Methods("POST")
+	servicesSubRouter.HandleFunc("/account/follow/{id}", we.wrapFunc(we.servicesApisHandler.deleteFollow, we.auth.services.User)).Methods("DELETE")
 	servicesSubRouter.HandleFunc("/test", we.wrapFunc(we.servicesApisHandler.getTest, nil)).Methods("GET")                       //Public
 	servicesSubRouter.HandleFunc("/app-configs", we.wrapFunc(we.servicesApisHandler.getApplicationConfigs, nil)).Methods("POST") //Requires API key in request
 	servicesSubRouter.HandleFunc("/app-configs/organization", we.wrapFunc(we.servicesApisHandler.getApplicationOrgConfigs, we.auth.services.Standard)).Methods("POST")
@@ -153,6 +161,12 @@ func (we Adapter) Start() {
 	adminSubrouter.HandleFunc("/auth/verify-mfa", we.wrapFunc(we.adminApisHandler.verifyMFA, we.auth.admin.User)).Methods("POST")
 	adminSubrouter.HandleFunc("/auth/app-token", we.wrapFunc(we.adminApisHandler.getAppToken, we.auth.admin.User)).Methods("GET")
 
+	adminSubrouter.HandleFunc("/configs/{id}", we.wrapFunc(we.adminApisHandler.getConfig, we.auth.admin.Permissions)).Methods("GET")
+	adminSubrouter.HandleFunc("/configs", we.wrapFunc(we.adminApisHandler.getConfigs, we.auth.admin.Permissions)).Methods("GET")
+	adminSubrouter.HandleFunc("/configs", we.wrapFunc(we.adminApisHandler.createConfig, we.auth.admin.Permissions)).Methods("POST")
+	adminSubrouter.HandleFunc("/configs/{id}", we.wrapFunc(we.adminApisHandler.updateConfig, we.auth.admin.Permissions)).Methods("PUT")
+	adminSubrouter.HandleFunc("/configs/{id}", we.wrapFunc(we.adminApisHandler.deleteConfig, we.auth.admin.Permissions)).Methods("DELETE")
+
 	adminSubrouter.HandleFunc("/account", we.wrapFunc(we.adminApisHandler.getAccount, we.auth.admin.User)).Methods("GET")
 	adminSubrouter.HandleFunc("/account/mfa", we.wrapFunc(we.adminApisHandler.getMFATypes, we.auth.admin.User)).Methods("GET")
 	adminSubrouter.HandleFunc("/account/mfa", we.wrapFunc(we.adminApisHandler.addMFAType, we.auth.admin.Authenticated)).Methods("POST")
@@ -165,6 +179,12 @@ func (we Adapter) Start() {
 	adminSubrouter.HandleFunc("/organization/applications", we.wrapFunc(we.adminApisHandler.getApplications, we.auth.admin.User)).Methods("GET")
 
 	adminSubrouter.HandleFunc("/application/login-sessions", we.wrapFunc(we.adminApisHandler.getApplicationLoginSessions, we.auth.admin.Permissions)).Methods("GET")
+
+	adminSubrouter.HandleFunc("/application/configs", we.wrapFunc(we.adminApisHandler.getApplicationConfigs, we.auth.admin.Permissions)).Methods("GET")
+	adminSubrouter.HandleFunc("/application/configs", we.wrapFunc(we.adminApisHandler.createApplicationConfig, we.auth.admin.Permissions)).Methods("POST")
+	adminSubrouter.HandleFunc("/application/configs/{id}", we.wrapFunc(we.adminApisHandler.getApplicationConfig, we.auth.admin.Permissions)).Methods("GET")
+	adminSubrouter.HandleFunc("/application/configs/{id}", we.wrapFunc(we.adminApisHandler.updateApplicationConfig, we.auth.admin.Permissions)).Methods("PUT")
+	adminSubrouter.HandleFunc("/application/configs/{id}", we.wrapFunc(we.adminApisHandler.deleteApplicationConfig, we.auth.admin.Permissions)).Methods("DELETE")
 
 	adminSubrouter.HandleFunc("/application/groups", we.wrapFunc(we.adminApisHandler.getApplicationGroups, we.auth.admin.Permissions)).Methods("GET")
 	adminSubrouter.HandleFunc("/application/groups", we.wrapFunc(we.adminApisHandler.createApplicationGroup, we.auth.admin.Permissions)).Methods("POST")
@@ -197,6 +217,7 @@ func (we Adapter) Start() {
 	adminSubrouter.HandleFunc("/application/accounts/{id}/roles", we.wrapFunc(we.adminApisHandler.revokeAccountRoles, we.auth.admin.Permissions)).Methods("DELETE")
 	adminSubrouter.HandleFunc("/application/accounts/{id}/system-configs", we.wrapFunc(we.adminApisHandler.getAccountSystemConfigs, we.auth.admin.Permissions)).Methods("GET")
 	adminSubrouter.HandleFunc("/application/accounts/{id}/system-configs", we.wrapFunc(we.adminApisHandler.updateAccountSystemConfigs, we.auth.admin.Permissions)).Methods("PUT")
+	adminSubrouter.HandleFunc("/application/accounts/{id}/verified", we.wrapFunc(we.adminApisHandler.updateAccountVerified, we.auth.admin.Permissions)).Methods("PUT")
 	///
 
 	///enc ///
@@ -235,10 +256,6 @@ func (we Adapter) Start() {
 
 	systemSubrouter.HandleFunc("/auth/app-org-token", we.wrapFunc(we.systemApisHandler.getAppOrgToken, we.auth.system.User)).Methods("GET")
 
-	systemSubrouter.HandleFunc("/global-config", we.wrapFunc(we.systemApisHandler.createGlobalConfig, we.auth.system.Permissions)).Methods("POST")
-	systemSubrouter.HandleFunc("/global-config", we.wrapFunc(we.systemApisHandler.getGlobalConfig, we.auth.system.Permissions)).Methods("GET")
-	systemSubrouter.HandleFunc("/global-config", we.wrapFunc(we.systemApisHandler.updateGlobalConfig, we.auth.system.Permissions)).Methods("PUT")
-
 	systemSubrouter.HandleFunc("/organizations", we.wrapFunc(we.systemApisHandler.createOrganization, we.auth.system.Permissions)).Methods("POST")
 	systemSubrouter.HandleFunc("/organizations/{id}", we.wrapFunc(we.systemApisHandler.updateOrganization, we.auth.system.Permissions)).Methods("PUT")
 	systemSubrouter.HandleFunc("/organizations/{id}", we.wrapFunc(we.systemApisHandler.getOrganization, we.auth.system.Permissions)).Methods("GET")
@@ -256,12 +273,6 @@ func (we Adapter) Start() {
 
 	systemSubrouter.HandleFunc("/permissions", we.wrapFunc(we.systemApisHandler.createPermission, we.auth.system.Permissions)).Methods("POST")
 	systemSubrouter.HandleFunc("/permissions", we.wrapFunc(we.systemApisHandler.updatePermission, we.auth.system.Permissions)).Methods("PUT")
-
-	systemSubrouter.HandleFunc("/application/configs", we.wrapFunc(we.systemApisHandler.getApplicationConfigs, we.auth.system.Permissions)).Methods("GET")
-	systemSubrouter.HandleFunc("/application/configs", we.wrapFunc(we.systemApisHandler.createApplicationConfig, we.auth.system.Permissions)).Methods("POST")
-	systemSubrouter.HandleFunc("/application/configs/{id}", we.wrapFunc(we.systemApisHandler.getApplicationConfig, we.auth.system.Permissions)).Methods("GET")
-	systemSubrouter.HandleFunc("/application/configs/{id}", we.wrapFunc(we.systemApisHandler.updateApplicationConfig, we.auth.system.Permissions)).Methods("PUT")
-	systemSubrouter.HandleFunc("/application/configs/{id}", we.wrapFunc(we.systemApisHandler.deleteApplicationConfig, we.auth.system.Permissions)).Methods("DELETE")
 
 	systemSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.systemApisHandler.getServiceRegistrations, we.auth.system.Permissions)).Methods("GET")
 	systemSubrouter.HandleFunc("/service-regs", we.wrapFunc(we.systemApisHandler.registerService, we.auth.system.Permissions)).Methods("POST")
@@ -287,7 +298,11 @@ func (we Adapter) Start() {
 	systemSubrouter.HandleFunc("/auth-types/{id}", we.wrapFunc(we.systemApisHandler.updateAuthTypes, we.auth.system.Permissions)).Methods("PUT")
 	///
 
-	err := http.ListenAndServe(":"+we.port, router)
+	var handler http.Handler = router
+	if len(we.corsAllowedOrigins) > 0 {
+		handler = webauth.SetupCORS(we.corsAllowedOrigins, we.corsAllowedHeaders, router)
+	}
+	err := http.ListenAndServe(":"+we.port, handler)
 	if err != nil {
 		we.logger.Fatalf("error on listen and server - %s", err.Error())
 	}
@@ -521,7 +536,8 @@ func (we Adapter) completeResponse(w http.ResponseWriter, response logs.HTTPResp
 }
 
 // NewWebAdapter creates new WebAdapter instance
-func NewWebAdapter(env string, serviceRegManager *authservice.ServiceRegManager, port string, coreAPIs *core.APIs, host string, baseServerURL string, prodServerURL string, testServerURL string, devServerURL string, logger *logs.Logger) Adapter {
+func NewWebAdapter(env string, serviceRegManager *authservice.ServiceRegManager, port string, coreAPIs *core.APIs, host string, corsAllowedOrigins []string,
+	corsAllowedHeaders []string, baseServerURL string, prodServerURL string, testServerURL string, devServerURL string, logger *logs.Logger) Adapter {
 	//openAPI doc
 	loader := &openapi3.Loader{Context: context.Background(), IsExternalRefsAllowed: true}
 	// doc, err := loader.LoadFromFile("driver/web/docs/gen/def.yaml")
@@ -571,7 +587,8 @@ func NewWebAdapter(env string, serviceRegManager *authservice.ServiceRegManager,
 	systemApisHandler := NewSystemApisHandler(coreAPIs)
 	return Adapter{env: env, port: port, productionServerURL: prodServerURL, testServerURL: testServerURL, developmentServerURL: devServerURL, cachedYamlDoc: yamlDoc,
 		openAPIRouter: openAPIRouter, host: host, auth: auth, logger: logger, defaultApisHandler: defaultApisHandler, servicesApisHandler: servicesApisHandler, adminApisHandler: adminApisHandler,
-		encApisHandler: encApisHandler, bbsApisHandler: bbsApisHandler, tpsApisHandler: tpsApisHandler, systemApisHandler: systemApisHandler, coreAPIs: coreAPIs}
+		encApisHandler: encApisHandler, bbsApisHandler: bbsApisHandler, tpsApisHandler: tpsApisHandler, systemApisHandler: systemApisHandler, coreAPIs: coreAPIs,
+		corsAllowedOrigins: corsAllowedOrigins, corsAllowedHeaders: corsAllowedHeaders}
 }
 
 // AppListener implements core.ApplicationListener interface

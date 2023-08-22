@@ -187,12 +187,14 @@ type Account struct {
 	MostRecentClientVersion *string                  `json:"most_recent_client_version,omitempty"`
 	Permissions             *[]Permission            `json:"permissions,omitempty"`
 	Preferences             *map[string]interface{}  `json:"preferences"`
+	Privacy                 *Privacy                 `json:"privacy,omitempty"`
 	Profile                 *Profile                 `json:"profile,omitempty"`
 	Roles                   *[]AppOrgRole            `json:"roles,omitempty"`
 	Scopes                  *[]string                `json:"scopes,omitempty"`
 	System                  *bool                    `json:"system,omitempty"`
 	SystemConfigs           *map[string]interface{}  `json:"system_configs"`
 	Username                *string                  `json:"username,omitempty"`
+	Verified                *bool                    `json:"verified,omitempty"`
 }
 
 // AccountAuthType defines model for AccountAuthType.
@@ -311,9 +313,26 @@ type AuthType struct {
 	UseCredentials bool `json:"use_credentials"`
 }
 
+// Config defines model for Config.
+type Config struct {
+	AppId       *string     `json:"app_id,omitempty"`
+	Data        Config_Data `json:"data"`
+	DateCreated *string     `json:"date_created,omitempty"`
+	DateUpdated *string     `json:"date_updated"`
+	Id          *string     `json:"id,omitempty"`
+	OrgId       *string     `json:"org_id,omitempty"`
+	System      bool        `json:"system"`
+	Type        string      `json:"type"`
+}
+
+// Config_Data defines model for Config.Data.
+type Config_Data struct {
+	union json.RawMessage
+}
+
 // Device defines model for Device.
 type Device struct {
-	DeviceId *string    `json:"device_id,omitempty"`
+	DeviceId *string    `json:"device_id"`
 	Id       *string    `json:"id,omitempty"`
 	Os       *string    `json:"os,omitempty"`
 	Type     DeviceType `json:"type"`
@@ -322,9 +341,17 @@ type Device struct {
 // DeviceType defines model for Device.Type.
 type DeviceType string
 
-// GlobalConfig defines model for GlobalConfig.
-type GlobalConfig struct {
-	Setting string `json:"setting"`
+// EnvConfigData defines model for EnvConfigData.
+type EnvConfigData struct {
+	CorsAllowedHeaders *[]string `json:"cors_allowed_headers"`
+	CorsAllowedOrigins *[]string `json:"cors_allowed_origins"`
+}
+
+// Follow defines model for Follow.
+type Follow struct {
+	FollowerId  *string `json:"follower_id,omitempty"`
+	FollowingId string  `json:"following_id"`
+	Id          *string `json:"id,omitempty"`
 }
 
 // IdentityProviderSettings defines model for IdentityProviderSettings.
@@ -437,7 +464,7 @@ type LoginSession struct {
 	DateCreated               *string `json:"date_created,omitempty"`
 	DateRefreshed             *string `json:"date_refreshed"`
 	DateUpdated               *string `json:"date_updated"`
-	DeviceId                  *string `json:"device_id,omitempty"`
+	DeviceId                  *string `json:"device_id"`
 	Id                        *string `json:"id,omitempty"`
 	Identifier                *string `json:"identifier,omitempty"`
 	IpAddress                 *string `json:"ip_address,omitempty"`
@@ -496,11 +523,13 @@ type PartialAccount struct {
 	OrgId         string                  `json:"org_id"`
 	Params        *map[string]interface{} `json:"params"`
 	Permissions   []Permission            `json:"permissions"`
+	Privacy       *Privacy                `json:"privacy,omitempty"`
 	Roles         []AppOrgRole            `json:"roles"`
 	Scopes        *[]string               `json:"scopes,omitempty"`
 	System        *bool                   `json:"system,omitempty"`
 	SystemConfigs *map[string]interface{} `json:"system_configs"`
 	Username      *string                 `json:"username,omitempty"`
+	Verified      *bool                   `json:"verified,omitempty"`
 }
 
 // Permission defines model for Permission.
@@ -512,6 +541,16 @@ type Permission struct {
 	Id          *string   `json:"id,omitempty"`
 	Name        string    `json:"name"`
 	ServiceId   *string   `json:"service_id,omitempty"`
+}
+
+// Privacy defines model for Privacy.
+type Privacy struct {
+	Public *bool `json:"public,omitempty"`
+}
+
+// PrivacyNullable defines model for PrivacyNullable.
+type PrivacyNullable struct {
+	Public *bool `json:"public"`
 }
 
 // Profile defines model for Profile.
@@ -549,6 +588,16 @@ type ProfileNullable struct {
 type PubKey struct {
 	Alg    string `json:"alg"`
 	KeyPem string `json:"key_pem"`
+}
+
+// PublicAccount defines model for PublicAccount.
+type PublicAccount struct {
+	FirstName   *string `json:"first_name,omitempty"`
+	Id          string  `json:"id"`
+	IsFollowing *bool   `json:"is_following,omitempty"`
+	LastName    *string `json:"last_name,omitempty"`
+	Username    *string `json:"username,omitempty"`
+	Verified    *bool   `json:"verified,omitempty"`
 }
 
 // ServiceAccount defines model for ServiceAccount.
@@ -653,6 +702,20 @@ type AdminReqApplicationRole struct {
 	System      *bool     `json:"system,omitempty"`
 }
 
+// AdminReqCreateUpdateConfig defines model for _admin_req_create-update-config.
+type AdminReqCreateUpdateConfig struct {
+	AllApps *bool                           `json:"all_apps"`
+	AllOrgs *bool                           `json:"all_orgs"`
+	Data    AdminReqCreateUpdateConfig_Data `json:"data"`
+	System  bool                            `json:"system"`
+	Type    string                          `json:"type"`
+}
+
+// AdminReqCreateUpdateConfig_Data defines model for AdminReqCreateUpdateConfig.Data.
+type AdminReqCreateUpdateConfig_Data struct {
+	union json.RawMessage
+}
+
 // AdminReqGrantPermissions defines model for _admin_req_grant-permissions.
 type AdminReqGrantPermissions struct {
 	Permissions []string `json:"permissions"`
@@ -681,6 +744,11 @@ type AdminReqRevokePermissions struct {
 // AdminReqRevokeRolesFromAccount defines model for _admin_req_revoke-roles-from-account.
 type AdminReqRevokeRolesFromAccount struct {
 	RoleIds []string `json:"role_ids"`
+}
+
+// AdminReqVerified defines model for _admin_req_verified.
+type AdminReqVerified struct {
+	Verified bool `json:"verified"`
 }
 
 // ServicesReqAccountAuthTypeLink defines model for _services_req_account_auth-type-link.
@@ -856,6 +924,7 @@ type SharedReqCreateAccount struct {
 	GroupIds    *[]string                      `json:"group_ids,omitempty"`
 	Identifier  string                         `json:"identifier"`
 	Permissions *[]string                      `json:"permissions,omitempty"`
+	Privacy     *PrivacyNullable               `json:"privacy"`
 	Profile     *ProfileNullable               `json:"profile"`
 	RoleIds     *[]string                      `json:"role_ids,omitempty"`
 	Scopes      *[]string                      `json:"scopes,omitempty"`
@@ -896,6 +965,7 @@ type SharedReqLogin struct {
 	OrgId             string                  `json:"org_id"`
 	Params            *SharedReqLogin_Params  `json:"params,omitempty"`
 	Preferences       *map[string]interface{} `json:"preferences"`
+	Privacy           *PrivacyNullable        `json:"privacy"`
 	Profile           *ProfileNullable        `json:"profile"`
 	Username          *string                 `json:"username"`
 }
@@ -1174,6 +1244,13 @@ type PutAdminApplicationAccountsIdSystemConfigsParams struct {
 	CreateAnonymous *bool `form:"create-anonymous,omitempty" json:"create-anonymous,omitempty"`
 }
 
+// GetAdminApplicationConfigsParams defines parameters for GetAdminApplicationConfigs.
+type GetAdminApplicationConfigsParams struct {
+	AppTypeId string  `form:"app_type_id" json:"app_type_id"`
+	OrgId     *string `form:"org_id,omitempty" json:"org_id,omitempty"`
+	Version   *string `form:"version,omitempty" json:"version,omitempty"`
+}
+
 // PostAdminApplicationFilterAccountsJSONBody defines parameters for PostAdminApplicationFilterAccounts.
 type PostAdminApplicationFilterAccountsJSONBody = map[string]interface{}
 
@@ -1223,6 +1300,12 @@ type GetAdminAuthAppTokenParams struct {
 type PostAdminAuthMfaParams struct {
 	// State Login state
 	State *string `form:"state,omitempty" json:"state,omitempty"`
+}
+
+// GetAdminConfigsParams defines parameters for GetAdminConfigs.
+type GetAdminConfigsParams struct {
+	// Type config type
+	Type *string `form:"type,omitempty" json:"type,omitempty"`
 }
 
 // PostBbsAccountsJSONBody defines parameters for PostBbsAccounts.
@@ -1300,6 +1383,33 @@ type GetServicesAccountsParams struct {
 	GroupIds *string `form:"group-ids,omitempty" json:"group-ids,omitempty"`
 }
 
+// GetServicesAccountsPublicParams defines parameters for GetServicesAccountsPublic.
+type GetServicesAccountsPublicParams struct {
+	// Limit The maximum number of accounts to return
+	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+
+	// Offset The index of the first account to return
+	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
+
+	// Search The search for username, firstname, or lastname
+	Search *string `form:"search,omitempty" json:"search,omitempty"`
+
+	// Username The username
+	Username *string `form:"username,omitempty" json:"username,omitempty"`
+
+	// Firstname The account profile first name
+	Firstname *string `form:"firstname,omitempty" json:"firstname,omitempty"`
+
+	// Lastname The account profile last name
+	Lastname *string `form:"lastname,omitempty" json:"lastname,omitempty"`
+
+	// FollowingId The ID of the account being followed
+	FollowingId *string `form:"following-id,omitempty" json:"following-id,omitempty"`
+
+	// FollowerId The ID of the account following
+	FollowerId *string `form:"follower-id,omitempty" json:"follower-id,omitempty"`
+}
+
 // GetServicesAuthCredentialVerifyParams defines parameters for GetServicesAuthCredentialVerify.
 type GetServicesAuthCredentialVerifyParams struct {
 	// Id Credential ID
@@ -1348,13 +1458,6 @@ type GetSystemAppOrgsParams struct {
 
 	// OrgId Organization ID to search for
 	OrgId *string `form:"org_id,omitempty" json:"org_id,omitempty"`
-}
-
-// GetSystemApplicationConfigsParams defines parameters for GetSystemApplicationConfigs.
-type GetSystemApplicationConfigsParams struct {
-	AppTypeId string  `form:"app_type_id" json:"app_type_id"`
-	OrgId     *string `form:"org_id,omitempty" json:"org_id,omitempty"`
-	Version   *string `form:"version,omitempty" json:"version,omitempty"`
 }
 
 // GetSystemAuthAppOrgTokenParams defines parameters for GetSystemAuthAppOrgToken.
@@ -1531,6 +1634,15 @@ type PutAdminApplicationAccountsIdRolesJSONRequestBody = AdminReqGrantRolesToAcc
 // PutAdminApplicationAccountsIdSystemConfigsJSONRequestBody defines body for PutAdminApplicationAccountsIdSystemConfigs for application/json ContentType.
 type PutAdminApplicationAccountsIdSystemConfigsJSONRequestBody = PutAdminApplicationAccountsIdSystemConfigsJSONBody
 
+// PutAdminApplicationAccountsIdVerifiedJSONRequestBody defines body for PutAdminApplicationAccountsIdVerified for application/json ContentType.
+type PutAdminApplicationAccountsIdVerifiedJSONRequestBody = AdminReqVerified
+
+// PostAdminApplicationConfigsJSONRequestBody defines body for PostAdminApplicationConfigs for application/json ContentType.
+type PostAdminApplicationConfigsJSONRequestBody = ApplicationConfig
+
+// PutAdminApplicationConfigsIdJSONRequestBody defines body for PutAdminApplicationConfigsId for application/json ContentType.
+type PutAdminApplicationConfigsIdJSONRequestBody = ApplicationConfig
+
 // PostAdminApplicationFilterAccountsJSONRequestBody defines body for PostAdminApplicationFilterAccounts for application/json ContentType.
 type PostAdminApplicationFilterAccountsJSONRequestBody = PostAdminApplicationFilterAccountsJSONBody
 
@@ -1573,6 +1685,12 @@ type PostAdminAuthRefreshJSONRequestBody = SharedReqRefresh
 // PostAdminAuthVerifyMfaJSONRequestBody defines body for PostAdminAuthVerifyMfa for application/json ContentType.
 type PostAdminAuthVerifyMfaJSONRequestBody = SharedReqMfa
 
+// PostAdminConfigsJSONRequestBody defines body for PostAdminConfigs for application/json ContentType.
+type PostAdminConfigsJSONRequestBody = AdminReqCreateUpdateConfig
+
+// PutAdminConfigsIdJSONRequestBody defines body for PutAdminConfigsId for application/json ContentType.
+type PutAdminConfigsIdJSONRequestBody = AdminReqCreateUpdateConfig
+
 // PostBbsAccessTokenJSONRequestBody defines body for PostBbsAccessToken for application/json ContentType.
 type PostBbsAccessTokenJSONRequestBody = ServicesReqServiceAccountsAccessToken
 
@@ -1588,6 +1706,9 @@ type PostBbsAccountsCountJSONRequestBody = PostBbsAccountsCountJSONBody
 // PostBbsServiceAccountIdJSONRequestBody defines body for PostBbsServiceAccountId for application/json ContentType.
 type PostBbsServiceAccountIdJSONRequestBody = ServicesReqServiceAccountsParams
 
+// PostServicesAccountFollowJSONRequestBody defines body for PostServicesAccountFollow for application/json ContentType.
+type PostServicesAccountFollowJSONRequestBody = Follow
+
 // DeleteServicesAccountMfaJSONRequestBody defines body for DeleteServicesAccountMfa for application/json ContentType.
 type DeleteServicesAccountMfaJSONRequestBody = SharedReqMfa
 
@@ -1596,6 +1717,9 @@ type PostServicesAccountMfaJSONRequestBody = SharedReqMfa
 
 // PutServicesAccountPreferencesJSONRequestBody defines body for PutServicesAccountPreferences for application/json ContentType.
 type PutServicesAccountPreferencesJSONRequestBody = PutServicesAccountPreferencesJSONBody
+
+// PutServicesAccountPrivacyJSONRequestBody defines body for PutServicesAccountPrivacy for application/json ContentType.
+type PutServicesAccountPrivacyJSONRequestBody = Privacy
 
 // PutServicesAccountProfileJSONRequestBody defines body for PutServicesAccountProfile for application/json ContentType.
 type PutServicesAccountProfileJSONRequestBody = Profile
@@ -1681,12 +1805,6 @@ type PostSystemAppOrgsJSONRequestBody = ApplicationOrganization
 // PutSystemAppOrgsIdJSONRequestBody defines body for PutSystemAppOrgsId for application/json ContentType.
 type PutSystemAppOrgsIdJSONRequestBody = ApplicationOrganization
 
-// PostSystemApplicationConfigsJSONRequestBody defines body for PostSystemApplicationConfigs for application/json ContentType.
-type PostSystemApplicationConfigsJSONRequestBody = ApplicationConfig
-
-// PutSystemApplicationConfigsIdJSONRequestBody defines body for PutSystemApplicationConfigsId for application/json ContentType.
-type PutSystemApplicationConfigsIdJSONRequestBody = ApplicationConfig
-
 // PostSystemApplicationsJSONRequestBody defines body for PostSystemApplications for application/json ContentType.
 type PostSystemApplicationsJSONRequestBody = Application
 
@@ -1698,12 +1816,6 @@ type PostSystemAuthTypesJSONRequestBody = AuthType
 
 // PutSystemAuthTypesIdJSONRequestBody defines body for PutSystemAuthTypesId for application/json ContentType.
 type PutSystemAuthTypesIdJSONRequestBody = AuthType
-
-// PostSystemGlobalConfigJSONRequestBody defines body for PostSystemGlobalConfig for application/json ContentType.
-type PostSystemGlobalConfigJSONRequestBody = GlobalConfig
-
-// PutSystemGlobalConfigJSONRequestBody defines body for PutSystemGlobalConfig for application/json ContentType.
-type PutSystemGlobalConfigJSONRequestBody = GlobalConfig
 
 // PostSystemOrganizationsJSONRequestBody defines body for PostSystemOrganizations for application/json ContentType.
 type PostSystemOrganizationsJSONRequestBody = Organization
@@ -1746,6 +1858,78 @@ type PostTpsAccountsCountJSONRequestBody = PostTpsAccountsCountJSONBody
 
 // PostTpsServiceAccountIdJSONRequestBody defines body for PostTpsServiceAccountId for application/json ContentType.
 type PostTpsServiceAccountIdJSONRequestBody = ServicesReqServiceAccountsParams
+
+// AsEnvConfigData returns the union data inside the Config_Data as a EnvConfigData
+func (t Config_Data) AsEnvConfigData() (EnvConfigData, error) {
+	var body EnvConfigData
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromEnvConfigData overwrites any union data inside the Config_Data as the provided EnvConfigData
+func (t *Config_Data) FromEnvConfigData(v EnvConfigData) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeEnvConfigData performs a merge with any union data inside the Config_Data, using the provided EnvConfigData
+func (t *Config_Data) MergeEnvConfigData(v EnvConfigData) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+func (t Config_Data) MarshalJSON() ([]byte, error) {
+	b, err := t.union.MarshalJSON()
+	return b, err
+}
+
+func (t *Config_Data) UnmarshalJSON(b []byte) error {
+	err := t.union.UnmarshalJSON(b)
+	return err
+}
+
+// AsEnvConfigData returns the union data inside the AdminReqCreateUpdateConfig_Data as a EnvConfigData
+func (t AdminReqCreateUpdateConfig_Data) AsEnvConfigData() (EnvConfigData, error) {
+	var body EnvConfigData
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromEnvConfigData overwrites any union data inside the AdminReqCreateUpdateConfig_Data as the provided EnvConfigData
+func (t *AdminReqCreateUpdateConfig_Data) FromEnvConfigData(v EnvConfigData) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeEnvConfigData performs a merge with any union data inside the AdminReqCreateUpdateConfig_Data, using the provided EnvConfigData
+func (t *AdminReqCreateUpdateConfig_Data) MergeEnvConfigData(v EnvConfigData) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+func (t AdminReqCreateUpdateConfig_Data) MarshalJSON() ([]byte, error) {
+	b, err := t.union.MarshalJSON()
+	return b, err
+}
+
+func (t *AdminReqCreateUpdateConfig_Data) UnmarshalJSON(b []byte) error {
+	err := t.union.UnmarshalJSON(b)
+	return err
+}
 
 // AsSharedReqCredsEmail returns the union data inside the ServicesReqAccountAuthTypeLink_Creds as a SharedReqCredsEmail
 func (t ServicesReqAccountAuthTypeLink_Creds) AsSharedReqCredsEmail() (SharedReqCredsEmail, error) {
