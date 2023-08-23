@@ -493,15 +493,9 @@ func (a *Auth) updateExternalUserIfNeeded(accountAuthType model.AccountAuthType,
 	l.Info("updateExternalUserIfNeeded")
 
 	//get the current external user
-	currentDataMap := accountAuthType.Params["user"]
-	currentDataJSON, err := utils.ConvertToJSON(currentDataMap)
+	currentData, err := utils.JSONConvert[model.ExternalSystemUser, interface{}](accountAuthType.Params["user"])
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionMarshal, model.TypeExternalSystemUser, nil, err)
-	}
-	var currentData *model.ExternalSystemUser
-	err = json.Unmarshal(currentDataJSON, &currentData)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, model.TypeExternalSystemUser, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionParse, model.TypeExternalSystemUser, nil, err)
 	}
 
 	identityProviderID, ok := authType.Params["identity_provider"].(string)

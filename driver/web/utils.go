@@ -17,6 +17,7 @@ package web
 import (
 	"core-building-block/core/model"
 	Def "core-building-block/driver/web/docs/gen"
+	"core-building-block/utils"
 	"encoding/json"
 	"net/http"
 
@@ -40,20 +41,16 @@ func authBuildLoginResponse(l *logs.Log, loginSession *model.LoginSession) logs.
 	}
 
 	//params
-	var paramsRes Def.SharedResLogin_Params
+	var paramsRes *Def.SharedResLogin_Params
+	var err error
 	if loginSession.Params != nil {
-		paramsBytes, err := json.Marshal(loginSession.Params)
+		paramsRes, err = utils.JSONConvert[Def.SharedResLogin_Params, map[string]interface{}](loginSession.Params)
 		if err != nil {
-			return l.HTTPResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("auth login response params"), nil, err, http.StatusInternalServerError, false)
-		}
-
-		err = json.Unmarshal(paramsBytes, &paramsRes)
-		if err != nil {
-			return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth login response params"), nil, err, http.StatusInternalServerError, false)
+			return l.HTTPResponseErrorAction(logutils.ActionParse, logutils.MessageDataType("auth login response params"), nil, err, http.StatusInternalServerError, false)
 		}
 	}
 
-	responseData := &Def.SharedResLogin{Token: &rokwireToken, Account: accountData, Params: &paramsRes}
+	responseData := &Def.SharedResLogin{Token: &rokwireToken, Account: accountData, Params: paramsRes}
 	respData, err := json.Marshal(responseData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("auth login response"), nil, err, http.StatusInternalServerError, false)

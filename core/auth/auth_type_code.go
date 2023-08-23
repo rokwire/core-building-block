@@ -162,21 +162,16 @@ func (a *codeAuthImpl) parseCreds(creds string) (*codeCreds, error) {
 }
 
 func (a *codeAuthImpl) mapToCreds(credsMap map[string]interface{}) (*codeCreds, error) {
-	credBytes, err := json.Marshal(credsMap)
+	creds, err := utils.JSONConvert[codeCreds, map[string]interface{}](credsMap)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionMarshal, "webauthn creds map", nil, err)
-	}
-	var creds codeCreds
-	err = json.Unmarshal(credBytes, &creds)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeCodeCreds, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionParse, typeCodeCreds, nil, err)
 	}
 
 	err = validator.New().Struct(creds)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionValidate, typeCodeCreds, nil, err)
 	}
-	return &creds, nil
+	return creds, nil
 }
 
 // initCodeAuth initializes and registers a new code auth instance

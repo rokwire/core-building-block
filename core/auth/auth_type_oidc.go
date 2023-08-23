@@ -473,15 +473,9 @@ func (a *oidcAuthImpl) getOidcAuthConfig(authType model.AuthType, appTypeID stri
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeIdentityProviderConfig, errFields, err)
 	}
 
-	configBytes, err := json.Marshal(authConfig.Config)
+	oidcConfig, err := utils.JSONConvert[oidcAuthConfig, map[string]interface{}](authConfig.Config)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionMarshal, model.TypeIdentityProviderConfig, errFields, err)
-	}
-
-	var oidcConfig oidcAuthConfig
-	err = json.Unmarshal(configBytes, &oidcConfig)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, model.TypeIdentityProviderConfig, errFields, err)
+		return nil, errors.WrapErrorAction(logutils.ActionParse, model.TypeIdentityProviderConfig, errFields, err)
 	}
 
 	validate := validator.New()
@@ -490,7 +484,7 @@ func (a *oidcAuthImpl) getOidcAuthConfig(authType model.AuthType, appTypeID stri
 		return nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeIdentityProviderConfig, errFields, err)
 	}
 
-	return &oidcConfig, nil
+	return oidcConfig, nil
 }
 
 // --- Helper functions ---

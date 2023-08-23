@@ -70,16 +70,18 @@ func (c *passwordCreds) setResetParams(code *string, expiry *time.Time) {
 }
 
 func (c *passwordCreds) toMap() (map[string]interface{}, error) {
-	credBytes, err := json.Marshal(c)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionMarshal, typePasswordCreds, nil, err)
+	if c == nil {
+		return nil, errors.ErrorData(logutils.StatusMissing, typePasswordCreds, nil)
 	}
-	var credsMap map[string]interface{}
-	err = json.Unmarshal(credBytes, &credsMap)
+
+	credsMap, err := utils.JSONConvert[map[string]interface{}, passwordCreds](*c)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, "password creds map", nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionParse, typePasswordCreds, nil, err)
 	}
-	return credsMap, nil
+	if credsMap == nil {
+		return nil, errors.ErrorData(logutils.StatusInvalid, "password creds map", nil)
+	}
+	return *credsMap, nil
 }
 
 type passwordParams struct {
@@ -341,21 +343,16 @@ func (a *passwordAuthImpl) parseParams(params string) (*passwordParams, error) {
 }
 
 func (a *passwordAuthImpl) mapToCreds(credsMap map[string]interface{}) (*passwordCreds, error) {
-	credBytes, err := json.Marshal(credsMap)
+	creds, err := utils.JSONConvert[passwordCreds, map[string]interface{}](credsMap)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionMarshal, "password creds map", nil, err)
-	}
-	var creds passwordCreds
-	err = json.Unmarshal(credBytes, &creds)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typePasswordCreds, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionParse, typePasswordCreds, nil, err)
 	}
 
 	err = validator.New().Struct(creds)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionValidate, typePasswordCreds, nil, err)
 	}
-	return &creds, nil
+	return creds, nil
 }
 
 // initPasswordAuth initializes and registers a new password auth instance

@@ -2476,11 +2476,11 @@ func (sa *Adapter) FindCredentials(context TransactionContext, ids []string) ([]
 
 // InsertCredential inserts a set of credential
 func (sa *Adapter) InsertCredential(context TransactionContext, creds *model.Credential) error {
-	storageCreds := credentialToStorage(creds)
-
-	if storageCreds == nil {
+	if creds == nil {
 		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeCredential))
 	}
+
+	storageCreds := credentialToStorage(*creds)
 
 	_, err := sa.db.credentials.InsertOneWithContext(context, storageCreds)
 	if err != nil {
@@ -2492,11 +2492,11 @@ func (sa *Adapter) InsertCredential(context TransactionContext, creds *model.Cre
 
 // UpdateCredential updates a set of credentials
 func (sa *Adapter) UpdateCredential(context TransactionContext, creds *model.Credential) error {
-	storageCreds := credentialToStorage(creds)
-
-	if storageCreds == nil {
+	if creds == nil {
 		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeCredential))
 	}
+
+	storageCreds := credentialToStorage(*creds)
 
 	filter := bson.D{primitive.E{Key: "_id", Value: storageCreds.ID}}
 	err := sa.db.credentials.ReplaceOneWithContext(context, filter, storageCreds, nil)
@@ -4128,12 +4128,12 @@ func (sa *Adapter) migrateAuthTypes() error {
 		}
 
 		//2. remove old auth types if they exist
-		removedAuthTypes := make(map[string]string)
-		remove := map[string]string{
-			"email":        newAuthTypes["password"].ID,
-			"username":     newAuthTypes["password"].ID,
-			"phone":        newAuthTypes["code"].ID,
-			"twilio_phone": newAuthTypes["code"].ID,
+		removedAuthTypes := make(map[string]model.AuthType)
+		remove := map[string]model.AuthType{
+			"email":        newAuthTypes["password"],
+			"username":     newAuthTypes["password"],
+			"phone":        newAuthTypes["code"],
+			"twilio_phone": newAuthTypes["code"],
 		}
 		for old, new := range remove {
 			// need to load auth type directly from DB so that we do not get one of the new auth types by alias
@@ -4168,10 +4168,10 @@ func (sa *Adapter) migrateAuthTypes() error {
 		// }
 
 		//5. migrate credentials
-		// err = sa.migrateCredentials(context, removedAuthTypes)
-		// if err != nil {
-		// 	return errors.WrapErrorAction("migrating", model.TypeCredential, nil, err)
-		// }
+		err = sa.migrateCredentials(context, removedAuthTypes)
+		if err != nil {
+			return errors.WrapErrorAction("migrating", model.TypeCredential, nil, err)
+		}
 
 		return nil
 	}
@@ -4179,7 +4179,7 @@ func (sa *Adapter) migrateAuthTypes() error {
 	return sa.PerformTransaction(transaction)
 }
 
-func (sa *Adapter) migrateAppOrgs(context TransactionContext, removedAuthTypes map[string]string) error {
+func (sa *Adapter) migrateAppOrgs(context TransactionContext, removedAuthTypes map[string]model.AuthType) error {
 	appOrgs, err := sa.FindApplicationsOrganizations()
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
@@ -4190,10 +4190,10 @@ func (sa *Adapter) migrateAppOrgs(context TransactionContext, removedAuthTypes m
 		for i, appType := range appOrg.SupportedAuthTypes {
 			updatedIDs := make([]string, 0)
 			for j, authType := range appType.SupportedAuthTypes {
-				if newID := removedAuthTypes[authType.AuthTypeID]; newID != "" {
-					if !utils.Contains(updatedIDs, newID) {
-						appType.SupportedAuthTypes[j] = model.SupportedAuthType{AuthTypeID: newID}
-						updatedIDs = append(updatedIDs, newID)
+				if newAuthType, exists := removedAuthTypes[authType.AuthTypeID]; exists {
+					if !utils.Contains(updatedIDs, newAuthType.ID) {
+						appType.SupportedAuthTypes[j] = model.SupportedAuthType{AuthTypeID: newAuthType.ID}
+						updatedIDs = append(updatedIDs, newAuthType.ID)
 					} else {
 						// remove the obsolete supported auth type if the newID is already included in the list
 						appType.SupportedAuthTypes = append(appType.SupportedAuthTypes[:j], appType.SupportedAuthTypes[j+1:]...)
@@ -4223,9 +4223,99 @@ func (sa *Adapter) migrateAccounts(context TransactionContext, removedAuthTypes 
 	return errors.New(logutils.Unimplemented)
 }
 
-func (sa *Adapter) migrateCredentials(context TransactionContext, removedAuthTypes map[string]string) error {
-	//TODO: migrate credentials
-	return errors.New(logutils.Unimplemented)
+func (sa *Adapter) migrateCredentials(context TransactionContext, removedAuthTypes map[string]model.AuthType) error {
+	var allCredentials []credential
+	err := sa.db.credentials.FindWithContext(context, bson.M{}, &allCredentials, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
+	}
+
+	type passwordCreds struct {
+		Password string `json:"password"`
+
+		ResetCode   *string    `json:"reset_code,omitempty"`
+		ResetExpiry *time.Time `json:"reset_expiry,omitempty"`
+	}
+
+	type webauthnCreds struct {
+		Credential *string `json:"credential,omitempty"`
+		Session    *string `json:"session,omitempty"`
+	}
+
+	migratedCredentials := make([]credential, 0)
+	for _, cred := range allCredentials {
+		var migrated credential
+		if newAuthType, exists := removedAuthTypes[cred.AuthTypeID]; exists && newAuthType.Code == "password" {
+			// found a password credential, migrate it
+			passwordValue, err := utils.JSONConvert[passwordCreds, map[string]interface{}](cred.Value)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionParse, "password credential value map", &logutils.FieldArgs{"id": cred.ID}, err)
+			}
+			if passwordValue == nil || passwordValue.Password == "" {
+				continue
+			}
+			if passwordValue.ResetCode != nil && *passwordValue.ResetCode == "" {
+				passwordValue.ResetCode = nil
+			}
+			if passwordValue.ResetExpiry != nil && passwordValue.ResetExpiry.IsZero() {
+				passwordValue.ResetExpiry = nil
+			}
+
+			passwordValueMap, err := utils.JSONConvert[map[string]interface{}, passwordCreds](*passwordValue)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionParse, "password credential value", &logutils.FieldArgs{"id": cred.ID}, err)
+			}
+			if passwordValueMap == nil {
+				continue
+			}
+
+			migrated = credential{ID: cred.ID, AuthTypeID: newAuthType.ID, AccountsAuthTypes: cred.AccountsAuthTypes, Value: *passwordValueMap,
+				DateCreated: cred.DateCreated, DateUpdated: cred.DateUpdated}
+		} else {
+			// found something other than a password credential, try to migrate it as a webauthn credential
+			webauthnValue, err := utils.JSONConvert[webauthnCreds, map[string]interface{}](cred.Value)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionParse, "webauthn credential value map", &logutils.FieldArgs{"id": cred.ID}, err)
+			}
+
+			// credential value is not for webauthn or it is in a hanging state or is missing its credential
+			if webauthnValue == nil || webauthnValue.Session != nil || webauthnValue.Credential == nil {
+				continue
+			}
+
+			webauthnValueMap, err := utils.JSONConvert[map[string]interface{}, webauthnCreds](*webauthnValue)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionParse, "webauthn credential value", &logutils.FieldArgs{"id": cred.ID}, err)
+			}
+			if webauthnValueMap == nil {
+				continue
+			}
+
+			migrated = credential{ID: cred.ID, AuthTypeID: cred.AuthTypeID, AccountsAuthTypes: cred.AccountsAuthTypes, Value: *webauthnValueMap,
+				DateCreated: cred.DateCreated, DateUpdated: cred.DateUpdated}
+		}
+
+		if migrated.ID != "" {
+			migratedCredentials = append(migratedCredentials, migrated)
+		}
+	}
+
+	_, err = sa.db.credentials.DeleteManyWithContext(context, bson.M{}, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeCredential, nil, err)
+	}
+
+	credItems := make([]interface{}, len(migratedCredentials))
+	for i, cred := range migratedCredentials {
+		credItems[i] = cred
+	}
+
+	_, err = sa.db.credentials.InsertManyWithContext(context, credItems, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeCredential, nil, err)
+	}
+
+	return nil
 }
 
 func (sa *Adapter) migrateLoginSessions() error {

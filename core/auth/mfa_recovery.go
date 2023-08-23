@@ -18,7 +18,6 @@ import (
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
 	"core-building-block/utils"
-	"encoding/json"
 	"time"
 
 	"github.com/google/uuid"
@@ -45,24 +44,23 @@ func (m *recoveryMfaImpl) verify(context storage.TransactionContext, mfa *model.
 		return nil, errors.ErrorData(logutils.StatusMissing, "mfa params", nil)
 	}
 
-	var codes []string
-	data, err := json.Marshal(mfa.Params["codes"])
+	codes, err := utils.JSONConvert[[]string, interface{}](mfa.Params["codes"])
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionMarshal, "stored recovery codes", nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionParse, "stored recovery codes", nil, err)
 	}
-	err = json.Unmarshal(data, &codes)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, "stored recovery codes", nil, err)
+	if codes == nil {
+		return nil, errors.ErrorData(logutils.StatusInvalid, "stored recovery codes", nil)
 	}
+	recoveryCodes := *codes
 
-	if len(codes) == 0 {
+	if len(recoveryCodes) == 0 {
 		message := "no valid codes"
 		return &message, errors.ErrorData(logutils.StatusMissing, "recovery codes", nil)
 	}
 
-	for i, rc := range codes {
+	for i, rc := range recoveryCodes {
 		if code == rc {
-			mfa.Params["codes"] = append(codes[:i], codes[i+1:]...)
+			mfa.Params["codes"] = append(recoveryCodes[:i], recoveryCodes[i+1:]...)
 			now := time.Now().UTC()
 			mfa.DateUpdated = &now
 

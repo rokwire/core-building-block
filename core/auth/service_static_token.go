@@ -18,7 +18,6 @@ import (
 	"core-building-block/core/model"
 	"core-building-block/utils"
 	"encoding/base64"
-	"encoding/json"
 	"time"
 
 	"github.com/google/uuid"
@@ -47,15 +46,9 @@ type staticTokenServiceAuthImpl struct {
 }
 
 func (s *staticTokenServiceAuthImpl) checkCredentials(_ *sigauth.Request, creds interface{}, params map[string]interface{}) ([]model.ServiceAccount, error) {
-	credsData, err := json.Marshal(creds)
+	tokenCreds, err := utils.JSONConvert[staticTokenCreds, interface{}](creds)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionMarshal, TypeStaticTokenCreds, nil, err)
-	}
-
-	var tokenCreds staticTokenCreds
-	err = json.Unmarshal([]byte(credsData), &tokenCreds)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, TypeStaticTokenCreds, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionParse, TypeStaticTokenCreds, nil, err)
 	}
 
 	validate := validator.New()

@@ -17,6 +17,7 @@ package auth
 import (
 	"bytes"
 	"core-building-block/core/model"
+	"core-building-block/utils"
 	"encoding/json"
 	"strings"
 	"time"
@@ -112,16 +113,18 @@ func (c *webauthnCreds) getResetParams() (*string, *time.Time) {
 func (c *webauthnCreds) setResetParams(code *string, expiry *time.Time) {}
 
 func (c *webauthnCreds) toMap() (map[string]interface{}, error) {
-	credBytes, err := json.Marshal(c)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionMarshal, typeWebAuthnCreds, nil, err)
+	if c == nil {
+		return nil, errors.ErrorData(logutils.StatusMissing, typeWebAuthnCreds, nil)
 	}
-	var credsMap map[string]interface{}
-	err = json.Unmarshal(credBytes, &credsMap)
+
+	credsMap, err := utils.JSONConvert[map[string]interface{}, webauthnCreds](*c)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, "webauthn creds map", nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionParse, typeWebAuthnCreds, nil, err)
 	}
-	return credsMap, nil
+	if credsMap == nil {
+		return nil, errors.ErrorData(logutils.StatusInvalid, "webauthn creds map", nil)
+	}
+	return *credsMap, nil
 }
 
 type webauthnParams struct {
@@ -565,21 +568,16 @@ func (a *webAuthnAuthImpl) parseParams(params string) (*webauthnParams, error) {
 }
 
 func (a *webAuthnAuthImpl) mapToCreds(credsMap map[string]interface{}) (*webauthnCreds, error) {
-	credBytes, err := json.Marshal(credsMap)
+	creds, err := utils.JSONConvert[webauthnCreds, map[string]interface{}](credsMap)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionMarshal, "webauthn creds map", nil, err)
-	}
-	var creds webauthnCreds
-	err = json.Unmarshal(credBytes, &creds)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeWebAuthnCreds, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionParse, typeWebAuthnCreds, nil, err)
 	}
 
 	err = validator.New().Struct(creds)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionValidate, typeWebAuthnCreds, nil, err)
 	}
-	return &creds, nil
+	return creds, nil
 }
 
 func (a *webAuthnAuthImpl) parseWebAuthnSession(credValue map[string]interface{}) (*webauthn.SessionData, error) {

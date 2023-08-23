@@ -148,7 +148,7 @@ func (h AdminApisHandler) login(l *logs.Log, r *http.Request, claims *tokenauth.
 	}
 
 	if loginSession.State != "" {
-		paramsRes, err := convert[Def.SharedResLoginMfa_Params](loginSession.Params)
+		paramsRes, err := utils.JSONConvert[Def.SharedResLoginMfa_Params](loginSession.Params)
 		if err != nil {
 			return l.HTTPResponseErrorAction("converting", logutils.MessageDataType("auth login response params"), nil, err, http.StatusInternalServerError, false)
 		}
@@ -242,7 +242,7 @@ func (h AdminApisHandler) refresh(l *logs.Log, r *http.Request, claims *tokenaut
 	accessToken := loginSession.AccessToken
 	refreshToken := loginSession.CurrentRefreshToken()
 
-	paramsRes, err := convert[Def.SharedResRefresh_Params](loginSession.Params)
+	paramsRes, err := utils.JSONConvert[Def.SharedResRefresh_Params](loginSession.Params)
 	if err != nil {
 		return l.HTTPResponseErrorAction("converting", logutils.MessageDataType("auth refresh response params"), nil, err, http.StatusInternalServerError, false)
 	}

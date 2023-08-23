@@ -105,13 +105,36 @@ func GenerateRandomPassword(s int) string {
 	return string(password)
 }
 
-// ConvertToJSON converts to json
-func ConvertToJSON(data interface{}) ([]byte, error) {
-	dataJSON, err := json.Marshal(data)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionMarshal, "map to json", nil, err)
+// JSONConvert json marshals and unmarshals data into result (result should be passed as a pointer)
+func JSONConvert[T any, F any](val F) (*T, error) {
+	if IsNil(val) {
+		return nil, nil
 	}
-	return dataJSON, nil
+
+	bytes, err := json.Marshal(val)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionMarshal, "value", nil, err)
+	}
+
+	var out T
+	err = json.Unmarshal(bytes, &out)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, "value", nil, err)
+	}
+
+	return &out, nil
+}
+
+// IsNil determines whether the given interface has a nil value
+func IsNil(i interface{}) bool {
+	if i == nil {
+		return true
+	}
+	switch reflect.TypeOf(i).Kind() {
+	case reflect.Ptr, reflect.Map, reflect.Array, reflect.Chan, reflect.Slice:
+		return reflect.ValueOf(i).IsNil()
+	}
+	return false
 }
 
 // DeepEqual checks whether a and b are “deeply equal,”
