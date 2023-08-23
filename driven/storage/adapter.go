@@ -127,11 +127,6 @@ func (sa *Adapter) Start() error {
 		return errors.WrapErrorAction("migrating", model.TypeAuthType, nil, err)
 	}
 
-	// err = sa.migrateLoginSessions()
-	// if err != nil {
-	// 	return errors.WrapErrorAction("migrating", model.TypeLoginSession, nil, err)
-	// }
-
 	return err
 }
 
@@ -4128,14 +4123,14 @@ func (sa *Adapter) migrateAuthTypes() error {
 		}
 
 		//2. remove old auth types if they exist
-		removedAuthTypes := make(map[string]model.AuthType)
-		remove := map[string]model.AuthType{
+		removedAuthTypeIDs := make(map[string]model.AuthType)
+		removedAuthTypeCodes := map[string]model.AuthType{
 			"email":        newAuthTypes["password"],
 			"username":     newAuthTypes["password"],
 			"phone":        newAuthTypes["code"],
 			"twilio_phone": newAuthTypes["code"],
 		}
-		for old, new := range remove {
+		for old, new := range removedAuthTypeCodes {
 			// need to load auth type directly from DB so that we do not get one of the new auth types by alias
 			var authTypes []model.AuthType
 			err := sa.db.authTypes.FindWithContext(context, bson.M{"code": old}, &authTypes, nil)
@@ -4146,7 +4141,7 @@ func (sa *Adapter) migrateAuthTypes() error {
 				continue
 			}
 
-			removedAuthTypes[authTypes[0].ID] = new
+			removedAuthTypeIDs[authTypes[0].ID] = new
 
 			// remove the unwanted auth type, which also updates the cache
 			_, err = sa.db.authTypes.DeleteOneWithContext(context, bson.M{"code": old}, nil)
@@ -4156,7 +4151,7 @@ func (sa *Adapter) migrateAuthTypes() error {
 		}
 
 		//3. migrate app orgs
-		err := sa.migrateAppOrgs(context, removedAuthTypes)
+		err := sa.migrateAppOrgs(context, removedAuthTypeIDs)
 		if err != nil {
 			return errors.WrapErrorAction("migrating", model.TypeApplicationOrganization, nil, err)
 		}
@@ -4168,9 +4163,15 @@ func (sa *Adapter) migrateAuthTypes() error {
 		// }
 
 		//5. migrate credentials
-		err = sa.migrateCredentials(context, removedAuthTypes)
+		err = sa.migrateCredentials(context, removedAuthTypeIDs)
 		if err != nil {
 			return errors.WrapErrorAction("migrating", model.TypeCredential, nil, err)
+		}
+
+		//6. migrate login sessions
+		err = sa.migrateLoginSessions(context, removedAuthTypeCodes)
+		if err != nil {
+			return errors.WrapErrorAction("migrating", model.TypeLoginSession, nil, err)
 		}
 
 		return nil
@@ -4318,9 +4319,39 @@ func (sa *Adapter) migrateCredentials(context TransactionContext, removedAuthTyp
 	return nil
 }
 
-func (sa *Adapter) migrateLoginSessions() error {
-	//TODO: migrate login sessions
-	return errors.New(logutils.Unimplemented)
+func (sa *Adapter) migrateLoginSessions(context TransactionContext, removedAuthTypes map[string]model.AuthType) error {
+	// remove the following fields from all login sessions
+	update := bson.D{primitive.E{Key: "$unset", Value: bson.D{
+		primitive.E{Key: "account_auth_type_id", Value: 1},
+		primitive.E{Key: "account_auth_type_identifier", Value: 1},
+		primitive.E{Key: "external_ids", Value: 1},
+	}}}
+	res, err := sa.db.loginsSessions.UpdateManyWithContext(context, bson.M{}, update, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeLoginSession, nil, err)
+	}
+	if res.ModifiedCount != res.MatchedCount {
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeLoginSession, &logutils.FieldArgs{"matched": res.MatchedCount, "modified": res.ModifiedCount})
+	}
+
+	for oldCode, authType := range removedAuthTypes {
+		// update the auth_type_code field for all removed auth types
+		update := bson.D{
+			primitive.E{Key: "$set", Value: bson.D{
+				primitive.E{Key: "auth_type_code", Value: authType.Code},
+			}},
+		}
+
+		res, err := sa.db.loginsSessions.UpdateManyWithContext(context, bson.M{"auth_type_code": oldCode}, update, nil)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeLoginSession, &logutils.FieldArgs{"auth_type_code": oldCode}, err)
+		}
+		if res.ModifiedCount != res.MatchedCount {
+			return errors.ErrorAction(logutils.ActionUpdate, model.TypeLoginSession, &logutils.FieldArgs{"auth_type_code": oldCode, "matched": res.MatchedCount, "modified": res.ModifiedCount})
+		}
+	}
+
+	return nil
 }
 
 func (sa *Adapter) getFilterForParams(params map[string]interface{}) bson.M {
