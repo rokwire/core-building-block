@@ -136,6 +136,7 @@ func accountAuthTypesToDef(account *model.Account) []Def.AccountAuthType {
 		return nil
 	}
 
+	//TODO: not working
 	aats := make([]Def.AccountAuthType, 0)
 	for _, aat := range account.AuthTypes {
 		for _, id := range account.Identifiers {

@@ -776,12 +776,16 @@ func (a *Auth) checkCredentials(identifierImpl identifierType, accountIdentifier
 	}
 
 	//check the credentials
-	message, credID, err := authImpl.checkCredentials(identifierImpl, accountIdentifier, accountID, credentials, creds, appOrg, supportedAuthType.Params)
+	msg, credID, err := authImpl.checkCredentials(identifierImpl, accountIdentifier, accountID, credentials, creds, appOrg, supportedAuthType.Params)
 	if err != nil {
 		return nil, "", errors.WrapErrorAction(logutils.ActionValidate, model.TypeCredential, nil, err)
 	}
 
-	return &message, credID, nil
+	var message *string
+	if msg != "" {
+		message = &msg
+	}
+	return message, credID, nil
 }
 
 func (a *Auth) applySignUp(identifierImpl identifierType, account *model.Account, supportedAuthType model.SupportedAuthType, appOrg model.ApplicationOrganization, userIdentifier string, creds string,
@@ -2213,10 +2217,11 @@ func (a *Auth) validateAuthType(authenticationType string, appTypeIdentifier *st
 func (a *Auth) validateAppOrg(appTypeIdentifier *string, appID *string, orgID string) (*model.ApplicationType, *model.ApplicationOrganization, error) {
 	var applicationID string
 	var applicationType *model.ApplicationType
+	var err error
 	if appID != nil {
 		applicationID = *appID
 	} else if appTypeIdentifier != nil {
-		applicationType, err := a.storage.FindApplicationType(*appTypeIdentifier)
+		applicationType, err = a.storage.FindApplicationType(*appTypeIdentifier)
 		if err != nil {
 			return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationType, logutils.StringArgs(*appTypeIdentifier), err)
 
