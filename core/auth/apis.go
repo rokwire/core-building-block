@@ -632,7 +632,14 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appID string, orgID
 				return errors.ErrorData(logutils.StatusMissing, model.TypeIdentityProviderConfig, &logutils.FieldArgs{"app_org": appOrg.ID, "identity_provider_id": identityProviderID})
 			}
 
-			externalUser := model.ExternalSystemUser{ExternalIDs: map[string]string{identityProviderSetting.UserIdentifierField: identifier}}
+			externalIDs := make(map[string]string)
+			for k, v := range identityProviderSetting.ExternalIDFields {
+				if v == identityProviderSetting.UserIdentifierField {
+					externalIDs[k] = identifier
+					break
+				}
+			}
+			externalUser := model.ExternalSystemUser{Identifier: identifier, ExternalIDs: externalIDs}
 			newAccount, err = a.applySignUpAdminExternal(context, supportedAuthType.AuthType, *appOrg, externalUser, profile, privacy, username, permissions, roleIDs, groupIDs, scopes, creatorPermissions, clientVersion, l)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionRegister, "admin user", &logutils.FieldArgs{"auth_type": supportedAuthType.AuthType.Code, "identifier": identifier}, err)

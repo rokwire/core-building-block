@@ -24,7 +24,6 @@ import (
 	"core-building-block/driven/profilebb"
 	"core-building-block/driven/storage"
 	"core-building-block/driver/web"
-	"core-building-block/utils"
 	"os"
 	"strconv"
 	"strings"
@@ -65,11 +64,6 @@ func main() {
 
 	logger.Infof("Version: %s", Version)
 
-	err := utils.SetRandomSeed()
-	if err != nil {
-		logger.Error(err.Error())
-	}
-
 	env := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_ENVIRONMENT", true, false) //local, dev, staging, prod
 	port := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_PORT", false, false)
 	//Default port of 80
@@ -89,7 +83,7 @@ func main() {
 	mongoDBName := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_MONGO_DATABASE", true, false)
 	mongoTimeout := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_MONGO_TIMEOUT", false, false)
 	storageAdapter := storage.NewStorageAdapter(host, mongoDBAuth, mongoDBName, mongoTimeout, logger)
-	err = storageAdapter.Start()
+	err := storageAdapter.Start()
 	if err != nil {
 		logger.Fatalf("Cannot start the mongoDB adapter: %v", err)
 	}

@@ -4156,19 +4156,13 @@ func (sa *Adapter) migrateAuthTypes() error {
 			return errors.WrapErrorAction("migrating", model.TypeApplicationOrganization, nil, err)
 		}
 
-		//4. migrate accounts
-		// err = sa.migrateAccounts(context, removedAuthTypes)
-		// if err != nil {
-		// 	return errors.WrapErrorAction("migrating", model.TypeAccount, nil, err)
-		// }
-
-		//5. migrate credentials
+		//4. migrate credentials
 		err = sa.migrateCredentials(context, removedAuthTypeIDs)
 		if err != nil {
 			return errors.WrapErrorAction("migrating", model.TypeCredential, nil, err)
 		}
 
-		//6. migrate login sessions
+		//5. migrate login sessions
 		err = sa.migrateLoginSessions(context, removedAuthTypeCodes)
 		if err != nil {
 			return errors.WrapErrorAction("migrating", model.TypeLoginSession, nil, err)
@@ -4214,14 +4208,138 @@ func (sa *Adapter) migrateAppOrgs(context TransactionContext, removedAuthTypes m
 				return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeApplicationOrganization, &logutils.FieldArgs{"id": appOrg.ID}, err)
 			}
 		}
+
+		err = sa.migrateAccounts(context, appOrg, removedAuthTypes)
+		if err != nil {
+			return errors.WrapErrorAction("migrating", model.TypeAccount, &logutils.FieldArgs{"app_org_id": appOrg.ID}, err)
+		}
 	}
 
 	return nil
 }
 
-func (sa *Adapter) migrateAccounts(context TransactionContext, removedAuthTypes map[string]string) error {
-	//TODO: migrate account auth type data
-	return errors.New(logutils.Unimplemented)
+func (sa *Adapter) migrateAccounts(context TransactionContext, appOrg model.ApplicationOrganization, removedAuthTypes map[string]model.AuthType) error {
+	filter := bson.M{"app_org_id": appOrg.ID}
+	var accounts []account
+
+	err := sa.db.accounts.Find(filter, &accounts, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"app_org_id": appOrg.ID}, err)
+	}
+	if len(accounts) == 0 {
+		return nil
+	}
+
+	migratedAccounts := make([]interface{}, len(accounts))
+	for i, acct := range accounts {
+		migrated := acct
+		identifiers := make([]accountIdentifier, 0)
+		authTypes := make([]accountAuthType, 0)
+		externalIdentifier := accountIdentifier{}
+		addedIdentifiers := make([]string, 0)
+		hasExternal := false
+		for _, aat := range acct.AuthTypes {
+			newAat := aat
+			isExternal := (aat.Params != nil)
+			hasExternal = hasExternal || isExternal
+			newAuthType, exists := removedAuthTypes[aat.AuthTypeID]
+			if aat.Identifier != nil && !isExternal {
+				identifier := *aat.Identifier
+				identifierCode, _ := strings.CutPrefix(aat.AuthTypeCode, "twilio_")
+				if !exists {
+					if strings.Contains(identifier, "@") {
+						identifierCode = "email"
+					} else if strings.Contains(identifier, "+") {
+						identifierCode = "phone"
+					} else {
+						identifierCode = "username"
+					}
+
+					if strings.Contains(identifier, "-") {
+						identifierParts := strings.Split(identifier, "-")
+						identifier = identifierParts[0]
+					}
+				}
+
+				if !utils.Contains(addedIdentifiers, identifier) {
+					verified := true
+					if aat.Unverified != nil {
+						verified = !*aat.Unverified
+					}
+					linked := false
+					if aat.Linked != nil {
+						linked = *aat.Linked
+					}
+
+					newIdentifier := accountIdentifier{ID: uuid.NewString(), Code: identifierCode, Identifier: identifier, Verified: verified, Linked: linked,
+						DateCreated: aat.DateCreated, DateUpdated: aat.DateUpdated}
+					identifiers = append(identifiers, newIdentifier)
+					addedIdentifiers = append(addedIdentifiers, identifier)
+				}
+			}
+
+			if exists {
+				// update the auth type ID and code if the current auth type was removed
+				newAat.AuthTypeID = newAuthType.ID
+				newAat.AuthTypeCode = newAuthType.Code
+			} else if isExternal {
+				externalAatID := aat.ID
+
+				externalIdentifier.AccountAuthTypeID = &externalAatID
+				externalIdentifier.DateCreated = aat.DateCreated
+				if aat.Identifier != nil {
+					externalIdentifier.Identifier = *aat.Identifier
+				}
+				if aat.DateUpdated != nil {
+					dateUpdated := *aat.DateUpdated
+					externalIdentifier.DateUpdated = &dateUpdated
+				}
+			}
+
+			newAat.Identifier = nil
+			newAat.Unverified = nil
+			newAat.Linked = nil
+			authTypes = append(authTypes, newAat)
+		}
+
+		// handle external identifiers (includes oidc)
+		if len(acct.ExternalIDs) == 0 && hasExternal {
+			code := "uin"
+			if len(appOrg.IdentityProvidersSettings) > 0 {
+				for k, v := range appOrg.IdentityProvidersSettings[0].ExternalIDFields {
+					if v == appOrg.IdentityProvidersSettings[0].UserIdentifierField {
+						code = k
+						break
+					}
+				}
+			}
+			newIdentifier := accountIdentifier{ID: uuid.NewString(), Code: code, Identifier: externalIdentifier.Identifier, Verified: true,
+				AccountAuthTypeID: externalIdentifier.AccountAuthTypeID, DateCreated: externalIdentifier.DateCreated, DateUpdated: externalIdentifier.DateUpdated}
+			identifiers = append(identifiers, newIdentifier)
+		}
+		for code, id := range acct.ExternalIDs {
+			newIdentifier := accountIdentifier{ID: uuid.NewString(), Code: code, Identifier: id, Verified: true, AccountAuthTypeID: externalIdentifier.AccountAuthTypeID,
+				DateCreated: externalIdentifier.DateCreated, DateUpdated: externalIdentifier.DateUpdated}
+			identifiers = append(identifiers, newIdentifier)
+		}
+
+		migrated.AuthTypes = authTypes
+		migrated.Identifiers = identifiers
+		migrated.ExternalIDs = nil
+		migratedAccounts[i] = migrated
+	}
+
+	_, err = sa.db.accounts.DeleteManyWithContext(context, filter, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
+	}
+
+	_, err = sa.db.accounts.InsertManyWithContext(context, migratedAccounts, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAccount, nil, err)
+	}
+
+	return nil
 }
 
 func (sa *Adapter) migrateCredentials(context TransactionContext, removedAuthTypes map[string]model.AuthType) error {
@@ -4243,7 +4361,7 @@ func (sa *Adapter) migrateCredentials(context TransactionContext, removedAuthTyp
 		Session    *string `json:"session,omitempty"`
 	}
 
-	migratedCredentials := make([]credential, 0)
+	migratedCredentials := make([]interface{}, 0)
 	for _, cred := range allCredentials {
 		var migrated credential
 		if newAuthType, exists := removedAuthTypes[cred.AuthTypeID]; exists && newAuthType.Code == "password" {
@@ -4306,12 +4424,7 @@ func (sa *Adapter) migrateCredentials(context TransactionContext, removedAuthTyp
 		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeCredential, nil, err)
 	}
 
-	credItems := make([]interface{}, len(migratedCredentials))
-	for i, cred := range migratedCredentials {
-		credItems[i] = cred
-	}
-
-	_, err = sa.db.credentials.InsertManyWithContext(context, credItems, nil)
+	_, err = sa.db.credentials.InsertManyWithContext(context, migratedCredentials, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeCredential, nil, err)
 	}

@@ -36,7 +36,7 @@ type account struct {
 	MFATypes []mfaType `bson:"mfa_types,omitempty"`
 
 	Username      string                 `bson:"username"`
-	ExternalIDs   map[string]string      `bson:"external_ids"`
+	ExternalIDs   map[string]string      `bson:"external_ids,omitempty"`
 	Preferences   map[string]interface{} `bson:"preferences"`
 	SystemConfigs map[string]interface{} `bson:"system_configs"`
 	Profile       profile                `bson:"profile"`
@@ -90,8 +90,9 @@ type accountIdentifier struct {
 	ID         string `bson:"id"`
 	Code       string `bson:"code"`
 	Identifier string `bson:"identifier"`
-	Verified   bool   `bson:"verified"`
-	Linked     bool   `bson:"linked"`
+
+	Verified bool `bson:"verified"`
+	Linked   bool `bson:"linked"`
 
 	AccountAuthTypeID *string `bson:"account_auth_type_id"`
 

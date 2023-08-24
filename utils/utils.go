@@ -18,7 +18,6 @@ import (
 	crand "crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
-	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"math/rand"
@@ -58,22 +57,10 @@ const (
 	special string = "!@#$%^&*()"
 )
 
-// SetRandomSeed sets the seed for random number generation
-func SetRandomSeed() error {
-	seed := make([]byte, 8)
-	_, err := crand.Read(seed)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionGenerate, "math/rand seed", nil, err)
-	}
-
-	rand.Seed(int64(binary.LittleEndian.Uint64(seed)))
-	return nil
-}
-
 // GenerateRandomBytes returns securely generated random bytes
 func GenerateRandomBytes(n int) ([]byte, error) {
 	b := make([]byte, n)
-	_, err := rand.Read(b)
+	_, err := crand.Read(b)
 	if err != nil {
 		return nil, err
 	}
