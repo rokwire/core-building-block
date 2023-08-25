@@ -139,18 +139,28 @@ func accountAuthTypesToDef(account *model.Account) []Def.AccountAuthType {
 	//TODO: not working
 	aats := make([]Def.AccountAuthType, 0)
 	for _, aat := range account.AuthTypes {
+		resAat := accountAuthTypeToDef(aat)
+		addedLegacy := false
 		for _, id := range account.Identifiers {
 			// create the account auth type and set the identifier if the account has an identifier code matching an alias
 			if utils.Contains(aat.SupportedAuthType.AuthType.Aliases, id.Code) {
-				legacyAat := accountAuthTypeToDef(aat)
+				legacyAat := resAat
 
-				code := &id.Code
-				legacyAat.Code = code // old clients will not understand new auth type codes
+				code := id.Code
+				if code == "phone" {
+					code = "twilio_" + code
+				}
+				legacyAat.Code = &code // old clients will not understand new auth type codes
 				identifier := id.Identifier
 				legacyAat.Identifier = &identifier // old clients expect the identifier in the auth types
 
 				aats = append(aats, legacyAat)
+				addedLegacy = true
 			}
+		}
+
+		if !addedLegacy {
+			aats = append(aats, resAat)
 		}
 	}
 

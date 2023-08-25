@@ -94,7 +94,7 @@ func (we Adapter) Start() {
 	//ui
 	subRouter.HandleFunc("/ui/credential/reset", we.serveResetCredential)                                                     //Public
 	subRouter.HandleFunc("/ui/webauthn-test", we.serveWebAuthnTest)                                                           //Public
-	subRouter.HandleFunc("/ui/credential/verify", we.uiWrapFunc(we.servicesApisHandler.verifyIdentifier, nil)).Methods("GET") //Public (validates code)
+	subRouter.HandleFunc("/ui/identifier/verify", we.uiWrapFunc(we.servicesApisHandler.verifyIdentifier, nil)).Methods("GET") //Public (validates code)
 	// subRouter.HandleFunc("/ui/webauthn-test", we.serveWebAuthnTest)                                                           //Public
 
 	///default ///

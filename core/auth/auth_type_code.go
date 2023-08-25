@@ -92,7 +92,11 @@ func (a *codeAuthImpl) checkCredentials(identifierImpl identifierType, accountId
 	if err != nil {
 		return "", "", errors.WrapErrorAction(logutils.ActionParse, typeCodeCreds, nil, err)
 	}
-	incomingCode := *incomingCreds.Code
+	incomingCode := ""
+	if incomingCreds.Code != nil {
+		incomingCode = *incomingCreds.Code
+	}
+
 	if identifierChannel.requiresCodeGeneration() {
 		if accountIdentifier != nil {
 			accountIDVal := string(accountIdentifier.Account.ID)
@@ -127,7 +131,6 @@ func (a *codeAuthImpl) checkCredentials(identifierImpl identifierType, accountId
 				return "", "", errors.ErrorData(logutils.StatusInvalid, "code", logutils.StringArgs(*incomingCreds.Code))
 			}
 
-			accountIdentifier.Verified = true
 			return "", "", nil
 		}
 	}

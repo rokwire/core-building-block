@@ -1272,7 +1272,7 @@ func (sa *Adapter) FindAccount(context TransactionContext, appOrgID string, code
 		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, nil)
 	}
 
-	modelAccount := accountFromStorage(account, *appOrg)
+	modelAccount := accountFromStorage(account, *appOrg, sa)
 	return &modelAccount, nil
 }
 
@@ -1365,7 +1365,7 @@ func (sa *Adapter) FindAccounts(context TransactionContext, limit *int, offset *
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
 
-	accounts := accountsFromStorage(list, *appOrg)
+	accounts := accountsFromStorage(list, *appOrg, sa)
 	return accounts, nil
 }
 
@@ -1544,7 +1544,7 @@ func (sa *Adapter) FindAccountsByAccountID(context TransactionContext, appID str
 	if err != nil {
 		return nil, err
 	}
-	accounts := accountsFromStorage(accountResult, *appOrg)
+	accounts := accountsFromStorage(accountResult, *appOrg, sa)
 	return accounts, nil
 }
 
@@ -1565,7 +1565,7 @@ func (sa *Adapter) FindAccountsByUsername(context TransactionContext, appOrg *mo
 		sa.logger.WarnWithFields("duplicate username", logutils.Fields{"number": len(accountResult), "app_org_id": appOrg.ID, "username": username})
 	}
 
-	accounts := accountsFromStorage(accountResult, *appOrg)
+	accounts := accountsFromStorage(accountResult, *appOrg, sa)
 	return accounts, nil
 }
 
@@ -1577,6 +1577,11 @@ func (sa *Adapter) FindAccountByID(context TransactionContext, id string) (*mode
 // FindAccountByAuthTypeID finds an account by auth type id
 func (sa *Adapter) FindAccountByAuthTypeID(context TransactionContext, id string) (*model.Account, error) {
 	return sa.findAccount(context, "auth_types.id", id)
+}
+
+// FindAccountByCredentialID finds an account by auth type id
+func (sa *Adapter) FindAccountByCredentialID(context TransactionContext, id string) (*model.Account, error) {
+	return sa.findAccount(context, "auth_types.credential_id", id)
 }
 
 // FindAccountByIdentifierID finds an account by identifier id
@@ -1603,7 +1608,7 @@ func (sa *Adapter) findAccount(context TransactionContext, key string, id string
 		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, nil)
 	}
 
-	modelAccount := accountFromStorage(*account, *appOrg)
+	modelAccount := accountFromStorage(*account, *appOrg, sa)
 
 	return &modelAccount, nil
 }
@@ -3307,7 +3312,7 @@ func (sa *Adapter) FindAccountProfiles(appID string, accountIdentifier string) (
 		return nil, nil
 	}
 
-	result := profilesFromStorage(accounts, *sa)
+	result := profilesFromStorage(accounts, sa)
 	return result, nil
 }
 

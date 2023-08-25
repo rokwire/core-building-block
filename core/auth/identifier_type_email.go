@@ -99,6 +99,10 @@ func (a *emailIdentifierImpl) buildIdentifier(accountID *string, appName string)
 	return message, &accountIdentifier, nil
 }
 
+func (a *emailIdentifierImpl) allowMultiple() bool {
+	return true
+}
+
 // authCommunicationChannel interface
 
 func (a *emailIdentifierImpl) verifyIdentifier(accountIdentifier *model.AccountIdentifier, verification string) error {
@@ -231,10 +235,6 @@ func (a *emailIdentifierImpl) sendCode(appName string, code string, codeType str
 }
 
 func (a *emailIdentifierImpl) requiresCodeGeneration() bool {
-	return true
-}
-
-func (a *emailIdentifierImpl) allowMultiple() bool {
 	return true
 }
 

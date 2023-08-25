@@ -5970,7 +5970,7 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /ui/credential/verify:
+  /ui/identifier/verify:
     get:
       tags:
         - UI
@@ -5980,7 +5980,7 @@ paths:
       parameters:
         - name: id
           in: query
-          description: Credential ID
+          description: Identifier ID
           required: true
           style: form
           explode: false

@@ -16,6 +16,7 @@ package auth
 
 import (
 	"core-building-block/core/model"
+	"core-building-block/driven/phoneverifier"
 	"core-building-block/driven/storage"
 	"core-building-block/utils"
 	"encoding/json"
@@ -626,6 +627,26 @@ func (a *Auth) applyAuthType(supportedAuthType model.SupportedAuthType, appOrg m
 	if err != nil {
 		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeIdentifierType, nil, err)
 	}
+	if identifierImpl == nil {
+		// attempt identifier-less login (only sign in is allowed because sign up is impossible without a user identifier)
+		message, credID, err := a.checkCredentials(nil, nil, nil, nil, creds, appOrg, supportedAuthType)
+		if err != nil {
+			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionVerify, model.TypeCredential, nil, err)
+		}
+
+		account, err := a.storage.FindAccountByCredentialID(nil, credID)
+		if err != nil {
+			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"credential_id": credID}, err)
+		}
+
+		accountAuthTypes, err := a.findAccountAuthTypesAndCredentials(account, supportedAuthType)
+		if err != nil {
+			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountAuthType, nil, err)
+		}
+
+		retParams, verifiedMFATypes, err := a.completeSignIn(message, account, accountAuthTypes, credID)
+		return retParams, account, verifiedMFATypes, err
+	}
 
 	//check if the user exists check
 	code := identifierImpl.getCode()
@@ -705,12 +726,25 @@ func (a *Auth) applySignIn(identifierImpl identifierType, supportedAuthType mode
 		}
 	}
 
+	updateIdentifier := !accountIdentifier.Verified
 	message, credID, err := a.checkCredentials(identifierImpl, accountIdentifier, nil, credentials, creds, appOrg, supportedAuthType)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionVerify, model.TypeCredential, nil, err)
 	}
 
 	account.SortAccountIdentifiers(userIdentifier)
+	if updateIdentifier && message == nil {
+		accountIdentifier.Verified = true
+		err := a.storage.UpdateAccountIdentifier(*accountIdentifier)
+		if err != nil {
+			return nil, nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountIdentifier, nil, err)
+		}
+	}
+
+	return a.completeSignIn(message, account, accountAuthTypes, credID)
+}
+
+func (a *Auth) completeSignIn(message *string, account *model.Account, accountAuthTypes []model.AccountAuthType, credID string) (map[string]interface{}, []model.MFAType, error) {
 	//sort by the account auth type used to perform the login
 	for _, aat := range accountAuthTypes {
 		if aat.Credential != nil && aat.Credential.ID == credID {
@@ -719,7 +753,7 @@ func (a *Auth) applySignIn(identifierImpl identifierType, supportedAuthType mode
 			// if the account auth type is not already active, mark it as active
 			if !aat.Active {
 				aat.Active = true
-				err = a.storage.UpdateAccountAuthType(aat)
+				err := a.storage.UpdateAccountAuthType(aat)
 				if err != nil {
 					return nil, nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountAuthType, nil, err)
 				}
@@ -993,7 +1027,7 @@ func (a *Auth) validateAPIKey(apiKey string, appID string) error {
 func (a *Auth) canSignIn(account *model.Account, code string, identifier string) bool {
 	if account != nil {
 		aat := account.GetAccountIdentifier(code, identifier)
-		return aat == nil || !aat.Linked || !aat.Verified
+		return aat == nil || !aat.Linked || aat.Verified
 	}
 
 	return false
@@ -2246,17 +2280,12 @@ func (a *Auth) validateAppOrg(appTypeIdentifier *string, appID *string, orgID st
 
 func (a *Auth) getIdentifierTypeImpl(identifierJSON string, authenticationType *string, userIdentifier *string) (identifierType, error) {
 	if authenticationType != nil && userIdentifier != nil {
-		authType, err := a.storage.FindAuthType(*authenticationType)
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthType, logutils.StringArgs(*authenticationType), err)
-		}
-		if authType == nil {
-			return nil, errors.ErrorData(logutils.StatusMissing, model.TypeAuthType, logutils.StringArgs(*authenticationType))
-		}
-
-		code := authType.Code
+		code := *authenticationType
 		if code == illinoisOIDCCode {
-			code = defaultIllinoisOIDCIdentifier // backwards compatibility: if an OIDC auth type is used, illinois_oidc was provided, so use uin as the identifier code
+			// backwards compatibility: if an OIDC auth type is used, illinois_oidc was provided, so use uin as the identifier code
+			code = defaultIllinoisOIDCIdentifier
+		} else if code == string(phoneverifier.TypeTwilio) {
+			code = IdentifierTypePhone
 		}
 
 		identifierMap := map[string]string{code: *userIdentifier}
@@ -2287,7 +2316,7 @@ func (a *Auth) getIdentifierTypeImpl(identifierJSON string, authenticationType *
 		}
 	}
 
-	return nil, errors.ErrorAction(logutils.ActionGet, typeIdentifierType, nil)
+	return nil, nil
 }
 
 func (a *Auth) getAuthTypeImpl(authType model.AuthType) (authType, error) {

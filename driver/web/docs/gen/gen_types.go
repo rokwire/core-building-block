@@ -1668,9 +1668,9 @@ type GetUiCredentialResetParams struct {
 	Code string `form:"code" json:"code"`
 }
 
-// GetUiCredentialVerifyParams defines parameters for GetUiCredentialVerify.
-type GetUiCredentialVerifyParams struct {
-	// Id Credential ID
+// GetUiIdentifierVerifyParams defines parameters for GetUiIdentifierVerify.
+type GetUiIdentifierVerifyParams struct {
+	// Id Identifier ID
 	Id string `form:"id" json:"id"`
 
 	// Code Verification code

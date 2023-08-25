@@ -202,6 +202,9 @@ func (a *Auth) AccountExists(identifierJSON string, apiKey string, appTypeIdenti
 	if err != nil {
 		return false, errors.WrapErrorAction(logutils.ActionLoadCache, typeIdentifierType, nil, err)
 	}
+	if identifierImpl == nil {
+		return false, errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, nil)
+	}
 
 	account, err := a.getAccount(identifierImpl.getCode(), identifierImpl.getIdentifier(), apiKey, appTypeIdentifier, orgID)
 	if err != nil {
@@ -228,6 +231,10 @@ func (a *Auth) CanSignIn(identifierJSON string, apiKey string, appTypeIdentifier
 	if err != nil {
 		return false, errors.WrapErrorAction(logutils.ActionLoadCache, typeIdentifierType, nil, err)
 	}
+	if identifierImpl == nil {
+		return false, errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, nil)
+	}
+
 	code := identifierImpl.getCode()
 	identifier := identifierImpl.getIdentifier()
 
@@ -256,6 +263,10 @@ func (a *Auth) CanLink(identifierJSON string, apiKey string, appTypeIdentifier s
 	if err != nil {
 		return false, errors.WrapErrorAction(logutils.ActionLoadCache, typeIdentifierType, nil, err)
 	}
+	if identifierImpl == nil {
+		return false, errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, nil)
+	}
+
 	code := identifierImpl.getCode()
 	identifier := identifierImpl.getIdentifier()
 
@@ -608,6 +619,9 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appID string, orgID
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeIdentifierType, nil, err)
 	}
+	if identifierImpl == nil {
+		return nil, nil, errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, nil)
+	}
 	identifier := identifierImpl.getIdentifier()
 
 	// create account
@@ -681,6 +695,9 @@ func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID
 	identifierImpl, err := a.getIdentifierTypeImpl(identifierJSON, nil, nil)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeIdentifierType, nil, err)
+	}
+	if identifierImpl == nil {
+		return nil, nil, errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, nil)
 	}
 	identifier := identifierImpl.getIdentifier()
 
@@ -925,6 +942,9 @@ func (a *Auth) VerifyIdentifier(id string, verification string, l *logs.Log) err
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionLoadCache, typeIdentifierType, nil, err)
 	}
+	if identifierImpl == nil {
+		return errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, nil)
+	}
 
 	if identifierChannel, ok := identifierImpl.(authCommunicationChannel); ok {
 		err = identifierChannel.verifyIdentifier(accountIdentifier, verification)
@@ -956,6 +976,10 @@ func (a *Auth) SendVerifyIdentifier(appTypeIdentifier string, orgID string, apiK
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionLoadCache, typeIdentifierType, nil, err)
 	}
+	if identifierImpl == nil {
+		return errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, nil)
+	}
+
 	code := identifierImpl.getCode()
 	identifier := identifierImpl.getIdentifier()
 
@@ -1120,6 +1144,10 @@ func (a *Auth) ForgotCredential(authenticationType string, identifierJSON string
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionLoadCache, typeIdentifierType, nil, err)
 	}
+	if identifierImpl == nil {
+		return errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, nil)
+	}
+
 	code := identifierImpl.getCode()
 	identifier := identifierImpl.getIdentifier()
 
@@ -1808,6 +1836,9 @@ func (a *Auth) LinkAccountIdentifier(accountID string, identifierJSON string, ad
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeIdentifierType, nil, err)
 	}
+	if identifierImpl == nil {
+		return nil, nil, errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, nil)
+	}
 
 	if identifierImpl.getCode() == IdentifierTypeExternal && !admin {
 		return nil, nil, errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, logutils.StringArgs(IdentifierTypeExternal))
@@ -1834,6 +1865,9 @@ func (a *Auth) UnlinkAccountIdentifier(accountID string, appTypeIdentifier strin
 	identifierImpl, err := a.getIdentifierTypeImpl(identifierJSON, nil, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeIdentifierType, nil, err)
+	}
+	if identifierImpl == nil {
+		return nil, errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, nil)
 	}
 
 	if identifierImpl.getCode() == IdentifierTypeExternal && !admin {
@@ -1895,6 +1929,9 @@ func (a *Auth) InitializeSystemAccount(context storage.TransactionContext, authT
 	identifierImpl, err := a.getIdentifierTypeImpl("", &authenticationType, &email)
 	if err != nil {
 		return "", errors.WrapErrorAction(logutils.ActionLoadCache, typeIdentifierType, nil, err)
+	}
+	if identifierImpl == nil {
+		return "", errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, nil)
 	}
 
 	_, account, err := a.applySignUpAdmin(context, nil, authType, appOrg, identifierImpl, creds, profile, privacy, "", permissions, nil, nil, nil, permissions, &clientVersion, l)

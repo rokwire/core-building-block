@@ -242,8 +242,8 @@ paths:
   #ui
   /ui/credential/reset:
     $ref: "./resources/ui/credential/reset.yaml"
-  /ui/credential/verify:
-    $ref: "./resources/ui/credential/verify.yaml"
+  /ui/identifier/verify:
+    $ref: "./resources/ui/identifier/verify.yaml"
 
   #default
   /version:

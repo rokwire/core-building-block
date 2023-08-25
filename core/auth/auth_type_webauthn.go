@@ -240,10 +240,6 @@ func (a *webAuthnAuthImpl) resetCredential(credential *model.Credential, resetCo
 }
 
 func (a *webAuthnAuthImpl) checkCredentials(identifierImpl identifierType, accountIdentifier *model.AccountIdentifier, accountID *string, credentials []model.Credential, creds string, appOrg model.ApplicationOrganization, config map[string]interface{}) (string, string, error) {
-	if len(credentials) == 0 {
-		return "", "", errors.ErrorData(logutils.StatusMissing, model.TypeCredential, nil)
-	}
-
 	if accountIdentifier != nil {
 		err := a.auth.checkIdentifierVerified(identifierImpl, accountIdentifier, appOrg.Application.Name)
 		if err != nil {
@@ -282,6 +278,12 @@ func (a *webAuthnAuthImpl) checkCredentials(identifierImpl identifierType, accou
 			}
 		}
 
+		// identifier-less login
+		if identifierImpl == nil && accountIdentifier == nil && len(credentials) == 0 {
+			optionData, err := a.beginLogin(auth, user, appOrg)
+			return optionData, "", err
+		}
+
 		return "", "", errors.ErrorData(logutils.StatusMissing, model.TypeCredential, nil)
 
 		//TODO: should we register new credential if no valid credentials are found?
@@ -299,6 +301,7 @@ func (a *webAuthnAuthImpl) checkCredentials(identifierImpl identifierType, accou
 		// return message, nil
 	}
 
+	// accountID will not be nil if linking or if account identifier has been verified during sign up
 	if accountID != nil {
 		user = webAuthnUser{ID: *accountID}
 

@@ -30,7 +30,8 @@ import (
 )
 
 const (
-	typeTwilio logutils.MessageDataType = "twilio_phone"
+	// TypeTwilio refers to the twilio specific phone identifier type
+	TypeTwilio logutils.MessageDataType = "twilio_phone"
 
 	servicesPathPart                                  = "https://verify.twilio.com/v2/Services"
 	verificationsPathPart                             = "Verifications"

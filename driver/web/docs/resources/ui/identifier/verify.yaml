@@ -7,7 +7,7 @@ get:
   parameters:
     - name: id
       in: query
-      description: Credential ID
+      description: Identifier ID
       required: true
       style: form
       explode: false

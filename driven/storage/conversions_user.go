@@ -19,11 +19,11 @@ import (
 )
 
 // Account
-func accountFromStorage(item account, appOrg model.ApplicationOrganization) model.Account {
+func accountFromStorage(item account, appOrg model.ApplicationOrganization, sa *Adapter) model.Account {
 	roles := accountRolesFromStorage(item.Roles, appOrg)
 	groups := accountGroupsFromStorage(item.Groups, appOrg)
 	identifiers := accountIdentifiersFromStorage(item.Identifiers)
-	authTypes := accountAuthTypesFromStorage(item.AuthTypes)
+	authTypes := accountAuthTypesFromStorage(item.AuthTypes, sa)
 	mfaTypes := mfaTypesFromStorage(item.MFATypes)
 	profile := profileFromStorage(item.Profile)
 	devices := accountDevicesFromStorage(item)
@@ -33,14 +33,14 @@ func accountFromStorage(item account, appOrg model.ApplicationOrganization) mode
 		LastLoginDate: item.LastLoginDate, LastAccessTokenDate: item.LastAccessTokenDate, MostRecentClientVersion: item.MostRecentClientVersion}
 }
 
-func accountsFromStorage(items []account, appOrg model.ApplicationOrganization) []model.Account {
+func accountsFromStorage(items []account, appOrg model.ApplicationOrganization, sa *Adapter) []model.Account {
 	if len(items) == 0 {
 		return make([]model.Account, 0)
 	}
 
 	res := make([]model.Account, len(items))
 	for i, item := range items {
-		res[i] = accountFromStorage(item, appOrg)
+		res[i] = accountFromStorage(item, appOrg, sa)
 	}
 	return res
 }
@@ -97,23 +97,24 @@ func accountDeviceToStorage(item model.Device) userDevice {
 }
 
 // AccountAuthType
-func accountAuthTypeFromStorage(item accountAuthType) model.AccountAuthType {
+func accountAuthTypeFromStorage(item accountAuthType, sa *Adapter) model.AccountAuthType {
 	id := item.ID
-	authType := model.AuthType{ID: item.AuthTypeID, Code: item.AuthTypeCode}
+
+	authType, _ := sa.FindAuthType(item.AuthTypeID)
 	params := item.Params
 	var credential *model.Credential
 	if item.CredentialID != nil {
 		credential = &model.Credential{ID: *item.CredentialID}
 	}
 	active := item.Active
-	return model.AccountAuthType{ID: id, SupportedAuthType: model.SupportedAuthType{AuthType: authType}, Params: params, Credential: credential,
+	return model.AccountAuthType{ID: id, SupportedAuthType: model.SupportedAuthType{AuthTypeID: item.AuthTypeID, AuthType: *authType}, Params: params, Credential: credential,
 		Active: active, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
-func accountAuthTypesFromStorage(items []accountAuthType) []model.AccountAuthType {
+func accountAuthTypesFromStorage(items []accountAuthType, sa *Adapter) []model.AccountAuthType {
 	res := make([]model.AccountAuthType, len(items))
 	for i, aat := range items {
-		res[i] = accountAuthTypeFromStorage(aat)
+		res[i] = accountAuthTypeFromStorage(aat, sa)
 	}
 	return res
 }
@@ -248,7 +249,7 @@ func profileFromStorage(item profile) model.Profile {
 		UnstructuredProperties: item.UnstructuredProperties}
 }
 
-func profilesFromStorage(items []account, sa Adapter) []model.Profile {
+func profilesFromStorage(items []account, sa *Adapter) []model.Profile {
 	if len(items) == 0 {
 		return make([]model.Profile, 0)
 	}
@@ -257,7 +258,7 @@ func profilesFromStorage(items []account, sa Adapter) []model.Profile {
 	accounts := make(map[string][]model.Account, len(items))
 	for _, account := range items {
 		appOrg, _ := sa.getCachedApplicationOrganizationByKey(account.AppOrgID)
-		rAccount := accountFromStorage(account, *appOrg)
+		rAccount := accountFromStorage(account, *appOrg, sa)
 
 		//add account to the map
 		profileAccounts := accounts[rAccount.Profile.ID]
