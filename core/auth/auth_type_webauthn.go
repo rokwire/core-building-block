@@ -535,7 +535,7 @@ func (a *webAuthnAuthImpl) completeLogin(auth *webauthn.WebAuthn, response *prot
 		}
 
 		credential.Value[credentialKeyCredential] = string(credentialData)
-		err = a.auth.storage.UpdateCredential(nil, credential)
+		err = a.auth.storage.UpdateCredentialValue(credID, credential.Value)
 		if err != nil {
 			return "", errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
 		}

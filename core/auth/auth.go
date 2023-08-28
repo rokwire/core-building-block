@@ -371,8 +371,11 @@ func (a *Auth) applySignUpExternal(context storage.TransactionContext, supported
 	}
 
 	externalAuthTypeID := account.AuthTypes[0].ID
-	for i := range account.Identifiers {
+	for i, id := range account.Identifiers {
 		account.Identifiers[i].AccountAuthTypeID = &externalAuthTypeID
+
+		main := (id.Identifier == externalUser.Identifier)
+		account.Identifiers[i].Main = &main
 	}
 
 	return account, nil
@@ -403,8 +406,11 @@ func (a *Auth) applySignUpAdminExternal(context storage.TransactionContext, auth
 	}
 
 	externalAuthTypeID := account.AuthTypes[0].ID
-	for i := range account.Identifiers {
+	for i, id := range account.Identifiers {
 		account.Identifiers[i].AccountAuthTypeID = &externalAuthTypeID
+
+		main := (id.Identifier == externalUser.Identifier)
+		account.Identifiers[i].Main = &main
 	}
 
 	return account, nil
@@ -481,7 +487,7 @@ func (a *Auth) applyProfileDataFromExternalUser(profile model.Profile, newExtern
 
 	changed := !utils.DeepEqual(profile, newProfile)
 	if changed {
-		now := time.Now()
+		now := time.Now().UTC()
 		newProfile.DateUpdated = &now
 		return &newProfile, nil
 	}
@@ -523,7 +529,7 @@ func (a *Auth) updateExternalUserIfNeeded(accountAuthType model.AccountAuthType,
 	updatedActiveStatus := !accountAuthType.Active
 	updatedExternalUser := !currentData.Equals(externalUser)
 	accountAuthType.Params["user"] = externalUser
-	now := time.Now()
+	now := time.Now().UTC()
 	accountAuthType.DateUpdated = &now
 
 	transaction := func(context storage.TransactionContext) error {
@@ -644,7 +650,7 @@ func (a *Auth) applyAuthType(supportedAuthType model.SupportedAuthType, appOrg m
 			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountAuthType, nil, err)
 		}
 
-		retParams, verifiedMFATypes, err := a.completeSignIn(message, account, accountAuthTypes, credID)
+		retParams, verifiedMFATypes, err := a.completeSignIn(message, account, accountAuthTypes, supportedAuthType, credID)
 		return retParams, account, verifiedMFATypes, err
 	}
 
@@ -741,25 +747,29 @@ func (a *Auth) applySignIn(identifierImpl identifierType, supportedAuthType mode
 		}
 	}
 
-	return a.completeSignIn(message, account, accountAuthTypes, credID)
+	return a.completeSignIn(message, account, accountAuthTypes, supportedAuthType, credID)
 }
 
-func (a *Auth) completeSignIn(message *string, account *model.Account, accountAuthTypes []model.AccountAuthType, credID string) (map[string]interface{}, []model.MFAType, error) {
+func (a *Auth) completeSignIn(message *string, account *model.Account, accountAuthTypes []model.AccountAuthType, supportedAuthType model.SupportedAuthType, credID string) (map[string]interface{}, []model.MFAType, error) {
 	//sort by the account auth type used to perform the login
-	for _, aat := range accountAuthTypes {
-		if aat.Credential != nil && aat.Credential.ID == credID {
-			account.SortAccountAuthTypes(aat.ID, "")
+	if credID == "" {
+		account.SortAccountAuthTypes("", supportedAuthType.AuthType.Code)
+	} else {
+		for _, aat := range accountAuthTypes {
+			if aat.Credential != nil && aat.Credential.ID == credID {
+				account.SortAccountAuthTypes(aat.ID, "")
 
-			// if the account auth type is not already active, mark it as active
-			if !aat.Active {
-				aat.Active = true
-				err := a.storage.UpdateAccountAuthType(aat)
-				if err != nil {
-					return nil, nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountAuthType, nil, err)
+				// if the account auth type is not already active, mark it as active
+				if !aat.Active {
+					aat.Active = true
+					err := a.storage.UpdateAccountAuthType(aat)
+					if err != nil {
+						return nil, nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountAuthType, nil, err)
+					}
 				}
-			}
 
-			break
+				break
+			}
 		}
 	}
 
@@ -1687,8 +1697,9 @@ func (a *Auth) linkAccountAuthType(account *model.Account, supportedAuthType mod
 	var err error
 
 	linkedIdentifier := false
+	authTypeCode, _ := strings.CutPrefix(supportedAuthType.AuthType.Code, "twilio_")
 	identifierImpl, _ := a.getIdentifierTypeImpl(creds, nil, nil)
-	if identifierImpl != nil {
+	if identifierImpl != nil && authTypeCode == identifierImpl.getCode() {
 		message, err = a.linkAccountIdentifier(account, identifierImpl)
 		if err != nil {
 			return nil, nil, errors.WrapErrorAction("linking", model.TypeAccountIdentifier, nil, err)
@@ -1696,8 +1707,6 @@ func (a *Auth) linkAccountAuthType(account *model.Account, supportedAuthType mod
 
 		linkedIdentifier = true
 	}
-
-	identifierChannel, _ := a.getIdentifierTypeImpl(creds, nil, nil)
 
 	authImpl, err := a.getAuthTypeImpl(supportedAuthType.AuthType)
 	if err != nil {
@@ -1723,7 +1732,7 @@ func (a *Auth) linkAccountAuthType(account *model.Account, supportedAuthType mod
 	}
 	if len(inactiveAats) > 0 {
 		// there are inactive account auth types, so try to verify one of them using creds
-		message, aat, err := a.applyLinkVerify(identifierChannel, supportedAuthType, aats, account.ID, creds, appOrg)
+		message, aat, err := a.applyLinkVerify(identifierImpl, supportedAuthType, aats, account.ID, creds, appOrg)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -1739,7 +1748,7 @@ func (a *Auth) linkAccountAuthType(account *model.Account, supportedAuthType mod
 	}
 
 	//apply sign up
-	signUpMessage, _, credential, err := authImpl.signUp(identifierChannel, &account.ID, appOrg, creds, params, supportedAuthType.Params)
+	signUpMessage, _, credential, err := authImpl.signUp(identifierImpl, &account.ID, appOrg, creds, params, supportedAuthType.Params)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction("signing up", "user", nil, err)
 	}
@@ -2595,7 +2604,7 @@ func (a *Auth) storeCoreRegs() error {
 
 // storeCoreServiceAccount stores the service account record for the Core BB
 func (a *Auth) storeCoreServiceAccount() {
-	coreAccount := model.ServiceAccount{AccountID: a.serviceID, Name: "ROKWIRE Core Building Block", FirstParty: true, DateCreated: time.Now()}
+	coreAccount := model.ServiceAccount{AccountID: a.serviceID, Name: "ROKWIRE Core Building Block", FirstParty: true, DateCreated: time.Now().UTC()}
 	// Setup core service account if missing
 	a.storage.InsertServiceAccount(&coreAccount)
 }

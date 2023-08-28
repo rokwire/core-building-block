@@ -146,7 +146,7 @@ func (a *emailIdentifierImpl) sendVerifyIdentifier(accountIdentifier *model.Acco
 	//Check if previous verification email was sent within the wait time if one was already sent
 	if accountIdentifier.VerificationExpiry != nil {
 		prevTime := accountIdentifier.VerificationExpiry.Add(time.Duration(-*verifyExpiryTime) * time.Hour)
-		if time.Now().Sub(prevTime) < time.Duration(*verifyWaitTime)*time.Second {
+		if time.Now().UTC().Sub(prevTime) < time.Duration(*verifyWaitTime)*time.Second {
 			return false, errors.ErrorAction(logutils.ActionSend, "verification email", logutils.StringArgs("resend requested too soon"))
 		}
 	}
@@ -189,7 +189,7 @@ func (a *emailIdentifierImpl) restartIdentifierVerification(accountIdentifier *m
 		return errors.WrapErrorAction(logutils.ActionSend, "verification email", nil, err)
 	}
 	//update new verification data in credential value
-	expiry := time.Now().Add(time.Hour * 24)
+	expiry := time.Now().UTC().Add(time.Hour * 24)
 	accountIdentifier.VerificationCode = &newCode
 	accountIdentifier.VerificationExpiry = &expiry
 	return nil

@@ -182,7 +182,7 @@ func (a *passwordAuthImpl) forgotCredential(identifierImpl identifierType, crede
 	}
 
 	hashedResetCodeStr := string(hashedResetCode)
-	resetExpiry := time.Now().Add(time.Hour * 24)
+	resetExpiry := time.Now().UTC().Add(time.Hour * 24)
 	passwordCreds.setResetParams(&hashedResetCodeStr, &resetExpiry)
 	_, err = identifierChannel.sendCode(appOrg.Application.Name, resetCode, typePasswordResetCode, credential.ID)
 	if err != nil {
@@ -307,9 +307,7 @@ func (a *passwordAuthImpl) buildCredential(password string) (*model.Credential, 
 		return nil, errors.WrapErrorAction(logutils.ActionCast, "map from creds", nil, err)
 	}
 
-	now := time.Now()
-	credential := &model.Credential{ID: uuid.NewString(), Value: credValueMap, AuthType: model.AuthType{Code: a.authType}, DateCreated: now}
-
+	credential := &model.Credential{ID: uuid.NewString(), Value: credValueMap, AuthType: model.AuthType{Code: a.authType}, DateCreated: time.Now().UTC()}
 	return credential, nil
 }
 

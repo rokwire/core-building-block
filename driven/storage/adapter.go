@@ -2512,6 +2512,7 @@ func (sa *Adapter) UpdateCredentialValue(ID string, value map[string]interface{}
 	update := bson.D{
 		primitive.E{Key: "$set", Value: bson.D{
 			primitive.E{Key: "value", Value: value},
+			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
 		}},
 	}
 
@@ -3427,7 +3428,7 @@ func (sa *Adapter) InsertOrganization(context TransactionContext, organization m
 // UpdateOrganization updates an organization
 func (sa *Adapter) UpdateOrganization(ID string, name string, requestType string, organizationDomains []string) error {
 
-	now := time.Now()
+	now := time.Now().UTC()
 	//TODO - use pointers and update only what not nil
 	updatOrganizationFilter := bson.D{primitive.E{Key: "_id", Value: ID}}
 	updateOrganization := bson.D{
@@ -3604,7 +3605,7 @@ func (sa *Adapter) InsertAppConfig(item model.ApplicationConfig) (*model.Applica
 
 // UpdateAppConfig updates an appconfig
 func (sa *Adapter) UpdateAppConfig(ID string, appType model.ApplicationType, appOrg *model.ApplicationOrganization, version model.Version, data map[string]interface{}) error {
-	now := time.Now()
+	now := time.Now().UTC()
 	//TODO - use pointers and update only what not nil
 	updatAppConfigFilter := bson.D{primitive.E{Key: "_id", Value: ID}}
 	updateItem := bson.D{primitive.E{Key: "date_updated", Value: now}, primitive.E{Key: "app_type_id", Value: appType.ID}, primitive.E{Key: "version", Value: versionToStorage(version)}}
@@ -3780,7 +3781,7 @@ func (sa *Adapter) InsertApplicationOrganization(context TransactionContext, app
 // UpdateApplicationOrganization updates an application organization
 func (sa *Adapter) UpdateApplicationOrganization(context TransactionContext, applicationOrganization model.ApplicationOrganization) error {
 	appOrg := applicationOrganizationToStorage(applicationOrganization)
-	now := time.Now()
+	now := time.Now().UTC()
 
 	filter := bson.M{"_id": applicationOrganization.ID}
 	update := bson.D{primitive.E{Key: "date_updated", Value: now},
@@ -3868,7 +3869,7 @@ func (sa *Adapter) InsertAuthType(context TransactionContext, authType model.Aut
 func (sa *Adapter) UpdateAuthTypes(ID string, code string, description string, isExternal bool, isAnonymous bool,
 	useCredentials bool, ignoreMFA bool, params map[string]interface{}) error {
 
-	now := time.Now()
+	now := time.Now().UTC()
 	updateAuthTypeFilter := bson.D{primitive.E{Key: "_id", Value: ID}}
 	updateAuthType := bson.D{
 		primitive.E{Key: "$set", Value: bson.D{

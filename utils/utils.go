@@ -71,7 +71,7 @@ func GenerateRandomBytes(n int) ([]byte, error) {
 // GenerateRandomString returns a URL-safe, base64 encoded securely generated random string
 func GenerateRandomString(s int) (string, error) {
 	b, err := GenerateRandomBytes(s)
-	return base64.URLEncoding.EncodeToString(b), err
+	return base64.URLEncoding.EncodeToString(b)[:s], err
 }
 
 // GenerateRandomInt returns a random integer between 0 and max

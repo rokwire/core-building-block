@@ -1054,7 +1054,7 @@ func (a *Auth) UpdateCredential(accountID string, accountAuthTypeID string, para
 
 	//Update the credential with new password
 	accountAuthType.Credential.Value = authTypeCreds
-	if err = a.storage.UpdateCredential(nil, accountAuthType.Credential); err != nil {
+	if err = a.storage.UpdateCredentialValue(accountAuthType.Credential.ID, accountAuthType.Credential.Value); err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
 	}
 
@@ -1098,7 +1098,7 @@ func (a *Auth) ResetForgotCredential(credsID string, resetCode string, params st
 	}
 	//Update the credential with new password
 	credential.Value = authTypeCreds
-	if err = a.storage.UpdateCredential(nil, credential); err != nil {
+	if err = a.storage.UpdateCredentialValue(credential.ID, credential.Value); err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
 	}
 
@@ -1197,7 +1197,7 @@ func (a *Auth) ForgotCredential(authenticationType string, identifierJSON string
 
 	//Update the credential with reset code and expiry
 	credential.Value = authTypeCreds
-	if err = a.storage.UpdateCredential(nil, credential); err != nil {
+	if err = a.storage.UpdateCredentialValue(credential.ID, credential.Value); err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
 	}
 	return nil
@@ -1913,7 +1913,7 @@ func (a *Auth) DeleteAccount(id string) error {
 // InitializeSystemAccount initializes the first system account
 func (a *Auth) InitializeSystemAccount(context storage.TransactionContext, authType model.AuthType, appOrg model.ApplicationOrganization,
 	allSystemPermission string, email string, password string, clientVersion string, l *logs.Log) (string, error) {
-	now := time.Now()
+	now := time.Now().UTC()
 	profile := model.Profile{ID: uuid.NewString(), Email: email, DateCreated: now}
 	privacy := model.Privacy{Public: false}
 	permissions := []string{allSystemPermission}

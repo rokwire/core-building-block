@@ -47,7 +47,7 @@ func (app *application) sysCreateApplicationOrganization(appOrg model.Applicatio
 
 	appOrgID, _ := uuid.NewUUID()
 	appOrg.ID = appOrgID.String()
-	appOrg.DateCreated = time.Now()
+	appOrg.DateCreated = time.Now().UTC()
 
 	insertedAppOrg, err := app.storage.InsertApplicationOrganization(nil, appOrg)
 	if err != nil {
@@ -68,7 +68,7 @@ func (app *application) sysUpdateApplicationOrganization(appOrg model.Applicatio
 }
 
 func (app *application) sysCreateOrganization(name string, requestType string, organizationDomains []string) (*model.Organization, error) {
-	now := time.Now()
+	now := time.Now().UTC()
 
 	orgConfig := model.OrganizationConfig{ID: uuid.NewString(), Domains: organizationDomains, DateCreated: now}
 	organization := model.Organization{ID: uuid.NewString(), Name: name, Type: requestType, Config: orgConfig, DateCreated: now}
@@ -124,7 +124,7 @@ func (app *application) sysGetApplication(ID string) (*model.Application, error)
 }
 
 func (app *application) sysCreateApplication(name string, multiTenant bool, admin bool, sharedIdentities bool, appTypes []model.ApplicationType) (*model.Application, error) {
-	now := time.Now()
+	now := time.Now().UTC()
 
 	// application
 	for i, at := range appTypes {
@@ -212,7 +212,7 @@ func (app *application) sysGetApplications() ([]model.Application, error) {
 
 func (app *application) sysCreatePermission(name string, description *string, serviceID *string, assigners *[]string) (*model.Permission, error) {
 	id, _ := uuid.NewUUID()
-	now := time.Now()
+	now := time.Now().UTC()
 	serviceIDVal := ""
 	if serviceID != nil {
 		serviceIDVal = *serviceID

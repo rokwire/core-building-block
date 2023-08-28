@@ -240,6 +240,7 @@ func (sa *Adapter) migrateAccounts(context TransactionContext, appOrg model.Appl
 		// handle external identifiers (includes oidc)
 		if len(acct.ExternalIDs) == 0 && hasExternal {
 			code := "uin"
+			main := true
 			if len(appOrg.IdentityProvidersSettings) > 0 {
 				for k, v := range appOrg.IdentityProvidersSettings[0].ExternalIDFields {
 					if v == appOrg.IdentityProvidersSettings[0].UserIdentifierField {
@@ -248,13 +249,14 @@ func (sa *Adapter) migrateAccounts(context TransactionContext, appOrg model.Appl
 					}
 				}
 			}
-			newIdentifier := accountIdentifier{ID: uuid.NewString(), Code: code, Identifier: externalIdentifier.Identifier, Verified: true,
+			newIdentifier := accountIdentifier{ID: uuid.NewString(), Code: code, Identifier: externalIdentifier.Identifier, Verified: true, Main: &main,
 				AccountAuthTypeID: externalIdentifier.AccountAuthTypeID, DateCreated: externalIdentifier.DateCreated, DateUpdated: externalIdentifier.DateUpdated}
 			identifiers = append(identifiers, newIdentifier)
 		}
 		for code, id := range acct.ExternalIDs {
+			main := (id == externalIdentifier.Identifier)
 			newIdentifier := accountIdentifier{ID: uuid.NewString(), Code: code, Identifier: id, Verified: true, AccountAuthTypeID: externalIdentifier.AccountAuthTypeID,
-				DateCreated: externalIdentifier.DateCreated, DateUpdated: externalIdentifier.DateUpdated}
+				Main: &main, DateCreated: externalIdentifier.DateCreated, DateUpdated: externalIdentifier.DateUpdated}
 			identifiers = append(identifiers, newIdentifier)
 		}
 

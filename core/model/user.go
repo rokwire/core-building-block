@@ -445,6 +445,7 @@ type AccountIdentifier struct {
 	Linked   bool
 
 	AccountAuthTypeID *string
+	Main              *bool
 
 	Account Account
 

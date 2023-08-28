@@ -128,7 +128,8 @@ func partialAccountsToDef(items []model.Account) []Def.PartialAccount {
 func accountAuthTypeToDef(item model.AccountAuthType) Def.AccountAuthType {
 	params := item.Params
 
-	return Def.AccountAuthType{Id: item.ID, AuthTypeCode: item.SupportedAuthType.AuthType.Code, Active: &item.Active, Params: &params}
+	code := item.SupportedAuthType.AuthType.Code
+	return Def.AccountAuthType{Id: item.ID, AuthTypeCode: code, Active: &item.Active, Params: &params, Code: &code}
 }
 
 func accountAuthTypesToDef(account *model.Account) []Def.AccountAuthType {
@@ -143,15 +144,20 @@ func accountAuthTypesToDef(account *model.Account) []Def.AccountAuthType {
 		addedLegacy := false
 		for _, id := range account.Identifiers {
 			// create the account auth type and set the identifier if the account has an identifier code matching an alias
+			code := id.Code
+			identifier := id.Identifier
+			legacyAat := resAat
 			if utils.Contains(aat.SupportedAuthType.AuthType.Aliases, id.Code) {
-				legacyAat := resAat
 
-				code := id.Code
 				if code == "phone" {
 					code = "twilio_" + code
 				}
-				legacyAat.Code = &code // old clients will not understand new auth type codes
-				identifier := id.Identifier
+				legacyAat.Code = &code             // old clients will not understand new auth type codes
+				legacyAat.Identifier = &identifier // old clients expect the identifier in the auth types
+
+				aats = append(aats, legacyAat)
+				addedLegacy = true
+			} else if id.AccountAuthTypeID != nil && *id.AccountAuthTypeID == aat.ID && id.Main != nil && *id.Main {
 				legacyAat.Identifier = &identifier // old clients expect the identifier in the auth types
 
 				aats = append(aats, legacyAat)

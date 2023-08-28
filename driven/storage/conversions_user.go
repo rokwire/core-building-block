@@ -139,7 +139,7 @@ func accountAuthTypesToStorage(items []model.AccountAuthType) []accountAuthType 
 // AccountIdentifier
 func accountIdentifierFromStorage(item accountIdentifier) model.AccountIdentifier {
 	return model.AccountIdentifier{ID: item.ID, Code: item.Code, Identifier: item.Identifier, Verified: item.Verified, Linked: item.Linked, AccountAuthTypeID: item.AccountAuthTypeID,
-		VerificationCode: item.VerificationCode, VerificationExpiry: item.VerificationExpiry, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+		Main: item.Main, VerificationCode: item.VerificationCode, VerificationExpiry: item.VerificationExpiry, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
 func accountIdentifiersFromStorage(items []accountIdentifier) []model.AccountIdentifier {
@@ -152,7 +152,7 @@ func accountIdentifiersFromStorage(items []accountIdentifier) []model.AccountIde
 
 func accountIdentifierToStorage(item model.AccountIdentifier) accountIdentifier {
 	return accountIdentifier{ID: item.ID, Code: item.Code, Identifier: item.Identifier, Verified: item.Verified, Linked: item.Linked, AccountAuthTypeID: item.AccountAuthTypeID,
-		VerificationCode: item.VerificationCode, VerificationExpiry: item.VerificationExpiry, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+		Main: item.Main, VerificationCode: item.VerificationCode, VerificationExpiry: item.VerificationExpiry, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
 func accountIdentifiersToStorage(items []model.AccountIdentifier) []accountIdentifier {
