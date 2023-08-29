@@ -50,6 +50,8 @@ type identifierType interface {
 	//	accountIdentifier (*model.AccountIdentifier): the new account identifier
 	buildIdentifier(accountID *string, appName string) (string, *model.AccountIdentifier, error)
 
+	checkVerified(accountIdentifier *model.AccountIdentifier, appName string) error
+
 	//allowMultiple says whether an account may have multiple identifiers of this type
 	// Returns:
 	//	allowed (bool): whether mulitple identifier types are allowed
@@ -86,7 +88,7 @@ type authType interface {
 	//	message (string): Success message if verification is required. If verification is not required, return ""
 	//	accountIdentifier (*model.AccountIdentifier): new account identifier
 	//	credential (*model.Credential): new credential
-	signUp(identifierImpl identifierType, accountID *string, appOrg model.ApplicationOrganization, creds string, params string, config map[string]interface{}) (string, *model.AccountIdentifier, *model.Credential, error)
+	signUp(identifierImpl identifierType, accountID *string, appOrg model.ApplicationOrganization, creds string, params string) (string, *model.AccountIdentifier, *model.Credential, error)
 
 	//signUpAdmin signs up a new admin user
 	// Returns:
@@ -107,7 +109,11 @@ type authType interface {
 	// Returns:
 	//	message (string): information required to complete login, if applicable
 	//	credentialID (string): the ID of the credential used to validate the login
-	checkCredentials(identifierImpl identifierType, accountIdentifier *model.AccountIdentifier, accountID *string, credentials []model.Credential, creds string, appOrg model.ApplicationOrganization, config map[string]interface{}) (string, string, error)
+	checkCredentials(identifierImpl identifierType, accountID *string, credentials []model.Credential, creds string, appOrg model.ApplicationOrganization) (string, string, error)
+
+	withParams(params map[string]interface{}) (authType, error)
+
+	requireIdentifierVerification() bool
 
 	//allowMultiple says whether an account may have multiple auth types of this type
 	// Returns:
@@ -115,13 +121,13 @@ type authType interface {
 	allowMultiple() bool
 }
 
-type authCreds interface {
-	getCredential(key string) string
-	setCredential(value string, key string)
-	getResetParams() (*string, *time.Time)
-	setResetParams(code *string, expiry *time.Time)
-	toMap() (map[string]interface{}, error)
-}
+// type authCreds interface {
+// 	getCredential(key string) string
+// 	setCredential(value string, key string)
+// 	getResetParams() (*string, *time.Time)
+// 	setResetParams(code *string, expiry *time.Time)
+// 	toMap() (map[string]interface{}, error)
+// }
 
 // externalAuthType is the interface for authentication for auth types which are external for the system(the users comes from external system).
 // these are the different identity providers - illinois_oidc etc
@@ -557,16 +563,16 @@ type Storage interface {
 	//AccountAuthTypes
 	FindAccountByAuthTypeID(context storage.TransactionContext, id string) (*model.Account, error)
 	FindAccountByCredentialID(context storage.TransactionContext, id string) (*model.Account, error)
-	InsertAccountAuthType(item model.AccountAuthType) error
+	InsertAccountAuthType(context storage.TransactionContext, item model.AccountAuthType) error
 	UpdateAccountAuthType(item model.AccountAuthType) error
 	DeleteAccountAuthType(context storage.TransactionContext, item model.AccountAuthType) error
 
 	//AccountIdentifiers
 	FindAccountByIdentifierID(context storage.TransactionContext, id string) (*model.Account, error)
-	InsertAccountIdentifier(item model.AccountIdentifier) error
+	InsertAccountIdentifier(context storage.TransactionContext, item model.AccountIdentifier) error
 	UpdateAccountIdentifier(item model.AccountIdentifier) error
-	UpdateAccountIdentifiers(items []model.AccountIdentifier) error
-	DeleteAccountIdentifier(item model.AccountIdentifier) error
+	UpdateAccountIdentifiers(context storage.TransactionContext, items []model.AccountIdentifier) error
+	DeleteAccountIdentifier(context storage.TransactionContext, item model.AccountIdentifier) error
 	DeleteExternalAccountIdentifiers(context storage.TransactionContext, aat model.AccountAuthType) error
 
 	//Applications

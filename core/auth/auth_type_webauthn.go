@@ -83,35 +83,6 @@ type webauthnCreds struct {
 	Response   *string `json:"response,omitempty"`
 }
 
-func (c *webauthnCreds) getCredential(key string) string {
-	switch key {
-	case credentialKeyResponse:
-		if c.Response != nil {
-			return *c.Response
-		}
-	case credentialKeyCredential:
-		if c.Credential != nil {
-			return *c.Credential
-		}
-	}
-	return ""
-}
-
-func (c *webauthnCreds) setCredential(value string, key string) {
-	switch key {
-	case credentialKeyResponse:
-		c.Response = &value
-	case credentialKeyCredential:
-		c.Credential = &value
-	}
-}
-
-func (c *webauthnCreds) getResetParams() (*string, *time.Time) {
-	return nil, nil
-}
-
-func (c *webauthnCreds) setResetParams(code *string, expiry *time.Time) {}
-
 func (c *webauthnCreds) toMap() (map[string]interface{}, error) {
 	if c == nil {
 		return nil, errors.ErrorData(logutils.StatusMissing, typeWebAuthnCreds, nil)
@@ -135,63 +106,11 @@ type webauthnParams struct {
 type webAuthnAuthImpl struct {
 	auth     *Auth
 	authType string
+
+	config *webauthn.WebAuthn
 }
 
-func buildWebAuthn(config map[string]interface{}, appName string) (*webauthn.WebAuthn, error) {
-	rpID, ok := config["rp_id"].(string)
-	if !ok {
-		return nil, errors.ErrorData(logutils.StatusInvalid, "supported auth type param", &logutils.FieldArgs{"param": "rp_id", "app_name": appName})
-	}
-	rpOrigins, ok := config["rp_origins"].(string)
-	if !ok {
-		return nil, errors.ErrorData(logutils.StatusInvalid, "supported auth type param", &logutils.FieldArgs{"param": "rp_origins", "app_name": appName})
-	}
-
-	requireResidentKey, _ := config["require_resident_key"].(bool)
-	residentKey, ok := config["resident_key"].(string)
-	if !ok {
-		residentKey = string(protocol.ResidentKeyRequirementRequired)
-	}
-	userVerification, ok := config["user_verification"].(string)
-	if !ok {
-		userVerification = string(protocol.VerificationRequired)
-	}
-	attestationPreference, ok := config["attestation_preference"].(string)
-	if !ok {
-		attestationPreference = string(protocol.PreferNoAttestation)
-	}
-	authenticatorAttachment, ok := config["authenticator_attachment"].(string)
-	if !ok {
-		authenticatorAttachment = string(protocol.Platform)
-	}
-
-	wconfig := &webauthn.Config{
-		RPDisplayName:         appName,                       // Display Name for your site
-		RPID:                  rpID,                          // Generally the FQDN for your site
-		RPOrigins:             strings.Split(rpOrigins, ","), // The origin URLs allowed for WebAuthn requests
-		AttestationPreference: protocol.ConveyancePreference(attestationPreference),
-		AuthenticatorSelection: protocol.AuthenticatorSelection{
-			AuthenticatorAttachment: protocol.AuthenticatorAttachment(authenticatorAttachment),
-			RequireResidentKey:      &requireResidentKey,
-			ResidentKey:             protocol.ResidentKeyRequirement(residentKey),
-			UserVerification:        protocol.UserVerificationRequirement(userVerification),
-		},
-	}
-
-	auth, err := webauthn.New(wconfig)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionInitialize, model.TypeAuthType, nil, err)
-	}
-
-	return auth, nil
-}
-
-func (a *webAuthnAuthImpl) signUp(identifierImpl identifierType, accountID *string, appOrg model.ApplicationOrganization, creds string, params string, config map[string]interface{}) (string, *model.AccountIdentifier, *model.Credential, error) {
-	auth, err := buildWebAuthn(config, appOrg.Application.Name)
-	if err != nil {
-		return "", nil, nil, errors.WrapErrorAction(logutils.ActionInitialize, logutils.MessageDataType(AuthTypeWebAuthn), nil, err)
-	}
-
+func (a *webAuthnAuthImpl) signUp(identifierImpl identifierType, accountID *string, appOrg model.ApplicationOrganization, creds string, params string) (string, *model.AccountIdentifier, *model.Credential, error) {
 	parameters, err := a.parseParams(params)
 	if err != nil {
 		return "", nil, nil, errors.WrapErrorAction(logutils.ActionParse, typeWebAuthnParams, nil, err)
@@ -217,7 +136,7 @@ func (a *webAuthnAuthImpl) signUp(identifierImpl identifierType, accountID *stri
 		user.DisplayName = accountIdentifier.Identifier
 	}
 
-	message, credential, err := a.beginRegistration(auth, user, appOrg)
+	message, credential, err := a.beginRegistration(user, appOrg)
 	if err != nil {
 		return "", nil, nil, errors.WrapErrorAction(logutils.ActionStart, "webauthn registration", nil, err)
 	}
@@ -239,28 +158,14 @@ func (a *webAuthnAuthImpl) resetCredential(credential *model.Credential, resetCo
 	return nil, errors.New(logutils.Unimplemented)
 }
 
-func (a *webAuthnAuthImpl) checkCredentials(identifierImpl identifierType, accountIdentifier *model.AccountIdentifier, accountID *string, credentials []model.Credential, creds string, appOrg model.ApplicationOrganization, config map[string]interface{}) (string, string, error) {
-	if accountIdentifier != nil {
-		err := a.auth.checkIdentifierVerified(identifierImpl, accountIdentifier, appOrg.Application.Name)
-		if err != nil {
-			return "", "", errors.WrapErrorData(logutils.StatusInvalid, model.TypeAccountIdentifier, &logutils.FieldArgs{"verified": false}, err)
-		}
-		accountID = &accountIdentifier.Account.ID
-	}
-
-	auth, err := buildWebAuthn(config, appOrg.Application.Name)
-	if err != nil {
-		return "", "", errors.WrapErrorAction(logutils.ActionInitialize, logutils.MessageDataType(AuthTypeWebAuthn), nil, err)
-	}
-
+func (a *webAuthnAuthImpl) checkCredentials(identifierImpl identifierType, accountID *string, credentials []model.Credential, creds string, appOrg model.ApplicationOrganization) (string, string, error) {
 	incomingCreds, err := a.parseCreds(creds)
 	if err != nil {
 		return "", "", errors.WrapErrorAction(logutils.ActionParse, typeWebAuthnCreds, nil, err)
 	}
 
 	var user webauthn.User
-	response := incomingCreds.getCredential(credentialKeyResponse)
-	if response == "" {
+	if incomingCreds.Response == nil {
 		for _, credential := range credentials {
 			webAuthnCred, err := a.parseWebAuthnCredential(credential.Value)
 			if err != nil {
@@ -273,14 +178,14 @@ func (a *webAuthnAuthImpl) checkCredentials(identifierImpl identifierType, accou
 					user = webAuthnUser{ID: *accountID}
 				}
 
-				optionData, err := a.beginLogin(auth, user, appOrg)
+				optionData, err := a.beginLogin(user, appOrg)
 				return optionData, "", err
 			}
 		}
 
 		// identifier-less login
-		if identifierImpl == nil && accountIdentifier == nil && len(credentials) == 0 {
-			optionData, err := a.beginLogin(auth, user, appOrg)
+		if identifierImpl == nil && len(credentials) == 0 {
+			optionData, err := a.beginLogin(user, appOrg)
 			return optionData, "", err
 		}
 
@@ -306,8 +211,8 @@ func (a *webAuthnAuthImpl) checkCredentials(identifierImpl identifierType, accou
 		user = webAuthnUser{ID: *accountID}
 
 		// complete registration
-		if response, err := protocol.ParseCredentialCreationResponseBody(strings.NewReader(creds)); err == nil {
-			credID, err := a.completeRegistration(auth, response, user, appOrg)
+		if response, err := protocol.ParseCredentialCreationResponseBody(strings.NewReader(*incomingCreds.Response)); err == nil {
+			credID, err := a.completeRegistration(response, user, appOrg)
 			if err != nil {
 				return "", "", err
 			}
@@ -316,13 +221,65 @@ func (a *webAuthnAuthImpl) checkCredentials(identifierImpl identifierType, accou
 	}
 
 	// either complete login with identifier or complete discoverable login without identifier
-	if response, err := protocol.ParseCredentialRequestResponseBody(strings.NewReader(creds)); err == nil {
-		credID, err := a.completeLogin(auth, response, user, credentials, appOrg)
+	if response, err := protocol.ParseCredentialRequestResponseBody(strings.NewReader(*incomingCreds.Response)); err == nil {
+		credID, err := a.completeLogin(response, user, credentials, appOrg)
 		return "", credID, err
 	}
 
 	// cannot parse response, so it is invalid
 	return "", "", errors.ErrorData(logutils.StatusInvalid, logutils.MessageDataType(credentialKeyResponse), nil)
+}
+
+func (a *webAuthnAuthImpl) withParams(params map[string]interface{}) (authType, error) {
+	rpID, ok := params["rp_id"].(string)
+	if !ok {
+		return nil, errors.ErrorData(logutils.StatusInvalid, "supported auth type param", &logutils.FieldArgs{"param": "rp_id"})
+	}
+	rpOrigins, ok := params["rp_origins"].(string)
+	if !ok {
+		return nil, errors.ErrorData(logutils.StatusInvalid, "supported auth type param", &logutils.FieldArgs{"param": "rp_origins"})
+	}
+
+	requireResidentKey, _ := params["require_resident_key"].(bool)
+	residentKey, ok := params["resident_key"].(string)
+	if !ok {
+		residentKey = string(protocol.ResidentKeyRequirementRequired)
+	}
+	userVerification, ok := params["user_verification"].(string)
+	if !ok {
+		userVerification = string(protocol.VerificationRequired)
+	}
+	attestationPreference, ok := params["attestation_preference"].(string)
+	if !ok {
+		attestationPreference = string(protocol.PreferNoAttestation)
+	}
+	authenticatorAttachment, ok := params["authenticator_attachment"].(string)
+	if !ok {
+		authenticatorAttachment = string(protocol.Platform)
+	}
+
+	wconfig := &webauthn.Config{
+		RPID:                  rpID,                          // Generally the FQDN for your site
+		RPOrigins:             strings.Split(rpOrigins, ","), // The origin URLs allowed for WebAuthn requests
+		AttestationPreference: protocol.ConveyancePreference(attestationPreference),
+		AuthenticatorSelection: protocol.AuthenticatorSelection{
+			AuthenticatorAttachment: protocol.AuthenticatorAttachment(authenticatorAttachment),
+			RequireResidentKey:      &requireResidentKey,
+			ResidentKey:             protocol.ResidentKeyRequirement(residentKey),
+			UserVerification:        protocol.UserVerificationRequirement(userVerification),
+		},
+	}
+
+	config, err := webauthn.New(wconfig)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionInitialize, model.TypeAuthType, nil, err)
+	}
+
+	return &webAuthnAuthImpl{auth: a.auth, authType: a.authType, config: config}, nil
+}
+
+func (a *webAuthnAuthImpl) requireIdentifierVerification() bool {
+	return true
 }
 
 func (a *webAuthnAuthImpl) allowMultiple() bool {
@@ -331,8 +288,9 @@ func (a *webAuthnAuthImpl) allowMultiple() bool {
 
 // Helpers
 
-func (a *webAuthnAuthImpl) beginRegistration(auth *webauthn.WebAuthn, user webAuthnUser, appOrg model.ApplicationOrganization) (string, *model.Credential, error) {
-	options, session, err := auth.BeginRegistration(user)
+func (a *webAuthnAuthImpl) beginRegistration(user webAuthnUser, appOrg model.ApplicationOrganization) (string, *model.Credential, error) {
+	a.config.Config.RPDisplayName = appOrg.Application.Name
+	options, session, err := a.config.BeginRegistration(user)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
 	}
@@ -357,7 +315,7 @@ func (a *webAuthnAuthImpl) beginRegistration(auth *webauthn.WebAuthn, user webAu
 	return string(optionData), nil, nil
 }
 
-func (a *webAuthnAuthImpl) completeRegistration(auth *webauthn.WebAuthn, response *protocol.ParsedCredentialCreationData, user webauthn.User, appOrg model.ApplicationOrganization) (string, error) {
+func (a *webAuthnAuthImpl) completeRegistration(response *protocol.ParsedCredentialCreationData, user webauthn.User, appOrg model.ApplicationOrganization) (string, error) {
 	var accountID *string
 	if user != nil {
 		accountIDVal := string(user.WebAuthnID())
@@ -380,7 +338,8 @@ func (a *webAuthnAuthImpl) completeRegistration(auth *webauthn.WebAuthn, respons
 		return "", errors.ErrorData(logutils.StatusMissing, "session", nil)
 	}
 
-	credential, err := auth.CreateCredential(user, *session, response)
+	a.config.Config.RPDisplayName = appOrg.Application.Name
+	credential, err := a.config.CreateCredential(user, *session, response)
 	if err != nil {
 		return "", errors.WrapErrorAction(logutils.ActionCreate, model.TypeCredential, nil, err)
 	}
@@ -406,13 +365,14 @@ func (a *webAuthnAuthImpl) completeRegistration(auth *webauthn.WebAuthn, respons
 	return storeCred.ID, nil
 }
 
-func (a *webAuthnAuthImpl) beginLogin(auth *webauthn.WebAuthn, user webauthn.User, appOrg model.ApplicationOrganization) (string, error) {
+func (a *webAuthnAuthImpl) beginLogin(user webauthn.User, appOrg model.ApplicationOrganization) (string, error) {
 	var options *protocol.CredentialAssertion
 	var session *webauthn.SessionData
 	var err error
 	var accountID *string
+	a.config.Config.RPDisplayName = appOrg.Application.Name
 	if user != nil {
-		options, session, err = auth.BeginLogin(user)
+		options, session, err = a.config.BeginLogin(user)
 		if err != nil {
 			return "", errors.WrapErrorAction(logutils.ActionStart, "login", nil, err)
 		}
@@ -420,7 +380,7 @@ func (a *webAuthnAuthImpl) beginLogin(auth *webauthn.WebAuthn, user webauthn.Use
 		accountID = &accountIDVal
 	} else {
 		// if no user, we can start a discoverable login
-		options, session, err = auth.BeginDiscoverableLogin()
+		options, session, err = a.config.BeginDiscoverableLogin()
 		if err != nil {
 			return "", errors.WrapErrorAction(logutils.ActionStart, "discoverable login", nil, err)
 		}
@@ -446,7 +406,9 @@ func (a *webAuthnAuthImpl) beginLogin(auth *webauthn.WebAuthn, user webauthn.Use
 	return string(optionData), nil
 }
 
-func (a *webAuthnAuthImpl) completeLogin(auth *webauthn.WebAuthn, response *protocol.ParsedCredentialAssertionData, user webauthn.User, credentials []model.Credential, appOrg model.ApplicationOrganization) (string, error) {
+func (a *webAuthnAuthImpl) completeLogin(response *protocol.ParsedCredentialAssertionData, user webauthn.User, credentials []model.Credential, appOrg model.ApplicationOrganization) (string, error) {
+	a.config.Config.RPDisplayName = appOrg.Application.Name
+
 	var accountID *string
 	if user != nil {
 		accountIDVal := string(user.WebAuthnID())
@@ -472,7 +434,7 @@ func (a *webAuthnAuthImpl) completeLogin(auth *webauthn.WebAuthn, response *prot
 	var credential *model.Credential
 	var updatedCred *webauthn.Credential
 	if user != nil {
-		updatedCred, err = auth.ValidateLogin(user, *session, response)
+		updatedCred, err = a.config.ValidateLogin(user, *session, response)
 		if err != nil {
 			return "", errors.WrapErrorAction(logutils.ActionValidate, "login", nil, err)
 		}
@@ -520,7 +482,7 @@ func (a *webAuthnAuthImpl) completeLogin(auth *webauthn.WebAuthn, response *prot
 			return nil, errors.ErrorData(logutils.StatusMissing, "user", &logutils.FieldArgs{"userHandle": string(userHandle), "rawID": string(rawID)})
 		}
 
-		updatedCred, err = auth.ValidateDiscoverableLogin(userDiscoverer, *session, response)
+		updatedCred, err = a.config.ValidateDiscoverableLogin(userDiscoverer, *session, response)
 		if err != nil {
 			return "", errors.WrapErrorAction(logutils.ActionValidate, "discoverable login", nil, err)
 		}

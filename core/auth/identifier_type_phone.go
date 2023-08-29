@@ -16,6 +16,7 @@ package auth
 
 import (
 	"core-building-block/core/model"
+	"core-building-block/utils"
 	"encoding/json"
 	"net/url"
 	"regexp"
@@ -101,6 +102,30 @@ func (a *phoneIdentifierImpl) buildIdentifier(accountID *string, appName string)
 	return message, &accountIdentifier, nil
 }
 
+func (a *phoneIdentifierImpl) checkVerified(accountIdentifier *model.AccountIdentifier, appName string) error {
+	verified := accountIdentifier.Verified
+	expired := accountIdentifier.VerificationExpiry == nil || accountIdentifier.VerificationExpiry.Before(time.Now())
+
+	if !verified {
+		//it is unverified
+		if !expired {
+			//not expired, just notify the client that it is "unverified"
+			return errors.ErrorData("unverified", model.TypeAccountIdentifier, nil).SetStatus(utils.ErrorStatusUnverified)
+		}
+
+		//restart identifier verification
+		err := a.restartIdentifierVerification(accountIdentifier, appName)
+		if err != nil {
+			return errors.WrapErrorAction("restarting", "identifier verification", nil, err)
+		}
+
+		//notify the client that it is unverified and verification is restarted
+		return errors.ErrorData("expired", "identifier verification", nil).SetStatus(utils.ErrorStatusVerificationExpired)
+	}
+
+	return nil
+}
+
 func (a *phoneIdentifierImpl) allowMultiple() bool {
 	return true
 }
@@ -133,8 +158,16 @@ func (a *phoneIdentifierImpl) sendVerifyIdentifier(accountIdentifier *model.Acco
 }
 
 func (a *phoneIdentifierImpl) restartIdentifierVerification(accountIdentifier *model.AccountIdentifier, appName string) error {
-	//TODO: do twilio/other phone verifiers have verification timeouts?
-	return errors.New(logutils.Unimplemented)
+	if accountIdentifier == nil {
+		return errors.ErrorData(logutils.StatusMissing, model.TypeAccountIdentifier, nil)
+	}
+
+	//send new verification code for future
+	if _, err := a.sendCode(appName, "", typeVerificationCode, accountIdentifier.ID); err != nil {
+		return errors.WrapErrorAction(logutils.ActionSend, "verification text", nil, err)
+	}
+
+	return nil
 }
 
 func (a *phoneIdentifierImpl) sendCode(appName string, code string, codeType string, itemID string) (string, error) {

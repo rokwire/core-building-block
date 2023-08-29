@@ -86,6 +86,10 @@ func (a *usernameIdentifierImpl) buildIdentifier(accountID *string, appName stri
 	return "", &accountIdentifier, nil
 }
 
+func (a *usernameIdentifierImpl) checkVerified(accountIdentifier *model.AccountIdentifier, appName string) error {
+	return nil
+}
+
 func (a *usernameIdentifierImpl) allowMultiple() bool {
 	return false
 }

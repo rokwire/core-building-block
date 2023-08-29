@@ -99,6 +99,35 @@ func (a *emailIdentifierImpl) buildIdentifier(accountID *string, appName string)
 	return message, &accountIdentifier, nil
 }
 
+func (a *emailIdentifierImpl) checkVerified(accountIdentifier *model.AccountIdentifier, appName string) error {
+	verified := accountIdentifier.Verified
+	expired := accountIdentifier.VerificationExpiry == nil || accountIdentifier.VerificationExpiry.Before(time.Now())
+
+	if !verified {
+		//it is unverified
+		if !expired {
+			//not expired, just notify the client that it is "unverified"
+			return errors.ErrorData("unverified", model.TypeAccountIdentifier, nil).SetStatus(utils.ErrorStatusUnverified)
+		}
+
+		//restart identifier verification
+		err := a.restartIdentifierVerification(accountIdentifier, appName)
+		if err != nil {
+			return errors.WrapErrorAction("restarting", "identifier verification", nil, err)
+		}
+
+		err = a.auth.storage.UpdateAccountIdentifier(*accountIdentifier)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountIdentifier, nil, err)
+		}
+
+		//notify the client that it is unverified and verification is restarted
+		return errors.ErrorData("expired", "identifier verification", nil).SetStatus(utils.ErrorStatusVerificationExpired)
+	}
+
+	return nil
+}
+
 func (a *emailIdentifierImpl) allowMultiple() bool {
 	return true
 }
@@ -178,7 +207,6 @@ func (a *emailIdentifierImpl) restartIdentifierVerification(accountIdentifier *m
 	}
 
 	//Generate new verification code
-	//TODO: turn length of reset code into a setting
 	newCode, err := utils.GenerateRandomString(64)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionGenerate, "verification code", nil, err)

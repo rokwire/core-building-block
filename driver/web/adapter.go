@@ -116,12 +116,8 @@ func (we Adapter) Start() {
 	servicesSubRouter.HandleFunc("/auth/account/identifier/link", we.wrapFunc(we.servicesApisHandler.unlinkAccountIdentifier, we.auth.services.Authenticated)).Methods("DELETE")
 	servicesSubRouter.HandleFunc("/auth/account/auth-type/link", we.wrapFunc(we.servicesApisHandler.linkAccountAuthType, we.auth.services.Authenticated)).Methods("POST")
 	servicesSubRouter.HandleFunc("/auth/account/auth-type/link", we.wrapFunc(we.servicesApisHandler.unlinkAccountAuthType, we.auth.services.Authenticated)).Methods("DELETE")
-	servicesSubRouter.HandleFunc("/auth/identifier/verify", we.wrapFunc(we.servicesApisHandler.verifyIdentifier, nil)).Methods("GET")           //Public (validates code)
-	servicesSubRouter.HandleFunc("/auth/identifier/send-verify", we.wrapFunc(we.servicesApisHandler.sendVerifyIdentifier, nil)).Methods("POST") //Requires API key in request
-
-	// DEPRECATED
-	servicesSubRouter.HandleFunc("/auth/credential/send-verify", we.wrapFunc(we.servicesApisHandler.sendVerifyIdentifier, nil)).Methods("POST") //Requires API key in request
-
+	servicesSubRouter.HandleFunc("/auth/identifier/verify", we.wrapFunc(we.servicesApisHandler.verifyIdentifier, nil)).Methods("GET")                   //Public (validates code)
+	servicesSubRouter.HandleFunc("/auth/identifier/send-verify", we.wrapFunc(we.servicesApisHandler.sendVerifyIdentifier, nil)).Methods("POST")         //Requires API key in request
 	servicesSubRouter.HandleFunc("/auth/credential/forgot/initiate", we.wrapFunc(we.servicesApisHandler.forgotCredentialInitiate, nil)).Methods("POST") //Requires API key in request
 	servicesSubRouter.HandleFunc("/auth/credential/forgot/complete", we.wrapFunc(we.servicesApisHandler.forgotCredentialComplete, nil)).Methods("POST") //Public
 	servicesSubRouter.HandleFunc("/auth/credential/update", we.wrapFunc(we.servicesApisHandler.updateCredential, we.auth.services.Authenticated)).Methods("POST")
@@ -151,7 +147,8 @@ func (we Adapter) Start() {
 	servicesSubRouter.HandleFunc("/app-configs/organization", we.wrapFunc(we.servicesApisHandler.getApplicationOrgConfigs, we.auth.services.Standard)).Methods("POST")
 
 	// DEPRECATED
-	servicesSubRouter.HandleFunc("/application/configs", we.wrapFunc(we.servicesApisHandler.getApplicationConfigs, nil)).Methods("POST") //Requires API key in request
+	servicesSubRouter.HandleFunc("/auth/credential/send-verify", we.wrapFunc(we.servicesApisHandler.sendVerifyIdentifier, nil)).Methods("POST") //Requires API key in request
+	servicesSubRouter.HandleFunc("/application/configs", we.wrapFunc(we.servicesApisHandler.getApplicationConfigs, nil)).Methods("POST")        //Requires API key in request
 	servicesSubRouter.HandleFunc("/application/organization/configs", we.wrapFunc(we.servicesApisHandler.getApplicationOrgConfigs, we.auth.services.Standard)).Methods("POST")
 	///
 

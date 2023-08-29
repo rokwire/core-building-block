@@ -32,7 +32,7 @@ type firebaseAuthImpl struct {
 	authType string
 }
 
-func (a *firebaseAuthImpl) signUp(identifierImpl identifierType, accountID *string, appOrg model.ApplicationOrganization, creds string, params string, config map[string]interface{}) (string, *model.AccountIdentifier, *model.Credential, error) {
+func (a *firebaseAuthImpl) signUp(identifierImpl identifierType, accountID *string, appOrg model.ApplicationOrganization, creds string, params string) (string, *model.AccountIdentifier, *model.Credential, error) {
 	return "", nil, nil, nil
 }
 
@@ -48,8 +48,16 @@ func (a *firebaseAuthImpl) resetCredential(credential *model.Credential, resetCo
 	return nil, nil
 }
 
-func (a *firebaseAuthImpl) checkCredentials(identifierImpl identifierType, accountIdentifier *model.AccountIdentifier, accountID *string, credentials []model.Credential, creds string, appOrg model.ApplicationOrganization, config map[string]interface{}) (string, string, error) {
+func (a *firebaseAuthImpl) checkCredentials(identifierImpl identifierType, accountID *string, credentials []model.Credential, creds string, appOrg model.ApplicationOrganization) (string, string, error) {
 	return "", "", nil
+}
+
+func (a *firebaseAuthImpl) withParams(params map[string]interface{}) (authType, error) {
+	return a, nil
+}
+
+func (a *firebaseAuthImpl) requireIdentifierVerification() bool {
+	return false
 }
 
 func (a *firebaseAuthImpl) allowMultiple() bool {

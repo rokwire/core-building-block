@@ -50,21 +50,20 @@ type codeAuthImpl struct {
 	authType string
 }
 
-func (a *codeAuthImpl) signUp(identifierImpl identifierType, accountID *string, appOrg model.ApplicationOrganization, creds string, params string, config map[string]interface{}) (string, *model.AccountIdentifier, *model.Credential, error) {
+func (a *codeAuthImpl) signUp(identifierImpl identifierType, accountID *string, appOrg model.ApplicationOrganization, creds string, params string) (string, *model.AccountIdentifier, *model.Credential, error) {
 	identifierChannel, _ := identifierImpl.(authCommunicationChannel)
 	if identifierChannel == nil {
 		return "", nil, nil, errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, logutils.StringArgs(identifierImpl.getCode()))
 	}
 
-	message := ""
-	var accountIdentifier *model.AccountIdentifier
-	var err error
-	if accountID == nil {
-		// we are not linking a code credential, so use the accountID generated for the identifier
-		message, accountIdentifier, err = identifierImpl.buildIdentifier(nil, appOrg.Application.Name)
-		if err != nil {
-			return "", nil, nil, errors.WrapErrorAction("building", "identifier", logutils.StringArgs(identifierImpl.getCode()), err)
-		}
+	if accountID != nil {
+		return "", nil, nil, nil
+	}
+
+	// we are not linking a code credential, so use the accountID generated for the identifier
+	message, accountIdentifier, err := identifierImpl.buildIdentifier(nil, appOrg.Application.Name)
+	if err != nil {
+		return "", nil, nil, errors.WrapErrorAction("building", "identifier", logutils.StringArgs(identifierImpl.getCode()), err)
 	}
 
 	return message, accountIdentifier, nil, nil
@@ -82,7 +81,7 @@ func (a *codeAuthImpl) resetCredential(credential *model.Credential, resetCode *
 	return nil, errors.New(logutils.Unimplemented)
 }
 
-func (a *codeAuthImpl) checkCredentials(identifierImpl identifierType, accountIdentifier *model.AccountIdentifier, accountID *string, credentials []model.Credential, creds string, appOrg model.ApplicationOrganization, config map[string]interface{}) (string, string, error) {
+func (a *codeAuthImpl) checkCredentials(identifierImpl identifierType, accountID *string, credentials []model.Credential, creds string, appOrg model.ApplicationOrganization) (string, string, error) {
 	identifierChannel, _ := identifierImpl.(authCommunicationChannel)
 	if identifierChannel == nil {
 		return "", "", errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, logutils.StringArgs(identifierImpl.getCode()))
@@ -98,11 +97,6 @@ func (a *codeAuthImpl) checkCredentials(identifierImpl identifierType, accountId
 	}
 
 	if identifierChannel.requiresCodeGeneration() {
-		if accountIdentifier != nil {
-			accountIDVal := string(accountIdentifier.Account.ID)
-			accountID = &accountIDVal
-		}
-
 		if incomingCode == "" {
 			// generate a new code
 			code := strconv.Itoa(utils.GenerateRandomInt(1000000))
@@ -140,9 +134,15 @@ func (a *codeAuthImpl) checkCredentials(identifierImpl identifierType, accountId
 		return "", "", err
 	}
 
-	// sendCode returns a message if starting verification, but not when checking verification
-	accountIdentifier.Verified = (message == "")
 	return message, "", nil
+}
+
+func (a *codeAuthImpl) withParams(params map[string]interface{}) (authType, error) {
+	return a, nil
+}
+
+func (a *codeAuthImpl) requireIdentifierVerification() bool {
+	return false
 }
 
 func (a *codeAuthImpl) allowMultiple() bool {

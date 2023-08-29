@@ -64,6 +64,10 @@ func (a *externalIdentifierImpl) buildIdentifier(accountID *string, appName stri
 	return "", nil, errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, nil)
 }
 
+func (a *externalIdentifierImpl) checkVerified(accountIdentifier *model.AccountIdentifier, appName string) error {
+	return nil
+}
+
 func (a *externalIdentifierImpl) allowMultiple() bool {
 	return true
 }

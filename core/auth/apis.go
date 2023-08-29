@@ -1042,7 +1042,7 @@ func (a *Auth) UpdateCredential(accountID string, accountAuthTypeID string, para
 		return errors.ErrorData(logutils.StatusInvalid, model.TypeAuthType, nil)
 	}
 
-	authImpl, err := a.getAuthTypeImpl(accountAuthType.SupportedAuthType.AuthType)
+	authImpl, err := a.getAuthTypeImpl(accountAuthType.SupportedAuthType)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeAuthType, nil, err)
 	}
@@ -1078,12 +1078,21 @@ func (a *Auth) ResetForgotCredential(credsID string, resetCode string, params st
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
 	}
 
-	//Determine the auth type for resetPassword
-	authType, err := a.storage.FindAuthType(credential.AuthType.ID)
-	if err != nil || authType == nil {
-		return errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeAuthType, logutils.StringArgs(credential.AuthType.ID), err)
+	//get account by the credential ID (this is valid for now because there are no credentials shared between app orgs)
+	account, err := a.storage.FindAccountByCredentialID(nil, credsID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"credential_id": credsID}, err)
 	}
-	if !authType.UseCredentials {
+	if account == nil {
+		return errors.ErrorData(logutils.StatusMissing, model.TypeAccount, &logutils.FieldArgs{"credential_id": credsID})
+	}
+
+	//validate if the provided auth type is supported by the provided application and organization
+	authType, _, _, err := a.validateAuthType(credential.AuthType.ID, nil, &account.AppOrg.Application.ID, account.AppOrg.Organization.ID)
+	if err != nil || authType == nil {
+		return errors.WrapErrorAction(logutils.ActionValidate, model.TypeAuthType, nil, err)
+	}
+	if !authType.AuthType.UseCredentials {
 		return errors.ErrorData(logutils.StatusInvalid, model.TypeAuthType, logutils.StringArgs("reset forgot credential"))
 	}
 
@@ -1180,12 +1189,12 @@ func (a *Auth) ForgotCredential(authenticationType string, identifierJSON string
 	}
 	a.setLogContext(account, l)
 
-	authImpl, err := a.getAuthTypeImpl(authType.AuthType)
+	authImpl, err := a.getAuthTypeImpl(*authType)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeAuthType, nil, err)
 	}
 
-	err = a.checkIdentifierVerified(identifierImpl, accountIdentifier, appOrg.Application.Name)
+	err = identifierImpl.checkVerified(accountIdentifier, appOrg.Application.Name)
 	if err != nil {
 		return err
 	}
@@ -1852,7 +1861,7 @@ func (a *Auth) LinkAccountIdentifier(accountID string, identifierJSON string, ad
 		return nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, nil)
 	}
 
-	message, err := a.linkAccountIdentifier(account, identifierImpl)
+	message, err := a.linkAccountIdentifier(nil, account, identifierImpl)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction("linking", model.TypeAccountIdentifier, nil, err)
 	}
@@ -1882,7 +1891,7 @@ func (a *Auth) UnlinkAccountIdentifier(accountID string, appTypeIdentifier strin
 		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, nil)
 	}
 
-	err = a.unlinkAccountIdentifier(account, identifierImpl.getIdentifier())
+	err = a.unlinkAccountIdentifier(nil, account, identifierImpl.getIdentifier())
 
 	return account, nil
 }

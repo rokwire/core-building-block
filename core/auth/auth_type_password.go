@@ -99,7 +99,7 @@ type passwordAuthImpl struct {
 	authType string
 }
 
-func (a *passwordAuthImpl) signUp(identifierImpl identifierType, accountID *string, appOrg model.ApplicationOrganization, creds string, params string, config map[string]interface{}) (string, *model.AccountIdentifier, *model.Credential, error) {
+func (a *passwordAuthImpl) signUp(identifierImpl identifierType, accountID *string, appOrg model.ApplicationOrganization, creds string, params string) (string, *model.AccountIdentifier, *model.Credential, error) {
 	credentials, err := a.parseCreds(creds, true)
 	if err != nil {
 		return "", nil, nil, errors.WrapErrorAction(logutils.ActionParse, typePasswordCreds, nil, err)
@@ -255,16 +255,9 @@ func (a *passwordAuthImpl) resetCredential(credential *model.Credential, resetCo
 	return credsMap, nil
 }
 
-func (a *passwordAuthImpl) checkCredentials(identifierImpl identifierType, accountIdentifier *model.AccountIdentifier, accountID *string, credentials []model.Credential, creds string, appOrg model.ApplicationOrganization, config map[string]interface{}) (string, string, error) {
+func (a *passwordAuthImpl) checkCredentials(identifierImpl identifierType, accountID *string, credentials []model.Credential, creds string, appOrg model.ApplicationOrganization) (string, string, error) {
 	if len(credentials) != 1 {
 		return "", "", errors.ErrorData(logutils.StatusInvalid, "credential list", &logutils.FieldArgs{"count": len(credentials)})
-	}
-
-	if accountIdentifier != nil {
-		err := a.auth.checkIdentifierVerified(identifierImpl, accountIdentifier, appOrg.Application.Name)
-		if err != nil {
-			return "", "", errors.WrapErrorData(logutils.StatusInvalid, model.TypeAccountIdentifier, &logutils.FieldArgs{"verified": false}, err)
-		}
 	}
 
 	storedCreds, err := a.mapToCreds(credentials[0].Value)
@@ -286,6 +279,14 @@ func (a *passwordAuthImpl) checkCredentials(identifierImpl identifierType, accou
 	}
 
 	return "", credentials[0].ID, nil
+}
+
+func (a *passwordAuthImpl) withParams(params map[string]interface{}) (authType, error) {
+	return a, nil
+}
+
+func (a *passwordAuthImpl) requireIdentifierVerification() bool {
+	return true
 }
 
 func (a *passwordAuthImpl) allowMultiple() bool {

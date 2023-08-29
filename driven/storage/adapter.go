@@ -2246,7 +2246,7 @@ func (sa *Adapter) UpdateAccountScopes(context TransactionContext, accountID str
 }
 
 // InsertAccountAuthType inserts am account auth type
-func (sa *Adapter) InsertAccountAuthType(item model.AccountAuthType) error {
+func (sa *Adapter) InsertAccountAuthType(context TransactionContext, item model.AccountAuthType) error {
 	storageItem := accountAuthTypeToStorage(item)
 
 	//3. first find the account record
@@ -2255,14 +2255,17 @@ func (sa *Adapter) InsertAccountAuthType(item model.AccountAuthType) error {
 		primitive.E{Key: "$push", Value: bson.D{
 			primitive.E{Key: "auth_types", Value: storageItem},
 		}},
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
+		}},
 	}
 
-	res, err := sa.db.accounts.UpdateOne(filter, update, nil)
+	res, err := sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAccountAuthType, nil, err)
 	}
 	if res.ModifiedCount != 1 {
-		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"modified": res.ModifiedCount, "expected": 1})
 	}
 
 	return nil
@@ -2276,6 +2279,9 @@ func (sa *Adapter) UpdateAccountAuthType(item model.AccountAuthType) error {
 	update := bson.D{
 		primitive.E{Key: "$set", Value: bson.D{
 			primitive.E{Key: "auth_types.$", Value: storageItem},
+		}},
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
 		}},
 	}
 
@@ -2297,6 +2303,9 @@ func (sa *Adapter) DeleteAccountAuthType(context TransactionContext, item model.
 		primitive.E{Key: "$pull", Value: bson.D{
 			primitive.E{Key: "auth_types", Value: bson.M{"id": item.ID, "auth_type_code": item.SupportedAuthType.AuthType.Code}},
 		}},
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
+		}},
 	}
 
 	res, err := sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
@@ -2311,7 +2320,7 @@ func (sa *Adapter) DeleteAccountAuthType(context TransactionContext, item model.
 }
 
 // InsertAccountIdentifier inserts am account auth type
-func (sa *Adapter) InsertAccountIdentifier(item model.AccountIdentifier) error {
+func (sa *Adapter) InsertAccountIdentifier(context TransactionContext, item model.AccountIdentifier) error {
 	storageItem := accountIdentifierToStorage(item)
 
 	//3. first find the account record
@@ -2320,9 +2329,12 @@ func (sa *Adapter) InsertAccountIdentifier(item model.AccountIdentifier) error {
 		primitive.E{Key: "$push", Value: bson.D{
 			primitive.E{Key: "identifiers", Value: storageItem},
 		}},
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
+		}},
 	}
 
-	res, err := sa.db.accounts.UpdateOne(filter, update, nil)
+	res, err := sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAccountIdentifier, nil, err)
 	}
@@ -2342,6 +2354,9 @@ func (sa *Adapter) UpdateAccountIdentifier(item model.AccountIdentifier) error {
 		primitive.E{Key: "$set", Value: bson.D{
 			primitive.E{Key: "identifiers.$", Value: storageItem},
 		}},
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
+		}},
 	}
 
 	res, err := sa.db.accounts.UpdateOne(filter, update, nil)
@@ -2356,7 +2371,7 @@ func (sa *Adapter) UpdateAccountIdentifier(item model.AccountIdentifier) error {
 }
 
 // UpdateAccountIdentifiers updates an account with the given list of account identifiers
-func (sa *Adapter) UpdateAccountIdentifiers(items []model.AccountIdentifier) error {
+func (sa *Adapter) UpdateAccountIdentifiers(context TransactionContext, items []model.AccountIdentifier) error {
 	if len(items) == 0 {
 		return nil
 	}
@@ -2368,9 +2383,12 @@ func (sa *Adapter) UpdateAccountIdentifiers(items []model.AccountIdentifier) err
 		primitive.E{Key: "$set", Value: bson.D{
 			primitive.E{Key: "identifiers", Value: storageItems},
 		}},
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
+		}},
 	}
 
-	res, err := sa.db.accounts.UpdateOne(filter, update, nil)
+	res, err := sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountIdentifier, nil, err)
 	}
@@ -2382,15 +2400,18 @@ func (sa *Adapter) UpdateAccountIdentifiers(items []model.AccountIdentifier) err
 }
 
 // DeleteAccountIdentifier deletes the given account identifier from an account
-func (sa *Adapter) DeleteAccountIdentifier(item model.AccountIdentifier) error {
-	filter := bson.M{"_id": item.Account.ID, "identifiers.id": item.ID}
+func (sa *Adapter) DeleteAccountIdentifier(context TransactionContext, item model.AccountIdentifier) error {
+	filter := bson.M{"_id": item.Account.ID}
 	update := bson.D{
 		primitive.E{Key: "$pull", Value: bson.D{
-			primitive.E{Key: "identifiers", Value: bson.M{"id": item.ID}},
+			primitive.E{Key: "identifiers", Value: bson.M{"id": item.ID, "code": item.Code}},
+		}},
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
 		}},
 	}
 
-	res, err := sa.db.accounts.UpdateOne(filter, update, nil)
+	res, err := sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccountIdentifier, nil, err)
 	}
@@ -2403,10 +2424,13 @@ func (sa *Adapter) DeleteAccountIdentifier(item model.AccountIdentifier) error {
 
 // DeleteExternalAccountIdentifiers deletes account identifiers with an account auth type ID matching the given account auth type
 func (sa *Adapter) DeleteExternalAccountIdentifiers(context TransactionContext, aat model.AccountAuthType) error {
-	filter := bson.M{"_id": aat.Account.ID, "identifiers.account_auth_type_id": aat.ID}
+	filter := bson.M{"_id": aat.Account.ID}
 	update := bson.D{
 		primitive.E{Key: "$pull", Value: bson.D{
 			primitive.E{Key: "identifiers", Value: bson.M{"account_auth_type_id": aat.ID}},
+		}},
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
 		}},
 	}
 
