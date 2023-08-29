@@ -444,12 +444,16 @@ func (sa *Adapter) setCachedAuthTypes(authProviders []model.AuthType) {
 		err := validate.Struct(authType)
 		if err == nil {
 			//we will get it by id and code as well
-			sa.cachedAuthTypes.Store(authType.ID, authType)
-			sa.cachedAuthTypes.Store(authType.Code, authType)
+			sa.setCachedAuthType(authType)
 		} else {
 			sa.logger.Errorf("failed to validate and cache auth type with code %s: %s", authType.Code, err.Error())
 		}
 	}
+}
+
+func (sa *Adapter) setCachedAuthType(authType model.AuthType) {
+	sa.cachedAuthTypes.Store(authType.ID, authType)
+	sa.cachedAuthTypes.Store(authType.Code, authType)
 }
 
 func (sa *Adapter) getCachedAuthType(key string) (*model.AuthType, error) {
@@ -3789,6 +3793,7 @@ func (sa *Adapter) InsertDevice(context TransactionContext, device model.Device)
 
 // InsertAuthType inserts an auth type
 func (sa *Adapter) InsertAuthType(context TransactionContext, authType model.AuthType) (*model.AuthType, error) {
+	sa.setCachedAuthType(authType)
 	_, err := sa.db.authTypes.InsertOneWithContext(context, authType)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeAuthType, nil, err)
