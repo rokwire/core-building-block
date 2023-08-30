@@ -138,6 +138,8 @@ _shared_req_CredsWebAuthn:
   $ref: "./apis/shared/requests/CredsWebAuthn.yaml"
 _shared_req_Identifiers:
   $ref: "./apis/shared/requests/Identifiers.yaml"
+_shared_req_IdentifierString:
+  $ref: "./apis/shared/requests/IdentifierString.yaml"
 _shared_req_ParamsNone:
   $ref: "./apis/shared/requests/ParamsNone.yaml"
 _shared_req_ParamsOIDC:

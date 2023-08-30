@@ -47,28 +47,6 @@ type passwordCreds struct {
 	ResetExpiry *time.Time `json:"reset_expiry,omitempty"`
 }
 
-func (c *passwordCreds) getCredential(key string) string {
-	if key == credentialKeyPassword {
-		return c.Password
-	}
-	return ""
-}
-
-func (c *passwordCreds) setCredential(value string, key string) {
-	if key == credentialKeyPassword {
-		c.Password = value
-	}
-}
-
-func (c *passwordCreds) getResetParams() (*string, *time.Time) {
-	return c.ResetCode, c.ResetExpiry
-}
-
-func (c *passwordCreds) setResetParams(code *string, expiry *time.Time) {
-	c.ResetCode = code
-	c.ResetExpiry = expiry
-}
-
 func (c *passwordCreds) toMap() (map[string]interface{}, error) {
 	if c == nil {
 		return nil, errors.ErrorData(logutils.StatusMissing, typePasswordCreds, nil)
@@ -183,7 +161,9 @@ func (a *passwordAuthImpl) forgotCredential(identifierImpl identifierType, crede
 
 	hashedResetCodeStr := string(hashedResetCode)
 	resetExpiry := time.Now().UTC().Add(time.Hour * 24)
-	passwordCreds.setResetParams(&hashedResetCodeStr, &resetExpiry)
+	passwordCreds.ResetCode = &hashedResetCodeStr
+	passwordCreds.ResetExpiry = &resetExpiry
+
 	_, err = identifierChannel.sendCode(appOrg.Application.Name, resetCode, typePasswordResetCode, credential.ID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionSend, "password reset code", nil, err)
@@ -224,20 +204,20 @@ func (a *passwordAuthImpl) resetCredential(credential *model.Credential, resetCo
 
 	//reset password from link
 	if resetCode != nil {
-		storedResetCode, storedResetExpiry := passwordCreds.getResetParams()
-		if storedResetExpiry == nil || storedResetExpiry.Before(time.Now()) {
+		if passwordCreds.ResetExpiry == nil || passwordCreds.ResetExpiry.Before(time.Now()) {
 			return nil, errors.ErrorData("expired", "reset expiration time", nil)
 		}
-		if storedResetCode == nil {
+		if passwordCreds.ResetCode == nil {
 			return nil, errors.ErrorData(logutils.StatusMissing, "stored reset code", nil)
 		}
-		err = bcrypt.CompareHashAndPassword([]byte(*storedResetCode), []byte(*resetCode))
+		err = bcrypt.CompareHashAndPassword([]byte(*passwordCreds.ResetCode), []byte(*resetCode))
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionValidate, "password reset code", nil, err)
 		}
 
 		//Update reset data
-		passwordCreds.setResetParams(nil, nil)
+		passwordCreds.ResetCode = nil
+		passwordCreds.ResetExpiry = nil
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(resetData.NewPassword), bcrypt.DefaultCost)
@@ -246,7 +226,7 @@ func (a *passwordAuthImpl) resetCredential(credential *model.Credential, resetCo
 	}
 
 	//Update password
-	passwordCreds.setCredential(string(hashedPassword), credentialKeyPassword)
+	passwordCreds.Password = string(hashedPassword)
 	credsMap, err := passwordCreds.toMap()
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCast, "map from password creds", nil, err)
@@ -264,16 +244,14 @@ func (a *passwordAuthImpl) checkCredentials(identifierImpl identifierType, accou
 	if err != nil {
 		return "", "", errors.WrapErrorAction(logutils.ActionCast, "map to password creds", nil, err)
 	}
-	storedCred := storedCreds.getCredential(credentialKeyPassword)
 
 	incomingCreds, err := a.parseCreds(creds, true)
 	if err != nil {
 		return "", "", errors.WrapErrorAction(logutils.ActionParse, typePasswordCreds, nil, err)
 	}
-	incomingCred := incomingCreds.getCredential(credentialKeyPassword)
 
 	//compare stored and request passwords
-	err = bcrypt.CompareHashAndPassword([]byte(storedCred), []byte(incomingCred))
+	err = bcrypt.CompareHashAndPassword([]byte(storedCreds.Password), []byte(incomingCreds.Password))
 	if err != nil {
 		return "", "", errors.WrapErrorAction(logutils.ActionValidate, model.TypeCredential, nil, err).SetStatus(utils.ErrorStatusInvalid)
 	}
@@ -283,10 +261,6 @@ func (a *passwordAuthImpl) checkCredentials(identifierImpl identifierType, accou
 
 func (a *passwordAuthImpl) withParams(params map[string]interface{}) (authType, error) {
 	return a, nil
-}
-
-func (a *passwordAuthImpl) requireIdentifierVerification() bool {
-	return true
 }
 
 func (a *passwordAuthImpl) allowMultiple() bool {

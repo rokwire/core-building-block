@@ -6,10 +6,16 @@ required:
 type: object
 properties:
   identifier:
-    $ref: "../../../../shared/requests/Identifiers.yaml"
+    oneOf:
+      - $ref: "../../../../shared/requests/Identifiers.yaml"
+      - $ref: "../../../../shared/requests/IdentifierString.yaml"
   org_id:
     type: string
   api_key:
     type: string
   app_type_identifier:
     type: string
+  auth_type:
+    type: string
+    enum:
+      - email

@@ -93,6 +93,11 @@ const (
 	ServicesReqCredentialForgotInitiateAuthTypePassword ServicesReqCredentialForgotInitiateAuthType = "password"
 )
 
+// Defines values for ServicesReqIdentifierSendVerifyAuthType.
+const (
+	ServicesReqIdentifierSendVerifyAuthTypeEmail ServicesReqIdentifierSendVerifyAuthType = "email"
+)
+
 // Defines values for ServicesReqServiceAccountsAccessTokenAuthType.
 const (
 	ServicesReqServiceAccountsAccessTokenAuthTypeSignature   ServicesReqServiceAccountsAccessTokenAuthType = "signature"
@@ -167,8 +172,8 @@ const (
 
 // Defines values for SharedReqUpdateAccountAuthType.
 const (
-	SharedReqUpdateAccountAuthTypeIllinoisOidc SharedReqUpdateAccountAuthType = "illinois_oidc"
-	SharedReqUpdateAccountAuthTypePassword     SharedReqUpdateAccountAuthType = "password"
+	IllinoisOidc SharedReqUpdateAccountAuthType = "illinois_oidc"
+	Password     SharedReqUpdateAccountAuthType = "password"
 )
 
 // Defines values for SharedResRokwireTokenTokenType.
@@ -842,18 +847,20 @@ type ServicesReqCredentialForgotComplete_Params struct {
 
 // ServicesReqCredentialForgotInitiate defines model for _services_req_credential_forgot_initiate.
 type ServicesReqCredentialForgotInitiate struct {
-	ApiKey            string                                      `json:"api_key"`
-	AppTypeIdentifier string                                      `json:"app_type_identifier"`
-	AuthType          ServicesReqCredentialForgotInitiateAuthType `json:"auth_type"`
-	Identifier        *string                                     `json:"identifier,omitempty"`
-	OrgId             string                                      `json:"org_id"`
-
-	// VerifiedIdentifier Allowed identifier types
-	VerifiedIdentifier *SharedReqIdentifiers `json:"verified_identifier,omitempty"`
+	ApiKey            string                                         `json:"api_key"`
+	AppTypeIdentifier string                                         `json:"app_type_identifier"`
+	AuthType          ServicesReqCredentialForgotInitiateAuthType    `json:"auth_type"`
+	Identifier        ServicesReqCredentialForgotInitiate_Identifier `json:"identifier"`
+	OrgId             string                                         `json:"org_id"`
 }
 
 // ServicesReqCredentialForgotInitiateAuthType defines model for ServicesReqCredentialForgotInitiate.AuthType.
 type ServicesReqCredentialForgotInitiateAuthType string
+
+// ServicesReqCredentialForgotInitiate_Identifier defines model for ServicesReqCredentialForgotInitiate.Identifier.
+type ServicesReqCredentialForgotInitiate_Identifier struct {
+	union json.RawMessage
+}
 
 // ServicesReqCredentialUpdate defines model for _services_req_credential_update.
 type ServicesReqCredentialUpdate struct {
@@ -868,12 +875,19 @@ type ServicesReqCredentialUpdate_Params struct {
 
 // ServicesReqIdentifierSendVerify defines model for _services_req_identifier_send-verify.
 type ServicesReqIdentifierSendVerify struct {
-	ApiKey            string `json:"api_key"`
-	AppTypeIdentifier string `json:"app_type_identifier"`
+	ApiKey            string                                     `json:"api_key"`
+	AppTypeIdentifier string                                     `json:"app_type_identifier"`
+	AuthType          *ServicesReqIdentifierSendVerifyAuthType   `json:"auth_type,omitempty"`
+	Identifier        ServicesReqIdentifierSendVerify_Identifier `json:"identifier"`
+	OrgId             string                                     `json:"org_id"`
+}
 
-	// Identifier Allowed identifier types
-	Identifier SharedReqIdentifiers `json:"identifier"`
-	OrgId      string               `json:"org_id"`
+// ServicesReqIdentifierSendVerifyAuthType defines model for ServicesReqIdentifierSendVerify.AuthType.
+type ServicesReqIdentifierSendVerifyAuthType string
+
+// ServicesReqIdentifierSendVerify_Identifier defines model for ServicesReqIdentifierSendVerify.Identifier.
+type ServicesReqIdentifierSendVerify_Identifier struct {
+	union json.RawMessage
 }
 
 // ServicesReqServiceAccountsAccessToken defines model for _services_req_service-accounts_access-token.
@@ -1023,6 +1037,9 @@ type SharedReqCredsWebAuthn struct {
 	Username             *string           `json:"username,omitempty"`
 	AdditionalProperties map[string]string `json:"-"`
 }
+
+// SharedReqIdentifierString User identifier string
+type SharedReqIdentifierString = string
 
 // SharedReqIdentifiers Allowed identifier types
 type SharedReqIdentifiers struct {
@@ -2790,6 +2807,68 @@ func (t *ServicesReqCredentialForgotComplete_Params) UnmarshalJSON(b []byte) err
 	return err
 }
 
+// AsSharedReqIdentifiers returns the union data inside the ServicesReqCredentialForgotInitiate_Identifier as a SharedReqIdentifiers
+func (t ServicesReqCredentialForgotInitiate_Identifier) AsSharedReqIdentifiers() (SharedReqIdentifiers, error) {
+	var body SharedReqIdentifiers
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromSharedReqIdentifiers overwrites any union data inside the ServicesReqCredentialForgotInitiate_Identifier as the provided SharedReqIdentifiers
+func (t *ServicesReqCredentialForgotInitiate_Identifier) FromSharedReqIdentifiers(v SharedReqIdentifiers) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeSharedReqIdentifiers performs a merge with any union data inside the ServicesReqCredentialForgotInitiate_Identifier, using the provided SharedReqIdentifiers
+func (t *ServicesReqCredentialForgotInitiate_Identifier) MergeSharedReqIdentifiers(v SharedReqIdentifiers) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsSharedReqIdentifierString returns the union data inside the ServicesReqCredentialForgotInitiate_Identifier as a SharedReqIdentifierString
+func (t ServicesReqCredentialForgotInitiate_Identifier) AsSharedReqIdentifierString() (SharedReqIdentifierString, error) {
+	var body SharedReqIdentifierString
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromSharedReqIdentifierString overwrites any union data inside the ServicesReqCredentialForgotInitiate_Identifier as the provided SharedReqIdentifierString
+func (t *ServicesReqCredentialForgotInitiate_Identifier) FromSharedReqIdentifierString(v SharedReqIdentifierString) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeSharedReqIdentifierString performs a merge with any union data inside the ServicesReqCredentialForgotInitiate_Identifier, using the provided SharedReqIdentifierString
+func (t *ServicesReqCredentialForgotInitiate_Identifier) MergeSharedReqIdentifierString(v SharedReqIdentifierString) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+func (t ServicesReqCredentialForgotInitiate_Identifier) MarshalJSON() ([]byte, error) {
+	b, err := t.union.MarshalJSON()
+	return b, err
+}
+
+func (t *ServicesReqCredentialForgotInitiate_Identifier) UnmarshalJSON(b []byte) error {
+	err := t.union.UnmarshalJSON(b)
+	return err
+}
+
 // AsSharedReqParamsResetPassword returns the union data inside the ServicesReqCredentialUpdate_Params as a SharedReqParamsResetPassword
 func (t ServicesReqCredentialUpdate_Params) AsSharedReqParamsResetPassword() (SharedReqParamsResetPassword, error) {
 	var body SharedReqParamsResetPassword
@@ -2822,6 +2901,68 @@ func (t ServicesReqCredentialUpdate_Params) MarshalJSON() ([]byte, error) {
 }
 
 func (t *ServicesReqCredentialUpdate_Params) UnmarshalJSON(b []byte) error {
+	err := t.union.UnmarshalJSON(b)
+	return err
+}
+
+// AsSharedReqIdentifiers returns the union data inside the ServicesReqIdentifierSendVerify_Identifier as a SharedReqIdentifiers
+func (t ServicesReqIdentifierSendVerify_Identifier) AsSharedReqIdentifiers() (SharedReqIdentifiers, error) {
+	var body SharedReqIdentifiers
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromSharedReqIdentifiers overwrites any union data inside the ServicesReqIdentifierSendVerify_Identifier as the provided SharedReqIdentifiers
+func (t *ServicesReqIdentifierSendVerify_Identifier) FromSharedReqIdentifiers(v SharedReqIdentifiers) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeSharedReqIdentifiers performs a merge with any union data inside the ServicesReqIdentifierSendVerify_Identifier, using the provided SharedReqIdentifiers
+func (t *ServicesReqIdentifierSendVerify_Identifier) MergeSharedReqIdentifiers(v SharedReqIdentifiers) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsSharedReqIdentifierString returns the union data inside the ServicesReqIdentifierSendVerify_Identifier as a SharedReqIdentifierString
+func (t ServicesReqIdentifierSendVerify_Identifier) AsSharedReqIdentifierString() (SharedReqIdentifierString, error) {
+	var body SharedReqIdentifierString
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromSharedReqIdentifierString overwrites any union data inside the ServicesReqIdentifierSendVerify_Identifier as the provided SharedReqIdentifierString
+func (t *ServicesReqIdentifierSendVerify_Identifier) FromSharedReqIdentifierString(v SharedReqIdentifierString) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeSharedReqIdentifierString performs a merge with any union data inside the ServicesReqIdentifierSendVerify_Identifier, using the provided SharedReqIdentifierString
+func (t *ServicesReqIdentifierSendVerify_Identifier) MergeSharedReqIdentifierString(v SharedReqIdentifierString) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+func (t ServicesReqIdentifierSendVerify_Identifier) MarshalJSON() ([]byte, error) {
+	b, err := t.union.MarshalJSON()
+	return b, err
+}
+
+func (t *ServicesReqIdentifierSendVerify_Identifier) UnmarshalJSON(b []byte) error {
 	err := t.union.UnmarshalJSON(b)
 	return err
 }

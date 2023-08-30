@@ -473,36 +473,6 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /services/auth/credential/send-verify:
-    post:
-      tags:
-        - Services
-      summary: Send verification code to identifier
-      description: |
-        Sends verification code to identifier to verify account ownership
-      deprecated: true
-      requestBody:
-        description: |
-          Account information to be checked
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/_services_req_identifier_send-verify'
-        required: true
-      responses:
-        '200':
-          description: Successful operation
-          content:
-            text/plain:
-              schema:
-                type: string
-                example: Successfully sent verification code
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal error
   /services/auth/credential/forgot/initiate:
     post:
       tags:
@@ -918,12 +888,14 @@ paths:
                     enum:
                       - invalid
                       - unverified
+                      - verification-expired
                       - already-exists
                       - not-found
                       - internal-server-error
                     description: |
                       - `invalid`: Invalid credentials
                       - `unverified`: Unverified credentials
+                      - `verification-expired`: Identifier verification expired. The verification is restarted
                       - `already-exists`: Auth type already exists
                       - `not-found`: Account could not be found when `sign-up=false`
                       - `internal-server-error`: An undefined error occurred
@@ -1795,6 +1767,36 @@ paths:
           description: Unauthorized
         '404':
           description: AppConfig not found
+        '500':
+          description: Internal error
+  /services/auth/credential/send-verify:
+    post:
+      tags:
+        - Services
+      summary: Send verification code to identifier
+      description: |
+        Sends verification code to identifier to verify account ownership
+      deprecated: true
+      requestBody:
+        description: |
+          Account information to be checked
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_services_req_identifier_send-verify'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Successfully sent verification code
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
         '500':
           description: Internal error
   /services/application/configs:
@@ -7336,6 +7338,9 @@ components:
           type: string
       additionalProperties:
         type: string
+    _shared_req_IdentifierString:
+      type: string
+      description: User identifier string
     _shared_req_ParamsNone:
       type: object
       description: Auth login request params for unlisted auth_types (None)
@@ -7617,13 +7622,19 @@ components:
       type: object
       properties:
         identifier:
-          $ref: '#/components/schemas/_shared_req_Identifiers'
+          oneOf:
+            - $ref: '#/components/schemas/_shared_req_Identifiers'
+            - $ref: '#/components/schemas/_shared_req_IdentifierString'
         org_id:
           type: string
         api_key:
           type: string
         app_type_identifier:
           type: string
+        auth_type:
+          type: string
+          enum:
+            - email
     _services_req_credential_update:
       required:
         - account_auth_type_id
@@ -7638,6 +7649,7 @@ components:
     _services_req_credential_forgot_initiate:
       required:
         - auth_type
+        - identifier
         - app_type_identifier
         - org_id
         - api_key
@@ -7648,15 +7660,15 @@ components:
           enum:
             - password
             - email
-        verified_identifier:
-          $ref: '#/components/schemas/_shared_req_Identifiers'
+        identifier:
+          oneOf:
+            - $ref: '#/components/schemas/_shared_req_Identifiers'
+            - $ref: '#/components/schemas/_shared_req_IdentifierString'
         app_type_identifier:
           type: string
         org_id:
           type: string
         api_key:
-          type: string
-        identifier:
           type: string
     _services_req_credential_forgot_complete:
       required:

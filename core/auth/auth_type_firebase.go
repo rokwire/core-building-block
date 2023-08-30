@@ -56,10 +56,6 @@ func (a *firebaseAuthImpl) withParams(params map[string]interface{}) (authType, 
 	return a, nil
 }
 
-func (a *firebaseAuthImpl) requireIdentifierVerification() bool {
-	return false
-}
-
 func (a *firebaseAuthImpl) allowMultiple() bool {
 	return false
 }

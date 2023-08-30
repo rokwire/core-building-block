@@ -919,43 +919,43 @@ func (a *Auth) CreateAnonymousAccount(context storage.TransactionContext, appID 
 }
 
 // VerifyIdentifier verifies credential (checks the verification code in the credentials collection)
-func (a *Auth) VerifyIdentifier(id string, verification string, l *logs.Log) error {
+func (a *Auth) VerifyIdentifier(id string, verification string, l *logs.Log) (*model.AccountIdentifier, error) {
 	//get the auth type
 	account, err := a.storage.FindAccountByIdentifierID(nil, id)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
 	if account == nil {
-		return errors.ErrorData(logutils.StatusMissing, model.TypeAccount, &logutils.FieldArgs{"identifiers.id": id})
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, &logutils.FieldArgs{"identifiers.id": id})
 	}
 	a.setLogContext(account, l)
 
 	accountIdentifier := account.GetAccountIdentifierByID(id)
 	if accountIdentifier == nil {
-		return errors.ErrorData(logutils.StatusMissing, model.TypeAccountIdentifier, &logutils.FieldArgs{"id": id})
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccountIdentifier, &logutils.FieldArgs{"id": id})
 	}
 	if accountIdentifier.Verified {
-		return errors.ErrorAction(logutils.ActionVerify, model.TypeAccountIdentifier, logutils.StringArgs("already verified"))
+		return accountIdentifier, nil
 	}
 
 	identifierImpl, err := a.getIdentifierTypeImpl("", &accountIdentifier.Code, &accountIdentifier.Identifier)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionLoadCache, typeIdentifierType, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeIdentifierType, nil, err)
 	}
 	if identifierImpl == nil {
-		return errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, nil)
+		return nil, errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, nil)
 	}
 
 	if identifierChannel, ok := identifierImpl.(authCommunicationChannel); ok {
 		err = identifierChannel.verifyIdentifier(accountIdentifier, verification)
 		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionValidate, "verification code", nil, err)
+			return nil, errors.WrapErrorAction(logutils.ActionValidate, "verification code", nil, err)
 		}
 	} else {
-		return errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, logutils.StringArgs(accountIdentifier.Code))
+		return nil, errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, logutils.StringArgs(accountIdentifier.Code))
 	}
 
-	return a.updateAccountIdentifier(nil, account, accountIdentifier)
+	return accountIdentifier, a.updateAccountIdentifier(nil, account, accountIdentifier)
 }
 
 // SendVerifyIdentifier sends the verification code to the identifier
@@ -1125,7 +1125,7 @@ func (a *Auth) ResetForgotCredential(credsID string, resetCode string, params st
 //		userIdentifier (*string): Optional user identifier for backwards compatibility
 //	Returns:
 //		error: if any
-func (a *Auth) ForgotCredential(authenticationType string, identifierJSON string, appTypeIdentifier string, orgID string, apiKey string, userIdentifier *string, l *logs.Log) error {
+func (a *Auth) ForgotCredential(authenticationType string, identifierJSON string, appTypeIdentifier string, orgID string, apiKey string, l *logs.Log) error {
 	//validate if the provided auth type is supported by the provided application and organization
 	authType, _, appOrg, err := a.validateAuthType(authenticationType, &appTypeIdentifier, nil, orgID)
 	if err != nil || authType == nil || appOrg == nil {
@@ -1149,7 +1149,7 @@ func (a *Auth) ForgotCredential(authenticationType string, identifierJSON string
 		return errors.ErrorData(logutils.StatusInvalid, model.TypeAuthType, logutils.StringArgs("credential reset"))
 	}
 
-	identifierImpl, err := a.getIdentifierTypeImpl(identifierJSON, &authenticationType, userIdentifier)
+	identifierImpl, err := a.getIdentifierTypeImpl(identifierJSON, nil, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionLoadCache, typeIdentifierType, nil, err)
 	}

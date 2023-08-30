@@ -99,6 +99,10 @@ func (a *emailIdentifierImpl) buildIdentifier(accountID *string, appName string)
 	return message, &accountIdentifier, nil
 }
 
+func (a *emailIdentifierImpl) requireVerificationForSignIn() bool {
+	return true
+}
+
 func (a *emailIdentifierImpl) checkVerified(accountIdentifier *model.AccountIdentifier, appName string) error {
 	verified := accountIdentifier.Verified
 	expired := accountIdentifier.VerificationExpiry == nil || accountIdentifier.VerificationExpiry.Before(time.Now())

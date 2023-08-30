@@ -2274,14 +2274,14 @@ func (sa *Adapter) InsertAccountAuthType(context TransactionContext, item model.
 // UpdateAccountAuthType updates an account with the provided account auth type
 func (sa *Adapter) UpdateAccountAuthType(item model.AccountAuthType) error {
 	storageItem := accountAuthTypeToStorage(item)
+	now := time.Now().UTC()
+	storageItem.DateUpdated = &now
 
 	filter := bson.M{"_id": item.Account.ID, "auth_types.id": item.ID}
 	update := bson.D{
 		primitive.E{Key: "$set", Value: bson.D{
 			primitive.E{Key: "auth_types.$", Value: storageItem},
-		}},
-		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
+			primitive.E{Key: "date_updated", Value: now},
 		}},
 	}
 
@@ -2348,14 +2348,14 @@ func (sa *Adapter) InsertAccountIdentifier(context TransactionContext, item mode
 // UpdateAccountIdentifier updates an account with the given account identifier
 func (sa *Adapter) UpdateAccountIdentifier(item model.AccountIdentifier) error {
 	storageItem := accountIdentifierToStorage(item)
+	now := time.Now().UTC()
+	storageItem.DateUpdated = &now
 
 	filter := bson.M{"_id": item.Account.ID, "identifiers.id": item.ID}
 	update := bson.D{
 		primitive.E{Key: "$set", Value: bson.D{
 			primitive.E{Key: "identifiers.$", Value: storageItem},
-		}},
-		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
+			primitive.E{Key: "date_updated", Value: now},
 		}},
 	}
 
@@ -2371,19 +2371,17 @@ func (sa *Adapter) UpdateAccountIdentifier(item model.AccountIdentifier) error {
 }
 
 // UpdateAccountIdentifiers updates an account with the given list of account identifiers
-func (sa *Adapter) UpdateAccountIdentifiers(context TransactionContext, items []model.AccountIdentifier) error {
+func (sa *Adapter) UpdateAccountIdentifiers(context TransactionContext, accountID string, items []model.AccountIdentifier) error {
 	if len(items) == 0 {
 		return nil
 	}
 
 	storageItems := accountIdentifiersToStorage(items)
 
-	filter := bson.M{"_id": items[0].Account.ID}
+	filter := bson.M{"_id": accountID}
 	update := bson.D{
 		primitive.E{Key: "$set", Value: bson.D{
 			primitive.E{Key: "identifiers", Value: storageItems},
-		}},
-		primitive.E{Key: "$set", Value: bson.D{
 			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
 		}},
 	}

@@ -20,6 +20,7 @@ import (
 	Def "core-building-block/driver/web/docs/gen"
 	"core-building-block/utils"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -31,6 +32,8 @@ import (
 	"github.com/rokwire/logging-library-go/v2/errors"
 	"github.com/rokwire/logging-library-go/v2/logs"
 	"github.com/rokwire/logging-library-go/v2/logutils"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 // ServicesApisHandler handles the rest APIs implementation
@@ -1193,18 +1196,12 @@ func (h ServicesApisHandler) getApplicationOrgConfigs(l *logs.Log, r *http.Reque
 	return l.HTTPResponseSuccessJSON(response)
 }
 
-// Handler for reset password endpoint from client application
+// Handler for reset credential endpoint from client application
 func (h ServicesApisHandler) updateCredential(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	accountID := claims.Subject
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
-
 	var requestData Def.ServicesReqCredentialUpdate
-	err = json.Unmarshal(data, &requestData)
+	err := json.NewDecoder(r.Body).Decode(&requestData)
 	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth reset password client request"), nil, err, http.StatusBadRequest, true)
+		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth reset credential client request"), nil, err, http.StatusBadRequest, true)
 	}
 
 	//params
@@ -1213,24 +1210,19 @@ func (h ServicesApisHandler) updateCredential(l *logs.Log, r *http.Request, clai
 		return l.HTTPResponseErrorAction(logutils.ActionMarshal, "params", nil, err, http.StatusBadRequest, true)
 	}
 
-	if err := h.coreAPIs.Auth.UpdateCredential(accountID, requestData.AccountAuthTypeId, requestParams, l); err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionUpdate, "password", nil, err, http.StatusInternalServerError, false)
+	if err := h.coreAPIs.Auth.UpdateCredential(claims.Subject, requestData.AccountAuthTypeId, requestParams, l); err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionUpdate, "credential", nil, err, http.StatusInternalServerError, false)
 	}
 
-	return l.HTTPResponseSuccessMessage("Reset Password from client successfully")
+	return l.HTTPResponseSuccessMessage("Reset credential from client successfully")
 }
 
-// Handler for reset password endpoint from reset link
+// Handler for reset credential endpoint from reset link
 func (h ServicesApisHandler) forgotCredentialComplete(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
-
 	var requestData Def.ServicesReqCredentialForgotComplete
-	err = json.Unmarshal(data, &requestData)
+	err := json.NewDecoder(r.Body).Decode(&requestData)
 	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth reset password link request"), nil, err, http.StatusBadRequest, true)
+		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth reset credential link request"), nil, err, http.StatusBadRequest, true)
 	}
 
 	//params
@@ -1240,10 +1232,10 @@ func (h ServicesApisHandler) forgotCredentialComplete(l *logs.Log, r *http.Reque
 	}
 
 	if err := h.coreAPIs.Auth.ResetForgotCredential(requestData.CredentialId, requestData.ResetCode, requestParams, l); err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionUpdate, "password", nil, err, http.StatusInternalServerError, false)
+		return l.HTTPResponseErrorAction(logutils.ActionUpdate, "credential", nil, err, http.StatusInternalServerError, false)
 	}
 
-	return l.HTTPResponseSuccessMessage("Reset Password from link successfully")
+	return l.HTTPResponseSuccessMessage("Reset credential from link successfully")
 }
 
 // Handler for forgot credential endpoint
@@ -1251,21 +1243,29 @@ func (h ServicesApisHandler) forgotCredentialInitiate(l *logs.Log, r *http.Reque
 	var requestData Def.ServicesReqCredentialForgotInitiate
 	err := json.NewDecoder(r.Body).Decode(&requestData)
 	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth reset password request"), nil, err, http.StatusBadRequest, true)
+		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth reset credential request"), nil, err, http.StatusBadRequest, true)
+	}
+
+	var requestIdentifier interface{}
+	if identifier, err := requestData.Identifier.AsSharedReqIdentifierString(); err == nil {
+		requestIdentifier = map[string]string{string(requestData.AuthType): identifier}
+	} else if identifier, err := requestData.Identifier.AsSharedReqIdentifiers(); err == nil {
+		requestIdentifier = identifier
+	} else {
+		return l.HTTPResponseErrorData(logutils.StatusInvalid, logutils.MessageDataType("auth reset credential identifier"), nil, err, http.StatusBadRequest, true)
 	}
 
 	//identifier
-	requestIdentifier, err := interfaceToJSON(requestData.VerifiedIdentifier)
+	identifierJSON, err := interfaceToJSON(requestIdentifier)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeCreds, nil, err, http.StatusBadRequest, true)
 	}
 
-	if err := h.coreAPIs.Auth.ForgotCredential(string(requestData.AuthType), requestIdentifier, requestData.AppTypeIdentifier,
-		requestData.OrgId, requestData.ApiKey, requestData.Identifier, l); err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionSend, "forgot password link", nil, err, http.StatusInternalServerError, false)
+	if err := h.coreAPIs.Auth.ForgotCredential(string(requestData.AuthType), identifierJSON, requestData.AppTypeIdentifier, requestData.OrgId, requestData.ApiKey, l); err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionSend, "forgot credential link", nil, err, http.StatusInternalServerError, false)
 	}
 
-	return l.HTTPResponseSuccessMessage("Sent forgot password link successfully")
+	return l.HTTPResponseSuccessMessage("Sent forgot credential link successfully")
 }
 
 // Handler for verify endpoint
@@ -1280,11 +1280,16 @@ func (h ServicesApisHandler) verifyIdentifier(l *logs.Log, r *http.Request, clai
 		return l.HTTPResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("code"), nil, http.StatusBadRequest, false)
 	}
 
-	if err := h.coreAPIs.Auth.VerifyIdentifier(id, code, l); err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionValidate, "code", nil, err, http.StatusInternalServerError, false)
+	accountIdentifier, err := h.coreAPIs.Auth.VerifyIdentifier(id, code, l)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionValidate, model.TypeAccountIdentifier, nil, err, http.StatusInternalServerError, false)
 	}
 
-	return l.HTTPResponseSuccessMessage("Code verified successfully!")
+	identifierStr := "Account identifier"
+	if accountIdentifier != nil && accountIdentifier.Code != "" {
+		identifierStr = cases.Title(language.English).String(accountIdentifier.Code)
+	}
+	return l.HTTPResponseSuccessMessage(fmt.Sprintf("%s verified successfully!", identifierStr))
 }
 
 // Handler for resending verify code
@@ -1292,16 +1297,26 @@ func (h ServicesApisHandler) sendVerifyIdentifier(l *logs.Log, r *http.Request, 
 	var requestData Def.ServicesReqIdentifierSendVerify
 	err := json.NewDecoder(r.Body).Decode(&requestData)
 	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth resend verify code request"), nil, err, http.StatusBadRequest, true)
+		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth resend verification request"), nil, err, http.StatusBadRequest, true)
+	}
+
+	var requestIdentifier interface{}
+	if identifier, err := requestData.Identifier.AsSharedReqIdentifierString(); err == nil && requestData.AuthType != nil {
+		authType := string(*requestData.AuthType)
+		requestIdentifier = map[string]string{authType: identifier}
+	} else if identifier, err := requestData.Identifier.AsSharedReqIdentifiers(); err == nil {
+		requestIdentifier = identifier
+	} else {
+		return l.HTTPResponseErrorData(logutils.StatusInvalid, logutils.MessageDataType("auth resend verification identifier"), nil, err, http.StatusBadRequest, true)
 	}
 
 	//identifier
-	requestIdentifier, err := interfaceToJSON(requestData.Identifier)
+	identifierJSON, err := interfaceToJSON(requestIdentifier)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeCreds, nil, err, http.StatusBadRequest, true)
 	}
 
-	if err := h.coreAPIs.Auth.SendVerifyIdentifier(requestData.AppTypeIdentifier, requestData.OrgId, requestData.ApiKey, requestIdentifier, l); err != nil {
+	if err := h.coreAPIs.Auth.SendVerifyIdentifier(requestData.AppTypeIdentifier, requestData.OrgId, requestData.ApiKey, identifierJSON, l); err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionSend, "code", nil, err, http.StatusInternalServerError, false)
 	}
 

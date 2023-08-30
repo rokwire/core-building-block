@@ -555,7 +555,7 @@ func (a *Auth) updateExternalUserIfNeeded(accountAuthType model.AccountAuthType,
 		account.AuthTypes = newAccountAuthTypes
 
 		// 3. update external ids
-		updatedIdentifiers := a.updateExternalIdentifiers(account, accountAuthType.ID, &externalUser)
+		updatedIdentifiers := a.updateExternalIdentifiers(account, accountAuthType.ID, &externalUser, false)
 
 		// 4. update profile
 		profileUpdated := false
@@ -736,7 +736,7 @@ func (a *Auth) applySignIn(identifierImpl identifierType, authImpl authType, sup
 		}
 	}
 
-	if authImpl.requireIdentifierVerification() {
+	if identifierImpl.requireVerificationForSignIn() {
 		err := identifierImpl.checkVerified(accountIdentifier, appOrg.Application.Name)
 		if err != nil {
 			return nil, nil, errors.WrapErrorData(logutils.StatusInvalid, model.TypeAccountIdentifier, &logutils.FieldArgs{"verified": false}, err)
@@ -763,24 +763,20 @@ func (a *Auth) applySignIn(identifierImpl identifierType, authImpl authType, sup
 
 func (a *Auth) completeSignIn(message *string, account *model.Account, accountAuthTypes []model.AccountAuthType, supportedAuthType model.SupportedAuthType, credID string) (map[string]interface{}, []model.MFAType, error) {
 	//sort by the account auth type used to perform the login
-	if credID == "" {
-		account.SortAccountAuthTypes("", supportedAuthType.AuthType.Code)
-	} else {
-		for _, aat := range accountAuthTypes {
-			if aat.Credential != nil && aat.Credential.ID == credID {
-				account.SortAccountAuthTypes(aat.ID, "")
+	for _, aat := range accountAuthTypes {
+		if credID == "" || (aat.Credential != nil && aat.Credential.ID == credID) {
+			account.SortAccountAuthTypes(aat.ID, "")
 
-				// if the account auth type is not already active, mark it as active
-				if !aat.Active {
-					aat.Active = true
-					err := a.storage.UpdateAccountAuthType(aat)
-					if err != nil {
-						return nil, nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountAuthType, nil, err)
-					}
+			// if the account auth type is not already active, mark it as active
+			if !aat.Active {
+				aat.Active = true
+				err := a.storage.UpdateAccountAuthType(aat)
+				if err != nil {
+					return nil, nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountAuthType, nil, err)
 				}
-
-				break
 			}
+
+			break
 		}
 	}
 
@@ -1669,7 +1665,8 @@ func (a *Auth) linkAccountAuthType(account *model.Account, supportedAuthType mod
 
 	transaction := func(context storage.TransactionContext) error {
 		identifierImpl, _ := a.getIdentifierTypeImpl(creds, nil, nil)
-		tryIdentifierLink := identifierImpl != nil && account.GetAccountIdentifier(identifierImpl.getCode(), identifierImpl.getIdentifier()) == nil
+		accountIdentifier := account.GetAccountIdentifier(identifierImpl.getCode(), identifierImpl.getIdentifier())
+		tryIdentifierLink := identifierImpl != nil && accountIdentifier == nil
 
 		authImpl, err := a.getAuthTypeImpl(supportedAuthType)
 		if err != nil {
@@ -1690,7 +1687,7 @@ func (a *Auth) linkAccountAuthType(account *model.Account, supportedAuthType mod
 		if len(inactiveAats) > 0 {
 			// there are inactive account auth types (have not been used to sign in yet), so try to verify one of them using creds
 			var accountAuthType *model.AccountAuthType // do not return this account auth type, so use a new variable
-			message, accountAuthType, err = a.applyLinkVerify(identifierImpl, authImpl, aats, account.ID, creds, appOrg)
+			message, accountAuthType, err = a.verifyAuthTypeActive(identifierImpl, accountIdentifier, authImpl, aats, account.ID, creds, appOrg)
 			if err != nil {
 				return err
 			}
@@ -1702,6 +1699,16 @@ func (a *Auth) linkAccountAuthType(account *model.Account, supportedAuthType mod
 					}
 				}
 			}
+
+			updateIdentifier := accountIdentifier != nil && !accountIdentifier.Verified
+			if updateIdentifier && message == nil {
+				accountIdentifier.Verified = true
+				err := a.storage.UpdateAccountIdentifier(*accountIdentifier)
+				if err != nil {
+					return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountIdentifier, nil, err)
+				}
+			}
+
 			return nil
 		}
 
@@ -1761,13 +1768,20 @@ func (a *Auth) linkAccountAuthType(account *model.Account, supportedAuthType mod
 	return message, aat, nil
 }
 
-func (a *Auth) applyLinkVerify(identifierImpl identifierType, authImpl authType, accountAuthTypes []model.AccountAuthType, accountID string,
+func (a *Auth) verifyAuthTypeActive(identifierImpl identifierType, accountIdentifier *model.AccountIdentifier, authImpl authType, accountAuthTypes []model.AccountAuthType, accountID string,
 	creds string, appOrg model.ApplicationOrganization) (*string, *model.AccountAuthType, error) {
 
 	credentials := make([]model.Credential, 0)
 	for _, aat := range accountAuthTypes {
 		if aat.Credential != nil {
 			credentials = append(credentials, *aat.Credential)
+		}
+	}
+
+	if accountIdentifier != nil && identifierImpl.requireVerificationForSignIn() {
+		err := identifierImpl.checkVerified(accountIdentifier, appOrg.Application.Name)
+		if err != nil {
+			return nil, nil, errors.WrapErrorData(logutils.StatusInvalid, model.TypeAccountIdentifier, &logutils.FieldArgs{"verified": false}, err)
 		}
 	}
 
@@ -1779,6 +1793,11 @@ func (a *Auth) applyLinkVerify(identifierImpl identifierType, authImpl authType,
 	for _, aat := range accountAuthTypes {
 		if credID == "" || (aat.Credential != nil && aat.Credential.ID == credID) {
 			aat.Active = true
+			err = a.storage.UpdateAccountAuthType(aat)
+			if err != nil {
+				return nil, nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountAuthType, nil, err)
+			}
+
 			return message, &aat, nil
 		}
 	}
@@ -1826,7 +1845,7 @@ func (a *Auth) linkAccountAuthTypeExternal(account *model.Account, supportedAuth
 		}
 		accountAuthType.Account = *account
 
-		updatedIdentifiers := a.updateExternalIdentifiers(account, accountAuthType.ID, externalUser)
+		updatedIdentifiers := a.updateExternalIdentifiers(account, accountAuthType.ID, externalUser, true)
 
 		err = a.registerAccountAuthType(context, *accountAuthType, credential, account.Identifiers, updatedIdentifiers)
 		if err != nil {
@@ -1859,7 +1878,7 @@ func (a *Auth) registerAccountAuthType(context storage.TransactionContext, accou
 	}
 
 	if updatedIdentifiers {
-		err = a.storage.UpdateAccountIdentifiers(context, accountIdentifiers)
+		err = a.storage.UpdateAccountIdentifiers(context, accountAuthType.Account.ID, accountIdentifiers)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountIdentifier, nil, err)
 		}
@@ -1944,6 +1963,11 @@ func (a *Auth) linkAccountIdentifier(context storage.TransactionContext, account
 func (a *Auth) unlinkAccountIdentifier(context storage.TransactionContext, account *model.Account, identifier string) error {
 	if len(account.Identifiers) < 2 {
 		return errors.ErrorData(logutils.StatusInvalid, model.TypeAccount, &logutils.FieldArgs{"identifiers": len(account.Identifiers)})
+	}
+
+	verifiedIdentifiers := account.GetVerifiedAccountIdentifiers()
+	if len(verifiedIdentifiers) == 1 && verifiedIdentifiers[0].Identifier == identifier {
+		return errors.ErrorData(logutils.StatusInvalid, model.TypeAccount, &logutils.FieldArgs{"verified_identifiers": 1})
 	}
 
 	for i, id := range account.Identifiers {
@@ -2558,17 +2582,20 @@ func (a *Auth) updateExternalAccountGroups(account *model.Account, newExternalGr
 	return updated, nil
 }
 
-func (a *Auth) updateExternalIdentifiers(account *model.Account, accountAuthTypeID string, externalUser *model.ExternalSystemUser) bool {
+func (a *Auth) updateExternalIdentifiers(account *model.Account, accountAuthTypeID string, externalUser *model.ExternalSystemUser, linked bool) bool {
 	updated := false
 	for k, v := range externalUser.ExternalIDs {
 		accountIdentifier := account.GetAccountIdentifier(k, "")
 		if accountIdentifier == nil {
-			newIdentifier := model.AccountIdentifier{ID: uuid.NewString(), Code: k, Identifier: v, Verified: true, AccountAuthTypeID: &accountAuthTypeID,
-				DateCreated: time.Now().UTC()}
+			main := (v == externalUser.Identifier)
+			newIdentifier := model.AccountIdentifier{ID: uuid.NewString(), Code: k, Identifier: v, Verified: true, Linked: linked, AccountAuthTypeID: &accountAuthTypeID,
+				Main: &main, Account: model.Account{ID: account.ID}, DateCreated: time.Now().UTC()}
 			account.Identifiers = append(account.Identifiers, newIdentifier)
 			updated = true
 		} else if accountIdentifier.Identifier != v {
 			accountIdentifier.Identifier = v
+			now := time.Now().UTC()
+			accountIdentifier.DateUpdated = &now
 			updated = true
 		}
 	}

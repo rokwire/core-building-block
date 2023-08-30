@@ -79,12 +79,14 @@ post:
                 enum:
                   - invalid
                   - unverified
+                  - verification-expired
                   - already-exists
                   - not-found
                   - internal-server-error
                 description: |
                   - `invalid`: Invalid credentials
                   - `unverified`: Unverified credentials
+                  - `verification-expired`: Identifier verification expired. The verification is restarted
                   - `already-exists`: Auth type already exists
                   - `not-found`: Account could not be found when `sign-up=false`
                   - `internal-server-error`: An undefined error occurred

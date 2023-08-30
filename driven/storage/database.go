@@ -363,7 +363,7 @@ func (m *database) applyLoginStatesChecks(loginStates *collectionWrapper) error 
 		return err
 	}
 
-	err = loginStates.AddIndex(bson.D{primitive.E{Key: "account_id", Value: 1}}, true)
+	err = loginStates.AddIndex(bson.D{primitive.E{Key: "account_id", Value: 1}}, false)
 	if err != nil {
 		return err
 	}

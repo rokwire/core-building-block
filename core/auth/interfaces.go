@@ -50,6 +50,8 @@ type identifierType interface {
 	//	accountIdentifier (*model.AccountIdentifier): the new account identifier
 	buildIdentifier(accountID *string, appName string) (string, *model.AccountIdentifier, error)
 
+	requireVerificationForSignIn() bool
+
 	checkVerified(accountIdentifier *model.AccountIdentifier, appName string) error
 
 	//allowMultiple says whether an account may have multiple identifiers of this type
@@ -113,21 +115,11 @@ type authType interface {
 
 	withParams(params map[string]interface{}) (authType, error)
 
-	requireIdentifierVerification() bool
-
 	//allowMultiple says whether an account may have multiple auth types of this type
 	// Returns:
 	//	allowed (bool): whether mulitple auth types are allowed
 	allowMultiple() bool
 }
-
-// type authCreds interface {
-// 	getCredential(key string) string
-// 	setCredential(value string, key string)
-// 	getResetParams() (*string, *time.Time)
-// 	setResetParams(code *string, expiry *time.Time)
-// 	toMap() (map[string]interface{}, error)
-// }
 
 // externalAuthType is the interface for authentication for auth types which are external for the system(the users comes from external system).
 // these are the different identity providers - illinois_oidc etc
@@ -295,7 +287,7 @@ type APIs interface {
 		systemConfigs map[string]interface{}, skipExistsCheck bool, l *logs.Log) (*model.Account, error)
 
 	//VerifyIdentifier verifies credential (checks the verification code in the credentials collection)
-	VerifyIdentifier(id string, verification string, l *logs.Log) error
+	VerifyIdentifier(id string, verification string, l *logs.Log) (*model.AccountIdentifier, error)
 
 	//SendVerifyIdentifier sends verification code to identifier
 	SendVerifyIdentifier(appTypeIdentifier string, orgID string, apiKey string, identifierJSON string, l *logs.Log) error
@@ -316,10 +308,9 @@ type APIs interface {
 	//		appTypeIdentifier (string): Identifier of the app type/client that the user is logging in from
 	//		orgID (string): ID of the organization that the user is logging in
 	//		apiKey (string): API key to validate the specified app
-	//		userIdentifier (*string): Optional user identifier for backwards compatibility
 	//	Returns:
 	//		error: if any
-	ForgotCredential(authenticationType string, identifierJSON string, appTypeIdentifier string, orgID string, apiKey string, userIdentifier *string, l *logs.Log) error
+	ForgotCredential(authenticationType string, identifierJSON string, appTypeIdentifier string, orgID string, apiKey string, l *logs.Log) error
 
 	//ResetForgotCredential resets forgot credential
 	//	Input:
@@ -571,7 +562,7 @@ type Storage interface {
 	FindAccountByIdentifierID(context storage.TransactionContext, id string) (*model.Account, error)
 	InsertAccountIdentifier(context storage.TransactionContext, item model.AccountIdentifier) error
 	UpdateAccountIdentifier(item model.AccountIdentifier) error
-	UpdateAccountIdentifiers(context storage.TransactionContext, items []model.AccountIdentifier) error
+	UpdateAccountIdentifiers(context storage.TransactionContext, accountID string, items []model.AccountIdentifier) error
 	DeleteAccountIdentifier(context storage.TransactionContext, item model.AccountIdentifier) error
 	DeleteExternalAccountIdentifiers(context storage.TransactionContext, aat model.AccountAuthType) error
 

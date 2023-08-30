@@ -64,6 +64,10 @@ func (a *externalIdentifierImpl) buildIdentifier(accountID *string, appName stri
 	return "", nil, errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, nil)
 }
 
+func (a *externalIdentifierImpl) requireVerificationForSignIn() bool {
+	return true
+}
+
 func (a *externalIdentifierImpl) checkVerified(accountIdentifier *model.AccountIdentifier, appName string) error {
 	return nil
 }

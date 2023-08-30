@@ -102,6 +102,10 @@ func (a *phoneIdentifierImpl) buildIdentifier(accountID *string, appName string)
 	return message, &accountIdentifier, nil
 }
 
+func (a *phoneIdentifierImpl) requireVerificationForSignIn() bool {
+	return false
+}
+
 func (a *phoneIdentifierImpl) checkVerified(accountIdentifier *model.AccountIdentifier, appName string) error {
 	verified := accountIdentifier.Verified
 	expired := accountIdentifier.VerificationExpiry == nil || accountIdentifier.VerificationExpiry.Before(time.Now())

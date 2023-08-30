@@ -278,10 +278,6 @@ func (a *webAuthnAuthImpl) withParams(params map[string]interface{}) (authType, 
 	return &webAuthnAuthImpl{auth: a.auth, authType: a.authType, config: config}, nil
 }
 
-func (a *webAuthnAuthImpl) requireIdentifierVerification() bool {
-	return true
-}
-
 func (a *webAuthnAuthImpl) allowMultiple() bool {
 	return true
 }

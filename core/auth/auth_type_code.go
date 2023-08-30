@@ -141,10 +141,6 @@ func (a *codeAuthImpl) withParams(params map[string]interface{}) (authType, erro
 	return a, nil
 }
 
-func (a *codeAuthImpl) requireIdentifierVerification() bool {
-	return false
-}
-
 func (a *codeAuthImpl) allowMultiple() bool {
 	return false
 }
