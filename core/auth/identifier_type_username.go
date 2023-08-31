@@ -16,6 +16,7 @@ package auth
 
 import (
 	"core-building-block/core/model"
+	"core-building-block/utils"
 	"encoding/json"
 	"strings"
 	"time"
@@ -65,7 +66,15 @@ func (a *usernameIdentifierImpl) withIdentifier(creds string) (identifierType, e
 		return nil, errors.WrapErrorAction(logutils.ActionValidate, typeUsernameIdentifier, nil, err)
 	}
 
-	return &usernameIdentifierImpl{auth: a.auth, code: a.code, identifier: strings.TrimSpace(strings.ToLower(requestCreds.Username))}, nil
+	username := strings.TrimSpace(strings.ToLower(requestCreds.Username))
+
+	// some applications may append -<platform> to usernames to support cross-platform passkeys - we just want the raw username
+	platforms := []string{"android", "ios", "web"}
+	if usernameParts := strings.Split(username, "-"); len(usernameParts) > 1 && utils.Contains(platforms, usernameParts[len(usernameParts)-1]) {
+		username = strings.Join(usernameParts[:len(usernameParts)-1], "-")
+	}
+
+	return &usernameIdentifierImpl{auth: a.auth, code: a.code, identifier: username}, nil
 }
 
 func (a *usernameIdentifierImpl) buildIdentifier(accountID *string, appName string) (string, *model.AccountIdentifier, error) {

@@ -219,6 +219,7 @@ func (m *database) start() error {
 	m.devices = devices
 	m.credentials = credentials
 	m.loginsSessions = loginsSessions
+	m.loginStates = loginStates
 	m.configs = configs
 	m.apiKeys = apiKeys
 	m.serviceRegs = serviceRegs

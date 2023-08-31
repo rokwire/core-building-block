@@ -744,7 +744,7 @@ func (a *Auth) applySignIn(identifierImpl identifierType, authImpl authType, sup
 	}
 
 	updateIdentifier := !accountIdentifier.Verified
-	message, credID, err := a.checkCredentials(identifierImpl, authImpl, nil, credentials, creds, appOrg)
+	message, credID, err := a.checkCredentials(identifierImpl, authImpl, &account.ID, credentials, creds, appOrg)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionVerify, model.TypeCredential, nil, err)
 	}
@@ -921,7 +921,7 @@ func (a *Auth) signUpNewAccount(context storage.TransactionContext, identifierIm
 	}
 
 	//External and anonymous auth is automatically verified, otherwise verified if credential has been verified previously
-	account, err := a.registerUser(context, []model.AccountIdentifier{*accountIdentifier}, supportedAuthType.AuthType, false, nil, appOrg, credential,
+	account, err := a.registerUser(context, []model.AccountIdentifier{*accountIdentifier}, supportedAuthType.AuthType, retParams == nil, nil, appOrg, credential,
 		nil, profile, privacy, preferences, username, permissions, roles, groups, scopes, creatorPermissions, clientVersion, l)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
