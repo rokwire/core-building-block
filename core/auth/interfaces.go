@@ -111,7 +111,7 @@ type authType interface {
 	// Returns:
 	//	message (string): information required to complete login, if applicable
 	//	credentialID (string): the ID of the credential used to validate the login
-	checkCredentials(identifierImpl identifierType, accountID *string, credentials []model.Credential, creds string, appOrg model.ApplicationOrganization) (string, string, error)
+	checkCredentials(identifierImpl identifierType, accountID *string, aats []model.AccountAuthType, creds string, appOrg model.ApplicationOrganization) (string, string, error)
 
 	withParams(params map[string]interface{}) (authType, error)
 
@@ -557,7 +557,7 @@ type Storage interface {
 	FindAccountByAuthTypeID(context storage.TransactionContext, id string) (*model.Account, error)
 	FindAccountByCredentialID(context storage.TransactionContext, id string) (*model.Account, error)
 	InsertAccountAuthType(context storage.TransactionContext, item model.AccountAuthType) error
-	UpdateAccountAuthType(item model.AccountAuthType) error
+	UpdateAccountAuthType(context storage.TransactionContext, item model.AccountAuthType) error
 	DeleteAccountAuthType(context storage.TransactionContext, item model.AccountAuthType) error
 
 	//AccountIdentifiers

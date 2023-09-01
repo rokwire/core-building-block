@@ -17,6 +17,7 @@ package auth
 import (
 	"bytes"
 	"core-building-block/core/model"
+	"core-building-block/driven/storage"
 	"core-building-block/utils"
 	"encoding/json"
 	"strings"
@@ -118,7 +119,7 @@ func (a *webAuthnAuthImpl) signUp(identifierImpl identifierType, accountID *stri
 		return "", nil, nil, errors.WrapErrorAction(logutils.ActionParse, typeWebAuthnParams, nil, err)
 	}
 
-	user := webAuthnUser{}
+	user := webAuthnUser{Name: identifierImpl.getIdentifier()}
 	var accountIdentifier *model.AccountIdentifier
 	if accountID != nil {
 		// we are linking a webauthn credential, so use the existing accountID
@@ -160,7 +161,7 @@ func (a *webAuthnAuthImpl) resetCredential(credential *model.Credential, resetCo
 	return nil, errors.New(logutils.Unimplemented)
 }
 
-func (a *webAuthnAuthImpl) checkCredentials(identifierImpl identifierType, accountID *string, credentials []model.Credential, creds string, appOrg model.ApplicationOrganization) (string, string, error) {
+func (a *webAuthnAuthImpl) checkCredentials(identifierImpl identifierType, accountID *string, aats []model.AccountAuthType, creds string, appOrg model.ApplicationOrganization) (string, string, error) {
 	incomingCreds, err := a.parseCreds(creds)
 	if err != nil {
 		return "", "", errors.WrapErrorAction(logutils.ActionParse, typeWebAuthnCreds, nil, err)
@@ -168,7 +169,7 @@ func (a *webAuthnAuthImpl) checkCredentials(identifierImpl identifierType, accou
 
 	var user webauthn.User
 	if incomingCreds.Response == nil {
-		user, err = a.buildUser(accountID, credentials)
+		user, err = a.buildUser(accountID, aats)
 		if err != nil {
 			return "", "", errors.WrapErrorAction("building", "webauthn user", nil, err)
 		}
@@ -178,16 +179,15 @@ func (a *webAuthnAuthImpl) checkCredentials(identifierImpl identifierType, accou
 	}
 
 	// accountID will not be nil if linking or if account identifier has been verified during sign up
-	//TODO: require identifier verification for webauthn
 	if accountID != nil {
-		user, err = a.buildUser(accountID, credentials)
+		user, err = a.buildUser(accountID, aats)
 		if err != nil {
 			return "", "", errors.WrapErrorAction("building", "webauthn user", nil, err)
 		}
 
 		// complete registration
 		if response, err := protocol.ParseCredentialCreationResponseBody(strings.NewReader(*incomingCreds.Response)); err == nil {
-			credID, err := a.completeRegistration(response, user, appOrg)
+			credID, err := a.completeRegistration(response, user, aats, appOrg)
 			if err != nil {
 				return "", "", err
 			}
@@ -199,11 +199,11 @@ func (a *webAuthnAuthImpl) checkCredentials(identifierImpl identifierType, accou
 	if response, err := protocol.ParseCredentialRequestResponseBody(strings.NewReader(*incomingCreds.Response)); err == nil {
 		if user != nil {
 			if len(response.Response.UserHandle) > 0 {
-				for _, cred := range credentials {
+				for _, aat := range aats {
 					// backwards compatibility: user handles (user IDs) used to be credential IDs
 					// check if the user handle matches any of the user's webauthn credential IDs
 					// if so, set the user handle equal to the user ID (now the account ID)
-					if bytes.Equal(response.Response.UserHandle, []byte(cred.ID)) {
+					if aat.Credential != nil && bytes.Equal(response.Response.UserHandle, []byte(aat.Credential.ID)) {
 						response.Response.UserHandle = user.WebAuthnID()
 						break
 					}
@@ -211,7 +211,7 @@ func (a *webAuthnAuthImpl) checkCredentials(identifierImpl identifierType, accou
 			}
 		}
 
-		credID, err := a.completeLogin(response, user, credentials, appOrg)
+		credID, err := a.completeLogin(response, user, aats, appOrg)
 		return "", credID, err
 	}
 
@@ -220,8 +220,8 @@ func (a *webAuthnAuthImpl) checkCredentials(identifierImpl identifierType, accou
 }
 
 func (a *webAuthnAuthImpl) withParams(params map[string]interface{}) (authType, error) {
-	rpDisplayName, ok := params["rp_display_name"].(string)
-	if !ok || rpDisplayName == "" {
+	rpDisplayName, _ := params["rp_display_name"].(string)
+	if rpDisplayName == "" {
 		rpDisplayName = rpDisplayNameKey
 	}
 	rpID, ok := params["rp_id"].(string)
@@ -311,12 +311,13 @@ func (a *webAuthnAuthImpl) beginRegistration(user webAuthnUser, appOrg model.App
 	return string(optionData), nil, nil
 }
 
-func (a *webAuthnAuthImpl) completeRegistration(response *protocol.ParsedCredentialCreationData, user webauthn.User, appOrg model.ApplicationOrganization) (string, error) {
-	var accountID *string
-	if user != nil {
-		accountIDVal := string(user.WebAuthnID())
-		accountID = &accountIDVal
+func (a *webAuthnAuthImpl) completeRegistration(response *protocol.ParsedCredentialCreationData, user webauthn.User, aats []model.AccountAuthType, appOrg model.ApplicationOrganization) (string, error) {
+	if user == nil {
+		return "", errors.ErrorData(logutils.StatusMissing, model.TypeAccount, nil)
 	}
+
+	accountIDVal := string(user.WebAuthnID())
+	accountID := &accountIDVal
 
 	params := map[string]interface{}{
 		stateKeyChallenge: response.Response.CollectedClientData.Challenge,
@@ -354,13 +355,43 @@ func (a *webAuthnAuthImpl) completeRegistration(response *protocol.ParsedCredent
 		return "", errors.WrapErrorAction(logutils.ActionCast, "map from webauthn creds", nil, err)
 	}
 
-	storeCred := &model.Credential{ID: uuid.NewString(), Value: credData, AuthType: model.AuthType{Code: a.authType}, DateCreated: time.Now().UTC()}
-	err = a.auth.storage.InsertCredential(nil, storeCred)
-	if err != nil {
-		return "", errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
+	var accountAuthType model.AccountAuthType
+	for _, aat := range aats {
+		if aat.Credential == nil {
+			accountAuthType = aat
+			break
+		}
+	}
+	if accountAuthType.ID == "" {
+		return "", errors.ErrorData(logutils.StatusMissing, "account auth type without credential", &logutils.FieldArgs{"auth_type_code": a.authType, "account_id": accountIDVal})
 	}
 
-	return storeCred.ID, nil
+	credID := uuid.NewString()
+	transaction := func(context storage.TransactionContext) error {
+		//1. insert new credential
+		storeCred := &model.Credential{ID: credID, Value: credData, AccountsAuthTypes: []model.AccountAuthType{accountAuthType},
+			AuthType: model.AuthType{Code: a.authType}, DateCreated: time.Now().UTC()}
+		err = a.auth.storage.InsertCredential(context, storeCred)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
+		}
+
+		//2. update the credential of the existing account auth type
+		accountAuthType.Credential = &model.Credential{ID: credID}
+		err = a.auth.storage.UpdateAccountAuthType(context, accountAuthType)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountAuthType, &logutils.FieldArgs{"id": accountAuthType.ID, "account_id": accountIDVal}, err)
+		}
+
+		return nil
+	}
+
+	err = a.auth.storage.PerformTransaction(transaction)
+	if err != nil {
+		return "", err
+	}
+
+	return credID, nil
 }
 
 func (a *webAuthnAuthImpl) beginLogin(user webauthn.User, appOrg model.ApplicationOrganization) (string, error) {
@@ -406,7 +437,7 @@ func (a *webAuthnAuthImpl) beginLogin(user webauthn.User, appOrg model.Applicati
 	return string(optionData), nil
 }
 
-func (a *webAuthnAuthImpl) completeLogin(response *protocol.ParsedCredentialAssertionData, user webauthn.User, credentials []model.Credential, appOrg model.ApplicationOrganization) (string, error) {
+func (a *webAuthnAuthImpl) completeLogin(response *protocol.ParsedCredentialAssertionData, user webauthn.User, aats []model.AccountAuthType, appOrg model.ApplicationOrganization) (string, error) {
 	if a.config.Config.RPDisplayName == rpDisplayNameKey {
 		a.config.Config.RPDisplayName = appOrg.Application.Name
 	}
@@ -442,15 +473,17 @@ func (a *webAuthnAuthImpl) completeLogin(response *protocol.ParsedCredentialAsse
 		}
 
 		// find matching credential in provided list
-		for _, cred := range credentials {
-			webAuthnCred, err := a.parseWebAuthnCredential(cred.Value)
-			if err != nil {
-				return "", errors.WrapErrorAction(logutils.ActionParse, "webauthn credential", nil, err)
-			}
+		for _, aat := range aats {
+			if aat.Credential != nil {
+				webAuthnCred, err := a.parseWebAuthnCredential(aat.Credential.Value)
+				if err != nil {
+					return "", errors.WrapErrorAction(logutils.ActionParse, "webauthn credential", nil, err)
+				}
 
-			if webAuthnCred != nil && bytes.Equal(updatedCred.ID, webAuthnCred.ID) {
-				credential = &cred
-				break
+				if webAuthnCred != nil && bytes.Equal(updatedCred.ID, webAuthnCred.ID) {
+					credential = aat.Credential
+					break
+				}
 			}
 		}
 	} else {
@@ -480,18 +513,20 @@ func (a *webAuthnAuthImpl) completeLogin(response *protocol.ParsedCredentialAsse
 			// find matching credential by rawId (should match a credential ID)
 			aats, err := a.auth.findAccountAuthTypesAndCredentials(account, model.SupportedAuthType{AuthType: model.AuthType{Code: a.authType}})
 			for _, aat := range aats {
-				webAuthnCred, err := a.parseWebAuthnCredential(aat.Credential.Value)
-				if err != nil {
-					return nil, errors.WrapErrorAction(logutils.ActionParse, "webauthn credential", nil, err)
-				}
-
-				if webAuthnCred != nil && bytes.Equal(rawID, webAuthnCred.ID) {
-					credential = aat.Credential
-					userID := account.ID
-					if legacyUserHandle {
-						userID = credential.ID
+				if aat.Credential != nil {
+					webAuthnCred, err := a.parseWebAuthnCredential(aat.Credential.Value)
+					if err != nil {
+						return nil, errors.WrapErrorAction(logutils.ActionParse, "webauthn credential", nil, err)
 					}
-					return webAuthnUser{ID: userID, Credentials: []webauthn.Credential{*webAuthnCred}}, nil
+
+					if webAuthnCred != nil && bytes.Equal(rawID, webAuthnCred.ID) {
+						credential = aat.Credential
+						userID := account.ID
+						if legacyUserHandle {
+							userID = credential.ID
+						}
+						return webAuthnUser{ID: userID, Credentials: []webauthn.Credential{*webAuthnCred}}, nil
+					}
 				}
 			}
 
@@ -522,23 +557,25 @@ func (a *webAuthnAuthImpl) completeLogin(response *protocol.ParsedCredentialAsse
 	return credID, nil
 }
 
-func (a *webAuthnAuthImpl) buildUser(accountID *string, credentials []model.Credential) (webauthn.User, error) {
+func (a *webAuthnAuthImpl) buildUser(accountID *string, aats []model.AccountAuthType) (webauthn.User, error) {
 	var user webauthn.User
 
 	userCredentials := make([]webauthn.Credential, 0)
-	for _, credential := range credentials {
-		webAuthnCred, err := a.parseWebAuthnCredential(credential.Value)
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionParse, "webauthn credential", nil, err)
-		}
+	for _, aat := range aats {
+		if aat.Credential != nil {
+			webAuthnCred, err := a.parseWebAuthnCredential(aat.Credential.Value)
+			if err != nil {
+				return nil, errors.WrapErrorAction(logutils.ActionParse, "webauthn credential", nil, err)
+			}
 
-		// have at least one valid webauthn credential, so initiate login
-		if webAuthnCred != nil {
-			userCredentials = append(userCredentials, *webAuthnCred)
+			// have at least one valid webauthn credential, so initiate login
+			if webAuthnCred != nil {
+				userCredentials = append(userCredentials, *webAuthnCred)
+			}
 		}
 	}
 
-	if accountID != nil && len(userCredentials) > 0 { // otherwise identifier-less login
+	if accountID != nil { // otherwise identifier-less login
 		user = webAuthnUser{ID: *accountID, Credentials: userCredentials}
 	}
 

@@ -235,12 +235,15 @@ func (a *passwordAuthImpl) resetCredential(credential *model.Credential, resetCo
 	return credsMap, nil
 }
 
-func (a *passwordAuthImpl) checkCredentials(identifierImpl identifierType, accountID *string, credentials []model.Credential, creds string, appOrg model.ApplicationOrganization) (string, string, error) {
-	if len(credentials) != 1 {
-		return "", "", errors.ErrorData(logutils.StatusInvalid, "credential list", &logutils.FieldArgs{"count": len(credentials)})
+func (a *passwordAuthImpl) checkCredentials(identifierImpl identifierType, accountID *string, aats []model.AccountAuthType, creds string, appOrg model.ApplicationOrganization) (string, string, error) {
+	if len(aats) != 1 {
+		return "", "", errors.ErrorData(logutils.StatusInvalid, "account auth type list", &logutils.FieldArgs{"count": len(aats)})
+	}
+	if aats[0].Credential == nil {
+		return "", "", errors.ErrorData(logutils.StatusInvalid, model.TypeAccountAuthType, &logutils.FieldArgs{"id": aats[0].ID, "credential": nil})
 	}
 
-	storedCreds, err := a.mapToCreds(credentials[0].Value)
+	storedCreds, err := a.mapToCreds(aats[0].Credential.Value)
 	if err != nil {
 		return "", "", errors.WrapErrorAction(logutils.ActionCast, "map to password creds", nil, err)
 	}
@@ -256,7 +259,7 @@ func (a *passwordAuthImpl) checkCredentials(identifierImpl identifierType, accou
 		return "", "", errors.WrapErrorAction(logutils.ActionValidate, model.TypeCredential, nil, err).SetStatus(utils.ErrorStatusInvalid)
 	}
 
-	return "", credentials[0].ID, nil
+	return "", aats[0].Credential.ID, nil
 }
 
 func (a *passwordAuthImpl) withParams(params map[string]interface{}) (authType, error) {

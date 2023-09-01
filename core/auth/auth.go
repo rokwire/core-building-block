@@ -731,19 +731,6 @@ func (a *Auth) applySignIn(identifierImpl identifierType, authImpl authType, sup
 		return nil, nil, errors.ErrorData(logutils.StatusInvalid, model.TypeAccountIdentifier, &logutils.FieldArgs{"verified": false, "linked": true})
 	}
 
-	//find account auth type
-	accountAuthTypes, err := a.findAccountAuthTypesAndCredentials(account, supportedAuthType)
-	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountAuthType, nil, err)
-	}
-
-	credentials := make([]model.Credential, 0)
-	for _, aat := range accountAuthTypes {
-		if aat.Credential != nil {
-			credentials = append(credentials, *aat.Credential)
-		}
-	}
-
 	if identifierImpl.requireVerificationForSignIn() || authImpl.requireIdentifierVerificationForSignIn() {
 		err := identifierImpl.checkVerified(accountIdentifier, appOrg.Application.Name)
 		if err != nil {
@@ -751,8 +738,14 @@ func (a *Auth) applySignIn(identifierImpl identifierType, authImpl authType, sup
 		}
 	}
 
+	//find account auth type
+	accountAuthTypes, err := a.findAccountAuthTypesAndCredentials(account, supportedAuthType)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountAuthType, nil, err)
+	}
+
 	updateIdentifier := !accountIdentifier.Verified
-	message, credID, err := a.checkCredentials(identifierImpl, authImpl, &account.ID, credentials, creds, appOrg)
+	message, credID, err := a.checkCredentials(identifierImpl, authImpl, &account.ID, accountAuthTypes, creds, appOrg)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionVerify, model.TypeCredential, nil, err)
 	}
@@ -778,7 +771,7 @@ func (a *Auth) completeSignIn(message *string, account *model.Account, accountAu
 			// if the account auth type is not already active, mark it as active
 			if !aat.Active {
 				aat.Active = true
-				err := a.storage.UpdateAccountAuthType(aat)
+				err := a.storage.UpdateAccountAuthType(nil, aat)
 				if err != nil {
 					return nil, nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountAuthType, nil, err)
 				}
@@ -795,10 +788,10 @@ func (a *Auth) completeSignIn(message *string, account *model.Account, accountAu
 	return retParams, account.GetVerifiedMFATypes(), nil
 }
 
-func (a *Auth) checkCredentials(identifierImpl identifierType, authImpl authType, accountID *string, credentials []model.Credential, creds string,
+func (a *Auth) checkCredentials(identifierImpl identifierType, authImpl authType, accountID *string, aats []model.AccountAuthType, creds string,
 	appOrg model.ApplicationOrganization) (*string, string, error) {
 	//check the credentials
-	msg, credID, err := authImpl.checkCredentials(identifierImpl, accountID, credentials, creds, appOrg)
+	msg, credID, err := authImpl.checkCredentials(identifierImpl, accountID, aats, creds, appOrg)
 	if err != nil {
 		return nil, "", errors.WrapErrorAction(logutils.ActionValidate, model.TypeCredential, nil, err)
 	}
@@ -1780,14 +1773,6 @@ func (a *Auth) linkAccountAuthType(account *model.Account, supportedAuthType mod
 
 func (a *Auth) verifyAuthTypeActive(identifierImpl identifierType, accountIdentifier *model.AccountIdentifier, authImpl authType, accountAuthTypes []model.AccountAuthType, accountID string,
 	creds string, appOrg model.ApplicationOrganization) (*string, *model.AccountAuthType, error) {
-
-	credentials := make([]model.Credential, 0)
-	for _, aat := range accountAuthTypes {
-		if aat.Credential != nil {
-			credentials = append(credentials, *aat.Credential)
-		}
-	}
-
 	if accountIdentifier != nil && identifierImpl.requireVerificationForSignIn() {
 		err := identifierImpl.checkVerified(accountIdentifier, appOrg.Application.Name)
 		if err != nil {
@@ -1795,7 +1780,7 @@ func (a *Auth) verifyAuthTypeActive(identifierImpl identifierType, accountIdenti
 		}
 	}
 
-	message, credID, err := a.checkCredentials(identifierImpl, authImpl, &accountID, credentials, creds, appOrg)
+	message, credID, err := a.checkCredentials(identifierImpl, authImpl, &accountID, accountAuthTypes, creds, appOrg)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionVerify, model.TypeCredential, nil, err)
 	}
@@ -1803,7 +1788,7 @@ func (a *Auth) verifyAuthTypeActive(identifierImpl identifierType, accountIdenti
 	for _, aat := range accountAuthTypes {
 		if credID == "" || (aat.Credential != nil && aat.Credential.ID == credID) {
 			aat.Active = true
-			err = a.storage.UpdateAccountAuthType(aat)
+			err = a.storage.UpdateAccountAuthType(nil, aat)
 			if err != nil {
 				return nil, nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountAuthType, nil, err)
 			}

@@ -14,7 +14,7 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/lestrrat-go/jwx v1.2.26
 	github.com/pquerna/otp v1.4.0
-	github.com/rokwire/core-auth-library-go/v3 v3.0.1
+	github.com/rokwire/core-auth-library-go/v3 v3.1.0
 	github.com/rokwire/logging-library-go/v2 v2.2.0
 	github.com/stretchr/testify v1.8.4
 	github.com/swaggo/http-swagger v1.3.4
@@ -71,7 +71,7 @@ require (
 	github.com/KyleBanks/depth v1.2.1 // indirect
 	github.com/Shopify/goreferrer v0.0.0-20220729165902-8cddb4f5de06 // indirect
 	github.com/andybalholm/brotli v1.0.5 // indirect
-	github.com/aws/aws-sdk-go v1.45.0 // indirect
+	github.com/aws/aws-sdk-go v1.45.2 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/boombuler/barcode v1.0.1 // indirect
 	github.com/casbin/casbin/v2 v2.77.1 // indirect

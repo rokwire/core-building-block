@@ -2272,7 +2272,7 @@ func (sa *Adapter) InsertAccountAuthType(context TransactionContext, item model.
 }
 
 // UpdateAccountAuthType updates an account with the provided account auth type
-func (sa *Adapter) UpdateAccountAuthType(item model.AccountAuthType) error {
+func (sa *Adapter) UpdateAccountAuthType(context TransactionContext, item model.AccountAuthType) error {
 	storageItem := accountAuthTypeToStorage(item)
 	now := time.Now().UTC()
 	storageItem.DateUpdated = &now
@@ -2285,7 +2285,7 @@ func (sa *Adapter) UpdateAccountAuthType(item model.AccountAuthType) error {
 		}},
 	}
 
-	res, err := sa.db.accounts.UpdateOne(filter, update, nil)
+	res, err := sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountAuthType, nil, err)
 	}

@@ -48,7 +48,7 @@ func (a *signatureAuthImpl) resetCredential(credential *model.Credential, resetC
 	return nil, nil
 }
 
-func (a *signatureAuthImpl) checkCredentials(identifierImpl identifierType, accountID *string, credentials []model.Credential, creds string, appOrg model.ApplicationOrganization) (string, string, error) {
+func (a *signatureAuthImpl) checkCredentials(identifierImpl identifierType, accountID *string, aats []model.AccountAuthType, creds string, appOrg model.ApplicationOrganization) (string, string, error) {
 	return "", "", nil
 }
 

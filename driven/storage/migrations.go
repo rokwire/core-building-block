@@ -85,16 +85,16 @@ func (sa *Adapter) migrateAuthTypes() error {
 			}
 		}
 
-		//3. migrate app orgs
-		err := sa.migrateAppOrgs(context, removedAuthTypeIDs)
-		if err != nil {
-			return errors.WrapErrorAction("migrating", model.TypeApplicationOrganization, nil, err)
-		}
-
-		//4. migrate credentials
-		err = sa.migrateCredentials(context, removedAuthTypeIDs)
+		//3. migrate credentials
+		removedCredentials, err := sa.migrateCredentials(context, removedAuthTypeIDs)
 		if err != nil {
 			return errors.WrapErrorAction("migrating", model.TypeCredential, nil, err)
+		}
+
+		//4. migrate app orgs
+		err = sa.migrateAppOrgs(context, removedAuthTypeIDs, removedCredentials)
+		if err != nil {
+			return errors.WrapErrorAction("migrating", model.TypeApplicationOrganization, nil, err)
 		}
 
 		//5. migrate login sessions
@@ -109,7 +109,104 @@ func (sa *Adapter) migrateAuthTypes() error {
 	return sa.PerformTransaction(transaction)
 }
 
-func (sa *Adapter) migrateAppOrgs(context TransactionContext, removedAuthTypes map[string]model.AuthType) error {
+func (sa *Adapter) migrateCredentials(context TransactionContext, removedAuthTypes map[string]model.AuthType) ([]string, error) {
+	var allCredentials []credential
+	err := sa.db.credentials.FindWithContext(context, bson.M{}, &allCredentials, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
+	}
+
+	type passwordCreds struct {
+		Password string `json:"password"`
+
+		ResetCode   *string    `json:"reset_code,omitempty"`
+		ResetExpiry *time.Time `json:"reset_expiry,omitempty"`
+	}
+
+	type webauthnCreds struct {
+		Credential *string `json:"credential,omitempty"`
+		Session    *string `json:"session,omitempty"`
+	}
+
+	migratedCredentials := make([]interface{}, 0)
+	removedCredentials := make([]string, 0)
+	for _, cred := range allCredentials {
+		var migrated credential
+		if newAuthType, exists := removedAuthTypes[cred.AuthTypeID]; exists && newAuthType.Code == "password" {
+			// found a password credential, migrate it
+			passwordValue, err := utils.JSONConvert[passwordCreds, map[string]interface{}](cred.Value)
+			if err != nil {
+				return nil, errors.WrapErrorAction(logutils.ActionParse, "password credential value map", &logutils.FieldArgs{"id": cred.ID}, err)
+			}
+			if passwordValue == nil || passwordValue.Password == "" {
+				removedCredentials = append(removedCredentials, cred.ID)
+				continue
+			}
+			if passwordValue.ResetCode != nil && *passwordValue.ResetCode == "" {
+				passwordValue.ResetCode = nil
+			}
+			if passwordValue.ResetExpiry != nil && passwordValue.ResetExpiry.IsZero() {
+				passwordValue.ResetExpiry = nil
+			}
+
+			passwordValueMap, err := utils.JSONConvert[map[string]interface{}, passwordCreds](*passwordValue)
+			if err != nil {
+				return nil, errors.WrapErrorAction(logutils.ActionParse, "password credential value", &logutils.FieldArgs{"id": cred.ID}, err)
+			}
+			if passwordValueMap == nil {
+				removedCredentials = append(removedCredentials, cred.ID)
+				continue
+			}
+
+			migrated = credential{ID: cred.ID, AuthTypeID: newAuthType.ID, AccountsAuthTypes: cred.AccountsAuthTypes, Value: *passwordValueMap,
+				DateCreated: cred.DateCreated, DateUpdated: cred.DateUpdated}
+		} else {
+			// found something other than a password credential, try to migrate it as a webauthn credential
+			webauthnValue, err := utils.JSONConvert[webauthnCreds, map[string]interface{}](cred.Value)
+			if err != nil {
+				return nil, errors.WrapErrorAction(logutils.ActionParse, "webauthn credential value map", &logutils.FieldArgs{"id": cred.ID}, err)
+			}
+
+			// credential value is not for webauthn or it is in a hanging state or is missing its credential
+			if webauthnValue == nil || webauthnValue.Session != nil || webauthnValue.Credential == nil {
+				removedCredentials = append(removedCredentials, cred.ID)
+				continue
+			}
+
+			webauthnValueMap, err := utils.JSONConvert[map[string]interface{}, webauthnCreds](*webauthnValue)
+			if err != nil {
+				return nil, errors.WrapErrorAction(logutils.ActionParse, "webauthn credential value", &logutils.FieldArgs{"id": cred.ID}, err)
+			}
+			if webauthnValueMap == nil {
+				removedCredentials = append(removedCredentials, cred.ID)
+				continue
+			}
+
+			migrated = credential{ID: cred.ID, AuthTypeID: cred.AuthTypeID, AccountsAuthTypes: cred.AccountsAuthTypes, Value: *webauthnValueMap,
+				DateCreated: cred.DateCreated, DateUpdated: cred.DateUpdated}
+		}
+
+		if migrated.ID != "" {
+			migratedCredentials = append(migratedCredentials, migrated)
+		} else {
+			removedCredentials = append(removedCredentials, cred.ID)
+		}
+	}
+
+	_, err = sa.db.credentials.DeleteManyWithContext(context, bson.M{}, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionDelete, model.TypeCredential, nil, err)
+	}
+
+	_, err = sa.db.credentials.InsertManyWithContext(context, migratedCredentials, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeCredential, nil, err)
+	}
+
+	return removedCredentials, nil
+}
+
+func (sa *Adapter) migrateAppOrgs(context TransactionContext, removedAuthTypes map[string]model.AuthType, removedCredentials []string) error {
 	appOrgs, err := sa.FindApplicationsOrganizations()
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
@@ -144,7 +241,7 @@ func (sa *Adapter) migrateAppOrgs(context TransactionContext, removedAuthTypes m
 			}
 		}
 
-		err = sa.migrateAccounts(context, appOrg, removedAuthTypes)
+		err = sa.migrateAccounts(context, appOrg, removedAuthTypes, removedCredentials)
 		if err != nil {
 			return errors.WrapErrorAction("migrating", model.TypeAccount, &logutils.FieldArgs{"app_org_id": appOrg.ID}, err)
 		}
@@ -153,7 +250,7 @@ func (sa *Adapter) migrateAppOrgs(context TransactionContext, removedAuthTypes m
 	return nil
 }
 
-func (sa *Adapter) migrateAccounts(context TransactionContext, appOrg model.ApplicationOrganization, removedAuthTypes map[string]model.AuthType) error {
+func (sa *Adapter) migrateAccounts(context TransactionContext, appOrg model.ApplicationOrganization, removedAuthTypes map[string]model.AuthType, removedCredentials []string) error {
 	filter := bson.M{"app_org_id": appOrg.ID}
 	var accounts []account
 
@@ -231,6 +328,11 @@ func (sa *Adapter) migrateAccounts(context TransactionContext, appOrg model.Appl
 				}
 			}
 
+			// do not keep the account auth type if its associated credential was removed
+			if newAat.CredentialID != nil && utils.Contains(removedCredentials, *newAat.CredentialID) {
+				continue
+			}
+
 			newAat.Identifier = nil
 			newAat.Unverified = nil
 			newAat.Linked = nil
@@ -274,96 +376,6 @@ func (sa *Adapter) migrateAccounts(context TransactionContext, appOrg model.Appl
 	_, err = sa.db.accounts.InsertManyWithContext(context, migratedAccounts, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAccount, nil, err)
-	}
-
-	return nil
-}
-
-func (sa *Adapter) migrateCredentials(context TransactionContext, removedAuthTypes map[string]model.AuthType) error {
-	var allCredentials []credential
-	err := sa.db.credentials.FindWithContext(context, bson.M{}, &allCredentials, nil)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
-	}
-
-	type passwordCreds struct {
-		Password string `json:"password"`
-
-		ResetCode   *string    `json:"reset_code,omitempty"`
-		ResetExpiry *time.Time `json:"reset_expiry,omitempty"`
-	}
-
-	type webauthnCreds struct {
-		Credential *string `json:"credential,omitempty"`
-		Session    *string `json:"session,omitempty"`
-	}
-
-	migratedCredentials := make([]interface{}, 0)
-	for _, cred := range allCredentials {
-		var migrated credential
-		if newAuthType, exists := removedAuthTypes[cred.AuthTypeID]; exists && newAuthType.Code == "password" {
-			// found a password credential, migrate it
-			passwordValue, err := utils.JSONConvert[passwordCreds, map[string]interface{}](cred.Value)
-			if err != nil {
-				return errors.WrapErrorAction(logutils.ActionParse, "password credential value map", &logutils.FieldArgs{"id": cred.ID}, err)
-			}
-			if passwordValue == nil || passwordValue.Password == "" {
-				continue
-			}
-			if passwordValue.ResetCode != nil && *passwordValue.ResetCode == "" {
-				passwordValue.ResetCode = nil
-			}
-			if passwordValue.ResetExpiry != nil && passwordValue.ResetExpiry.IsZero() {
-				passwordValue.ResetExpiry = nil
-			}
-
-			passwordValueMap, err := utils.JSONConvert[map[string]interface{}, passwordCreds](*passwordValue)
-			if err != nil {
-				return errors.WrapErrorAction(logutils.ActionParse, "password credential value", &logutils.FieldArgs{"id": cred.ID}, err)
-			}
-			if passwordValueMap == nil {
-				continue
-			}
-
-			migrated = credential{ID: cred.ID, AuthTypeID: newAuthType.ID, AccountsAuthTypes: cred.AccountsAuthTypes, Value: *passwordValueMap,
-				DateCreated: cred.DateCreated, DateUpdated: cred.DateUpdated}
-		} else {
-			// found something other than a password credential, try to migrate it as a webauthn credential
-			webauthnValue, err := utils.JSONConvert[webauthnCreds, map[string]interface{}](cred.Value)
-			if err != nil {
-				return errors.WrapErrorAction(logutils.ActionParse, "webauthn credential value map", &logutils.FieldArgs{"id": cred.ID}, err)
-			}
-
-			// credential value is not for webauthn or it is in a hanging state or is missing its credential
-			if webauthnValue == nil || webauthnValue.Session != nil || webauthnValue.Credential == nil {
-				continue
-			}
-
-			webauthnValueMap, err := utils.JSONConvert[map[string]interface{}, webauthnCreds](*webauthnValue)
-			if err != nil {
-				return errors.WrapErrorAction(logutils.ActionParse, "webauthn credential value", &logutils.FieldArgs{"id": cred.ID}, err)
-			}
-			if webauthnValueMap == nil {
-				continue
-			}
-
-			migrated = credential{ID: cred.ID, AuthTypeID: cred.AuthTypeID, AccountsAuthTypes: cred.AccountsAuthTypes, Value: *webauthnValueMap,
-				DateCreated: cred.DateCreated, DateUpdated: cred.DateUpdated}
-		}
-
-		if migrated.ID != "" {
-			migratedCredentials = append(migratedCredentials, migrated)
-		}
-	}
-
-	_, err = sa.db.credentials.DeleteManyWithContext(context, bson.M{}, nil)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeCredential, nil, err)
-	}
-
-	_, err = sa.db.credentials.InsertManyWithContext(context, migratedCredentials, nil)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeCredential, nil, err)
 	}
 
 	return nil
