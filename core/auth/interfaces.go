@@ -115,6 +115,8 @@ type authType interface {
 
 	withParams(params map[string]interface{}) (authType, error)
 
+	requireIdentifierVerificationForSignIn() bool
+
 	//allowMultiple says whether an account may have multiple auth types of this type
 	// Returns:
 	//	allowed (bool): whether mulitple auth types are allowed

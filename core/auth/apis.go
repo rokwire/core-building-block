@@ -277,9 +277,14 @@ func (a *Auth) CanLink(identifierJSON string, apiKey string, appTypeIdentifier s
 
 	if account != nil {
 		ai := account.GetAccountIdentifier(code, identifier)
-		return (ai != nil && !ai.Verified), nil
+		if authenticationType == nil && userIdentifier == nil {
+			// if not an old client, treat as a request to check if can link identifier
+			return (ai != nil && !ai.Verified), nil
+		}
 	}
 
+	// either there is no account with the provided identifier, or
+	// old client, so treat as request to check if can link identifier OR auth type (can always attempt to link an auth type)
 	return true, nil
 }
 

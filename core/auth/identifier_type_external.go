@@ -16,6 +16,7 @@ package auth
 
 import (
 	"core-building-block/core/model"
+	"core-building-block/utils"
 	"encoding/json"
 	"strings"
 
@@ -53,8 +54,12 @@ func (a *externalIdentifierImpl) withIdentifier(creds string) (identifierType, e
 		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, typeExternalIdentifier, nil, err)
 	}
 
+	// these are keys that should NOT be treated as external identifier codes
+	excludeKeys := []string{IdentifierTypeEmail, IdentifierTypePhone, IdentifierTypeUsername, credentialKeyResponse}
 	for k, id := range requestCreds {
-		return &externalIdentifierImpl{auth: a.auth, code: k, identifier: strings.TrimSpace(id)}, nil
+		if !utils.Contains(excludeKeys, k) {
+			return &externalIdentifierImpl{auth: a.auth, code: k, identifier: strings.TrimSpace(id)}, nil
+		}
 	}
 
 	return nil, errors.ErrorData(logutils.StatusMissing, "external identifier", nil)

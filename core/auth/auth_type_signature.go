@@ -56,6 +56,10 @@ func (a *signatureAuthImpl) withParams(params map[string]interface{}) (authType,
 	return a, nil
 }
 
+func (a *signatureAuthImpl) requireIdentifierVerificationForSignIn() bool {
+	return false
+}
+
 func (a *signatureAuthImpl) allowMultiple() bool {
 	return false
 }

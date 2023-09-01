@@ -272,6 +272,10 @@ func (a *webAuthnAuthImpl) withParams(params map[string]interface{}) (authType, 
 	return &webAuthnAuthImpl{auth: a.auth, authType: a.authType, config: config}, nil
 }
 
+func (a *webAuthnAuthImpl) requireIdentifierVerificationForSignIn() bool {
+	return true
+}
+
 func (a *webAuthnAuthImpl) allowMultiple() bool {
 	return true
 }
@@ -452,28 +456,42 @@ func (a *webAuthnAuthImpl) completeLogin(response *protocol.ParsedCredentialAsse
 	} else {
 		// if no user, we can validate a discoverable login
 		userDiscoverer := func(rawID, userHandle []byte) (webauthn.User, error) {
+			legacyUserHandle := false
+
 			// find account by userHandle (should match an account ID)
 			account, err := a.auth.storage.FindAccountByID(nil, string(userHandle))
 			if err != nil {
 				return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"userHandle": string(userHandle)}, err)
 			}
 			if account == nil {
-				return nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, &logutils.FieldArgs{"userHandle": string(userHandle)})
+				// backwards compatibility: user handles (user IDs) used to be credential IDs
+				// check if the user handle matches any of the user's webauthn credential IDs
+				account, err = a.auth.storage.FindAccountByCredentialID(nil, string(userHandle))
+				if err != nil {
+					return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"userHandle": string(userHandle), "legacy": true}, err)
+				}
+
+				if account == nil {
+					return nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, &logutils.FieldArgs{"userHandle": string(userHandle)})
+				}
+				legacyUserHandle = true
 			}
 
 			// find matching credential by rawId (should match a credential ID)
 			aats, err := a.auth.findAccountAuthTypesAndCredentials(account, model.SupportedAuthType{AuthType: model.AuthType{Code: a.authType}})
 			for _, aat := range aats {
-				if aat.Credential != nil {
-					webAuthnCred, err := a.parseWebAuthnCredential(aat.Credential.Value)
-					if err != nil {
-						return nil, errors.WrapErrorAction(logutils.ActionParse, "webauthn credential", nil, err)
-					}
+				webAuthnCred, err := a.parseWebAuthnCredential(aat.Credential.Value)
+				if err != nil {
+					return nil, errors.WrapErrorAction(logutils.ActionParse, "webauthn credential", nil, err)
+				}
 
-					if webAuthnCred != nil && bytes.Equal(rawID, webAuthnCred.ID) {
-						credential = aat.Credential
-						return webAuthnUser{ID: account.ID}, nil
+				if webAuthnCred != nil && bytes.Equal(rawID, webAuthnCred.ID) {
+					credential = aat.Credential
+					userID := account.ID
+					if legacyUserHandle {
+						userID = credential.ID
 					}
+					return webAuthnUser{ID: userID, Credentials: []webauthn.Credential{*webAuthnCred}}, nil
 				}
 			}
 

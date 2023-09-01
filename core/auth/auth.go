@@ -644,9 +644,17 @@ func (a *Auth) applyAuthType(supportedAuthType model.SupportedAuthType, appOrg m
 			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionVerify, model.TypeCredential, nil, err)
 		}
 
+		if message != nil {
+			return map[string]interface{}{"message": *message}, nil, nil, nil
+		}
+
 		account, err := a.storage.FindAccountByCredentialID(nil, credID)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"credential_id": credID}, err)
+		}
+
+		if len(account.GetVerifiedAccountIdentifiers()) == 0 {
+			return nil, nil, nil, errors.ErrorData(logutils.StatusInvalid, model.TypeAccount, &logutils.FieldArgs{"verified": false})
 		}
 
 		accountAuthTypes, err := a.findAccountAuthTypesAndCredentials(account, supportedAuthType)
@@ -654,8 +662,8 @@ func (a *Auth) applyAuthType(supportedAuthType model.SupportedAuthType, appOrg m
 			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountAuthType, nil, err)
 		}
 
-		retParams, verifiedMFATypes, err := a.completeSignIn(message, account, accountAuthTypes, supportedAuthType, credID)
-		return retParams, account, verifiedMFATypes, err
+		_, verifiedMFATypes, err := a.completeSignIn(nil, account, accountAuthTypes, supportedAuthType, credID)
+		return nil, account, verifiedMFATypes, err
 	}
 
 	//check if the user exists check
@@ -736,7 +744,7 @@ func (a *Auth) applySignIn(identifierImpl identifierType, authImpl authType, sup
 		}
 	}
 
-	if identifierImpl.requireVerificationForSignIn() {
+	if identifierImpl.requireVerificationForSignIn() || authImpl.requireIdentifierVerificationForSignIn() {
 		err := identifierImpl.checkVerified(accountIdentifier, appOrg.Application.Name)
 		if err != nil {
 			return nil, nil, errors.WrapErrorData(logutils.StatusInvalid, model.TypeAccountIdentifier, &logutils.FieldArgs{"verified": false}, err)
@@ -1666,6 +1674,8 @@ func (a *Auth) linkAccountAuthType(account *model.Account, supportedAuthType mod
 	transaction := func(context storage.TransactionContext) error {
 		identifierImpl, _ := a.getIdentifierTypeImpl(creds, nil, nil)
 		accountIdentifier := account.GetAccountIdentifier(identifierImpl.getCode(), identifierImpl.getIdentifier())
+
+		// only try if an identifier was provided and the account does not already have it (conflicts will be handled if attempted)
 		tryIdentifierLink := identifierImpl != nil && accountIdentifier == nil
 
 		authImpl, err := a.getAuthTypeImpl(supportedAuthType)

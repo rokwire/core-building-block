@@ -263,6 +263,10 @@ func (a *passwordAuthImpl) withParams(params map[string]interface{}) (authType, 
 	return a, nil
 }
 
+func (a *passwordAuthImpl) requireIdentifierVerificationForSignIn() bool {
+	return true
+}
+
 func (a *passwordAuthImpl) allowMultiple() bool {
 	return false
 }
