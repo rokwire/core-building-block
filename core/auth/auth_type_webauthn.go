@@ -191,7 +191,7 @@ func (a *webAuthnAuthImpl) checkCredentials(identifierImpl identifierType, accou
 			if err != nil {
 				return "", "", err
 			}
-			return "registration complete", credID, nil
+			return "", credID, nil
 		}
 	}
 
@@ -355,21 +355,21 @@ func (a *webAuthnAuthImpl) completeRegistration(response *protocol.ParsedCredent
 		return "", errors.WrapErrorAction(logutils.ActionCast, "map from webauthn creds", nil, err)
 	}
 
-	var accountAuthType model.AccountAuthType
-	for _, aat := range aats {
+	var accountAuthType *model.AccountAuthType
+	for i, aat := range aats {
 		if aat.Credential == nil {
-			accountAuthType = aat
+			accountAuthType = &aats[i]
 			break
 		}
 	}
-	if accountAuthType.ID == "" {
+	if accountAuthType == nil {
 		return "", errors.ErrorData(logutils.StatusMissing, "account auth type without credential", &logutils.FieldArgs{"auth_type_code": a.authType, "account_id": accountIDVal})
 	}
 
 	credID := uuid.NewString()
 	transaction := func(context storage.TransactionContext) error {
 		//1. insert new credential
-		storeCred := &model.Credential{ID: credID, Value: credData, AccountsAuthTypes: []model.AccountAuthType{accountAuthType},
+		storeCred := &model.Credential{ID: credID, Value: credData, AccountsAuthTypes: []model.AccountAuthType{*accountAuthType},
 			AuthType: model.AuthType{Code: a.authType}, DateCreated: time.Now().UTC()}
 		err = a.auth.storage.InsertCredential(context, storeCred)
 		if err != nil {
@@ -378,7 +378,7 @@ func (a *webAuthnAuthImpl) completeRegistration(response *protocol.ParsedCredent
 
 		//2. update the credential of the existing account auth type
 		accountAuthType.Credential = &model.Credential{ID: credID}
-		err = a.auth.storage.UpdateAccountAuthType(context, accountAuthType)
+		err = a.auth.storage.UpdateAccountAuthType(context, *accountAuthType)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountAuthType, &logutils.FieldArgs{"id": accountAuthType.ID, "account_id": accountIDVal}, err)
 		}
