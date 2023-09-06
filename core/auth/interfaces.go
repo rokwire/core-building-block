@@ -172,7 +172,7 @@ type APIs interface {
 	//		deviceType (string): "mobile" or "web" or "desktop" etc
 	//		deviceOS (*string): Device OS
 	//		deviceID (string): Device ID
-	//		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
+	//		authenticationType (string): Name of the authentication method for provided creds (eg. "password", "code", "illinois_oidc")
 	//		creds (string): Credentials/JSON encoded credential structure defined for the specified auth type
 	//		apiKey (string): API key to validate the specified app
 	//		appTypeIdentifier (string): identifier of the app type/client that the user is logging in from
@@ -181,6 +181,8 @@ type APIs interface {
 	//      clientVersion(*string): Most recent client version
 	//		profile (Profile): Account profile
 	//		preferences (map): Account preferences
+	//		username (string): Account username
+	//		accountIdentifierID (*string): UUID of account identifier, meant to be used after using SignInOptions
 	//		admin (bool): Is this an admin login?
 	//		l (*logs.Log): Log object pointer for request
 	//	Returns:
@@ -194,7 +196,7 @@ type APIs interface {
 	//		MFA types ([]model.MFAType): list of MFA types account is enrolled in
 	Login(ipAddress string, deviceType string, deviceOS *string, deviceID string, authenticationType string, creds string, apiKey string,
 		appTypeIdentifier string, orgID string, params string, clientVersion *string, profile model.Profile, privacy model.Privacy, preferences map[string]interface{},
-		username string, admin bool, l *logs.Log) (map[string]interface{}, *model.LoginSession, []model.MFAType, error)
+		username string, accountIdentifierID *string, admin bool, l *logs.Log) (map[string]interface{}, *model.LoginSession, []model.MFAType, error)
 
 	//Logout logouts an account from app/org
 	//	Input:
@@ -230,6 +232,17 @@ type APIs interface {
 	//	Returns:
 	//		canLink (bool): valid when error is nil
 	CanLink(identifierJSON string, apiKey string, appTypeIdentifier string, orgID string, authenticationType *string, userIdentifier *string) (bool, error)
+
+	//SignInOptions returns the identifiers and auth types that may be used to sign in to an account
+	//	Input:
+	//		userIdentifier (string): User identifier for the specified auth type
+	//		apiKey (string): API key to validate the specified app
+	//		appTypeIdentifier (string): identifier of the app type/client being used
+	//		orgID (string): ID of the organization being used
+	//	Returns:
+	//		identifiers ([]model.AccountIdentifier): account identifiers that may be used for sign-in
+	//		authTypes ([]model.AccountAuthType): account auth types that may be used for sign-in
+	SignInOptions(identifierJSON string, apiKey string, appTypeIdentifier string, orgID string, authenticationType *string, userIdentifier *string) ([]model.AccountIdentifier, []model.AccountAuthType, error)
 
 	//Refresh refreshes an access token using a refresh token
 	//	Input:

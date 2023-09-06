@@ -57,6 +57,8 @@ paths:
     $ref: "./resources/services/auth/account/can-sign-in.yaml"
   /services/auth/account/can-link:
     $ref: "./resources/services/auth/account/can-link.yaml"
+  /services/auth/account/sign-in-options:
+    $ref: "./resources/services/auth/account/sign-in-options.yaml"
   /services/auth/account/identifier/link:
     $ref: "./resources/services/auth/account/identifier/link.yaml"
   /services/auth/account/auth-type/link:

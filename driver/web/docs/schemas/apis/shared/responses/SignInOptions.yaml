@@ -1,0 +1,13 @@
+required:
+  - identifiers
+  - auth_types
+type: object
+properties:
+  identifiers:
+    type: array
+    items:
+      $ref: "../../../user/AccountIdentifier.yaml"
+  auth_types:
+    type: array
+    items:
+      $ref: "../../../user/AccountAuthType.yaml"

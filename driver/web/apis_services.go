@@ -93,7 +93,8 @@ func (h ServicesApisHandler) login(l *logs.Log, r *http.Request, claims *tokenau
 	requestDevice := requestData.Device
 
 	noLoginParams, loginSession, mfaTypes, err := h.coreAPIs.Auth.Login(ip, string(requestDevice.Type), requestDevice.Os, *requestDevice.DeviceId, string(requestData.AuthType),
-		requestCreds, requestData.ApiKey, requestData.AppTypeIdentifier, requestData.OrgId, requestParams, &clientVersion, requestProfile, requestPrivacy, requestPreferences, username, false, l)
+		requestCreds, requestData.ApiKey, requestData.AppTypeIdentifier, requestData.OrgId, requestParams, &clientVersion, requestProfile, requestPrivacy, requestPreferences,
+		username, requestData.AccountIdentifierId, false, l)
 	if err != nil {
 		loggingErr, ok := err.(*errors.Error)
 		if ok && loggingErr.Status() != "" {
@@ -355,6 +356,43 @@ func (h ServicesApisHandler) canLink(l *logs.Log, r *http.Request, claims *token
 	return l.HTTPResponseSuccessJSON(respData)
 }
 
+func (h ServicesApisHandler) signInOptions(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
+	var requestData Def.SharedReqAccountCheck
+	err := json.NewDecoder(r.Body).Decode(&requestData)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.TypeRequest, nil, err, http.StatusBadRequest, true)
+	}
+
+	//identifier
+	requestIdentifier, err := interfaceToJSON(requestData.Identifier)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeCreds, nil, err, http.StatusBadRequest, true)
+	}
+
+	//auth type
+	var authType *string
+	if requestData.AuthType != nil {
+		authTypeStr := string(*requestData.AuthType)
+		authType = &authTypeStr
+	}
+
+	identifiers, authTypes, err := h.coreAPIs.Auth.SignInOptions(requestIdentifier, requestData.ApiKey, requestData.AppTypeIdentifier, requestData.OrgId, authType, requestData.UserIdentifier)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionGet, logutils.MessageDataType("sign-in options"), nil, err, http.StatusInternalServerError, false)
+	}
+
+	respIdentifiers := accountIdentifiersToDef(identifiers)
+	respAuthTypes := accountAuthTypesToDef(authTypes)
+	resp := Def.SharedResSignInOptions{Identifiers: respIdentifiers, AuthTypes: respAuthTypes}
+
+	respData, err := json.Marshal(resp)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionMarshal, logutils.TypeResponse, nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HTTPResponseSuccessJSON(respData)
+}
+
 func (h ServicesApisHandler) linkAccountAuthType(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
 	var requestData Def.ServicesReqAccountAuthTypeLink
 	err := json.NewDecoder(r.Body).Decode(&requestData)
@@ -382,7 +420,7 @@ func (h ServicesApisHandler) linkAccountAuthType(l *logs.Log, r *http.Request, c
 	authTypes := make([]Def.AccountAuthType, 0)
 	if account != nil {
 		account.SortAccountAuthTypes("", claims.AuthType)
-		authTypes = accountAuthTypesToDef(account)
+		authTypes = accountAuthTypesToDefLegacy(account)
 	}
 
 	responseData := &Def.ServicesResAccountAuthTypeLink{AuthTypes: authTypes, Message: message}
@@ -414,7 +452,7 @@ func (h ServicesApisHandler) unlinkAccountAuthType(l *logs.Log, r *http.Request,
 	authTypes := make([]Def.AccountAuthType, 0)
 	if account != nil {
 		account.SortAccountAuthTypes("", claims.AuthType)
-		authTypes = accountAuthTypesToDef(account)
+		authTypes = accountAuthTypesToDefLegacy(account)
 	}
 
 	responseData := &Def.ServicesResAccountAuthTypeLink{AuthTypes: authTypes}

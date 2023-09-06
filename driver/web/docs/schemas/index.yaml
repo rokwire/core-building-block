@@ -176,6 +176,8 @@ _shared_res_ParamsOIDC:
   $ref: "./apis/shared/responses/ParamsOIDC.yaml"
 _shared_res_RokwireToken:
   $ref: "./apis/shared/responses/RokwireToken.yaml"
+_shared_res_SignInOptions:
+  $ref: "./apis/shared/responses/SignInOptions.yaml"
 ## end SHARED requests and responses
 
 ## SERVICES section

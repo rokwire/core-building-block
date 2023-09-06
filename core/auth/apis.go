@@ -51,33 +51,36 @@ func (a *Auth) GetHost() string {
 // Login logs a user into a specific application using the specified credentials and authentication method.
 // The authentication method must be one of the supported for the application.
 //
-//	Input:
-//		ipAddress (string): Client's IP address
-//		deviceType (string): "mobile" or "web" or "desktop" etc
-//		deviceOS (*string): Device OS
-//		deviceID (string): Device ID
-//		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
-//		creds (string): Credentials/JSON encoded credential structure defined for the specified auth type
-//		apiKey (string): API key to validate the specified app
-//		appTypeIdentifier (string): identifier of the app type/client that the user is logging in from
-//		orgID (string): ID of the organization that the user is logging in
-//		params (string): JSON encoded params defined by specified auth type
-//		profile (Profile): Account profile
-//		preferences (map): Account preferences
-//		admin (bool): Is this an admin login?
-//		l (*logs.Log): Log object pointer for request
-//	Returns:
-//		Message (*string): message
-//		Login session (*LoginSession): Signed ROKWIRE access token to be used to authorize future requests
-//			Access token (string): Signed ROKWIRE access token to be used to authorize future requests
-//			Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
-//			AccountAuthType (AccountAuthType): AccountAuthType object for authenticated user
-//			Params (interface{}): authType-specific set of parameters passed back to client
-//			State (string): login state used if account is enrolled in MFA
-//		MFA types ([]model.MFAType): list of MFA types account is enrolled in
+//		Input:
+//			ipAddress (string): Client's IP address
+//			deviceType (string): "mobile" or "web" or "desktop" etc
+//			deviceOS (*string): Device OS
+//			deviceID (string): Device ID
+//			authenticationType (string): Name of the authentication method for provided creds (eg. "password", "code", "illinois_oidc")
+//			creds (string): Credentials/JSON encoded credential structure defined for the specified auth type
+//			apiKey (string): API key to validate the specified app
+//			appTypeIdentifier (string): identifier of the app type/client that the user is logging in from
+//			orgID (string): ID of the organization that the user is logging in
+//			params (string): JSON encoded params defined by specified auth type
+//	     clientVersion(*string): Most recent client version
+//			profile (Profile): Account profile
+//			preferences (map): Account preferences
+//			username (string): Account username
+//			accountIdentifierID (*string): UUID of account identifier, meant to be used after using SignInOptions
+//			admin (bool): Is this an admin login?
+//			l (*logs.Log): Log object pointer for request
+//		Returns:
+//			Message (*string): message
+//			Login session (*LoginSession): Signed ROKWIRE access token to be used to authorize future requests
+//				Access token (string): Signed ROKWIRE access token to be used to authorize future requests
+//				Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
+//				AccountAuthType (AccountAuthType): AccountAuthType object for authenticated user
+//				Params (interface{}): authType-specific set of parameters passed back to client
+//				State (string): login state used if account is enrolled in MFA
+//			MFA types ([]model.MFAType): list of MFA types account is enrolled in
 func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, deviceID string, authenticationType string, creds string, apiKey string,
 	appTypeIdentifier string, orgID string, params string, clientVersion *string, profile model.Profile, privacy model.Privacy, preferences map[string]interface{},
-	username string, admin bool, l *logs.Log) (map[string]interface{}, *model.LoginSession, []model.MFAType, error) {
+	username string, accountIdentifierID *string, admin bool, l *logs.Log) (map[string]interface{}, *model.LoginSession, []model.MFAType, error) {
 	//TODO - analyse what should go in one transaction
 
 	//validate if the provided auth type is supported by the provided application and organization
@@ -286,6 +289,37 @@ func (a *Auth) CanLink(identifierJSON string, apiKey string, appTypeIdentifier s
 	// either there is no account with the provided identifier, or
 	// old client, so treat as request to check if can link identifier OR auth type (can always attempt to link an auth type)
 	return true, nil
+}
+
+// SignInOptions returns the identifiers and auth types that may be used to sign in to an account
+//
+//	Input:
+//		userIdentifier (string): User identifier for the specified auth type
+//		apiKey (string): API key to validate the specified app
+//		appTypeIdentifier (string): identifier of the app type/client being used
+//		orgID (string): ID of the organization being used
+//	Returns:
+//		identifiers ([]model.AccountIdentifier): account identifiers that may be used for sign-in
+//		authTypes ([]model.AccountAuthType): account auth types that may be used for sign-in
+func (a *Auth) SignInOptions(identifierJSON string, apiKey string, appTypeIdentifier string, orgID string, authenticationType *string, userIdentifier *string) ([]model.AccountIdentifier, []model.AccountAuthType, error) {
+	identifierImpl, err := a.getIdentifierTypeImpl(identifierJSON, authenticationType, userIdentifier)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeIdentifierType, nil, err)
+	}
+	if identifierImpl == nil {
+		return nil, nil, errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, nil)
+	}
+
+	code := identifierImpl.getCode()
+	identifier := identifierImpl.getIdentifier()
+
+	account, err := a.getAccount(code, identifier, apiKey, appTypeIdentifier, orgID)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeAccount, nil, err)
+	}
+
+	//TODO: implement
+	return nil, nil, errors.New(logutils.Unimplemented)
 }
 
 // Refresh refreshes an access token using a refresh token

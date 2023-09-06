@@ -1051,17 +1051,18 @@ type SharedReqIdentifiers struct {
 
 // SharedReqLogin defines model for _shared_req_Login.
 type SharedReqLogin struct {
-	ApiKey            string                  `json:"api_key"`
-	AppTypeIdentifier string                  `json:"app_type_identifier"`
-	AuthType          SharedReqLoginAuthType  `json:"auth_type"`
-	Creds             *SharedReqLogin_Creds   `json:"creds,omitempty"`
-	Device            Device                  `json:"device"`
-	OrgId             string                  `json:"org_id"`
-	Params            *SharedReqLogin_Params  `json:"params,omitempty"`
-	Preferences       *map[string]interface{} `json:"preferences"`
-	Privacy           *PrivacyNullable        `json:"privacy"`
-	Profile           *ProfileNullable        `json:"profile"`
-	Username          *string                 `json:"username"`
+	AccountIdentifierId *string                 `json:"account_identifier_id"`
+	ApiKey              string                  `json:"api_key"`
+	AppTypeIdentifier   string                  `json:"app_type_identifier"`
+	AuthType            SharedReqLoginAuthType  `json:"auth_type"`
+	Creds               *SharedReqLogin_Creds   `json:"creds,omitempty"`
+	Device              Device                  `json:"device"`
+	OrgId               string                  `json:"org_id"`
+	Params              *SharedReqLogin_Params  `json:"params,omitempty"`
+	Preferences         *map[string]interface{} `json:"preferences"`
+	Privacy             *PrivacyNullable        `json:"privacy"`
+	Profile             *ProfileNullable        `json:"profile"`
+	Username            *string                 `json:"username"`
 }
 
 // SharedReqLoginAuthType defines model for SharedReqLogin.AuthType.
@@ -1269,6 +1270,12 @@ type SharedResRokwireToken struct {
 
 // SharedResRokwireTokenTokenType The type of the provided tokens to be specified when they are sent in the "Authorization" header
 type SharedResRokwireTokenTokenType string
+
+// SharedResSignInOptions defines model for _shared_res_SignInOptions.
+type SharedResSignInOptions struct {
+	AuthTypes   []AccountAuthType   `json:"auth_types"`
+	Identifiers []AccountIdentifier `json:"identifiers"`
+}
 
 // SystemReqUpdateServiceAccount defines model for _system_req_update_service-account.
 type SystemReqUpdateServiceAccount struct {
@@ -1855,6 +1862,9 @@ type DeleteServicesAuthAccountIdentifierLinkJSONRequestBody = ServicesReqAccount
 
 // PostServicesAuthAccountIdentifierLinkJSONRequestBody defines body for PostServicesAuthAccountIdentifierLink for application/json ContentType.
 type PostServicesAuthAccountIdentifierLinkJSONRequestBody = ServicesReqAccountIdentifierLink
+
+// PostServicesAuthAccountSignInOptionsJSONRequestBody defines body for PostServicesAuthAccountSignInOptions for application/json ContentType.
+type PostServicesAuthAccountSignInOptionsJSONRequestBody = SharedReqAccountCheck
 
 // PostServicesAuthAuthorizeServiceJSONRequestBody defines body for PostServicesAuthAuthorizeService for application/json ContentType.
 type PostServicesAuthAuthorizeServiceJSONRequestBody = ServicesReqAuthorizeService

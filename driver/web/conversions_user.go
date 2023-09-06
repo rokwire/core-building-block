@@ -37,7 +37,7 @@ func accountToDef(item model.Account) *Def.Account {
 	//groups
 	groups := accountGroupsToDef(item.GetActiveGroups())
 	//account auth types
-	authTypes := accountAuthTypesToDef(&item)
+	authTypes := accountAuthTypesToDefLegacy(&item)
 	//account identifiers
 	identifiers := accountIdentifiersToDef(item.Identifiers)
 	//username
@@ -85,7 +85,7 @@ func partialAccountToDef(item model.Account, params map[string]interface{}) *Def
 	//account identifiers
 	identifiers := accountIdentifiersToDef(item.Identifiers)
 	//account auth types
-	authTypes := accountAuthTypesToDef(&item)
+	authTypes := accountAuthTypesToDefLegacy(&item)
 	for i := 0; i < len(authTypes); i++ {
 		authTypes[i].Params = nil
 	}
@@ -132,7 +132,15 @@ func accountAuthTypeToDef(item model.AccountAuthType) Def.AccountAuthType {
 	return Def.AccountAuthType{Id: item.ID, AuthTypeCode: code, Active: &item.Active, Params: &params, Code: &code}
 }
 
-func accountAuthTypesToDef(account *model.Account) []Def.AccountAuthType {
+func accountAuthTypesToDef(items []model.AccountAuthType) []Def.AccountAuthType {
+	result := make([]Def.AccountAuthType, len(items))
+	for i, item := range items {
+		result[i] = accountAuthTypeToDef(item)
+	}
+	return result
+}
+
+func accountAuthTypesToDefLegacy(account *model.Account) []Def.AccountAuthType {
 	if account == nil {
 		return nil
 	}

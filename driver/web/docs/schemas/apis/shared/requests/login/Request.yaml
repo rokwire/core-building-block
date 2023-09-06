@@ -51,3 +51,6 @@ properties:
   username:
     type: string
     nullable: true
+  account_identifier_id:
+    type: string
+    nullable: true
