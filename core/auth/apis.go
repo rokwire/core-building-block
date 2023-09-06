@@ -128,7 +128,7 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 
 		sub = account.ID
 	} else {
-		responseParams, account, mfaTypes, err = a.applyAuthType(*authType, *appOrg, creds, params, clientVersion, profile, privacy, preferences, username, admin, l)
+		responseParams, account, mfaTypes, err = a.applyAuthType(*authType, *appOrg, creds, params, clientVersion, profile, privacy, preferences, username, accountIdentifierID, admin, l)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionApply, model.TypeAuthType, logutils.StringArgs("user"), err)
 		}
@@ -201,10 +201,7 @@ func (a *Auth) Logout(appID string, orgID string, currentAccountID string, sessi
 //	Returns:
 //		accountExisted (bool): valid when error is nil
 func (a *Auth) AccountExists(identifierJSON string, apiKey string, appTypeIdentifier string, orgID string, authenticationType *string, userIdentifier *string) (bool, error) {
-	identifierImpl, err := a.getIdentifierTypeImpl(identifierJSON, authenticationType, userIdentifier)
-	if err != nil {
-		return false, errors.WrapErrorAction(logutils.ActionLoadCache, typeIdentifierType, nil, err)
-	}
+	identifierImpl := a.getIdentifierTypeImpl(identifierJSON, authenticationType, userIdentifier)
 	if identifierImpl == nil {
 		return false, errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, nil)
 	}
@@ -230,10 +227,7 @@ func (a *Auth) AccountExists(identifierJSON string, apiKey string, appTypeIdenti
 //	Returns:
 //		canSignIn (bool): valid when error is nil
 func (a *Auth) CanSignIn(identifierJSON string, apiKey string, appTypeIdentifier string, orgID string, authenticationType *string, userIdentifier *string) (bool, error) {
-	identifierImpl, err := a.getIdentifierTypeImpl(identifierJSON, authenticationType, userIdentifier)
-	if err != nil {
-		return false, errors.WrapErrorAction(logutils.ActionLoadCache, typeIdentifierType, nil, err)
-	}
+	identifierImpl := a.getIdentifierTypeImpl(identifierJSON, authenticationType, userIdentifier)
 	if identifierImpl == nil {
 		return false, errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, nil)
 	}
@@ -262,10 +256,7 @@ func (a *Auth) CanSignIn(identifierJSON string, apiKey string, appTypeIdentifier
 //	Returns:
 //		canLink (bool): valid when error is nil
 func (a *Auth) CanLink(identifierJSON string, apiKey string, appTypeIdentifier string, orgID string, authenticationType *string, userIdentifier *string) (bool, error) {
-	identifierImpl, err := a.getIdentifierTypeImpl(identifierJSON, authenticationType, userIdentifier)
-	if err != nil {
-		return false, errors.WrapErrorAction(logutils.ActionLoadCache, typeIdentifierType, nil, err)
-	}
+	identifierImpl := a.getIdentifierTypeImpl(identifierJSON, authenticationType, userIdentifier)
 	if identifierImpl == nil {
 		return false, errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, nil)
 	}
@@ -302,10 +293,7 @@ func (a *Auth) CanLink(identifierJSON string, apiKey string, appTypeIdentifier s
 //		identifiers ([]model.AccountIdentifier): account identifiers that may be used for sign-in
 //		authTypes ([]model.AccountAuthType): account auth types that may be used for sign-in
 func (a *Auth) SignInOptions(identifierJSON string, apiKey string, appTypeIdentifier string, orgID string, authenticationType *string, userIdentifier *string) ([]model.AccountIdentifier, []model.AccountAuthType, error) {
-	identifierImpl, err := a.getIdentifierTypeImpl(identifierJSON, authenticationType, userIdentifier)
-	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeIdentifierType, nil, err)
-	}
+	identifierImpl := a.getIdentifierTypeImpl(identifierJSON, authenticationType, userIdentifier)
 	if identifierImpl == nil {
 		return nil, nil, errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, nil)
 	}
@@ -317,9 +305,11 @@ func (a *Auth) SignInOptions(identifierJSON string, apiKey string, appTypeIdenti
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeAccount, nil, err)
 	}
+	if account == nil {
+		return nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, nil)
+	}
 
-	//TODO: implement
-	return nil, nil, errors.New(logutils.Unimplemented)
+	return account.GetVerifiedAccountIdentifiers(), account.AuthTypes, errors.New(logutils.Unimplemented)
 }
 
 // Refresh refreshes an access token using a refresh token
@@ -654,10 +644,7 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appID string, orgID
 		return nil, nil, errors.ErrorData(logutils.StatusInvalid, model.TypeAuthType, nil)
 	}
 
-	identifierImpl, err := a.getIdentifierTypeImpl(identifierJSON, nil, nil)
-	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeIdentifierType, nil, err)
-	}
+	identifierImpl := a.getIdentifierTypeImpl(identifierJSON, nil, nil)
 	if identifierImpl == nil {
 		return nil, nil, errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, nil)
 	}
@@ -731,10 +718,7 @@ func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID
 		return nil, nil, errors.ErrorData(logutils.StatusInvalid, "auth type", nil)
 	}
 
-	identifierImpl, err := a.getIdentifierTypeImpl(identifierJSON, nil, nil)
-	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeIdentifierType, nil, err)
-	}
+	identifierImpl := a.getIdentifierTypeImpl(identifierJSON, nil, nil)
 	if identifierImpl == nil {
 		return nil, nil, errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, nil)
 	}
@@ -977,12 +961,9 @@ func (a *Auth) VerifyIdentifier(id string, verification string, l *logs.Log) (*m
 		return accountIdentifier, nil
 	}
 
-	identifierImpl, err := a.getIdentifierTypeImpl("", &accountIdentifier.Code, &accountIdentifier.Identifier)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeIdentifierType, nil, err)
-	}
+	identifierImpl := a.getIdentifierTypeImpl("", &accountIdentifier.Code, &accountIdentifier.Identifier)
 	if identifierImpl == nil {
-		return nil, errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, nil)
+		return nil, errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, &logutils.FieldArgs{"code": accountIdentifier.Code, "identifier": accountIdentifier.Identifier})
 	}
 
 	if identifierChannel, ok := identifierImpl.(authCommunicationChannel); ok {
@@ -1011,10 +992,7 @@ func (a *Auth) SendVerifyIdentifier(appTypeIdentifier string, orgID string, apiK
 		return errors.WrapErrorData(logutils.StatusInvalid, model.TypeAPIKey, nil, err)
 	}
 
-	identifierImpl, err := a.getIdentifierTypeImpl(identifierJSON, nil, nil)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionLoadCache, typeIdentifierType, nil, err)
-	}
+	identifierImpl := a.getIdentifierTypeImpl(identifierJSON, nil, nil)
 	if identifierImpl == nil {
 		return errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, nil)
 	}
@@ -1188,10 +1166,7 @@ func (a *Auth) ForgotCredential(authenticationType string, identifierJSON string
 		return errors.ErrorData(logutils.StatusInvalid, model.TypeAuthType, logutils.StringArgs("credential reset"))
 	}
 
-	identifierImpl, err := a.getIdentifierTypeImpl(identifierJSON, nil, nil)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionLoadCache, typeIdentifierType, nil, err)
-	}
+	identifierImpl := a.getIdentifierTypeImpl(identifierJSON, nil, nil)
 	if identifierImpl == nil {
 		return errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, nil)
 	}
@@ -1880,10 +1855,7 @@ func (a *Auth) UnlinkAccountAuthType(accountID string, accountAuthTypeID *string
 
 // LinkAccountIdentifier links an identifier to an existing account.
 func (a *Auth) LinkAccountIdentifier(accountID string, identifierJSON string, admin bool, l *logs.Log) (*string, *model.Account, error) {
-	identifierImpl, err := a.getIdentifierTypeImpl(identifierJSON, nil, nil)
-	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeIdentifierType, nil, err)
-	}
+	identifierImpl := a.getIdentifierTypeImpl(identifierJSON, nil, nil)
 	if identifierImpl == nil {
 		return nil, nil, errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, nil)
 	}
@@ -1910,10 +1882,7 @@ func (a *Auth) LinkAccountIdentifier(accountID string, identifierJSON string, ad
 
 // UnlinkAccountIdentifier unlinks an identifier from an existing account.
 func (a *Auth) UnlinkAccountIdentifier(accountID string, appTypeIdentifier string, identifierJSON string, admin bool, l *logs.Log) (*model.Account, error) {
-	identifierImpl, err := a.getIdentifierTypeImpl(identifierJSON, nil, nil)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeIdentifierType, nil, err)
-	}
+	identifierImpl := a.getIdentifierTypeImpl(identifierJSON, nil, nil)
 	if identifierImpl == nil {
 		return nil, errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, nil)
 	}
@@ -1973,13 +1942,10 @@ func (a *Auth) InitializeSystemAccount(context storage.TransactionContext, authT
 	}
 	creds := string(credsBytes)
 
-	authenticationType := AuthTypePassword
-	identifierImpl, err := a.getIdentifierTypeImpl("", &authenticationType, &email)
-	if err != nil {
-		return "", errors.WrapErrorAction(logutils.ActionLoadCache, typeIdentifierType, nil, err)
-	}
+	code := IdentifierTypeEmail
+	identifierImpl := a.getIdentifierTypeImpl("", &code, &email)
 	if identifierImpl == nil {
-		return "", errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, nil)
+		return "", errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, &logutils.FieldArgs{"code": code, "identifier": email})
 	}
 
 	_, account, err := a.applySignUpAdmin(context, nil, authType, appOrg, identifierImpl, creds, profile, privacy, "", permissions, nil, nil, nil, permissions, &clientVersion, l)
