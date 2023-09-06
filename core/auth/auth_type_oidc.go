@@ -75,7 +75,7 @@ type oidcLoginParams struct {
 }
 
 type oidcToken struct {
-	IDToken      string `json:"id_token" validate:"required"`
+	IDToken      string `json:"id_token"`
 	AccessToken  string `json:"access_token" validate:"required"`
 	RefreshToken string `json:"refresh_token"`
 	TokenType    string `json:"token_type" validate:"required"`
@@ -272,9 +272,13 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 		return nil, nil, "", errors.WrapErrorAction(logutils.ActionGet, typeOidcToken, nil, err)
 	}
 
-	sub, err := a.checkToken(token.IDToken, authType, appType, oidcConfig, l)
-	if err != nil {
-		return nil, nil, "", errors.WrapErrorAction(logutils.ActionValidate, typeOidcToken, nil, err)
+	sub := ""
+	if token.IDToken != "" {
+		// we should not check the ID token if it is not provided
+		sub, err = a.checkToken(token.IDToken, authType, appType, oidcConfig, l)
+		if err != nil {
+			return nil, nil, "", errors.WrapErrorAction(logutils.ActionValidate, typeOidcToken, nil, err)
+		}
 	}
 
 	userInfoURL := oidcConfig.Host + "/idp/profile/oidc/userinfo"
@@ -292,9 +296,12 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 		return nil, nil, "", errors.WrapErrorAction(logutils.ActionUnmarshal, "user info", nil, err)
 	}
 
-	userClaimsSub, _ := userClaims["sub"].(string)
-	if userClaimsSub != sub {
-		return nil, nil, "", errors.ErrorData("mismatched", "sub fields", &logutils.FieldArgs{"user info": userClaimsSub, "id token": sub})
+	if sub != "" {
+		// we should only perform this check if we get the ID token
+		userClaimsSub, _ := userClaims["sub"].(string)
+		if userClaimsSub != sub {
+			return nil, nil, "", errors.ErrorData("mismatched", "sub fields", &logutils.FieldArgs{"user info": userClaimsSub, "id token": sub})
+		}
 	}
 
 	identityProviderID, _ := authType.Params["identity_provider"].(string)
