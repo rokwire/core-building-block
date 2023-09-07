@@ -498,7 +498,11 @@ func (a *oidcAuthImpl) getOidcAuthConfig(authType model.AuthType, appType model.
 
 // generatePkceChallenge generates and returns a PKCE code challenge and verifier
 func generatePkceChallenge() (string, string, error) {
-	codeVerifier := utils.GenerateRandomString(50)
+	codeVerifier, err := utils.GenerateRandomString(50)
+	if err != nil {
+		return "", "", errors.WrapErrorAction(logutils.ActionGenerate, "code verifier", nil, err)
+	}
+
 	codeChallengeBytes, err := authutils.HashSha256([]byte(codeVerifier))
 	if err != nil {
 		return "", "", errors.WrapErrorAction(logutils.ActionCompute, "code verifier hash", nil, err)

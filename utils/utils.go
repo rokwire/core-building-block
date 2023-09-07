@@ -81,13 +81,13 @@ func GenerateRandomBytes(n int) ([]byte, error) {
 }
 
 // GenerateRandomString returns a URL-safe, base64 encoded securely generated random string
-func GenerateRandomString(s int) string {
+func GenerateRandomString(s int) (string, error) {
 	chars := []rune("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 	b := make([]rune, s)
 	for i := range b {
 		b[i] = chars[rand.Intn(len(chars))]
 	}
-	return string(b)
+	return string(b), nil
 }
 
 // GenerateRandomInt returns a random integer between 0 and max
