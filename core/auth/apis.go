@@ -1801,14 +1801,13 @@ func (a *Auth) GetAdminToken(claims tokenauth.Claims, appID string, orgID string
 //	Input:
 //		accountID (string): ID of the account to link the creds to
 //		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
-//		appTypeIdentifier (string): identifier of the app type/client that the user is logging in from
 //		creds (string): Credentials/JSON encoded credential structure defined for the specified auth type
 //		params (string): JSON encoded params defined by specified auth type
 //		l (*logs.Log): Log object pointer for request
 //	Returns:
 //		message (*string): response message
 //		account (*model.Account): account data after the operation
-func (a *Auth) LinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, creds string, params string, l *logs.Log) (*string, *model.Account, error) {
+func (a *Auth) LinkAccountAuthType(accountID string, authenticationType string, creds string, params string, l *logs.Log) (*string, *model.Account, error) {
 	var message *string
 	var newAccountAuthType *model.AccountAuthType
 
@@ -1821,7 +1820,7 @@ func (a *Auth) LinkAccountAuthType(accountID string, authenticationType string, 
 	}
 
 	//validate if the provided auth type is supported by the provided application and organization
-	authType, appType, appOrg, err := a.validateAuthType(authenticationType, &appTypeIdentifier, nil, account.AppOrg.Organization.ID)
+	authType, appType, appOrg, err := a.validateAuthType(authenticationType, nil, &account.AppOrg.Application.ID, account.AppOrg.Organization.ID)
 	if err != nil || authType == nil || appType == nil || appOrg == nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeAuthType, nil, err)
 	}
@@ -1864,8 +1863,8 @@ func (a *Auth) LinkAccountAuthType(accountID string, authenticationType string, 
 //		l (*logs.Log): Log object pointer for request
 //	Returns:
 //		account (*model.Account): account data after the operation
-func (a *Auth) UnlinkAccountAuthType(accountID string, accountAuthTypeID *string, authenticationType *string, identifier *string, l *logs.Log) (*model.Account, error) {
-	return a.unlinkAccountAuthType(accountID, accountAuthTypeID, authenticationType, identifier)
+func (a *Auth) UnlinkAccountAuthType(accountID string, accountAuthTypeID *string, authenticationType *string, identifier *string, admin bool, l *logs.Log) (*model.Account, error) {
+	return a.unlinkAccountAuthType(accountID, accountAuthTypeID, authenticationType, identifier, admin)
 }
 
 // LinkAccountIdentifier links an identifier to an existing account.
@@ -1896,16 +1895,7 @@ func (a *Auth) LinkAccountIdentifier(accountID string, identifierJSON string, ad
 }
 
 // UnlinkAccountIdentifier unlinks an identifier from an existing account.
-func (a *Auth) UnlinkAccountIdentifier(accountID string, appTypeIdentifier string, identifierJSON string, admin bool, l *logs.Log) (*model.Account, error) {
-	identifierImpl := a.getIdentifierTypeImpl(identifierJSON, nil, nil)
-	if identifierImpl == nil {
-		return nil, errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, nil)
-	}
-
-	if identifierImpl.getCode() == IdentifierTypeExternal && !admin {
-		return nil, errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, logutils.StringArgs(IdentifierTypeExternal))
-	}
-
+func (a *Auth) UnlinkAccountIdentifier(accountID string, accountIdentifierID string, admin bool, l *logs.Log) (*model.Account, error) {
 	account, err := a.storage.FindAccountByID(nil, accountID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
@@ -1914,7 +1904,7 @@ func (a *Auth) UnlinkAccountIdentifier(accountID string, appTypeIdentifier strin
 		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, nil)
 	}
 
-	err = a.unlinkAccountIdentifier(nil, account, identifierImpl.getIdentifier())
+	err = a.unlinkAccountIdentifier(nil, account, &accountIdentifierID, nil, admin)
 
 	return account, nil
 }

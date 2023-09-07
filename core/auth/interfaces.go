@@ -424,14 +424,13 @@ type APIs interface {
 	//	Input:
 	//		accountID (string): ID of the account to link the creds to
 	//		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
-	//		appTypeIdentifier (string): identifier of the app type/client that the user is logging in from
 	//		creds (string): Credentials/JSON encoded credential structure defined for the specified auth type
 	//		params (string): JSON encoded params defined by specified auth type
 	//		l (*logs.Log): Log object pointer for request
 	//	Returns:
 	//		message (*string): response message
 	//		account (*model.Account): account data after the operation
-	LinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, creds string, params string, l *logs.Log) (*string, *model.Account, error)
+	LinkAccountAuthType(accountID string, authenticationType string, creds string, params string, l *logs.Log) (*string, *model.Account, error)
 
 	//UnlinkAccountAuthType unlinks credentials from an existing account.
 	//The authentication method must be one of the supported for the application.
@@ -443,11 +442,11 @@ type APIs interface {
 	//		l (*logs.Log): Log object pointer for request
 	//	Returns:
 	//		account (*model.Account): account data after the operation
-	UnlinkAccountAuthType(accountID string, accountAuthTypeID *string, authenticationType *string, identifier *string, l *logs.Log) (*model.Account, error)
+	UnlinkAccountAuthType(accountID string, accountAuthTypeID *string, authenticationType *string, identifier *string, admin bool, l *logs.Log) (*model.Account, error)
 
 	LinkAccountIdentifier(accountID string, identifierJSON string, admin bool, l *logs.Log) (*string, *model.Account, error)
 
-	UnlinkAccountIdentifier(accountID string, appTypeIdentifier string, identifierJSON string, admin bool, l *logs.Log) (*model.Account, error)
+	UnlinkAccountIdentifier(accountID string, accountIdentifierID string, admin bool, l *logs.Log) (*model.Account, error)
 
 	//InitializeSystemAccount initializes the first system account
 	InitializeSystemAccount(context storage.TransactionContext, authType model.AuthType, appOrg model.ApplicationOrganization, allSystemPermission string, email string, password string, clientVersion string, l *logs.Log) (string, error)

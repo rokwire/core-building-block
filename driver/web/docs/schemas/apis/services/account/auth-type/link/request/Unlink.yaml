@@ -1,6 +1,6 @@
 type: object
 properties:
-  auth_type_id:
+  id:
     type: string
   auth_type:
     type: string

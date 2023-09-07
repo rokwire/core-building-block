@@ -412,7 +412,7 @@ func (h ServicesApisHandler) linkAccountAuthType(l *logs.Log, r *http.Request, c
 		return l.HTTPResponseErrorAction(logutils.ActionMarshal, "params", nil, err, http.StatusBadRequest, true)
 	}
 
-	message, account, err := h.coreAPIs.Auth.LinkAccountAuthType(claims.Subject, string(requestData.AuthType), requestData.AppTypeIdentifier, requestCreds, requestParams, l)
+	message, account, err := h.coreAPIs.Auth.LinkAccountAuthType(claims.Subject, string(requestData.AuthType), requestCreds, requestParams, l)
 	if err != nil {
 		return l.HTTPResponseError("Error linking account auth type", err, http.StatusInternalServerError, true)
 	}
@@ -444,7 +444,7 @@ func (h ServicesApisHandler) unlinkAccountAuthType(l *logs.Log, r *http.Request,
 		authTypeStr := string(*requestData.AuthType)
 		authType = &authTypeStr
 	}
-	account, err := h.coreAPIs.Auth.UnlinkAccountAuthType(claims.Subject, requestData.AuthTypeId, authType, requestData.Identifier, l)
+	account, err := h.coreAPIs.Auth.UnlinkAccountAuthType(claims.Subject, requestData.Id, authType, requestData.Identifier, false, l)
 	if err != nil {
 		return l.HTTPResponseError("Error unlinking account auth type", err, http.StatusInternalServerError, true)
 	}
@@ -503,13 +503,7 @@ func (h ServicesApisHandler) unlinkAccountIdentifier(l *logs.Log, r *http.Reques
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("account identifier unlink request"), nil, err, http.StatusBadRequest, true)
 	}
 
-	//identifier
-	requestIdentifier, err := interfaceToJSON(requestData.Identifier)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeCreds, nil, err, http.StatusBadRequest, true)
-	}
-
-	account, err := h.coreAPIs.Auth.UnlinkAccountIdentifier(claims.Subject, requestData.AppTypeIdentifier, requestIdentifier, false, l)
+	account, err := h.coreAPIs.Auth.UnlinkAccountIdentifier(claims.Subject, requestData.Id, false, l)
 	if err != nil {
 		return l.HTTPResponseError("Error unlinking account identifier", err, http.StatusInternalServerError, true)
 	}

@@ -1907,7 +1907,7 @@ func (a *Auth) registerAccountAuthType(context storage.TransactionContext, accou
 	return nil
 }
 
-func (a *Auth) unlinkAccountAuthType(accountID string, accountAuthTypeID *string, authenticationType *string, identifier *string) (*model.Account, error) {
+func (a *Auth) unlinkAccountAuthType(accountID string, accountAuthTypeID *string, authenticationType *string, identifier *string, admin bool) (*model.Account, error) {
 	account, err := a.storage.FindAccountByID(nil, accountID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
@@ -1923,7 +1923,7 @@ func (a *Auth) unlinkAccountAuthType(accountID string, accountAuthTypeID *string
 		if aatIDMatch || aatCodeMatch {
 			transaction := func(context storage.TransactionContext) error {
 				if aatCodeMatch && identifier != nil && !aat.SupportedAuthType.AuthType.IsExternal {
-					err = a.unlinkAccountIdentifier(context, account, *identifier)
+					err = a.unlinkAccountIdentifier(context, account, nil, identifier, admin)
 					if err != nil {
 						return errors.WrapErrorAction("unlinking", model.TypeAccountIdentifier, &logutils.FieldArgs{"account_id": account.ID, "identifier": *identifier}, err)
 					}
@@ -1980,27 +1980,33 @@ func (a *Auth) linkAccountIdentifier(context storage.TransactionContext, account
 	return &message, nil
 }
 
-func (a *Auth) unlinkAccountIdentifier(context storage.TransactionContext, account *model.Account, identifier string) error {
+func (a *Auth) unlinkAccountIdentifier(context storage.TransactionContext, account *model.Account, accountIdentifierID *string, identifier *string, admin bool) error {
 	if len(account.Identifiers) < 2 {
 		return errors.ErrorData(logutils.StatusInvalid, model.TypeAccount, &logutils.FieldArgs{"identifiers": len(account.Identifiers)})
 	}
 
 	verifiedIdentifiers := account.GetVerifiedAccountIdentifiers()
-	if len(verifiedIdentifiers) == 1 && verifiedIdentifiers[0].Identifier == identifier {
-		return errors.ErrorData(logutils.StatusInvalid, model.TypeAccount, &logutils.FieldArgs{"verified_identifiers": 1})
+	if len(verifiedIdentifiers) == 1 {
+		idMatch := accountIdentifierID != nil && verifiedIdentifiers[0].ID == *accountIdentifierID
+		identifierMatch := identifier != nil && verifiedIdentifiers[0].Identifier == *identifier
+		if idMatch || identifierMatch {
+			return errors.ErrorData(logutils.StatusInvalid, model.TypeAccount, &logutils.FieldArgs{"verified_identifiers": 1})
+		}
 	}
 
 	for i, id := range account.Identifiers {
-		// unlink identifier with matching identifier value (do not directly unlink identifiers with associated auth type)
-		if identifier == id.Identifier && id.AccountAuthTypeID == nil {
-			id.Account = *account
-			err := a.storage.DeleteAccountIdentifier(context, id)
-			if err != nil {
-				return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccountIdentifier, nil, err)
-			}
+		// unlink identifier with matching identifier value (do not directly unlink identifiers with associated auth type unless admin)
+		if id.AccountAuthTypeID == nil || admin {
+			if (identifier != nil && *identifier == id.Identifier) || (accountIdentifierID != nil && *accountIdentifierID == id.ID) {
+				id.Account = *account
+				err := a.storage.DeleteAccountIdentifier(context, id)
+				if err != nil {
+					return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccountIdentifier, nil, err)
+				}
 
-			account.Identifiers = append(account.Identifiers[:i], account.Identifiers[i+1:]...)
-			break
+				account.Identifiers = append(account.Identifiers[:i], account.Identifiers[i+1:]...)
+				break
+			}
 		}
 	}
 

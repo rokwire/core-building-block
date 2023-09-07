@@ -7569,7 +7569,6 @@ components:
     _services_req_account_auth-type-link:
       required:
         - auth_type
-        - app_type_identifier
       type: object
       properties:
         auth_type:
@@ -7583,8 +7582,6 @@ components:
             - phone
             - twilio_phone
             - username
-        app_type_identifier:
-          type: string
         creds:
           anyOf:
             - $ref: '#/components/schemas/_shared_req_CredsCode'
@@ -7602,7 +7599,7 @@ components:
     _services_req_account_auth-type-unlink:
       type: object
       properties:
-        auth_type_id:
+        id:
           type: string
         auth_type:
           type: string
@@ -7638,14 +7635,11 @@ components:
           $ref: '#/components/schemas/_shared_req_Identifiers'
     _services_req_account_identifier-unlink:
       required:
-        - app_type_identifier
-        - identifier
+        - id
       type: object
       properties:
-        app_type_identifier:
+        id:
           type: string
-        identifier:
-          $ref: '#/components/schemas/_shared_req_Identifiers'
     _services_res_account_identifier-link:
       required:
         - identifiers

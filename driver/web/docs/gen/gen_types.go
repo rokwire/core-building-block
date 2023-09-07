@@ -783,10 +783,9 @@ type AdminReqVerified struct {
 
 // ServicesReqAccountAuthTypeLink defines model for _services_req_account_auth-type-link.
 type ServicesReqAccountAuthTypeLink struct {
-	AppTypeIdentifier string                                 `json:"app_type_identifier"`
-	AuthType          ServicesReqAccountAuthTypeLinkAuthType `json:"auth_type"`
-	Creds             *ServicesReqAccountAuthTypeLink_Creds  `json:"creds,omitempty"`
-	Params            *ServicesReqAccountAuthTypeLink_Params `json:"params,omitempty"`
+	AuthType ServicesReqAccountAuthTypeLinkAuthType `json:"auth_type"`
+	Creds    *ServicesReqAccountAuthTypeLink_Creds  `json:"creds,omitempty"`
+	Params   *ServicesReqAccountAuthTypeLink_Params `json:"params,omitempty"`
 }
 
 // ServicesReqAccountAuthTypeLinkAuthType defines model for ServicesReqAccountAuthTypeLink.AuthType.
@@ -805,7 +804,7 @@ type ServicesReqAccountAuthTypeLink_Params struct {
 // ServicesReqAccountAuthTypeUnlink defines model for _services_req_account_auth-type-unlink.
 type ServicesReqAccountAuthTypeUnlink struct {
 	AuthType   *ServicesReqAccountAuthTypeUnlinkAuthType `json:"auth_type,omitempty"`
-	AuthTypeId *string                                   `json:"auth_type_id,omitempty"`
+	Id         *string                                   `json:"id,omitempty"`
 	Identifier *string                                   `json:"identifier,omitempty"`
 }
 
@@ -820,10 +819,7 @@ type ServicesReqAccountIdentifierLink struct {
 
 // ServicesReqAccountIdentifierUnlink defines model for _services_req_account_identifier-unlink.
 type ServicesReqAccountIdentifierUnlink struct {
-	AppTypeIdentifier string `json:"app_type_identifier"`
-
-	// Identifier Allowed identifier types
-	Identifier SharedReqIdentifiers `json:"identifier"`
+	Id string `json:"id"`
 }
 
 // ServicesReqAuthorizeService defines model for _services_req_authorize-service.

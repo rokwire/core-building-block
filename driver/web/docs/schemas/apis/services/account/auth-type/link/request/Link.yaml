@@ -1,6 +1,5 @@
 required:
   - auth_type
-  - app_type_identifier
 type: object
 properties:
   auth_type:
@@ -14,8 +13,6 @@ properties:
       - phone
       - twilio_phone
       - username
-  app_type_identifier:
-    type: string
   creds:
     anyOf:
       - $ref: "../../../../../shared/requests/CredsCode.yaml"
