@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"regexp"
 	"strings"
 	"time"
 
@@ -70,7 +71,14 @@ func (a *emailIdentifierImpl) withIdentifier(creds string) (identifierType, erro
 		return nil, errors.WrapErrorAction(logutils.ActionValidate, typeEmailIdentifier, nil, err)
 	}
 
-	return &emailIdentifierImpl{auth: a.auth, code: a.code, identifier: strings.TrimSpace(requestCreds.Email)}, nil
+	email := strings.TrimSpace(requestCreds.Email)
+	//TODO: validate this regexp is correct
+	validEmail := regexp.MustCompile(`^[a-zA-Z0-9.!#\$%&'*+/=?^_{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?(?:.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?)*$`)
+	if !validEmail.MatchString(email) {
+		return nil, errors.ErrorData(logutils.StatusInvalid, typeEmailIdentifier, &logutils.FieldArgs{"email": email})
+	}
+
+	return &emailIdentifierImpl{auth: a.auth, code: a.code, identifier: email}, nil
 }
 
 func (a *emailIdentifierImpl) buildIdentifier(accountID *string, appName string) (string, *model.AccountIdentifier, error) {

@@ -309,7 +309,22 @@ func (a *Auth) SignInOptions(identifierJSON string, apiKey string, appTypeIdenti
 		return nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, nil)
 	}
 
-	return account.GetVerifiedAccountIdentifiers(), account.AuthTypes, errors.New(logutils.Unimplemented)
+	identifiers := account.GetVerifiedAccountIdentifiers()
+	for i, id := range identifiers {
+		if id.Code == IdentifierTypeEmail {
+			emailParts := strings.Split(id.Identifier, "@")
+			if len(emailParts) != 2 {
+				a.logger.WarnWithFields("found a malformatted email identifier", logutils.Fields{"id": id.ID})
+				continue
+			}
+
+			emailParts[0] = utils.GetLogValue(emailParts[0], 3) // mask all but the last 3 characters of the email prefix
+			identifiers[i].Identifier = strings.Join(emailParts, "@")
+		} else if id.Code == IdentifierTypePhone {
+			identifiers[i].Identifier = utils.GetLogValue(id.Identifier, 4) // mask all but the last 4 phone digits
+		}
+	}
+	return identifiers, account.AuthTypes, errors.New(logutils.Unimplemented)
 }
 
 // Refresh refreshes an access token using a refresh token
