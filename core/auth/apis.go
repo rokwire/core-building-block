@@ -1818,13 +1818,13 @@ func (a *Auth) LinkAccountAuthType(accountID string, authenticationType string, 
 		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
 	if account == nil {
-		return nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, &logutils.FieldArgs{"id": accountID})
+		return nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, &logutils.FieldArgs{"id": accountID}).SetStatus(utils.ErrorStatusNotFound)
 	}
 
 	//validate if the provided auth type is supported by the provided application and organization
 	authType, appType, appOrg, err := a.validateAuthType(authenticationType, nil, &account.AppOrg.Application.ID, account.AppOrg.Organization.ID)
 	if err != nil || authType == nil || appType == nil || appOrg == nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeAuthType, nil, err)
+		return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeAuthType, nil, err).SetStatus(utils.ErrorStatusNotAllowed)
 	}
 
 	if authType.AuthType.IsAnonymous {
@@ -1877,7 +1877,7 @@ func (a *Auth) LinkAccountIdentifier(accountID string, identifierJSON string, ad
 	}
 
 	if identifierImpl.getCode() == IdentifierTypeExternal && !admin {
-		return nil, nil, errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, logutils.StringArgs(IdentifierTypeExternal))
+		return nil, nil, errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, logutils.StringArgs(IdentifierTypeExternal)).SetStatus(utils.ErrorStatusNotAllowed)
 	}
 
 	account, err := a.storage.FindAccountByID(nil, accountID)
@@ -1885,7 +1885,7 @@ func (a *Auth) LinkAccountIdentifier(accountID string, identifierJSON string, ad
 		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
 	if account == nil {
-		return nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, nil)
+		return nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, nil).SetStatus(utils.ErrorStatusNotFound)
 	}
 
 	message, err := a.linkAccountIdentifier(nil, account, identifierImpl)

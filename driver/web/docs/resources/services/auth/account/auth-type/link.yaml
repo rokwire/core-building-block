@@ -77,6 +77,7 @@ post:
                   - verification-expired
                   - already-exists
                   - not-found
+                  - not-allowed
                   - internal-server-error
                 description: |
                   - `invalid`: Invalid credentials
@@ -84,6 +85,7 @@ post:
                   - `verification-expired`: Identifier verification expired. The verification is restarted
                   - `already-exists`: Auth type already exists
                   - `not-found`: Account could not be found when `sign-up=false`
+                  - `not-allowed`: Invalid operation
                   - `internal-server-error`: An undefined error occurred
               message:
                 type: string
