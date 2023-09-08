@@ -120,11 +120,13 @@ type Auth struct {
 	//delete sessions timer
 	deleteSessionsTimer     *time.Timer
 	deleteSessionsTimerDone chan bool
+
+	version string
 }
 
 // NewAuth creates a new auth instance
 func NewAuth(serviceID string, host string, authPrivKey *keys.PrivKey, authService *authservice.AuthService, storage Storage, emailer Emailer, phoneVerifier PhoneVerifier,
-	profileBB ProfileBuildingBlock, minTokenExp *int64, maxTokenExp *int64, supportLegacySigs bool, logger *logs.Logger) (*Auth, error) {
+	profileBB ProfileBuildingBlock, minTokenExp *int64, maxTokenExp *int64, supportLegacySigs bool, logger *logs.Logger, version string) (*Auth, error) {
 	if minTokenExp == nil {
 		var minTokenExpVal int64 = 5
 		minTokenExp = &minTokenExpVal
@@ -154,7 +156,7 @@ func NewAuth(serviceID string, host string, authPrivKey *keys.PrivKey, authServi
 		externalAuthTypes: externalAuthTypes, anonymousAuthTypes: anonymousAuthTypes, serviceAuthTypes: serviceAuthTypes, mfaTypes: mfaTypes, authPrivKey: authPrivKey,
 		ServiceRegManager: nil, serviceID: serviceID, host: host, minTokenExp: *minTokenExp, maxTokenExp: *maxTokenExp, profileBB: profileBB,
 		cachedIdentityProviders: cachedIdentityProviders, identityProvidersLock: identityProvidersLock, apiKeys: apiKeys, apiKeysLock: apiKeysLock,
-		deleteSessionsTimerDone: deleteSessionsTimerDone}
+		deleteSessionsTimerDone: deleteSessionsTimerDone, version: version}
 
 	err := auth.storeCoreRegs()
 	if err != nil {
