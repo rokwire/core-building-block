@@ -17,19 +17,16 @@ post:
           email:
             summary: Email
             value:
-              app_type_identifier: edu.illinois.rokwire
               identifier:
                 email: test@example.com 
           phone:
             summary: Phone
             value:
-              app_type_identifier: edu.illinois.rokwire
               identifier:
                 phone: "+12223334444"
           username:
             summary: Username
             value:
-              app_type_identifier: edu.illinois.rokwire
               identifier:
                 username: username
     required: true
@@ -84,25 +81,8 @@ delete:
       application/json:
         schema:
           $ref: "../../../../../schemas/apis/services/account/identifier/link/request/Unlink.yaml"
-        examples:
-          email:
-            summary: Email
-            value:
-              app_type_identifier: edu.illinois.rokwire
-              identifier:
-                email: test@example.com 
-          phone:
-            summary: Phone
-            value:
-              app_type_identifier: edu.illinois.rokwire
-              identifier:
-                phone: "+12223334444"
-          username:
-            summary: Username
-            value:
-              app_type_identifier: edu.illinois.rokwire
-              identifier:
-                username: username
+        example:
+          id: <account identifier ID>
     required: true
   responses:
     200:

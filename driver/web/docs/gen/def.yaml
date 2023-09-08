@@ -734,19 +734,16 @@ paths:
               email:
                 summary: Email
                 value:
-                  app_type_identifier: edu.illinois.rokwire
                   identifier:
                     email: test@example.com
               phone:
                 summary: Phone
                 value:
-                  app_type_identifier: edu.illinois.rokwire
                   identifier:
                     phone: '+12223334444'
               username:
                 summary: Username
                 value:
-                  app_type_identifier: edu.illinois.rokwire
                   identifier:
                     username: username
         required: true
@@ -801,25 +798,8 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/_services_req_account_identifier-unlink'
-            examples:
-              email:
-                summary: Email
-                value:
-                  app_type_identifier: edu.illinois.rokwire
-                  identifier:
-                    email: test@example.com
-              phone:
-                summary: Phone
-                value:
-                  app_type_identifier: edu.illinois.rokwire
-                  identifier:
-                    phone: '+12223334444'
-              username:
-                summary: Username
-                value:
-                  app_type_identifier: edu.illinois.rokwire
-                  identifier:
-                    username: username
+            example:
+              id: <account identifier ID>
         required: true
       responses:
         '200':
@@ -855,7 +835,6 @@ paths:
                 summary: Password
                 value:
                   auth_type: password
-                  app_type_identifier: edu.illinois.rokwire
                   creds:
                     password: test12345
                   params:
@@ -864,21 +843,18 @@ paths:
                 summary: Code
                 value:
                   auth_type: code
-                  app_type_identifier: edu.illinois.rokwire
                   creds:
                     phone: '+12223334444'
               webauthn-begin_registration:
                 summary: Webauthn begin registration
                 value:
                   auth_type: webauthn
-                  app_type_identifier: edu.illinois.rokwire
                   params:
                     display_name: Name
               webauthn-complete_registration:
                 summary: Webauthn complete registration
                 value:
                   auth_type: webauthn
-                  app_type_identifier: edu.illinois.rokwire
                   creds:
                     response: <create credential response>
                   params:
@@ -887,7 +863,6 @@ paths:
                 summary: Illinois OIDC
                 value:
                   auth_type: illinois_oidc
-                  app_type_identifier: edu.illinois.rokwire
                   creds: 'https://redirect.example.com?code=ai324uith8gSEefesEguorgwsf43'
                   params:
                     redirect_uri: 'https://redirect.example.com'
@@ -945,7 +920,7 @@ paths:
             schema:
               $ref: '#/components/schemas/_services_req_account_auth-type-unlink'
             example:
-              auth_type_id: <account auth type ID>
+              id: <account auth type ID>
         required: true
       responses:
         '200':

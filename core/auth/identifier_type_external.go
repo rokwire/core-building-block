@@ -55,7 +55,7 @@ func (a *externalIdentifierImpl) withIdentifier(creds string) (identifierType, e
 	}
 
 	// these are keys that should NOT be treated as external identifier codes
-	excludeKeys := []string{IdentifierTypeEmail, IdentifierTypePhone, IdentifierTypeUsername, credentialKeyResponse}
+	excludeKeys := []string{IdentifierTypeEmail, IdentifierTypePhone, IdentifierTypeUsername, AuthTypePassword, AuthTypeCode, credentialKeyResponse}
 	for k, id := range requestCreds {
 		if !utils.Contains(excludeKeys, k) {
 			return &externalIdentifierImpl{auth: a.auth, code: k, identifier: strings.TrimSpace(id)}, nil

@@ -324,7 +324,7 @@ func (a *Auth) SignInOptions(identifierJSON string, apiKey string, appTypeIdenti
 			identifiers[i].Identifier = utils.GetLogValue(id.Identifier, 4) // mask all but the last 4 phone digits
 		}
 	}
-	return identifiers, account.AuthTypes, errors.New(logutils.Unimplemented)
+	return identifiers, account.AuthTypes, nil
 }
 
 // Refresh refreshes an access token using a refresh token

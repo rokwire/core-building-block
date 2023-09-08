@@ -1690,11 +1690,15 @@ func (a *Auth) linkAccountAuthType(account *model.Account, supportedAuthType mod
 	var err error
 
 	transaction := func(context storage.TransactionContext) error {
+		var accountIdentifier *model.AccountIdentifier
+		tryIdentifierLink := false
 		identifierImpl := a.getIdentifierTypeImpl(creds, nil, nil)
-		accountIdentifier := account.GetAccountIdentifier(identifierImpl.getCode(), identifierImpl.getIdentifier())
+		if identifierImpl != nil {
+			accountIdentifier = account.GetAccountIdentifier(identifierImpl.getCode(), identifierImpl.getIdentifier())
 
-		// only try if an identifier was provided and the account does not already have it (conflicts will be handled if attempted)
-		tryIdentifierLink := identifierImpl != nil && accountIdentifier == nil
+			// only try if an identifier was provided and the account does not already have it (conflicts will be handled if attempted)
+			tryIdentifierLink = (accountIdentifier == nil)
+		}
 
 		authImpl, err := a.getAuthTypeImpl(supportedAuthType)
 		if err != nil {

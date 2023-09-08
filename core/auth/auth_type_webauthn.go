@@ -119,7 +119,13 @@ func (a *webAuthnAuthImpl) signUp(identifierImpl identifierType, accountID *stri
 		return "", nil, nil, errors.WrapErrorAction(logutils.ActionParse, typeWebAuthnParams, nil, err)
 	}
 
-	user := webAuthnUser{Name: identifierImpl.getIdentifier()}
+	var user webAuthnUser
+	if identifierImpl != nil {
+		user.Name = identifierImpl.getIdentifier()
+	} else if parameters.DisplayName != nil {
+		user.Name = *parameters.DisplayName
+	}
+
 	var accountIdentifier *model.AccountIdentifier
 	if accountID != nil {
 		// we are linking a webauthn credential, so use the existing accountID
