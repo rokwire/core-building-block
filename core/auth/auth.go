@@ -1322,6 +1322,7 @@ func (a *Auth) createLoginSession(anonymous bool, sub string, authType model.Aut
 	name := ""
 	email := ""
 	phone := ""
+	username := ""
 	permissions := []string{}
 	scopes := []string{authorization.ScopeGlobal}
 	externalIDs := make(map[string]string)
@@ -1332,13 +1333,14 @@ func (a *Auth) createLoginSession(anonymous bool, sub string, authType model.Aut
 		name = account.Profile.GetFullName()
 		email = account.Profile.Email
 		phone = account.Profile.Phone
+		username = account.Username
 		permissions = account.GetPermissionNames()
 		scopes = append(scopes, account.GetScopes()...)
 		for _, external := range account.GetExternalAccountIdentifiers() {
 			externalIDs[external.Code] = external.Identifier
 		}
 	}
-	claims := a.getStandardClaims(sub, name, email, phone, rokwireTokenAud, orgID, appID, authType.Code, externalIDs, nil, anonymous, true, appOrg.Application.Admin, appOrg.Organization.System, false, true, id)
+	claims := a.getStandardClaims(sub, name, email, phone, username, rokwireTokenAud, orgID, appID, authType.Code, externalIDs, nil, anonymous, true, appOrg.Application.Admin, appOrg.Organization.System, false, true, id)
 	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), strings.Join(scopes, " "))
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
@@ -2219,7 +2221,7 @@ func (a *Auth) buildAccessTokenForServiceAccount(account model.ServiceAccount, a
 		aud = strings.Join(services, ",")
 	}
 
-	claims := a.getStandardClaims(account.AccountID, account.Name, "", "", aud, orgID, appID, authType, nil, nil, false, true, false, false, true, account.FirstParty, "")
+	claims := a.getStandardClaims(account.AccountID, account.Name, "", "", "", aud, orgID, appID, authType, nil, nil, false, true, false, false, true, account.FirstParty, "")
 	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), scope)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
@@ -2468,7 +2470,7 @@ func (a *Auth) getScopedAccessToken(claims tokenauth.Claims, serviceID string, s
 		aud = append(aud, serviceID)
 	}
 
-	scopedClaims := a.getStandardClaims(claims.Subject, "", "", "", strings.Join(aud, ","), claims.OrgID, claims.AppID, claims.AuthType, claims.ExternalIDs, &claims.ExpiresAt, claims.Anonymous, claims.Authenticated, false, false, claims.Service, false, claims.SessionID)
+	scopedClaims := a.getStandardClaims(claims.Subject, "", "", "", "", strings.Join(aud, ","), claims.OrgID, claims.AppID, claims.AuthType, claims.ExternalIDs, &claims.ExpiresAt, claims.Anonymous, claims.Authenticated, false, false, claims.Service, false, claims.SessionID)
 	return a.buildAccessToken(scopedClaims, "", scope)
 }
 
@@ -2485,7 +2487,7 @@ func (a *Auth) tokenDataForScopes(scopes []authorization.Scope) ([]string, strin
 	return services, strings.Join(scopeStrings, " ")
 }
 
-func (a *Auth) getStandardClaims(sub string, name string, email string, phone string, aud string, orgID string, appID string, authType string, externalIDs map[string]string,
+func (a *Auth) getStandardClaims(sub string, name string, email string, phone string, username string, aud string, orgID string, appID string, authType string, externalIDs map[string]string,
 	exp *int64, anonymous bool, authenticated bool, admin bool, system bool, service bool, firstParty bool, sessionID string) tokenauth.Claims {
 	return tokenauth.Claims{
 		StandardClaims: jwt.StandardClaims{
@@ -2494,7 +2496,7 @@ func (a *Auth) getStandardClaims(sub string, name string, email string, phone st
 			ExpiresAt: a.getExp(exp),
 			IssuedAt:  time.Now().Unix(),
 			Issuer:    a.host,
-		}, OrgID: orgID, AppID: appID, AuthType: authType, Name: name, Email: email, Phone: phone,
+		}, OrgID: orgID, AppID: appID, AuthType: authType, Name: name, Email: email, Phone: phone, Username: username,
 		ExternalIDs: externalIDs, Anonymous: anonymous, Authenticated: authenticated, Admin: admin, System: system,
 		Service: service, FirstParty: firstParty, SessionID: sessionID,
 	}

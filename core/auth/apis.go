@@ -402,6 +402,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 	name := ""
 	email := ""
 	phone := ""
+	username := ""
 	permissions := []string{}
 	externalIDs := make(map[string]string)
 
@@ -450,6 +451,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 		name = loginSession.Account.Profile.GetFullName()
 		email = loginSession.Account.Profile.Email
 		phone = loginSession.Account.Profile.Phone
+		username = loginSession.Account.Username
 		permissions = loginSession.Account.GetPermissionNames()
 		scopes = append(scopes, loginSession.Account.GetScopes()...)
 		if len(externalIDs) == 0 {
@@ -458,7 +460,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 			}
 		}
 	}
-	claims := a.getStandardClaims(sub, name, email, phone, rokwireTokenAud, orgID, appID, authType, externalIDs, nil, anonymous, false, loginSession.AppOrg.Application.Admin, loginSession.AppOrg.Organization.System, false, true, loginSession.ID)
+	claims := a.getStandardClaims(sub, name, email, phone, username, rokwireTokenAud, orgID, appID, authType, externalIDs, nil, anonymous, false, loginSession.AppOrg.Application.Admin, loginSession.AppOrg.Organization.System, false, true, loginSession.ID)
 	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), strings.Join(scopes, " "))
 	if err != nil {
 		l.Infof("error generating acccess token on refresh - %s", refreshToken)
@@ -1790,7 +1792,7 @@ func (a *Auth) GetAdminToken(claims tokenauth.Claims, appID string, orgID string
 		return "", errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"org_id": orgID, "app_id": appID})
 	}
 
-	adminClaims := a.getStandardClaims(claims.Subject, claims.Name, claims.Email, claims.Phone, claims.Audience, orgID, appID, claims.AuthType,
+	adminClaims := a.getStandardClaims(claims.Subject, claims.Name, claims.Email, claims.Phone, claims.Username, claims.Audience, orgID, appID, claims.AuthType,
 		claims.ExternalIDs, &claims.ExpiresAt, false, false, true, claims.System, claims.Service, claims.FirstParty, claims.SessionID)
 	return a.buildAccessToken(adminClaims, claims.Permissions, claims.Scope)
 }
