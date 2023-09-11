@@ -6,6 +6,15 @@ p, get_test, /core/admin/test, (GET), Get test data
 
 p, get_test-model, /core/admin/test-model, (GET), Get test models
 
+p, all_configs_core, /core/admin/configs/*, (GET)|(PUT)|(DELETE), All core config admin actions
+p, all_configs_core, /core/admin/configs, (GET)|(POST),
+p, get_configs_core, /core/admin/configs/*, (GET), Get core configs
+p, get_configs_core, /core/admin/configs, (GET),
+p, update_configs_core, /core/admin/configs/*, (GET)|(PUT), Update core configs
+p, update_configs_core, /core/admin/configs, (GET)|(POST),
+p, delete_configs_core, /core/admin/configs/*, (GET)|(DELETE), Delete core configs
+p, delete_configs_core, /core/admin/configs, (GET),
+
 p, all_login-sessions, /core/admin/application/login-sessions, (GET), All login session actions
 p, all_login-sessions, /core/admin/application/account/*/login-sessions/*, (DELETE),
 p, get_login-sessions, /core/admin/application/login-sessions, (GET), Get login sessions
@@ -64,6 +73,17 @@ p, update_account-auth-roles, /core/admin/application/roles, (GET),
 p, update_account-auth-groups, /core/admin/application/groups/*/accounts, (PUT)|(DELETE), Add and remove accounts from auth groups
 p, update_account-auth-groups, /core/admin/application/groups, (GET),
 
+p, update_account-verified, /core/admin/application/accounts/*/verified, (PUT), Set verification status on accounts
+
 p, all_account-system-configs, /core/admin/application/accounts/*/system-configs, (GET)|(POST)|(PUT)|(DELETE), All account system config actions
 p, get_account-system-configs, /core/admin/application/accounts/*/system-configs, (GET), Get account system configs
 p, update_account-system-configs, /core/admin/application/accounts/*/system-configs, (PUT), Update account system configs
+
+p, all_app-configs, /core/admin/application/configs, (GET)|(POST)|(PUT)|(DELETE), All app config actions
+p, all_app-configs, /core/admin/application/configs/*, (GET)|(POST)|(PUT)|(DELETE), All app config actions
+p, get_app-configs, /core/admin/application/configs, (GET), Get app configs
+p, get_app-configs, /core/admin/application/configs/*, (GET),
+p, update_app-configs, /core/admin/application/configs, (GET)|(POST), Update and create app configs
+p, update_app-configs, /core/admin/application/configs/*, (GET)|(PUT),
+p, delete_app-config, /core/admin/application/configs/*, (GET)|(DELETE), Delete app configs
+p, delete_app-config, /core/admin/application/configs, (GET),

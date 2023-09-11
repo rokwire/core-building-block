@@ -8,6 +8,7 @@ properties:
     type: string
   device_id:
     type: string
+    nullable: true
   type:
     type: string
     enum:

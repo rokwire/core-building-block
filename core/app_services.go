@@ -18,6 +18,7 @@ import (
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
 
+	"github.com/google/uuid"
 	"github.com/rokwire/logging-library-go/v2/errors"
 	"github.com/rokwire/logging-library-go/v2/logs"
 	"github.com/rokwire/logging-library-go/v2/logutils"
@@ -66,7 +67,7 @@ func (app *application) serGetAccountSystemConfigs(accountID string) (map[string
 	return account.SystemConfigs, nil
 }
 
-func (app *application) serUpdateProfile(accountID string, profile model.Profile) error {
+func (app *application) serUpdateAccountProfile(accountID string, profile model.Profile) error {
 	//1. find the account
 	account, err := app.storage.FindAccountByID(nil, accountID)
 	if err != nil {
@@ -77,9 +78,17 @@ func (app *application) serUpdateProfile(accountID string, profile model.Profile
 	profile.ID = account.Profile.ID
 
 	//3. update profile
-	err = app.storage.UpdateProfile(nil, profile)
+	err = app.storage.UpdateAccountProfile(nil, profile)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeProfile, nil, err)
+	}
+	return nil
+}
+
+func (app *application) serUpdateAccountPrivacy(accountID string, privacy model.Privacy) error {
+	err := app.storage.UpdateAccountPrivacy(nil, accountID, privacy)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypePrivacy, nil, err)
 	}
 	return nil
 }
@@ -134,6 +143,33 @@ func (app *application) serGetAccounts(limit int, offset int, appID string, orgI
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
 	return accounts, nil
+}
+
+func (app *application) serGetPublicAccounts(appID string, orgID string, limit int, offset int, search *string, firstName *string,
+	lastName *string, username *string, followingID *string, followerID *string, userID string) ([]model.PublicAccount, error) {
+	//find the accounts
+	accounts, err := app.storage.FindPublicAccounts(nil, appID, orgID, &limit, &offset, search, firstName, lastName, username, followingID, followerID, userID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+	return accounts, nil
+}
+
+func (app *application) serAddFollow(follow model.Follow) error {
+	follow.ID = uuid.NewString()
+	err := app.storage.InsertFollow(nil, follow)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeFollow, nil, err)
+	}
+	return nil
+}
+
+func (app *application) serDeleteFollow(appID string, orgID string, followingID string, followerID string) error {
+	err := app.storage.DeleteFollow(nil, appID, orgID, followingID, followerID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeFollow, nil, err)
+	}
+	return nil
 }
 
 func (app *application) serGetAuthTest(l *logs.Log) string {

@@ -1,11 +1,11 @@
 get:
   tags:
-  - System
+  - Admin
   summary: Reads app configs by ID
   description: |
     Get app configs for the provided ID
     
-    **Auth:** Requires system access token with `get_app-configs`, `update_app-configs`, `delete_app-configs`, or `all_app-configs` permission
+    **Auth:** Requires admin access token with `get_app-configs`, `update_app-configs`, `delete_app-configs`, or `all_app-configs` permission
   security:
     - bearerAuth: []
   parameters:
@@ -23,7 +23,7 @@ get:
       content:
         application/json:
           schema:
-            $ref: "../../schemas/application/ApplicationConfig.yaml"
+            $ref: "../../../schemas/application/ApplicationConfig.yaml"
     400:
       description: Bad request.
     401:
@@ -32,12 +32,12 @@ get:
       description: Internal error
 put:
   tags:
-  - System
+  - Admin
   summary: Updates app config by ID
   description: |
     Updates app config with the provided ID
 
-    **Auth:** Requires system access token with `update_app-configs` or `all_app-configs` permission
+    **Auth:** Requires admin access token with `update_app-configs` or `all_app-configs` permission
   security:
     - bearerAuth: []
   parameters:
@@ -53,7 +53,7 @@ put:
     content:
       application/json:
         schema:
-          $ref: "../../schemas/application/ApplicationConfig.yaml"
+          $ref: "../../../schemas/application/ApplicationConfig.yaml"
         example:
           version: "1.0.1"
           app_type_id: 7e037f2d-b423-4b4d-a1bc-18507f81c6d1
@@ -77,12 +77,12 @@ put:
       description: Internal error
 delete:
   tags:
-  - System
+  - Admin
   summary: Deletes app config by ID
   description: |
     Deletes app config with the provided ID
 
-    **Auth:** Requires system access token with `delete_app-configs` or `all_app-configs` permission
+    **Auth:** Requires admin access token with `delete_app-configs` or `all_app-configs` permission
   security:
     - bearerAuth: []
   parameters:

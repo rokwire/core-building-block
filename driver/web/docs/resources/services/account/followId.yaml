@@ -1,0 +1,28 @@
+delete:
+  tags:
+  - Services
+  summary: Delete a follow relationship
+  description: |
+    Delete a follow where subject follows userID
+
+    **Auth:** Requires user auth token
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: id
+      in: path
+      description: The account ID to stop following
+      required: true
+      style: simple
+      explode: false
+      schema:
+        type: string
+  responses:
+    200:
+      description: Success
+    400:
+      description: Bad request
+    401:
+      description: Unauthorized
+    500:
+      description: Internal error

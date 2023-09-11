@@ -20,6 +20,7 @@ properties:
     type: string
   device_id:
     type: string
+    nullable: true
   ip_address:
     type: string
   refresh_tokens_count:

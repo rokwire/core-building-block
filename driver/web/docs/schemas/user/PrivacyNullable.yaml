@@ -1,0 +1,6 @@
+type: object
+nullable: true
+properties:
+  public:
+    type: boolean
+    nullable: true
