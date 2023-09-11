@@ -1380,16 +1380,38 @@ func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, 
 	pipeline := []bson.M{}
 
 	var searchStr, firstNameStr, lastNameStr, usernameStr, followingIDStr, followerIDStr string
+
+	// search for matching using text search. No substring matches
+	// if search != nil {
+	// 	searchStr = *search
+	// 	pipeline = append(pipeline,
+	// 		bson.M{
+	// 			"$match": bson.M{
+	// 				"$text": bson.M{
+	// 					"$search": search,
+	// 					// "$caseSensitive": false,
+	// 				}},
+	// 		})
+	// }
+
 	if search != nil {
 		searchStr = *search
-		pipeline = append(pipeline,
-			bson.M{
-				"$match": bson.M{
-					"$text": bson.M{
-						"$search": search,
-						// "$caseSensitive": false,
-					}},
-			})
+		searchStrParts := strings.Split(searchStr, " ")
+		searchStr = ""
+		for _, part := range searchStrParts {
+			if searchStr != "" {
+				searchStr += "|"
+			}
+			searchStr += "(" + part + ")"
+		}
+		regexFilter := bson.M{
+			"$or": []bson.M{
+				{"username": primitive.Regex{Pattern: searchStr, Options: "i"}},
+				{"profile.first_name": primitive.Regex{Pattern: searchStr, Options: "i"}},
+				{"profile.last_name": primitive.Regex{Pattern: searchStr, Options: "i"}},
+			},
+		}
+		pipeline = append(pipeline, bson.M{"$match": regexFilter})
 	}
 
 	pipeline = append(pipeline, bson.M{"$match": bson.M{"app_org_id": appOrg.ID, "privacy.public": true}})
@@ -3368,8 +3390,8 @@ func (sa *Adapter) FindConfigs(configType *string) ([]model.Config, error) {
 }
 
 // InsertConfig inserts a new config
-func (sa *Adapter) InsertConfig(config model.Config) error {
-	_, err := sa.db.configs.InsertOne(config)
+func (sa *Adapter) InsertConfig(context TransactionContext, config model.Config) error {
+	_, err := sa.db.configs.InsertOneWithContext(context, config)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeConfig, nil, err)
 	}
@@ -3378,7 +3400,7 @@ func (sa *Adapter) InsertConfig(config model.Config) error {
 }
 
 // UpdateConfig updates an existing config
-func (sa *Adapter) UpdateConfig(config model.Config) error {
+func (sa *Adapter) UpdateConfig(context TransactionContext, config model.Config) error {
 	filter := bson.M{"_id": config.ID}
 	update := bson.D{
 		primitive.E{Key: "$set", Value: bson.D{
@@ -3387,10 +3409,10 @@ func (sa *Adapter) UpdateConfig(config model.Config) error {
 			primitive.E{Key: "org_id", Value: config.OrgID},
 			primitive.E{Key: "system", Value: config.System},
 			primitive.E{Key: "data", Value: config.Data},
-			primitive.E{Key: "date_updated", Value: config.DateUpdated},
+			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
 		}},
 	}
-	_, err := sa.db.configs.UpdateOne(filter, update, nil)
+	_, err := sa.db.configs.UpdateOneWithContext(context, filter, update, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeConfig, &logutils.FieldArgs{"id": config.ID}, err)
 	}

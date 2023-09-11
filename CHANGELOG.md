@@ -7,8 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Added
-- Support following accounts [#667](https://github.com/rokwire/core-building-block/issues/667)
 - WebAuthn authentication [#659](https://github.com/rokwire/core-building-block/issues/659)
+- Searching follows looks for substring matches [#670](https://github.com/rokwire/core-building-block/issues/670)
+- Support following accounts [#667](https://github.com/rokwire/core-building-block/issues/667)
+- Device ID not nullable [#672](https://github.com/rokwire/core-building-block/issues/672)
+### Changed
 - Decouple authentication and verification mechanisms [#665](https://github.com/rokwire/core-building-block/issues/665)
 - Refactor account auth types [#674](https://github.com/rokwire/core-building-block/issues/674)
 

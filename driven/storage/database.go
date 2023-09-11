@@ -307,10 +307,10 @@ func (m *database) applyAccountsChecks(accounts *collectionWrapper) error {
 		return err
 	}
 
-	err = accounts.AddIndex(bson.D{primitive.E{Key: "username", Value: "text"}, primitive.E{Key: "profile.first_name", Value: "text"}, primitive.E{Key: "profile.last_name", Value: "text"}}, false)
-	if err != nil {
-		return err
-	}
+	// err = accounts.AddIndex(bson.D{primitive.E{Key: "username", Value: "text"}, primitive.E{Key: "profile.first_name", Value: "text"}, primitive.E{Key: "profile.last_name", Value: "text"}}, false)
+	// if err != nil {
+	// 	return err
+	// }
 
 	m.logger.Info("accounts check passed")
 	return nil

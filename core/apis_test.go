@@ -29,7 +29,7 @@ import (
 )
 
 func buildTestCoreAPIs(storage core.Storage) *core.APIs {
-	return core.NewCoreAPIs("local", "1.1.1", "build", "core", storage, nil, nil, nil)
+	return core.NewCoreAPIs("local", "1.1.1", "build", "core", storage, nil, nil, false, 30, 24, nil)
 }
 
 //Services
@@ -83,7 +83,7 @@ func TestAdmGetTest(t *testing.T) {
 func TestAdmCreateConfig(t *testing.T) {
 	anyConfig := mock.AnythingOfType("model.Config")
 	storage := genmocks.Storage{}
-	storage.On("InsertConfig", anyConfig).Return(nil)
+	storage.On("InsertConfig", nil, anyConfig).Return(nil)
 
 	coreAPIs := buildTestCoreAPIs(&storage)
 
@@ -96,7 +96,7 @@ func TestAdmCreateConfig(t *testing.T) {
 
 	//second case - error
 	storage2 := genmocks.Storage{}
-	storage2.On("InsertConfig", anyConfig).Return(errors.New("error occured"))
+	storage2.On("InsertConfig", nil, anyConfig).Return(errors.New("error occured"))
 
 	coreAPIs = buildTestCoreAPIs(&storage2)
 

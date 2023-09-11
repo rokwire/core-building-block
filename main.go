@@ -105,6 +105,25 @@ func main() {
 	smtpFrom := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SMTP_EMAIL_FROM", false, false)
 	smtpPortNum, _ := strconv.Atoi(smtpPort)
 
+	verifyEmailRaw := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_VERIFY_EMAIL", false, false)
+	verifyEmail, err := strconv.ParseBool(verifyEmailRaw)
+	if err != nil {
+		logger.Infof("Error parsing ROKWIRE_CORE_VERIFY_EMAIL, applying defaults: %v", err)
+		verifyEmail = true
+	}
+	verifyWaitTimeRaw := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_VERIFY_WAIT_TIME", false, false)
+	verifyWaitTime, err := strconv.Atoi(verifyWaitTimeRaw)
+	if err != nil {
+		logger.Infof("Error parsing ROKWIRE_CORE_VERIFY_WAIT_TIME, applying defaults: %v", err)
+		verifyWaitTime = 30 // minutes
+	}
+	verifyExpiryRaw := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_VERIFY_EXPIRY", false, false)
+	verifyExpiry, err := strconv.Atoi(verifyExpiryRaw)
+	if err != nil {
+		logger.Infof("Error parsing ROKWIRE_CORE_VERIFY_EXPIRY, applying defaults: %v", err)
+		verifyExpiry = 24 // hours
+	}
+
 	emailer := emailer.NewEmailerAdapter(smtpHost, smtpPortNum, smtpUser, smtpPassword, smtpFrom)
 
 	supportLegacySigsStr := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SUPPORT_LEGACY_SIGNATURES", false, false)
@@ -197,7 +216,7 @@ func main() {
 	}
 
 	//core
-	coreAPIs := core.NewCoreAPIs(env, Version, Build, serviceID, storageAdapter, authImpl, systemInitSettings, logger)
+	coreAPIs := core.NewCoreAPIs(env, Version, Build, serviceID, storageAdapter, authImpl, systemInitSettings, verifyEmail, verifyWaitTime, verifyExpiry, logger)
 	coreAPIs.Start()
 
 	// read CORS parameters from stored env config
