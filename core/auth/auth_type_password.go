@@ -235,7 +235,7 @@ func (a *passwordAuthImpl) resetCredential(credential *model.Credential, resetCo
 	return credsMap, nil
 }
 
-func (a *passwordAuthImpl) checkCredentials(identifierImpl identifierType, accountID *string, aats []model.AccountAuthType, creds string, appOrg model.ApplicationOrganization) (string, string, error) {
+func (a *passwordAuthImpl) checkCredentials(identifierImpl identifierType, accountID *string, aats []model.AccountAuthType, creds string, params string, appOrg model.ApplicationOrganization) (string, string, error) {
 	if len(aats) != 1 {
 		return "", "", errors.ErrorData(logutils.StatusInvalid, "account auth type list", &logutils.FieldArgs{"count": len(aats)})
 	}

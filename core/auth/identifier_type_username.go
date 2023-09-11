@@ -89,7 +89,7 @@ func (a *usernameIdentifierImpl) buildIdentifier(accountID *string, appName stri
 		accountIDStr = uuid.NewString()
 	}
 
-	accountIdentifier := model.AccountIdentifier{ID: uuid.NewString(), Code: a.code, Identifier: a.identifier, Verified: true,
+	accountIdentifier := model.AccountIdentifier{ID: uuid.NewString(), Code: a.code, Identifier: a.identifier, Verified: false,
 		Account: model.Account{ID: accountIDStr}, DateCreated: time.Now().UTC()}
 
 	return "", &accountIdentifier, nil
@@ -100,7 +100,7 @@ func (a *usernameIdentifierImpl) requireVerificationForSignIn() bool {
 }
 
 func (a *usernameIdentifierImpl) checkVerified(accountIdentifier *model.AccountIdentifier, appName string) error {
-	return nil
+	return nil // return nil because username verification is not possible for now
 }
 
 func (a *usernameIdentifierImpl) allowMultiple() bool {

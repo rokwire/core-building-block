@@ -145,12 +145,12 @@ func (a *webAuthnAuthImpl) signUp(identifierImpl identifierType, accountID *stri
 		user.DisplayName = accountIdentifier.Identifier
 	}
 
-	message, credential, err := a.beginRegistration(user, appOrg)
+	message, err := a.beginRegistration(user, appOrg)
 	if err != nil {
 		return "", nil, nil, errors.WrapErrorAction(logutils.ActionStart, "webauthn registration", nil, err)
 	}
 
-	return message, accountIdentifier, credential, nil
+	return message, accountIdentifier, nil, nil
 }
 
 func (a *webAuthnAuthImpl) signUpAdmin(identifierImpl identifierType, appOrg model.ApplicationOrganization, creds string) (map[string]interface{}, *model.AccountIdentifier, *model.Credential, error) {
@@ -167,7 +167,7 @@ func (a *webAuthnAuthImpl) resetCredential(credential *model.Credential, resetCo
 	return nil, errors.New(logutils.Unimplemented)
 }
 
-func (a *webAuthnAuthImpl) checkCredentials(identifierImpl identifierType, accountID *string, aats []model.AccountAuthType, creds string, appOrg model.ApplicationOrganization) (string, string, error) {
+func (a *webAuthnAuthImpl) checkCredentials(identifierImpl identifierType, accountID *string, aats []model.AccountAuthType, creds string, params string, appOrg model.ApplicationOrganization) (string, string, error) {
 	incomingCreds, err := a.parseCreds(creds)
 	if err != nil {
 		return "", "", errors.WrapErrorAction(logutils.ActionParse, typeWebAuthnCreds, nil, err)
@@ -180,8 +180,43 @@ func (a *webAuthnAuthImpl) checkCredentials(identifierImpl identifierType, accou
 			return "", "", errors.WrapErrorAction("building", "webauthn user", nil, err)
 		}
 
-		optionData, err := a.beginLogin(user, appOrg)
-		return optionData, "", err
+		var optionData string
+		if user != nil && len(user.WebAuthnCredentials()) == 0 {
+			// attempting login with identifier and no credentials - need to restart registration instead
+			parameters, err := a.parseParams(params)
+			if err != nil {
+				return "", "", errors.WrapErrorAction(logutils.ActionParse, typeWebAuthnParams, nil, err)
+			}
+
+			newUser, ok := user.(webAuthnUser)
+			if !ok {
+				return "", "", errors.ErrorData(logutils.StatusInvalid, "webauthn user", nil)
+			}
+
+			if identifierImpl != nil {
+				newUser.Name = identifierImpl.getIdentifier()
+			} else if parameters.DisplayName != nil {
+				newUser.Name = *parameters.DisplayName
+			}
+
+			if parameters.DisplayName != nil {
+				newUser.DisplayName = *parameters.DisplayName
+			} else if identifierImpl != nil {
+				newUser.DisplayName = identifierImpl.getIdentifier()
+			}
+
+			optionData, err = a.beginRegistration(newUser, appOrg)
+			if err != nil {
+				return "", "", errors.WrapErrorAction(logutils.ActionStart, "webauthn registration", nil, err)
+			}
+		} else {
+			optionData, err = a.beginLogin(user, appOrg)
+			if err != nil {
+				return "", "", errors.WrapErrorAction("beginning", "webauthn login", nil, err)
+			}
+		}
+
+		return optionData, "", nil
 	}
 
 	// accountID will not be nil if linking or if account identifier has been verified during sign up
@@ -288,33 +323,34 @@ func (a *webAuthnAuthImpl) allowMultiple() bool {
 
 // Helpers
 
-func (a *webAuthnAuthImpl) beginRegistration(user webAuthnUser, appOrg model.ApplicationOrganization) (string, *model.Credential, error) {
+func (a *webAuthnAuthImpl) beginRegistration(user webauthn.User, appOrg model.ApplicationOrganization) (string, error) {
 	if a.config.Config.RPDisplayName == rpDisplayNameKey {
 		a.config.Config.RPDisplayName = appOrg.Application.Name
 	}
 	options, session, err := a.config.BeginRegistration(user)
 	if err != nil {
-		return "", nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
+		return "", errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
 	}
 
 	sessionData, err := json.Marshal(session)
 	if err != nil {
-		return "", nil, errors.WrapErrorAction(logutils.ActionMarshal, "session", nil, err)
+		return "", errors.WrapErrorAction(logutils.ActionMarshal, "session", nil, err)
 	}
 
 	state := map[string]interface{}{stateKeyChallenge: session.Challenge, stateKeySession: string(sessionData)}
-	loginState := model.LoginState{ID: uuid.NewString(), AppID: appOrg.Application.ID, OrgID: appOrg.Organization.ID, AccountID: &user.ID, State: state, DateCreated: time.Now().UTC()}
+	accountID := string(user.WebAuthnID())
+	loginState := model.LoginState{ID: uuid.NewString(), AppID: appOrg.Application.ID, OrgID: appOrg.Organization.ID, AccountID: &accountID, State: state, DateCreated: time.Now().UTC()}
 	err = a.auth.storage.InsertLoginState(loginState)
 	if err != nil {
-		return "", nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeLoginState, nil, err)
+		return "", errors.WrapErrorAction(logutils.ActionCreate, model.TypeLoginState, nil, err)
 	}
 
 	optionData, err := json.Marshal(options)
 	if err != nil {
-		return "", nil, errors.WrapErrorAction(logutils.ActionMarshal, "creation options", nil, err)
+		return "", errors.WrapErrorAction(logutils.ActionMarshal, "creation options", nil, err)
 	}
 
-	return string(optionData), nil, nil
+	return string(optionData), nil
 }
 
 func (a *webAuthnAuthImpl) completeRegistration(response *protocol.ParsedCredentialCreationData, user webauthn.User, aats []model.AccountAuthType, appOrg model.ApplicationOrganization) (string, error) {

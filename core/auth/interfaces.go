@@ -111,7 +111,7 @@ type authType interface {
 	// Returns:
 	//	message (string): information required to complete login, if applicable
 	//	credentialID (string): the ID of the credential used to validate the login
-	checkCredentials(identifierImpl identifierType, accountID *string, aats []model.AccountAuthType, creds string, appOrg model.ApplicationOrganization) (string, string, error)
+	checkCredentials(identifierImpl identifierType, accountID *string, aats []model.AccountAuthType, creds string, params string, appOrg model.ApplicationOrganization) (string, string, error)
 
 	withParams(params map[string]interface{}) (authType, error)
 
