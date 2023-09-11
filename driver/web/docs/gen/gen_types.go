@@ -118,6 +118,7 @@ const (
 	SharedReqAccountCheckAuthTypeIllinoisOidc SharedReqAccountCheckAuthType = "illinois_oidc"
 	SharedReqAccountCheckAuthTypeTwilioPhone  SharedReqAccountCheckAuthType = "twilio_phone"
 	SharedReqAccountCheckAuthTypeUsername     SharedReqAccountCheckAuthType = "username"
+	SharedReqAccountCheckAuthTypeWebauthn     SharedReqAccountCheckAuthType = "webauthn"
 )
 
 // Defines values for SharedReqCreateAccountAuthType.
@@ -133,6 +134,7 @@ const (
 	SharedReqLoginAuthTypeIllinoisOidc SharedReqLoginAuthType = "illinois_oidc"
 	SharedReqLoginAuthTypeTwilioPhone  SharedReqLoginAuthType = "twilio_phone"
 	SharedReqLoginAuthTypeUsername     SharedReqLoginAuthType = "username"
+	SharedReqLoginAuthTypeWebauthn     SharedReqLoginAuthType = "webauthn"
 )
 
 // Defines values for SharedReqLoginUrlAuthType.
@@ -955,6 +957,18 @@ type SharedReqCredsTwilioPhone struct {
 	Phone string  `json:"phone"`
 }
 
+// SharedReqCredsUsername Auth login creds for auth_type="username"
+type SharedReqCredsUsername struct {
+	Password string `json:"password"`
+	Username string `json:"username"`
+}
+
+// SharedReqCredsWebAuthn Auth login creds for auth_type="webauthn"
+type SharedReqCredsWebAuthn struct {
+	Response *string `json:"response,omitempty"`
+	Username string  `json:"username"`
+}
+
 // SharedReqLogin defines model for _shared_req_Login.
 type SharedReqLogin struct {
 	ApiKey            string                  `json:"api_key"`
@@ -973,22 +987,9 @@ type SharedReqLogin struct {
 // SharedReqLoginAuthType defines model for SharedReqLogin.AuthType.
 type SharedReqLoginAuthType string
 
-// SharedReqLoginCreds4 Auth login creds for auth_type="username"
-type SharedReqLoginCreds4 struct {
-	Password string `json:"password"`
-	Username string `json:"username"`
-}
-
 // SharedReqLogin_Creds defines model for SharedReqLogin.Creds.
 type SharedReqLogin_Creds struct {
 	union json.RawMessage
-}
-
-// SharedReqLoginParams3 Auth login params for auth_type="username"
-type SharedReqLoginParams3 struct {
-	// ConfirmPassword This should match the `creds` password field when sign_up=true. This should be verified on the client side as well to reduce invalid requests.
-	ConfirmPassword *string `json:"confirm_password,omitempty"`
-	SignUp          *bool   `json:"sign_up,omitempty"`
 }
 
 // SharedReqLogin_Params defines model for SharedReqLogin.Params.
@@ -1052,6 +1053,20 @@ type SharedReqParamsOIDC struct {
 type SharedReqParamsSetEmailCredential struct {
 	ConfirmPassword string `json:"confirm_password"`
 	NewPassword     string `json:"new_password"`
+}
+
+// SharedReqParamsUsername Auth login params for auth_type="username"
+type SharedReqParamsUsername struct {
+	// ConfirmPassword This should match the `creds` password field when sign_up=true. This should be verified on the client side as well to reduce invalid requests.
+	ConfirmPassword *string `json:"confirm_password,omitempty"`
+	SignUp          *bool   `json:"sign_up,omitempty"`
+}
+
+// SharedReqParamsWebAuthn Auth login params for auth_type="webauthn"
+type SharedReqParamsWebAuthn struct {
+	// DisplayName User's account name for display purposes
+	DisplayName *string `json:"display_name,omitempty"`
+	SignUp      *bool   `json:"sign_up,omitempty"`
 }
 
 // SharedReqRefresh defines model for _shared_req_Refresh.
@@ -2179,6 +2194,32 @@ func (t *ServicesReqCredentialUpdate_Params) UnmarshalJSON(b []byte) error {
 	return err
 }
 
+// AsSharedReqCredsWebAuthn returns the union data inside the SharedReqLogin_Creds as a SharedReqCredsWebAuthn
+func (t SharedReqLogin_Creds) AsSharedReqCredsWebAuthn() (SharedReqCredsWebAuthn, error) {
+	var body SharedReqCredsWebAuthn
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromSharedReqCredsWebAuthn overwrites any union data inside the SharedReqLogin_Creds as the provided SharedReqCredsWebAuthn
+func (t *SharedReqLogin_Creds) FromSharedReqCredsWebAuthn(v SharedReqCredsWebAuthn) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeSharedReqCredsWebAuthn performs a merge with any union data inside the SharedReqLogin_Creds, using the provided SharedReqCredsWebAuthn
+func (t *SharedReqLogin_Creds) MergeSharedReqCredsWebAuthn(v SharedReqCredsWebAuthn) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
 // AsSharedReqCredsEmail returns the union data inside the SharedReqLogin_Creds as a SharedReqCredsEmail
 func (t SharedReqLogin_Creds) AsSharedReqCredsEmail() (SharedReqCredsEmail, error) {
 	var body SharedReqCredsEmail
@@ -2283,22 +2324,22 @@ func (t *SharedReqLogin_Creds) MergeSharedReqCredsAPIKey(v SharedReqCredsAPIKey)
 	return err
 }
 
-// AsSharedReqLoginCreds4 returns the union data inside the SharedReqLogin_Creds as a SharedReqLoginCreds4
-func (t SharedReqLogin_Creds) AsSharedReqLoginCreds4() (SharedReqLoginCreds4, error) {
-	var body SharedReqLoginCreds4
+// AsSharedReqCredsUsername returns the union data inside the SharedReqLogin_Creds as a SharedReqCredsUsername
+func (t SharedReqLogin_Creds) AsSharedReqCredsUsername() (SharedReqCredsUsername, error) {
+	var body SharedReqCredsUsername
 	err := json.Unmarshal(t.union, &body)
 	return body, err
 }
 
-// FromSharedReqLoginCreds4 overwrites any union data inside the SharedReqLogin_Creds as the provided SharedReqLoginCreds4
-func (t *SharedReqLogin_Creds) FromSharedReqLoginCreds4(v SharedReqLoginCreds4) error {
+// FromSharedReqCredsUsername overwrites any union data inside the SharedReqLogin_Creds as the provided SharedReqCredsUsername
+func (t *SharedReqLogin_Creds) FromSharedReqCredsUsername(v SharedReqCredsUsername) error {
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
 }
 
-// MergeSharedReqLoginCreds4 performs a merge with any union data inside the SharedReqLogin_Creds, using the provided SharedReqLoginCreds4
-func (t *SharedReqLogin_Creds) MergeSharedReqLoginCreds4(v SharedReqLoginCreds4) error {
+// MergeSharedReqCredsUsername performs a merge with any union data inside the SharedReqLogin_Creds, using the provided SharedReqCredsUsername
+func (t *SharedReqLogin_Creds) MergeSharedReqCredsUsername(v SharedReqCredsUsername) error {
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -2316,6 +2357,32 @@ func (t SharedReqLogin_Creds) MarshalJSON() ([]byte, error) {
 
 func (t *SharedReqLogin_Creds) UnmarshalJSON(b []byte) error {
 	err := t.union.UnmarshalJSON(b)
+	return err
+}
+
+// AsSharedReqParamsWebAuthn returns the union data inside the SharedReqLogin_Params as a SharedReqParamsWebAuthn
+func (t SharedReqLogin_Params) AsSharedReqParamsWebAuthn() (SharedReqParamsWebAuthn, error) {
+	var body SharedReqParamsWebAuthn
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromSharedReqParamsWebAuthn overwrites any union data inside the SharedReqLogin_Params as the provided SharedReqParamsWebAuthn
+func (t *SharedReqLogin_Params) FromSharedReqParamsWebAuthn(v SharedReqParamsWebAuthn) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeSharedReqParamsWebAuthn performs a merge with any union data inside the SharedReqLogin_Params, using the provided SharedReqParamsWebAuthn
+func (t *SharedReqLogin_Params) MergeSharedReqParamsWebAuthn(v SharedReqParamsWebAuthn) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(t.union, b)
+	t.union = merged
 	return err
 }
 
@@ -2397,22 +2464,22 @@ func (t *SharedReqLogin_Params) MergeSharedReqParamsNone(v SharedReqParamsNone) 
 	return err
 }
 
-// AsSharedReqLoginParams3 returns the union data inside the SharedReqLogin_Params as a SharedReqLoginParams3
-func (t SharedReqLogin_Params) AsSharedReqLoginParams3() (SharedReqLoginParams3, error) {
-	var body SharedReqLoginParams3
+// AsSharedReqParamsUsername returns the union data inside the SharedReqLogin_Params as a SharedReqParamsUsername
+func (t SharedReqLogin_Params) AsSharedReqParamsUsername() (SharedReqParamsUsername, error) {
+	var body SharedReqParamsUsername
 	err := json.Unmarshal(t.union, &body)
 	return body, err
 }
 
-// FromSharedReqLoginParams3 overwrites any union data inside the SharedReqLogin_Params as the provided SharedReqLoginParams3
-func (t *SharedReqLogin_Params) FromSharedReqLoginParams3(v SharedReqLoginParams3) error {
+// FromSharedReqParamsUsername overwrites any union data inside the SharedReqLogin_Params as the provided SharedReqParamsUsername
+func (t *SharedReqLogin_Params) FromSharedReqParamsUsername(v SharedReqParamsUsername) error {
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
 }
 
-// MergeSharedReqLoginParams3 performs a merge with any union data inside the SharedReqLogin_Params, using the provided SharedReqLoginParams3
-func (t *SharedReqLogin_Params) MergeSharedReqLoginParams3(v SharedReqLoginParams3) error {
+// MergeSharedReqParamsUsername performs a merge with any union data inside the SharedReqLogin_Params, using the provided SharedReqParamsUsername
+func (t *SharedReqLogin_Params) MergeSharedReqParamsUsername(v SharedReqParamsUsername) error {
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err

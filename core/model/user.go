@@ -114,7 +114,7 @@ func (a Account) GetAccountAuthTypeByID(ID string) *AccountAuthType {
 // GetAccountAuthType finds account auth type
 func (a Account) GetAccountAuthType(authTypeID string, identifier string) *AccountAuthType {
 	for _, aat := range a.AuthTypes {
-		if aat.AuthType.ID == authTypeID && aat.Identifier == identifier {
+		if aat.SupportedAuthType.AuthType.ID == authTypeID && aat.Identifier == identifier {
 			aat.Account = a
 			return &aat
 		}
@@ -334,8 +334,8 @@ func AccountGroupsFromAppOrgGroups(items []AppOrgGroup, active bool, adminSet bo
 type AccountAuthType struct {
 	ID string
 
-	AuthType AuthType //one of the supported auth type
-	Account  Account
+	SupportedAuthType SupportedAuthType //one of the supported auth type
+	Account           Account
 
 	Identifier string
 	Params     map[string]interface{}
@@ -372,7 +372,7 @@ func (aat *AccountAuthType) Equals(other AccountAuthType) bool {
 	if aat.Account.ID != other.Account.ID {
 		return false
 	}
-	if aat.AuthType.Code != other.AuthType.Code {
+	if aat.SupportedAuthType.AuthType.Code != other.SupportedAuthType.AuthType.Code {
 		return false
 	}
 	if aat.Active != other.Active {

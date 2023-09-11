@@ -32,7 +32,7 @@ type authType interface {
 	// Returns:
 	//	message (string): Success message if verification is required. If verification is not required, return ""
 	//	credentialValue (map): Credential value
-	signUp(authType model.AuthType, appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error)
+	signUp(supportedAuthType model.SupportedAuthType, appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error)
 
 	//signUpAdmin signs up a new admin user
 	// Returns:

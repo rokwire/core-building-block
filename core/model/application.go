@@ -349,18 +349,19 @@ func (ao ApplicationOrganization) FindIdentityProviderSetting(identityProviderID
 	return nil
 }
 
-// IsAuthTypeSupported checks if an auth type is supported for application type
-func (ao ApplicationOrganization) IsAuthTypeSupported(appType ApplicationType, authType AuthType) bool {
+// FindSupportedAuthType finds a supported auth type for application type
+func (ao ApplicationOrganization) FindSupportedAuthType(appType ApplicationType, authType AuthType) *SupportedAuthType {
 	for _, sat := range ao.SupportedAuthTypes {
 		if sat.AppTypeID == appType.ID {
 			for _, at := range sat.SupportedAuthTypes {
 				if at.AuthTypeID == authType.ID {
-					return true
+					at.AuthType = authType
+					return &at
 				}
 			}
 		}
 	}
-	return false
+	return nil
 }
 
 // IdentityProviderSetting represents identity provider setting for an organization in an application
@@ -458,6 +459,7 @@ type AuthTypesSupport struct {
 type SupportedAuthType struct {
 	AuthTypeID string                 `bson:"auth_type_id"`
 	Params     map[string]interface{} `bson:"params"`
+	AuthType   AuthType               `bson:"-"`
 }
 
 // ApplicationConfig represents app configs
