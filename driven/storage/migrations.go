@@ -342,7 +342,7 @@ func (sa *Adapter) migrateAccounts(context TransactionContext, appOrg model.Appl
 		// handle external identifiers (includes oidc)
 		if len(acct.ExternalIDs) == 0 && hasExternal {
 			code := "uin"
-			main := true
+			primary := true
 			if len(appOrg.IdentityProvidersSettings) > 0 {
 				for k, v := range appOrg.IdentityProvidersSettings[0].ExternalIDFields {
 					if v == appOrg.IdentityProvidersSettings[0].UserIdentifierField {
@@ -351,16 +351,19 @@ func (sa *Adapter) migrateAccounts(context TransactionContext, appOrg model.Appl
 					}
 				}
 			}
-			newIdentifier := accountIdentifier{ID: uuid.NewString(), Code: code, Identifier: externalIdentifier.Identifier, Verified: true, Main: &main,
+			newIdentifier := accountIdentifier{ID: uuid.NewString(), Code: code, Identifier: externalIdentifier.Identifier, Verified: true, Primary: &primary,
 				AccountAuthTypeID: externalIdentifier.AccountAuthTypeID, DateCreated: externalIdentifier.DateCreated, DateUpdated: externalIdentifier.DateUpdated}
 			identifiers = append(identifiers, newIdentifier)
 		}
 		for code, id := range acct.ExternalIDs {
-			main := (id == externalIdentifier.Identifier)
+			primary := (id == externalIdentifier.Identifier)
 			newIdentifier := accountIdentifier{ID: uuid.NewString(), Code: code, Identifier: id, Verified: true, AccountAuthTypeID: externalIdentifier.AccountAuthTypeID,
-				Main: &main, DateCreated: externalIdentifier.DateCreated, DateUpdated: externalIdentifier.DateUpdated}
+				Primary: &primary, DateCreated: externalIdentifier.DateCreated, DateUpdated: externalIdentifier.DateUpdated}
 			identifiers = append(identifiers, newIdentifier)
 		}
+
+		//TODO: look at account profile and add email and phone to identifiers if not already there
+		//TODO: look at account username and add it to identifiers if not already there
 
 		migrated.AuthTypes = authTypes
 		migrated.Identifiers = identifiers

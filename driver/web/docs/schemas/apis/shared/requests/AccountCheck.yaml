@@ -21,6 +21,7 @@ properties:
       - anonymous
       - twilio_phone
       - illinois_oidc
+      - conde_oidc
   user_identifier:
     type: string
   

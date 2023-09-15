@@ -13,6 +13,7 @@ properties:
       - phone
       - twilio_phone
       - illinois_oidc
+      - conde_oidc
       - anonymous
       - username
       - password
@@ -47,9 +48,6 @@ properties:
     $ref:  "../../../../user/PrivacyNullable.yaml"
   preferences:
     type: object
-    nullable: true
-  username:
-    type: string
     nullable: true
   account_identifier_id:
     type: string

@@ -17,7 +17,6 @@ package utils
 import (
 	crand "crypto/rand"
 	"crypto/sha256"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"math/rand"
@@ -69,9 +68,13 @@ func GenerateRandomBytes(n int) ([]byte, error) {
 }
 
 // GenerateRandomString returns a URL-safe, base64 encoded securely generated random string
-func GenerateRandomString(s int) (string, error) {
-	b, err := GenerateRandomBytes(s)
-	return base64.URLEncoding.EncodeToString(b)[:s], err
+func GenerateRandomString(s int) string {
+	chars := []rune("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+	b := make([]rune, s)
+	for i := range b {
+		b[i] = chars[rand.Intn(len(chars))]
+	}
+	return string(b)
 }
 
 // GenerateRandomInt returns a random integer between 0 and max

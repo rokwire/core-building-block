@@ -193,7 +193,7 @@ func main() {
 	}
 
 	authImpl, err := auth.NewAuth(serviceID, host, authPrivKey, authService, storageAdapter, emailer, twilioPhoneVerifier, profileBBAdapter,
-		minTokenExp, maxTokenExp, supportLegacySigs, logger)
+		minTokenExp, maxTokenExp, supportLegacySigs, Version, logger)
 	if err != nil {
 		logger.Fatalf("Error initializing auth: %v", err)
 	}

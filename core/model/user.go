@@ -83,7 +83,6 @@ type Account struct {
 
 	MFATypes []MFAType
 
-	Username      string
 	Preferences   map[string]interface{}
 	SystemConfigs map[string]interface{}
 	Profile       Profile //one account has one profile, one profile can be shared between many accounts
@@ -441,11 +440,12 @@ type AccountIdentifier struct {
 	Code       string
 	Identifier string
 
-	Verified bool
-	Linked   bool
+	Verified  bool
+	Linked    bool
+	Sensitive bool
 
 	AccountAuthTypeID *string
-	Main              *bool
+	Primary           *bool
 
 	Account Account
 
@@ -523,8 +523,6 @@ type Profile struct {
 	PhotoURL  string
 	FirstName string
 	LastName  string
-	Email     string
-	Phone     string
 	BirthYear int16
 	Address   string
 	ZipCode   string
@@ -556,12 +554,6 @@ func (p Profile) Merge(src Profile) Profile {
 	}
 	if src.LastName != "" {
 		p.LastName = src.LastName
-	}
-	if src.Email != "" {
-		p.Email = src.Email
-	}
-	if src.Phone != "" {
-		p.Phone = src.Phone
 	}
 	if src.Address != "" {
 		p.Address = src.Address
@@ -606,14 +598,6 @@ func ProfileFromMap(profileMap map[string]interface{}) Profile {
 			if typeVal, ok := val.(string); ok {
 				profile.LastName = typeVal
 			}
-		} else if key == "email" {
-			if typeVal, ok := val.(string); ok {
-				profile.Email = typeVal
-			}
-		} else if key == "phone" {
-			if typeVal, ok := val.(string); ok {
-				profile.Phone = typeVal
-			}
 		} else if key == "birth_year" {
 			if typeVal, ok := val.(int16); ok {
 				profile.BirthYear = typeVal
@@ -636,7 +620,7 @@ func ProfileFromMap(profileMap map[string]interface{}) Profile {
 			}
 		} else if key == "photo_url" {
 			if typeVal, ok := val.(string); ok {
-				profile.Phone = typeVal
+				profile.PhotoURL = typeVal
 			}
 		} else {
 			profile.UnstructuredProperties[key] = val

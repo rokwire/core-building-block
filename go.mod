@@ -20,6 +20,7 @@ require (
 	github.com/swaggo/http-swagger v1.3.4
 	go.mongodb.org/mongo-driver v1.12.1
 	golang.org/x/crypto v0.13.0
+	golang.org/x/oauth2 v0.12.0
 	golang.org/x/sync v0.3.0
 	golang.org/x/text v0.13.0
 	gopkg.in/go-playground/validator.v9 v9.31.0
@@ -87,7 +88,6 @@ require (
 	github.com/xdg-go/stringprep v1.0.4 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a // indirect
 	golang.org/x/net v0.15.0 // indirect
-	golang.org/x/oauth2 v0.12.0 // indirect
 	golang.org/x/sys v0.12.0 // indirect
 	golang.org/x/tools v0.13.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect

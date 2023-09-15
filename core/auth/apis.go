@@ -65,7 +65,6 @@ func (a *Auth) GetHost() string {
 //	     clientVersion(*string): Most recent client version
 //			profile (Profile): Account profile
 //			preferences (map): Account preferences
-//			username (string): Account username
 //			accountIdentifierID (*string): UUID of account identifier, meant to be used after using SignInOptions
 //			admin (bool): Is this an admin login?
 //			l (*logs.Log): Log object pointer for request
@@ -80,7 +79,7 @@ func (a *Auth) GetHost() string {
 //			MFA types ([]model.MFAType): list of MFA types account is enrolled in
 func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, deviceID string, authenticationType string, creds string, apiKey string,
 	appTypeIdentifier string, orgID string, params string, clientVersion *string, profile model.Profile, privacy model.Privacy, preferences map[string]interface{},
-	username string, accountIdentifierID *string, admin bool, l *logs.Log) (map[string]interface{}, *model.LoginSession, []model.MFAType, error) {
+	accountIdentifierID *string, admin bool, l *logs.Log) (map[string]interface{}, *model.LoginSession, []model.MFAType, error) {
 	//TODO - analyse what should go in one transaction
 
 	//validate if the provided auth type is supported by the provided application and organization
@@ -144,10 +143,7 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 
 	//check if account is enrolled in MFA
 	if !authType.AuthType.IgnoreMFA && len(mfaTypes) > 0 {
-		state, err = utils.GenerateRandomString(loginStateLength)
-		if err != nil {
-			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionGenerate, "login state", nil, err)
-		}
+		state = utils.GenerateRandomString(loginStateLength)
 	}
 
 	//clear the expired sessions for the identifier - user or anonymous
@@ -468,11 +464,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 	}
 	loginSession.AccessToken = accessToken //set the generated token
 	// - generate new refresh token
-	refreshToken, err = a.buildRefreshToken()
-	if err != nil {
-		l.Infof("error generating refresh token on refresh - %s", refreshToken)
-		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
-	}
+	refreshToken = utils.GenerateRandomString(refreshTokenLength)
 	if loginSession.RefreshTokens == nil {
 		loginSession.RefreshTokens = make([]string, 0)
 	}
@@ -648,8 +640,8 @@ func (a *Auth) LoginMFA(apiKey string, accountID string, sessionID string, ident
 }
 
 // CreateAdminAccount creates an account for a new admin user
-func (a *Auth) CreateAdminAccount(authenticationType string, appID string, orgID string, identifierJSON string, profile model.Profile, privacy model.Privacy, username string,
-	permissions []string, roleIDs []string, groupIDs []string, scopes []string, creatorPermissions []string, clientVersion *string, l *logs.Log) (*model.Account, map[string]interface{}, error) {
+func (a *Auth) CreateAdminAccount(authenticationType string, appID string, orgID string, identifierJSON string, profile model.Profile, privacy model.Privacy, permissions []string,
+	roleIDs []string, groupIDs []string, scopes []string, creatorPermissions []string, clientVersion *string, l *logs.Log) (*model.Account, map[string]interface{}, error) {
 	// check if the provided auth type is supported by the provided application and organization
 	supportedAuthType, _, appOrg, err := a.validateAuthType(authenticationType, nil, &appID, orgID)
 	if err != nil {

@@ -124,11 +124,13 @@ type Auth struct {
 	//delete sessions timer
 	deleteSessionsTimer     *time.Timer
 	deleteSessionsTimerDone chan bool
+
+	version string
 }
 
 // NewAuth creates a new auth instance
 func NewAuth(serviceID string, host string, authPrivKey *keys.PrivKey, authService *authservice.AuthService, storage Storage, emailer Emailer, phoneVerifier PhoneVerifier,
-	profileBB ProfileBuildingBlock, minTokenExp *int64, maxTokenExp *int64, supportLegacySigs bool, logger *logs.Logger) (*Auth, error) {
+	profileBB ProfileBuildingBlock, minTokenExp *int64, maxTokenExp *int64, supportLegacySigs bool, version string, logger *logs.Logger) (*Auth, error) {
 	if minTokenExp == nil {
 		var minTokenExpVal int64 = 5
 		minTokenExp = &minTokenExpVal
@@ -158,7 +160,7 @@ func NewAuth(serviceID string, host string, authPrivKey *keys.PrivKey, authServi
 		externalAuthTypes: externalAuthTypes, anonymousAuthTypes: anonymousAuthTypes, serviceAuthTypes: serviceAuthTypes, mfaTypes: mfaTypes, authPrivKey: authPrivKey,
 		ServiceRegManager: nil, serviceID: serviceID, host: host, minTokenExp: *minTokenExp, maxTokenExp: *maxTokenExp, profileBB: profileBB,
 		cachedIdentityProviders: cachedIdentityProviders, identityProvidersLock: identityProvidersLock, apiKeys: apiKeys, apiKeysLock: apiKeysLock,
-		deleteSessionsTimerDone: deleteSessionsTimerDone}
+		deleteSessionsTimerDone: deleteSessionsTimerDone, version: version}
 
 	err := auth.storeCoreRegs()
 	if err != nil {
@@ -457,8 +459,9 @@ func (a *Auth) prepareExternalUserData(authType model.AuthType, appOrg model.App
 	accountID := uuid.NewString()
 	accountIdentifiers := make([]model.AccountIdentifier, 0)
 	for k, v := range externalUser.ExternalIDs {
+		main := (v == externalUser.Identifier)
 		accountIdentifiers = append(accountIdentifiers, model.AccountIdentifier{ID: uuid.NewString(), Code: k, Identifier: v,
-			Verified: true, Account: model.Account{ID: accountID}, DateCreated: time.Now().UTC()})
+			Verified: true, Main: &main, Account: model.Account{ID: accountID}, DateCreated: time.Now().UTC()})
 	}
 
 	return accountIdentifiers, params, &profile, preferences, nil
@@ -1347,10 +1350,7 @@ func (a *Auth) createLoginSession(anonymous bool, sub string, authType model.Aut
 	}
 
 	//refresh token
-	refreshToken, err := a.buildRefreshToken()
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
-	}
+	refreshToken := utils.GenerateRandomString(refreshTokenLength)
 
 	now := time.Now().UTC()
 	var stateExpires *time.Time
@@ -1563,6 +1563,12 @@ func (a *Auth) constructAccount(context storage.TransactionContext, accountIdent
 	accountAuthType, err := a.prepareAccountAuthType(authType, accountAuthTypeActive, accountAuthTypeParams, credential)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeAccountAuthType, nil, err)
+	}
+	if accountAuthType.Params != nil {
+		// external auth type, so set account auth type IDs for identifiers
+		for i := range accountIdentifiers {
+			accountIdentifiers[i].AccountAuthTypeID = &accountAuthType.ID
+		}
 	}
 
 	//create account object
@@ -2452,15 +2458,6 @@ func (a *Auth) buildAccessToken(claims tokenauth.Claims, permissions string, sco
 func (a *Auth) buildCsrfToken(claims tokenauth.Claims) (string, error) {
 	claims.Purpose = "csrf"
 	return tokenauth.GenerateSignedToken(&claims, a.authPrivKey)
-}
-
-func (a *Auth) buildRefreshToken() (string, error) {
-	newToken, err := utils.GenerateRandomString(refreshTokenLength)
-	if err != nil {
-		return "", errors.WrapErrorAction(logutils.ActionCompute, logutils.TypeToken, nil, err)
-	}
-
-	return newToken, nil
 }
 
 // getScopedAccessToken returns a scoped access token with the requested scopes

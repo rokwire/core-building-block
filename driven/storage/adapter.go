@@ -1406,7 +1406,7 @@ func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, 
 		}
 		regexFilter := bson.M{
 			"$or": []bson.M{
-				{"username": primitive.Regex{Pattern: searchStr, Options: "i"}},
+				{"identifiers": bson.M{"$elemMatch": bson.M{"code": "username", "identifier": primitive.Regex{Pattern: searchStr, Options: "i"}}}},
 				{"profile.first_name": primitive.Regex{Pattern: searchStr, Options: "i"}},
 				{"profile.last_name": primitive.Regex{Pattern: searchStr, Options: "i"}},
 			},
@@ -1438,7 +1438,7 @@ func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, 
 	}
 	if username != nil {
 		usernameStr = *username
-		pipeline = append(pipeline, bson.M{"$match": bson.M{"username": *username}})
+		pipeline = append(pipeline, bson.M{"$match": bson.M{"identifiers": bson.M{"$elemMatch": bson.M{"code": "username", "identifier": *username}}}})
 	}
 
 	if followingID != nil {
@@ -1470,9 +1470,17 @@ func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, 
 
 	var publicAccounts []model.PublicAccount
 	for _, account := range accounts {
+		username := ""
+		for _, id := range account.Identifiers {
+			if id.Code == "username" {
+				username = id.Identifier
+				break
+			}
+		}
+
 		publicAccounts = append(publicAccounts, model.PublicAccount{
 			ID:          account.ID,
-			Username:    account.Username,
+			Username:    username,
 			FirstName:   account.Profile.FirstName,
 			LastName:    account.Profile.LastName,
 			Verified:    account.Verified,
@@ -1576,7 +1584,7 @@ func (sa *Adapter) FindAccountsByUsername(context TransactionContext, appOrg *mo
 		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, nil)
 	}
 
-	filter := bson.D{primitive.E{Key: "app_org_id", Value: appOrg.ID}, primitive.E{Key: "username", Value: username}}
+	filter := bson.D{primitive.E{Key: "app_org_id", Value: appOrg.ID}, primitive.E{Key: "identifiers", Value: bson.M{"$elemMatch": bson.M{"code": "username", "identifier": username}}}}
 
 	var accountResult []account
 	err := sa.db.accounts.Find(filter, &accountResult, nil)
@@ -2025,12 +2033,15 @@ func (sa *Adapter) UpdateAccountUsername(context TransactionContext, accountID s
 	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
 	update := bson.D{
 		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "username", Value: username},
+			primitive.E{Key: "identifiers.$[id].identifier", Value: username},
 			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
 		}},
 	}
 
-	res, err := sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
+	opts := options.UpdateOptions{}
+	arrayFilters := []interface{}{bson.M{"id.code": "username"}}
+	opts.SetArrayFilters(options.ArrayFilters{Filters: arrayFilters})
+	res, err := sa.db.accounts.UpdateOneWithContext(context, filter, update, &opts)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"id": accountID}, err)
 	}
@@ -2041,7 +2052,7 @@ func (sa *Adapter) UpdateAccountUsername(context TransactionContext, accountID s
 	return nil
 }
 
-// UpdateAccountVerified updates an account's username
+// UpdateAccountVerified updates an account's verified status
 func (sa *Adapter) UpdateAccountVerified(context TransactionContext, accountID string, appID string, orgID string, verified bool) error {
 	appOrg, err := sa.FindApplicationOrganization(appID, orgID)
 	if err != nil || appOrg == nil {
@@ -3295,8 +3306,6 @@ func (sa *Adapter) UpdateAccountProfile(context TransactionContext, profile mode
 			primitive.E{Key: "profile.photo_url", Value: profile.PhotoURL},
 			primitive.E{Key: "profile.first_name", Value: profile.FirstName},
 			primitive.E{Key: "profile.last_name", Value: profile.LastName},
-			primitive.E{Key: "profile.email", Value: profile.Email},
-			primitive.E{Key: "profile.phone", Value: profile.Phone},
 			primitive.E{Key: "profile.birth_year", Value: profile.BirthYear},
 			primitive.E{Key: "profile.address", Value: profile.Address},
 			primitive.E{Key: "profile.zip_code", Value: profile.ZipCode},

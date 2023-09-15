@@ -149,11 +149,7 @@ func (a *passwordAuthImpl) forgotCredential(identifierImpl identifierType, crede
 	}
 
 	//TODO: turn length of reset code into a setting
-	resetCode, err := utils.GenerateRandomString(64)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionGenerate, "reset code", nil, err)
-
-	}
+	resetCode := utils.GenerateRandomString(64)
 	hashedResetCode, err := bcrypt.GenerateFromPassword([]byte(resetCode), bcrypt.DefaultCost)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGenerate, "reset code hash", nil, err)

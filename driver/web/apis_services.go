@@ -84,17 +84,12 @@ func (h ServicesApisHandler) login(l *logs.Log, r *http.Request, claims *tokenau
 	// privacy
 	requestPrivacy := privacyFromDefNullable(requestData.Privacy)
 
-	username := ""
-	if requestData.Username != nil {
-		username = *requestData.Username
-	}
-
 	//device
 	requestDevice := requestData.Device
 
 	noLoginParams, loginSession, mfaTypes, err := h.coreAPIs.Auth.Login(ip, string(requestDevice.Type), requestDevice.Os, *requestDevice.DeviceId, string(requestData.AuthType),
 		requestCreds, requestData.ApiKey, requestData.AppTypeIdentifier, requestData.OrgId, requestParams, &clientVersion, requestProfile, requestPrivacy, requestPreferences,
-		username, requestData.AccountIdentifierId, false, l)
+		requestData.AccountIdentifierId, false, l)
 	if err != nil {
 		loggingErr, ok := err.(*errors.Error)
 		if ok && loggingErr.Status() != "" {
@@ -641,11 +636,6 @@ func (h ServicesApisHandler) createAdminAccount(l *logs.Log, r *http.Request, cl
 	profile := profileFromDefNullable(requestData.Profile)
 	privacy := privacyFromDefNullable(requestData.Privacy)
 
-	username := ""
-	if requestData.Username != nil {
-		username = *requestData.Username
-	}
-
 	//identifier
 	requestIdentifier, err := interfaceToJSON(requestData.Identifier)
 	if err != nil {
@@ -654,7 +644,7 @@ func (h ServicesApisHandler) createAdminAccount(l *logs.Log, r *http.Request, cl
 
 	creatorPermissions := strings.Split(claims.Permissions, ",")
 	account, params, err := h.coreAPIs.Auth.CreateAdminAccount(string(requestData.AuthType), claims.AppID, claims.OrgID,
-		requestIdentifier, profile, privacy, username, permissions, roleIDs, groupIDs, scopes, creatorPermissions, &clientVersion, l)
+		requestIdentifier, profile, privacy, permissions, roleIDs, groupIDs, scopes, creatorPermissions, &clientVersion, l)
 	if err != nil || account == nil {
 		return l.HTTPResponseErrorAction(logutils.ActionCreate, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}

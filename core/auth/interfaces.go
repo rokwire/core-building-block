@@ -181,7 +181,6 @@ type APIs interface {
 	//      clientVersion(*string): Most recent client version
 	//		profile (Profile): Account profile
 	//		preferences (map): Account preferences
-	//		username (string): Account username
 	//		accountIdentifierID (*string): UUID of account identifier, meant to be used after using SignInOptions
 	//		admin (bool): Is this an admin login?
 	//		l (*logs.Log): Log object pointer for request
@@ -196,7 +195,7 @@ type APIs interface {
 	//		MFA types ([]model.MFAType): list of MFA types account is enrolled in
 	Login(ipAddress string, deviceType string, deviceOS *string, deviceID string, authenticationType string, creds string, apiKey string,
 		appTypeIdentifier string, orgID string, params string, clientVersion *string, profile model.Profile, privacy model.Privacy, preferences map[string]interface{},
-		username string, accountIdentifierID *string, admin bool, l *logs.Log) (map[string]interface{}, *model.LoginSession, []model.MFAType, error)
+		accountIdentifierID *string, admin bool, l *logs.Log) (map[string]interface{}, *model.LoginSession, []model.MFAType, error)
 
 	//Logout logouts an account from app/org
 	//	Input:
@@ -290,7 +289,7 @@ type APIs interface {
 	LoginMFA(apiKey string, accountID string, sessionID string, identifier string, mfaType string, mfaCode string, state string, l *logs.Log) (*string, *model.LoginSession, error)
 
 	//CreateAdminAccount creates an account for a new admin user
-	CreateAdminAccount(authenticationType string, appID string, orgID string, identifierJSON string, profile model.Profile, privacy model.Privacy, username string, permissions []string,
+	CreateAdminAccount(authenticationType string, appID string, orgID string, identifierJSON string, profile model.Profile, privacy model.Privacy, permissions []string,
 		roleIDs []string, groupIDs []string, scopes []string, creatorPermissions []string, clientVersion *string, l *logs.Log) (*model.Account, map[string]interface{}, error)
 
 	//UpdateAdminAccount updates an existing user's account with new permissions, roles, and groups

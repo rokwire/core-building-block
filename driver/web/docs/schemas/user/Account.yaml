@@ -7,8 +7,6 @@ properties:
     type: string
   app_org:
     $ref: "../application/ApplicationOrganization.yaml"
-  username:
-    type: string
   profile:
     $ref: "./Profile.yaml"
   privacy:

@@ -30,6 +30,3 @@ properties:
     $ref:  "../../../../user/ProfileNullable.yaml"
   privacy:
     $ref:  "../../../../user/PrivacyNullable.yaml"
-  username:
-    type: string
-    nullable: true

@@ -66,6 +66,7 @@ const (
 // Defines values for ServicesReqAccountAuthTypeLinkAuthType.
 const (
 	ServicesReqAccountAuthTypeLinkAuthTypeCode         ServicesReqAccountAuthTypeLinkAuthType = "code"
+	ServicesReqAccountAuthTypeLinkAuthTypeCondeOidc    ServicesReqAccountAuthTypeLinkAuthType = "conde_oidc"
 	ServicesReqAccountAuthTypeLinkAuthTypeEmail        ServicesReqAccountAuthTypeLinkAuthType = "email"
 	ServicesReqAccountAuthTypeLinkAuthTypeIllinoisOidc ServicesReqAccountAuthTypeLinkAuthType = "illinois_oidc"
 	ServicesReqAccountAuthTypeLinkAuthTypePassword     ServicesReqAccountAuthTypeLinkAuthType = "password"
@@ -78,6 +79,7 @@ const (
 // Defines values for ServicesReqAccountAuthTypeUnlinkAuthType.
 const (
 	ServicesReqAccountAuthTypeUnlinkAuthTypeCode         ServicesReqAccountAuthTypeUnlinkAuthType = "code"
+	ServicesReqAccountAuthTypeUnlinkAuthTypeCondeOidc    ServicesReqAccountAuthTypeUnlinkAuthType = "conde_oidc"
 	ServicesReqAccountAuthTypeUnlinkAuthTypeEmail        ServicesReqAccountAuthTypeUnlinkAuthType = "email"
 	ServicesReqAccountAuthTypeUnlinkAuthTypeIllinoisOidc ServicesReqAccountAuthTypeUnlinkAuthType = "illinois_oidc"
 	ServicesReqAccountAuthTypeUnlinkAuthTypePassword     ServicesReqAccountAuthTypeUnlinkAuthType = "password"
@@ -124,6 +126,7 @@ const (
 // Defines values for SharedReqAccountCheckAuthType.
 const (
 	SharedReqAccountCheckAuthTypeAnonymous    SharedReqAccountCheckAuthType = "anonymous"
+	SharedReqAccountCheckAuthTypeCondeOidc    SharedReqAccountCheckAuthType = "conde_oidc"
 	SharedReqAccountCheckAuthTypeEmail        SharedReqAccountCheckAuthType = "email"
 	SharedReqAccountCheckAuthTypeIllinoisOidc SharedReqAccountCheckAuthType = "illinois_oidc"
 	SharedReqAccountCheckAuthTypePhone        SharedReqAccountCheckAuthType = "phone"
@@ -141,6 +144,7 @@ const (
 const (
 	SharedReqLoginAuthTypeAnonymous    SharedReqLoginAuthType = "anonymous"
 	SharedReqLoginAuthTypeCode         SharedReqLoginAuthType = "code"
+	SharedReqLoginAuthTypeCondeOidc    SharedReqLoginAuthType = "conde_oidc"
 	SharedReqLoginAuthTypeEmail        SharedReqLoginAuthType = "email"
 	SharedReqLoginAuthTypeIllinoisOidc SharedReqLoginAuthType = "illinois_oidc"
 	SharedReqLoginAuthTypePassword     SharedReqLoginAuthType = "password"
@@ -152,6 +156,7 @@ const (
 
 // Defines values for SharedReqLoginUrlAuthType.
 const (
+	SharedReqLoginUrlAuthTypeCondeOidc    SharedReqLoginUrlAuthType = "conde_oidc"
 	SharedReqLoginUrlAuthTypeIllinoisOidc SharedReqLoginUrlAuthType = "illinois_oidc"
 )
 
@@ -208,7 +213,6 @@ type Account struct {
 	Scopes                  *[]string                `json:"scopes,omitempty"`
 	System                  *bool                    `json:"system,omitempty"`
 	SystemConfigs           *map[string]interface{}  `json:"system_configs"`
-	Username                *string                  `json:"username,omitempty"`
 	Verified                *bool                    `json:"verified,omitempty"`
 }
 
@@ -326,7 +330,7 @@ type AuthServiceReg struct {
 
 // AuthType defines model for AuthType.
 type AuthType struct {
-	// Code username or email or phone or illinois_oidc etc
+	// Code passowrd or code or webauthn or illinois_oidc etc
 	Code        string  `json:"code"`
 	Description string  `json:"description"`
 	Id          *string `json:"id,omitempty"`
@@ -558,7 +562,6 @@ type PartialAccount struct {
 	Scopes        *[]string               `json:"scopes,omitempty"`
 	System        *bool                   `json:"system,omitempty"`
 	SystemConfigs *map[string]interface{} `json:"system_configs"`
-	Username      *string                 `json:"username,omitempty"`
 	Verified      *bool                   `json:"verified,omitempty"`
 }
 
@@ -588,11 +591,9 @@ type Profile struct {
 	Address                *string                 `json:"address"`
 	BirthYear              *int                    `json:"birth_year"`
 	Country                *string                 `json:"country"`
-	Email                  *string                 `json:"email"`
 	FirstName              *string                 `json:"first_name,omitempty"`
 	Id                     *string                 `json:"id,omitempty"`
 	LastName               *string                 `json:"last_name,omitempty"`
-	Phone                  *string                 `json:"phone"`
 	PhotoUrl               *string                 `json:"photo_url,omitempty"`
 	State                  *string                 `json:"state"`
 	UnstructuredProperties *map[string]interface{} `json:"unstructured_properties"`
@@ -989,7 +990,6 @@ type SharedReqCreateAccount struct {
 	Profile     *ProfileNullable     `json:"profile"`
 	RoleIds     *[]string            `json:"role_ids,omitempty"`
 	Scopes      *[]string            `json:"scopes,omitempty"`
-	Username    *string              `json:"username"`
 }
 
 // SharedReqCreateAccountAuthType defines model for SharedReqCreateAccount.AuthType.
@@ -1058,7 +1058,6 @@ type SharedReqLogin struct {
 	Preferences         *map[string]interface{} `json:"preferences"`
 	Privacy             *PrivacyNullable        `json:"privacy"`
 	Profile             *ProfileNullable        `json:"profile"`
-	Username            *string                 `json:"username"`
 }
 
 // SharedReqLoginAuthType defines model for SharedReqLogin.AuthType.

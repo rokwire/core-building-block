@@ -28,8 +28,8 @@ func accountFromStorage(item account, appOrg model.ApplicationOrganization, sa *
 	profile := profileFromStorage(item.Profile)
 	devices := accountDevicesFromStorage(item)
 	return model.Account{ID: item.ID, AppOrg: appOrg, Anonymous: item.Anonymous, Permissions: item.Permissions, Roles: roles, Groups: groups, Scopes: item.Scopes,
-		Identifiers: identifiers, AuthTypes: authTypes, MFATypes: mfaTypes, Username: item.Username, Preferences: item.Preferences, Profile: profile,
-		SystemConfigs: item.SystemConfigs, Privacy: item.Privacy, Verified: item.Verified, Devices: devices, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated,
+		Identifiers: identifiers, AuthTypes: authTypes, MFATypes: mfaTypes, Preferences: item.Preferences, Profile: profile, SystemConfigs: item.SystemConfigs,
+		Privacy: item.Privacy, Verified: item.Verified, Devices: devices, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated,
 		LastLoginDate: item.LastLoginDate, LastAccessTokenDate: item.LastAccessTokenDate, MostRecentClientVersion: item.MostRecentClientVersion}
 }
 
@@ -63,8 +63,8 @@ func accountToStorage(item *model.Account) *account {
 	mostRecentClientVersion := item.MostRecentClientVersion
 
 	return &account{ID: id, AppOrgID: appOrgID, Anonymous: item.Anonymous, Permissions: permissions, Roles: roles, Groups: groups, Scopes: item.Scopes,
-		Identifiers: identifiers, AuthTypes: authTypes, MFATypes: mfaTypes, Privacy: item.Privacy, Verified: item.Verified, Username: item.Username,
-		Preferences: item.Preferences, Profile: profile, SystemConfigs: item.SystemConfigs, Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated,
+		Identifiers: identifiers, AuthTypes: authTypes, MFATypes: mfaTypes, Privacy: item.Privacy, Verified: item.Verified, Preferences: item.Preferences,
+		Profile: profile, SystemConfigs: item.SystemConfigs, Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated,
 		LastLoginDate: lastLoginDate, LastAccessTokenDate: lastAccessTokenDate, MostRecentClientVersion: mostRecentClientVersion}
 }
 
@@ -139,7 +139,7 @@ func accountAuthTypesToStorage(items []model.AccountAuthType) []accountAuthType 
 // AccountIdentifier
 func accountIdentifierFromStorage(item accountIdentifier) model.AccountIdentifier {
 	return model.AccountIdentifier{ID: item.ID, Code: item.Code, Identifier: item.Identifier, Verified: item.Verified, Linked: item.Linked, AccountAuthTypeID: item.AccountAuthTypeID,
-		Main: item.Main, VerificationCode: item.VerificationCode, VerificationExpiry: item.VerificationExpiry, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+		Primary: item.Primary, VerificationCode: item.VerificationCode, VerificationExpiry: item.VerificationExpiry, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
 func accountIdentifiersFromStorage(items []accountIdentifier) []model.AccountIdentifier {
@@ -152,7 +152,7 @@ func accountIdentifiersFromStorage(items []accountIdentifier) []model.AccountIde
 
 func accountIdentifierToStorage(item model.AccountIdentifier) accountIdentifier {
 	return accountIdentifier{ID: item.ID, Code: item.Code, Identifier: item.Identifier, Verified: item.Verified, Linked: item.Linked, AccountAuthTypeID: item.AccountAuthTypeID,
-		Main: item.Main, VerificationCode: item.VerificationCode, VerificationExpiry: item.VerificationExpiry, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+		Primary: item.Primary, VerificationCode: item.VerificationCode, VerificationExpiry: item.VerificationExpiry, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
 func accountIdentifiersToStorage(items []model.AccountIdentifier) []accountIdentifier {
@@ -244,8 +244,8 @@ func accountGroupsToStorage(items []model.AccountGroup) []accountGroup {
 // Profile
 func profileFromStorage(item profile) model.Profile {
 	return model.Profile{ID: item.ID, PhotoURL: item.PhotoURL, FirstName: item.FirstName, LastName: item.LastName,
-		Email: item.Email, Phone: item.Phone, BirthYear: item.BirthYear, Address: item.Address, ZipCode: item.ZipCode,
-		State: item.State, Country: item.Country, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated,
+		BirthYear: item.BirthYear, Address: item.Address, ZipCode: item.ZipCode, State: item.State,
+		Country: item.Country, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated,
 		UnstructuredProperties: item.UnstructuredProperties}
 }
 
@@ -283,8 +283,8 @@ func profilesFromStorage(items []account, sa *Adapter) []model.Profile {
 
 func profileToStorage(item model.Profile) profile {
 	return profile{ID: item.ID, PhotoURL: item.PhotoURL, FirstName: item.FirstName, LastName: item.LastName,
-		Email: item.Email, Phone: item.Phone, BirthYear: item.BirthYear, Address: item.Address, ZipCode: item.ZipCode,
-		State: item.State, Country: item.Country, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated,
+		BirthYear: item.BirthYear, Address: item.Address, ZipCode: item.ZipCode, State: item.State,
+		Country: item.Country, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated,
 		UnstructuredProperties: item.UnstructuredProperties}
 }
 

@@ -194,10 +194,7 @@ func (a *emailIdentifierImpl) sendVerifyIdentifier(accountIdentifier *model.Acco
 
 	//verification code
 	//TODO: turn length of reset code into a setting
-	code, err := utils.GenerateRandomString(64)
-	if err != nil {
-		return false, errors.WrapErrorAction(logutils.ActionGenerate, "verification code", nil, err)
-	}
+	code := utils.GenerateRandomString(64)
 
 	//send verification email
 	if _, err = a.sendCode(appName, code, typeVerificationCode, accountIdentifier.ID); err != nil {
@@ -219,13 +216,10 @@ func (a *emailIdentifierImpl) restartIdentifierVerification(accountIdentifier *m
 	}
 
 	//Generate new verification code
-	newCode, err := utils.GenerateRandomString(64)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionGenerate, "verification code", nil, err)
+	newCode := utils.GenerateRandomString(64)
 
-	}
 	//send new verification code for future
-	if _, err = a.sendCode(appName, newCode, typeVerificationCode, accountIdentifier.ID); err != nil {
+	if _, err := a.sendCode(appName, newCode, typeVerificationCode, accountIdentifier.ID); err != nil {
 		return errors.WrapErrorAction(logutils.ActionSend, "verification email", nil, err)
 	}
 	//update new verification data in credential value

@@ -6481,7 +6481,7 @@ components:
           type: string
         code:
           type: string
-          description: username or email or phone or illinois_oidc etc
+          description: passowrd or code or webauthn or illinois_oidc etc
         description:
           type: string
         is_external:
@@ -6758,8 +6758,6 @@ components:
           type: string
         app_org:
           $ref: '#/components/schemas/ApplicationOrganization'
-        username:
-          type: string
         profile:
           $ref: '#/components/schemas/Profile'
         privacy:
@@ -6856,8 +6854,6 @@ components:
           type: string
         system:
           type: boolean
-        username:
-          type: string
         permissions:
           type: array
           items:
@@ -6914,12 +6910,6 @@ components:
           type: string
         last_name:
           type: string
-        email:
-          type: string
-          nullable: true
-        phone:
-          type: string
-          nullable: true
         birth_year:
           type: integer
           nullable: true
@@ -7088,6 +7078,7 @@ components:
             - phone
             - twilio_phone
             - illinois_oidc
+            - conde_oidc
             - anonymous
             - username
             - password
@@ -7122,9 +7113,6 @@ components:
           $ref: '#/components/schemas/PrivacyNullable'
         preferences:
           type: object
-          nullable: true
-        username:
-          type: string
           nullable: true
         account_identifier_id:
           type: string
@@ -7172,6 +7160,7 @@ components:
           type: string
           enum:
             - illinois_oidc
+            - conde_oidc
         app_type_identifier:
           type: string
         org_id:
@@ -7239,9 +7228,6 @@ components:
           $ref: '#/components/schemas/ProfileNullable'
         privacy:
           $ref: '#/components/schemas/PrivacyNullable'
-        username:
-          type: string
-          nullable: true
     _shared_req_UpdateAccount:
       required:
         - auth_type
@@ -7295,6 +7281,7 @@ components:
             - anonymous
             - twilio_phone
             - illinois_oidc
+            - conde_oidc
         user_identifier:
           type: string
     _shared_req_CredsNone:
@@ -7559,6 +7546,7 @@ components:
             - webauthn
             - code
             - illinois_oidc
+            - conde_oidc
             - email
             - phone
             - twilio_phone
@@ -7589,6 +7577,7 @@ components:
             - webauthn
             - code
             - illinois_oidc
+            - conde_oidc
             - email
             - phone
             - twilio_phone

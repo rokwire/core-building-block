@@ -35,8 +35,6 @@ type account struct {
 
 	MFATypes []mfaType `bson:"mfa_types,omitempty"`
 
-	Username      string                 `bson:"username"`
-	ExternalIDs   map[string]string      `bson:"external_ids,omitempty"`
 	Preferences   map[string]interface{} `bson:"preferences"`
 	SystemConfigs map[string]interface{} `bson:"system_configs"`
 	Profile       profile                `bson:"profile"`
@@ -55,6 +53,10 @@ type account struct {
 	LastLoginDate           *time.Time `bson:"last_login_date"`
 	LastAccessTokenDate     *time.Time `bson:"last_access_token_date"`
 	MostRecentClientVersion *string    `bson:"most_recent_client_version"`
+
+	// DEPRECATED
+	Username    *string           `bson:"username,omitempty"`
+	ExternalIDs map[string]string `bson:"external_ids,omitempty"`
 }
 
 type accountRole struct {
@@ -91,11 +93,12 @@ type accountIdentifier struct {
 	Code       string `bson:"code"`
 	Identifier string `bson:"identifier"`
 
-	Verified bool `bson:"verified"`
-	Linked   bool `bson:"linked"`
+	Verified  bool `bson:"verified"`
+	Linked    bool `bson:"linked"`
+	Sensitive bool `bson:"sensitive"`
 
 	AccountAuthTypeID *string `bson:"account_auth_type_id"`
-	Main              *bool   `bson:"main,omitempty"`
+	Primary           *bool   `bson:"primary,omitempty"`
 
 	VerificationCode   *string    `bson:"verification_code,omitempty"`
 	VerificationExpiry *time.Time `bson:"verification_expiry,omitempty"`
@@ -110,8 +113,6 @@ type profile struct {
 	PhotoURL  string `bson:"photo_url"`
 	FirstName string `bson:"first_name"`
 	LastName  string `bson:"last_name"`
-	Email     string `bson:"email"`
-	Phone     string `bson:"phone"`
 	BirthYear int16  `bson:"birth_year"`
 	Address   string `bson:"address"`
 	ZipCode   string `bson:"zip_code"`
@@ -122,6 +123,10 @@ type profile struct {
 	DateUpdated *time.Time `bson:"date_updated"`
 
 	UnstructuredProperties map[string]interface{} `bson:"unstructured_properties"`
+
+	// DEPRECATED
+	Email *string `bson:"email,omitempty"`
+	Phone *string `bson:"phone,omitempty"`
 }
 
 type userDevice struct {

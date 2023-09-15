@@ -88,10 +88,7 @@ func (s *staticTokenServiceAuthImpl) addCredentials(creds *model.ServiceAccountC
 		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeServiceAccountCredential, nil)
 	}
 
-	token, err := s.auth.buildRefreshToken()
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
-	}
+	token := utils.GenerateRandomString(refreshTokenLength)
 
 	creds.ID = uuid.NewString()
 	creds.Secrets = map[string]interface{}{

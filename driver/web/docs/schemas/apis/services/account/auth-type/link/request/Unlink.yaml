@@ -9,6 +9,7 @@ properties:
       - webauthn
       - code
       - illinois_oidc
+      - conde_oidc
       - email
       - phone
       - twilio_phone

@@ -79,11 +79,7 @@ func (m *recoveryMfaImpl) verify(context storage.TransactionContext, mfa *model.
 func (m *recoveryMfaImpl) enroll(identifier string) (*model.MFAType, error) {
 	codes := make([]string, numCodes)
 	for i := 0; i < numCodes; i++ {
-		newCode, err := utils.GenerateRandomString(codeLength)
-		if err != nil {
-			return nil, errors.WrapErrorAction("generating", "recovery code", nil, err)
-		}
-		codes[i] = string(newCode)
+		codes[i] = string(utils.GenerateRandomString(codeLength))
 	}
 
 	params := map[string]interface{}{

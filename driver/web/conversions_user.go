@@ -40,11 +40,6 @@ func accountToDef(item model.Account) *Def.Account {
 	authTypes := accountAuthTypesToDefLegacy(&item)
 	//account identifiers
 	identifiers := accountIdentifiersToDef(item.Identifiers)
-	//username
-	var username *string
-	if item.Username != "" {
-		username = &item.Username
-	}
 	//account usage information
 	lastLoginDate := utils.FormatTime(item.LastLoginDate)
 	lastAccessTokenDate := utils.FormatTime(item.LastAccessTokenDate)
@@ -55,7 +50,7 @@ func accountToDef(item model.Account) *Def.Account {
 	}
 
 	return &Def.Account{Id: &item.ID, Anonymous: &item.Anonymous, System: &item.AppOrg.Organization.System, Permissions: &permissions, Roles: &roles, Groups: &groups,
-		Privacy: privacy, Verified: &item.Verified, Scopes: &scopes, Identifiers: &identifiers, AuthTypes: &authTypes, Username: username, Profile: profile, Preferences: preferences,
+		Privacy: privacy, Verified: &item.Verified, Scopes: &scopes, Identifiers: &identifiers, AuthTypes: &authTypes, Profile: profile, Preferences: preferences,
 		SystemConfigs: systemConfigs, LastLoginDate: &lastLoginDate, LastAccessTokenDate: &lastAccessTokenDate, MostRecentClientVersion: item.MostRecentClientVersion}
 }
 
@@ -96,11 +91,6 @@ func partialAccountToDef(item model.Account, params map[string]interface{}) *Def
 		formatted := utils.FormatTime(item.DateUpdated)
 		dateUpdated = &formatted
 	}
-	//username
-	var username *string
-	if item.Username != "" {
-		username = &item.Username
-	}
 
 	//params
 	var paramsData *map[string]interface{}
@@ -111,7 +101,7 @@ func partialAccountToDef(item model.Account, params map[string]interface{}) *Def
 	privacy := privacyToDef(&item.Privacy)
 
 	return &Def.PartialAccount{Id: &item.ID, Anonymous: item.Anonymous, AppId: item.AppOrg.Application.ID, OrgId: item.AppOrg.Organization.ID, FirstName: item.Profile.FirstName,
-		LastName: item.Profile.LastName, Username: username, System: &item.AppOrg.Organization.System, Permissions: permissions, Roles: roles, Groups: groups,
+		LastName: item.Profile.LastName, System: &item.AppOrg.Organization.System, Permissions: permissions, Roles: roles, Groups: groups,
 		Privacy: privacy, Verified: &item.Verified, Scopes: &scopes, SystemConfigs: systemConfigs, Identifiers: identifiers, AuthTypes: authTypes,
 		DateCreated: &dateCreated, DateUpdated: dateUpdated, Params: paramsData}
 }
@@ -145,7 +135,6 @@ func accountAuthTypesToDefLegacy(account *model.Account) []Def.AccountAuthType {
 		return nil
 	}
 
-	//TODO: not working
 	aats := make([]Def.AccountAuthType, 0)
 	for _, aat := range account.AuthTypes {
 		resAat := accountAuthTypeToDef(aat)
@@ -165,7 +154,7 @@ func accountAuthTypesToDefLegacy(account *model.Account) []Def.AccountAuthType {
 
 				aats = append(aats, legacyAat)
 				addedLegacy = true
-			} else if id.AccountAuthTypeID != nil && *id.AccountAuthTypeID == aat.ID && id.Main != nil && *id.Main {
+			} else if id.AccountAuthTypeID != nil && *id.AccountAuthTypeID == aat.ID {
 				legacyAat.Identifier = &identifier // old clients expect the identifier in the auth types
 
 				aats = append(aats, legacyAat)
@@ -264,14 +253,6 @@ func profileFromDef(item *Def.Profile) model.Profile {
 	if item.LastName != nil {
 		lastName = *item.LastName
 	}
-	var email string
-	if item.Email != nil {
-		email = *item.Email
-	}
-	var phone string
-	if item.Phone != nil {
-		phone = *item.Phone
-	}
 	var birthYear int
 	if item.BirthYear != nil {
 		birthYear = *item.BirthYear
@@ -299,7 +280,7 @@ func profileFromDef(item *Def.Profile) model.Profile {
 	}
 
 	return model.Profile{PhotoURL: photoURL, FirstName: firstName, LastName: lastName,
-		Email: email, Phone: phone, BirthYear: int16(birthYear), Address: address, ZipCode: zipCode,
+		BirthYear: int16(birthYear), Address: address, ZipCode: zipCode,
 		State: state, Country: country, UnstructuredProperties: unstructuredProperties}
 }
 
@@ -311,8 +292,8 @@ func profileToDef(item *model.Profile) *Def.Profile {
 	itemVal := *item
 	birthYear := int(itemVal.BirthYear)
 	return &Def.Profile{Id: &itemVal.ID, PhotoUrl: &itemVal.PhotoURL, FirstName: &itemVal.FirstName, LastName: &itemVal.LastName,
-		Email: &itemVal.Email, Phone: &itemVal.Phone, BirthYear: &birthYear, Address: &itemVal.Address, ZipCode: &itemVal.ZipCode,
-		State: &itemVal.State, Country: &itemVal.Country, UnstructuredProperties: &itemVal.UnstructuredProperties}
+		BirthYear: &birthYear, Address: &itemVal.Address, ZipCode: &itemVal.ZipCode, State: &itemVal.State,
+		Country: &itemVal.Country, UnstructuredProperties: &itemVal.UnstructuredProperties}
 }
 
 func profileFromDefNullable(item *Def.ProfileNullable) model.Profile {
@@ -332,14 +313,6 @@ func profileFromDefNullable(item *Def.ProfileNullable) model.Profile {
 	if item.LastName != nil {
 		lastName = *item.LastName
 	}
-	var email string
-	if item.Email != nil {
-		email = *item.Email
-	}
-	var phone string
-	if item.Phone != nil {
-		phone = *item.Phone
-	}
 	var birthYear int
 	if item.BirthYear != nil {
 		birthYear = *item.BirthYear
@@ -367,7 +340,7 @@ func profileFromDefNullable(item *Def.ProfileNullable) model.Profile {
 	}
 
 	return model.Profile{PhotoURL: photoURL, FirstName: firstName, LastName: lastName,
-		Email: email, Phone: phone, BirthYear: int16(birthYear), Address: address, ZipCode: zipCode,
+		BirthYear: int16(birthYear), Address: address, ZipCode: zipCode,
 		State: state, Country: country, UnstructuredProperties: unstructuredProperties}
 }
 
