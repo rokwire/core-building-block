@@ -120,14 +120,14 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 		}
 		sub = anonymousID
 	} else if authType.AuthType.IsExternal {
-		responseParams, account, mfaTypes, err = a.applyExternalAuthType(*authType, *appType, *appOrg, creds, params, clientVersion, profile, privacy, preferences, username, admin, l)
+		responseParams, account, mfaTypes, err = a.applyExternalAuthType(*authType, *appType, *appOrg, creds, params, clientVersion, profile, privacy, preferences, admin, l)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionApply, typeExternalAuthType, logutils.StringArgs("user"), err)
 		}
 
 		sub = account.ID
 	} else {
-		responseParams, account, mfaTypes, err = a.applyAuthType(*authType, *appOrg, creds, params, clientVersion, profile, privacy, preferences, username, accountIdentifierID, admin, l)
+		responseParams, account, mfaTypes, err = a.applyAuthType(*authType, *appOrg, creds, params, clientVersion, profile, privacy, preferences, accountIdentifierID, admin, l)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionApply, model.TypeAuthType, logutils.StringArgs("user"), err)
 		}
@@ -444,10 +444,16 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 		if loginSession.Account == nil {
 			return nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, &logutils.FieldArgs{"session_id": loginSession.ID, "anonymous": false})
 		}
+		if emailIdentifier := loginSession.Account.GetAccountIdentifier(IdentifierTypeEmail, ""); emailIdentifier != nil {
+			email = emailIdentifier.Identifier
+		}
+		if phoneIdentifier := loginSession.Account.GetAccountIdentifier(IdentifierTypePhone, ""); phoneIdentifier != nil {
+			phone = phoneIdentifier.Identifier
+		}
+		if usernameIdentifier := loginSession.Account.GetAccountIdentifier(IdentifierTypeUsername, ""); usernameIdentifier != nil {
+			username = usernameIdentifier.Identifier
+		}
 		name = loginSession.Account.Profile.GetFullName()
-		email = loginSession.Account.Profile.Email
-		phone = loginSession.Account.Profile.Phone
-		username = loginSession.Account.Username
 		permissions = loginSession.Account.GetPermissionNames()
 		scopes = append(scopes, loginSession.Account.GetScopes()...)
 		if len(externalIDs) == 0 {
@@ -689,13 +695,12 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appID string, orgID
 				}
 			}
 			externalUser := model.ExternalSystemUser{Identifier: identifier, ExternalIDs: externalIDs}
-			newAccount, err = a.applySignUpAdminExternal(context, supportedAuthType.AuthType, *appOrg, externalUser, profile, privacy, username, permissions, roleIDs, groupIDs, scopes, creatorPermissions, clientVersion, l)
+			newAccount, err = a.applySignUpAdminExternal(context, supportedAuthType.AuthType, *appOrg, externalUser, profile, privacy, permissions, roleIDs, groupIDs, scopes, creatorPermissions, clientVersion, l)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionRegister, "admin user", &logutils.FieldArgs{"auth_type": supportedAuthType.AuthType.Code, "identifier": identifier}, err)
 			}
 		} else {
-			profile.Email = identifier
-			params, newAccount, err = a.applySignUpAdmin(context, account, supportedAuthType.AuthType, *appOrg, identifierImpl, "", profile, privacy, username, permissions, roleIDs, groupIDs, scopes, creatorPermissions, clientVersion, l)
+			params, newAccount, err = a.signUpNewAccount(context, identifierImpl, *supportedAuthType, *appOrg, "", "", clientVersion, profile, privacy, nil, permissions, roleIDs, groupIDs, scopes, creatorPermissions, l)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionRegister, "admin user", &logutils.FieldArgs{"auth_type": supportedAuthType.AuthType.Code, "identifier": identifier}, err)
 			}
@@ -1930,7 +1935,7 @@ func (a *Auth) DeleteAccount(id string) error {
 func (a *Auth) InitializeSystemAccount(context storage.TransactionContext, authType model.AuthType, appOrg model.ApplicationOrganization,
 	allSystemPermission string, email string, password string, clientVersion string, l *logs.Log) (string, error) {
 	now := time.Now().UTC()
-	profile := model.Profile{ID: uuid.NewString(), Email: email, DateCreated: now}
+	profile := model.Profile{ID: uuid.NewString(), DateCreated: now}
 	privacy := model.Privacy{Public: false}
 	permissions := []string{allSystemPermission}
 
@@ -1947,7 +1952,7 @@ func (a *Auth) InitializeSystemAccount(context storage.TransactionContext, authT
 		return "", errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, &logutils.FieldArgs{"code": code, "identifier": email})
 	}
 
-	_, account, err := a.applySignUpAdmin(context, nil, authType, appOrg, identifierImpl, creds, profile, privacy, "", permissions, nil, nil, nil, permissions, &clientVersion, l)
+	_, account, err := a.signUpNewAccount(context, identifierImpl, model.SupportedAuthType{AuthType: authType}, appOrg, creds, "", &clientVersion, profile, privacy, nil, permissions, nil, nil, nil, permissions, l)
 	if err != nil {
 		return "", errors.WrapErrorAction(logutils.ActionRegister, "initial system user", &logutils.FieldArgs{"email": email}, err)
 	}
