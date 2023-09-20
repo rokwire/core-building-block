@@ -144,17 +144,16 @@ func accountAuthTypesToDefLegacy(account *model.Account) []Def.AccountAuthType {
 			code := id.Code
 			identifier := id.Identifier
 			legacyAat := resAat
-			if utils.Contains(aat.SupportedAuthType.AuthType.Aliases, id.Code) {
-
-				if code == "phone" {
-					code = "twilio_" + code
-				}
-				legacyAat.Code = &code             // old clients will not understand new auth type codes
+			if id.AccountAuthTypeID != nil && *id.AccountAuthTypeID == aat.ID {
 				legacyAat.Identifier = &identifier // old clients expect the identifier in the auth types
 
 				aats = append(aats, legacyAat)
 				addedLegacy = true
-			} else if id.AccountAuthTypeID != nil && *id.AccountAuthTypeID == aat.ID {
+			} else if utils.Contains(aat.SupportedAuthType.AuthType.Aliases, id.Code) {
+				if code == "phone" {
+					code = "twilio_" + code
+				}
+				legacyAat.Code = &code             // old clients will not understand new auth type codes
 				legacyAat.Identifier = &identifier // old clients expect the identifier in the auth types
 
 				aats = append(aats, legacyAat)

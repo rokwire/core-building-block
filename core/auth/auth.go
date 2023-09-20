@@ -364,10 +364,7 @@ func (a *Auth) applySignUpExternal(context storage.TransactionContext, supported
 		return nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
 	}
 
-	externalAuthTypeID := account.AuthTypes[0].ID
 	for i, id := range account.Identifiers {
-		account.Identifiers[i].AccountAuthTypeID = &externalAuthTypeID
-
 		primary := (id.Identifier == externalUser.Identifier)
 		account.Identifiers[i].Primary = &primary
 	}
@@ -391,10 +388,7 @@ func (a *Auth) applySignUpAdminExternal(context storage.TransactionContext, auth
 		return nil, errors.WrapErrorAction(logutils.ActionRegister, "admin account", nil, err)
 	}
 
-	externalAuthTypeID := account.AuthTypes[0].ID
 	for i, id := range account.Identifiers {
-		account.Identifiers[i].AccountAuthTypeID = &externalAuthTypeID
-
 		primary := (id.Identifier == externalUser.Identifier)
 		account.Identifiers[i].Primary = &primary
 	}
@@ -440,12 +434,17 @@ func (a *Auth) prepareExternalUserData(authType model.AuthType, appOrg model.App
 	params := map[string]interface{}{"user": externalUser}
 
 	//3. create the account identifiers
+	now := time.Now().UTC()
 	accountID := uuid.NewString()
 	accountIdentifiers := make([]model.AccountIdentifier, 0)
 	for k, v := range externalUser.ExternalIDs {
 		primary := (v == externalUser.Identifier)
 		accountIdentifiers = append(accountIdentifiers, model.AccountIdentifier{ID: uuid.NewString(), Code: k, Identifier: v,
-			Verified: true, Primary: &primary, Account: model.Account{ID: accountID}, DateCreated: time.Now().UTC()})
+			Verified: true, Primary: &primary, Account: model.Account{ID: accountID}, DateCreated: now})
+	}
+	if externalUser.Email != "" {
+		accountIdentifiers = append(accountIdentifiers, model.AccountIdentifier{ID: uuid.NewString(), Code: IdentifierTypeEmail, Identifier: externalUser.Email,
+			Account: model.Account{ID: accountID}, DateCreated: now})
 	}
 
 	return accountIdentifiers, params, &profile, preferences, nil
@@ -515,6 +514,7 @@ func (a *Auth) updateExternalUserIfNeeded(accountAuthType model.AccountAuthType,
 	now := time.Now().UTC()
 	accountAuthType.DateUpdated = &now
 
+	//TODO: make sure external identifiers get updated in storage and in account memory
 	transaction := func(context storage.TransactionContext) error {
 		//1. first find the account record
 		account, err := a.storage.FindAccountByAuthTypeID(context, accountAuthType.ID)
@@ -2559,12 +2559,13 @@ func (a *Auth) updateExternalAccountGroups(account *model.Account, newExternalGr
 
 func (a *Auth) updateExternalIdentifiers(account *model.Account, accountAuthTypeID string, externalUser *model.ExternalSystemUser, linked bool) bool {
 	updated := false
+	now := time.Now().UTC()
 	for k, v := range externalUser.ExternalIDs {
 		accountIdentifier := account.GetAccountIdentifier(k, "")
 		if accountIdentifier == nil {
 			primary := (v == externalUser.Identifier)
 			newIdentifier := model.AccountIdentifier{ID: uuid.NewString(), Code: k, Identifier: v, Verified: true, Linked: linked, AccountAuthTypeID: &accountAuthTypeID,
-				Primary: &primary, Account: model.Account{ID: account.ID}, DateCreated: time.Now().UTC()}
+				Primary: &primary, Account: model.Account{ID: account.ID}, DateCreated: now}
 			account.Identifiers = append(account.Identifiers, newIdentifier)
 			updated = true
 		} else if accountIdentifier.Identifier != v {
@@ -2572,6 +2573,25 @@ func (a *Auth) updateExternalIdentifiers(account *model.Account, accountAuthType
 			now := time.Now().UTC()
 			accountIdentifier.DateUpdated = &now
 			updated = true
+		}
+	}
+
+	if externalUser.Email != "" {
+		hasExternalEmail := false
+		for i, identifier := range account.Identifiers {
+			if identifier.AccountAuthTypeID != nil && *identifier.AccountAuthTypeID == accountAuthTypeID && identifier.Code == IdentifierTypeEmail {
+				hasExternalEmail = true
+				if identifier.Identifier != externalUser.Email {
+					account.Identifiers[i].Identifier = externalUser.Email
+					updated = true
+					break
+				}
+			}
+		}
+		if !hasExternalEmail {
+			primary := (externalUser.Email == externalUser.Identifier)
+			account.Identifiers = append(account.Identifiers, model.AccountIdentifier{ID: uuid.NewString(), Code: IdentifierTypeEmail, Identifier: externalUser.Email,
+				Linked: linked, Sensitive: true, AccountAuthTypeID: &accountAuthTypeID, Primary: &primary, Account: model.Account{ID: account.ID}, DateCreated: now})
 		}
 	}
 
