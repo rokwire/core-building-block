@@ -237,6 +237,7 @@ type AccountIdentifier struct {
 	Id                string  `json:"id"`
 	Identifier        string  `json:"identifier"`
 	Linked            bool    `json:"linked"`
+	Sensitive         bool    `json:"sensitive"`
 	Verified          bool    `json:"verified"`
 }
 

@@ -162,17 +162,18 @@ func accountAuthTypesToDefLegacy(account *model.Account) []Def.AccountAuthType {
 			code := id.Code
 			identifier := id.Identifier
 			legacyAat := resAat
-			if id.AccountAuthTypeID != nil && *id.AccountAuthTypeID == aat.ID {
-				legacyAat.Identifier = &identifier // old clients expect the identifier in the auth types
+			if id.AccountAuthTypeID != nil && *id.AccountAuthTypeID == aat.ID && id.Primary != nil && *id.Primary {
+				// only use the primary identifierfor old account auth types
+				legacyAat.Identifier = &identifier
 
 				aats = append(aats, legacyAat)
 				addedLegacy = true
-			} else if utils.Contains(aat.SupportedAuthType.AuthType.Aliases, id.Code) {
+			} else if id.AccountAuthTypeID == nil && utils.Contains(aat.SupportedAuthType.AuthType.Aliases, id.Code) {
 				if code == "phone" {
 					code = "twilio_" + code
 				}
-				legacyAat.Code = &code             // old clients will not understand new auth type codes
-				legacyAat.Identifier = &identifier // old clients expect the identifier in the auth types
+				legacyAat.Code = &code
+				legacyAat.Identifier = &identifier
 
 				aats = append(aats, legacyAat)
 				addedLegacy = true
@@ -189,7 +190,8 @@ func accountAuthTypesToDefLegacy(account *model.Account) []Def.AccountAuthType {
 
 // AccountIdentifier
 func accountIdentifierToDef(item model.AccountIdentifier) Def.AccountIdentifier {
-	return Def.AccountIdentifier{Id: item.ID, Code: item.Code, Identifier: item.Identifier, Linked: item.Linked, Verified: item.Verified, AccountAuthTypeId: item.AccountAuthTypeID}
+	return Def.AccountIdentifier{Id: item.ID, Code: item.Code, Identifier: item.Identifier, Linked: item.Linked, Verified: item.Verified,
+		Sensitive: item.Sensitive, AccountAuthTypeId: item.AccountAuthTypeID}
 }
 
 func accountIdentifiersToDef(items []model.AccountIdentifier) []Def.AccountIdentifier {

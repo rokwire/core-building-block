@@ -4,6 +4,7 @@ required:
   - identifier
   - verified
   - linked
+  - sensitive
 type: object
 properties:
   id:
@@ -15,6 +16,8 @@ properties:
   verified:
     type: boolean
   linked:
+    type: boolean
+  sensitive:
     type: boolean
   account_auth_type_id:
     type: string
