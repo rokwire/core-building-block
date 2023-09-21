@@ -258,6 +258,9 @@ func (a *Auth) applyExternalAuthType(supportedAuthType model.SupportedAuthType, 
 			code = k
 		}
 	}
+	if code == "" && externalUser.Email == externalUser.Identifier {
+		code = IdentifierTypeEmail
+	}
 
 	account, err := a.storage.FindAccount(nil, appOrg.ID, code, externalUser.Identifier)
 	if err != nil {
@@ -1792,9 +1795,11 @@ func (a *Auth) linkAccountAuthTypeExternal(account *model.Account, supportedAuth
 			code = k
 		}
 	}
+	if code == "" && externalUser.Email == externalUser.Identifier {
+		code = IdentifierTypeEmail
+	}
 
 	var accountAuthType *model.AccountAuthType
-	var credential *model.Credential
 	transaction := func(context storage.TransactionContext) error {
 		newCredsAccount, err := a.storage.FindAccount(context, appOrg.ID, code, externalUser.Identifier)
 		if err != nil {
@@ -1816,7 +1821,7 @@ func (a *Auth) linkAccountAuthTypeExternal(account *model.Account, supportedAuth
 
 		updatedIdentifiers := a.updateExternalIdentifiers(account, accountAuthType.ID, externalUser, true)
 
-		err = a.registerAccountAuthType(context, *accountAuthType, credential, account.Identifiers, updatedIdentifiers)
+		err = a.registerAccountAuthType(context, *accountAuthType, nil, account.Identifiers, updatedIdentifiers)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccountAuthType, nil, err)
 		}
@@ -2557,7 +2562,7 @@ func (a *Auth) updateExternalIdentifiers(account *model.Account, accountAuthType
 		if accountIdentifier == nil {
 			primary := (v == externalUser.Identifier)
 			newIdentifier := model.AccountIdentifier{ID: uuid.NewString(), Code: k, Identifier: v, Verified: true, Linked: linked, AccountAuthTypeID: &accountAuthTypeID,
-				Primary: &primary, Account: model.Account{ID: account.ID}, DateCreated: now}
+				Sensitive: utils.Contains(externalUser.SensitiveExternalIDs, k), Primary: &primary, Account: model.Account{ID: account.ID}, DateCreated: now}
 			account.Identifiers = append(account.Identifiers, newIdentifier)
 			updated = true
 		} else if accountIdentifier.Identifier != v {
@@ -2578,6 +2583,7 @@ func (a *Auth) updateExternalIdentifiers(account *model.Account, accountAuthType
 				if identifier.Identifier != externalUser.Email {
 					primary := (externalUser.Email == externalUser.Identifier)
 					account.Identifiers[i].Identifier = externalUser.Email
+					account.Identifiers[i].Sensitive = true
 					account.Identifiers[i].Primary = &primary
 					updated = true
 					break
@@ -2588,6 +2594,7 @@ func (a *Auth) updateExternalIdentifiers(account *model.Account, accountAuthType
 			primary := (externalUser.Email == externalUser.Identifier)
 			account.Identifiers = append(account.Identifiers, model.AccountIdentifier{ID: uuid.NewString(), Code: IdentifierTypeEmail, Identifier: externalUser.Email,
 				Linked: linked, Sensitive: true, AccountAuthTypeID: &accountAuthTypeID, Primary: &primary, Account: model.Account{ID: account.ID}, DateCreated: now})
+			updated = true
 		}
 	}
 
