@@ -304,7 +304,7 @@ func (sa *Adapter) migrateAccounts(context TransactionContext, appOrg model.Appl
 					}
 
 					newIdentifier := accountIdentifier{ID: uuid.NewString(), Code: identifierCode, Identifier: identifier, Verified: verified, Linked: linked,
-						DateCreated: aat.DateCreated, DateUpdated: aat.DateUpdated}
+						Sensitive: identifierCode == "email" || identifierCode == "phone", DateCreated: aat.DateCreated, DateUpdated: aat.DateUpdated}
 					identifiers = append(identifiers, newIdentifier)
 					addedIdentifiers = append(addedIdentifiers, identifier)
 				}
@@ -340,6 +340,7 @@ func (sa *Adapter) migrateAccounts(context TransactionContext, appOrg model.Appl
 		}
 
 		// handle external identifiers (includes oidc)
+		//TODO: set sensitive flags for external identifiers (based on app org IDP settings)
 		if len(acct.ExternalIDs) == 0 && hasExternal {
 			code := "uin"
 			primary := true
