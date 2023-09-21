@@ -11,6 +11,14 @@ properties:
     type: string
   last_name:
     type: string
+  email:
+    type: string
+    nullable: true
+    deprecated: true
+  phone:
+    type: string
+    nullable: true
+    deprecated: true
   birth_year:
     type: integer
     nullable: true

@@ -90,7 +90,7 @@ func (a *phoneIdentifierImpl) buildIdentifier(accountID *string, appName string)
 
 	message := ""
 	accountIdentifier := model.AccountIdentifier{ID: uuid.NewString(), Code: a.code, Identifier: a.identifier, Verified: false,
-		Account: model.Account{ID: accountIDStr}, DateCreated: time.Now().UTC()}
+		Sensitive: true, Account: model.Account{ID: accountIDStr}, DateCreated: time.Now().UTC()}
 	sent, err := a.sendVerifyIdentifier(&accountIdentifier, appName)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionSend, "phone verification", nil, err)
@@ -100,6 +100,10 @@ func (a *phoneIdentifierImpl) buildIdentifier(accountID *string, appName string)
 	}
 
 	return message, &accountIdentifier, nil
+}
+
+func (a *phoneIdentifierImpl) maskIdentifier() (string, error) {
+	return utils.GetLogValue(a.identifier, 4), nil // mask all but the last 4 phone digits
 }
 
 func (a *phoneIdentifierImpl) requireVerificationForSignIn() bool {

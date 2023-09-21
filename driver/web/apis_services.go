@@ -371,7 +371,7 @@ func (h ServicesApisHandler) signInOptions(l *logs.Log, r *http.Request, claims 
 		authType = &authTypeStr
 	}
 
-	identifiers, authTypes, err := h.coreAPIs.Auth.SignInOptions(requestIdentifier, requestData.ApiKey, requestData.AppTypeIdentifier, requestData.OrgId, authType, requestData.UserIdentifier)
+	identifiers, authTypes, err := h.coreAPIs.Auth.SignInOptions(requestIdentifier, requestData.ApiKey, requestData.AppTypeIdentifier, requestData.OrgId, authType, requestData.UserIdentifier, l)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionGet, logutils.MessageDataType("sign-in options"), nil, err, http.StatusInternalServerError, false)
 	}
@@ -781,6 +781,16 @@ func (h ServicesApisHandler) getProfile(l *logs.Log, r *http.Request, claims *to
 	}
 
 	profileResp := profileToDef(profile)
+
+	// maintain backwards compatibility
+	if len(profile.Accounts) == 1 {
+		if emailIdentifier := profile.Accounts[0].GetAccountIdentifier("email", ""); emailIdentifier != nil {
+			profileResp.Email = &emailIdentifier.Identifier
+		}
+		if phoneIdentifier := profile.Accounts[0].GetAccountIdentifier("phone", ""); phoneIdentifier != nil {
+			profileResp.Phone = &phoneIdentifier.Identifier
+		}
+	}
 
 	data, err := json.Marshal(profileResp)
 	if err != nil {

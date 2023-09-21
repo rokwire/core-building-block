@@ -213,17 +213,21 @@ type Account struct {
 	Scopes                  *[]string                `json:"scopes,omitempty"`
 	System                  *bool                    `json:"system,omitempty"`
 	SystemConfigs           *map[string]interface{}  `json:"system_configs"`
-	Verified                *bool                    `json:"verified,omitempty"`
+	// Deprecated:
+	Username *string `json:"username"`
+	Verified *bool   `json:"verified,omitempty"`
 }
 
 // AccountAuthType defines model for AccountAuthType.
 type AccountAuthType struct {
-	Active       *bool                   `json:"active,omitempty"`
-	AuthTypeCode string                  `json:"auth_type_code"`
-	Code         *string                 `json:"code,omitempty"`
-	Id           string                  `json:"id"`
-	Identifier   *string                 `json:"identifier,omitempty"`
-	Params       *map[string]interface{} `json:"params"`
+	Active       *bool  `json:"active,omitempty"`
+	AuthTypeCode string `json:"auth_type_code"`
+	// Deprecated:
+	Code *string `json:"code,omitempty"`
+	Id   string  `json:"id"`
+	// Deprecated:
+	Identifier *string                 `json:"identifier,omitempty"`
+	Params     *map[string]interface{} `json:"params"`
 }
 
 // AccountIdentifier defines model for AccountIdentifier.
@@ -392,20 +396,21 @@ type Follow struct {
 
 // IdentityProviderSettings defines model for IdentityProviderSettings.
 type IdentityProviderSettings struct {
-	AlwaysSyncProfile   *bool              `json:"always_sync_profile,omitempty"`
-	EmailField          *string            `json:"email_field,omitempty"`
-	ExternalIdFields    *map[string]string `json:"external_id_fields"`
-	FirstNameField      *string            `json:"first_name_field,omitempty"`
-	Groups              *map[string]string `json:"groups"`
-	GroupsField         *string            `json:"groups_field,omitempty"`
-	IdentityBbBaseUrl   *string            `json:"identity_bb_base_url,omitempty"`
-	IdentityProviderId  string             `json:"identity_provider_id"`
-	LastNameField       *string            `json:"last_name_field,omitempty"`
-	MiddleNameField     *string            `json:"middle_name_field,omitempty"`
-	Roles               *map[string]string `json:"roles"`
-	RolesField          *string            `json:"roles_field,omitempty"`
-	UserIdentifierField string             `json:"user_identifier_field"`
-	UserSpecificFields  *[]string          `json:"user_specific_fields"`
+	AlwaysSyncProfile    *bool              `json:"always_sync_profile,omitempty"`
+	EmailField           *string            `json:"email_field,omitempty"`
+	ExternalIdFields     *map[string]string `json:"external_id_fields"`
+	FirstNameField       *string            `json:"first_name_field,omitempty"`
+	Groups               *map[string]string `json:"groups"`
+	GroupsField          *string            `json:"groups_field,omitempty"`
+	IdentityBbBaseUrl    *string            `json:"identity_bb_base_url,omitempty"`
+	IdentityProviderId   string             `json:"identity_provider_id"`
+	LastNameField        *string            `json:"last_name_field,omitempty"`
+	MiddleNameField      *string            `json:"middle_name_field,omitempty"`
+	Roles                *map[string]string `json:"roles"`
+	RolesField           *string            `json:"roles_field,omitempty"`
+	SensitiveExternalIds *[]string          `json:"sensitive_external_ids"`
+	UserIdentifierField  string             `json:"user_identifier_field"`
+	UserSpecificFields   *[]string          `json:"user_specific_fields"`
 }
 
 // InactiveExpirePolicy defines model for InactiveExpirePolicy.
@@ -562,7 +567,9 @@ type PartialAccount struct {
 	Scopes        *[]string               `json:"scopes,omitempty"`
 	System        *bool                   `json:"system,omitempty"`
 	SystemConfigs *map[string]interface{} `json:"system_configs"`
-	Verified      *bool                   `json:"verified,omitempty"`
+	// Deprecated:
+	Username *string `json:"username"`
+	Verified *bool   `json:"verified,omitempty"`
 }
 
 // Permission defines model for Permission.
@@ -588,12 +595,16 @@ type PrivacyNullable struct {
 
 // Profile defines model for Profile.
 type Profile struct {
-	Address                *string                 `json:"address"`
-	BirthYear              *int                    `json:"birth_year"`
-	Country                *string                 `json:"country"`
-	FirstName              *string                 `json:"first_name,omitempty"`
-	Id                     *string                 `json:"id,omitempty"`
-	LastName               *string                 `json:"last_name,omitempty"`
+	Address   *string `json:"address"`
+	BirthYear *int    `json:"birth_year"`
+	Country   *string `json:"country"`
+	// Deprecated:
+	Email     *string `json:"email"`
+	FirstName *string `json:"first_name,omitempty"`
+	Id        *string `json:"id,omitempty"`
+	LastName  *string `json:"last_name,omitempty"`
+	// Deprecated:
+	Phone                  *string                 `json:"phone"`
 	PhotoUrl               *string                 `json:"photo_url,omitempty"`
 	State                  *string                 `json:"state"`
 	UnstructuredProperties *map[string]interface{} `json:"unstructured_properties"`
@@ -602,12 +613,14 @@ type Profile struct {
 
 // ProfileNullable defines model for ProfileNullable.
 type ProfileNullable struct {
-	Address                *string                 `json:"address"`
-	BirthYear              *int                    `json:"birth_year"`
-	Country                *string                 `json:"country"`
-	Email                  *string                 `json:"email"`
-	FirstName              *string                 `json:"first_name"`
-	LastName               *string                 `json:"last_name"`
+	Address   *string `json:"address"`
+	BirthYear *int    `json:"birth_year"`
+	Country   *string `json:"country"`
+	// Deprecated:
+	Email     *string `json:"email"`
+	FirstName *string `json:"first_name"`
+	LastName  *string `json:"last_name"`
+	// Deprecated:
 	Phone                  *string                 `json:"phone"`
 	PhotoUrl               *string                 `json:"photo_url"`
 	State                  *string                 `json:"state"`
@@ -965,14 +978,16 @@ type ServicesServiceAccountsCredsStaticToken struct {
 
 // SharedReqAccountCheck defines model for _shared_req_AccountCheck.
 type SharedReqAccountCheck struct {
-	ApiKey            string                         `json:"api_key"`
-	AppTypeIdentifier string                         `json:"app_type_identifier"`
-	AuthType          *SharedReqAccountCheckAuthType `json:"auth_type,omitempty"`
+	ApiKey            string `json:"api_key"`
+	AppTypeIdentifier string `json:"app_type_identifier"`
+	// Deprecated:
+	AuthType *SharedReqAccountCheckAuthType `json:"auth_type,omitempty"`
 
 	// Identifier Allowed identifier types
-	Identifier     *SharedReqIdentifiers `json:"identifier,omitempty"`
-	OrgId          string                `json:"org_id"`
-	UserIdentifier *string               `json:"user_identifier,omitempty"`
+	Identifier *SharedReqIdentifiers `json:"identifier,omitempty"`
+	OrgId      string                `json:"org_id"`
+	// Deprecated:
+	UserIdentifier *string `json:"user_identifier,omitempty"`
 }
 
 // SharedReqAccountCheckAuthType defines model for SharedReqAccountCheck.AuthType.

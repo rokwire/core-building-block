@@ -288,7 +288,7 @@ func (a *Auth) CanLink(identifierJSON string, apiKey string, appTypeIdentifier s
 //	Returns:
 //		identifiers ([]model.AccountIdentifier): account identifiers that may be used for sign-in
 //		authTypes ([]model.AccountAuthType): account auth types that may be used for sign-in
-func (a *Auth) SignInOptions(identifierJSON string, apiKey string, appTypeIdentifier string, orgID string, authenticationType *string, userIdentifier *string) ([]model.AccountIdentifier, []model.AccountAuthType, error) {
+func (a *Auth) SignInOptions(identifierJSON string, apiKey string, appTypeIdentifier string, orgID string, authenticationType *string, userIdentifier *string, l *logs.Log) ([]model.AccountIdentifier, []model.AccountAuthType, error) {
 	identifierImpl := a.getIdentifierTypeImpl(identifierJSON, authenticationType, userIdentifier)
 	if identifierImpl == nil {
 		return nil, nil, errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, nil)
@@ -307,17 +307,18 @@ func (a *Auth) SignInOptions(identifierJSON string, apiKey string, appTypeIdenti
 
 	identifiers := account.GetVerifiedAccountIdentifiers()
 	for i, id := range identifiers {
-		if id.Code == IdentifierTypeEmail {
-			emailParts := strings.Split(id.Identifier, "@")
-			if len(emailParts) != 2 {
-				a.logger.WarnWithFields("found a malformatted email identifier", logutils.Fields{"id": id.ID})
-				continue
+		if id.Sensitive {
+			idImpl := a.getIdentifierTypeImpl("", &id.Code, &id.Identifier)
+			if idImpl == nil {
+				return nil, nil, errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, &logutils.FieldArgs{"code": id.Code})
 			}
 
-			emailParts[0] = utils.GetLogValue(emailParts[0], 3) // mask all but the last 3 characters of the email prefix
-			identifiers[i].Identifier = strings.Join(emailParts, "@")
-		} else if id.Code == IdentifierTypePhone {
-			identifiers[i].Identifier = utils.GetLogValue(id.Identifier, 4) // mask all but the last 4 phone digits
+			masked, err := idImpl.maskIdentifier()
+			if err != nil {
+				l.Errorf("error masking identifier for sign-in options: %v", err)
+				continue
+			}
+			identifiers[i].Identifier = masked
 		}
 	}
 	return identifiers, account.AuthTypes, nil
@@ -694,8 +695,8 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appID string, orgID
 					break
 				}
 			}
-			externalUser := model.ExternalSystemUser{Identifier: identifier, ExternalIDs: externalIDs}
-			newAccount, err = a.applySignUpAdminExternal(context, supportedAuthType.AuthType, *appOrg, externalUser, profile, privacy, permissions, roleIDs, groupIDs, scopes, creatorPermissions, clientVersion, l)
+			externalUser := model.ExternalSystemUser{Identifier: identifier, ExternalIDs: externalIDs, SensitiveExternalIDs: identityProviderSetting.SensitiveExternalIDs}
+			newAccount, err = a.applySignUpAdminExternal(context, *supportedAuthType, *appOrg, externalUser, profile, privacy, permissions, roleIDs, groupIDs, scopes, creatorPermissions, clientVersion, l)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionRegister, "admin user", &logutils.FieldArgs{"auth_type": supportedAuthType.AuthType.Code, "identifier": identifier}, err)
 			}

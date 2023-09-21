@@ -340,7 +340,6 @@ func (sa *Adapter) migrateAccounts(context TransactionContext, appOrg model.Appl
 		}
 
 		// handle external identifiers (includes oidc)
-		//TODO: set sensitive flags for external identifiers (based on app org IDP settings)
 		if len(acct.ExternalIDs) == 0 && hasExternal {
 			code := "uin"
 			primary := true
@@ -367,8 +366,9 @@ func (sa *Adapter) migrateAccounts(context TransactionContext, appOrg model.Appl
 		// add profile email to identifiers if not already there
 		if acct.Profile.Email != nil && *acct.Profile.Email != "" {
 			foundEmail := false
-			for _, identifier := range identifiers {
+			for j, identifier := range identifiers {
 				if identifier.Code == "email" && identifier.Identifier == *acct.Profile.Email {
+					identifiers[j].AccountAuthTypeID = externalIdentifier.AccountAuthTypeID
 					foundEmail = true
 					break
 				}

@@ -50,8 +50,13 @@ type identifierType interface {
 	//	accountIdentifier (*model.AccountIdentifier): the new account identifier
 	buildIdentifier(accountID *string, appName string) (string, *model.AccountIdentifier, error)
 
+	// masks the cached identifier
+	maskIdentifier() (string, error)
+
+	// gives whether the identifier must be verified before sign-in is allowed
 	requireVerificationForSignIn() bool
 
+	// checks whether the given account identifier is verified, restarts verification if necessary and possible
 	checkVerified(accountIdentifier *model.AccountIdentifier, appName string) error
 
 	//allowMultiple says whether an account may have multiple identifiers of this type
@@ -113,8 +118,12 @@ type authType interface {
 	//	credentialID (string): the ID of the credential used to validate the login
 	checkCredentials(identifierImpl identifierType, accountID *string, aats []model.AccountAuthType, creds string, params string, appOrg model.ApplicationOrganization) (string, string, error)
 
+	//withParams parses the params and copies the calling authType while caching the params
+	// Returns:
+	//	authImpl (authType): Copy of calling authType with cached params
 	withParams(params map[string]interface{}) (authType, error)
 
+	// gives whether the identifier used with this auth type must be verified before sign-in is allowed
 	requireIdentifierVerificationForSignIn() bool
 
 	//allowMultiple says whether an account may have multiple auth types of this type
@@ -241,7 +250,7 @@ type APIs interface {
 	//	Returns:
 	//		identifiers ([]model.AccountIdentifier): account identifiers that may be used for sign-in
 	//		authTypes ([]model.AccountAuthType): account auth types that may be used for sign-in
-	SignInOptions(identifierJSON string, apiKey string, appTypeIdentifier string, orgID string, authenticationType *string, userIdentifier *string) ([]model.AccountIdentifier, []model.AccountAuthType, error)
+	SignInOptions(identifierJSON string, apiKey string, appTypeIdentifier string, orgID string, authenticationType *string, userIdentifier *string, l *logs.Log) ([]model.AccountIdentifier, []model.AccountAuthType, error)
 
 	//Refresh refreshes an access token using a refresh token
 	//	Input:

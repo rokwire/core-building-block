@@ -6327,6 +6327,11 @@ components:
           additionalProperties:
             type: string
           nullable: true
+        sensitive_external_ids:
+          type: array
+          items:
+            type: string
+          nullable: true
         first_name_field:
           type: string
         middle_name_field:
@@ -6808,6 +6813,10 @@ components:
           type: string
         most_recent_client_version:
           type: string
+        username:
+          type: string
+          nullable: true
+          deprecated: true
     PublicAccount:
       required:
         - id
@@ -6896,6 +6905,10 @@ components:
         date_updated:
           type: string
           nullable: true
+        username:
+          type: string
+          nullable: true
+          deprecated: true
     Profile:
       required:
         - id
@@ -6910,6 +6923,14 @@ components:
           type: string
         last_name:
           type: string
+        email:
+          type: string
+          nullable: true
+          deprecated: true
+        phone:
+          type: string
+          nullable: true
+          deprecated: true
         birth_year:
           type: integer
           nullable: true
@@ -6944,9 +6965,11 @@ components:
         email:
           type: string
           nullable: true
+          deprecated: true
         phone:
           type: string
           nullable: true
+          deprecated: true
         birth_year:
           type: integer
           nullable: true
@@ -6996,8 +7019,10 @@ components:
           type: string
         code:
           type: string
+          deprecated: true
         identifier:
           type: string
+          deprecated: true
         params:
           type: object
           additionalProperties: true
@@ -7282,8 +7307,10 @@ components:
             - twilio_phone
             - illinois_oidc
             - conde_oidc
+          deprecated: true
         user_identifier:
           type: string
+          deprecated: true
     _shared_req_CredsNone:
       type: object
       description: Auth login request creds for unlisted auth_types (None)

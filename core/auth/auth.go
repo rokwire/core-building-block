@@ -364,33 +364,23 @@ func (a *Auth) applySignUpExternal(context storage.TransactionContext, supported
 		return nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
 	}
 
-	for i, id := range account.Identifiers {
-		primary := (id.Identifier == externalUser.Identifier)
-		account.Identifiers[i].Primary = &primary
-	}
-
 	return account, nil
 }
 
-func (a *Auth) applySignUpAdminExternal(context storage.TransactionContext, authType model.AuthType, appOrg model.ApplicationOrganization, externalUser model.ExternalSystemUser, regProfile model.Profile,
+func (a *Auth) applySignUpAdminExternal(context storage.TransactionContext, supportedAuthType model.SupportedAuthType, appOrg model.ApplicationOrganization, externalUser model.ExternalSystemUser, regProfile model.Profile,
 	privacy model.Privacy, permissions []string, roleIDs []string, groupIDs []string, scopes []string, creatorPermissions []string, clientVersion *string, l *logs.Log) (*model.Account, error) {
 	//1. prepare external admin user data
-	identifiers, aatParams, profile, _, err := a.prepareExternalUserData(authType, appOrg, externalUser, regProfile, nil, l)
+	identifiers, aatParams, profile, _, err := a.prepareExternalUserData(supportedAuthType.AuthType, appOrg, externalUser, regProfile, nil, l)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionPrepare, "external admin user data", nil, err)
 	}
 
 	//2. register the account
 	//External and anonymous auth is automatically verified, otherwise verified if credential has been verified previously
-	account, err := a.registerUser(context, identifiers, authType, false, aatParams, appOrg, nil, nil, *profile, privacy, nil,
+	account, err := a.registerUser(context, identifiers, supportedAuthType.AuthType, false, aatParams, appOrg, nil, nil, *profile, privacy, nil,
 		permissions, roleIDs, groupIDs, scopes, creatorPermissions, clientVersion, l)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionRegister, "admin account", nil, err)
-	}
-
-	for i, id := range account.Identifiers {
-		primary := (id.Identifier == externalUser.Identifier)
-		account.Identifiers[i].Primary = &primary
 	}
 
 	return account, nil
@@ -439,13 +429,15 @@ func (a *Auth) prepareExternalUserData(authType model.AuthType, appOrg model.App
 	accountIdentifiers := make([]model.AccountIdentifier, 0)
 	for k, v := range externalUser.ExternalIDs {
 		primary := (v == externalUser.Identifier)
-		accountIdentifiers = append(accountIdentifiers, model.AccountIdentifier{ID: uuid.NewString(), Code: k, Identifier: v,
-			Verified: true, Primary: &primary, Account: model.Account{ID: accountID}, DateCreated: now})
+		accountIdentifiers = append(accountIdentifiers, model.AccountIdentifier{ID: uuid.NewString(), Code: k, Identifier: v, Verified: true,
+			Sensitive: utils.Contains(externalUser.SensitiveExternalIDs, k), Primary: &primary, Account: model.Account{ID: accountID}, DateCreated: now})
 	}
 	if externalUser.Email != "" {
+		primary := (externalUser.Email == externalUser.Identifier)
 		accountIdentifiers = append(accountIdentifiers, model.AccountIdentifier{ID: uuid.NewString(), Code: IdentifierTypeEmail, Identifier: externalUser.Email,
-			Account: model.Account{ID: accountID}, DateCreated: now})
+			Sensitive: true, Primary: &primary, Account: model.Account{ID: accountID}, DateCreated: now})
 	}
+	// AccountAuthTypeID field will be set later
 
 	return accountIdentifiers, params, &profile, preferences, nil
 }
@@ -2569,8 +2561,10 @@ func (a *Auth) updateExternalIdentifiers(account *model.Account, accountAuthType
 			account.Identifiers = append(account.Identifiers, newIdentifier)
 			updated = true
 		} else if accountIdentifier.Identifier != v {
-			accountIdentifier.Identifier = v
 			now := time.Now().UTC()
+			primary := (v == externalUser.Identifier)
+			accountIdentifier.Identifier = v
+			accountIdentifier.Primary = &primary
 			accountIdentifier.DateUpdated = &now
 			updated = true
 		}
@@ -2582,7 +2576,9 @@ func (a *Auth) updateExternalIdentifiers(account *model.Account, accountAuthType
 			if identifier.AccountAuthTypeID != nil && *identifier.AccountAuthTypeID == accountAuthTypeID && identifier.Code == IdentifierTypeEmail {
 				hasExternalEmail = true
 				if identifier.Identifier != externalUser.Email {
+					primary := (externalUser.Email == externalUser.Identifier)
 					account.Identifiers[i].Identifier = externalUser.Email
+					account.Identifiers[i].Primary = &primary
 					updated = true
 					break
 				}

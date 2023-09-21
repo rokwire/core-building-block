@@ -54,8 +54,9 @@ type account struct {
 	LastAccessTokenDate     *time.Time `bson:"last_access_token_date"`
 	MostRecentClientVersion *string    `bson:"most_recent_client_version"`
 
-	// DEPRECATED
-	Username    *string           `bson:"username,omitempty"`
+	// Deprecated:
+	Username *string `bson:"username,omitempty"`
+	// Deprecated:
 	ExternalIDs map[string]string `bson:"external_ids,omitempty"`
 }
 
@@ -79,10 +80,12 @@ type accountAuthType struct {
 	CredentialID *string                `bson:"credential_id"`
 	Active       bool                   `bson:"active"`
 
-	// DEPRECATED
+	// Deprecated:
 	Identifier *string `bson:"identifier,omitempty"`
-	Unverified *bool   `bson:"unverified,omitempty"`
-	Linked     *bool   `bson:"linked,omitempty"`
+	// Deprecated:
+	Unverified *bool `bson:"unverified,omitempty"`
+	// Deprecated:
+	Linked *bool `bson:"linked,omitempty"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
@@ -124,8 +127,9 @@ type profile struct {
 
 	UnstructuredProperties map[string]interface{} `bson:"unstructured_properties"`
 
-	// DEPRECATED
+	// Deprecated:
 	Email *string `bson:"email,omitempty"`
+	// Deprecated:
 	Phone *string `bson:"phone,omitempty"`
 }
 

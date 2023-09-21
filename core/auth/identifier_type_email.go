@@ -72,7 +72,6 @@ func (a *emailIdentifierImpl) withIdentifier(creds string) (identifierType, erro
 	}
 
 	email := strings.TrimSpace(requestCreds.Email)
-	//TODO: validate this regexp is correct
 	validEmail := regexp.MustCompile(`^[a-zA-Z0-9.!#\$%&'*+/=?^_{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?(?:.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?)*$`)
 	if !validEmail.MatchString(email) {
 		return nil, errors.ErrorData(logutils.StatusInvalid, typeEmailIdentifier, &logutils.FieldArgs{"email": email})
@@ -95,7 +94,7 @@ func (a *emailIdentifierImpl) buildIdentifier(accountID *string, appName string)
 
 	message := ""
 	accountIdentifier := model.AccountIdentifier{ID: uuid.NewString(), Code: a.code, Identifier: a.identifier, Verified: false,
-		Account: model.Account{ID: accountIDStr}, DateCreated: time.Now().UTC()}
+		Sensitive: true, Account: model.Account{ID: accountIDStr}, DateCreated: time.Now().UTC()}
 	sent, err := a.sendVerifyIdentifier(&accountIdentifier, appName)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionSend, "identifier verification", nil, err)
@@ -105,6 +104,16 @@ func (a *emailIdentifierImpl) buildIdentifier(accountID *string, appName string)
 	}
 
 	return message, &accountIdentifier, nil
+}
+
+func (a *emailIdentifierImpl) maskIdentifier() (string, error) {
+	emailParts := strings.Split(a.identifier, "@")
+	if len(emailParts) != 2 {
+		return "", errors.ErrorData(logutils.StatusInvalid, typeEmailIdentifier, &logutils.FieldArgs{"identifier": a.identifier})
+	}
+
+	emailParts[0] = utils.GetLogValue(emailParts[0], 3) // mask all but the last 3 characters of the email prefix
+	return strings.Join(emailParts, "@"), nil
 }
 
 func (a *emailIdentifierImpl) requireVerificationForSignIn() bool {

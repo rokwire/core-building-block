@@ -377,8 +377,9 @@ func (ao ApplicationOrganization) FindSupportedAuthType(appType ApplicationType,
 type IdentityProviderSetting struct {
 	IdentityProviderID string `bson:"identity_provider_id"`
 
-	UserIdentifierField string            `bson:"user_identifier_field"`
-	ExternalIDFields    map[string]string `bson:"external_id_fields"`
+	UserIdentifierField  string            `bson:"user_identifier_field"`
+	ExternalIDFields     map[string]string `bson:"external_id_fields"`
+	SensitiveExternalIDs []string          `bson:"sensitive_external_ids"`
 
 	FirstNameField  string `bson:"first_name_field"`
 	MiddleNameField string `bson:"middle_name_field"`

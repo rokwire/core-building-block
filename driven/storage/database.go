@@ -472,8 +472,6 @@ func (m *database) applyOrganizationsChecks(organizations *collectionWrapper) er
 		return err
 	}
 
-	//TODO
-
 	//add applications index
 	err = organizations.AddIndex(bson.D{primitive.E{Key: "applications", Value: 1}}, false)
 	if err != nil {

@@ -22,6 +22,8 @@ properties:
       - twilio_phone
       - illinois_oidc
       - conde_oidc
+    deprecated: true
   user_identifier:
     type: string
+    deprecated: true
   

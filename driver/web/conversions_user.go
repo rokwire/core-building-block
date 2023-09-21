@@ -49,9 +49,21 @@ func accountToDef(item model.Account) *Def.Account {
 		scopes = []string{}
 	}
 
+	// maintain backwards compatibility
+	var username *string
+	if usernameIdentifier := item.GetAccountIdentifier("username", ""); usernameIdentifier != nil {
+		username = &usernameIdentifier.Identifier
+	}
+	if emailIdentifier := item.GetAccountIdentifier("email", ""); emailIdentifier != nil {
+		profile.Email = &emailIdentifier.Identifier
+	}
+	if phoneIdentifier := item.GetAccountIdentifier("phone", ""); phoneIdentifier != nil {
+		profile.Phone = &phoneIdentifier.Identifier
+	}
+
 	return &Def.Account{Id: &item.ID, Anonymous: &item.Anonymous, System: &item.AppOrg.Organization.System, Permissions: &permissions, Roles: &roles, Groups: &groups,
 		Privacy: privacy, Verified: &item.Verified, Scopes: &scopes, Identifiers: &identifiers, AuthTypes: &authTypes, Profile: profile, Preferences: preferences,
-		SystemConfigs: systemConfigs, LastLoginDate: &lastLoginDate, LastAccessTokenDate: &lastAccessTokenDate, MostRecentClientVersion: item.MostRecentClientVersion}
+		SystemConfigs: systemConfigs, LastLoginDate: &lastLoginDate, LastAccessTokenDate: &lastAccessTokenDate, MostRecentClientVersion: item.MostRecentClientVersion, Username: username}
 }
 
 func accountsToDef(items []model.Account) []Def.Account {
@@ -100,10 +112,16 @@ func partialAccountToDef(item model.Account, params map[string]interface{}) *Def
 
 	privacy := privacyToDef(&item.Privacy)
 
+	// maintain backwards compatibility
+	var username *string
+	if usernameIdentifier := item.GetAccountIdentifier("username", ""); usernameIdentifier != nil {
+		username = &usernameIdentifier.Identifier
+	}
+
 	return &Def.PartialAccount{Id: &item.ID, Anonymous: item.Anonymous, AppId: item.AppOrg.Application.ID, OrgId: item.AppOrg.Organization.ID, FirstName: item.Profile.FirstName,
 		LastName: item.Profile.LastName, System: &item.AppOrg.Organization.System, Permissions: permissions, Roles: roles, Groups: groups,
 		Privacy: privacy, Verified: &item.Verified, Scopes: &scopes, SystemConfigs: systemConfigs, Identifiers: identifiers, AuthTypes: authTypes,
-		DateCreated: &dateCreated, DateUpdated: dateUpdated, Params: paramsData}
+		DateCreated: &dateCreated, DateUpdated: dateUpdated, Params: paramsData, Username: username}
 }
 
 func partialAccountsToDef(items []model.Account) []Def.PartialAccount {

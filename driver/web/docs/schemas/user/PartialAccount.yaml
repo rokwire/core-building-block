@@ -68,3 +68,7 @@ properties:
   date_updated:
     type: string
     nullable: true
+  username:
+    type: string
+    nullable: true
+    deprecated: true

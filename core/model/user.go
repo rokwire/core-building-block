@@ -645,8 +645,9 @@ type Device struct {
 
 // ExternalSystemUser represents external system user
 type ExternalSystemUser struct {
-	Identifier  string            `json:"identifier" bson:"identifier"` //this is the identifier used in our system to map the user
-	ExternalIDs map[string]string `json:"external_ids" bson:"external_ids"`
+	Identifier           string            `json:"identifier" bson:"identifier"` //this is the identifier used in our system to map the user
+	ExternalIDs          map[string]string `json:"external_ids" bson:"external_ids"`
+	SensitiveExternalIDs []string          `json:"sensitive_external_ids" bson:"sensitive_external_ids"`
 
 	//these are common fields which should be popuated by the external system
 	FirstName  string   `json:"first_name" bson:"first_name"`

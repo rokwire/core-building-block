@@ -95,6 +95,10 @@ func (a *usernameIdentifierImpl) buildIdentifier(accountID *string, appName stri
 	return "", &accountIdentifier, nil
 }
 
+func (a *usernameIdentifierImpl) maskIdentifier() (string, error) {
+	return a.identifier, nil
+}
+
 func (a *usernameIdentifierImpl) requireVerificationForSignIn() bool {
 	return true
 }

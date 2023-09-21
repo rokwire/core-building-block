@@ -9,8 +9,10 @@ properties:
     type: string
   code:
     type: string
+    deprecated: true
   identifier:
     type: string
+    deprecated: true
   params:  
     type: object
     additionalProperties: true

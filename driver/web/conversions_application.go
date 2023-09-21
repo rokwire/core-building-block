@@ -343,6 +343,10 @@ func identityProviderSettingFromDef(item *Def.IdentityProviderSettings) *model.I
 	if item.ExternalIdFields != nil {
 		externalIDFields = *item.ExternalIdFields
 	}
+	var sensitiveExternalIDs []string
+	if item.SensitiveExternalIds != nil {
+		sensitiveExternalIDs = *item.SensitiveExternalIds
+	}
 	var roles map[string]string
 	if item.Roles != nil {
 		roles = *item.Roles
@@ -361,7 +365,7 @@ func identityProviderSettingFromDef(item *Def.IdentityProviderSettings) *model.I
 	}
 
 	return &model.IdentityProviderSetting{IdentityProviderID: item.IdentityProviderId, UserIdentifierField: item.UserIdentifierField,
-		ExternalIDFields: externalIDFields, FirstNameField: firstNameField, MiddleNameField: middleNameField,
+		ExternalIDFields: externalIDFields, SensitiveExternalIDs: sensitiveExternalIDs, FirstNameField: firstNameField, MiddleNameField: middleNameField,
 		LastNameField: lastNameField, EmailField: emailField, RolesField: rolesField, GroupsField: groupsField,
 		UserSpecificFields: userSpecificFields, Roles: roles, Groups: groups, AlwaysSyncProfile: alwaysSyncProfile, IdentityBBBaseURL: identityBBBaseURL}
 }
@@ -386,6 +390,7 @@ func identityProviderSettingToDef(item *model.IdentityProviderSetting) *Def.Iden
 	}
 
 	externalIDs := item.ExternalIDFields
+	sensitiveExternalIDs := item.SensitiveExternalIDs
 	roles := item.Roles
 	groups := item.Groups
 
@@ -399,7 +404,7 @@ func identityProviderSettingToDef(item *model.IdentityProviderSetting) *Def.Iden
 	alwaysSyncProfile := item.AlwaysSyncProfile
 	identityBBBaseURL := item.IdentityBBBaseURL
 	return &Def.IdentityProviderSettings{IdentityProviderId: item.IdentityProviderID, UserIdentifierField: item.UserIdentifierField,
-		ExternalIdFields: &externalIDs, FirstNameField: &firstNameField, MiddleNameField: &middleNameField,
+		ExternalIdFields: &externalIDs, SensitiveExternalIds: &sensitiveExternalIDs, FirstNameField: &firstNameField, MiddleNameField: &middleNameField,
 		LastNameField: &lastNameField, EmailField: &emailField, RolesField: &rolesField, GroupsField: &groupsField,
 		UserSpecificFields: &userSpecificFields, Roles: &roles, Groups: &groups, AlwaysSyncProfile: &alwaysSyncProfile, IdentityBbBaseUrl: &identityBBBaseURL}
 }
