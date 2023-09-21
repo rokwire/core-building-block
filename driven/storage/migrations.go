@@ -362,12 +362,59 @@ func (sa *Adapter) migrateAccounts(context TransactionContext, appOrg model.Appl
 			identifiers = append(identifiers, newIdentifier)
 		}
 
-		//TODO: look at account profile and add email and phone to identifiers if not already there
-		//TODO: look at account username and add it to identifiers if not already there
+		now := time.Now().UTC()
+		// add profile email to identifiers if not already there
+		if acct.Profile.Email != nil && *acct.Profile.Email != "" {
+			foundEmail := false
+			for _, identifier := range identifiers {
+				if identifier.Code == "email" && identifier.Identifier == *acct.Profile.Email {
+					foundEmail = true
+					break
+				}
+			}
+			if !foundEmail {
+				emailIdentifier := accountIdentifier{ID: uuid.NewString(), Code: "email", Identifier: *acct.Profile.Email, Sensitive: true, DateCreated: now}
+				if strings.HasSuffix(emailIdentifier.Identifier, "@illinois.edu") {
+					primary := false
+					emailIdentifier.AccountAuthTypeID = externalIdentifier.AccountAuthTypeID
+					emailIdentifier.Primary = &primary
+				}
+				identifiers = append(identifiers, emailIdentifier)
+			}
+		}
+		// add profile phone to identifiers if not already there
+		if acct.Profile.Phone != nil && *acct.Profile.Phone != "" {
+			foundPhone := false
+			for _, identifier := range identifiers {
+				if identifier.Code == "phone" && identifier.Identifier == *acct.Profile.Phone {
+					foundPhone = true
+					break
+				}
+			}
+			if !foundPhone {
+				identifiers = append(identifiers, accountIdentifier{ID: uuid.NewString(), Code: "phone", Identifier: *acct.Profile.Phone, Sensitive: true, DateCreated: now})
+			}
+		}
+		// add account username to identifiers if not already there
+		if acct.Username != nil && *acct.Username != "" {
+			foundUsername := false
+			for _, identifier := range identifiers {
+				if identifier.Code == "username" {
+					foundUsername = true
+					break
+				}
+			}
+			if !foundUsername {
+				identifiers = append(identifiers, accountIdentifier{ID: uuid.NewString(), Code: "username", Identifier: *acct.Username, Verified: true, DateCreated: now})
+			}
+		}
 
 		migrated.AuthTypes = authTypes
 		migrated.Identifiers = identifiers
 		migrated.ExternalIDs = nil
+		migrated.Profile.Email = nil
+		migrated.Profile.Phone = nil
+		migrated.Username = nil
 		migratedAccounts[i] = migrated
 	}
 
