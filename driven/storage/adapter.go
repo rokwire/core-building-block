@@ -1578,7 +1578,7 @@ func (sa *Adapter) FindAccountsByAccountID(context TransactionContext, appID str
 	return accounts, nil
 }
 
-// FindAccountsByUsername finds accounts with a username for a given appOrg
+// FindAccountsByUsername finds accounts by username for a given appOrg
 func (sa *Adapter) FindAccountsByUsername(context TransactionContext, appOrg *model.ApplicationOrganization, username string) ([]model.Account, error) {
 	if appOrg == nil {
 		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, nil)

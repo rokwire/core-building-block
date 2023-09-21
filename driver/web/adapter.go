@@ -140,7 +140,6 @@ func (we Adapter) Start() {
 	servicesSubRouter.HandleFunc("/account/profile", we.wrapFunc(we.servicesApisHandler.updateProfile, we.auth.services.User)).Methods("PUT")
 	servicesSubRouter.HandleFunc("/account/privacy", we.wrapFunc(we.servicesApisHandler.updatePrivacy, we.auth.services.User)).Methods("PUT")
 	servicesSubRouter.HandleFunc("/account/system-configs", we.wrapFunc(we.servicesApisHandler.getAccountSystemConfigs, we.auth.services.Standard)).Methods("GET")
-	//TODO: change to generic update identifier API
 	servicesSubRouter.HandleFunc("/account/username", we.wrapFunc(we.servicesApisHandler.updateAccountUsername, we.auth.services.User)).Methods("PUT")
 	servicesSubRouter.HandleFunc("/account/follow", we.wrapFunc(we.servicesApisHandler.addFollow, we.auth.services.User)).Methods("POST")
 	servicesSubRouter.HandleFunc("/account/follow/{id}", we.wrapFunc(we.servicesApisHandler.deleteFollow, we.auth.services.User)).Methods("DELETE")
@@ -178,7 +177,6 @@ func (we Adapter) Start() {
 	adminSubrouter.HandleFunc("/account/mfa", we.wrapFunc(we.adminApisHandler.getMFATypes, we.auth.admin.User)).Methods("GET")
 	adminSubrouter.HandleFunc("/account/mfa", we.wrapFunc(we.adminApisHandler.addMFAType, we.auth.admin.Authenticated)).Methods("POST")
 	adminSubrouter.HandleFunc("/account/mfa", we.wrapFunc(we.adminApisHandler.removeMFAType, we.auth.admin.Authenticated)).Methods("DELETE")
-	//TODO: change to generic update identifier API
 	adminSubrouter.HandleFunc("/account/username", we.wrapFunc(we.adminApisHandler.updateAccountUsername, we.auth.admin.User)).Methods("PUT")
 
 	adminSubrouter.HandleFunc("/app-configs", we.wrapFunc(we.adminApisHandler.getAppConfigs, nil)).Methods("POST") //Requires API key in request

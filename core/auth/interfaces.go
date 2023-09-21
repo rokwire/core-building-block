@@ -267,7 +267,7 @@ type APIs interface {
 
 	//GetLoginURL returns a pre-formatted login url for SSO providers
 	//	Input:
-	//		authType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
+	//		authType (string): Name of the authentication method for provided creds (eg. "illinois_oidc")
 	//		appTypeIdentifier (string): Identifier of the app type/client that the user is logging in from
 	//		orgID (string): ID of the organization that the user is logging in
 	//		redirectURI (string): Registered redirect URI where client will receive response
@@ -326,7 +326,7 @@ type APIs interface {
 
 	//ForgotCredential initiate forgot credential process (generates a reset link and sends to the given identifier for email auth type)
 	//	Input:
-	//		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
+	//		authenticationType (string): Name of the authentication method for provided creds (eg. "password")
 	//		identifierJSON (string): JSON string of the user's identifier and the identifier code
 	//		appTypeIdentifier (string): Identifier of the app type/client that the user is logging in from
 	//		orgID (string): ID of the organization that the user is logging in
@@ -431,7 +431,7 @@ type APIs interface {
 	//The authentication method must be one of the supported for the application.
 	//	Input:
 	//		accountID (string): ID of the account to link the creds to
-	//		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
+	//		authenticationType (string): Name of the authentication method for provided creds (eg. "password", "webauthn", "illinois_oidc")
 	//		creds (string): Credentials/JSON encoded credential structure defined for the specified auth type
 	//		params (string): JSON encoded params defined by specified auth type
 	//		l (*logs.Log): Log object pointer for request
