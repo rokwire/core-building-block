@@ -136,6 +136,7 @@ func (a *webAuthnAuthImpl) signUp(identifierImpl identifierType, accountID *stri
 			return "", nil, nil, errors.WrapErrorAction("building", "identifier", logutils.StringArgs(identifierImpl.getCode()), err)
 		}
 
+		accountIdentifier.Verified = false
 		user.ID = accountIdentifier.Account.ID
 	}
 

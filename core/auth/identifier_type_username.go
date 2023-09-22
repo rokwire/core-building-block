@@ -89,7 +89,7 @@ func (a *usernameIdentifierImpl) buildIdentifier(accountID *string, appName stri
 		accountIDStr = uuid.NewString()
 	}
 
-	accountIdentifier := model.AccountIdentifier{ID: uuid.NewString(), Code: a.code, Identifier: a.identifier, Verified: false,
+	accountIdentifier := model.AccountIdentifier{ID: uuid.NewString(), Code: a.code, Identifier: a.identifier, Verified: true,
 		Account: model.Account{ID: accountIDStr}, DateCreated: time.Now().UTC()}
 
 	return "", &accountIdentifier, nil
