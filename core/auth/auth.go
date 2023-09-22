@@ -2578,14 +2578,19 @@ func (a *Auth) updateExternalIdentifiers(account *model.Account, accountAuthType
 	if externalUser.Email != "" {
 		hasExternalEmail := false
 		for i, identifier := range account.Identifiers {
-			if identifier.AccountAuthTypeID != nil && *identifier.AccountAuthTypeID == accountAuthTypeID && identifier.Code == IdentifierTypeEmail {
-				hasExternalEmail = true
-				if identifier.Identifier != externalUser.Email {
+			if identifier.Code == IdentifierTypeEmail {
+				aatMatch := identifier.AccountAuthTypeID != nil && *identifier.AccountAuthTypeID == accountAuthTypeID // have an external email
+				identifierMatch := identifier.AccountAuthTypeID == nil && identifier.Identifier == externalUser.Email // have an internal email matching external email field
+				hasExternalEmail = aatMatch || identifierMatch
+				if (aatMatch && identifier.Identifier != externalUser.Email) || identifierMatch {
+					// update if have mismatching external email or internal email matching external email field
 					primary := (externalUser.Email == externalUser.Identifier)
 					account.Identifiers[i].Identifier = externalUser.Email
 					account.Identifiers[i].Sensitive = true
 					account.Identifiers[i].Primary = &primary
 					updated = true
+				}
+				if hasExternalEmail {
 					break
 				}
 			}
