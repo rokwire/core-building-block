@@ -1869,6 +1869,9 @@ func (a *Auth) unlinkAccountAuthType(accountID string, accountAuthTypeID *string
 	if account == nil {
 		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, &logutils.FieldArgs{"id": accountID})
 	}
+	if len(account.AuthTypes) < 2 {
+		return nil, errors.ErrorData(logutils.StatusInvalid, model.TypeAccount, &logutils.FieldArgs{"auth_types": len(account.AuthTypes)})
+	}
 
 	for i, aat := range account.AuthTypes {
 		// unlink auth type with matching code and identifier
@@ -1876,7 +1879,7 @@ func (a *Auth) unlinkAccountAuthType(accountID string, accountAuthTypeID *string
 		aatCodeMatch := authenticationType != nil && utils.Contains(aat.SupportedAuthType.AuthType.Aliases, *authenticationType)
 		if aatIDMatch || aatCodeMatch {
 			transaction := func(context storage.TransactionContext) error {
-				if aatCodeMatch && identifier != nil && !aat.SupportedAuthType.AuthType.IsExternal {
+				if aatCodeMatch && identifier != nil && (!aat.SupportedAuthType.AuthType.IsExternal || admin) {
 					err = a.unlinkAccountIdentifier(context, account, nil, identifier, admin)
 					if err != nil {
 						return errors.WrapErrorAction("unlinking", model.TypeAccountIdentifier, &logutils.FieldArgs{"account_id": account.ID, "identifier": *identifier}, err)
