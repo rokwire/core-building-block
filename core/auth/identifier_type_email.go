@@ -137,7 +137,7 @@ func (a *emailIdentifierImpl) checkVerified(accountIdentifier *model.AccountIden
 			return errors.WrapErrorAction("restarting", "identifier verification", nil, err)
 		}
 
-		err = a.auth.storage.UpdateAccountIdentifier(*accountIdentifier)
+		err = a.auth.storage.UpdateAccountIdentifier(nil, *accountIdentifier)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountIdentifier, nil, err)
 		}

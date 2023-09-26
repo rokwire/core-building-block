@@ -127,7 +127,7 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 
 		sub = account.ID
 	} else {
-		responseParams, account, mfaTypes, err = a.applyAuthType(*authType, *appOrg, creds, params, clientVersion, profile, privacy, preferences, accountIdentifierID, admin, l)
+		responseParams, account, mfaTypes, err = a.applyAuthType(*authType, *appOrg, appType, creds, params, clientVersion, profile, privacy, preferences, accountIdentifierID, admin, l)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionApply, model.TypeAuthType, logutils.StringArgs("user"), err)
 		}
@@ -504,7 +504,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 // GetLoginURL returns a pre-formatted login url for SSO providers
 //
 //	Input:
-//		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
+//		authenticationType (string): Name of the authentication method for provided creds (eg. "illinois_oidc")
 //		appTypeIdentifier (string): Identifier of the app type/client that the user is logging in from
 //		orgID (string): ID of the organization that the user is logging in
 //		redirectURI (string): Registered redirect URI where client will receive response
@@ -701,7 +701,7 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appID string, orgID
 				return errors.WrapErrorAction(logutils.ActionRegister, "admin user", &logutils.FieldArgs{"auth_type": supportedAuthType.AuthType.Code, "identifier": identifier}, err)
 			}
 		} else {
-			params, newAccount, err = a.signUpNewAccount(context, identifierImpl, *supportedAuthType, *appOrg, "", "", clientVersion, profile, privacy, nil, permissions, roleIDs, groupIDs, scopes, creatorPermissions, l)
+			params, newAccount, err = a.signUpNewAccount(context, identifierImpl, *supportedAuthType, *appOrg, nil, "", "", clientVersion, profile, privacy, nil, permissions, roleIDs, groupIDs, scopes, creatorPermissions, l)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionRegister, "admin user", &logutils.FieldArgs{"auth_type": supportedAuthType.AuthType.Code, "identifier": identifier}, err)
 			}
@@ -1149,7 +1149,7 @@ func (a *Auth) ResetForgotCredential(credsID string, resetCode string, params st
 // ForgotCredential initiate forgot credential process (generates a reset link and sends to the given identifier for email auth type)
 //
 //	Input:
-//		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
+//		authenticationType (string): Name of the authentication method for provided creds (eg. "password")
 //		identifierJSON (string): JSON string of the user's identifier and the identifier code
 //		appTypeIdentifier (string): Identifier of the app type/client that the user is logging in from
 //		orgID (string): ID of the organization that the user is logging in
@@ -1800,14 +1800,15 @@ func (a *Auth) GetAdminToken(claims tokenauth.Claims, appID string, orgID string
 //
 //	Input:
 //		accountID (string): ID of the account to link the creds to
-//		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
+//		authenticationType (string): Name of the authentication method for provided creds (eg. "password", "webauthn", "illinois_oidc")
+//		appTypeIdentifier (string): Identifier of the app type/client that the user is logging in from
 //		creds (string): Credentials/JSON encoded credential structure defined for the specified auth type
 //		params (string): JSON encoded params defined by specified auth type
 //		l (*logs.Log): Log object pointer for request
 //	Returns:
 //		message (*string): response message
 //		account (*model.Account): account data after the operation
-func (a *Auth) LinkAccountAuthType(accountID string, authenticationType string, creds string, params string, l *logs.Log) (*string, *model.Account, error) {
+func (a *Auth) LinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, creds string, params string, l *logs.Log) (*string, *model.Account, error) {
 	var message *string
 	var newAccountAuthType *model.AccountAuthType
 
@@ -1820,7 +1821,7 @@ func (a *Auth) LinkAccountAuthType(accountID string, authenticationType string, 
 	}
 
 	//validate if the provided auth type is supported by the provided application and organization
-	authType, appType, appOrg, err := a.validateAuthType(authenticationType, nil, &account.AppOrg.Application.ID, account.AppOrg.Organization.ID)
+	authType, appType, appOrg, err := a.validateAuthType(authenticationType, &appTypeIdentifier, nil, account.AppOrg.Organization.ID)
 	if err != nil || authType == nil || appType == nil || appOrg == nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeAuthType, nil, err).SetStatus(utils.ErrorStatusNotAllowed)
 	}
@@ -1839,7 +1840,7 @@ func (a *Auth) LinkAccountAuthType(accountID string, authenticationType string, 
 			return nil, nil, errors.WrapErrorAction("linking", model.TypeAccountAuthType, nil, err)
 		}
 	} else {
-		message, newAccountAuthType, err = a.linkAccountAuthType(account, *authType, *appOrg, creds, params)
+		message, newAccountAuthType, err = a.linkAccountAuthType(account, *authType, *appOrg, appType, creds, params)
 		if err != nil {
 			return nil, nil, errors.WrapErrorAction("linking", model.TypeAccountAuthType, nil, err)
 		}
@@ -1953,7 +1954,7 @@ func (a *Auth) InitializeSystemAccount(context storage.TransactionContext, authT
 		return "", errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, &logutils.FieldArgs{"code": code, "identifier": email})
 	}
 
-	_, account, err := a.signUpNewAccount(context, identifierImpl, model.SupportedAuthType{AuthType: authType}, appOrg, creds, "", &clientVersion, profile, privacy, nil, permissions, nil, nil, nil, permissions, l)
+	_, account, err := a.signUpNewAccount(context, identifierImpl, model.SupportedAuthType{AuthType: authType}, appOrg, nil, creds, "", &clientVersion, profile, privacy, nil, permissions, nil, nil, nil, permissions, l)
 	if err != nil {
 		return "", errors.WrapErrorAction(logutils.ActionRegister, "initial system user", &logutils.FieldArgs{"email": email}, err)
 	}

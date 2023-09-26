@@ -432,13 +432,14 @@ type APIs interface {
 	//	Input:
 	//		accountID (string): ID of the account to link the creds to
 	//		authenticationType (string): Name of the authentication method for provided creds (eg. "password", "webauthn", "illinois_oidc")
+	//		appTypeIdentifier (string): Identifier of the app type/client that the user is logging in from
 	//		creds (string): Credentials/JSON encoded credential structure defined for the specified auth type
 	//		params (string): JSON encoded params defined by specified auth type
 	//		l (*logs.Log): Log object pointer for request
 	//	Returns:
 	//		message (*string): response message
 	//		account (*model.Account): account data after the operation
-	LinkAccountAuthType(accountID string, authenticationType string, creds string, params string, l *logs.Log) (*string, *model.Account, error)
+	LinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, creds string, params string, l *logs.Log) (*string, *model.Account, error)
 
 	//UnlinkAccountAuthType unlinks credentials from an existing account.
 	//The authentication method must be one of the supported for the application.
@@ -583,7 +584,7 @@ type Storage interface {
 	//AccountIdentifiers
 	FindAccountByIdentifierID(context storage.TransactionContext, id string) (*model.Account, error)
 	InsertAccountIdentifier(context storage.TransactionContext, item model.AccountIdentifier) error
-	UpdateAccountIdentifier(item model.AccountIdentifier) error
+	UpdateAccountIdentifier(context storage.TransactionContext, item model.AccountIdentifier) error
 	UpdateAccountIdentifiers(context storage.TransactionContext, accountID string, items []model.AccountIdentifier) error
 	DeleteAccountIdentifier(context storage.TransactionContext, item model.AccountIdentifier) error
 	DeleteExternalAccountIdentifiers(context storage.TransactionContext, aat model.AccountAuthType) error

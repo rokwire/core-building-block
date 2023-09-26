@@ -2379,7 +2379,7 @@ func (sa *Adapter) InsertAccountIdentifier(context TransactionContext, item mode
 }
 
 // UpdateAccountIdentifier updates an account with the given account identifier
-func (sa *Adapter) UpdateAccountIdentifier(item model.AccountIdentifier) error {
+func (sa *Adapter) UpdateAccountIdentifier(context TransactionContext, item model.AccountIdentifier) error {
 	storageItem := accountIdentifierToStorage(item)
 	now := time.Now().UTC()
 	storageItem.DateUpdated = &now
@@ -2392,7 +2392,7 @@ func (sa *Adapter) UpdateAccountIdentifier(item model.AccountIdentifier) error {
 		}},
 	}
 
-	res, err := sa.db.accounts.UpdateOne(filter, update, nil)
+	res, err := sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountIdentifier, nil, err)
 	}
