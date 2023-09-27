@@ -18,6 +18,7 @@ post:
             summary: Password
             value:
               auth_type: password
+              app_type_identifier: edu.illinois.rokwire
               creds:
                 password: test12345
               params:
@@ -26,18 +27,21 @@ post:
             summary: Code
             value:
               auth_type: code
+              app_type_identifier: edu.illinois.rokwire
               creds:
                 phone: "+12223334444"
           webauthn-begin_registration:
             summary: Webauthn begin registration
             value:
               auth_type: webauthn
+              app_type_identifier: edu.illinois.rokwire
               params:
                 display_name: Name
           webauthn-complete_registration:
             summary: Webauthn complete registration
             value:
               auth_type: webauthn
+              app_type_identifier: edu.illinois.rokwire
               creds:
                 response: <create credential response>
               params:
@@ -46,6 +50,7 @@ post:
             summary: Illinois OIDC
             value:
               auth_type: illinois_oidc
+              app_type_identifier: edu.illinois.rokwire
               creds: https://redirect.example.com?code=ai324uith8gSEefesEguorgwsf43
               params:
                 redirect_uri: https://redirect.example.com
