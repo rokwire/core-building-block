@@ -941,8 +941,9 @@ type ServicesReqServiceAccountsParamsAuthType string
 
 // ServicesResAccountAuthTypeLink defines model for _services_res_account_auth-type-link.
 type ServicesResAccountAuthTypeLink struct {
-	AuthTypes []AccountAuthType `json:"auth_types"`
-	Message   *string           `json:"message"`
+	AuthTypes   []AccountAuthType    `json:"auth_types"`
+	Identifiers *[]AccountIdentifier `json:"identifiers,omitempty"`
+	Message     *string              `json:"message"`
 }
 
 // ServicesResAccountIdentifierLink defines model for _services_res_account_identifier-link.

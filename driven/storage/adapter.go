@@ -2534,6 +2534,16 @@ func (sa *Adapter) InsertCredential(context TransactionContext, creds *model.Cre
 		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeCredential))
 	}
 
+	if creds.AuthType.ID == "" {
+		authType, err := sa.getCachedAuthType(creds.AuthType.Code)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeAuthType, &logutils.FieldArgs{"code": creds.AuthType.Code}, err)
+		}
+		if authType == nil {
+			return errors.ErrorData(logutils.StatusMissing, model.TypeAuthType, &logutils.FieldArgs{"code": creds.AuthType.Code})
+		}
+		creds.AuthType = *authType
+	}
 	storageCreds := credentialToStorage(*creds)
 
 	_, err := sa.db.credentials.InsertOneWithContext(context, storageCreds)

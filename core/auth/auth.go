@@ -1826,10 +1826,10 @@ func (a *Auth) linkAccountAuthTypeExternal(account *model.Account, supportedAuth
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionCreate, model.TypeAccountAuthType, nil, err)
 		}
-		accountAuthType.Account = *account
 
 		updatedIdentifiers := a.updateExternalIdentifiers(account, accountAuthType.ID, externalUser, true)
 
+		accountAuthType.Account = *account
 		err = a.registerAccountAuthType(context, *accountAuthType, nil, account.Identifiers, updatedIdentifiers)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccountAuthType, nil, err)

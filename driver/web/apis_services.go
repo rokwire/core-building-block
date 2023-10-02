@@ -412,13 +412,15 @@ func (h ServicesApisHandler) linkAccountAuthType(l *logs.Log, r *http.Request, c
 		return l.HTTPResponseError("Error linking account auth type", err, http.StatusInternalServerError, true)
 	}
 
+	identifiers := make([]Def.AccountIdentifier, 0)
 	authTypes := make([]Def.AccountAuthType, 0)
 	if account != nil {
 		account.SortAccountAuthTypes("", claims.AuthType)
+		identifiers = accountIdentifiersToDef(account.Identifiers)
 		authTypes = accountAuthTypesToDefLegacy(account)
 	}
 
-	responseData := &Def.ServicesResAccountAuthTypeLink{AuthTypes: authTypes, Message: message}
+	responseData := &Def.ServicesResAccountAuthTypeLink{Identifiers: &identifiers, AuthTypes: authTypes, Message: message}
 	respData, err := json.Marshal(responseData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionMarshal, "link account auth type response", nil, err, http.StatusInternalServerError, false)
@@ -444,13 +446,15 @@ func (h ServicesApisHandler) unlinkAccountAuthType(l *logs.Log, r *http.Request,
 		return l.HTTPResponseError("Error unlinking account auth type", err, http.StatusInternalServerError, true)
 	}
 
+	identifiers := make([]Def.AccountIdentifier, 0)
 	authTypes := make([]Def.AccountAuthType, 0)
 	if account != nil {
 		account.SortAccountAuthTypes("", claims.AuthType)
+		identifiers = accountIdentifiersToDef(account.Identifiers)
 		authTypes = accountAuthTypesToDefLegacy(account)
 	}
 
-	responseData := &Def.ServicesResAccountAuthTypeLink{AuthTypes: authTypes}
+	responseData := &Def.ServicesResAccountAuthTypeLink{Identifiers: &identifiers, AuthTypes: authTypes}
 	respData, err := json.Marshal(responseData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionMarshal, "unlink account auth type response", nil, err, http.StatusInternalServerError, false)

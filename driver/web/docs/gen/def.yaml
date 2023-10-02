@@ -7630,6 +7630,10 @@ components:
         message:
           type: string
           nullable: true
+        identifiers:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccountIdentifier'
         auth_types:
           type: array
           items:
