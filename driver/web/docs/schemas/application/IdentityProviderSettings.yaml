@@ -17,6 +17,8 @@ properties:
     items:
       type: string
     nullable: true
+  is_email_verified:
+    type: boolean
   first_name_field:
     type: string
   middle_name_field:

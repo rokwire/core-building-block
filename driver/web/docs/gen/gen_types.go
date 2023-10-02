@@ -405,6 +405,7 @@ type IdentityProviderSettings struct {
 	GroupsField          *string            `json:"groups_field,omitempty"`
 	IdentityBbBaseUrl    *string            `json:"identity_bb_base_url,omitempty"`
 	IdentityProviderId   string             `json:"identity_provider_id"`
+	IsEmailVerified      *bool              `json:"is_email_verified,omitempty"`
 	LastNameField        *string            `json:"last_name_field,omitempty"`
 	MiddleNameField      *string            `json:"middle_name_field,omitempty"`
 	Roles                *map[string]string `json:"roles"`

@@ -438,7 +438,7 @@ func (a *Auth) prepareExternalUserData(authType model.AuthType, appOrg model.App
 	if externalUser.Email != "" {
 		primary := (externalUser.Email == externalUser.Identifier)
 		accountIdentifiers = append(accountIdentifiers, model.AccountIdentifier{ID: uuid.NewString(), Code: IdentifierTypeEmail, Identifier: externalUser.Email,
-			Sensitive: true, Primary: &primary, Account: model.Account{ID: accountID}, DateCreated: now})
+			Verified: externalUser.IsEmailVerified, Sensitive: true, Primary: &primary, Account: model.Account{ID: accountID}, DateCreated: now})
 	}
 	// AccountAuthTypeID field will be set later
 
@@ -2610,7 +2610,8 @@ func (a *Auth) updateExternalIdentifiers(account *model.Account, accountAuthType
 		if !hasExternalEmail {
 			primary := (externalUser.Email == externalUser.Identifier)
 			account.Identifiers = append(account.Identifiers, model.AccountIdentifier{ID: uuid.NewString(), Code: IdentifierTypeEmail, Identifier: externalUser.Email,
-				Linked: linked, Sensitive: true, AccountAuthTypeID: &accountAuthTypeID, Primary: &primary, Account: model.Account{ID: account.ID}, DateCreated: now})
+				Verified: externalUser.IsEmailVerified, Linked: linked, Sensitive: true, AccountAuthTypeID: &accountAuthTypeID, Primary: &primary,
+				Account: model.Account{ID: account.ID}, DateCreated: now})
 			updated = true
 		}
 	}

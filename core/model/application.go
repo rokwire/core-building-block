@@ -380,6 +380,7 @@ type IdentityProviderSetting struct {
 	UserIdentifierField  string            `bson:"user_identifier_field"`
 	ExternalIDFields     map[string]string `bson:"external_id_fields"`
 	SensitiveExternalIDs []string          `bson:"sensitive_external_ids"`
+	IsEmailVerified      bool              `bson:"is_email_verified"`
 
 	FirstNameField  string `bson:"first_name_field"`
 	MiddleNameField string `bson:"middle_name_field"`

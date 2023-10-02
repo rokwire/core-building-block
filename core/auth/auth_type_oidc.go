@@ -371,7 +371,8 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 	}
 
 	externalUser := model.ExternalSystemUser{Identifier: identifier, ExternalIDs: externalIDs, SensitiveExternalIDs: identityProviderSetting.SensitiveExternalIDs,
-		FirstName: firstName, MiddleName: middleName, LastName: lastName, Email: email, Roles: roles, Groups: groups, SystemSpecific: systemSpecific}
+		IsEmailVerified: identityProviderSetting.IsEmailVerified, FirstName: firstName, MiddleName: middleName, LastName: lastName, Email: email, Roles: roles,
+		Groups: groups, SystemSpecific: systemSpecific}
 
 	oidcParams := map[string]interface{}{}
 	oidcParams["id_token"] = token.IDToken

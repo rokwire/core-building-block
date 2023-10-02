@@ -267,13 +267,10 @@ func (sa *Adapter) migrateAccounts(context TransactionContext, appOrg model.Appl
 		migrated := acct
 		identifiers := make([]accountIdentifier, 0)
 		authTypes := make([]accountAuthType, 0)
-		externalIdentifier := accountIdentifier{}
 		addedIdentifiers := make([]string, 0)
-		hasExternal := false
 		for _, aat := range acct.AuthTypes {
 			newAat := aat
-			isExternal := (aat.Params != nil)
-			hasExternal = hasExternal || isExternal
+			isExternal := (aat.Params["user"] != nil)
 			newAuthType, exists := removedAuthTypes[aat.AuthTypeID]
 			if aat.Identifier != nil && !isExternal {
 				identifier := *aat.Identifier
@@ -315,16 +312,53 @@ func (sa *Adapter) migrateAccounts(context TransactionContext, appOrg model.Appl
 				newAat.AuthTypeID = newAuthType.ID
 				newAat.AuthTypeCode = newAuthType.Code
 			} else if isExternal {
-				externalAatID := aat.ID
-
-				externalIdentifier.AccountAuthTypeID = &externalAatID
-				externalIdentifier.DateCreated = aat.DateCreated
-				if aat.Identifier != nil {
-					externalIdentifier.Identifier = *aat.Identifier
+				// parse the external user from params
+				externalUser, err := utils.JSONConvert[model.ExternalSystemUser, interface{}](aat.Params["user"])
+				if err != nil {
+					return errors.WrapErrorAction(logutils.ActionParse, model.TypeExternalSystemUser, &logutils.FieldArgs{"auth_types.id": aat.ID}, err)
 				}
-				if aat.DateUpdated != nil {
-					dateUpdated := *aat.DateUpdated
-					externalIdentifier.DateUpdated = &dateUpdated
+				if externalUser != nil {
+					externalAatID := aat.ID
+					linked := false
+					if aat.Linked != nil {
+						linked = *aat.Linked
+					}
+					var dateUpdated *time.Time
+					if aat.DateUpdated != nil {
+						dateUpdatedVal := *aat.DateUpdated
+						dateUpdated = &dateUpdatedVal
+					}
+
+					// add the primary external identifier
+					code := ""
+					primary := true
+					for k, v := range appOrg.IdentityProvidersSettings[0].ExternalIDFields {
+						if v == appOrg.IdentityProvidersSettings[0].UserIdentifierField {
+							code = k
+							break
+						}
+					}
+					primaryIdentifier := accountIdentifier{ID: uuid.NewString(), Code: code, Identifier: externalUser.Identifier, Verified: true, Linked: linked,
+						AccountAuthTypeID: &externalAatID, Primary: &primary, DateCreated: aat.DateCreated, DateUpdated: dateUpdated}
+					identifiers = append(identifiers, primaryIdentifier)
+
+					// add the other external identifiers from external IDs
+					for code, id := range externalUser.ExternalIDs {
+						if code != primaryIdentifier.Code {
+							primary := false
+							newIdentifier := accountIdentifier{ID: uuid.NewString(), Code: code, Identifier: id, Verified: true, Linked: linked,
+								AccountAuthTypeID: &externalAatID, Primary: &primary, DateCreated: aat.DateCreated, DateUpdated: dateUpdated}
+							identifiers = append(identifiers, newIdentifier)
+						}
+					}
+
+					// add the external email if there is one
+					if externalUser.Email != "" && externalUser.Email != externalUser.Identifier {
+						primary := false
+						externalEmail := accountIdentifier{ID: uuid.NewString(), Code: "email", Identifier: externalUser.Email, Verified: true, Linked: linked,
+							Sensitive: true, Primary: &primary, AccountAuthTypeID: &externalAatID, DateCreated: aat.DateCreated, DateUpdated: dateUpdated}
+						identifiers = append(identifiers, externalEmail)
+					}
 				}
 			}
 
@@ -339,47 +373,18 @@ func (sa *Adapter) migrateAccounts(context TransactionContext, appOrg model.Appl
 			authTypes = append(authTypes, newAat)
 		}
 
-		// handle external identifiers (includes oidc)
-		if len(acct.ExternalIDs) == 0 && hasExternal {
-			code := "uin"
-			primary := true
-			if len(appOrg.IdentityProvidersSettings) > 0 {
-				for k, v := range appOrg.IdentityProvidersSettings[0].ExternalIDFields {
-					if v == appOrg.IdentityProvidersSettings[0].UserIdentifierField {
-						code = k
-						break
-					}
-				}
-			}
-			newIdentifier := accountIdentifier{ID: uuid.NewString(), Code: code, Identifier: externalIdentifier.Identifier, Verified: true, Primary: &primary,
-				AccountAuthTypeID: externalIdentifier.AccountAuthTypeID, DateCreated: externalIdentifier.DateCreated, DateUpdated: externalIdentifier.DateUpdated}
-			identifiers = append(identifiers, newIdentifier)
-		}
-		for code, id := range acct.ExternalIDs {
-			primary := (id == externalIdentifier.Identifier)
-			newIdentifier := accountIdentifier{ID: uuid.NewString(), Code: code, Identifier: id, Verified: true, AccountAuthTypeID: externalIdentifier.AccountAuthTypeID,
-				Primary: &primary, DateCreated: externalIdentifier.DateCreated, DateUpdated: externalIdentifier.DateUpdated}
-			identifiers = append(identifiers, newIdentifier)
-		}
-
 		now := time.Now().UTC()
 		// add profile email to identifiers if not already there
 		if acct.Profile.Email != nil && *acct.Profile.Email != "" {
 			foundEmail := false
-			for j, identifier := range identifiers {
+			for _, identifier := range identifiers {
 				if identifier.Code == "email" && identifier.Identifier == *acct.Profile.Email {
-					identifiers[j].AccountAuthTypeID = externalIdentifier.AccountAuthTypeID
 					foundEmail = true
 					break
 				}
 			}
 			if !foundEmail {
 				emailIdentifier := accountIdentifier{ID: uuid.NewString(), Code: "email", Identifier: *acct.Profile.Email, Sensitive: true, DateCreated: now}
-				if strings.HasSuffix(emailIdentifier.Identifier, "@illinois.edu") {
-					primary := false
-					emailIdentifier.AccountAuthTypeID = externalIdentifier.AccountAuthTypeID
-					emailIdentifier.Primary = &primary
-				}
 				identifiers = append(identifiers, emailIdentifier)
 			}
 		}
