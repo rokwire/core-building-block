@@ -15,6 +15,8 @@
 package utils
 
 import (
+	"crypto/aes"
+	"crypto/cipher"
 	crand "crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
@@ -27,6 +29,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/rokwire/core-auth-library-go/v3/keys"
 	"github.com/rokwire/logging-library-go/v2/logs"
 	"github.com/rokwire/logging-library-go/v2/logutils"
 
@@ -222,6 +225,96 @@ func GetPrintableString(v *string, defaultVal string) string {
 		return *v
 	}
 	return defaultVal
+}
+
+// Encrypt data with AES-128 encryption algorithm and returns the encrypted data and the AES key encrypted with the given public key
+func Encrypt(data []byte, pub *keys.PubKey) (string, string, string, error) {
+	blockSize := 16
+	randomKey, err := GenerateRandomBytes(blockSize)
+	if err != nil {
+		return "", "", "", errors.WrapErrorAction("generating", "random bytes", logutils.StringArgs("session key"), err)
+	}
+	//Encrypt blobJSON with AES using random key(CBC mode, PKCS7 padding, 0 IV) and convert to base 64 to get encrypted_data
+	cipherBlock, err := aes.NewCipher(randomKey)
+	if err != nil {
+		return "", "", "", errors.WrapErrorAction(logutils.ActionCreate, "AES cipher block", nil, err)
+	}
+
+	nonce, err := GenerateRandomBytes(12)
+	if err != nil {
+		return "", "", "", errors.WrapErrorAction("generating", "random bytes", logutils.StringArgs("nonce"), err)
+	}
+	gcm, err := cipher.NewGCM(cipherBlock)
+	if err != nil {
+		return "", "", "", errors.WrapErrorAction(logutils.ActionCreate, "block cipher", logutils.StringArgs("GCM"), err)
+	}
+	cipherText := gcm.Seal(nil, nonce, data, nil)
+
+	//Encrypt the session key with public key
+	encryptedKeyBytes, err := EncryptWithPublicKey(randomKey, pub)
+	if err != nil || encryptedKeyBytes == nil {
+		return "", "", "", err
+	}
+	encodedKey := base64.StdEncoding.EncodeToString(encryptedKeyBytes)
+	encodedNonce := base64.StdEncoding.EncodeToString(nonce)
+	encodedData := base64.StdEncoding.EncodeToString(cipherText)
+	return encodedKey, encodedNonce, encodedData, nil
+}
+
+// EncryptWithPublicKey encrypts data with the given public key
+func EncryptWithPublicKey(data []byte, pub *keys.PubKey) ([]byte, error) {
+	cipherText, err := pub.Encrypt(data, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionEncrypt, logutils.TypeString, logutils.StringArgs("public key"), err)
+	}
+	return cipherText, nil
+}
+
+// Decrypt decrypts data using AES-128 with the key decrypted using priv
+func Decrypt(data string, key string, nonce string, priv *keys.PrivKey) ([]byte, error) {
+	//1. decrypt key
+	decodedKey, err := base64.StdEncoding.DecodeString(key)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionDecode, "key string", nil, err)
+	}
+	decryptedKey, err := DecryptWithPrivateKey(decodedKey, priv)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionDecrypt, "decoded key string", nil, err)
+	}
+
+	//2. decrypt data
+	decodedNonce, err := base64.StdEncoding.DecodeString(nonce)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionDecode, "iv string", nil, err)
+	}
+	decodedData, err := base64.StdEncoding.DecodeString(data)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionDecode, "data string", nil, err)
+	}
+	cipherBlock, err := aes.NewCipher(decryptedKey)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionCreate, "AES cipher block", nil, err)
+	}
+
+	gcm, err := cipher.NewGCM(cipherBlock)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionCreate, "block cipher", logutils.StringArgs("GCM"), err)
+	}
+	decryptedData, err := gcm.Open(nil, decodedNonce, decodedData, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionDecrypt, "decoded data string", nil, err)
+	}
+
+	return decryptedData, nil
+}
+
+// DecryptWithPrivateKey decrypts data with the given private key
+func DecryptWithPrivateKey(data []byte, priv *keys.PrivKey) ([]byte, error) {
+	cipherText, err := priv.Decrypt(data, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionDecrypt, logutils.TypeString, logutils.StringArgs("private key"), err)
+	}
+	return []byte(cipherText), nil
 }
 
 // StartTimer starts a timer with the given name, period, and function to call when the timer goes off

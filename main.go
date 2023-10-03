@@ -119,6 +119,9 @@ func main() {
 		supportLegacySigs = true
 	}
 
+	//TODO: add parsing for old key (key rotation)
+	// if can decrypt stored key (keys collection) with "current" key or old key not specified, no action necessary
+	// if cannot decrypt with "current" key and old key specified, perform rotation (decrypt with old key, encrypt and update with "current" key)
 	var authPrivKeyPem string
 	authPrivKeyPemString := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_PRIV_KEY", false, true)
 	if authPrivKeyPemString != "" {

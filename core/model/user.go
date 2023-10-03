@@ -84,6 +84,7 @@ type Account struct {
 	ExternalIDs   map[string]string
 	Preferences   map[string]interface{}
 	SystemConfigs map[string]interface{}
+	Secrets       map[string]interface{}
 	Profile       Profile //one account has one profile, one profile can be shared between many accounts
 	Privacy       Privacy
 

@@ -6583,6 +6583,9 @@ components:
         system_configs:
           type: object
           nullable: true
+        secrets:
+          type: object
+          nullable: true
         anonymous:
           type: boolean
         verified:
