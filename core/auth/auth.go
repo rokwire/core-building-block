@@ -2598,7 +2598,6 @@ func (a *Auth) updateExternalIdentifiers(account *model.Account, accountAuthType
 					// update if have mismatching external email or internal email matching external email field
 					primary := (externalUser.Email == externalUser.Identifier)
 					account.Identifiers[i].Identifier = externalUser.Email
-					account.Identifiers[i].Sensitive = true
 					account.Identifiers[i].Primary = &primary
 					updated = true
 				}
