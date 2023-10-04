@@ -547,6 +547,11 @@ type Storage interface {
 	SaveServiceAuthorization(authorization *model.ServiceAuthorization) error
 	DeleteServiceAuthorization(userID string, orgID string) error
 
+	//Keys
+	FindKey(name string) (*model.Key, error)
+	InsertKey(key model.Key) error
+	UpdateKey(key model.Key) error
+
 	//APIKeys
 	LoadAPIKeys() ([]model.APIKey, error)
 	InsertAPIKey(context storage.TransactionContext, apiKey model.APIKey) (*model.APIKey, error)

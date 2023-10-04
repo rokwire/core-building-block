@@ -65,6 +65,8 @@ const (
 	TypeJSONWebKeySet logutils.MessageDataType = "jwks"
 	//TypePubKey pub key type
 	TypePubKey logutils.MessageDataType = "pub key"
+	//TypeKey key type
+	TypeKey logutils.MessageDataType = "key"
 	//TypeAPIKey api key type
 	TypeAPIKey logutils.MessageDataType = "api key"
 	//TypeCreds cred type
@@ -218,6 +220,12 @@ func (ls LoginSession) LogInfo() string {
 		"state expires:%s,mfa attempts:%d, date refreshed:%s, date updated:%s, date created:%s]",
 		ls.ID, ls.Anonymous, identifier, accessToken, refreshTokens, state,
 		ls.StateExpires, ls.MfaAttempts, ls.DateRefreshed, ls.DateUpdated, ls.DateCreated)
+}
+
+// Key represents a service key and any associataed data
+type Key struct {
+	Name string `bson:"name"`
+	Key  string `bson:"key"`
 }
 
 // APIKey represents an API key entity

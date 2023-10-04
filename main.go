@@ -119,32 +119,11 @@ func main() {
 		supportLegacySigs = true
 	}
 
-	//TODO: add parsing for old key (key rotation)
-	// if can decrypt stored key (keys collection) with "current" key or old key not specified, no action necessary
-	// if cannot decrypt with "current" key and old key specified, perform rotation (decrypt with old key, encrypt and update with "current" key)
-	var authPrivKeyPem string
-	authPrivKeyPemString := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_PRIV_KEY", false, true)
-	if authPrivKeyPemString != "" {
-		//make it to be a single line - AWS environemnt variable issue
-		authPrivKeyPem = strings.ReplaceAll(authPrivKeyPemString, `\n`, "\n")
-	} else {
-		authPrivateKeyPath := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_PRIV_KEY_PATH", true, false)
-		authPrivKeyPemBytes, err := os.ReadFile(authPrivateKeyPath)
-		if err != nil {
-			logger.Fatalf("Could not find auth priv key file: %v", err)
-		}
-
-		authPrivKeyPem = string(authPrivKeyPemBytes)
+	currentAuthPrivKey := parsePrivKeyFromEnvVar("ROKWIRE_CORE_AUTH_PRIV_KEY", envLoader, supportLegacySigs, logger)
+	if currentAuthPrivKey == nil {
+		logger.Fatalf("Cannot parse the current private key: %v", err)
 	}
-
-	alg := keys.PS256
-	if supportLegacySigs {
-		alg = keys.RS256
-	}
-	authPrivKey, err := keys.NewPrivKey(alg, authPrivKeyPem)
-	if err != nil {
-		logger.Fatalf("Failed to parse auth priv key: %v", err)
-	}
+	oldAuthPrivKey := parsePrivKeyFromEnvVar("ROKWIRE_CORE_OLD_AUTH_PRIV_KEY", envLoader, supportLegacySigs, logger)
 
 	minTokenExpStr := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_MIN_TOKEN_EXP", false, false)
 	var minTokenExp *int64
@@ -181,7 +160,7 @@ func main() {
 		FirstParty:  true,
 	}
 
-	authImpl, err := auth.NewAuth(serviceID, host, authPrivKey, authService, storageAdapter, emailer, minTokenExp, maxTokenExp, supportLegacySigs,
+	authImpl, err := auth.NewAuth(serviceID, host, currentAuthPrivKey, oldAuthPrivKey, authService, storageAdapter, emailer, minTokenExp, maxTokenExp, supportLegacySigs,
 		twilioAccountSID, twilioToken, twilioServiceSID, profileBBAdapter, smtpHost, smtpPortNum, smtpUser, smtpPassword, smtpFrom, logger)
 	if err != nil {
 		logger.Fatalf("Error initializing auth: %v", err)
@@ -230,4 +209,34 @@ func main() {
 	webAdapter := web.NewWebAdapter(env, authImpl.ServiceRegManager, port, coreAPIs, host, corsAllowedOrigins,
 		corsAllowedHeaders, baseServerURL, prodServerURL, testServerURL, devServerURL, logger)
 	webAdapter.Start()
+}
+
+func parsePrivKeyFromEnvVar(envVarName string, envLoader envloader.EnvLoader, supportLegacySigs bool, logger *logs.Logger) *keys.PrivKey {
+	var authPrivKeyPem string
+	authPrivKeyPemString := envLoader.GetAndLogEnvVar(envVarName, false, true)
+	if authPrivKeyPemString != "" {
+		//make it to be a single line - AWS environemnt variable issue
+		authPrivKeyPem = strings.ReplaceAll(authPrivKeyPemString, `\n`, "\n")
+	} else {
+		authPrivateKeyPath := envLoader.GetAndLogEnvVar(envVarName+"_PATH", true, false)
+		if authPrivateKeyPath == "" {
+			return nil
+		}
+
+		authPrivKeyPemBytes, err := os.ReadFile(authPrivateKeyPath)
+		if err != nil {
+			logger.Fatalf("Could not find auth priv key file: %v", err)
+		}
+		authPrivKeyPem = string(authPrivKeyPemBytes)
+	}
+
+	alg := keys.PS256
+	if supportLegacySigs {
+		alg = keys.RS256
+	}
+	authPrivKey, err := keys.NewPrivKey(alg, authPrivKeyPem)
+	if err != nil {
+		logger.Fatalf("Failed to parse auth priv key: %v", err)
+	}
+	return authPrivKey
 }
