@@ -66,6 +66,21 @@ func (app *application) sharedGetAppConfig(appTypeIdentifier string, orgID *stri
 	return appConfigs, nil
 }
 
+func (app *application) sharedGetAccount(accountID string) (*model.Account, error) {
+	account, err := app.getAccount(nil, accountID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeAccount, nil, err)
+	}
+
+	decryptedSecrets, err := app.auth.CryptSecrets(account.Secrets, false)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionDecrypt, model.TypeAccountSecrets, &logutils.FieldArgs{"id": accountID}, err)
+	}
+	account.Secrets = decryptedSecrets
+
+	return account, nil
+}
+
 func (app *application) sharedGetAccountsByParams(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]map[string]interface{}, error) {
 	accounts, err := app.storage.FindAccountsByParams(searchParams, appID, orgID, limit, offset, allAccess, approvedKeys)
 	if err != nil {

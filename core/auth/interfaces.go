@@ -410,13 +410,14 @@ type APIs interface {
 	//CheckGroups loads appOrg groups by IDs from storage and checks that they are assignable or revocable
 	CheckGroups(context storage.TransactionContext, appOrg *model.ApplicationOrganization, groupIDs []string, assignerPermissions []string, revoke bool) ([]model.AppOrgGroup, error)
 
-	DecryptAccountSecrets(account *model.Account) error
-
 	//DeleteAccount deletes an account for the given id
 	DeleteAccount(id string) error
 
 	//GetAdminToken returns an admin token for the specified application and organization
 	GetAdminToken(claims tokenauth.Claims, appID string, orgID string, l *logs.Log) (string, error)
+
+	// CryptSecrets either JSON encodes and encrypts the secrets or decrypts and JSON decodes the secrets based on the encrypt flag
+	CryptSecrets(secrets map[string]interface{}, encrypt bool) (map[string]interface{}, error)
 
 	//GetAuthKeySet generates a JSON Web Key Set for auth service registration
 	GetAuthKeySet() (jwk.Set, error)

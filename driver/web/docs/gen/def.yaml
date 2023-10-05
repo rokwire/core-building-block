@@ -1436,7 +1436,7 @@ paths:
       description: |
         Updates account secrets
 
-        **Auth:** Requires auth token
+        **Auth:** Requires user auth token
       security:
         - bearerAuth: []
       responses:

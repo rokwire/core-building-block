@@ -18,6 +18,7 @@ import (
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
 	"core-building-block/utils"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -167,6 +168,14 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 	}
 
 	if loginSession.State == "" {
+		if loginSession.AccountAuthType != nil {
+			decryptedSecrets, err := a.CryptSecrets(loginSession.AccountAuthType.Account.Secrets, false)
+			if err != nil {
+				return nil, nil, nil, errors.WrapErrorAction(logutils.ActionDecrypt, model.TypeAccountSecrets, nil, err)
+			}
+			loginSession.AccountAuthType.Account.Secrets = decryptedSecrets
+		}
+
 		return nil, loginSession, nil, nil
 	}
 
@@ -1736,10 +1745,6 @@ func (a *Auth) UnlinkAccountAuthType(accountID string, authenticationType string
 	return a.unlinkAccountAuthType(accountID, authenticationType, appTypeIdentifier, identifier, l)
 }
 
-func (a *Auth) DecryptAccountSecrets(account *model.Account) error {
-	return nil
-}
-
 // DeleteAccount deletes an account for the given id
 func (a *Auth) DeleteAccount(id string) error {
 	transaction := func(context storage.TransactionContext) error {
@@ -2020,6 +2025,59 @@ func (a *Auth) CheckGroups(context storage.TransactionContext, appOrg *model.App
 	}
 
 	return groups, nil
+}
+
+// CryptSecrets either JSON encodes and encrypts the secrets or decrypts and JSON decodes the secrets based on the encrypt flag
+func (a *Auth) CryptSecrets(secrets map[string]interface{}, encrypt bool) (map[string]interface{}, error) {
+	if encrypt {
+		data, ok := secrets["data"].(string)
+		if !ok {
+			return nil, errors.ErrorData(logutils.StatusMissing, "encrypted data", nil)
+		}
+		dataNonce, ok := secrets["data_nonce"].(string)
+		if !ok {
+			return nil, errors.ErrorData(logutils.StatusMissing, "encrypted data nonce", nil)
+		}
+		key, ok := secrets["key"].(string)
+		if !ok {
+			return nil, errors.ErrorData(logutils.StatusMissing, "encrypted key", nil)
+		}
+		keyNonce, ok := secrets["key_nonce"].(string)
+		if !ok {
+			return nil, errors.ErrorData(logutils.StatusMissing, "encrypted key nonce", nil)
+		}
+
+		decrypted, err := utils.Decrypt(data, dataNonce, key, keyNonce, a.serviceAESKey)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionDecrypt, "secrets", nil, err)
+		}
+
+		var decryptedSecrets map[string]interface{}
+		err = json.Unmarshal(decrypted, &decryptedSecrets)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, "secrets", nil, err)
+		}
+
+		return decryptedSecrets, nil
+	}
+
+	secretsStr, err := json.Marshal(secrets)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionMarshal, "secrets", nil, err)
+	}
+
+	data, dataNonce, key, keyNonce, err := utils.Encrypt(secretsStr, a.serviceAESKey)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionEncrypt, "secrets", nil, err)
+	}
+
+	encryptedSecrets := map[string]interface{}{
+		"data":       data,
+		"data_nonce": dataNonce,
+		"key":        key,
+		"key_nonce":  keyNonce,
+	}
+	return encryptedSecrets, nil
 }
 
 // GetServiceRegistrations retrieves all service registrations

@@ -722,6 +722,21 @@ func (h ServicesApisHandler) getPreferences(l *logs.Log, r *http.Request, claims
 	return l.HTTPResponseSuccessJSON(data)
 }
 
+func (h ServicesApisHandler) updateAccountSecrets(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
+	var secrets map[string]interface{}
+	err := json.NewDecoder(r.Body).Decode(&secrets)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, "account secrets update request", nil, err, http.StatusBadRequest, true)
+	}
+
+	err = h.coreAPIs.Services.SerUpdateAccountSecrets(claims.Subject, secrets)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionUpdate, model.TypeAccountSecrets, nil, err, http.StatusInternalServerError, true)
+	}
+
+	return l.HTTPResponseSuccess()
+}
+
 func (h ServicesApisHandler) getAccountSystemConfigs(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
 	configs, err := h.coreAPIs.Services.SerGetAccountSystemConfigs(claims.Subject)
 	if err != nil {
