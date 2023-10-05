@@ -1736,6 +1736,10 @@ func (a *Auth) UnlinkAccountAuthType(accountID string, authenticationType string
 	return a.unlinkAccountAuthType(accountID, authenticationType, appTypeIdentifier, identifier, l)
 }
 
+func (a *Auth) DecryptAccountSecrets(account *model.Account) error {
+	return nil
+}
+
 // DeleteAccount deletes an account for the given id
 func (a *Auth) DeleteAccount(id string) error {
 	transaction := func(context storage.TransactionContext) error {

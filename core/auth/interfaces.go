@@ -410,6 +410,8 @@ type APIs interface {
 	//CheckGroups loads appOrg groups by IDs from storage and checks that they are assignable or revocable
 	CheckGroups(context storage.TransactionContext, appOrg *model.ApplicationOrganization, groupIDs []string, assignerPermissions []string, revoke bool) ([]model.AppOrgGroup, error)
 
+	DecryptAccountSecrets(account *model.Account) error
+
 	//DeleteAccount deletes an account for the given id
 	DeleteAccount(id string) error
 

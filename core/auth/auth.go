@@ -99,6 +99,7 @@ type Auth struct {
 
 	currentAuthPrivKey *keys.PrivKey
 	oldAuthPrivKey     *keys.PrivKey
+	serviceAESKey      []byte
 
 	ServiceRegManager *authservice.ServiceRegManager
 	SignatureAuth     *sigauth.SignatureAuth
@@ -160,7 +161,7 @@ func NewAuth(serviceID string, host string, currentAuthPrivKey *keys.PrivKey, ol
 		host: host, minTokenExp: *minTokenExp, maxTokenExp: *maxTokenExp, profileBB: profileBB, cachedIdentityProviders: cachedIdentityProviders, identityProvidersLock: identityProvidersLock,
 		apiKeys: apiKeys, apiKeysLock: apiKeysLock, deleteSessionsTimerDone: deleteSessionsTimerDone, emailDialer: emailDialer, emailFrom: smtpFrom}
 
-	err := auth.storeServiceAESKey()
+	err := auth.manageServiceAESKey()
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionSave, "service AES key", nil, err)
 	}
@@ -2348,15 +2349,13 @@ func (a *Auth) setLogContext(account *model.Account, l *logs.Log) {
 	l.SetContext("account_id", accountID)
 }
 
-func (a *Auth) storeServiceAESKey() error {
-	// if can decrypt stored key (keys collection) with "current" key or old key not specified, no action necessary
-	// if cannot decrypt with "current" key and old key specified, perform rotation (decrypt with old key, encrypt and update with "current" key)
-
+func (a *Auth) manageServiceAESKey() error {
 	key, err := a.storage.FindKey(serviceAESKey)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeKey, nil, err)
 	}
 	if key == nil {
+		// if key does not exist, generate one and store it encrypted with the current service public key
 		keyBytes, err := utils.GenerateAESKey()
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionGenerate, "service AES key", nil, err)
@@ -2373,14 +2372,17 @@ func (a *Auth) storeServiceAESKey() error {
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionInsert, model.TypeKey, nil, err)
 		}
+
+		a.serviceAESKey = keyBytes
 	} else {
+		// if key does exist, check if it should be rotated
 		decodedKey, err := base64.StdEncoding.DecodeString(key.Key)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionDecode, "service AES key", nil, err)
 		}
 
 		// attempt to decode and decrypt the stored service AES key with the current private key
-		_, err = a.currentAuthPrivKey.Decrypt(decodedKey, nil)
+		decryptedKey, err := a.currentAuthPrivKey.Decrypt(decodedKey, nil)
 		if err != nil {
 			a.logger.Infof("failed to decrypt service AES key using current private key: %v", err)
 
@@ -2389,7 +2391,7 @@ func (a *Auth) storeServiceAESKey() error {
 			}
 
 			// attempt to decode and decrypt the stored service AES key with the old private key
-			decryptedKey, err := a.oldAuthPrivKey.Decrypt(decodedKey, nil)
+			decryptedKey, err = a.oldAuthPrivKey.Decrypt(decodedKey, nil)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionDecrypt, "service AES key", nil, err)
 			}
@@ -2406,6 +2408,8 @@ func (a *Auth) storeServiceAESKey() error {
 				return errors.WrapErrorAction(logutils.ActionInsert, model.TypeKey, nil, err)
 			}
 		}
+
+		a.serviceAESKey = []byte(decryptedKey)
 	}
 
 	return nil

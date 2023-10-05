@@ -57,6 +57,7 @@ func accountToDef(item model.Account) *Def.Account {
 		scopes = []string{}
 	}
 
+	//TODO: decrypt secrets (need to access storage, auth -> new enc package?)
 	return &Def.Account{Id: &item.ID, Anonymous: &item.Anonymous, System: &item.AppOrg.Organization.System, Permissions: &permissions, Roles: &roles, Groups: &groups,
 		Privacy: privacy, Verified: &item.Verified, Scopes: &scopes, AuthTypes: &authTypes, Username: username, Profile: profile, Preferences: preferences, SystemConfigs: systemConfigs,
 		LastLoginDate: &lastLoginDate, LastAccessTokenDate: &lastAccessTokenDate, MostRecentClientVersion: item.MostRecentClientVersion, ExternalIds: &externalIds}
