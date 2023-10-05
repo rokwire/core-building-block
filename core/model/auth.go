@@ -226,6 +226,9 @@ func (ls LoginSession) LogInfo() string {
 type Key struct {
 	Name string `bson:"name"`
 	Key  string `bson:"key"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
 }
 
 // APIKey represents an API key entity

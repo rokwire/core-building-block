@@ -161,9 +161,9 @@ func NewAuth(serviceID string, host string, currentAuthPrivKey *keys.PrivKey, ol
 		host: host, minTokenExp: *minTokenExp, maxTokenExp: *maxTokenExp, profileBB: profileBB, cachedIdentityProviders: cachedIdentityProviders, identityProvidersLock: identityProvidersLock,
 		apiKeys: apiKeys, apiKeysLock: apiKeysLock, deleteSessionsTimerDone: deleteSessionsTimerDone, emailDialer: emailDialer, emailFrom: smtpFrom}
 
-	err := auth.manageServiceAESKey()
+	err := auth.verifyServiceAESKey()
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionSave, "service AES key", nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionVerify, "service AES key", nil, err)
 	}
 
 	err = auth.storeCoreRegs()
@@ -2349,7 +2349,7 @@ func (a *Auth) setLogContext(account *model.Account, l *logs.Log) {
 	l.SetContext("account_id", accountID)
 }
 
-func (a *Auth) manageServiceAESKey() error {
+func (a *Auth) verifyServiceAESKey() error {
 	key, err := a.storage.FindKey(serviceAESKey)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeKey, nil, err)
@@ -2366,7 +2366,7 @@ func (a *Auth) manageServiceAESKey() error {
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionEncrypt, "service AES key", nil, err)
 		}
-		newKey := model.Key{Name: serviceAESKey, Key: base64.StdEncoding.EncodeToString(encryptedKeyBytes)}
+		newKey := model.Key{Name: serviceAESKey, Key: base64.StdEncoding.EncodeToString(encryptedKeyBytes), DateCreated: time.Now().UTC()}
 
 		err = a.storage.InsertKey(newKey)
 		if err != nil {
@@ -2385,6 +2385,7 @@ func (a *Auth) manageServiceAESKey() error {
 		decryptedKey, err := a.currentAuthPrivKey.Decrypt(decodedKey, nil)
 		if err != nil {
 			a.logger.Infof("failed to decrypt service AES key using current private key: %v", err)
+			a.logger.Info("attempting service private key rotation.....")
 
 			if a.oldAuthPrivKey == nil {
 				return errors.ErrorData(logutils.StatusMissing, "previous service private key", nil)

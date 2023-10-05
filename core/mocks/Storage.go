@@ -1528,6 +1528,20 @@ func (_m *Storage) UpdateAccountProfile(context storage.TransactionContext, prof
 	return r0
 }
 
+// UpdateAccountSecrets provides a mock function with given fields: context, accountID, secrets
+func (_m *Storage) UpdateAccountSecrets(context storage.TransactionContext, accountID string, secrets map[string]interface{}) error {
+	ret := _m.Called(context, accountID, secrets)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, map[string]interface{}) error); ok {
+		r0 = rf(context, accountID, secrets)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // UpdateAccountSystemConfigs provides a mock function with given fields: context, accountID, configs
 func (_m *Storage) UpdateAccountSystemConfigs(context storage.TransactionContext, accountID string, configs map[string]interface{}) error {
 	ret := _m.Called(context, accountID, configs)

@@ -169,7 +169,7 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 
 	if loginSession.State == "" {
 		if loginSession.AccountAuthType != nil {
-			decryptedSecrets, err := a.CryptSecrets(loginSession.AccountAuthType.Account.Secrets, false)
+			decryptedSecrets, err := a.DecryptSecrets(loginSession.AccountAuthType.Account.Secrets)
 			if err != nil {
 				return nil, nil, nil, errors.WrapErrorAction(logutils.ActionDecrypt, model.TypeAccountSecrets, nil, err)
 			}
@@ -2027,38 +2027,10 @@ func (a *Auth) CheckGroups(context storage.TransactionContext, appOrg *model.App
 	return groups, nil
 }
 
-// CryptSecrets either JSON encodes and encrypts the secrets or decrypts and JSON decodes the secrets based on the encrypt flag
-func (a *Auth) CryptSecrets(secrets map[string]interface{}, encrypt bool) (map[string]interface{}, error) {
-	if encrypt {
-		data, ok := secrets["data"].(string)
-		if !ok {
-			return nil, errors.ErrorData(logutils.StatusMissing, "encrypted data", nil)
-		}
-		dataNonce, ok := secrets["data_nonce"].(string)
-		if !ok {
-			return nil, errors.ErrorData(logutils.StatusMissing, "encrypted data nonce", nil)
-		}
-		key, ok := secrets["key"].(string)
-		if !ok {
-			return nil, errors.ErrorData(logutils.StatusMissing, "encrypted key", nil)
-		}
-		keyNonce, ok := secrets["key_nonce"].(string)
-		if !ok {
-			return nil, errors.ErrorData(logutils.StatusMissing, "encrypted key nonce", nil)
-		}
-
-		decrypted, err := utils.Decrypt(data, dataNonce, key, keyNonce, a.serviceAESKey)
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionDecrypt, "secrets", nil, err)
-		}
-
-		var decryptedSecrets map[string]interface{}
-		err = json.Unmarshal(decrypted, &decryptedSecrets)
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, "secrets", nil, err)
-		}
-
-		return decryptedSecrets, nil
+// EncryptSecrets JSON encodes and encrypts the given plain secrets
+func (a *Auth) EncryptSecrets(secrets map[string]interface{}) (map[string]interface{}, error) {
+	if len(secrets) == 0 {
+		return nil, nil
 	}
 
 	secretsStr, err := json.Marshal(secrets)
@@ -2078,6 +2050,43 @@ func (a *Auth) CryptSecrets(secrets map[string]interface{}, encrypt bool) (map[s
 		"key_nonce":  keyNonce,
 	}
 	return encryptedSecrets, nil
+}
+
+// DecryptSecrets decrypts and JSON decodes the given encrypted secrets
+func (a *Auth) DecryptSecrets(secrets map[string]interface{}) (map[string]interface{}, error) {
+	if len(secrets) == 0 {
+		return nil, nil
+	}
+
+	data, ok := secrets["data"].(string)
+	if !ok {
+		return nil, errors.ErrorData(logutils.StatusMissing, "encrypted data", nil)
+	}
+	dataNonce, ok := secrets["data_nonce"].(string)
+	if !ok {
+		return nil, errors.ErrorData(logutils.StatusMissing, "encrypted data nonce", nil)
+	}
+	key, ok := secrets["key"].(string)
+	if !ok {
+		return nil, errors.ErrorData(logutils.StatusMissing, "encrypted key", nil)
+	}
+	keyNonce, ok := secrets["key_nonce"].(string)
+	if !ok {
+		return nil, errors.ErrorData(logutils.StatusMissing, "encrypted key nonce", nil)
+	}
+
+	decrypted, err := utils.Decrypt(data, dataNonce, key, keyNonce, a.serviceAESKey)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionDecrypt, "secrets", nil, err)
+	}
+
+	var decryptedSecrets map[string]interface{}
+	err = json.Unmarshal(decrypted, &decryptedSecrets)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, "secrets", nil, err)
+	}
+
+	return decryptedSecrets, nil
 }
 
 // GetServiceRegistrations retrieves all service registrations

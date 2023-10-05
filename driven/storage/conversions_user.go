@@ -27,7 +27,7 @@ func accountFromStorage(item account, appOrg model.ApplicationOrganization) mode
 	profile := profileFromStorage(item.Profile)
 	devices := accountDevicesFromStorage(item)
 	return model.Account{ID: item.ID, AppOrg: appOrg, Anonymous: item.Anonymous, Permissions: item.Permissions, Roles: roles, Groups: groups, Scopes: item.Scopes, AuthTypes: authTypes,
-		MFATypes: mfaTypes, Username: item.Username, ExternalIDs: item.ExternalIDs, Preferences: item.Preferences, Profile: profile, SystemConfigs: item.SystemConfigs,
+		MFATypes: mfaTypes, Username: item.Username, ExternalIDs: item.ExternalIDs, Preferences: item.Preferences, Profile: profile, Secrets: item.Secrets, SystemConfigs: item.SystemConfigs,
 		Privacy: item.Privacy, Verified: item.Verified, Devices: devices, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated, LastLoginDate: item.LastLoginDate,
 		LastAccessTokenDate: item.LastAccessTokenDate, MostRecentClientVersion: item.MostRecentClientVersion}
 }
@@ -61,8 +61,9 @@ func accountToStorage(item *model.Account) *account {
 	mostRecentClientVersion := item.MostRecentClientVersion
 
 	return &account{ID: id, AppOrgID: appOrgID, Anonymous: item.Anonymous, Permissions: permissions, Roles: roles, Groups: groups, Scopes: item.Scopes, AuthTypes: authTypes, MFATypes: mfaTypes,
-		Privacy: item.Privacy, Verified: item.Verified, Username: item.Username, ExternalIDs: item.ExternalIDs, Preferences: item.Preferences, Profile: profile, SystemConfigs: item.SystemConfigs, Devices: devices,
-		DateCreated: dateCreated, DateUpdated: dateUpdated, LastLoginDate: lastLoginDate, LastAccessTokenDate: lastAccessTokenDate, MostRecentClientVersion: mostRecentClientVersion}
+		Privacy: item.Privacy, Verified: item.Verified, Username: item.Username, ExternalIDs: item.ExternalIDs, Preferences: item.Preferences, Profile: profile, Secrets: item.Secrets,
+		SystemConfigs: item.SystemConfigs, Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated, LastLoginDate: lastLoginDate, LastAccessTokenDate: lastAccessTokenDate,
+		MostRecentClientVersion: mostRecentClientVersion}
 }
 
 func accountDevicesFromStorage(item account) []model.Device {

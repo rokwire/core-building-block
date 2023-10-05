@@ -177,6 +177,7 @@ type Storage interface {
 	FindAccountsByUsername(context storage.TransactionContext, appOrg *model.ApplicationOrganization, username string) ([]model.Account, error)
 
 	UpdateAccountPreferences(context storage.TransactionContext, accountID string, preferences map[string]interface{}) error
+	UpdateAccountSecrets(context storage.TransactionContext, accountID string, secrets map[string]interface{}) error
 	UpdateAccountSystemConfigs(context storage.TransactionContext, accountID string, configs map[string]interface{}) error
 	InsertAccountPermissions(context storage.TransactionContext, accountID string, permissions []model.Permission) error
 	DeleteAccountPermissions(context storage.TransactionContext, accountID string, permissionNames []string) error

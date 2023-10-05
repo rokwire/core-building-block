@@ -128,7 +128,17 @@ func (app *application) serUpdateAccountPreferences(id string, appID string, org
 }
 
 func (app *application) serUpdateAccountSecrets(accountID string, secrets map[string]interface{}) error {
-	return errors.New(logutils.Unimplemented)
+	encryptedSecrets, err := app.auth.EncryptSecrets(secrets)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionEncrypt, model.TypeAccountSecrets, nil, err)
+	}
+
+	err = app.storage.UpdateAccountSecrets(nil, accountID, encryptedSecrets)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountSecrets, &logutils.FieldArgs{"id": accountID}, err)
+	}
+
+	return nil
 }
 
 func (app *application) serDeleteAccount(id string) error {

@@ -72,7 +72,7 @@ func (app *application) sharedGetAccount(accountID string) (*model.Account, erro
 		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeAccount, nil, err)
 	}
 
-	decryptedSecrets, err := app.auth.CryptSecrets(account.Secrets, false)
+	decryptedSecrets, err := app.auth.DecryptSecrets(account.Secrets)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionDecrypt, model.TypeAccountSecrets, &logutils.FieldArgs{"id": accountID}, err)
 	}

@@ -118,12 +118,18 @@ func main() {
 		logger.Infof("Error parsing legacy signature support, applying defaults: %v", err)
 		supportLegacySigs = true
 	}
-
 	currentAuthPrivKey := parsePrivKeyFromEnvVar("ROKWIRE_CORE_AUTH_PRIV_KEY", envLoader, supportLegacySigs, logger)
 	if currentAuthPrivKey == nil {
 		logger.Fatalf("Cannot parse the current private key: %v", err)
 	}
-	oldAuthPrivKey := parsePrivKeyFromEnvVar("ROKWIRE_CORE_OLD_AUTH_PRIV_KEY", envLoader, supportLegacySigs, logger)
+
+	oldSupportLegacySigsStr := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_OLD_SUPPORT_LEGACY_SIGNATURES", false, false)
+	oldSupportLegacySigs, err := strconv.ParseBool(oldSupportLegacySigsStr)
+	if err != nil {
+		logger.Infof("Error parsing old legacy signature support, applying defaults: %v", err)
+		oldSupportLegacySigs = true
+	}
+	oldAuthPrivKey := parsePrivKeyFromEnvVar("ROKWIRE_CORE_OLD_AUTH_PRIV_KEY", envLoader, oldSupportLegacySigs, logger)
 
 	minTokenExpStr := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_MIN_TOKEN_EXP", false, false)
 	var minTokenExp *int64
@@ -218,7 +224,7 @@ func parsePrivKeyFromEnvVar(envVarName string, envLoader envloader.EnvLoader, su
 		//make it to be a single line - AWS environemnt variable issue
 		authPrivKeyPem = strings.ReplaceAll(authPrivKeyPemString, `\n`, "\n")
 	} else {
-		authPrivateKeyPath := envLoader.GetAndLogEnvVar(envVarName+"_PATH", true, false)
+		authPrivateKeyPath := envLoader.GetAndLogEnvVar(envVarName+"_PATH", false, false)
 		if authPrivateKeyPath == "" {
 			return nil
 		}

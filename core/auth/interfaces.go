@@ -416,8 +416,11 @@ type APIs interface {
 	//GetAdminToken returns an admin token for the specified application and organization
 	GetAdminToken(claims tokenauth.Claims, appID string, orgID string, l *logs.Log) (string, error)
 
-	// CryptSecrets either JSON encodes and encrypts the secrets or decrypts and JSON decodes the secrets based on the encrypt flag
-	CryptSecrets(secrets map[string]interface{}, encrypt bool) (map[string]interface{}, error)
+	// EncryptSecrets JSON encodes and encrypts the given plain secrets
+	EncryptSecrets(secrets map[string]interface{}) (map[string]interface{}, error)
+
+	// DecryptSecrets decrypts and JSON decodes the given encrypted secrets
+	DecryptSecrets(secrets map[string]interface{}) (map[string]interface{}, error)
 
 	//GetAuthKeySet generates a JSON Web Key Set for auth service registration
 	GetAuthKeySet() (jwk.Set, error)

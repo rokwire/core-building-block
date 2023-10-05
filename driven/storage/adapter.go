@@ -183,7 +183,8 @@ func (sa *Adapter) UpdateKey(key model.Key) error {
 	filter := bson.D{primitive.E{Key: "name", Value: key.Name}}
 	update := bson.D{
 		primitive.E{Key: "$set", Value: bson.M{
-			"key": key.Key,
+			"key":          key.Key,
+			"date_updated": time.Now().UTC(),
 		}},
 	}
 
@@ -1244,6 +1245,27 @@ func (sa *Adapter) UpdateAccountPreferences(context TransactionContext, accountI
 	}
 	if res.ModifiedCount != 1 {
 		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccountPreferences, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
+	}
+
+	return nil
+}
+
+// UpdateAccountSecrets updates account secrets
+func (sa *Adapter) UpdateAccountSecrets(context TransactionContext, accountID string, secrets map[string]interface{}) error {
+	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
+	update := bson.D{
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "secrets", Value: secrets},
+			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
+		}},
+	}
+
+	res, err := sa.db.accounts.UpdateOne(filter, update, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountSecrets, nil, err)
+	}
+	if res.ModifiedCount != 1 {
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccountSecrets, &logutils.FieldArgs{"id": accountID, "modified": res.ModifiedCount, "expected": 1})
 	}
 
 	return nil
@@ -3369,6 +3391,9 @@ func NewStorageAdapter(host string, mongoDBAuth string, mongoDBName string, mong
 	cachedConfigs := &syncmap.Map{}
 	configsLock := &sync.RWMutex{}
 
+	cachedKeys := &syncmap.Map{}
+	keysLock := &sync.RWMutex{}
+
 	db := &database{mongoDBAuth: mongoDBAuth, mongoDBName: mongoDBName, mongoTimeout: timeout, logger: logger}
 	return &Adapter{db: db, logger: logger, host: host, cachedServiceRegs: cachedServiceRegs, serviceRegsLock: serviceRegsLock,
 		cachedOrganizations: cachedOrganizations, organizationsLock: organizationsLock,
@@ -3376,7 +3401,7 @@ func NewStorageAdapter(host string, mongoDBAuth string, mongoDBName string, mong
 		cachedAuthTypes: cachedAuthTypes, authTypesLock: authTypesLock,
 		cachedApplicationsOrganizations: cachedApplicationsOrganizations, applicationsOrganizationsLock: applicationsOrganizationsLock,
 		cachedApplicationConfigs: cachedApplicationConfigs, applicationConfigsLock: applicationConfigsLock,
-		cachedConfigs: cachedConfigs, configsLock: configsLock}
+		cachedConfigs: cachedConfigs, configsLock: configsLock, cachedKeys: cachedKeys, keysLock: keysLock}
 }
 
 type storageListener struct {
