@@ -7,7 +7,7 @@ properties:
     type: string
   user_identifier_field:
     type: string
-  external_id_fields: # map
+  external_id_fields:
     type: object
     additionalProperties:
       type: string
