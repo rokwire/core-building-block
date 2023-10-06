@@ -93,9 +93,7 @@ func (we Adapter) Start() {
 
 	//ui
 	subRouter.HandleFunc("/ui/credential/reset", we.serveResetCredential)                                                     //Public
-	subRouter.HandleFunc("/ui/webauthn-test", we.serveWebAuthnTest)                                                           //Public
 	subRouter.HandleFunc("/ui/credential/verify", we.uiWrapFunc(we.servicesApisHandler.verifyCredential, nil)).Methods("GET") //Public (validates code)
-	// subRouter.HandleFunc("/ui/webauthn-test", we.serveWebAuthnTest)                                                           //Public
 
 	///default ///
 	subRouter.HandleFunc("/version", we.wrapFunc(we.defaultApisHandler.getVersion, nil)).Methods("GET")                                      //Public
@@ -313,11 +311,6 @@ func (we Adapter) Start() {
 func (we Adapter) serveResetCredential(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("access-control-allow-origin", "*")
 	http.ServeFile(w, r, "./driver/web/ui/reset-credential.html")
-}
-
-func (we Adapter) serveWebAuthnTest(w http.ResponseWriter, r *http.Request) {
-	w.Header().Add("access-control-allow-origin", "*")
-	http.ServeFile(w, r, "./driver/web/ui/webauthn-test.html")
 }
 
 func (we Adapter) serveDoc(w http.ResponseWriter, r *http.Request) {

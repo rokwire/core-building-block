@@ -80,7 +80,7 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 	//TODO - analyse what should go in one transaction
 
 	//validate if the provided auth type is supported by the provided application and organization
-	authType, appType, appOrg, err := a.validateAuthType(authenticationType, &appTypeIdentifier, nil, orgID)
+	authType, appType, appOrg, err := a.validateAuthType(authenticationType, appTypeIdentifier, nil, orgID)
 	if err != nil || authType == nil {
 		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeAuthType, nil, err)
 	}
@@ -432,7 +432,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 //		Params (map[string]interface{}): Params to be sent in subsequent request (if necessary)
 func (a *Auth) GetLoginURL(authenticationType string, appTypeIdentifier string, orgID string, redirectURI string, apiKey string, l *logs.Log) (string, map[string]interface{}, error) {
 	//validate if the provided auth type is supported by the provided application and organization
-	authType, appType, _, err := a.validateAuthType(authenticationType, &appTypeIdentifier, orgID)
+	authType, appType, _, err := a.validateAuthType(authenticationType, appTypeIdentifier, orgID)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeAuthType, nil, err)
 	}
@@ -595,7 +595,7 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appID string, orgID
 		profile.DateCreated = time.Now().UTC()
 		if authType.IsExternal {
 			externalUser := model.ExternalSystemUser{Identifier: identifier}
-			accountAuthType, err = a.applySignUpAdminExternal(context, authType, *appOrg, externalUser, profile, privacy, username, permissions, roleIDs, groupIDs, scopes, creatorPermissions, clientVersion, l)
+			accountAuthType, err = a.applySignUpAdminExternal(context, *authType, *appOrg, externalUser, profile, privacy, username, permissions, roleIDs, groupIDs, scopes, creatorPermissions, clientVersion, l)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionRegister, "admin user", &logutils.FieldArgs{"auth_type": authType.Code, "identifier": identifier}, err)
 			}
@@ -606,7 +606,7 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appID string, orgID
 			}
 
 			profile.Email = identifier
-			params, accountAuthType, err = a.applySignUpAdmin(context, authImpl, account, authType, *appOrg, identifier, "", profile, privacy, username, permissions, roleIDs, groupIDs, scopes, creatorPermissions, clientVersion, l)
+			params, accountAuthType, err = a.applySignUpAdmin(context, authImpl, account, *authType, *appOrg, identifier, "", profile, privacy, username, permissions, roleIDs, groupIDs, scopes, creatorPermissions, clientVersion, l)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionRegister, "admin user", &logutils.FieldArgs{"auth_type": authType.Code, "identifier": identifier}, err)
 			}
@@ -1009,7 +1009,7 @@ func (a *Auth) ResetForgotCredential(credsID string, resetCode string, params st
 //		error: if any
 func (a *Auth) ForgotCredential(authenticationType string, appTypeIdentifier string, orgID string, apiKey string, identifier string, l *logs.Log) error {
 	//validate if the provided auth type is supported by the provided application and organization
-	authType, _, appOrg, err := a.validateAuthType(authenticationType, &appTypeIdentifier, orgID)
+	authType, _, appOrg, err := a.validateAuthType(authenticationType, appTypeIdentifier, orgID)
 	if err != nil || authType == nil || appOrg == nil {
 		return errors.WrapErrorAction(logutils.ActionValidate, model.TypeAuthType, nil, err)
 	}
@@ -1075,7 +1075,7 @@ func (a *Auth) ForgotCredential(authenticationType string, appTypeIdentifier str
 // SendVerifyCredential sends the verification code to the identifier
 func (a *Auth) SendVerifyCredential(authenticationType string, appTypeIdentifier string, orgID string, apiKey string, identifier string, l *logs.Log) error {
 	//validate if the provided auth type is supported by the provided application and organization
-	authType, _, appOrg, err := a.validateAuthType(authenticationType, &appTypeIdentifier, orgID)
+	authType, _, appOrg, err := a.validateAuthType(authenticationType, appTypeIdentifier, orgID)
 	if err != nil || authType == nil || appOrg == nil {
 		return errors.WrapErrorAction(logutils.ActionValidate, model.TypeAuthType, nil, err)
 	}
@@ -1699,7 +1699,7 @@ func (a *Auth) LinkAccountAuthType(accountID string, authenticationType string, 
 	}
 
 	//validate if the provided auth type is supported by the provided application and organization
-	authType, appType, appOrg, err := a.validateAuthType(authenticationType, &appTypeIdentifier, account.AppOrg.Organization.ID)
+	authType, appType, appOrg, err := a.validateAuthType(authenticationType, appTypeIdentifier, account.AppOrg.Organization.ID)
 	if err != nil || authType == nil || appType == nil || appOrg == nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeAuthType, nil, err)
 	}

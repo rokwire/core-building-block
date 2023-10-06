@@ -1,8 +1,0 @@
-type: object
-description: Auth login params for auth_type="webauthn"
-properties:
-  display_name:
-    type: string
-    description: User's account name for display purposes
-  sign_up:
-    type: boolean

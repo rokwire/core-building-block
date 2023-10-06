@@ -135,7 +135,7 @@ func partialAccountsToDef(items []model.Account) []Def.PartialAccount {
 func accountAuthTypeToDef(item model.AccountAuthType) Def.AccountAuthType {
 	params := item.Params
 
-	return Def.AccountAuthType{Id: item.ID, Code: item.SupportedAuthType.AuthType.Code, Identifier: item.Identifier, Active: &item.Active, Unverified: &item.Unverified, Params: &params}
+	return Def.AccountAuthType{Id: item.ID, Code: item.AuthType.Code, Identifier: item.Identifier, Active: &item.Active, Unverified: &item.Unverified, Params: &params}
 }
 
 func accountAuthTypesToDef(items []model.AccountAuthType) []Def.AccountAuthType {

@@ -17,7 +17,6 @@ package auth
 import (
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
-	"net/url"
 	"time"
 
 	"github.com/lestrrat-go/jwx/jwk"
@@ -601,10 +600,4 @@ type IdentityBuildingBlock interface {
 // Emailer is used by core to send emails
 type Emailer interface {
 	Send(toEmail string, subject string, body string, attachmentFilename *string) error
-}
-
-// PhoneVerifier is used by core to verify phone numbers
-type PhoneVerifier interface {
-	StartVerification(phone string, data url.Values) error
-	CheckVerification(phone string, data url.Values) error
 }
