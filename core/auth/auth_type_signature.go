@@ -18,6 +18,7 @@ import (
 	"core-building-block/core/model"
 
 	"github.com/rokwire/logging-library-go/v2/errors"
+	"github.com/rokwire/logging-library-go/v2/logs"
 	"github.com/rokwire/logging-library-go/v2/logutils"
 )
 
@@ -32,24 +33,44 @@ type signatureAuthImpl struct {
 	authType string
 }
 
-func (a *signatureAuthImpl) signUp(identifierImpl identifierType, appName string, creds authCreds, params string, config map[string]interface{}, newCredentialID string) (string, map[string]interface{}, bool, error) {
-	return "", nil, false, nil
+func (a *signatureAuthImpl) signUp(authType model.AuthType, appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error) {
+	return "", nil, nil
 }
 
-func (a *signatureAuthImpl) signUpAdmin(identifierImpl identifierType, appName string, creds authCreds, newCredentialID string) (map[string]interface{}, map[string]interface{}, error) {
+func (a *signatureAuthImpl) signUpAdmin(authType model.AuthType, appOrg model.ApplicationOrganization, identifier string, password string, newCredentialID string) (map[string]interface{}, map[string]interface{}, error) {
 	return nil, nil, nil
 }
 
-func (a *signatureAuthImpl) forgotCredential(identifierImpl identifierType, credential authCreds, appName string, credID string) (map[string]interface{}, error) {
-	return nil, nil
-}
-
-func (a *signatureAuthImpl) resetCredential(credential authCreds, resetCode *string, params string) (map[string]interface{}, error) {
-	return nil, nil
-}
-
-func (a *signatureAuthImpl) checkCredential(identifierImpl identifierType, storedCreds *model.Credential, incomingCreds authCreds, displayName string, appName string, config map[string]interface{}) (string, error) {
+func (a *signatureAuthImpl) getUserIdentifier(creds string) (string, error) {
 	return "", nil
+}
+
+func (a *signatureAuthImpl) verifyCredential(credential *model.Credential, verification string, l *logs.Log) (map[string]interface{}, error) {
+	return nil, errors.New(logutils.Unimplemented)
+}
+
+func (a *signatureAuthImpl) sendVerifyCredential(credential *model.Credential, appName string, l *logs.Log) error {
+	return nil
+}
+
+func (a *signatureAuthImpl) restartCredentialVerification(credential *model.Credential, appName string, l *logs.Log) error {
+	return nil
+}
+
+func (a *signatureAuthImpl) isCredentialVerified(credential *model.Credential, l *logs.Log) (*bool, *bool, error) {
+	return nil, nil, nil
+}
+
+func (a *signatureAuthImpl) checkCredentials(accountAuthType model.AccountAuthType, creds string, l *logs.Log) (string, error) {
+	return "", nil
+}
+
+func (a *signatureAuthImpl) resetCredential(credential *model.Credential, resetCode *string, params string, l *logs.Log) (map[string]interface{}, error) {
+	return nil, nil
+}
+
+func (a *signatureAuthImpl) forgotCredential(credential *model.Credential, identifier string, appName string, l *logs.Log) (map[string]interface{}, error) {
+	return nil, nil
 }
 
 // initSignatureAuth initializes and registers a new signature auth instance

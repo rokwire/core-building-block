@@ -27,7 +27,6 @@ import (
 	"strconv"
 	"strings"
 
-	"golang.org/x/oauth2"
 	"gopkg.in/go-playground/validator.v9"
 
 	"github.com/coreos/go-oidc"
@@ -52,7 +51,6 @@ const (
 type oidcAuthImpl struct {
 	auth     *Auth
 	authType string
-	client   *http.Client
 }
 
 type oidcAuthConfig struct {
@@ -77,26 +75,16 @@ type oidcLoginParams struct {
 }
 
 type oidcToken struct {
-	IDToken      string `json:"id_token"`
+	IDToken      string `json:"id_token" validate:"required"`
 	AccessToken  string `json:"access_token" validate:"required"`
 	RefreshToken string `json:"refresh_token"`
-	TokenType    string `json:"token_type"`
+	TokenType    string `json:"token_type" validate:"required"`
 	ExpiresIn    int    `json:"expires_in"`
 }
 
 type oidcRefreshParams struct {
 	RefreshToken string `json:"refresh_token" bson:"refresh_token" validate:"required"`
 	RedirectURI  string `json:"redirect_uri" bson:"redirect_uri" validate:"required"`
-}
-
-type transport struct {
-	t         http.RoundTripper
-	userAgent string
-}
-
-func (adt *transport) RoundTrip(req *http.Request) (*http.Response, error) {
-	req.Header.Add("User-Agent", adt.userAgent)
-	return adt.t.RoundTrip(req)
 }
 
 func oidcRefreshParamsFromMap(val map[string]interface{}) (*oidcRefreshParams, error) {
@@ -223,11 +211,8 @@ func (a *oidcAuthImpl) checkToken(idToken string, authType model.AuthType, appTy
 	oidcProvider := oidcConfig.Host
 	oidcClientID := oidcConfig.ClientID
 
-	parent := oidc.ClientContext(context.Background(), a.client)
-	ctx := context.WithValue(parent, oauth2.HTTPClient, a.client)
-
 	// Validate the token
-	provider, err := oidc.NewProvider(ctx, oidcProvider)
+	provider, err := oidc.NewProvider(context.Background(), oidcProvider)
 	if err != nil {
 		return "", errors.WrapErrorAction(logutils.ActionInitialize, "oidc provider", nil, err)
 	}
@@ -409,7 +394,9 @@ func (a *oidcAuthImpl) loadOidcTokenWithParams(params map[string]string, oidcCon
 	for k, v := range headers {
 		req.Header.Set(k, v)
 	}
-	resp, err := a.client.Do(req)
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionSend, logutils.TypeRequest, nil, err)
 	}
@@ -454,7 +441,8 @@ func (a *oidcAuthImpl) loadOidcUserInfo(token *oidcToken, url string) ([]byte, e
 	}
 	req.Header.Set("Authorization", fmt.Sprintf("%s %s", token.TokenType, token.AccessToken))
 
-	resp, err := a.client.Do(req)
+	client := &http.Client{}
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionSend, logutils.TypeRequest, nil, err)
 	}
@@ -520,17 +508,14 @@ func generatePkceChallenge() (string, string, error) {
 	if err != nil {
 		return "", "", errors.WrapErrorAction(logutils.ActionCompute, "code verifier hash", nil, err)
 	}
-	codeChallenge := base64.RawURLEncoding.EncodeToString(codeChallengeBytes)
+	codeChallenge := base64.URLEncoding.EncodeToString(codeChallengeBytes)
 
 	return codeChallenge, codeVerifier, nil
 }
 
 // initOidcAuth initializes and registers a new OIDC auth instance
 func initOidcAuth(auth *Auth) (*oidcAuthImpl, error) {
-	client := &http.Client{
-		Transport: &transport{t: http.DefaultTransport, userAgent: "RokwireCore/" + auth.version},
-	}
-	oidc := &oidcAuthImpl{auth: auth, authType: AuthTypeOidc, client: client}
+	oidc := &oidcAuthImpl{auth: auth, authType: AuthTypeOidc}
 
 	err := auth.registerExternalAuthType(oidc.authType, oidc)
 	if err != nil {
