@@ -51,7 +51,7 @@ func initSamlAuth(auth *Auth) (*samlAuthImpl, error) {
 
 	err := auth.registerExternalAuthType(saml.authType, saml)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAuthType, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionRegister, typeExternalAuthType, nil, err)
 	}
 
 	return saml, nil

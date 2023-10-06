@@ -62,6 +62,8 @@ func main() {
 		logger.SetLevel(*logLevel)
 	}
 
+	logger.Infof("Version: %s", Version)
+
 	err := utils.SetRandomSeed()
 	if err != nil {
 		logger.Error(err.Error())
@@ -179,7 +181,7 @@ func main() {
 	}
 
 	authImpl, err := auth.NewAuth(serviceID, host, authPrivKey, authService, storageAdapter, emailer, minTokenExp, maxTokenExp, supportLegacySigs,
-		twilioAccountSID, twilioToken, twilioServiceSID, profileBBAdapter, smtpHost, smtpPortNum, smtpUser, smtpPassword, smtpFrom, logger)
+		twilioAccountSID, twilioToken, twilioServiceSID, profileBBAdapter, smtpHost, smtpPortNum, smtpUser, smtpPassword, smtpFrom, logger, Version)
 	if err != nil {
 		logger.Fatalf("Error initializing auth: %v", err)
 	}

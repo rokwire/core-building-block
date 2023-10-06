@@ -54,7 +54,7 @@ func (a *Auth) GetHost() string {
 //		ipAddress (string): Client's IP address
 //		deviceType (string): "mobile" or "web" or "desktop" etc
 //		deviceOS (*string): Device OS
-//		deviceID (string): Device ID
+//		deviceID (*string): Device ID
 //		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
 //		creds (string): Credentials/JSON encoded credential structure defined for the specified auth type
 //		apiKey (string): API key to validate the specified app
@@ -74,14 +74,14 @@ func (a *Auth) GetHost() string {
 //			Params (interface{}): authType-specific set of parameters passed back to client
 //			State (string): login state used if account is enrolled in MFA
 //		MFA types ([]model.MFAType): list of MFA types account is enrolled in
-func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, deviceID string, authenticationType string, creds string, apiKey string,
+func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, deviceID *string, authenticationType string, creds string, apiKey string,
 	appTypeIdentifier string, orgID string, params string, clientVersion *string, profile model.Profile, privacy model.Privacy, preferences map[string]interface{},
 	username string, admin bool, l *logs.Log) (*string, *model.LoginSession, []model.MFAType, error) {
 	//TODO - analyse what should go in one transaction
 
 	//validate if the provided auth type is supported by the provided application and organization
 	authType, appType, appOrg, err := a.validateAuthType(authenticationType, appTypeIdentifier, orgID)
-	if err != nil {
+	if err != nil || authType == nil {
 		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeAuthType, nil, err)
 	}
 
@@ -97,6 +97,8 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 	if err != nil {
 		return nil, nil, nil, errors.WrapErrorData(logutils.StatusInvalid, model.TypeAPIKey, nil, err)
 	}
+
+	username = strings.TrimSpace(strings.ToLower(username))
 
 	anonymous := false
 	sub := ""
@@ -127,7 +129,6 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 		accountAuthType, responseParams, mfaTypes, externalIDs, err = a.applyExternalAuthType(*authType, *appType, *appOrg, creds, params, clientVersion, profile, privacy, preferences, username, admin, l)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionApply, typeExternalAuthType, logutils.StringArgs("user"), err)
-
 		}
 
 		sub = accountAuthType.Account.ID
@@ -942,6 +943,7 @@ func (a *Auth) UpdateCredential(accountID string, accountAuthTypeID string, para
 	if err != nil || authTypeCreds == nil {
 		return errors.WrapErrorAction(logutils.ActionValidate, "reset password", nil, err)
 	}
+
 	//Update the credential with new password
 	credential.Value = authTypeCreds
 	if err = a.storage.UpdateCredential(nil, credential); err != nil {
@@ -1008,7 +1010,7 @@ func (a *Auth) ResetForgotCredential(credsID string, resetCode string, params st
 func (a *Auth) ForgotCredential(authenticationType string, appTypeIdentifier string, orgID string, apiKey string, identifier string, l *logs.Log) error {
 	//validate if the provided auth type is supported by the provided application and organization
 	authType, _, appOrg, err := a.validateAuthType(authenticationType, appTypeIdentifier, orgID)
-	if err != nil {
+	if err != nil || authType == nil || appOrg == nil {
 		return errors.WrapErrorAction(logutils.ActionValidate, model.TypeAuthType, nil, err)
 	}
 
@@ -1061,6 +1063,7 @@ func (a *Auth) ForgotCredential(authenticationType string, appTypeIdentifier str
 	if err != nil || authTypeCreds == nil {
 		return errors.WrapErrorAction(logutils.ActionValidate, "forgot password", nil, err)
 	}
+
 	//Update the credential with reset code and expiry
 	credential.Value = authTypeCreds
 	if err = a.storage.UpdateCredential(nil, credential); err != nil {
@@ -1073,7 +1076,7 @@ func (a *Auth) ForgotCredential(authenticationType string, appTypeIdentifier str
 func (a *Auth) SendVerifyCredential(authenticationType string, appTypeIdentifier string, orgID string, apiKey string, identifier string, l *logs.Log) error {
 	//validate if the provided auth type is supported by the provided application and organization
 	authType, _, appOrg, err := a.validateAuthType(authenticationType, appTypeIdentifier, orgID)
-	if err != nil {
+	if err != nil || authType == nil || appOrg == nil {
 		return errors.WrapErrorAction(logutils.ActionValidate, model.TypeAuthType, nil, err)
 	}
 	//validate api key before making db calls
@@ -1085,6 +1088,7 @@ func (a *Auth) SendVerifyCredential(authenticationType string, appTypeIdentifier
 	if !authType.UseCredentials {
 		return errors.ErrorData(logutils.StatusInvalid, model.TypeAuthType, logutils.StringArgs("credential verification code"))
 	}
+
 	authImpl, err := a.getAuthTypeImpl(*authType)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeAuthType, nil, err)
@@ -1696,7 +1700,7 @@ func (a *Auth) LinkAccountAuthType(accountID string, authenticationType string, 
 
 	//validate if the provided auth type is supported by the provided application and organization
 	authType, appType, appOrg, err := a.validateAuthType(authenticationType, appTypeIdentifier, account.AppOrg.Organization.ID)
-	if err != nil {
+	if err != nil || authType == nil || appType == nil || appOrg == nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeAuthType, nil, err)
 	}
 

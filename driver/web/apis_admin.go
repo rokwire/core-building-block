@@ -109,7 +109,7 @@ func (h AdminApisHandler) login(l *logs.Log, r *http.Request, claims *tokenauth.
 	//device
 	requestDevice := requestData.Device
 
-	message, loginSession, mfaTypes, err := h.coreAPIs.Auth.Login(ip, string(requestDevice.Type), requestDevice.Os, *requestDevice.DeviceId, string(requestData.AuthType),
+	message, loginSession, mfaTypes, err := h.coreAPIs.Auth.Login(ip, string(requestDevice.Type), requestDevice.Os, requestDevice.DeviceId, string(requestData.AuthType),
 		requestCreds, requestData.ApiKey, requestData.AppTypeIdentifier, requestData.OrgId, requestParams, &clientVersion, requestProfile, requestPrivacy, requestPreferences, username, true, l)
 	if err != nil {
 		loggingErr, ok := err.(*errors.Error)

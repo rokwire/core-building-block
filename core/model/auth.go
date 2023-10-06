@@ -25,9 +25,9 @@ import (
 )
 
 const (
-	//TypeLoginSession auth type type
+	//TypeLoginSession login session type
 	TypeLoginSession logutils.MessageDataType = "login session"
-	//TypeAuthType auth type type
+	//TypeAuthType auth type
 	TypeAuthType logutils.MessageDataType = "auth type"
 	//TypeIdentityProvider identity provider type
 	TypeIdentityProvider logutils.MessageDataType = "identity provider"

@@ -34,7 +34,6 @@ import (
 	"github.com/rokwire/core-auth-library-go/v3/tokenauth"
 	"golang.org/x/sync/syncmap"
 	"gopkg.in/go-playground/validator.v9"
-	"gopkg.in/gomail.v2"
 
 	"github.com/rokwire/logging-library-go/v2/errors"
 	"github.com/rokwire/logging-library-go/v2/logs"
@@ -107,9 +106,6 @@ type Auth struct {
 	profileBB  ProfileBuildingBlock
 	identityBB IdentityBuildingBlock
 
-	emailFrom   string
-	emailDialer *gomail.Dialer
-
 	cachedIdentityProviders *syncmap.Map //cache identityProviders
 	identityProvidersLock   *sync.RWMutex
 
@@ -119,11 +115,14 @@ type Auth struct {
 	//delete sessions timer
 	deleteSessionsTimer     *time.Timer
 	deleteSessionsTimerDone chan bool
+
+	version string
 }
 
 // NewAuth creates a new auth instance
-func NewAuth(serviceID string, host string, authPrivKey *keys.PrivKey, authService *authservice.AuthService, storage Storage, emailer Emailer, minTokenExp *int64, maxTokenExp *int64, supportLegacySigs bool, twilioAccountSID string,
-	twilioToken string, twilioServiceSID string, profileBB ProfileBuildingBlock, smtpHost string, smtpPortNum int, smtpUser string, smtpPassword string, smtpFrom string, logger *logs.Logger) (*Auth, error) {
+func NewAuth(serviceID string, host string, authPrivKey *keys.PrivKey, authService *authservice.AuthService, storage Storage, emailer Emailer, minTokenExp *int64,
+	maxTokenExp *int64, supportLegacySigs bool, twilioAccountSID string, twilioToken string, twilioServiceSID string, profileBB ProfileBuildingBlock,
+	smtpHost string, smtpPortNum int, smtpUser string, smtpPassword string, smtpFrom string, logger *logs.Logger, version string) (*Auth, error) {
 	if minTokenExp == nil {
 		var minTokenExpVal int64 = 5
 		minTokenExp = &minTokenExpVal
@@ -133,8 +132,6 @@ func NewAuth(serviceID string, host string, authPrivKey *keys.PrivKey, authServi
 		var maxTokenExpVal int64 = 60
 		maxTokenExp = &maxTokenExpVal
 	}
-	//maybe set up from config collection for diff types of auth
-	emailDialer := gomail.NewDialer(smtpHost, smtpPortNum, smtpUser, smtpPassword)
 
 	authTypes := map[string]authType{}
 	externalAuthTypes := map[string]externalAuthType{}
@@ -153,7 +150,7 @@ func NewAuth(serviceID string, host string, authPrivKey *keys.PrivKey, authServi
 	auth := &Auth{storage: storage, emailer: emailer, logger: logger, authTypes: authTypes, externalAuthTypes: externalAuthTypes, anonymousAuthTypes: anonymousAuthTypes,
 		serviceAuthTypes: serviceAuthTypes, mfaTypes: mfaTypes, authPrivKey: authPrivKey, ServiceRegManager: nil, serviceID: serviceID, host: host, minTokenExp: *minTokenExp,
 		maxTokenExp: *maxTokenExp, profileBB: profileBB, cachedIdentityProviders: cachedIdentityProviders, identityProvidersLock: identityProvidersLock,
-		apiKeys: apiKeys, apiKeysLock: apiKeysLock, deleteSessionsTimerDone: deleteSessionsTimerDone, emailDialer: emailDialer, emailFrom: smtpFrom}
+		apiKeys: apiKeys, apiKeysLock: apiKeysLock, deleteSessionsTimerDone: deleteSessionsTimerDone, version: version}
 
 	err := auth.storeCoreRegs()
 	if err != nil {
@@ -178,7 +175,7 @@ func NewAuth(serviceID string, host string, authPrivKey *keys.PrivKey, authServi
 
 	auth.SignatureAuth = signatureAuth
 
-	//Initialize auth types
+	// auth types
 	initUsernameAuth(auth)
 	initEmailAuth(auth)
 	initPhoneAuth(auth, twilioAccountSID, twilioToken, twilioServiceSID)
@@ -186,12 +183,15 @@ func NewAuth(serviceID string, host string, authPrivKey *keys.PrivKey, authServi
 	initAnonymousAuth(auth)
 	initSignatureAuth(auth)
 
+	// external auth types
 	initOidcAuth(auth)
 	initSamlAuth(auth)
 
+	// service auth types
 	initStaticTokenServiceAuth(auth)
 	initSignatureServiceAuth(auth)
 
+	// mfa types
 	initTotpMfa(auth)
 	initEmailMfa(auth)
 	initPhoneMfa(auth)
@@ -638,8 +638,8 @@ func (a *Auth) applyAuthType(authType model.AuthType, appOrg model.ApplicationOr
 	}
 	if isSignUp {
 		if admin {
-
-			return "", nil, nil, nil, errors.ErrorData(logutils.StatusInvalid, "sign up", &logutils.FieldArgs{"identifier": userIdentifier, "auth_type": authType.Code, "app_org_id": appOrg.ID, "admin": true}).SetStatus(utils.ErrorStatusNotAllowed)
+			return "", nil, nil, nil, errors.ErrorData(logutils.StatusInvalid, "sign up", &logutils.FieldArgs{"identifier": userIdentifier,
+				"auth_type": authType.Code, "app_org_id": appOrg.ID, "admin": true}).SetStatus(utils.ErrorStatusNotAllowed)
 		}
 		message, accountAuthType, err := a.applySignUp(authImpl, account, authType, appOrg, userIdentifier, creds, params, clientVersion,
 			regProfile, privacy, regPreferences, username, l)
@@ -682,9 +682,10 @@ func (a *Auth) checkCredentialVerified(authImpl authType, accountAuthType *model
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionVerify, "credential verified", nil, err)
 	}
+
 	if !*verified {
 		//it is unverified
-		if !*expired {
+		if expired == nil || !*expired {
 			//not expired, just notify the client that it is "unverified"
 			return errors.ErrorData("unverified", "credential", nil).SetStatus(utils.ErrorStatusUnverified)
 		}
@@ -1025,7 +1026,7 @@ func (a *Auth) findAccountAuthType(account *model.Account, authType *model.AuthT
 	if accountAuthType.Credential != nil {
 		//populate credentials in accountAuthType
 		credential, err := a.storage.FindCredential(nil, accountAuthType.Credential.ID)
-		if err != nil {
+		if err != nil || credential == nil {
 			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
 		}
 		credential.AuthType = *authType
@@ -1106,7 +1107,7 @@ func (a *Auth) clearExpiredSessions(identifier string, l *logs.Log) error {
 
 func (a *Auth) applyLogin(anonymous bool, sub string, authType model.AuthType, appOrg model.ApplicationOrganization,
 	accountAuthType *model.AccountAuthType, appType model.ApplicationType, externalIDs map[string]string, ipAddress string, deviceType string,
-	deviceOS *string, deviceID string, clientVersion *string, params map[string]interface{}, state string, l *logs.Log) (*model.LoginSession, error) {
+	deviceOS *string, deviceID *string, clientVersion *string, params map[string]interface{}, state string, l *logs.Log) (*model.LoginSession, error) {
 
 	var err error
 	var loginSession *model.LoginSession
@@ -1186,7 +1187,7 @@ func (a *Auth) applyLogin(anonymous bool, sub string, authType model.AuthType, a
 	return loginSession, nil
 }
 
-func (a *Auth) createDevice(accountID string, deviceType string, deviceOS *string, deviceID string, l *logs.Log) (*model.Device, error) {
+func (a *Auth) createDevice(accountID string, deviceType string, deviceOS *string, deviceID *string, l *logs.Log) (*model.Device, error) {
 	//id
 	idUUID, _ := uuid.NewUUID()
 	id := idUUID.String()
@@ -1627,8 +1628,7 @@ func (a *Auth) linkAccountAuthType(account model.Account, authType model.AuthTyp
 		}
 	}
 
-	credentialID, _ := uuid.NewUUID()
-	credID := credentialID.String()
+	credID := uuid.NewString()
 
 	//apply sign up
 	message, credentialValue, err := authImpl.signUp(authType, appOrg, creds, params, credID, l)
@@ -2061,7 +2061,6 @@ func (a *Auth) validateAuthType(authenticationType string, appTypeIdentifier str
 	applicationType, err := a.storage.FindApplicationType(appTypeIdentifier)
 	if err != nil {
 		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationType, logutils.StringArgs(appTypeIdentifier), err)
-
 	}
 	if applicationType == nil {
 		return nil, nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationType, logutils.StringArgs(appTypeIdentifier))

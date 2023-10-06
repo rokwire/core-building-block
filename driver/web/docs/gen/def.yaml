@@ -6890,31 +6890,14 @@ components:
             - $ref: '#/components/schemas/_shared_req_CredsTwilioPhone'
             - $ref: '#/components/schemas/_shared_req_CredsOIDC'
             - $ref: '#/components/schemas/_shared_req_CredsAPIKey'
-            - required:
-                - username
-                - password
-              type: object
-              description: Auth login creds for auth_type="username"
-              properties:
-                username:
-                  type: string
-                password:
-                  type: string
+            - $ref: '#/components/schemas/_shared_req_CredsUsername'
         params:
           type: object
           anyOf:
             - $ref: '#/components/schemas/_shared_req_ParamsEmail'
             - $ref: '#/components/schemas/_shared_req_ParamsOIDC'
             - $ref: '#/components/schemas/_shared_req_ParamsNone'
-            - type: object
-              description: Auth login params for auth_type="username"
-              properties:
-                confirm_password:
-                  type: string
-                  description: This should match the `creds` password field when sign_up=true. This should be verified on the client side as well to reduce invalid requests.
-                sign_up:
-                  type: boolean
-                  default: false
+            - $ref: '#/components/schemas/_shared_req_ParamsUsername'
         device:
           $ref: '#/components/schemas/Device'
         profile:
@@ -7120,6 +7103,17 @@ components:
       description: |
         Auth login creds for auth_type="oidc" (or variants)
           - full redirect URI received from OIDC provider
+    _shared_req_CredsUsername:
+      required:
+        - username
+        - password
+      type: object
+      description: Auth login creds for auth_type="username"
+      properties:
+        username:
+          type: string
+        password:
+          type: string
     _shared_req_CredsAPIKey:
       type: object
       description: Auth login creds for auth_type="anonymous"
@@ -7135,7 +7129,6 @@ components:
           description: This should match the `creds` password field when sign_up=true. This should be verified on the client side as well to reduce invalid requests.
         sign_up:
           type: boolean
-          default: false
     _shared_req_ParamsOIDC:
       type: object
       description: Auth login params for auth_type="oidc" (or variants)
@@ -7144,6 +7137,15 @@ components:
           type: string
         pkce_verifier:
           type: string
+    _shared_req_ParamsUsername:
+      type: object
+      description: Auth login params for auth_type="username"
+      properties:
+        confirm_password:
+          type: string
+          description: This should match the `creds` password field when sign_up=true. This should be verified on the client side as well to reduce invalid requests.
+        sign_up:
+          type: boolean
     _shared_req_ParamsNone:
       type: object
       description: Auth login request params for unlisted auth_types (None)

@@ -122,7 +122,7 @@ type APIs interface {
 	//		ipAddress (string): Client's IP address
 	//		deviceType (string): "mobile" or "web" or "desktop" etc
 	//		deviceOS (*string): Device OS
-	//		deviceID (string): Device ID
+	//		deviceID (*string): Device ID
 	//		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
 	//		creds (string): Credentials/JSON encoded credential structure defined for the specified auth type
 	//		apiKey (string): API key to validate the specified app
@@ -143,7 +143,7 @@ type APIs interface {
 	//			Params (interface{}): authType-specific set of parameters passed back to client
 	//			State (string): login state used if account is enrolled in MFA
 	//		MFA types ([]model.MFAType): list of MFA types account is enrolled in
-	Login(ipAddress string, deviceType string, deviceOS *string, deviceID string, authenticationType string, creds string, apiKey string,
+	Login(ipAddress string, deviceType string, deviceOS *string, deviceID *string, authenticationType string, creds string, apiKey string,
 		appTypeIdentifier string, orgID string, params string, clientVersion *string, profile model.Profile, privacy model.Privacy, preferences map[string]interface{},
 		username string, admin bool, l *logs.Log) (*string, *model.LoginSession, []model.MFAType, error)
 
@@ -562,7 +562,7 @@ type Storage interface {
 	FindApplicationOrganization(appID string, orgID string) (*model.ApplicationOrganization, error)
 
 	//Device
-	FindDevice(context storage.TransactionContext, deviceID string, accountID string) (*model.Device, error)
+	FindDevice(context storage.TransactionContext, deviceID *string, accountID string) (*model.Device, error)
 	InsertDevice(context storage.TransactionContext, device model.Device) (*model.Device, error)
 	DeleteDevice(context storage.TransactionContext, id string) error
 

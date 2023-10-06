@@ -387,7 +387,6 @@ func (a *oidcAuthImpl) loadOidcTokenWithParams(params map[string]string, oidcCon
 		"Content-Length": strconv.Itoa(len(data.Encode())),
 	}
 
-	client := &http.Client{}
 	req, err := http.NewRequest(http.MethodPost, tokenURI, strings.NewReader(data.Encode()))
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeRequest, nil, err)
@@ -395,6 +394,8 @@ func (a *oidcAuthImpl) loadOidcTokenWithParams(params map[string]string, oidcCon
 	for k, v := range headers {
 		req.Header.Set(k, v)
 	}
+
+	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionSend, logutils.TypeRequest, nil, err)
@@ -434,13 +435,13 @@ func (a *oidcAuthImpl) loadOidcUserInfo(token *oidcToken, url string) ([]byte, e
 		return nil, errors.ErrorData(logutils.StatusMissing, "user info url", nil)
 	}
 
-	client := &http.Client{}
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeRequest, nil, err)
 	}
 	req.Header.Set("Authorization", fmt.Sprintf("%s %s", token.TokenType, token.AccessToken))
 
+	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionSend, logutils.TypeRequest, nil, err)
@@ -518,7 +519,7 @@ func initOidcAuth(auth *Auth) (*oidcAuthImpl, error) {
 
 	err := auth.registerExternalAuthType(oidc.authType, oidc)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAuthType, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionRegister, typeExternalAuthType, nil, err)
 	}
 
 	return oidc, nil
