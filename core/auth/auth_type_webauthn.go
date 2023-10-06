@@ -182,39 +182,44 @@ func (a *webAuthnAuthImpl) checkCredentials(identifierImpl identifierType, accou
 		}
 
 		var optionData string
-		if user != nil && len(user.WebAuthnCredentials()) == 0 {
+		if user != nil {
 			// attempting login with identifier and no credentials - need to restart registration instead
 			parameters, err := a.parseParams(params)
 			if err != nil {
 				return "", "", errors.WrapErrorAction(logutils.ActionParse, typeWebAuthnParams, nil, err)
 			}
 
-			newUser, ok := user.(webAuthnUser)
+			namedUser, ok := user.(webAuthnUser)
 			if !ok {
 				return "", "", errors.ErrorData(logutils.StatusInvalid, "webauthn user", nil)
 			}
 
 			if identifierImpl != nil {
-				newUser.Name = identifierImpl.getIdentifier()
+				namedUser.Name = identifierImpl.getIdentifier()
 			} else if parameters.DisplayName != nil {
-				newUser.Name = *parameters.DisplayName
+				namedUser.Name = *parameters.DisplayName
 			}
 
 			if parameters.DisplayName != nil {
-				newUser.DisplayName = *parameters.DisplayName
+				namedUser.DisplayName = *parameters.DisplayName
 			} else if identifierImpl != nil {
-				newUser.DisplayName = identifierImpl.getIdentifier()
+				namedUser.DisplayName = identifierImpl.getIdentifier()
 			}
 
-			optionData, err = a.beginRegistration(newUser, appOrg)
-			if err != nil {
-				return "", "", errors.WrapErrorAction(logutils.ActionStart, "webauthn registration", nil, err)
+			user = namedUser
+			if len(user.WebAuthnCredentials()) == 0 {
+				optionData, err = a.beginRegistration(user, appOrg)
+				if err != nil {
+					return "", "", errors.WrapErrorAction(logutils.ActionStart, "webauthn registration", nil, err)
+				}
+
+				return optionData, "", nil
 			}
-		} else {
-			optionData, err = a.beginLogin(user, appOrg)
-			if err != nil {
-				return "", "", errors.WrapErrorAction("beginning", "webauthn login", nil, err)
-			}
+		}
+
+		optionData, err = a.beginLogin(user, appOrg)
+		if err != nil {
+			return "", "", errors.WrapErrorAction("beginning", "webauthn login", nil, err)
 		}
 
 		return optionData, "", nil
