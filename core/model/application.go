@@ -349,18 +349,19 @@ func (ao ApplicationOrganization) FindIdentityProviderSetting(identityProviderID
 	return nil
 }
 
-// IsAuthTypeSupported checks if an auth type is supported for application type
-func (ao ApplicationOrganization) IsAuthTypeSupported(appType ApplicationType, authType AuthType) bool {
+// FindSupportedAuthType finds a supported auth type for application type
+func (ao ApplicationOrganization) FindSupportedAuthType(appType ApplicationType, authType AuthType) *SupportedAuthType {
 	for _, sat := range ao.SupportedAuthTypes {
 		if sat.AppTypeID == appType.ID {
 			for _, at := range sat.SupportedAuthTypes {
 				if at.AuthTypeID == authType.ID {
-					return true
+					at.AuthType = authType
+					return &at
 				}
 			}
 		}
 	}
-	return false
+	return nil
 }
 
 // IdentityProviderSetting represents identity provider setting for an organization in an application
@@ -376,8 +377,10 @@ func (ao ApplicationOrganization) IsAuthTypeSupported(appType ApplicationType, a
 type IdentityProviderSetting struct {
 	IdentityProviderID string `bson:"identity_provider_id"`
 
-	UserIdentifierField string            `bson:"user_identifier_field"`
-	ExternalIDFields    map[string]string `bson:"external_id_fields"`
+	UserIdentifierField  string            `bson:"user_identifier_field"`
+	ExternalIDFields     map[string]string `bson:"external_id_fields"`
+	SensitiveExternalIDs []string          `bson:"sensitive_external_ids"`
+	IsEmailVerified      bool              `bson:"is_email_verified"`
 
 	FirstNameField  string `bson:"first_name_field"`
 	MiddleNameField string `bson:"middle_name_field"`
@@ -457,7 +460,8 @@ type AuthTypesSupport struct {
 // SupportedAuthType represents a supported auth type
 type SupportedAuthType struct {
 	AuthTypeID string                 `bson:"auth_type_id"`
-	Params     map[string]interface{} `bson:"params"`
+	Params     map[string]interface{} `bson:"params,omitempty"`
+	AuthType   AuthType               `bson:"-"`
 }
 
 // ApplicationConfig represents app configs

@@ -39,10 +39,10 @@ paths:
     $ref: "./resources/services/auth/login-url.yaml"
   /services/auth/logout:
     $ref: "./resources/services/auth/logout.yaml"
-  /services/auth/credential/verify:
-    $ref: "./resources/services/auth/credential/verify.yaml"
-  /services/auth/credential/send-verify:
-    $ref: "./resources/services/auth/credential/send-verify.yaml"
+  /services/auth/identifier/verify:
+    $ref: "./resources/services/auth/identifier/verify.yaml"
+  /services/auth/identifier/send-verify:
+    $ref: "./resources/services/auth/identifier/send-verify.yaml"
   /services/auth/credential/forgot/initiate:
     $ref: "./resources/services/auth/credential/forgot/initiate.yaml"
   /services/auth/credential/forgot/complete:
@@ -57,6 +57,10 @@ paths:
     $ref: "./resources/services/auth/account/can-sign-in.yaml"
   /services/auth/account/can-link:
     $ref: "./resources/services/auth/account/can-link.yaml"
+  /services/auth/account/sign-in-options:
+    $ref: "./resources/services/auth/account/sign-in-options.yaml"
+  /services/auth/account/identifier/link:
+    $ref: "./resources/services/auth/account/identifier/link.yaml"
   /services/auth/account/auth-type/link:
     $ref: "./resources/services/auth/account/auth-type/link.yaml"
   /services/auth/authorize-service:
@@ -91,6 +95,10 @@ paths:
     $ref: "./resources/services/app-configs/configs.yaml"
   /services/app-configs/organization:
     $ref: "./resources/services/app-configs/organization/configs.yaml"
+
+  # DEPRECATED
+  /services/auth/credential/send-verify:
+    $ref: "./resources/services/auth/credential/send-verify.yaml"
   /services/application/configs:
     $ref: "./resources/services/application/configs.yaml"
   /services/application/organization/configs:
@@ -235,8 +243,8 @@ paths:
   #ui
   /ui/credential/reset:
     $ref: "./resources/ui/credential/reset.yaml"
-  /ui/credential/verify:
-    $ref: "./resources/ui/credential/verify.yaml"
+  /ui/identifier/verify:
+    $ref: "./resources/ui/identifier/verify.yaml"
 
   #default
   /version:

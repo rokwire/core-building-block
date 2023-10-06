@@ -1,20 +1,21 @@
 required:
   - id
-  - code
-  - identifier
+  - auth_type_code
 type: object
 properties:
   id:
     type: string
+  auth_type_code:
+    type: string
   code:
     type: string
+    deprecated: true
   identifier:
     type: string
+    deprecated: true
   params:  
     type: object
     additionalProperties: true
     nullable: true
   active:
-    type: boolean
-  unverified:
     type: boolean

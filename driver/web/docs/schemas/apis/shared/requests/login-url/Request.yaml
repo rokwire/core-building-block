@@ -10,6 +10,7 @@ properties:
     type: string
     enum:
       - illinois_oidc
+      - conde_oidc
   app_type_identifier:
     type: string
   org_id:

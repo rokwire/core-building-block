@@ -1,0 +1,11 @@
+type: object
+properties:
+  email_should_verify:
+    type: boolean
+    nullable: true
+  email_verify_wait_time:
+    type: integer
+    nullable: true
+  email_verify_expiry:
+    type: integer
+    nullable: true

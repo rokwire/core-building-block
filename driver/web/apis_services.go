@@ -20,6 +20,7 @@ import (
 	Def "core-building-block/driver/web/docs/gen"
 	"core-building-block/utils"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -31,6 +32,8 @@ import (
 	"github.com/rokwire/logging-library-go/v2/errors"
 	"github.com/rokwire/logging-library-go/v2/logs"
 	"github.com/rokwire/logging-library-go/v2/logutils"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 // ServicesApisHandler handles the rest APIs implementation
@@ -81,16 +84,12 @@ func (h ServicesApisHandler) login(l *logs.Log, r *http.Request, claims *tokenau
 	// privacy
 	requestPrivacy := privacyFromDefNullable(requestData.Privacy)
 
-	username := ""
-	if requestData.Username != nil {
-		username = *requestData.Username
-	}
-
 	//device
 	requestDevice := requestData.Device
 
-	message, loginSession, mfaTypes, err := h.coreAPIs.Auth.Login(ip, string(requestDevice.Type), requestDevice.Os, requestDevice.DeviceId, string(requestData.AuthType),
-		requestCreds, requestData.ApiKey, requestData.AppTypeIdentifier, requestData.OrgId, requestParams, &clientVersion, requestProfile, requestPrivacy, requestPreferences, username, false, l)
+	noLoginParams, loginSession, mfaTypes, err := h.coreAPIs.Auth.Login(ip, string(requestDevice.Type), requestDevice.Os, requestDevice.DeviceId, string(requestData.AuthType),
+		requestCreds, requestData.ApiKey, requestData.AppTypeIdentifier, requestData.OrgId, requestParams, &clientVersion, requestProfile, requestPrivacy, requestPreferences,
+		requestData.AccountIdentifierId, false, l)
 	if err != nil {
 		loggingErr, ok := err.(*errors.Error)
 		if ok && loggingErr.Status() != "" {
@@ -101,9 +100,25 @@ func (h ServicesApisHandler) login(l *logs.Log, r *http.Request, claims *tokenau
 
 	///prepare response
 
-	//message
-	if message != nil {
-		responseData := &Def.SharedResLogin{Message: message}
+	//noLoginParams
+	if noLoginParams != nil {
+		var message *string
+		if messageVal, _ := noLoginParams["message"].(string); messageVal != "" {
+			message = &messageVal
+		}
+
+		var paramsRes Def.SharedResLogin_Params
+		paramsBytes, err := json.Marshal(noLoginParams)
+		if err != nil {
+			return l.HTTPResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("no login response params"), nil, err, http.StatusInternalServerError, false)
+		}
+
+		err = json.Unmarshal(paramsBytes, &paramsRes)
+		if err != nil {
+			return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("no login response params"), nil, err, http.StatusInternalServerError, false)
+		}
+
+		responseData := &Def.SharedResLogin{Message: message, Params: &paramsRes}
 		respData, err := json.Marshal(responseData)
 		if err != nil {
 			return l.HTTPResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("auth login response"), nil, err, http.StatusInternalServerError, false)
@@ -112,7 +127,7 @@ func (h ServicesApisHandler) login(l *logs.Log, r *http.Request, claims *tokenau
 	}
 
 	if loginSession.State != "" {
-		paramsRes, err := convert[Def.SharedResLoginMfa_Params](loginSession.Params)
+		paramsRes, err := utils.JSONConvert[Def.SharedResLoginMfa_Params](loginSession.Params)
 		if err != nil {
 			return l.HTTPResponseErrorAction("converting", logutils.MessageDataType("auth login response params"), nil, err, http.StatusInternalServerError, false)
 		}
@@ -180,7 +195,7 @@ func (h ServicesApisHandler) refresh(l *logs.Log, r *http.Request, claims *token
 	accessToken := loginSession.AccessToken
 	refreshToken := loginSession.CurrentRefreshToken()
 
-	paramsRes, err := convert[Def.SharedResRefresh_Params](loginSession.Params)
+	paramsRes, err := utils.JSONConvert[Def.SharedResRefresh_Params](loginSession.Params)
 	if err != nil {
 		return l.HTTPResponseErrorAction("converting", logutils.MessageDataType("auth refresh response params"), nil, err, http.StatusInternalServerError, false)
 	}
@@ -234,7 +249,20 @@ func (h ServicesApisHandler) accountExists(l *logs.Log, r *http.Request, claims 
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.TypeRequest, nil, err, http.StatusBadRequest, true)
 	}
 
-	accountExists, err := h.coreAPIs.Auth.AccountExists(string(requestData.AuthType), requestData.UserIdentifier, requestData.ApiKey, requestData.AppTypeIdentifier, requestData.OrgId)
+	//identifier
+	requestIdentifier, err := interfaceToJSON(requestData.Identifier)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeCreds, nil, err, http.StatusBadRequest, true)
+	}
+
+	//auth type
+	var authType *string
+	if requestData.AuthType != nil {
+		authTypeStr := string(*requestData.AuthType)
+		authType = &authTypeStr
+	}
+
+	accountExists, err := h.coreAPIs.Auth.AccountExists(requestIdentifier, requestData.ApiKey, requestData.AppTypeIdentifier, requestData.OrgId, authType, requestData.UserIdentifier)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionGet, logutils.MessageDataType("account exists"), nil, err, http.StatusInternalServerError, false)
 	}
@@ -259,7 +287,20 @@ func (h ServicesApisHandler) canSignIn(l *logs.Log, r *http.Request, claims *tok
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.TypeRequest, nil, err, http.StatusBadRequest, true)
 	}
 
-	canSignIn, err := h.coreAPIs.Auth.CanSignIn(string(requestData.AuthType), requestData.UserIdentifier, requestData.ApiKey, requestData.AppTypeIdentifier, requestData.OrgId)
+	//identifier
+	requestIdentifier, err := interfaceToJSON(requestData.Identifier)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeCreds, nil, err, http.StatusBadRequest, true)
+	}
+
+	//auth type
+	var authType *string
+	if requestData.AuthType != nil {
+		authTypeStr := string(*requestData.AuthType)
+		authType = &authTypeStr
+	}
+
+	canSignIn, err := h.coreAPIs.Auth.CanSignIn(requestIdentifier, requestData.ApiKey, requestData.AppTypeIdentifier, requestData.OrgId, authType, requestData.UserIdentifier)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionGet, logutils.MessageDataType("can sign in"), nil, err, http.StatusInternalServerError, false)
 	}
@@ -284,7 +325,20 @@ func (h ServicesApisHandler) canLink(l *logs.Log, r *http.Request, claims *token
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.TypeRequest, nil, err, http.StatusBadRequest, true)
 	}
 
-	canLink, err := h.coreAPIs.Auth.CanLink(string(requestData.AuthType), requestData.UserIdentifier, requestData.ApiKey, requestData.AppTypeIdentifier, requestData.OrgId)
+	//identifier
+	requestIdentifier, err := interfaceToJSON(requestData.Identifier)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeCreds, nil, err, http.StatusBadRequest, true)
+	}
+
+	//auth type
+	var authType *string
+	if requestData.AuthType != nil {
+		authTypeStr := string(*requestData.AuthType)
+		authType = &authTypeStr
+	}
+
+	canLink, err := h.coreAPIs.Auth.CanLink(requestIdentifier, requestData.ApiKey, requestData.AppTypeIdentifier, requestData.OrgId, authType, requestData.UserIdentifier)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionGet, logutils.MessageDataType("can link"), nil, err, http.StatusInternalServerError, false)
 	}
@@ -297,14 +351,46 @@ func (h ServicesApisHandler) canLink(l *logs.Log, r *http.Request, claims *token
 	return l.HTTPResponseSuccessJSON(respData)
 }
 
-func (h ServicesApisHandler) linkAccountAuthType(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	data, err := ioutil.ReadAll(r.Body)
+func (h ServicesApisHandler) signInOptions(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
+	var requestData Def.SharedReqAccountCheck
+	err := json.NewDecoder(r.Body).Decode(&requestData)
 	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.TypeRequest, nil, err, http.StatusBadRequest, true)
 	}
 
+	//identifier
+	requestIdentifier, err := interfaceToJSON(requestData.Identifier)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeCreds, nil, err, http.StatusBadRequest, true)
+	}
+
+	//auth type
+	var authType *string
+	if requestData.AuthType != nil {
+		authTypeStr := string(*requestData.AuthType)
+		authType = &authTypeStr
+	}
+
+	identifiers, authTypes, err := h.coreAPIs.Auth.SignInOptions(requestIdentifier, requestData.ApiKey, requestData.AppTypeIdentifier, requestData.OrgId, authType, requestData.UserIdentifier, l)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionGet, logutils.MessageDataType("sign-in options"), nil, err, http.StatusInternalServerError, false)
+	}
+
+	respIdentifiers := accountIdentifiersToDef(identifiers)
+	respAuthTypes := accountAuthTypesToDef(authTypes)
+	resp := Def.SharedResSignInOptions{Identifiers: respIdentifiers, AuthTypes: respAuthTypes}
+
+	respData, err := json.Marshal(resp)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionMarshal, logutils.TypeResponse, nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HTTPResponseSuccessJSON(respData)
+}
+
+func (h ServicesApisHandler) linkAccountAuthType(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
 	var requestData Def.ServicesReqAccountAuthTypeLink
-	err = json.Unmarshal(data, &requestData)
+	err := json.NewDecoder(r.Body).Decode(&requestData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("account auth type link request"), nil, err, http.StatusBadRequest, true)
 	}
@@ -326,13 +412,15 @@ func (h ServicesApisHandler) linkAccountAuthType(l *logs.Log, r *http.Request, c
 		return l.HTTPResponseError("Error linking account auth type", err, http.StatusInternalServerError, true)
 	}
 
+	identifiers := make([]Def.AccountIdentifier, 0)
 	authTypes := make([]Def.AccountAuthType, 0)
 	if account != nil {
-		account.SortAccountAuthTypes(claims.UID)
-		authTypes = accountAuthTypesToDef(account.AuthTypes)
+		account.SortAccountAuthTypes("", claims.AuthType)
+		identifiers = accountIdentifiersToDef(account.Identifiers)
+		authTypes = accountAuthTypesToDefLegacy(account)
 	}
 
-	responseData := &Def.ServicesResAccountAuthTypeLink{AuthTypes: authTypes, Message: message}
+	responseData := &Def.ServicesResAccountAuthTypeLink{Identifiers: &identifiers, AuthTypes: authTypes, Message: message}
 	respData, err := json.Marshal(responseData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionMarshal, "link account auth type response", nil, err, http.StatusInternalServerError, false)
@@ -342,36 +430,92 @@ func (h ServicesApisHandler) linkAccountAuthType(l *logs.Log, r *http.Request, c
 }
 
 func (h ServicesApisHandler) unlinkAccountAuthType(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
-
 	var requestData Def.ServicesReqAccountAuthTypeUnlink
-	err = json.Unmarshal(data, &requestData)
+	err := json.NewDecoder(r.Body).Decode(&requestData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("account auth type unlink request"), nil, err, http.StatusBadRequest, true)
 	}
 
-	if string(requestData.AuthType) == claims.AuthType && requestData.Identifier == claims.UID {
-		return l.HTTPResponseError("May not unlink account auth type currently in use", nil, http.StatusBadRequest, false)
+	var authType *string
+	if requestData.AuthType != nil {
+		authTypeStr := string(*requestData.AuthType)
+		authType = &authTypeStr
 	}
-
-	account, err := h.coreAPIs.Auth.UnlinkAccountAuthType(claims.Subject, string(requestData.AuthType), requestData.AppTypeIdentifier, requestData.Identifier, l)
+	account, err := h.coreAPIs.Auth.UnlinkAccountAuthType(claims.Subject, requestData.Id, authType, requestData.Identifier, false, l)
 	if err != nil {
 		return l.HTTPResponseError("Error unlinking account auth type", err, http.StatusInternalServerError, true)
 	}
 
+	identifiers := make([]Def.AccountIdentifier, 0)
 	authTypes := make([]Def.AccountAuthType, 0)
 	if account != nil {
-		account.SortAccountAuthTypes(claims.UID)
-		authTypes = accountAuthTypesToDef(account.AuthTypes)
+		account.SortAccountAuthTypes("", claims.AuthType)
+		identifiers = accountIdentifiersToDef(account.Identifiers)
+		authTypes = accountAuthTypesToDefLegacy(account)
 	}
 
-	responseData := &Def.ServicesResAccountAuthTypeLink{AuthTypes: authTypes}
+	responseData := &Def.ServicesResAccountAuthTypeLink{Identifiers: &identifiers, AuthTypes: authTypes}
 	respData, err := json.Marshal(responseData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionMarshal, "unlink account auth type response", nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HTTPResponseSuccessJSON(respData)
+}
+
+func (h ServicesApisHandler) linkAccountIdentifier(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
+	var requestData Def.ServicesReqAccountIdentifierLink
+	err := json.NewDecoder(r.Body).Decode(&requestData)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("account identifier link request"), nil, err, http.StatusBadRequest, true)
+	}
+
+	//identifier
+	requestIdentifier, err := interfaceToJSON(requestData.Identifier)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeCreds, nil, err, http.StatusBadRequest, true)
+	}
+
+	message, account, err := h.coreAPIs.Auth.LinkAccountIdentifier(claims.Subject, requestIdentifier, false, l)
+	if err != nil {
+		return l.HTTPResponseError("Error linking account identifier", err, http.StatusInternalServerError, true)
+	}
+
+	identifiers := make([]Def.AccountIdentifier, 0)
+	if account != nil {
+		identifiers = accountIdentifiersToDef(account.Identifiers)
+	}
+
+	responseData := &Def.ServicesResAccountIdentifierLink{Identifiers: identifiers, Message: message}
+	respData, err := json.Marshal(responseData)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionMarshal, "link account identifier response", nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HTTPResponseSuccessJSON(respData)
+}
+
+func (h ServicesApisHandler) unlinkAccountIdentifier(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
+	var requestData Def.ServicesReqAccountIdentifierUnlink
+	err := json.NewDecoder(r.Body).Decode(&requestData)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("account identifier unlink request"), nil, err, http.StatusBadRequest, true)
+	}
+
+	account, err := h.coreAPIs.Auth.UnlinkAccountIdentifier(claims.Subject, requestData.Id, false, l)
+	if err != nil {
+		return l.HTTPResponseError("Error unlinking account identifier", err, http.StatusInternalServerError, true)
+	}
+
+	identifiers := make([]Def.AccountIdentifier, 0)
+	if account != nil {
+		identifiers = accountIdentifiersToDef(account.Identifiers)
+	}
+
+	responseData := &Def.ServicesResAccountIdentifierLink{Identifiers: identifiers}
+	respData, err := json.Marshal(responseData)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionMarshal, "unlink account identifier response", nil, err, http.StatusInternalServerError, false)
 	}
 
 	return l.HTTPResponseSuccessJSON(respData)
@@ -451,7 +595,7 @@ func (h ServicesApisHandler) getAccount(l *logs.Log, r *http.Request, claims *to
 
 	var accountData *Def.Account
 	if account != nil {
-		account.SortAccountAuthTypes(claims.UID)
+		account.SortAccountAuthTypes("", claims.AuthType)
 		accountData = accountToDef(*account)
 	}
 
@@ -496,14 +640,15 @@ func (h ServicesApisHandler) createAdminAccount(l *logs.Log, r *http.Request, cl
 	profile := profileFromDefNullable(requestData.Profile)
 	privacy := privacyFromDefNullable(requestData.Privacy)
 
-	username := ""
-	if requestData.Username != nil {
-		username = *requestData.Username
+	//identifier
+	requestIdentifier, err := interfaceToJSON(requestData.Identifier)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeCreds, nil, err, http.StatusBadRequest, true)
 	}
 
 	creatorPermissions := strings.Split(claims.Permissions, ",")
 	account, params, err := h.coreAPIs.Auth.CreateAdminAccount(string(requestData.AuthType), claims.AppID, claims.OrgID,
-		requestData.Identifier, profile, privacy, username, permissions, roleIDs, groupIDs, scopes, creatorPermissions, &clientVersion, l)
+		requestIdentifier, profile, privacy, permissions, roleIDs, groupIDs, scopes, creatorPermissions, &clientVersion, l)
 	if err != nil || account == nil {
 		return l.HTTPResponseErrorAction(logutils.ActionCreate, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}
@@ -546,8 +691,15 @@ func (h ServicesApisHandler) updateAdminAccount(l *logs.Log, r *http.Request, cl
 	if requestData.Scopes != nil {
 		scopes = *requestData.Scopes
 	}
+
+	//identifier
+	requestIdentifier, err := interfaceToJSON(requestData.Identifier)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeCreds, nil, err, http.StatusBadRequest, true)
+	}
+
 	updaterPermissions := strings.Split(claims.Permissions, ",")
-	account, params, err := h.coreAPIs.Auth.UpdateAdminAccount(string(requestData.AuthType), claims.AppID, claims.OrgID, requestData.Identifier,
+	account, params, err := h.coreAPIs.Auth.UpdateAdminAccount(string(requestData.AuthType), claims.AppID, claims.OrgID, requestIdentifier,
 		permissions, roleIDs, groupIDs, scopes, updaterPermissions, l)
 	if err != nil || account == nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUpdate, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
@@ -633,6 +785,16 @@ func (h ServicesApisHandler) getProfile(l *logs.Log, r *http.Request, claims *to
 	}
 
 	profileResp := profileToDef(profile)
+
+	// maintain backwards compatibility
+	if len(profile.Accounts) == 1 {
+		if emailIdentifier := profile.Accounts[0].GetAccountIdentifier("email", ""); emailIdentifier != nil {
+			profileResp.Email = &emailIdentifier.Identifier
+		}
+		if phoneIdentifier := profile.Accounts[0].GetAccountIdentifier("phone", ""); phoneIdentifier != nil {
+			profileResp.Phone = &phoneIdentifier.Identifier
+		}
+	}
 
 	data, err := json.Marshal(profileResp)
 	if err != nil {
@@ -1006,25 +1168,6 @@ func (h ServicesApisHandler) getTest(l *logs.Log, r *http.Request, claims *token
 	return l.HTTPResponseSuccessMessage(res)
 }
 
-// Handler for verify endpoint
-func (h ServicesApisHandler) verifyCredential(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	id := r.URL.Query().Get("id")
-	if id == "" {
-		return l.HTTPResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
-	}
-
-	code := r.URL.Query().Get("code")
-	if code == "" {
-		return l.HTTPResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("code"), nil, http.StatusBadRequest, false)
-	}
-
-	if err := h.coreAPIs.Auth.VerifyCredential(id, code, l); err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionValidate, "code", nil, err, http.StatusInternalServerError, false)
-	}
-
-	return l.HTTPResponseSuccessMessage("Code verified successfully!")
-}
-
 func (h ServicesApisHandler) getApplicationConfigs(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -1089,18 +1232,12 @@ func (h ServicesApisHandler) getApplicationOrgConfigs(l *logs.Log, r *http.Reque
 	return l.HTTPResponseSuccessJSON(response)
 }
 
-// Handler for reset password endpoint from client application
+// Handler for reset credential endpoint from client application
 func (h ServicesApisHandler) updateCredential(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	accountID := claims.Subject
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
-
 	var requestData Def.ServicesReqCredentialUpdate
-	err = json.Unmarshal(data, &requestData)
+	err := json.NewDecoder(r.Body).Decode(&requestData)
 	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth reset password client request"), nil, err, http.StatusBadRequest, true)
+		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth reset credential client request"), nil, err, http.StatusBadRequest, true)
 	}
 
 	//params
@@ -1109,24 +1246,19 @@ func (h ServicesApisHandler) updateCredential(l *logs.Log, r *http.Request, clai
 		return l.HTTPResponseErrorAction(logutils.ActionMarshal, "params", nil, err, http.StatusBadRequest, true)
 	}
 
-	if err := h.coreAPIs.Auth.UpdateCredential(accountID, requestData.AccountAuthTypeId, requestParams, l); err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionUpdate, "password", nil, err, http.StatusInternalServerError, false)
+	if err := h.coreAPIs.Auth.UpdateCredential(claims.Subject, requestData.AccountAuthTypeId, requestParams, l); err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionUpdate, "credential", nil, err, http.StatusInternalServerError, false)
 	}
 
-	return l.HTTPResponseSuccessMessage("Reset Password from client successfully")
+	return l.HTTPResponseSuccessMessage("Reset credential from client successfully")
 }
 
-// Handler for reset password endpoint from reset link
+// Handler for reset credential endpoint from reset link
 func (h ServicesApisHandler) forgotCredentialComplete(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
-
 	var requestData Def.ServicesReqCredentialForgotComplete
-	err = json.Unmarshal(data, &requestData)
+	err := json.NewDecoder(r.Body).Decode(&requestData)
 	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth reset password link request"), nil, err, http.StatusBadRequest, true)
+		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth reset credential link request"), nil, err, http.StatusBadRequest, true)
 	}
 
 	//params
@@ -1136,47 +1268,91 @@ func (h ServicesApisHandler) forgotCredentialComplete(l *logs.Log, r *http.Reque
 	}
 
 	if err := h.coreAPIs.Auth.ResetForgotCredential(requestData.CredentialId, requestData.ResetCode, requestParams, l); err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionUpdate, "password", nil, err, http.StatusInternalServerError, false)
+		return l.HTTPResponseErrorAction(logutils.ActionUpdate, "credential", nil, err, http.StatusInternalServerError, false)
 	}
 
-	return l.HTTPResponseSuccessMessage("Reset Password from link successfully")
+	return l.HTTPResponseSuccessMessage("Reset credential from link successfully")
 }
 
 // Handler for forgot credential endpoint
 func (h ServicesApisHandler) forgotCredentialInitiate(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
-
 	var requestData Def.ServicesReqCredentialForgotInitiate
-	err = json.Unmarshal(data, &requestData)
+	err := json.NewDecoder(r.Body).Decode(&requestData)
 	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth reset password request"), nil, err, http.StatusBadRequest, true)
+		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth reset credential request"), nil, err, http.StatusBadRequest, true)
 	}
 
-	if err := h.coreAPIs.Auth.ForgotCredential(string(requestData.AuthType), requestData.AppTypeIdentifier,
-		requestData.OrgId, requestData.ApiKey, requestData.Identifier, l); err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionSend, "forgot password link", nil, err, http.StatusInternalServerError, false)
+	var requestIdentifier interface{}
+	if identifier, err := requestData.Identifier.AsSharedReqIdentifierString(); err == nil {
+		requestIdentifier = map[string]string{string(requestData.AuthType): identifier}
+	} else if identifier, err := requestData.Identifier.AsSharedReqIdentifiers(); err == nil {
+		requestIdentifier = identifier
+	} else {
+		return l.HTTPResponseErrorData(logutils.StatusInvalid, logutils.MessageDataType("auth reset credential identifier"), nil, err, http.StatusBadRequest, true)
 	}
 
-	return l.HTTPResponseSuccessMessage("Sent forgot password link successfully")
+	//identifier
+	identifierJSON, err := interfaceToJSON(requestIdentifier)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeCreds, nil, err, http.StatusBadRequest, true)
+	}
+
+	if err := h.coreAPIs.Auth.ForgotCredential(string(requestData.AuthType), identifierJSON, requestData.AppTypeIdentifier, requestData.OrgId, requestData.ApiKey, l); err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionSend, "forgot credential link", nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HTTPResponseSuccessMessage("Sent forgot credential link successfully")
+}
+
+// Handler for verify endpoint
+func (h ServicesApisHandler) verifyIdentifier(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
+	id := r.URL.Query().Get("id")
+	if id == "" {
+		return l.HTTPResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("id"), nil, http.StatusBadRequest, false)
+	}
+
+	code := r.URL.Query().Get("code")
+	if code == "" {
+		return l.HTTPResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("code"), nil, http.StatusBadRequest, false)
+	}
+
+	accountIdentifier, err := h.coreAPIs.Auth.VerifyIdentifier(id, code, l)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionValidate, model.TypeAccountIdentifier, nil, err, http.StatusInternalServerError, false)
+	}
+
+	identifierStr := "Account identifier"
+	if accountIdentifier != nil && accountIdentifier.Code != "" {
+		identifierStr = cases.Title(language.English).String(accountIdentifier.Code)
+	}
+	return l.HTTPResponseSuccessMessage(fmt.Sprintf("%s verified successfully!", identifierStr))
 }
 
 // Handler for resending verify code
-func (h ServicesApisHandler) sendVerifyCredential(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	data, err := ioutil.ReadAll(r.Body)
+func (h ServicesApisHandler) sendVerifyIdentifier(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
+	var requestData Def.ServicesReqIdentifierSendVerify
+	err := json.NewDecoder(r.Body).Decode(&requestData)
 	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth resend verification request"), nil, err, http.StatusBadRequest, true)
 	}
 
-	var requestData Def.ServicesReqCredentialSendVerify
-	err = json.Unmarshal(data, &requestData)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth resend verify code request"), nil, err, http.StatusBadRequest, true)
+	var requestIdentifier interface{}
+	if identifier, err := requestData.Identifier.AsSharedReqIdentifierString(); err == nil && requestData.AuthType != nil {
+		authType := string(*requestData.AuthType)
+		requestIdentifier = map[string]string{authType: identifier}
+	} else if identifier, err := requestData.Identifier.AsSharedReqIdentifiers(); err == nil {
+		requestIdentifier = identifier
+	} else {
+		return l.HTTPResponseErrorData(logutils.StatusInvalid, logutils.MessageDataType("auth resend verification identifier"), nil, err, http.StatusBadRequest, true)
 	}
 
-	if err := h.coreAPIs.Auth.SendVerifyCredential(string(requestData.AuthType), requestData.AppTypeIdentifier, requestData.OrgId, requestData.ApiKey, requestData.Identifier, l); err != nil {
+	//identifier
+	identifierJSON, err := interfaceToJSON(requestIdentifier)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeCreds, nil, err, http.StatusBadRequest, true)
+	}
+
+	if err := h.coreAPIs.Auth.SendVerifyIdentifier(requestData.AppTypeIdentifier, requestData.OrgId, requestData.ApiKey, identifierJSON, l); err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionSend, "code", nil, err, http.StatusInternalServerError, false)
 	}
 

@@ -17,6 +17,7 @@ package core
 import (
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
+	"core-building-block/utils"
 
 	"github.com/rokwire/logging-library-go/v2/errors"
 	"github.com/rokwire/logging-library-go/v2/logutils"
@@ -88,25 +89,19 @@ func (app *application) sharedGetAccountsCountByParams(searchParams map[string]i
 
 func (app *application) sharedUpdateAccountUsername(accountID string, appID string, orgID string, username string) error {
 	if username == "" {
-		err := app.storage.UpdateAccountUsername(nil, accountID, username)
-		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountUsername, nil, err)
-		}
+		return errors.ErrorData(logutils.StatusMissing, model.TypeAccountUsername, nil)
+	}
 
-		return nil
+	appOrg, err := app.storage.FindApplicationOrganization(appID, orgID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": appID, "org_id": orgID}, err)
+	}
+	if appOrg == nil {
+		return errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": appID, "org_id": orgID})
 	}
 
 	transaction := func(context storage.TransactionContext) error {
-		//1. find the app/org
-		appOrg, err := app.storage.FindApplicationOrganization(appID, orgID)
-		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": appID, "org_id": orgID}, err)
-		}
-		if appOrg == nil {
-			return errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": appID, "org_id": orgID})
-		}
-
-		//2. check if any accounts in the app/org use the username
+		//1. check if any accounts in the app/org use the username
 		accounts, err := app.storage.FindAccountsByUsername(context, appOrg, username)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
@@ -118,10 +113,10 @@ func (app *application) sharedUpdateAccountUsername(accountID string, appID stri
 					return nil
 				}
 			}
-			return errors.ErrorData(logutils.StatusInvalid, model.TypeAccountUsername, logutils.StringArgs(username+" taken"))
+			return errors.ErrorData(logutils.StatusInvalid, model.TypeAccountUsername, logutils.StringArgs(username+" taken")).SetStatus(utils.ErrorStatusUsernameTaken)
 		}
 
-		//3. update the username
+		//2. update the username
 		err = app.storage.UpdateAccountUsername(context, accountID, username)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountUsername, nil, err)

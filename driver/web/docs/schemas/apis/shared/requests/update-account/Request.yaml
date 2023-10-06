@@ -6,10 +6,10 @@ properties:
   auth_type:
     type: string
     enum:
-      - email
+      - password
       - illinois_oidc
   identifier:
-    type: string
+    $ref: "../Identifiers.yaml"
   permissions:
     type: array
     items:

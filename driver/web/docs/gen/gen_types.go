@@ -5,6 +5,7 @@ package Def
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/oapi-codegen/runtime"
 )
@@ -64,28 +65,39 @@ const (
 
 // Defines values for ServicesReqAccountAuthTypeLinkAuthType.
 const (
+	ServicesReqAccountAuthTypeLinkAuthTypeCode         ServicesReqAccountAuthTypeLinkAuthType = "code"
+	ServicesReqAccountAuthTypeLinkAuthTypeCondeOidc    ServicesReqAccountAuthTypeLinkAuthType = "conde_oidc"
 	ServicesReqAccountAuthTypeLinkAuthTypeEmail        ServicesReqAccountAuthTypeLinkAuthType = "email"
 	ServicesReqAccountAuthTypeLinkAuthTypeIllinoisOidc ServicesReqAccountAuthTypeLinkAuthType = "illinois_oidc"
+	ServicesReqAccountAuthTypeLinkAuthTypePassword     ServicesReqAccountAuthTypeLinkAuthType = "password"
+	ServicesReqAccountAuthTypeLinkAuthTypePhone        ServicesReqAccountAuthTypeLinkAuthType = "phone"
 	ServicesReqAccountAuthTypeLinkAuthTypeTwilioPhone  ServicesReqAccountAuthTypeLinkAuthType = "twilio_phone"
 	ServicesReqAccountAuthTypeLinkAuthTypeUsername     ServicesReqAccountAuthTypeLinkAuthType = "username"
+	ServicesReqAccountAuthTypeLinkAuthTypeWebauthn     ServicesReqAccountAuthTypeLinkAuthType = "webauthn"
 )
 
 // Defines values for ServicesReqAccountAuthTypeUnlinkAuthType.
 const (
+	ServicesReqAccountAuthTypeUnlinkAuthTypeCode         ServicesReqAccountAuthTypeUnlinkAuthType = "code"
+	ServicesReqAccountAuthTypeUnlinkAuthTypeCondeOidc    ServicesReqAccountAuthTypeUnlinkAuthType = "conde_oidc"
 	ServicesReqAccountAuthTypeUnlinkAuthTypeEmail        ServicesReqAccountAuthTypeUnlinkAuthType = "email"
 	ServicesReqAccountAuthTypeUnlinkAuthTypeIllinoisOidc ServicesReqAccountAuthTypeUnlinkAuthType = "illinois_oidc"
+	ServicesReqAccountAuthTypeUnlinkAuthTypePassword     ServicesReqAccountAuthTypeUnlinkAuthType = "password"
+	ServicesReqAccountAuthTypeUnlinkAuthTypePhone        ServicesReqAccountAuthTypeUnlinkAuthType = "phone"
 	ServicesReqAccountAuthTypeUnlinkAuthTypeTwilioPhone  ServicesReqAccountAuthTypeUnlinkAuthType = "twilio_phone"
 	ServicesReqAccountAuthTypeUnlinkAuthTypeUsername     ServicesReqAccountAuthTypeUnlinkAuthType = "username"
+	ServicesReqAccountAuthTypeUnlinkAuthTypeWebauthn     ServicesReqAccountAuthTypeUnlinkAuthType = "webauthn"
 )
 
 // Defines values for ServicesReqCredentialForgotInitiateAuthType.
 const (
-	ServicesReqCredentialForgotInitiateAuthTypeEmail ServicesReqCredentialForgotInitiateAuthType = "email"
+	ServicesReqCredentialForgotInitiateAuthTypeEmail    ServicesReqCredentialForgotInitiateAuthType = "email"
+	ServicesReqCredentialForgotInitiateAuthTypePassword ServicesReqCredentialForgotInitiateAuthType = "password"
 )
 
-// Defines values for ServicesReqCredentialSendVerifyAuthType.
+// Defines values for ServicesReqIdentifierSendVerifyAuthType.
 const (
-	ServicesReqCredentialSendVerifyAuthTypeEmail ServicesReqCredentialSendVerifyAuthType = "email"
+	ServicesReqIdentifierSendVerifyAuthTypeEmail ServicesReqIdentifierSendVerifyAuthType = "email"
 )
 
 // Defines values for ServicesReqServiceAccountsAccessTokenAuthType.
@@ -114,29 +126,37 @@ const (
 // Defines values for SharedReqAccountCheckAuthType.
 const (
 	SharedReqAccountCheckAuthTypeAnonymous    SharedReqAccountCheckAuthType = "anonymous"
+	SharedReqAccountCheckAuthTypeCondeOidc    SharedReqAccountCheckAuthType = "conde_oidc"
 	SharedReqAccountCheckAuthTypeEmail        SharedReqAccountCheckAuthType = "email"
 	SharedReqAccountCheckAuthTypeIllinoisOidc SharedReqAccountCheckAuthType = "illinois_oidc"
+	SharedReqAccountCheckAuthTypePhone        SharedReqAccountCheckAuthType = "phone"
 	SharedReqAccountCheckAuthTypeTwilioPhone  SharedReqAccountCheckAuthType = "twilio_phone"
 	SharedReqAccountCheckAuthTypeUsername     SharedReqAccountCheckAuthType = "username"
 )
 
 // Defines values for SharedReqCreateAccountAuthType.
 const (
-	SharedReqCreateAccountAuthTypeEmail        SharedReqCreateAccountAuthType = "email"
 	SharedReqCreateAccountAuthTypeIllinoisOidc SharedReqCreateAccountAuthType = "illinois_oidc"
+	SharedReqCreateAccountAuthTypePassword     SharedReqCreateAccountAuthType = "password"
 )
 
 // Defines values for SharedReqLoginAuthType.
 const (
 	SharedReqLoginAuthTypeAnonymous    SharedReqLoginAuthType = "anonymous"
+	SharedReqLoginAuthTypeCode         SharedReqLoginAuthType = "code"
+	SharedReqLoginAuthTypeCondeOidc    SharedReqLoginAuthType = "conde_oidc"
 	SharedReqLoginAuthTypeEmail        SharedReqLoginAuthType = "email"
 	SharedReqLoginAuthTypeIllinoisOidc SharedReqLoginAuthType = "illinois_oidc"
+	SharedReqLoginAuthTypePassword     SharedReqLoginAuthType = "password"
+	SharedReqLoginAuthTypePhone        SharedReqLoginAuthType = "phone"
 	SharedReqLoginAuthTypeTwilioPhone  SharedReqLoginAuthType = "twilio_phone"
 	SharedReqLoginAuthTypeUsername     SharedReqLoginAuthType = "username"
+	SharedReqLoginAuthTypeWebauthn     SharedReqLoginAuthType = "webauthn"
 )
 
 // Defines values for SharedReqLoginUrlAuthType.
 const (
+	SharedReqLoginUrlAuthTypeCondeOidc    SharedReqLoginUrlAuthType = "conde_oidc"
 	SharedReqLoginUrlAuthTypeIllinoisOidc SharedReqLoginUrlAuthType = "illinois_oidc"
 )
 
@@ -157,8 +177,8 @@ const (
 
 // Defines values for SharedReqUpdateAccountAuthType.
 const (
-	Email        SharedReqUpdateAccountAuthType = "email"
 	IllinoisOidc SharedReqUpdateAccountAuthType = "illinois_oidc"
+	Password     SharedReqUpdateAccountAuthType = "password"
 )
 
 // Defines values for SharedResRokwireTokenTokenType.
@@ -179,9 +199,9 @@ type Account struct {
 	AppOrg                  *ApplicationOrganization `json:"app_org"`
 	AuthTypes               *[]AccountAuthType       `json:"auth_types,omitempty"`
 	Devices                 *[]Device                `json:"devices,omitempty"`
-	ExternalIds             *map[string]interface{}  `json:"external_ids"`
 	Groups                  *[]AppOrgGroup           `json:"groups,omitempty"`
 	Id                      *string                  `json:"id,omitempty"`
+	Identifiers             *[]AccountIdentifier     `json:"identifiers,omitempty"`
 	LastAccessTokenDate     *string                  `json:"last_access_token_date,omitempty"`
 	LastLoginDate           *string                  `json:"last_login_date,omitempty"`
 	MostRecentClientVersion *string                  `json:"most_recent_client_version,omitempty"`
@@ -193,18 +213,32 @@ type Account struct {
 	Scopes                  *[]string                `json:"scopes,omitempty"`
 	System                  *bool                    `json:"system,omitempty"`
 	SystemConfigs           *map[string]interface{}  `json:"system_configs"`
-	Username                *string                  `json:"username,omitempty"`
-	Verified                *bool                    `json:"verified,omitempty"`
+	// Deprecated:
+	Username *string `json:"username"`
+	Verified *bool   `json:"verified,omitempty"`
 }
 
 // AccountAuthType defines model for AccountAuthType.
 type AccountAuthType struct {
-	Active     *bool                   `json:"active,omitempty"`
-	Code       string                  `json:"code"`
-	Id         string                  `json:"id"`
-	Identifier string                  `json:"identifier"`
+	Active       *bool  `json:"active,omitempty"`
+	AuthTypeCode string `json:"auth_type_code"`
+	// Deprecated:
+	Code *string `json:"code,omitempty"`
+	Id   string  `json:"id"`
+	// Deprecated:
+	Identifier *string                 `json:"identifier,omitempty"`
 	Params     *map[string]interface{} `json:"params"`
-	Unverified *bool                   `json:"unverified,omitempty"`
+}
+
+// AccountIdentifier defines model for AccountIdentifier.
+type AccountIdentifier struct {
+	AccountAuthTypeId *string `json:"account_auth_type_id"`
+	Code              string  `json:"code"`
+	Id                string  `json:"id"`
+	Identifier        string  `json:"identifier"`
+	Linked            bool    `json:"linked"`
+	Sensitive         bool    `json:"sensitive"`
+	Verified          bool    `json:"verified"`
 }
 
 // AdminToken defines model for AdminToken.
@@ -284,6 +318,13 @@ type ApplicationType struct {
 	Versions   *[]string `json:"versions,omitempty"`
 }
 
+// AuthConfigData defines model for AuthConfigData.
+type AuthConfigData struct {
+	EmailShouldVerify   *bool `json:"email_should_verify"`
+	EmailVerifyExpiry   *int  `json:"email_verify_expiry"`
+	EmailVerifyWaitTime *int  `json:"email_verify_wait_time"`
+}
+
 // AuthServiceReg Service registration record used for auth
 type AuthServiceReg struct {
 	Host             string  `json:"host"`
@@ -294,7 +335,7 @@ type AuthServiceReg struct {
 
 // AuthType defines model for AuthType.
 type AuthType struct {
-	// Code username or email or phone or illinois_oidc etc
+	// Code passowrd or code or webauthn or illinois_oidc etc
 	Code        string  `json:"code"`
 	Description string  `json:"description"`
 	Id          *string `json:"id,omitempty"`
@@ -356,20 +397,22 @@ type Follow struct {
 
 // IdentityProviderSettings defines model for IdentityProviderSettings.
 type IdentityProviderSettings struct {
-	AlwaysSyncProfile   *bool              `json:"always_sync_profile,omitempty"`
-	EmailField          *string            `json:"email_field,omitempty"`
-	ExternalIdFields    *map[string]string `json:"external_id_fields"`
-	FirstNameField      *string            `json:"first_name_field,omitempty"`
-	Groups              *map[string]string `json:"groups"`
-	GroupsField         *string            `json:"groups_field,omitempty"`
-	IdentityBbBaseUrl   *string            `json:"identity_bb_base_url,omitempty"`
-	IdentityProviderId  string             `json:"identity_provider_id"`
-	LastNameField       *string            `json:"last_name_field,omitempty"`
-	MiddleNameField     *string            `json:"middle_name_field,omitempty"`
-	Roles               *map[string]string `json:"roles"`
-	RolesField          *string            `json:"roles_field,omitempty"`
-	UserIdentifierField string             `json:"user_identifier_field"`
-	UserSpecificFields  *[]string          `json:"user_specific_fields"`
+	AlwaysSyncProfile    *bool              `json:"always_sync_profile,omitempty"`
+	EmailField           *string            `json:"email_field,omitempty"`
+	ExternalIdFields     *map[string]string `json:"external_id_fields"`
+	FirstNameField       *string            `json:"first_name_field,omitempty"`
+	Groups               *map[string]string `json:"groups"`
+	GroupsField          *string            `json:"groups_field,omitempty"`
+	IdentityBbBaseUrl    *string            `json:"identity_bb_base_url,omitempty"`
+	IdentityProviderId   string             `json:"identity_provider_id"`
+	IsEmailVerified      *bool              `json:"is_email_verified,omitempty"`
+	LastNameField        *string            `json:"last_name_field,omitempty"`
+	MiddleNameField      *string            `json:"middle_name_field,omitempty"`
+	Roles                *map[string]string `json:"roles"`
+	RolesField           *string            `json:"roles_field,omitempty"`
+	SensitiveExternalIds *[]string          `json:"sensitive_external_ids"`
+	UserIdentifierField  string             `json:"user_identifier_field"`
+	UserSpecificFields   *[]string          `json:"user_specific_fields"`
 }
 
 // InactiveExpirePolicy defines model for InactiveExpirePolicy.
@@ -454,24 +497,22 @@ type JWKS struct {
 
 // LoginSession defines model for LoginSession.
 type LoginSession struct {
-	AccountAuthTypeId         *string `json:"account_auth_type_id,omitempty"`
-	AccountAuthTypeIdentifier *string `json:"account_auth_type_identifier,omitempty"`
-	Anonymous                 *bool   `json:"anonymous,omitempty"`
-	AppOrgId                  *string `json:"app_org_id,omitempty"`
-	AppTypeId                 *string `json:"app_type_id,omitempty"`
-	AppTypeIdentifier         *string `json:"app_type_identifier,omitempty"`
-	AuthTypeCode              *string `json:"auth_type_code,omitempty"`
-	DateCreated               *string `json:"date_created,omitempty"`
-	DateRefreshed             *string `json:"date_refreshed"`
-	DateUpdated               *string `json:"date_updated"`
-	DeviceId                  *string `json:"device_id"`
-	Id                        *string `json:"id,omitempty"`
-	Identifier                *string `json:"identifier,omitempty"`
-	IpAddress                 *string `json:"ip_address,omitempty"`
-	MfaAttempts               *int    `json:"mfa_attempts,omitempty"`
-	RefreshTokensCount        *int    `json:"refresh_tokens_count,omitempty"`
-	State                     *string `json:"state,omitempty"`
-	StateExpires              *string `json:"state_expires"`
+	Anonymous          *bool   `json:"anonymous,omitempty"`
+	AppOrgId           *string `json:"app_org_id,omitempty"`
+	AppTypeId          *string `json:"app_type_id,omitempty"`
+	AppTypeIdentifier  *string `json:"app_type_identifier,omitempty"`
+	AuthTypeCode       *string `json:"auth_type_code,omitempty"`
+	DateCreated        *string `json:"date_created,omitempty"`
+	DateRefreshed      *string `json:"date_refreshed"`
+	DateUpdated        *string `json:"date_updated"`
+	DeviceId           *string `json:"device_id"`
+	Id                 *string `json:"id,omitempty"`
+	Identifier         *string `json:"identifier,omitempty"`
+	IpAddress          *string `json:"ip_address,omitempty"`
+	MfaAttempts        *int    `json:"mfa_attempts,omitempty"`
+	RefreshTokensCount *int    `json:"refresh_tokens_count,omitempty"`
+	State              *string `json:"state,omitempty"`
+	StateExpires       *string `json:"state_expires"`
 }
 
 // LoginSessionSettings defines model for LoginSessionSettings.
@@ -515,10 +556,10 @@ type PartialAccount struct {
 	AuthTypes     []AccountAuthType       `json:"auth_types"`
 	DateCreated   *string                 `json:"date_created,omitempty"`
 	DateUpdated   *string                 `json:"date_updated"`
-	ExternalIds   *map[string]interface{} `json:"external_ids"`
 	FirstName     string                  `json:"first_name"`
 	Groups        []AppOrgGroup           `json:"groups"`
 	Id            *string                 `json:"id,omitempty"`
+	Identifiers   []AccountIdentifier     `json:"identifiers"`
 	LastName      string                  `json:"last_name"`
 	OrgId         string                  `json:"org_id"`
 	Params        *map[string]interface{} `json:"params"`
@@ -528,8 +569,9 @@ type PartialAccount struct {
 	Scopes        *[]string               `json:"scopes,omitempty"`
 	System        *bool                   `json:"system,omitempty"`
 	SystemConfigs *map[string]interface{} `json:"system_configs"`
-	Username      *string                 `json:"username,omitempty"`
-	Verified      *bool                   `json:"verified,omitempty"`
+	// Deprecated:
+	Username *string `json:"username"`
+	Verified *bool   `json:"verified,omitempty"`
 }
 
 // Permission defines model for Permission.
@@ -555,13 +597,15 @@ type PrivacyNullable struct {
 
 // Profile defines model for Profile.
 type Profile struct {
-	Address                *string                 `json:"address"`
-	BirthYear              *int                    `json:"birth_year"`
-	Country                *string                 `json:"country"`
-	Email                  *string                 `json:"email"`
-	FirstName              *string                 `json:"first_name,omitempty"`
-	Id                     *string                 `json:"id,omitempty"`
-	LastName               *string                 `json:"last_name,omitempty"`
+	Address   *string `json:"address"`
+	BirthYear *int    `json:"birth_year"`
+	Country   *string `json:"country"`
+	// Deprecated:
+	Email     *string `json:"email"`
+	FirstName *string `json:"first_name,omitempty"`
+	Id        *string `json:"id,omitempty"`
+	LastName  *string `json:"last_name,omitempty"`
+	// Deprecated:
 	Phone                  *string                 `json:"phone"`
 	PhotoUrl               *string                 `json:"photo_url,omitempty"`
 	State                  *string                 `json:"state"`
@@ -571,12 +615,14 @@ type Profile struct {
 
 // ProfileNullable defines model for ProfileNullable.
 type ProfileNullable struct {
-	Address                *string                 `json:"address"`
-	BirthYear              *int                    `json:"birth_year"`
-	Country                *string                 `json:"country"`
-	Email                  *string                 `json:"email"`
-	FirstName              *string                 `json:"first_name"`
-	LastName               *string                 `json:"last_name"`
+	Address   *string `json:"address"`
+	BirthYear *int    `json:"birth_year"`
+	Country   *string `json:"country"`
+	// Deprecated:
+	Email     *string `json:"email"`
+	FirstName *string `json:"first_name"`
+	LastName  *string `json:"last_name"`
+	// Deprecated:
 	Phone                  *string                 `json:"phone"`
 	PhotoUrl               *string                 `json:"photo_url"`
 	State                  *string                 `json:"state"`
@@ -755,7 +801,7 @@ type AdminReqVerified struct {
 type ServicesReqAccountAuthTypeLink struct {
 	AppTypeIdentifier string                                 `json:"app_type_identifier"`
 	AuthType          ServicesReqAccountAuthTypeLinkAuthType `json:"auth_type"`
-	Creds             ServicesReqAccountAuthTypeLink_Creds   `json:"creds"`
+	Creds             *ServicesReqAccountAuthTypeLink_Creds  `json:"creds,omitempty"`
 	Params            *ServicesReqAccountAuthTypeLink_Params `json:"params,omitempty"`
 }
 
@@ -774,13 +820,24 @@ type ServicesReqAccountAuthTypeLink_Params struct {
 
 // ServicesReqAccountAuthTypeUnlink defines model for _services_req_account_auth-type-unlink.
 type ServicesReqAccountAuthTypeUnlink struct {
-	AppTypeIdentifier string                                   `json:"app_type_identifier"`
-	AuthType          ServicesReqAccountAuthTypeUnlinkAuthType `json:"auth_type"`
-	Identifier        string                                   `json:"identifier"`
+	AuthType   *ServicesReqAccountAuthTypeUnlinkAuthType `json:"auth_type,omitempty"`
+	Id         *string                                   `json:"id,omitempty"`
+	Identifier *string                                   `json:"identifier,omitempty"`
 }
 
 // ServicesReqAccountAuthTypeUnlinkAuthType defines model for ServicesReqAccountAuthTypeUnlink.AuthType.
 type ServicesReqAccountAuthTypeUnlinkAuthType string
+
+// ServicesReqAccountIdentifierLink defines model for _services_req_account_identifier-link.
+type ServicesReqAccountIdentifierLink struct {
+	// Identifier Allowed identifier types
+	Identifier SharedReqIdentifiers `json:"identifier"`
+}
+
+// ServicesReqAccountIdentifierUnlink defines model for _services_req_account_identifier-unlink.
+type ServicesReqAccountIdentifierUnlink struct {
+	Id string `json:"id"`
+}
 
 // ServicesReqAuthorizeService defines model for _services_req_authorize-service.
 type ServicesReqAuthorizeService struct {
@@ -803,27 +860,20 @@ type ServicesReqCredentialForgotComplete_Params struct {
 
 // ServicesReqCredentialForgotInitiate defines model for _services_req_credential_forgot_initiate.
 type ServicesReqCredentialForgotInitiate struct {
-	ApiKey            string                                      `json:"api_key"`
-	AppTypeIdentifier string                                      `json:"app_type_identifier"`
-	AuthType          ServicesReqCredentialForgotInitiateAuthType `json:"auth_type"`
-	Identifier        string                                      `json:"identifier"`
-	OrgId             string                                      `json:"org_id"`
+	ApiKey            string                                         `json:"api_key"`
+	AppTypeIdentifier string                                         `json:"app_type_identifier"`
+	AuthType          ServicesReqCredentialForgotInitiateAuthType    `json:"auth_type"`
+	Identifier        ServicesReqCredentialForgotInitiate_Identifier `json:"identifier"`
+	OrgId             string                                         `json:"org_id"`
 }
 
 // ServicesReqCredentialForgotInitiateAuthType defines model for ServicesReqCredentialForgotInitiate.AuthType.
 type ServicesReqCredentialForgotInitiateAuthType string
 
-// ServicesReqCredentialSendVerify defines model for _services_req_credential_send-verify.
-type ServicesReqCredentialSendVerify struct {
-	ApiKey            string                                  `json:"api_key"`
-	AppTypeIdentifier string                                  `json:"app_type_identifier"`
-	AuthType          ServicesReqCredentialSendVerifyAuthType `json:"auth_type"`
-	Identifier        string                                  `json:"identifier"`
-	OrgId             string                                  `json:"org_id"`
+// ServicesReqCredentialForgotInitiate_Identifier defines model for ServicesReqCredentialForgotInitiate.Identifier.
+type ServicesReqCredentialForgotInitiate_Identifier struct {
+	union json.RawMessage
 }
-
-// ServicesReqCredentialSendVerifyAuthType defines model for ServicesReqCredentialSendVerify.AuthType.
-type ServicesReqCredentialSendVerifyAuthType string
 
 // ServicesReqCredentialUpdate defines model for _services_req_credential_update.
 type ServicesReqCredentialUpdate struct {
@@ -833,6 +883,23 @@ type ServicesReqCredentialUpdate struct {
 
 // ServicesReqCredentialUpdate_Params defines model for ServicesReqCredentialUpdate.Params.
 type ServicesReqCredentialUpdate_Params struct {
+	union json.RawMessage
+}
+
+// ServicesReqIdentifierSendVerify defines model for _services_req_identifier_send-verify.
+type ServicesReqIdentifierSendVerify struct {
+	ApiKey            string                                     `json:"api_key"`
+	AppTypeIdentifier string                                     `json:"app_type_identifier"`
+	AuthType          *ServicesReqIdentifierSendVerifyAuthType   `json:"auth_type,omitempty"`
+	Identifier        ServicesReqIdentifierSendVerify_Identifier `json:"identifier"`
+	OrgId             string                                     `json:"org_id"`
+}
+
+// ServicesReqIdentifierSendVerifyAuthType defines model for ServicesReqIdentifierSendVerify.AuthType.
+type ServicesReqIdentifierSendVerifyAuthType string
+
+// ServicesReqIdentifierSendVerify_Identifier defines model for ServicesReqIdentifierSendVerify.Identifier.
+type ServicesReqIdentifierSendVerify_Identifier struct {
 	union json.RawMessage
 }
 
@@ -875,8 +942,15 @@ type ServicesReqServiceAccountsParamsAuthType string
 
 // ServicesResAccountAuthTypeLink defines model for _services_res_account_auth-type-link.
 type ServicesResAccountAuthTypeLink struct {
-	AuthTypes []AccountAuthType `json:"auth_types"`
-	Message   *string           `json:"message"`
+	AuthTypes   []AccountAuthType    `json:"auth_types"`
+	Identifiers *[]AccountIdentifier `json:"identifiers,omitempty"`
+	Message     *string              `json:"message"`
+}
+
+// ServicesResAccountIdentifierLink defines model for _services_res_account_identifier-link.
+type ServicesResAccountIdentifierLink struct {
+	Identifiers []AccountIdentifier `json:"identifiers"`
+	Message     *string             `json:"message"`
 }
 
 // ServicesResAuthorizeService defines model for _services_res_authorize-service.
@@ -908,11 +982,16 @@ type ServicesServiceAccountsCredsStaticToken struct {
 
 // SharedReqAccountCheck defines model for _shared_req_AccountCheck.
 type SharedReqAccountCheck struct {
-	ApiKey            string                        `json:"api_key"`
-	AppTypeIdentifier string                        `json:"app_type_identifier"`
-	AuthType          SharedReqAccountCheckAuthType `json:"auth_type"`
-	OrgId             string                        `json:"org_id"`
-	UserIdentifier    string                        `json:"user_identifier"`
+	ApiKey            string `json:"api_key"`
+	AppTypeIdentifier string `json:"app_type_identifier"`
+	// Deprecated:
+	AuthType *SharedReqAccountCheckAuthType `json:"auth_type,omitempty"`
+
+	// Identifier Allowed identifier types
+	Identifier *SharedReqIdentifiers `json:"identifier,omitempty"`
+	OrgId      string                `json:"org_id"`
+	// Deprecated:
+	UserIdentifier *string `json:"user_identifier,omitempty"`
 }
 
 // SharedReqAccountCheckAuthType defines model for SharedReqAccountCheck.AuthType.
@@ -920,60 +999,84 @@ type SharedReqAccountCheckAuthType string
 
 // SharedReqCreateAccount defines model for _shared_req_CreateAccount.
 type SharedReqCreateAccount struct {
-	AuthType    SharedReqCreateAccountAuthType `json:"auth_type"`
-	GroupIds    *[]string                      `json:"group_ids,omitempty"`
-	Identifier  string                         `json:"identifier"`
-	Permissions *[]string                      `json:"permissions,omitempty"`
-	Privacy     *PrivacyNullable               `json:"privacy"`
-	Profile     *ProfileNullable               `json:"profile"`
-	RoleIds     *[]string                      `json:"role_ids,omitempty"`
-	Scopes      *[]string                      `json:"scopes,omitempty"`
-	Username    *string                        `json:"username"`
+	AuthType SharedReqCreateAccountAuthType `json:"auth_type"`
+	GroupIds *[]string                      `json:"group_ids,omitempty"`
+
+	// Identifier Allowed identifier types
+	Identifier  SharedReqIdentifiers `json:"identifier"`
+	Permissions *[]string            `json:"permissions,omitempty"`
+	Privacy     *PrivacyNullable     `json:"privacy"`
+	Profile     *ProfileNullable     `json:"profile"`
+	RoleIds     *[]string            `json:"role_ids,omitempty"`
+	Scopes      *[]string            `json:"scopes,omitempty"`
 }
 
 // SharedReqCreateAccountAuthType defines model for SharedReqCreateAccount.AuthType.
 type SharedReqCreateAccountAuthType string
 
-// SharedReqCredsAPIKey Auth login creds for auth_type="anonymous"
-type SharedReqCredsAPIKey struct {
+// SharedReqCredsAnonymous Auth login creds for auth_type="anonymous"
+type SharedReqCredsAnonymous struct {
 	AnonymousId *string `json:"anonymous_id,omitempty"`
 }
 
-// SharedReqCredsEmail Auth login creds for auth_type="email"
-type SharedReqCredsEmail struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+// SharedReqCredsCode defines model for _shared_req_CredsCode.
+type SharedReqCredsCode struct {
+	Code                 *string           `json:"code,omitempty"`
+	Email                *string           `json:"email,omitempty"`
+	Phone                *string           `json:"phone,omitempty"`
+	Username             *string           `json:"username,omitempty"`
+	AdditionalProperties map[string]string `json:"-"`
 }
+
+// SharedReqCredsNone Auth login request creds for unlisted auth_types (None)
+type SharedReqCredsNone = map[string]interface{}
 
 // SharedReqCredsOIDC Auth login creds for auth_type="oidc" (or variants)
 //   - full redirect URI received from OIDC provider
 type SharedReqCredsOIDC = string
 
-// SharedReqCredsTwilioPhone Auth login creds for auth_type="twilio_phone"
-type SharedReqCredsTwilioPhone struct {
-	Code  *string `json:"code,omitempty"`
-	Phone string  `json:"phone"`
+// SharedReqCredsPassword defines model for _shared_req_CredsPassword.
+type SharedReqCredsPassword struct {
+	Email                *string           `json:"email,omitempty"`
+	Password             string            `json:"password"`
+	Phone                *string           `json:"phone,omitempty"`
+	Username             *string           `json:"username,omitempty"`
+	AdditionalProperties map[string]string `json:"-"`
 }
 
-// SharedReqCredsUsername Auth login creds for auth_type="username"
-type SharedReqCredsUsername struct {
-	Password string `json:"password"`
-	Username string `json:"username"`
+// SharedReqCredsWebAuthn defines model for _shared_req_CredsWebAuthn.
+type SharedReqCredsWebAuthn struct {
+	Email                *string           `json:"email,omitempty"`
+	Phone                *string           `json:"phone,omitempty"`
+	Response             *string           `json:"response,omitempty"`
+	Username             *string           `json:"username,omitempty"`
+	AdditionalProperties map[string]string `json:"-"`
+}
+
+// SharedReqIdentifierString User identifier string
+type SharedReqIdentifierString = string
+
+// SharedReqIdentifiers Allowed identifier types
+type SharedReqIdentifiers struct {
+	Email                *string           `json:"email,omitempty"`
+	Phone                *string           `json:"phone,omitempty"`
+	Username             *string           `json:"username,omitempty"`
+	AdditionalProperties map[string]string `json:"-"`
 }
 
 // SharedReqLogin defines model for _shared_req_Login.
 type SharedReqLogin struct {
-	ApiKey            string                  `json:"api_key"`
-	AppTypeIdentifier string                  `json:"app_type_identifier"`
-	AuthType          SharedReqLoginAuthType  `json:"auth_type"`
-	Creds             *SharedReqLogin_Creds   `json:"creds,omitempty"`
-	Device            Device                  `json:"device"`
-	OrgId             string                  `json:"org_id"`
-	Params            *SharedReqLogin_Params  `json:"params,omitempty"`
-	Preferences       *map[string]interface{} `json:"preferences"`
-	Privacy           *PrivacyNullable        `json:"privacy"`
-	Profile           *ProfileNullable        `json:"profile"`
-	Username          *string                 `json:"username"`
+	AccountIdentifierId *string                 `json:"account_identifier_id"`
+	ApiKey              string                  `json:"api_key"`
+	AppTypeIdentifier   string                  `json:"app_type_identifier"`
+	AuthType            SharedReqLoginAuthType  `json:"auth_type"`
+	Creds               *SharedReqLogin_Creds   `json:"creds,omitempty"`
+	Device              Device                  `json:"device"`
+	OrgId               string                  `json:"org_id"`
+	Params              *SharedReqLogin_Params  `json:"params,omitempty"`
+	Preferences         *map[string]interface{} `json:"preferences"`
+	Privacy             *PrivacyNullable        `json:"privacy"`
+	Profile             *ProfileNullable        `json:"profile"`
 }
 
 // SharedReqLoginAuthType defines model for SharedReqLogin.AuthType.
@@ -1025,13 +1128,6 @@ type SharedReqMfa struct {
 // SharedReqMfaType defines model for SharedReqMfa.Type.
 type SharedReqMfaType string
 
-// SharedReqParamsEmail Auth login params for auth_type="email"
-type SharedReqParamsEmail struct {
-	// ConfirmPassword This should match the `creds` password field when sign_up=true. This should be verified on the client side as well to reduce invalid requests.
-	ConfirmPassword *string `json:"confirm_password,omitempty"`
-	SignUp          *bool   `json:"sign_up,omitempty"`
-}
-
 // SharedReqParamsNone Auth login request params for unlisted auth_types (None)
 type SharedReqParamsNone = map[string]interface{}
 
@@ -1041,17 +1137,24 @@ type SharedReqParamsOIDC struct {
 	RedirectUri  *string `json:"redirect_uri,omitempty"`
 }
 
-// SharedReqParamsSetEmailCredential defines model for _shared_req_ParamsSetEmailCredential.
-type SharedReqParamsSetEmailCredential struct {
+// SharedReqParamsPassword Auth login params for auth_type="email"
+type SharedReqParamsPassword struct {
+	// ConfirmPassword This should match the `creds` password field when sign_up=true. This should be verified on the client side as well to reduce invalid requests.
+	ConfirmPassword *string `json:"confirm_password,omitempty"`
+	SignUp          *bool   `json:"sign_up,omitempty"`
+}
+
+// SharedReqParamsResetPassword defines model for _shared_req_ParamsResetPassword.
+type SharedReqParamsResetPassword struct {
 	ConfirmPassword string `json:"confirm_password"`
 	NewPassword     string `json:"new_password"`
 }
 
-// SharedReqParamsUsername Auth login params for auth_type="username"
-type SharedReqParamsUsername struct {
-	// ConfirmPassword This should match the `creds` password field when sign_up=true. This should be verified on the client side as well to reduce invalid requests.
-	ConfirmPassword *string `json:"confirm_password,omitempty"`
-	SignUp          *bool   `json:"sign_up,omitempty"`
+// SharedReqParamsWebAuthn Auth login params for auth_type="webauthn"
+type SharedReqParamsWebAuthn struct {
+	// DisplayName User's account name for display purposes
+	DisplayName *string `json:"display_name,omitempty"`
+	SignUp      *bool   `json:"sign_up,omitempty"`
 }
 
 // SharedReqRefresh defines model for _shared_req_Refresh.
@@ -1062,12 +1165,14 @@ type SharedReqRefresh struct {
 
 // SharedReqUpdateAccount defines model for _shared_req_UpdateAccount.
 type SharedReqUpdateAccount struct {
-	AuthType    SharedReqUpdateAccountAuthType `json:"auth_type"`
-	GroupIds    *[]string                      `json:"group_ids,omitempty"`
-	Identifier  string                         `json:"identifier"`
-	Permissions *[]string                      `json:"permissions,omitempty"`
-	RoleIds     *[]string                      `json:"role_ids,omitempty"`
-	Scopes      *[]string                      `json:"scopes,omitempty"`
+	AuthType SharedReqUpdateAccountAuthType `json:"auth_type"`
+	GroupIds *[]string                      `json:"group_ids,omitempty"`
+
+	// Identifier Allowed identifier types
+	Identifier  SharedReqIdentifiers `json:"identifier"`
+	Permissions *[]string            `json:"permissions,omitempty"`
+	RoleIds     *[]string            `json:"role_ids,omitempty"`
+	Scopes      *[]string            `json:"scopes,omitempty"`
 }
 
 // SharedReqUpdateAccountAuthType defines model for SharedReqUpdateAccount.AuthType.
@@ -1135,8 +1240,8 @@ type SharedResMfa struct {
 	Verified *bool                   `json:"verified,omitempty"`
 }
 
-// SharedResParamsAPIKey Auth login response params for auth_type="anonymous"
-type SharedResParamsAPIKey struct {
+// SharedResParamsAnonymous Auth login response params for auth_type="anonymous"
+type SharedResParamsAnonymous struct {
 	AnonymousId *string `json:"anonymous_id,omitempty"`
 }
 
@@ -1179,6 +1284,12 @@ type SharedResRokwireToken struct {
 
 // SharedResRokwireTokenTokenType The type of the provided tokens to be specified when they are sent in the "Authorization" header
 type SharedResRokwireTokenTokenType string
+
+// SharedResSignInOptions defines model for _shared_res_SignInOptions.
+type SharedResSignInOptions struct {
+	AuthTypes   []AccountAuthType   `json:"auth_types"`
+	Identifiers []AccountIdentifier `json:"identifiers"`
+}
 
 // SystemReqUpdateServiceAccount defines model for _system_req_update_service-account.
 type SystemReqUpdateServiceAccount struct {
@@ -1410,9 +1521,9 @@ type GetServicesAccountsPublicParams struct {
 	FollowerId *string `form:"follower-id,omitempty" json:"follower-id,omitempty"`
 }
 
-// GetServicesAuthCredentialVerifyParams defines parameters for GetServicesAuthCredentialVerify.
-type GetServicesAuthCredentialVerifyParams struct {
-	// Id Credential ID
+// GetServicesAuthIdentifierVerifyParams defines parameters for GetServicesAuthIdentifierVerify.
+type GetServicesAuthIdentifierVerifyParams struct {
+	// Id Account identifier ID
 	Id string `form:"id" json:"id"`
 
 	// Code Verification code
@@ -1595,9 +1706,9 @@ type GetUiCredentialResetParams struct {
 	Code string `form:"code" json:"code"`
 }
 
-// GetUiCredentialVerifyParams defines parameters for GetUiCredentialVerify.
-type GetUiCredentialVerifyParams struct {
-	// Id Credential ID
+// GetUiIdentifierVerifyParams defines parameters for GetUiIdentifierVerify.
+type GetUiIdentifierVerifyParams struct {
+	// Id Identifier ID
 	Id string `form:"id" json:"id"`
 
 	// Code Verification code
@@ -1760,6 +1871,15 @@ type PostServicesAuthAccountCanSignInJSONRequestBody = SharedReqAccountCheck
 // PostServicesAuthAccountExistsJSONRequestBody defines body for PostServicesAuthAccountExists for application/json ContentType.
 type PostServicesAuthAccountExistsJSONRequestBody = SharedReqAccountCheck
 
+// DeleteServicesAuthAccountIdentifierLinkJSONRequestBody defines body for DeleteServicesAuthAccountIdentifierLink for application/json ContentType.
+type DeleteServicesAuthAccountIdentifierLinkJSONRequestBody = ServicesReqAccountIdentifierUnlink
+
+// PostServicesAuthAccountIdentifierLinkJSONRequestBody defines body for PostServicesAuthAccountIdentifierLink for application/json ContentType.
+type PostServicesAuthAccountIdentifierLinkJSONRequestBody = ServicesReqAccountIdentifierLink
+
+// PostServicesAuthAccountSignInOptionsJSONRequestBody defines body for PostServicesAuthAccountSignInOptions for application/json ContentType.
+type PostServicesAuthAccountSignInOptionsJSONRequestBody = SharedReqAccountCheck
+
 // PostServicesAuthAuthorizeServiceJSONRequestBody defines body for PostServicesAuthAuthorizeService for application/json ContentType.
 type PostServicesAuthAuthorizeServiceJSONRequestBody = ServicesReqAuthorizeService
 
@@ -1770,10 +1890,13 @@ type PostServicesAuthCredentialForgotCompleteJSONRequestBody = ServicesReqCreden
 type PostServicesAuthCredentialForgotInitiateJSONRequestBody = ServicesReqCredentialForgotInitiate
 
 // PostServicesAuthCredentialSendVerifyJSONRequestBody defines body for PostServicesAuthCredentialSendVerify for application/json ContentType.
-type PostServicesAuthCredentialSendVerifyJSONRequestBody = ServicesReqCredentialSendVerify
+type PostServicesAuthCredentialSendVerifyJSONRequestBody = ServicesReqIdentifierSendVerify
 
 // PostServicesAuthCredentialUpdateJSONRequestBody defines body for PostServicesAuthCredentialUpdate for application/json ContentType.
 type PostServicesAuthCredentialUpdateJSONRequestBody = ServicesReqCredentialUpdate
+
+// PostServicesAuthIdentifierSendVerifyJSONRequestBody defines body for PostServicesAuthIdentifierSendVerify for application/json ContentType.
+type PostServicesAuthIdentifierSendVerifyJSONRequestBody = ServicesReqIdentifierSendVerify
 
 // PostServicesAuthLoginJSONRequestBody defines body for PostServicesAuthLogin for application/json ContentType.
 type PostServicesAuthLoginJSONRequestBody = SharedReqLogin
@@ -1859,6 +1982,441 @@ type PostTpsAccountsCountJSONRequestBody = PostTpsAccountsCountJSONBody
 // PostTpsServiceAccountIdJSONRequestBody defines body for PostTpsServiceAccountId for application/json ContentType.
 type PostTpsServiceAccountIdJSONRequestBody = ServicesReqServiceAccountsParams
 
+// Getter for additional properties for SharedReqCredsCode. Returns the specified
+// element and whether it was found
+func (a SharedReqCredsCode) Get(fieldName string) (value string, found bool) {
+	if a.AdditionalProperties != nil {
+		value, found = a.AdditionalProperties[fieldName]
+	}
+	return
+}
+
+// Setter for additional properties for SharedReqCredsCode
+func (a *SharedReqCredsCode) Set(fieldName string, value string) {
+	if a.AdditionalProperties == nil {
+		a.AdditionalProperties = make(map[string]string)
+	}
+	a.AdditionalProperties[fieldName] = value
+}
+
+// Override default JSON handling for SharedReqCredsCode to handle AdditionalProperties
+func (a *SharedReqCredsCode) UnmarshalJSON(b []byte) error {
+	object := make(map[string]json.RawMessage)
+	err := json.Unmarshal(b, &object)
+	if err != nil {
+		return err
+	}
+
+	if raw, found := object["code"]; found {
+		err = json.Unmarshal(raw, &a.Code)
+		if err != nil {
+			return fmt.Errorf("error reading 'code': %w", err)
+		}
+		delete(object, "code")
+	}
+
+	if raw, found := object["email"]; found {
+		err = json.Unmarshal(raw, &a.Email)
+		if err != nil {
+			return fmt.Errorf("error reading 'email': %w", err)
+		}
+		delete(object, "email")
+	}
+
+	if raw, found := object["phone"]; found {
+		err = json.Unmarshal(raw, &a.Phone)
+		if err != nil {
+			return fmt.Errorf("error reading 'phone': %w", err)
+		}
+		delete(object, "phone")
+	}
+
+	if raw, found := object["username"]; found {
+		err = json.Unmarshal(raw, &a.Username)
+		if err != nil {
+			return fmt.Errorf("error reading 'username': %w", err)
+		}
+		delete(object, "username")
+	}
+
+	if len(object) != 0 {
+		a.AdditionalProperties = make(map[string]string)
+		for fieldName, fieldBuf := range object {
+			var fieldVal string
+			err := json.Unmarshal(fieldBuf, &fieldVal)
+			if err != nil {
+				return fmt.Errorf("error unmarshaling field %s: %w", fieldName, err)
+			}
+			a.AdditionalProperties[fieldName] = fieldVal
+		}
+	}
+	return nil
+}
+
+// Override default JSON handling for SharedReqCredsCode to handle AdditionalProperties
+func (a SharedReqCredsCode) MarshalJSON() ([]byte, error) {
+	var err error
+	object := make(map[string]json.RawMessage)
+
+	if a.Code != nil {
+		object["code"], err = json.Marshal(a.Code)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'code': %w", err)
+		}
+	}
+
+	if a.Email != nil {
+		object["email"], err = json.Marshal(a.Email)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'email': %w", err)
+		}
+	}
+
+	if a.Phone != nil {
+		object["phone"], err = json.Marshal(a.Phone)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'phone': %w", err)
+		}
+	}
+
+	if a.Username != nil {
+		object["username"], err = json.Marshal(a.Username)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'username': %w", err)
+		}
+	}
+
+	for fieldName, field := range a.AdditionalProperties {
+		object[fieldName], err = json.Marshal(field)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling '%s': %w", fieldName, err)
+		}
+	}
+	return json.Marshal(object)
+}
+
+// Getter for additional properties for SharedReqCredsPassword. Returns the specified
+// element and whether it was found
+func (a SharedReqCredsPassword) Get(fieldName string) (value string, found bool) {
+	if a.AdditionalProperties != nil {
+		value, found = a.AdditionalProperties[fieldName]
+	}
+	return
+}
+
+// Setter for additional properties for SharedReqCredsPassword
+func (a *SharedReqCredsPassword) Set(fieldName string, value string) {
+	if a.AdditionalProperties == nil {
+		a.AdditionalProperties = make(map[string]string)
+	}
+	a.AdditionalProperties[fieldName] = value
+}
+
+// Override default JSON handling for SharedReqCredsPassword to handle AdditionalProperties
+func (a *SharedReqCredsPassword) UnmarshalJSON(b []byte) error {
+	object := make(map[string]json.RawMessage)
+	err := json.Unmarshal(b, &object)
+	if err != nil {
+		return err
+	}
+
+	if raw, found := object["email"]; found {
+		err = json.Unmarshal(raw, &a.Email)
+		if err != nil {
+			return fmt.Errorf("error reading 'email': %w", err)
+		}
+		delete(object, "email")
+	}
+
+	if raw, found := object["password"]; found {
+		err = json.Unmarshal(raw, &a.Password)
+		if err != nil {
+			return fmt.Errorf("error reading 'password': %w", err)
+		}
+		delete(object, "password")
+	}
+
+	if raw, found := object["phone"]; found {
+		err = json.Unmarshal(raw, &a.Phone)
+		if err != nil {
+			return fmt.Errorf("error reading 'phone': %w", err)
+		}
+		delete(object, "phone")
+	}
+
+	if raw, found := object["username"]; found {
+		err = json.Unmarshal(raw, &a.Username)
+		if err != nil {
+			return fmt.Errorf("error reading 'username': %w", err)
+		}
+		delete(object, "username")
+	}
+
+	if len(object) != 0 {
+		a.AdditionalProperties = make(map[string]string)
+		for fieldName, fieldBuf := range object {
+			var fieldVal string
+			err := json.Unmarshal(fieldBuf, &fieldVal)
+			if err != nil {
+				return fmt.Errorf("error unmarshaling field %s: %w", fieldName, err)
+			}
+			a.AdditionalProperties[fieldName] = fieldVal
+		}
+	}
+	return nil
+}
+
+// Override default JSON handling for SharedReqCredsPassword to handle AdditionalProperties
+func (a SharedReqCredsPassword) MarshalJSON() ([]byte, error) {
+	var err error
+	object := make(map[string]json.RawMessage)
+
+	if a.Email != nil {
+		object["email"], err = json.Marshal(a.Email)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'email': %w", err)
+		}
+	}
+
+	object["password"], err = json.Marshal(a.Password)
+	if err != nil {
+		return nil, fmt.Errorf("error marshaling 'password': %w", err)
+	}
+
+	if a.Phone != nil {
+		object["phone"], err = json.Marshal(a.Phone)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'phone': %w", err)
+		}
+	}
+
+	if a.Username != nil {
+		object["username"], err = json.Marshal(a.Username)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'username': %w", err)
+		}
+	}
+
+	for fieldName, field := range a.AdditionalProperties {
+		object[fieldName], err = json.Marshal(field)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling '%s': %w", fieldName, err)
+		}
+	}
+	return json.Marshal(object)
+}
+
+// Getter for additional properties for SharedReqCredsWebAuthn. Returns the specified
+// element and whether it was found
+func (a SharedReqCredsWebAuthn) Get(fieldName string) (value string, found bool) {
+	if a.AdditionalProperties != nil {
+		value, found = a.AdditionalProperties[fieldName]
+	}
+	return
+}
+
+// Setter for additional properties for SharedReqCredsWebAuthn
+func (a *SharedReqCredsWebAuthn) Set(fieldName string, value string) {
+	if a.AdditionalProperties == nil {
+		a.AdditionalProperties = make(map[string]string)
+	}
+	a.AdditionalProperties[fieldName] = value
+}
+
+// Override default JSON handling for SharedReqCredsWebAuthn to handle AdditionalProperties
+func (a *SharedReqCredsWebAuthn) UnmarshalJSON(b []byte) error {
+	object := make(map[string]json.RawMessage)
+	err := json.Unmarshal(b, &object)
+	if err != nil {
+		return err
+	}
+
+	if raw, found := object["email"]; found {
+		err = json.Unmarshal(raw, &a.Email)
+		if err != nil {
+			return fmt.Errorf("error reading 'email': %w", err)
+		}
+		delete(object, "email")
+	}
+
+	if raw, found := object["phone"]; found {
+		err = json.Unmarshal(raw, &a.Phone)
+		if err != nil {
+			return fmt.Errorf("error reading 'phone': %w", err)
+		}
+		delete(object, "phone")
+	}
+
+	if raw, found := object["response"]; found {
+		err = json.Unmarshal(raw, &a.Response)
+		if err != nil {
+			return fmt.Errorf("error reading 'response': %w", err)
+		}
+		delete(object, "response")
+	}
+
+	if raw, found := object["username"]; found {
+		err = json.Unmarshal(raw, &a.Username)
+		if err != nil {
+			return fmt.Errorf("error reading 'username': %w", err)
+		}
+		delete(object, "username")
+	}
+
+	if len(object) != 0 {
+		a.AdditionalProperties = make(map[string]string)
+		for fieldName, fieldBuf := range object {
+			var fieldVal string
+			err := json.Unmarshal(fieldBuf, &fieldVal)
+			if err != nil {
+				return fmt.Errorf("error unmarshaling field %s: %w", fieldName, err)
+			}
+			a.AdditionalProperties[fieldName] = fieldVal
+		}
+	}
+	return nil
+}
+
+// Override default JSON handling for SharedReqCredsWebAuthn to handle AdditionalProperties
+func (a SharedReqCredsWebAuthn) MarshalJSON() ([]byte, error) {
+	var err error
+	object := make(map[string]json.RawMessage)
+
+	if a.Email != nil {
+		object["email"], err = json.Marshal(a.Email)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'email': %w", err)
+		}
+	}
+
+	if a.Phone != nil {
+		object["phone"], err = json.Marshal(a.Phone)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'phone': %w", err)
+		}
+	}
+
+	if a.Response != nil {
+		object["response"], err = json.Marshal(a.Response)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'response': %w", err)
+		}
+	}
+
+	if a.Username != nil {
+		object["username"], err = json.Marshal(a.Username)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'username': %w", err)
+		}
+	}
+
+	for fieldName, field := range a.AdditionalProperties {
+		object[fieldName], err = json.Marshal(field)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling '%s': %w", fieldName, err)
+		}
+	}
+	return json.Marshal(object)
+}
+
+// Getter for additional properties for SharedReqIdentifiers. Returns the specified
+// element and whether it was found
+func (a SharedReqIdentifiers) Get(fieldName string) (value string, found bool) {
+	if a.AdditionalProperties != nil {
+		value, found = a.AdditionalProperties[fieldName]
+	}
+	return
+}
+
+// Setter for additional properties for SharedReqIdentifiers
+func (a *SharedReqIdentifiers) Set(fieldName string, value string) {
+	if a.AdditionalProperties == nil {
+		a.AdditionalProperties = make(map[string]string)
+	}
+	a.AdditionalProperties[fieldName] = value
+}
+
+// Override default JSON handling for SharedReqIdentifiers to handle AdditionalProperties
+func (a *SharedReqIdentifiers) UnmarshalJSON(b []byte) error {
+	object := make(map[string]json.RawMessage)
+	err := json.Unmarshal(b, &object)
+	if err != nil {
+		return err
+	}
+
+	if raw, found := object["email"]; found {
+		err = json.Unmarshal(raw, &a.Email)
+		if err != nil {
+			return fmt.Errorf("error reading 'email': %w", err)
+		}
+		delete(object, "email")
+	}
+
+	if raw, found := object["phone"]; found {
+		err = json.Unmarshal(raw, &a.Phone)
+		if err != nil {
+			return fmt.Errorf("error reading 'phone': %w", err)
+		}
+		delete(object, "phone")
+	}
+
+	if raw, found := object["username"]; found {
+		err = json.Unmarshal(raw, &a.Username)
+		if err != nil {
+			return fmt.Errorf("error reading 'username': %w", err)
+		}
+		delete(object, "username")
+	}
+
+	if len(object) != 0 {
+		a.AdditionalProperties = make(map[string]string)
+		for fieldName, fieldBuf := range object {
+			var fieldVal string
+			err := json.Unmarshal(fieldBuf, &fieldVal)
+			if err != nil {
+				return fmt.Errorf("error unmarshaling field %s: %w", fieldName, err)
+			}
+			a.AdditionalProperties[fieldName] = fieldVal
+		}
+	}
+	return nil
+}
+
+// Override default JSON handling for SharedReqIdentifiers to handle AdditionalProperties
+func (a SharedReqIdentifiers) MarshalJSON() ([]byte, error) {
+	var err error
+	object := make(map[string]json.RawMessage)
+
+	if a.Email != nil {
+		object["email"], err = json.Marshal(a.Email)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'email': %w", err)
+		}
+	}
+
+	if a.Phone != nil {
+		object["phone"], err = json.Marshal(a.Phone)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'phone': %w", err)
+		}
+	}
+
+	if a.Username != nil {
+		object["username"], err = json.Marshal(a.Username)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling 'username': %w", err)
+		}
+	}
+
+	for fieldName, field := range a.AdditionalProperties {
+		object[fieldName], err = json.Marshal(field)
+		if err != nil {
+			return nil, fmt.Errorf("error marshaling '%s': %w", fieldName, err)
+		}
+	}
+	return json.Marshal(object)
+}
+
 // AsEnvConfigData returns the union data inside the Config_Data as a EnvConfigData
 func (t Config_Data) AsEnvConfigData() (EnvConfigData, error) {
 	var body EnvConfigData
@@ -1875,6 +2433,32 @@ func (t *Config_Data) FromEnvConfigData(v EnvConfigData) error {
 
 // MergeEnvConfigData performs a merge with any union data inside the Config_Data, using the provided EnvConfigData
 func (t *Config_Data) MergeEnvConfigData(v EnvConfigData) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsAuthConfigData returns the union data inside the Config_Data as a AuthConfigData
+func (t Config_Data) AsAuthConfigData() (AuthConfigData, error) {
+	var body AuthConfigData
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromAuthConfigData overwrites any union data inside the Config_Data as the provided AuthConfigData
+func (t *Config_Data) FromAuthConfigData(v AuthConfigData) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeAuthConfigData performs a merge with any union data inside the Config_Data, using the provided AuthConfigData
+func (t *Config_Data) MergeAuthConfigData(v AuthConfigData) error {
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -1921,32 +2505,22 @@ func (t *AdminReqCreateUpdateConfig_Data) MergeEnvConfigData(v EnvConfigData) er
 	return err
 }
 
-func (t AdminReqCreateUpdateConfig_Data) MarshalJSON() ([]byte, error) {
-	b, err := t.union.MarshalJSON()
-	return b, err
-}
-
-func (t *AdminReqCreateUpdateConfig_Data) UnmarshalJSON(b []byte) error {
-	err := t.union.UnmarshalJSON(b)
-	return err
-}
-
-// AsSharedReqCredsEmail returns the union data inside the ServicesReqAccountAuthTypeLink_Creds as a SharedReqCredsEmail
-func (t ServicesReqAccountAuthTypeLink_Creds) AsSharedReqCredsEmail() (SharedReqCredsEmail, error) {
-	var body SharedReqCredsEmail
+// AsAuthConfigData returns the union data inside the AdminReqCreateUpdateConfig_Data as a AuthConfigData
+func (t AdminReqCreateUpdateConfig_Data) AsAuthConfigData() (AuthConfigData, error) {
+	var body AuthConfigData
 	err := json.Unmarshal(t.union, &body)
 	return body, err
 }
 
-// FromSharedReqCredsEmail overwrites any union data inside the ServicesReqAccountAuthTypeLink_Creds as the provided SharedReqCredsEmail
-func (t *ServicesReqAccountAuthTypeLink_Creds) FromSharedReqCredsEmail(v SharedReqCredsEmail) error {
+// FromAuthConfigData overwrites any union data inside the AdminReqCreateUpdateConfig_Data as the provided AuthConfigData
+func (t *AdminReqCreateUpdateConfig_Data) FromAuthConfigData(v AuthConfigData) error {
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
 }
 
-// MergeSharedReqCredsEmail performs a merge with any union data inside the ServicesReqAccountAuthTypeLink_Creds, using the provided SharedReqCredsEmail
-func (t *ServicesReqAccountAuthTypeLink_Creds) MergeSharedReqCredsEmail(v SharedReqCredsEmail) error {
+// MergeAuthConfigData performs a merge with any union data inside the AdminReqCreateUpdateConfig_Data, using the provided AuthConfigData
+func (t *AdminReqCreateUpdateConfig_Data) MergeAuthConfigData(v AuthConfigData) error {
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -1957,22 +2531,32 @@ func (t *ServicesReqAccountAuthTypeLink_Creds) MergeSharedReqCredsEmail(v Shared
 	return err
 }
 
-// AsSharedReqCredsTwilioPhone returns the union data inside the ServicesReqAccountAuthTypeLink_Creds as a SharedReqCredsTwilioPhone
-func (t ServicesReqAccountAuthTypeLink_Creds) AsSharedReqCredsTwilioPhone() (SharedReqCredsTwilioPhone, error) {
-	var body SharedReqCredsTwilioPhone
+func (t AdminReqCreateUpdateConfig_Data) MarshalJSON() ([]byte, error) {
+	b, err := t.union.MarshalJSON()
+	return b, err
+}
+
+func (t *AdminReqCreateUpdateConfig_Data) UnmarshalJSON(b []byte) error {
+	err := t.union.UnmarshalJSON(b)
+	return err
+}
+
+// AsSharedReqCredsCode returns the union data inside the ServicesReqAccountAuthTypeLink_Creds as a SharedReqCredsCode
+func (t ServicesReqAccountAuthTypeLink_Creds) AsSharedReqCredsCode() (SharedReqCredsCode, error) {
+	var body SharedReqCredsCode
 	err := json.Unmarshal(t.union, &body)
 	return body, err
 }
 
-// FromSharedReqCredsTwilioPhone overwrites any union data inside the ServicesReqAccountAuthTypeLink_Creds as the provided SharedReqCredsTwilioPhone
-func (t *ServicesReqAccountAuthTypeLink_Creds) FromSharedReqCredsTwilioPhone(v SharedReqCredsTwilioPhone) error {
+// FromSharedReqCredsCode overwrites any union data inside the ServicesReqAccountAuthTypeLink_Creds as the provided SharedReqCredsCode
+func (t *ServicesReqAccountAuthTypeLink_Creds) FromSharedReqCredsCode(v SharedReqCredsCode) error {
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
 }
 
-// MergeSharedReqCredsTwilioPhone performs a merge with any union data inside the ServicesReqAccountAuthTypeLink_Creds, using the provided SharedReqCredsTwilioPhone
-func (t *ServicesReqAccountAuthTypeLink_Creds) MergeSharedReqCredsTwilioPhone(v SharedReqCredsTwilioPhone) error {
+// MergeSharedReqCredsCode performs a merge with any union data inside the ServicesReqAccountAuthTypeLink_Creds, using the provided SharedReqCredsCode
+func (t *ServicesReqAccountAuthTypeLink_Creds) MergeSharedReqCredsCode(v SharedReqCredsCode) error {
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -2009,32 +2593,22 @@ func (t *ServicesReqAccountAuthTypeLink_Creds) MergeSharedReqCredsOIDC(v SharedR
 	return err
 }
 
-func (t ServicesReqAccountAuthTypeLink_Creds) MarshalJSON() ([]byte, error) {
-	b, err := t.union.MarshalJSON()
-	return b, err
-}
-
-func (t *ServicesReqAccountAuthTypeLink_Creds) UnmarshalJSON(b []byte) error {
-	err := t.union.UnmarshalJSON(b)
-	return err
-}
-
-// AsSharedReqParamsEmail returns the union data inside the ServicesReqAccountAuthTypeLink_Params as a SharedReqParamsEmail
-func (t ServicesReqAccountAuthTypeLink_Params) AsSharedReqParamsEmail() (SharedReqParamsEmail, error) {
-	var body SharedReqParamsEmail
+// AsSharedReqCredsPassword returns the union data inside the ServicesReqAccountAuthTypeLink_Creds as a SharedReqCredsPassword
+func (t ServicesReqAccountAuthTypeLink_Creds) AsSharedReqCredsPassword() (SharedReqCredsPassword, error) {
+	var body SharedReqCredsPassword
 	err := json.Unmarshal(t.union, &body)
 	return body, err
 }
 
-// FromSharedReqParamsEmail overwrites any union data inside the ServicesReqAccountAuthTypeLink_Params as the provided SharedReqParamsEmail
-func (t *ServicesReqAccountAuthTypeLink_Params) FromSharedReqParamsEmail(v SharedReqParamsEmail) error {
+// FromSharedReqCredsPassword overwrites any union data inside the ServicesReqAccountAuthTypeLink_Creds as the provided SharedReqCredsPassword
+func (t *ServicesReqAccountAuthTypeLink_Creds) FromSharedReqCredsPassword(v SharedReqCredsPassword) error {
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
 }
 
-// MergeSharedReqParamsEmail performs a merge with any union data inside the ServicesReqAccountAuthTypeLink_Params, using the provided SharedReqParamsEmail
-func (t *ServicesReqAccountAuthTypeLink_Params) MergeSharedReqParamsEmail(v SharedReqParamsEmail) error {
+// MergeSharedReqCredsPassword performs a merge with any union data inside the ServicesReqAccountAuthTypeLink_Creds, using the provided SharedReqCredsPassword
+func (t *ServicesReqAccountAuthTypeLink_Creds) MergeSharedReqCredsPassword(v SharedReqCredsPassword) error {
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -2042,6 +2616,68 @@ func (t *ServicesReqAccountAuthTypeLink_Params) MergeSharedReqParamsEmail(v Shar
 
 	merged, err := runtime.JsonMerge(t.union, b)
 	t.union = merged
+	return err
+}
+
+// AsSharedReqCredsWebAuthn returns the union data inside the ServicesReqAccountAuthTypeLink_Creds as a SharedReqCredsWebAuthn
+func (t ServicesReqAccountAuthTypeLink_Creds) AsSharedReqCredsWebAuthn() (SharedReqCredsWebAuthn, error) {
+	var body SharedReqCredsWebAuthn
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromSharedReqCredsWebAuthn overwrites any union data inside the ServicesReqAccountAuthTypeLink_Creds as the provided SharedReqCredsWebAuthn
+func (t *ServicesReqAccountAuthTypeLink_Creds) FromSharedReqCredsWebAuthn(v SharedReqCredsWebAuthn) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeSharedReqCredsWebAuthn performs a merge with any union data inside the ServicesReqAccountAuthTypeLink_Creds, using the provided SharedReqCredsWebAuthn
+func (t *ServicesReqAccountAuthTypeLink_Creds) MergeSharedReqCredsWebAuthn(v SharedReqCredsWebAuthn) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsSharedReqCredsNone returns the union data inside the ServicesReqAccountAuthTypeLink_Creds as a SharedReqCredsNone
+func (t ServicesReqAccountAuthTypeLink_Creds) AsSharedReqCredsNone() (SharedReqCredsNone, error) {
+	var body SharedReqCredsNone
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromSharedReqCredsNone overwrites any union data inside the ServicesReqAccountAuthTypeLink_Creds as the provided SharedReqCredsNone
+func (t *ServicesReqAccountAuthTypeLink_Creds) FromSharedReqCredsNone(v SharedReqCredsNone) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeSharedReqCredsNone performs a merge with any union data inside the ServicesReqAccountAuthTypeLink_Creds, using the provided SharedReqCredsNone
+func (t *ServicesReqAccountAuthTypeLink_Creds) MergeSharedReqCredsNone(v SharedReqCredsNone) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+func (t ServicesReqAccountAuthTypeLink_Creds) MarshalJSON() ([]byte, error) {
+	b, err := t.union.MarshalJSON()
+	return b, err
+}
+
+func (t *ServicesReqAccountAuthTypeLink_Creds) UnmarshalJSON(b []byte) error {
+	err := t.union.UnmarshalJSON(b)
 	return err
 }
 
@@ -2061,6 +2697,58 @@ func (t *ServicesReqAccountAuthTypeLink_Params) FromSharedReqParamsOIDC(v Shared
 
 // MergeSharedReqParamsOIDC performs a merge with any union data inside the ServicesReqAccountAuthTypeLink_Params, using the provided SharedReqParamsOIDC
 func (t *ServicesReqAccountAuthTypeLink_Params) MergeSharedReqParamsOIDC(v SharedReqParamsOIDC) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsSharedReqParamsPassword returns the union data inside the ServicesReqAccountAuthTypeLink_Params as a SharedReqParamsPassword
+func (t ServicesReqAccountAuthTypeLink_Params) AsSharedReqParamsPassword() (SharedReqParamsPassword, error) {
+	var body SharedReqParamsPassword
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromSharedReqParamsPassword overwrites any union data inside the ServicesReqAccountAuthTypeLink_Params as the provided SharedReqParamsPassword
+func (t *ServicesReqAccountAuthTypeLink_Params) FromSharedReqParamsPassword(v SharedReqParamsPassword) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeSharedReqParamsPassword performs a merge with any union data inside the ServicesReqAccountAuthTypeLink_Params, using the provided SharedReqParamsPassword
+func (t *ServicesReqAccountAuthTypeLink_Params) MergeSharedReqParamsPassword(v SharedReqParamsPassword) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsSharedReqParamsWebAuthn returns the union data inside the ServicesReqAccountAuthTypeLink_Params as a SharedReqParamsWebAuthn
+func (t ServicesReqAccountAuthTypeLink_Params) AsSharedReqParamsWebAuthn() (SharedReqParamsWebAuthn, error) {
+	var body SharedReqParamsWebAuthn
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromSharedReqParamsWebAuthn overwrites any union data inside the ServicesReqAccountAuthTypeLink_Params as the provided SharedReqParamsWebAuthn
+func (t *ServicesReqAccountAuthTypeLink_Params) FromSharedReqParamsWebAuthn(v SharedReqParamsWebAuthn) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeSharedReqParamsWebAuthn performs a merge with any union data inside the ServicesReqAccountAuthTypeLink_Params, using the provided SharedReqParamsWebAuthn
+func (t *ServicesReqAccountAuthTypeLink_Params) MergeSharedReqParamsWebAuthn(v SharedReqParamsWebAuthn) error {
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -2107,22 +2795,22 @@ func (t *ServicesReqAccountAuthTypeLink_Params) UnmarshalJSON(b []byte) error {
 	return err
 }
 
-// AsSharedReqParamsSetEmailCredential returns the union data inside the ServicesReqCredentialForgotComplete_Params as a SharedReqParamsSetEmailCredential
-func (t ServicesReqCredentialForgotComplete_Params) AsSharedReqParamsSetEmailCredential() (SharedReqParamsSetEmailCredential, error) {
-	var body SharedReqParamsSetEmailCredential
+// AsSharedReqParamsResetPassword returns the union data inside the ServicesReqCredentialForgotComplete_Params as a SharedReqParamsResetPassword
+func (t ServicesReqCredentialForgotComplete_Params) AsSharedReqParamsResetPassword() (SharedReqParamsResetPassword, error) {
+	var body SharedReqParamsResetPassword
 	err := json.Unmarshal(t.union, &body)
 	return body, err
 }
 
-// FromSharedReqParamsSetEmailCredential overwrites any union data inside the ServicesReqCredentialForgotComplete_Params as the provided SharedReqParamsSetEmailCredential
-func (t *ServicesReqCredentialForgotComplete_Params) FromSharedReqParamsSetEmailCredential(v SharedReqParamsSetEmailCredential) error {
+// FromSharedReqParamsResetPassword overwrites any union data inside the ServicesReqCredentialForgotComplete_Params as the provided SharedReqParamsResetPassword
+func (t *ServicesReqCredentialForgotComplete_Params) FromSharedReqParamsResetPassword(v SharedReqParamsResetPassword) error {
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
 }
 
-// MergeSharedReqParamsSetEmailCredential performs a merge with any union data inside the ServicesReqCredentialForgotComplete_Params, using the provided SharedReqParamsSetEmailCredential
-func (t *ServicesReqCredentialForgotComplete_Params) MergeSharedReqParamsSetEmailCredential(v SharedReqParamsSetEmailCredential) error {
+// MergeSharedReqParamsResetPassword performs a merge with any union data inside the ServicesReqCredentialForgotComplete_Params, using the provided SharedReqParamsResetPassword
+func (t *ServicesReqCredentialForgotComplete_Params) MergeSharedReqParamsResetPassword(v SharedReqParamsResetPassword) error {
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -2143,22 +2831,84 @@ func (t *ServicesReqCredentialForgotComplete_Params) UnmarshalJSON(b []byte) err
 	return err
 }
 
-// AsSharedReqParamsSetEmailCredential returns the union data inside the ServicesReqCredentialUpdate_Params as a SharedReqParamsSetEmailCredential
-func (t ServicesReqCredentialUpdate_Params) AsSharedReqParamsSetEmailCredential() (SharedReqParamsSetEmailCredential, error) {
-	var body SharedReqParamsSetEmailCredential
+// AsSharedReqIdentifiers returns the union data inside the ServicesReqCredentialForgotInitiate_Identifier as a SharedReqIdentifiers
+func (t ServicesReqCredentialForgotInitiate_Identifier) AsSharedReqIdentifiers() (SharedReqIdentifiers, error) {
+	var body SharedReqIdentifiers
 	err := json.Unmarshal(t.union, &body)
 	return body, err
 }
 
-// FromSharedReqParamsSetEmailCredential overwrites any union data inside the ServicesReqCredentialUpdate_Params as the provided SharedReqParamsSetEmailCredential
-func (t *ServicesReqCredentialUpdate_Params) FromSharedReqParamsSetEmailCredential(v SharedReqParamsSetEmailCredential) error {
+// FromSharedReqIdentifiers overwrites any union data inside the ServicesReqCredentialForgotInitiate_Identifier as the provided SharedReqIdentifiers
+func (t *ServicesReqCredentialForgotInitiate_Identifier) FromSharedReqIdentifiers(v SharedReqIdentifiers) error {
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
 }
 
-// MergeSharedReqParamsSetEmailCredential performs a merge with any union data inside the ServicesReqCredentialUpdate_Params, using the provided SharedReqParamsSetEmailCredential
-func (t *ServicesReqCredentialUpdate_Params) MergeSharedReqParamsSetEmailCredential(v SharedReqParamsSetEmailCredential) error {
+// MergeSharedReqIdentifiers performs a merge with any union data inside the ServicesReqCredentialForgotInitiate_Identifier, using the provided SharedReqIdentifiers
+func (t *ServicesReqCredentialForgotInitiate_Identifier) MergeSharedReqIdentifiers(v SharedReqIdentifiers) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsSharedReqIdentifierString returns the union data inside the ServicesReqCredentialForgotInitiate_Identifier as a SharedReqIdentifierString
+func (t ServicesReqCredentialForgotInitiate_Identifier) AsSharedReqIdentifierString() (SharedReqIdentifierString, error) {
+	var body SharedReqIdentifierString
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromSharedReqIdentifierString overwrites any union data inside the ServicesReqCredentialForgotInitiate_Identifier as the provided SharedReqIdentifierString
+func (t *ServicesReqCredentialForgotInitiate_Identifier) FromSharedReqIdentifierString(v SharedReqIdentifierString) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeSharedReqIdentifierString performs a merge with any union data inside the ServicesReqCredentialForgotInitiate_Identifier, using the provided SharedReqIdentifierString
+func (t *ServicesReqCredentialForgotInitiate_Identifier) MergeSharedReqIdentifierString(v SharedReqIdentifierString) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+func (t ServicesReqCredentialForgotInitiate_Identifier) MarshalJSON() ([]byte, error) {
+	b, err := t.union.MarshalJSON()
+	return b, err
+}
+
+func (t *ServicesReqCredentialForgotInitiate_Identifier) UnmarshalJSON(b []byte) error {
+	err := t.union.UnmarshalJSON(b)
+	return err
+}
+
+// AsSharedReqParamsResetPassword returns the union data inside the ServicesReqCredentialUpdate_Params as a SharedReqParamsResetPassword
+func (t ServicesReqCredentialUpdate_Params) AsSharedReqParamsResetPassword() (SharedReqParamsResetPassword, error) {
+	var body SharedReqParamsResetPassword
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromSharedReqParamsResetPassword overwrites any union data inside the ServicesReqCredentialUpdate_Params as the provided SharedReqParamsResetPassword
+func (t *ServicesReqCredentialUpdate_Params) FromSharedReqParamsResetPassword(v SharedReqParamsResetPassword) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeSharedReqParamsResetPassword performs a merge with any union data inside the ServicesReqCredentialUpdate_Params, using the provided SharedReqParamsResetPassword
+func (t *ServicesReqCredentialUpdate_Params) MergeSharedReqParamsResetPassword(v SharedReqParamsResetPassword) error {
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -2179,22 +2929,22 @@ func (t *ServicesReqCredentialUpdate_Params) UnmarshalJSON(b []byte) error {
 	return err
 }
 
-// AsSharedReqCredsEmail returns the union data inside the SharedReqLogin_Creds as a SharedReqCredsEmail
-func (t SharedReqLogin_Creds) AsSharedReqCredsEmail() (SharedReqCredsEmail, error) {
-	var body SharedReqCredsEmail
+// AsSharedReqIdentifiers returns the union data inside the ServicesReqIdentifierSendVerify_Identifier as a SharedReqIdentifiers
+func (t ServicesReqIdentifierSendVerify_Identifier) AsSharedReqIdentifiers() (SharedReqIdentifiers, error) {
+	var body SharedReqIdentifiers
 	err := json.Unmarshal(t.union, &body)
 	return body, err
 }
 
-// FromSharedReqCredsEmail overwrites any union data inside the SharedReqLogin_Creds as the provided SharedReqCredsEmail
-func (t *SharedReqLogin_Creds) FromSharedReqCredsEmail(v SharedReqCredsEmail) error {
+// FromSharedReqIdentifiers overwrites any union data inside the ServicesReqIdentifierSendVerify_Identifier as the provided SharedReqIdentifiers
+func (t *ServicesReqIdentifierSendVerify_Identifier) FromSharedReqIdentifiers(v SharedReqIdentifiers) error {
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
 }
 
-// MergeSharedReqCredsEmail performs a merge with any union data inside the SharedReqLogin_Creds, using the provided SharedReqCredsEmail
-func (t *SharedReqLogin_Creds) MergeSharedReqCredsEmail(v SharedReqCredsEmail) error {
+// MergeSharedReqIdentifiers performs a merge with any union data inside the ServicesReqIdentifierSendVerify_Identifier, using the provided SharedReqIdentifiers
+func (t *ServicesReqIdentifierSendVerify_Identifier) MergeSharedReqIdentifiers(v SharedReqIdentifiers) error {
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -2205,22 +2955,84 @@ func (t *SharedReqLogin_Creds) MergeSharedReqCredsEmail(v SharedReqCredsEmail) e
 	return err
 }
 
-// AsSharedReqCredsTwilioPhone returns the union data inside the SharedReqLogin_Creds as a SharedReqCredsTwilioPhone
-func (t SharedReqLogin_Creds) AsSharedReqCredsTwilioPhone() (SharedReqCredsTwilioPhone, error) {
-	var body SharedReqCredsTwilioPhone
+// AsSharedReqIdentifierString returns the union data inside the ServicesReqIdentifierSendVerify_Identifier as a SharedReqIdentifierString
+func (t ServicesReqIdentifierSendVerify_Identifier) AsSharedReqIdentifierString() (SharedReqIdentifierString, error) {
+	var body SharedReqIdentifierString
 	err := json.Unmarshal(t.union, &body)
 	return body, err
 }
 
-// FromSharedReqCredsTwilioPhone overwrites any union data inside the SharedReqLogin_Creds as the provided SharedReqCredsTwilioPhone
-func (t *SharedReqLogin_Creds) FromSharedReqCredsTwilioPhone(v SharedReqCredsTwilioPhone) error {
+// FromSharedReqIdentifierString overwrites any union data inside the ServicesReqIdentifierSendVerify_Identifier as the provided SharedReqIdentifierString
+func (t *ServicesReqIdentifierSendVerify_Identifier) FromSharedReqIdentifierString(v SharedReqIdentifierString) error {
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
 }
 
-// MergeSharedReqCredsTwilioPhone performs a merge with any union data inside the SharedReqLogin_Creds, using the provided SharedReqCredsTwilioPhone
-func (t *SharedReqLogin_Creds) MergeSharedReqCredsTwilioPhone(v SharedReqCredsTwilioPhone) error {
+// MergeSharedReqIdentifierString performs a merge with any union data inside the ServicesReqIdentifierSendVerify_Identifier, using the provided SharedReqIdentifierString
+func (t *ServicesReqIdentifierSendVerify_Identifier) MergeSharedReqIdentifierString(v SharedReqIdentifierString) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+func (t ServicesReqIdentifierSendVerify_Identifier) MarshalJSON() ([]byte, error) {
+	b, err := t.union.MarshalJSON()
+	return b, err
+}
+
+func (t *ServicesReqIdentifierSendVerify_Identifier) UnmarshalJSON(b []byte) error {
+	err := t.union.UnmarshalJSON(b)
+	return err
+}
+
+// AsSharedReqCredsAnonymous returns the union data inside the SharedReqLogin_Creds as a SharedReqCredsAnonymous
+func (t SharedReqLogin_Creds) AsSharedReqCredsAnonymous() (SharedReqCredsAnonymous, error) {
+	var body SharedReqCredsAnonymous
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromSharedReqCredsAnonymous overwrites any union data inside the SharedReqLogin_Creds as the provided SharedReqCredsAnonymous
+func (t *SharedReqLogin_Creds) FromSharedReqCredsAnonymous(v SharedReqCredsAnonymous) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeSharedReqCredsAnonymous performs a merge with any union data inside the SharedReqLogin_Creds, using the provided SharedReqCredsAnonymous
+func (t *SharedReqLogin_Creds) MergeSharedReqCredsAnonymous(v SharedReqCredsAnonymous) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsSharedReqCredsCode returns the union data inside the SharedReqLogin_Creds as a SharedReqCredsCode
+func (t SharedReqLogin_Creds) AsSharedReqCredsCode() (SharedReqCredsCode, error) {
+	var body SharedReqCredsCode
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromSharedReqCredsCode overwrites any union data inside the SharedReqLogin_Creds as the provided SharedReqCredsCode
+func (t *SharedReqLogin_Creds) FromSharedReqCredsCode(v SharedReqCredsCode) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeSharedReqCredsCode performs a merge with any union data inside the SharedReqLogin_Creds, using the provided SharedReqCredsCode
+func (t *SharedReqLogin_Creds) MergeSharedReqCredsCode(v SharedReqCredsCode) error {
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -2257,22 +3069,22 @@ func (t *SharedReqLogin_Creds) MergeSharedReqCredsOIDC(v SharedReqCredsOIDC) err
 	return err
 }
 
-// AsSharedReqCredsAPIKey returns the union data inside the SharedReqLogin_Creds as a SharedReqCredsAPIKey
-func (t SharedReqLogin_Creds) AsSharedReqCredsAPIKey() (SharedReqCredsAPIKey, error) {
-	var body SharedReqCredsAPIKey
+// AsSharedReqCredsPassword returns the union data inside the SharedReqLogin_Creds as a SharedReqCredsPassword
+func (t SharedReqLogin_Creds) AsSharedReqCredsPassword() (SharedReqCredsPassword, error) {
+	var body SharedReqCredsPassword
 	err := json.Unmarshal(t.union, &body)
 	return body, err
 }
 
-// FromSharedReqCredsAPIKey overwrites any union data inside the SharedReqLogin_Creds as the provided SharedReqCredsAPIKey
-func (t *SharedReqLogin_Creds) FromSharedReqCredsAPIKey(v SharedReqCredsAPIKey) error {
+// FromSharedReqCredsPassword overwrites any union data inside the SharedReqLogin_Creds as the provided SharedReqCredsPassword
+func (t *SharedReqLogin_Creds) FromSharedReqCredsPassword(v SharedReqCredsPassword) error {
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
 }
 
-// MergeSharedReqCredsAPIKey performs a merge with any union data inside the SharedReqLogin_Creds, using the provided SharedReqCredsAPIKey
-func (t *SharedReqLogin_Creds) MergeSharedReqCredsAPIKey(v SharedReqCredsAPIKey) error {
+// MergeSharedReqCredsPassword performs a merge with any union data inside the SharedReqLogin_Creds, using the provided SharedReqCredsPassword
+func (t *SharedReqLogin_Creds) MergeSharedReqCredsPassword(v SharedReqCredsPassword) error {
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -2283,22 +3095,48 @@ func (t *SharedReqLogin_Creds) MergeSharedReqCredsAPIKey(v SharedReqCredsAPIKey)
 	return err
 }
 
-// AsSharedReqCredsUsername returns the union data inside the SharedReqLogin_Creds as a SharedReqCredsUsername
-func (t SharedReqLogin_Creds) AsSharedReqCredsUsername() (SharedReqCredsUsername, error) {
-	var body SharedReqCredsUsername
+// AsSharedReqCredsWebAuthn returns the union data inside the SharedReqLogin_Creds as a SharedReqCredsWebAuthn
+func (t SharedReqLogin_Creds) AsSharedReqCredsWebAuthn() (SharedReqCredsWebAuthn, error) {
+	var body SharedReqCredsWebAuthn
 	err := json.Unmarshal(t.union, &body)
 	return body, err
 }
 
-// FromSharedReqCredsUsername overwrites any union data inside the SharedReqLogin_Creds as the provided SharedReqCredsUsername
-func (t *SharedReqLogin_Creds) FromSharedReqCredsUsername(v SharedReqCredsUsername) error {
+// FromSharedReqCredsWebAuthn overwrites any union data inside the SharedReqLogin_Creds as the provided SharedReqCredsWebAuthn
+func (t *SharedReqLogin_Creds) FromSharedReqCredsWebAuthn(v SharedReqCredsWebAuthn) error {
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
 }
 
-// MergeSharedReqCredsUsername performs a merge with any union data inside the SharedReqLogin_Creds, using the provided SharedReqCredsUsername
-func (t *SharedReqLogin_Creds) MergeSharedReqCredsUsername(v SharedReqCredsUsername) error {
+// MergeSharedReqCredsWebAuthn performs a merge with any union data inside the SharedReqLogin_Creds, using the provided SharedReqCredsWebAuthn
+func (t *SharedReqLogin_Creds) MergeSharedReqCredsWebAuthn(v SharedReqCredsWebAuthn) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsSharedReqCredsNone returns the union data inside the SharedReqLogin_Creds as a SharedReqCredsNone
+func (t SharedReqLogin_Creds) AsSharedReqCredsNone() (SharedReqCredsNone, error) {
+	var body SharedReqCredsNone
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromSharedReqCredsNone overwrites any union data inside the SharedReqLogin_Creds as the provided SharedReqCredsNone
+func (t *SharedReqLogin_Creds) FromSharedReqCredsNone(v SharedReqCredsNone) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeSharedReqCredsNone performs a merge with any union data inside the SharedReqLogin_Creds, using the provided SharedReqCredsNone
+func (t *SharedReqLogin_Creds) MergeSharedReqCredsNone(v SharedReqCredsNone) error {
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -2316,32 +3154,6 @@ func (t SharedReqLogin_Creds) MarshalJSON() ([]byte, error) {
 
 func (t *SharedReqLogin_Creds) UnmarshalJSON(b []byte) error {
 	err := t.union.UnmarshalJSON(b)
-	return err
-}
-
-// AsSharedReqParamsEmail returns the union data inside the SharedReqLogin_Params as a SharedReqParamsEmail
-func (t SharedReqLogin_Params) AsSharedReqParamsEmail() (SharedReqParamsEmail, error) {
-	var body SharedReqParamsEmail
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromSharedReqParamsEmail overwrites any union data inside the SharedReqLogin_Params as the provided SharedReqParamsEmail
-func (t *SharedReqLogin_Params) FromSharedReqParamsEmail(v SharedReqParamsEmail) error {
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeSharedReqParamsEmail performs a merge with any union data inside the SharedReqLogin_Params, using the provided SharedReqParamsEmail
-func (t *SharedReqLogin_Params) MergeSharedReqParamsEmail(v SharedReqParamsEmail) error {
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JsonMerge(t.union, b)
-	t.union = merged
 	return err
 }
 
@@ -2371,6 +3183,58 @@ func (t *SharedReqLogin_Params) MergeSharedReqParamsOIDC(v SharedReqParamsOIDC) 
 	return err
 }
 
+// AsSharedReqParamsPassword returns the union data inside the SharedReqLogin_Params as a SharedReqParamsPassword
+func (t SharedReqLogin_Params) AsSharedReqParamsPassword() (SharedReqParamsPassword, error) {
+	var body SharedReqParamsPassword
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromSharedReqParamsPassword overwrites any union data inside the SharedReqLogin_Params as the provided SharedReqParamsPassword
+func (t *SharedReqLogin_Params) FromSharedReqParamsPassword(v SharedReqParamsPassword) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeSharedReqParamsPassword performs a merge with any union data inside the SharedReqLogin_Params, using the provided SharedReqParamsPassword
+func (t *SharedReqLogin_Params) MergeSharedReqParamsPassword(v SharedReqParamsPassword) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsSharedReqParamsWebAuthn returns the union data inside the SharedReqLogin_Params as a SharedReqParamsWebAuthn
+func (t SharedReqLogin_Params) AsSharedReqParamsWebAuthn() (SharedReqParamsWebAuthn, error) {
+	var body SharedReqParamsWebAuthn
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromSharedReqParamsWebAuthn overwrites any union data inside the SharedReqLogin_Params as the provided SharedReqParamsWebAuthn
+func (t *SharedReqLogin_Params) FromSharedReqParamsWebAuthn(v SharedReqParamsWebAuthn) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeSharedReqParamsWebAuthn performs a merge with any union data inside the SharedReqLogin_Params, using the provided SharedReqParamsWebAuthn
+func (t *SharedReqLogin_Params) MergeSharedReqParamsWebAuthn(v SharedReqParamsWebAuthn) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JsonMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
 // AsSharedReqParamsNone returns the union data inside the SharedReqLogin_Params as a SharedReqParamsNone
 func (t SharedReqLogin_Params) AsSharedReqParamsNone() (SharedReqParamsNone, error) {
 	var body SharedReqParamsNone
@@ -2387,32 +3251,6 @@ func (t *SharedReqLogin_Params) FromSharedReqParamsNone(v SharedReqParamsNone) e
 
 // MergeSharedReqParamsNone performs a merge with any union data inside the SharedReqLogin_Params, using the provided SharedReqParamsNone
 func (t *SharedReqLogin_Params) MergeSharedReqParamsNone(v SharedReqParamsNone) error {
-	b, err := json.Marshal(v)
-	if err != nil {
-		return err
-	}
-
-	merged, err := runtime.JsonMerge(t.union, b)
-	t.union = merged
-	return err
-}
-
-// AsSharedReqParamsUsername returns the union data inside the SharedReqLogin_Params as a SharedReqParamsUsername
-func (t SharedReqLogin_Params) AsSharedReqParamsUsername() (SharedReqParamsUsername, error) {
-	var body SharedReqParamsUsername
-	err := json.Unmarshal(t.union, &body)
-	return body, err
-}
-
-// FromSharedReqParamsUsername overwrites any union data inside the SharedReqLogin_Params as the provided SharedReqParamsUsername
-func (t *SharedReqLogin_Params) FromSharedReqParamsUsername(v SharedReqParamsUsername) error {
-	b, err := json.Marshal(v)
-	t.union = b
-	return err
-}
-
-// MergeSharedReqParamsUsername performs a merge with any union data inside the SharedReqLogin_Params, using the provided SharedReqParamsUsername
-func (t *SharedReqLogin_Params) MergeSharedReqParamsUsername(v SharedReqParamsUsername) error {
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -2459,22 +3297,22 @@ func (t *SharedResLogin_Params) MergeSharedResParamsOIDC(v SharedResParamsOIDC) 
 	return err
 }
 
-// AsSharedResParamsAPIKey returns the union data inside the SharedResLogin_Params as a SharedResParamsAPIKey
-func (t SharedResLogin_Params) AsSharedResParamsAPIKey() (SharedResParamsAPIKey, error) {
-	var body SharedResParamsAPIKey
+// AsSharedResParamsAnonymous returns the union data inside the SharedResLogin_Params as a SharedResParamsAnonymous
+func (t SharedResLogin_Params) AsSharedResParamsAnonymous() (SharedResParamsAnonymous, error) {
+	var body SharedResParamsAnonymous
 	err := json.Unmarshal(t.union, &body)
 	return body, err
 }
 
-// FromSharedResParamsAPIKey overwrites any union data inside the SharedResLogin_Params as the provided SharedResParamsAPIKey
-func (t *SharedResLogin_Params) FromSharedResParamsAPIKey(v SharedResParamsAPIKey) error {
+// FromSharedResParamsAnonymous overwrites any union data inside the SharedResLogin_Params as the provided SharedResParamsAnonymous
+func (t *SharedResLogin_Params) FromSharedResParamsAnonymous(v SharedResParamsAnonymous) error {
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
 }
 
-// MergeSharedResParamsAPIKey performs a merge with any union data inside the SharedResLogin_Params, using the provided SharedResParamsAPIKey
-func (t *SharedResLogin_Params) MergeSharedResParamsAPIKey(v SharedResParamsAPIKey) error {
+// MergeSharedResParamsAnonymous performs a merge with any union data inside the SharedResLogin_Params, using the provided SharedResParamsAnonymous
+func (t *SharedResLogin_Params) MergeSharedResParamsAnonymous(v SharedResParamsAnonymous) error {
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -2547,22 +3385,22 @@ func (t *SharedResLoginMfa_Params) MergeSharedResParamsOIDC(v SharedResParamsOID
 	return err
 }
 
-// AsSharedResParamsAPIKey returns the union data inside the SharedResLoginMfa_Params as a SharedResParamsAPIKey
-func (t SharedResLoginMfa_Params) AsSharedResParamsAPIKey() (SharedResParamsAPIKey, error) {
-	var body SharedResParamsAPIKey
+// AsSharedResParamsAnonymous returns the union data inside the SharedResLoginMfa_Params as a SharedResParamsAnonymous
+func (t SharedResLoginMfa_Params) AsSharedResParamsAnonymous() (SharedResParamsAnonymous, error) {
+	var body SharedResParamsAnonymous
 	err := json.Unmarshal(t.union, &body)
 	return body, err
 }
 
-// FromSharedResParamsAPIKey overwrites any union data inside the SharedResLoginMfa_Params as the provided SharedResParamsAPIKey
-func (t *SharedResLoginMfa_Params) FromSharedResParamsAPIKey(v SharedResParamsAPIKey) error {
+// FromSharedResParamsAnonymous overwrites any union data inside the SharedResLoginMfa_Params as the provided SharedResParamsAnonymous
+func (t *SharedResLoginMfa_Params) FromSharedResParamsAnonymous(v SharedResParamsAnonymous) error {
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
 }
 
-// MergeSharedResParamsAPIKey performs a merge with any union data inside the SharedResLoginMfa_Params, using the provided SharedResParamsAPIKey
-func (t *SharedResLoginMfa_Params) MergeSharedResParamsAPIKey(v SharedResParamsAPIKey) error {
+// MergeSharedResParamsAnonymous performs a merge with any union data inside the SharedResLoginMfa_Params, using the provided SharedResParamsAnonymous
+func (t *SharedResLoginMfa_Params) MergeSharedResParamsAnonymous(v SharedResParamsAnonymous) error {
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -2635,22 +3473,22 @@ func (t *SharedResRefresh_Params) MergeSharedResParamsOIDC(v SharedResParamsOIDC
 	return err
 }
 
-// AsSharedResParamsAPIKey returns the union data inside the SharedResRefresh_Params as a SharedResParamsAPIKey
-func (t SharedResRefresh_Params) AsSharedResParamsAPIKey() (SharedResParamsAPIKey, error) {
-	var body SharedResParamsAPIKey
+// AsSharedResParamsAnonymous returns the union data inside the SharedResRefresh_Params as a SharedResParamsAnonymous
+func (t SharedResRefresh_Params) AsSharedResParamsAnonymous() (SharedResParamsAnonymous, error) {
+	var body SharedResParamsAnonymous
 	err := json.Unmarshal(t.union, &body)
 	return body, err
 }
 
-// FromSharedResParamsAPIKey overwrites any union data inside the SharedResRefresh_Params as the provided SharedResParamsAPIKey
-func (t *SharedResRefresh_Params) FromSharedResParamsAPIKey(v SharedResParamsAPIKey) error {
+// FromSharedResParamsAnonymous overwrites any union data inside the SharedResRefresh_Params as the provided SharedResParamsAnonymous
+func (t *SharedResRefresh_Params) FromSharedResParamsAnonymous(v SharedResParamsAnonymous) error {
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
 }
 
-// MergeSharedResParamsAPIKey performs a merge with any union data inside the SharedResRefresh_Params, using the provided SharedResParamsAPIKey
-func (t *SharedResRefresh_Params) MergeSharedResParamsAPIKey(v SharedResParamsAPIKey) error {
+// MergeSharedResParamsAnonymous performs a merge with any union data inside the SharedResRefresh_Params, using the provided SharedResParamsAnonymous
+func (t *SharedResRefresh_Params) MergeSharedResParamsAnonymous(v SharedResParamsAnonymous) error {
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err

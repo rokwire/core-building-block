@@ -33,6 +33,8 @@ const (
 	TypeAccountSystemConfigs logutils.MessageDataType = "account system configs"
 	//TypeAccountAuthType account auth type
 	TypeAccountAuthType logutils.MessageDataType = "account auth type"
+	//TypeAccountIdentifier account identifier
+	TypeAccountIdentifier logutils.MessageDataType = "account identifier"
 	//TypeAccountPermissions account permissions
 	TypeAccountPermissions logutils.MessageDataType = "account permissions"
 	//TypeAccountRoles account roles
@@ -76,12 +78,11 @@ type Account struct {
 	Groups      []AccountGroup
 	Scopes      []string
 
-	AuthTypes []AccountAuthType
+	Identifiers []AccountIdentifier
+	AuthTypes   []AccountAuthType
 
 	MFATypes []MFAType
 
-	Username      string
-	ExternalIDs   map[string]string
 	Preferences   map[string]interface{}
 	SystemConfigs map[string]interface{}
 	Profile       Profile //one account has one profile, one profile can be shared between many accounts
@@ -111,21 +112,81 @@ func (a Account) GetAccountAuthTypeByID(ID string) *AccountAuthType {
 	return nil
 }
 
-// GetAccountAuthType finds account auth type
-func (a Account) GetAccountAuthType(authTypeID string, identifier string) *AccountAuthType {
+// GetAccountAuthTypes finds account auth types
+func (a Account) GetAccountAuthTypes(authTypeIDorCode string) []AccountAuthType {
+	authTypes := make([]AccountAuthType, 0)
 	for _, aat := range a.AuthTypes {
-		if aat.AuthType.ID == authTypeID && aat.Identifier == identifier {
+		if aat.SupportedAuthType.AuthType.ID == authTypeIDorCode || aat.SupportedAuthType.AuthType.Code == authTypeIDorCode {
 			aat.Account = a
-			return &aat
+			authTypes = append(authTypes, aat)
+		}
+	}
+	return authTypes
+}
+
+// SortAccountAuthTypes sorts account auth types by matching the given id
+func (a Account) SortAccountAuthTypes(id string, authType string) {
+	sort.Slice(a.AuthTypes, func(i, _ int) bool {
+		return (id != "" && a.AuthTypes[i].ID == id) || (authType != "" && a.AuthTypes[i].SupportedAuthType.AuthType.Code == authType)
+	})
+}
+
+// GetAccountIdentifier finds account identifier
+func (a Account) GetAccountIdentifier(code string, identifier string) *AccountIdentifier {
+	for _, id := range a.Identifiers {
+		if code != "" && id.Code == code && identifier != "" && id.Identifier == identifier {
+			id.Account = a
+			return &id
+		}
+		if code != "" && id.Code == code {
+			id.Account = a
+			return &id
+		}
+		if identifier != "" && id.Identifier == identifier {
+			id.Account = a
+			return &id
 		}
 	}
 	return nil
 }
 
-// SortAccountAuthTypes sorts account auth types by matching the given uid
-func (a Account) SortAccountAuthTypes(uid string) {
-	sort.Slice(a.AuthTypes, func(i, _ int) bool {
-		return a.AuthTypes[i].Identifier == uid
+// GetAccountIdentifierByID finds account identifier by its ID
+func (a Account) GetAccountIdentifierByID(id string) *AccountIdentifier {
+	for _, ai := range a.Identifiers {
+		if ai.ID == id {
+			ai.Account = a
+			return &ai
+		}
+	}
+	return nil
+}
+
+// GetVerifiedAccountIdentifiers returns a list of only verified identifiers for this account
+func (a Account) GetVerifiedAccountIdentifiers() []AccountIdentifier {
+	identifiers := make([]AccountIdentifier, 0)
+	for _, id := range a.Identifiers {
+		if id.Verified {
+			identifiers = append(identifiers, id)
+		}
+	}
+	return identifiers
+}
+
+// GetExternalAccountIdentifiers returns a list of only external identifiers for this account
+func (a Account) GetExternalAccountIdentifiers() []AccountIdentifier {
+	identifiers := make([]AccountIdentifier, 0)
+	for _, id := range a.Identifiers {
+		if id.AccountAuthTypeID != nil {
+			identifiers = append(identifiers, id)
+		}
+	}
+	return identifiers
+}
+
+// SortAccountIdentifiers sorts account identifiers by matching the given identifier
+func (a Account) SortAccountIdentifiers(identifier string) {
+	sort.Slice(a.Identifiers, func(i, _ int) bool {
+		return a.Identifiers[i].Identifier == identifier
 	})
 }
 
@@ -334,54 +395,28 @@ func AccountGroupsFromAppOrgGroups(items []AppOrgGroup, active bool, adminSet bo
 type AccountAuthType struct {
 	ID string
 
-	AuthType AuthType //one of the supported auth type
-	Account  Account
+	SupportedAuthType SupportedAuthType //one of the supported auth type
+	Account           Account
 
-	Identifier string
-	Params     map[string]interface{}
+	Params map[string]interface{}
 
 	Credential *Credential //this can be nil as the external auth types authenticates the users outside the system
 
-	Active     bool
-	Unverified bool
-	Linked     bool
+	Active bool
 
 	DateCreated time.Time
 	DateUpdated *time.Time
 }
 
-// SetUnverified sets the Unverified flag to value in the account auth type itself and the appropriate account auth type within the account member
-func (aat *AccountAuthType) SetUnverified(value bool) {
-	if aat == nil {
-		return
-	}
-
-	aat.Unverified = false
-	for i := 0; i < len(aat.Account.AuthTypes); i++ {
-		if aat.Account.AuthTypes[i].ID == aat.ID {
-			aat.Account.AuthTypes[i].Unverified = false
-		}
-	}
-}
-
 // Equals checks if two account auth types are equal
 func (aat *AccountAuthType) Equals(other AccountAuthType) bool {
-	if aat.Identifier != other.Identifier {
-		return false
-	}
 	if aat.Account.ID != other.Account.ID {
 		return false
 	}
-	if aat.AuthType.Code != other.AuthType.Code {
+	if aat.SupportedAuthType.AuthType.Code != other.SupportedAuthType.AuthType.Code {
 		return false
 	}
 	if aat.Active != other.Active {
-		return false
-	}
-	if aat.Unverified != other.Unverified {
-		return false
-	}
-	if aat.Linked != other.Linked {
 		return false
 	}
 	if !utils.DeepEqual(aat.Params, other.Params) {
@@ -399,13 +434,66 @@ func (aat *AccountAuthType) Equals(other AccountAuthType) bool {
 	return true
 }
 
+// AccountIdentifier represents account identifiers
+type AccountIdentifier struct {
+	ID         string
+	Code       string
+	Identifier string
+
+	Verified  bool
+	Linked    bool
+	Sensitive bool
+
+	AccountAuthTypeID *string
+	Primary           *bool
+
+	Account Account
+
+	VerificationCode   *string
+	VerificationExpiry *time.Time
+
+	DateCreated time.Time
+	DateUpdated *time.Time
+}
+
+// SetVerified sets the Verified flag to value in the account auth type itself and the appropriate account auth type within the account member
+func (ai *AccountIdentifier) SetVerified(value bool) {
+	if ai == nil {
+		return
+	}
+
+	ai.Verified = value
+	for i := 0; i < len(ai.Account.Identifiers); i++ {
+		if ai.Account.Identifiers[i].Identifier == ai.Identifier {
+			ai.Account.Identifiers[i].Verified = value
+		}
+	}
+}
+
+// Equals checks if two account identifiers are equal
+func (ai *AccountIdentifier) Equals(other AccountIdentifier) bool {
+	if ai.Identifier != other.Identifier {
+		return false
+	}
+	if ai.Account.ID != other.Account.ID {
+		return false
+	}
+	if ai.Verified != other.Verified {
+		return false
+	}
+	if ai.Linked != other.Linked {
+		return false
+	}
+
+	return true
+}
+
 // Credential represents a credential for account auth type/s
 type Credential struct {
 	ID string
 
 	AuthType          AuthType
-	AccountsAuthTypes []AccountAuthType //one credential can be used for more than one account auth type
-	Verified          bool
+	AccountsAuthTypes []AccountAuthType      //one credential can be used for more than one account auth type
 	Value             map[string]interface{} //credential value
 
 	DateCreated time.Time
@@ -435,8 +523,6 @@ type Profile struct {
 	PhotoURL  string
 	FirstName string
 	LastName  string
-	Email     string
-	Phone     string
 	BirthYear int16
 	Address   string
 	ZipCode   string
@@ -468,12 +554,6 @@ func (p Profile) Merge(src Profile) Profile {
 	}
 	if src.LastName != "" {
 		p.LastName = src.LastName
-	}
-	if src.Email != "" {
-		p.Email = src.Email
-	}
-	if src.Phone != "" {
-		p.Phone = src.Phone
 	}
 	if src.Address != "" {
 		p.Address = src.Address
@@ -518,14 +598,6 @@ func ProfileFromMap(profileMap map[string]interface{}) Profile {
 			if typeVal, ok := val.(string); ok {
 				profile.LastName = typeVal
 			}
-		} else if key == "email" {
-			if typeVal, ok := val.(string); ok {
-				profile.Email = typeVal
-			}
-		} else if key == "phone" {
-			if typeVal, ok := val.(string); ok {
-				profile.Phone = typeVal
-			}
 		} else if key == "birth_year" {
 			if typeVal, ok := val.(int16); ok {
 				profile.BirthYear = typeVal
@@ -548,7 +620,7 @@ func ProfileFromMap(profileMap map[string]interface{}) Profile {
 			}
 		} else if key == "photo_url" {
 			if typeVal, ok := val.(string); ok {
-				profile.Phone = typeVal
+				profile.PhotoURL = typeVal
 			}
 		} else {
 			profile.UnstructuredProperties[key] = val
@@ -573,8 +645,10 @@ type Device struct {
 
 // ExternalSystemUser represents external system user
 type ExternalSystemUser struct {
-	Identifier  string            `json:"identifier" bson:"identifier"` //this is the identifier used in our system to map the user
-	ExternalIDs map[string]string `json:"external_ids" bson:"external_ids"`
+	Identifier           string            `json:"identifier" bson:"identifier"` //this is the identifier used in our system to map the user
+	ExternalIDs          map[string]string `json:"external_ids" bson:"external_ids"`
+	SensitiveExternalIDs []string          `json:"sensitive_external_ids" bson:"sensitive_external_ids"`
+	IsEmailVerified      bool              `json:"is_email_verified" bson:"is_email_verified"`
 
 	//these are common fields which should be popuated by the external system
 	FirstName  string   `json:"first_name" bson:"first_name"`

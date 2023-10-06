@@ -6,13 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
-
 ### Added
+- WebAuthn authentication [#659](https://github.com/rokwire/core-building-block/issues/659)
 - Searching follows looks for substring matches [#670](https://github.com/rokwire/core-building-block/issues/670)
-
-### Added
 - Support following accounts [#667](https://github.com/rokwire/core-building-block/issues/667)
 - Device ID not nullable [#672](https://github.com/rokwire/core-building-block/issues/672)
+### Changed
+- Decouple authentication and verification mechanisms [#665](https://github.com/rokwire/core-building-block/issues/665)
+- Refactor account auth types [#674](https://github.com/rokwire/core-building-block/issues/674)
 
 ## [1.34.0] - 2023-07-06
 ### Added

@@ -17,7 +17,6 @@ package utils
 import (
 	crand "crypto/rand"
 	"crypto/sha256"
-	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"math/rand"
@@ -57,22 +56,10 @@ const (
 	special string = "!@#$%^&*()"
 )
 
-// SetRandomSeed sets the seed for random number generation
-func SetRandomSeed() error {
-	seed := make([]byte, 8)
-	_, err := crand.Read(seed)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionGenerate, "math/rand seed", nil, err)
-	}
-
-	rand.Seed(int64(binary.LittleEndian.Uint64(seed)))
-	return nil
-}
-
 // GenerateRandomBytes returns securely generated random bytes
 func GenerateRandomBytes(n int) ([]byte, error) {
 	b := make([]byte, n)
-	_, err := rand.Read(b)
+	_, err := crand.Read(b)
 	if err != nil {
 		return nil, err
 	}
@@ -81,13 +68,13 @@ func GenerateRandomBytes(n int) ([]byte, error) {
 }
 
 // GenerateRandomString returns a URL-safe, base64 encoded securely generated random string
-func GenerateRandomString(s int) (string, error) {
+func GenerateRandomString(s int) string {
 	chars := []rune("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 	b := make([]rune, s)
 	for i := range b {
 		b[i] = chars[rand.Intn(len(chars))]
 	}
-	return string(b), nil
+	return string(b)
 }
 
 // GenerateRandomInt returns a random integer between 0 and max
@@ -108,13 +95,36 @@ func GenerateRandomPassword(s int) string {
 	return string(password)
 }
 
-// ConvertToJSON converts to json
-func ConvertToJSON(data interface{}) ([]byte, error) {
-	dataJSON, err := json.Marshal(data)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionMarshal, "map to json", nil, err)
+// JSONConvert json marshals and unmarshals data into result (result should be passed as a pointer)
+func JSONConvert[T any, F any](val F) (*T, error) {
+	if IsNil(val) {
+		return nil, nil
 	}
-	return dataJSON, nil
+
+	bytes, err := json.Marshal(val)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionMarshal, "value", nil, err)
+	}
+
+	var out T
+	err = json.Unmarshal(bytes, &out)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, "value", nil, err)
+	}
+
+	return &out, nil
+}
+
+// IsNil determines whether the given interface has a nil value
+func IsNil(i interface{}) bool {
+	if i == nil {
+		return true
+	}
+	switch reflect.TypeOf(i).Kind() {
+	case reflect.Ptr, reflect.Map, reflect.Array, reflect.Chan, reflect.Slice:
+		return reflect.ValueOf(i).IsNil()
+	}
+	return false
 }
 
 // DeepEqual checks whether a and b are “deeply equal,”

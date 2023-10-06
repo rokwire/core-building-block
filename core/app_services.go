@@ -33,6 +33,7 @@ func (app *application) serGetProfile(accountID string) (*model.Profile, error) 
 
 	//get the profile for the account
 	profile := account.Profile
+	profile.Accounts = []model.Account{*account}
 	return &profile, nil
 }
 

@@ -7,8 +7,6 @@ properties:
     type: string
   app_org:
     $ref: "../application/ApplicationOrganization.yaml"
-  username:
-    type: string
   profile:
     $ref: "./Profile.yaml"
   privacy:
@@ -25,9 +23,10 @@ properties:
     type: boolean
   system:
     type: boolean
-  external_ids:
-    type: object
-    nullable: true
+  identifiers:
+    type: array
+    items:
+      $ref: "./AccountIdentifier.yaml"
   auth_types:
     type: array
     items:
@@ -58,3 +57,7 @@ properties:
     type: string
   most_recent_client_version:
     type: string
+  username:
+    type: string
+    nullable: true
+    deprecated: true

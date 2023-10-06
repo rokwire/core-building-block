@@ -20,10 +20,10 @@ import (
 	"core-building-block/core/model"
 	"core-building-block/driven/emailer"
 	"core-building-block/driven/identitybb"
+	"core-building-block/driven/phoneverifier"
 	"core-building-block/driven/profilebb"
 	"core-building-block/driven/storage"
 	"core-building-block/driver/web"
-	"core-building-block/utils"
 	"os"
 	"strconv"
 	"strings"
@@ -64,16 +64,11 @@ func main() {
 
 	logger.Infof("Version: %s", Version)
 
-	err := utils.SetRandomSeed()
-	if err != nil {
-		logger.Error(err.Error())
-	}
-
 	env := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_ENVIRONMENT", true, false) //local, dev, staging, prod
 	port := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_PORT", false, false)
 	//Default port of 80
 	if port == "" {
-		port = "80"
+		port = "5000"
 	}
 
 	host := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_HOST", true, false)
@@ -88,7 +83,7 @@ func main() {
 	mongoDBName := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_MONGO_DATABASE", true, false)
 	mongoTimeout := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_MONGO_TIMEOUT", false, false)
 	storageAdapter := storage.NewStorageAdapter(host, mongoDBAuth, mongoDBName, mongoTimeout, logger)
-	err = storageAdapter.Start()
+	err := storageAdapter.Start()
 	if err != nil {
 		logger.Fatalf("Cannot start the mongoDB adapter: %v", err)
 	}
@@ -97,6 +92,11 @@ func main() {
 	twilioAccountSID := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_TWILIO_ACCOUNT_SID", false, true)
 	twilioToken := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_TWILIO_TOKEN", false, true)
 	twilioServiceSID := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_TWILIO_SERVICE_SID", false, true)
+
+	twilioPhoneVerifier, err := phoneverifier.NewTwilioAdapter(twilioAccountSID, twilioToken, twilioServiceSID)
+	if err != nil {
+		logger.Warnf("Cannot start the twilio phone verifier: %v", err)
+	}
 
 	smtpHost := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SMTP_HOST", false, false)
 	smtpPort := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SMTP_PORT", false, false)
@@ -110,6 +110,18 @@ func main() {
 	if err != nil {
 		logger.Infof("Error parsing ROKWIRE_CORE_VERIFY_EMAIL, applying defaults: %v", err)
 		verifyEmail = true
+	}
+	verifyWaitTimeRaw := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_VERIFY_WAIT_TIME", false, false)
+	verifyWaitTime, err := strconv.Atoi(verifyWaitTimeRaw)
+	if err != nil {
+		logger.Infof("Error parsing ROKWIRE_CORE_VERIFY_WAIT_TIME, applying defaults: %v", err)
+		verifyWaitTime = 30 // minutes
+	}
+	verifyExpiryRaw := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_VERIFY_EXPIRY", false, false)
+	verifyExpiry, err := strconv.Atoi(verifyExpiryRaw)
+	if err != nil {
+		logger.Infof("Error parsing ROKWIRE_CORE_VERIFY_EXPIRY, applying defaults: %v", err)
+		verifyExpiry = 24 // hours
 	}
 
 	emailer := emailer.NewEmailerAdapter(smtpHost, smtpPortNum, smtpUser, smtpPassword, smtpFrom)
@@ -180,8 +192,8 @@ func main() {
 		FirstParty:  true,
 	}
 
-	authImpl, err := auth.NewAuth(serviceID, host, authPrivKey, authService, storageAdapter, emailer, minTokenExp, maxTokenExp, supportLegacySigs,
-		twilioAccountSID, twilioToken, twilioServiceSID, profileBBAdapter, smtpHost, smtpPortNum, smtpUser, smtpPassword, smtpFrom, logger, Version)
+	authImpl, err := auth.NewAuth(serviceID, host, authPrivKey, authService, storageAdapter, emailer, twilioPhoneVerifier, profileBBAdapter,
+		minTokenExp, maxTokenExp, supportLegacySigs, Version, logger)
 	if err != nil {
 		logger.Fatalf("Error initializing auth: %v", err)
 	}
@@ -204,7 +216,7 @@ func main() {
 	}
 
 	//core
-	coreAPIs := core.NewCoreAPIs(env, Version, Build, serviceID, storageAdapter, authImpl, systemInitSettings, verifyEmail, logger)
+	coreAPIs := core.NewCoreAPIs(env, Version, Build, serviceID, storageAdapter, authImpl, systemInitSettings, verifyEmail, verifyWaitTime, verifyExpiry, logger)
 	coreAPIs.Start()
 
 	// read CORS parameters from stored env config
