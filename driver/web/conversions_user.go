@@ -440,11 +440,7 @@ func deviceFromDef(item *Def.Device) *model.Device {
 		return nil
 	}
 
-	var deviceID string
-	if item.DeviceId != nil {
-		deviceID = *item.DeviceId
-	}
-	return &model.Device{DeviceID: deviceID, Type: string(item.Type), OS: defString(item.Os)}
+	return &model.Device{DeviceID: item.DeviceId, Type: string(item.Type), OS: defString(item.Os)}
 }
 
 func deviceToDef(item *model.Device) *Def.Device {
@@ -452,7 +448,7 @@ func deviceToDef(item *model.Device) *Def.Device {
 		return nil
 	}
 
-	return &Def.Device{Id: &item.ID, DeviceId: &item.DeviceID, Type: Def.DeviceType(item.Type), Os: &item.OS}
+	return &Def.Device{Id: &item.ID, DeviceId: item.DeviceID, Type: Def.DeviceType(item.Type), Os: &item.OS}
 }
 
 func deviceListToDef(items []model.Device) []Def.Device {

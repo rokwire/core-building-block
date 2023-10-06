@@ -1173,7 +1173,7 @@ func (a *Auth) clearExpiredSessions(identifier string, l *logs.Log) error {
 }
 
 func (a *Auth) applyLogin(anonymous bool, sub string, authType model.AuthType, appOrg model.ApplicationOrganization, account *model.Account,
-	appType model.ApplicationType, ipAddress string, deviceType string, deviceOS *string, deviceID string, clientVersion *string, params map[string]interface{},
+	appType model.ApplicationType, ipAddress string, deviceType string, deviceOS *string, deviceID *string, clientVersion *string, params map[string]interface{},
 	state string, l *logs.Log) (*model.LoginSession, error) {
 
 	var err error
@@ -1254,7 +1254,7 @@ func (a *Auth) applyLogin(anonymous bool, sub string, authType model.AuthType, a
 	return loginSession, nil
 }
 
-func (a *Auth) createDevice(accountID string, deviceType string, deviceOS *string, deviceID string, l *logs.Log) (*model.Device, error) {
+func (a *Auth) createDevice(accountID string, deviceType string, deviceOS *string, deviceID *string, l *logs.Log) (*model.Device, error) {
 	//id
 	idUUID, _ := uuid.NewUUID()
 	id := idUUID.String()

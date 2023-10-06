@@ -136,7 +136,7 @@ type profile struct {
 type userDevice struct {
 	ID string `bson:"_id"`
 
-	DeviceID string `bson:"device_id"`
+	DeviceID *string `bson:"device_id"`
 
 	Type string `bson:"type"`
 	OS   string `bson:"os"`
@@ -148,8 +148,8 @@ type userDevice struct {
 type device struct {
 	ID string `bson:"_id"`
 
-	DeviceID string `bson:"device_id"`
-	Account  string `bson:"account_id"`
+	DeviceID *string `bson:"device_id"`
+	Account  string  `bson:"account_id"`
 
 	Type string `bson:"type"`
 	OS   string `bson:"os"`

@@ -449,14 +449,18 @@ func (sa *Adapter) setCachedAuthTypes(authProviders []model.AuthType) {
 		err := validate.Struct(authType)
 		if err == nil {
 			//we will get it by id and code as well
-			sa.cachedAuthTypes.Store(authType.ID, authType)
-			sa.cachedAuthTypes.Store(authType.Code, authType)
-			for _, alias := range authType.Aliases {
-				sa.cachedAuthTypes.Store(alias, authType)
-			}
+			sa.setCachedAuthType(authType)
 		} else {
 			sa.logger.Errorf("failed to validate and cache auth type with code %s: %s", authType.Code, err.Error())
 		}
+	}
+}
+
+func (sa *Adapter) setCachedAuthType(authType model.AuthType) {
+	sa.cachedAuthTypes.Store(authType.ID, authType)
+	sa.cachedAuthTypes.Store(authType.Code, authType)
+	for _, alias := range authType.Aliases {
+		sa.cachedAuthTypes.Store(alias, authType)
 	}
 }
 
@@ -3872,11 +3876,14 @@ func (sa *Adapter) UpdateApplicationOrganization(context TransactionContext, app
 }
 
 // FindDevice finds a device by device id and account id
-func (sa *Adapter) FindDevice(context TransactionContext, deviceID string, accountID string) (*model.Device, error) {
-	filter := bson.D{primitive.E{Key: "device_id", Value: deviceID},
-		primitive.E{Key: "account_id", Value: accountID}}
-	var result []device
+func (sa *Adapter) FindDevice(context TransactionContext, deviceID *string, accountID string) (*model.Device, error) {
+	filter := bson.D{primitive.E{Key: "account_id", Value: accountID}}
 
+	if deviceID != nil {
+		filter = append(filter, primitive.E{Key: "device_id", Value: *deviceID})
+	}
+
+	var result []device
 	err := sa.db.devices.FindWithContext(context, filter, &result, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeDevice, nil, err)
@@ -3920,6 +3927,7 @@ func (sa *Adapter) InsertDevice(context TransactionContext, device model.Device)
 
 // InsertAuthType inserts an auth type
 func (sa *Adapter) InsertAuthType(context TransactionContext, authType model.AuthType) (*model.AuthType, error) {
+	sa.setCachedAuthType(authType)
 	_, err := sa.db.authTypes.InsertOneWithContext(context, authType)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeAuthType, nil, err)

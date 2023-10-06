@@ -87,7 +87,7 @@ func (h ServicesApisHandler) login(l *logs.Log, r *http.Request, claims *tokenau
 	//device
 	requestDevice := requestData.Device
 
-	noLoginParams, loginSession, mfaTypes, err := h.coreAPIs.Auth.Login(ip, string(requestDevice.Type), requestDevice.Os, *requestDevice.DeviceId, string(requestData.AuthType),
+	noLoginParams, loginSession, mfaTypes, err := h.coreAPIs.Auth.Login(ip, string(requestDevice.Type), requestDevice.Os, requestDevice.DeviceId, string(requestData.AuthType),
 		requestCreds, requestData.ApiKey, requestData.AppTypeIdentifier, requestData.OrgId, requestParams, &clientVersion, requestProfile, requestPrivacy, requestPreferences,
 		requestData.AccountIdentifierId, false, l)
 	if err != nil {
