@@ -101,7 +101,6 @@ func (h ServicesApisHandler) login(l *logs.Log, r *http.Request, claims *tokenau
 
 	///prepare response
 
-	//noLoginParams
 	//message
 	if message != nil {
 		responseData := &Def.SharedResLogin{Message: message}

@@ -121,7 +121,6 @@ func (h AdminApisHandler) login(l *logs.Log, r *http.Request, claims *tokenauth.
 
 	///prepare response
 
-	//noLoginParams
 	//message
 	if message != nil {
 		responseData := &Def.SharedResLogin{Message: message}

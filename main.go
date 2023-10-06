@@ -73,7 +73,7 @@ func main() {
 	port := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_PORT", false, false)
 	//Default port of 80
 	if port == "" {
-		port = "5000"
+		port = "80"
 	}
 
 	host := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_HOST", true, false)
