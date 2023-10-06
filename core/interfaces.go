@@ -32,6 +32,7 @@ type Services interface {
 	SerUpdateAccountPreferences(id string, appID string, orgID string, anonymous bool, preferences map[string]interface{}, l *logs.Log) (bool, error)
 	SerUpdateAccountProfile(accountID string, profile model.Profile) error
 	SerUpdateAccountPrivacy(accountID string, privacy model.Privacy) error
+	SerUpdateAccountSecrets(accountID string, secrets map[string]interface{}) error
 	SerUpdateAccountUsername(accountID string, appID string, orgID string, username string) error
 
 	SerGetAccounts(limit int, offset int, appID string, orgID string, accountID *string, firstName *string, lastName *string, authType *string,
@@ -176,6 +177,7 @@ type Storage interface {
 	FindAccountsByUsername(context storage.TransactionContext, appOrg *model.ApplicationOrganization, username string) ([]model.Account, error)
 
 	UpdateAccountPreferences(context storage.TransactionContext, accountID string, preferences map[string]interface{}) error
+	UpdateAccountSecrets(context storage.TransactionContext, accountID string, secrets map[string]interface{}) error
 	UpdateAccountSystemConfigs(context storage.TransactionContext, accountID string, configs map[string]interface{}) error
 	InsertAccountPermissions(context storage.TransactionContext, accountID string, permissions []model.Permission) error
 	DeleteAccountPermissions(context storage.TransactionContext, accountID string, permissionNames []string) error

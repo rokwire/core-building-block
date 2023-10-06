@@ -29,6 +29,8 @@ const (
 	TypeAccountPreferences logutils.MessageDataType = "account preferences"
 	//TypeAccountUsername account username
 	TypeAccountUsername logutils.MessageDataType = "account username"
+	//TypeAccountSecrets account secrets
+	TypeAccountSecrets logutils.MessageDataType = "account secrets"
 	//TypeAccountSystemConfigs account system configs
 	TypeAccountSystemConfigs logutils.MessageDataType = "account system configs"
 	//TypeAccountAuthType account auth type
@@ -83,6 +85,7 @@ type Account struct {
 	Username      string
 	ExternalIDs   map[string]string
 	Preferences   map[string]interface{}
+	Secrets       map[string]interface{}
 	SystemConfigs map[string]interface{}
 	Profile       Profile //one account has one profile, one profile can be shared between many accounts
 	Privacy       Privacy

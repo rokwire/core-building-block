@@ -28,6 +28,8 @@ func accountToDef(item model.Account) *Def.Account {
 	privacy := privacyToDef(&item.Privacy)
 	//preferences
 	preferences := &item.Preferences
+	//secrets
+	secrets := &item.Secrets
 	//systemConfigs
 	systemConfigs := &item.SystemConfigs
 	//permissions
@@ -58,8 +60,9 @@ func accountToDef(item model.Account) *Def.Account {
 	}
 
 	return &Def.Account{Id: &item.ID, Anonymous: &item.Anonymous, System: &item.AppOrg.Organization.System, Permissions: &permissions, Roles: &roles, Groups: &groups,
-		Privacy: privacy, Verified: &item.Verified, Scopes: &scopes, AuthTypes: &authTypes, Username: username, Profile: profile, Preferences: preferences, SystemConfigs: systemConfigs,
-		LastLoginDate: &lastLoginDate, LastAccessTokenDate: &lastAccessTokenDate, MostRecentClientVersion: item.MostRecentClientVersion, ExternalIds: &externalIds}
+		Privacy: privacy, Verified: &item.Verified, Scopes: &scopes, AuthTypes: &authTypes, Username: username, Profile: profile, Preferences: preferences, Secrets: secrets,
+		SystemConfigs: systemConfigs, LastLoginDate: &lastLoginDate, LastAccessTokenDate: &lastAccessTokenDate, MostRecentClientVersion: item.MostRecentClientVersion,
+		ExternalIds: &externalIds}
 }
 
 func accountsToDef(items []model.Account) []Def.Account {

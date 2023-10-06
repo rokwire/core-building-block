@@ -37,6 +37,7 @@ type account struct {
 	Username      string                 `bson:"username"`
 	ExternalIDs   map[string]string      `bson:"external_ids"`
 	Preferences   map[string]interface{} `bson:"preferences"`
+	Secrets       map[string]interface{} `bson:"secrets"`
 	SystemConfigs map[string]interface{} `bson:"system_configs"`
 	Profile       profile                `bson:"profile"`
 

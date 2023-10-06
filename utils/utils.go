@@ -15,6 +15,8 @@
 package utils
 
 import (
+	"crypto/aes"
+	"crypto/cipher"
 	crand "crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
@@ -56,6 +58,11 @@ const (
 	lower   string = "abcdefghijklmnopqrstuvwxyz"
 	digits  string = "0123456789"
 	special string = "!@#$%^&*()"
+
+	// key length for AES-256 encryption/decryption
+	keyLength int = 32
+	// standard GCM nonce length
+	gcmNonceLength int = 12
 )
 
 // SetRandomSeed sets the seed for random number generation
@@ -222,6 +229,101 @@ func GetPrintableString(v *string, defaultVal string) string {
 		return *v
 	}
 	return defaultVal
+}
+
+// Encrypt data with AES-256 GCM and returns the data encrypted with a generated key, the generated key encrypted with aesKey, and their respective nonces
+func Encrypt(data []byte, aesKey []byte) (string, string, string, string, error) {
+	//1. generate random key
+	randomKey, err := GenerateAESKey()
+	if err != nil {
+		return "", "", "", "", err
+	}
+
+	//2. encrypt data using generated key
+	encodedData, encodedDataNonce, err := aesEncryptWithGCM(data, randomKey, "data")
+	if err != nil {
+		return "", "", "", "", errors.WrapErrorAction(logutils.ActionEncrypt, "data", logutils.StringArgs("AES-256 GCM"), err)
+	}
+
+	//3. encrypt generated key using provided key
+	encodedKey, encodedKeyNonce, err := aesEncryptWithGCM(randomKey, aesKey, "key")
+	if err != nil {
+		return "", "", "", "", errors.WrapErrorAction(logutils.ActionEncrypt, "key", logutils.StringArgs("AES-256 GCM"), err)
+	}
+
+	return encodedData, encodedDataNonce, encodedKey, encodedKeyNonce, nil
+}
+
+func aesEncryptWithGCM(data []byte, key []byte, messageType string) (string, string, error) {
+	nonce, err := GenerateRandomBytes(gcmNonceLength)
+	if err != nil {
+		return "", "", errors.WrapErrorAction(logutils.ActionGenerate, logutils.MessageDataType("GCM "+messageType+" nonce"), &logutils.FieldArgs{"nonce_length": gcmNonceLength}, err)
+	}
+	cipherBlock, err := aes.NewCipher(key)
+	if err != nil {
+		return "", "", errors.WrapErrorAction(logutils.ActionCreate, "AES cipher block", logutils.StringArgs(messageType), err)
+	}
+	gcm, err := cipher.NewGCM(cipherBlock)
+	if err != nil {
+		return "", "", errors.WrapErrorAction(logutils.ActionCreate, "GCM block cipher", logutils.StringArgs(messageType), err)
+	}
+	encrypted := gcm.Seal(nil, nonce, data, nil)
+
+	encodedData := base64.StdEncoding.EncodeToString(encrypted)
+	encodedNonce := base64.StdEncoding.EncodeToString(nonce)
+	return encodedData, encodedNonce, nil
+}
+
+// Decrypt decrypts data using AES-256 GCM with the AES key, nonce, and private key
+func Decrypt(data string, dataNonce string, key string, keyNonce string, aesKey []byte) ([]byte, error) {
+	//1. decrypt generated key
+	decryptedKey, err := aesDecryptWithGCM(key, keyNonce, aesKey, "key")
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionDecrypt, "key", logutils.StringArgs("AES-256 GCM"), err)
+	}
+
+	//2. decrypt data
+	decryptedData, err := aesDecryptWithGCM(data, dataNonce, decryptedKey, "data")
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionDecrypt, "data", logutils.StringArgs("AES-256 GCM"), err)
+	}
+
+	return decryptedData, nil
+}
+
+func aesDecryptWithGCM(data string, nonce string, key []byte, messageType string) ([]byte, error) {
+	decodedNonce, err := base64.StdEncoding.DecodeString(nonce)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionDecode, logutils.MessageDataType("GCM "+messageType+" nonce"), nil, err)
+	}
+	decodedData, err := base64.StdEncoding.DecodeString(data)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionDecode, logutils.MessageDataType(messageType), nil, err)
+	}
+	cipherBlock, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionCreate, "AES cipher block", logutils.StringArgs(messageType), err)
+	}
+
+	gcm, err := cipher.NewGCM(cipherBlock)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionCreate, "GCM block cipher", logutils.StringArgs(messageType), err)
+	}
+	decrypted, err := gcm.Open(nil, decodedNonce, decodedData, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionDecrypt, logutils.MessageDataType("decoded "+messageType), nil, err)
+	}
+
+	return decrypted, err
+}
+
+// GenerateAESKey creates a new random AES key with length equal to the keyLength constant
+func GenerateAESKey() ([]byte, error) {
+	randomKey, err := GenerateRandomBytes(keyLength)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionGenerate, "AES key", &logutils.FieldArgs{"key_length": keyLength}, err)
+	}
+	return randomKey, nil
 }
 
 // StartTimer starts a timer with the given name, period, and function to call when the timer goes off

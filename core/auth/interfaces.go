@@ -416,6 +416,12 @@ type APIs interface {
 	//GetAdminToken returns an admin token for the specified application and organization
 	GetAdminToken(claims tokenauth.Claims, appID string, orgID string, l *logs.Log) (string, error)
 
+	// EncryptSecrets JSON encodes and encrypts the given plain secrets
+	EncryptSecrets(secrets map[string]interface{}) (map[string]interface{}, error)
+
+	// DecryptSecrets decrypts and JSON decodes the given encrypted secrets
+	DecryptSecrets(secrets map[string]interface{}) (map[string]interface{}, error)
+
 	//GetAuthKeySet generates a JSON Web Key Set for auth service registration
 	GetAuthKeySet() (jwk.Set, error)
 
@@ -546,6 +552,11 @@ type Storage interface {
 	FindServiceAuthorization(userID string, orgID string) (*model.ServiceAuthorization, error)
 	SaveServiceAuthorization(authorization *model.ServiceAuthorization) error
 	DeleteServiceAuthorization(userID string, orgID string) error
+
+	//Keys
+	FindKey(name string) (*model.Key, error)
+	InsertKey(key model.Key) error
+	UpdateKey(key model.Key) error
 
 	//APIKeys
 	LoadAPIKeys() ([]model.APIKey, error)

@@ -35,6 +35,7 @@ type database struct {
 	db       *mongo.Database
 	dbClient *mongo.Client
 
+	keys                            *collectionWrapper
 	apiKeys                         *collectionWrapper
 	authTypes                       *collectionWrapper
 	identityProviders               *collectionWrapper
@@ -81,6 +82,12 @@ func (m *database) start() error {
 
 	//apply checks
 	db := client.Database(m.mongoDBName)
+
+	keys := &collectionWrapper{database: m, coll: db.Collection("keys")}
+	err = m.applyKeysChecks(keys)
+	if err != nil {
+		return err
+	}
 
 	authTypes := &collectionWrapper{database: m, coll: db.Collection("auth_types")}
 	err = m.applyAuthTypesChecks(authTypes)
@@ -206,6 +213,7 @@ func (m *database) start() error {
 	m.db = db
 	m.dbClient = client
 
+	m.keys = keys
 	m.authTypes = authTypes
 	m.identityProviders = identityProviders
 	m.accounts = accounts
@@ -227,6 +235,7 @@ func (m *database) start() error {
 	m.permissions = permissions
 	m.follows = follows
 
+	go m.keys.Watch(nil, m.logger)
 	go m.apiKeys.Watch(nil, m.logger)
 	go m.authTypes.Watch(nil, m.logger)
 	go m.identityProviders.Watch(nil, m.logger)
@@ -239,6 +248,19 @@ func (m *database) start() error {
 
 	m.listeners = []Listener{}
 
+	return nil
+}
+
+func (m *database) applyKeysChecks(keys *collectionWrapper) error {
+	m.logger.Info("apply keys checks.....")
+
+	//add name index
+	err := keys.AddIndex(bson.D{primitive.E{Key: "name", Value: 1}}, true)
+	if err != nil {
+		return err
+	}
+
+	m.logger.Info("keys check passed")
 	return nil
 }
 
@@ -599,6 +621,12 @@ func (m *database) onDataChanged(changeDoc map[string]interface{}) {
 	coll := nsMap["coll"]
 
 	switch coll {
+	case "keys":
+		m.logger.Info("keys collection changed")
+
+		for _, listener := range m.listeners {
+			go listener.OnKeysUpdated()
+		}
 	case "api_keys":
 		m.logger.Info("api_keys collection changed")
 
