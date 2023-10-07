@@ -19,6 +19,7 @@ import (
 	"core-building-block/driven/phoneverifier"
 	"core-building-block/driven/storage"
 	"core-building-block/utils"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -46,7 +47,6 @@ const (
 	ServiceAuthTypeCore string = "core"
 
 	authServiceID  string = "auth"
-	authKeyAlg     string = "RS256"
 	rokwireKeyword string = "ROKWIRE"
 
 	rokwireTokenAud string = "rokwire"
@@ -60,6 +60,8 @@ const (
 
 	defaultIllinoisOIDCIdentifier string = "uin"
 	illinoisOIDCCode              string = "illinois_oidc"
+
+	serviceAESKey string = "service_aes_key"
 
 	typeMail              logutils.MessageDataType = "mail"
 	typeIdentifierType    logutils.MessageDataType = "identifier type"
@@ -102,7 +104,9 @@ type Auth struct {
 	serviceAuthTypes   map[string]serviceAuthType
 	mfaTypes           map[string]mfaType
 
-	authPrivKey *keys.PrivKey
+	currentAuthPrivKey *keys.PrivKey
+	oldAuthPrivKey     *keys.PrivKey
+	serviceAESKey      []byte
 
 	ServiceRegManager *authservice.ServiceRegManager
 	SignatureAuth     *sigauth.SignatureAuth
@@ -129,8 +133,8 @@ type Auth struct {
 }
 
 // NewAuth creates a new auth instance
-func NewAuth(serviceID string, host string, authPrivKey *keys.PrivKey, authService *authservice.AuthService, storage Storage, emailer Emailer, phoneVerifier PhoneVerifier,
-	profileBB ProfileBuildingBlock, minTokenExp *int64, maxTokenExp *int64, supportLegacySigs bool, version string, logger *logs.Logger) (*Auth, error) {
+func NewAuth(serviceID string, host string, currentAuthPrivKey *keys.PrivKey, oldAuthPrivKey *keys.PrivKey, authService *authservice.AuthService, storage Storage, emailer Emailer,
+	phoneVerifier PhoneVerifier, profileBB ProfileBuildingBlock, minTokenExp *int64, maxTokenExp *int64, supportLegacySigs bool, version string, logger *logs.Logger) (*Auth, error) {
 	if minTokenExp == nil {
 		var minTokenExpVal int64 = 5
 		minTokenExp = &minTokenExpVal
@@ -157,12 +161,17 @@ func NewAuth(serviceID string, host string, authPrivKey *keys.PrivKey, authServi
 	deleteSessionsTimerDone := make(chan bool)
 
 	auth := &Auth{storage: storage, emailer: emailer, phoneVerifier: phoneVerifier, logger: logger, identifierTypes: identifierTypes, authTypes: authTypes,
-		externalAuthTypes: externalAuthTypes, anonymousAuthTypes: anonymousAuthTypes, serviceAuthTypes: serviceAuthTypes, mfaTypes: mfaTypes, authPrivKey: authPrivKey,
-		ServiceRegManager: nil, serviceID: serviceID, host: host, minTokenExp: *minTokenExp, maxTokenExp: *maxTokenExp, profileBB: profileBB,
-		cachedIdentityProviders: cachedIdentityProviders, identityProvidersLock: identityProvidersLock, apiKeys: apiKeys, apiKeysLock: apiKeysLock,
-		deleteSessionsTimerDone: deleteSessionsTimerDone, version: version}
+		externalAuthTypes: externalAuthTypes, anonymousAuthTypes: anonymousAuthTypes, serviceAuthTypes: serviceAuthTypes, mfaTypes: mfaTypes,
+		currentAuthPrivKey: currentAuthPrivKey, oldAuthPrivKey: oldAuthPrivKey, ServiceRegManager: nil, serviceID: serviceID, host: host, minTokenExp: *minTokenExp,
+		maxTokenExp: *maxTokenExp, profileBB: profileBB, cachedIdentityProviders: cachedIdentityProviders, identityProvidersLock: identityProvidersLock,
+		apiKeys: apiKeys, apiKeysLock: apiKeysLock, deleteSessionsTimerDone: deleteSessionsTimerDone, version: version}
 
-	err := auth.storeCoreRegs()
+	err := auth.verifyServiceAESKey()
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionVerify, "service AES key", nil, err)
+	}
+
+	err = auth.storeCoreRegs()
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionSave, model.TypeServiceReg, nil, err)
 	}
@@ -178,7 +187,7 @@ func NewAuth(serviceID string, host string, authPrivKey *keys.PrivKey, authServi
 
 	auth.ServiceRegManager = serviceRegManager
 
-	signatureAuth, err := sigauth.NewSignatureAuth(authPrivKey, serviceRegManager, true, supportLegacySigs)
+	signatureAuth, err := sigauth.NewSignatureAuth(currentAuthPrivKey, serviceRegManager, true, supportLegacySigs)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionInitialize, "signature auth", nil, err)
 	}
@@ -2406,12 +2415,12 @@ func (a *Auth) buildAccessToken(claims tokenauth.Claims, permissions string, sco
 		claims.Permissions = permissions
 	}
 	claims.Scope = scope
-	return tokenauth.GenerateSignedToken(&claims, a.authPrivKey)
+	return tokenauth.GenerateSignedToken(&claims, a.currentAuthPrivKey)
 }
 
 func (a *Auth) buildCsrfToken(claims tokenauth.Claims) (string, error) {
 	claims.Purpose = "csrf"
-	return tokenauth.GenerateSignedToken(&claims, a.authPrivKey)
+	return tokenauth.GenerateSignedToken(&claims, a.currentAuthPrivKey)
 }
 
 // getScopedAccessToken returns a scoped access token with the requested scopes
@@ -2626,6 +2635,73 @@ func (a *Auth) setLogContext(account *model.Account, l *logs.Log) {
 	l.SetContext("account_id", accountID)
 }
 
+func (a *Auth) verifyServiceAESKey() error {
+	key, err := a.storage.FindKey(serviceAESKey)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeKey, nil, err)
+	}
+	if key == nil {
+		// if key does not exist, generate one and store it encrypted with the current service public key
+		keyBytes, err := utils.GenerateAESKey()
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionGenerate, "service AES key", nil, err)
+		}
+
+		// encrypt the new service AES key with the current service public key
+		encryptedKeyBytes, err := a.currentAuthPrivKey.PubKey.Encrypt(keyBytes, nil)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionEncrypt, "service AES key", nil, err)
+		}
+		newKey := model.Key{Name: serviceAESKey, Key: base64.StdEncoding.EncodeToString(encryptedKeyBytes), DateCreated: time.Now().UTC()}
+
+		err = a.storage.InsertKey(newKey)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionInsert, model.TypeKey, nil, err)
+		}
+
+		a.serviceAESKey = keyBytes
+	} else {
+		// if key does exist, check if it should be rotated
+		decodedKey, err := base64.StdEncoding.DecodeString(key.Key)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionDecode, "service AES key", nil, err)
+		}
+
+		// attempt to decode and decrypt the stored service AES key with the current private key
+		decryptedKey, err := a.currentAuthPrivKey.Decrypt(decodedKey, nil)
+		if err != nil {
+			a.logger.Infof("failed to decrypt service AES key using current private key: %v", err)
+			a.logger.Info("attempting service private key rotation.....")
+
+			if a.oldAuthPrivKey == nil {
+				return errors.ErrorData(logutils.StatusMissing, "previous service private key", nil)
+			}
+
+			// attempt to decode and decrypt the stored service AES key with the old private key
+			decryptedKey, err = a.oldAuthPrivKey.Decrypt(decodedKey, nil)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionDecrypt, "service AES key", nil, err)
+			}
+
+			// re-encrypt the service AES key with the current private key and store it
+			encryptedKeyBytes, err := a.currentAuthPrivKey.PubKey.Encrypt([]byte(decryptedKey), nil)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionEncrypt, "service AES key", nil, err)
+			}
+			updatedKey := model.Key{Name: serviceAESKey, Key: base64.StdEncoding.EncodeToString(encryptedKeyBytes)}
+
+			err = a.storage.UpdateKey(updatedKey)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionInsert, model.TypeKey, nil, err)
+			}
+		}
+
+		a.serviceAESKey = []byte(decryptedKey)
+	}
+
+	return nil
+}
+
 // storeCoreRegs stores the service registration records for the Core BB
 func (a *Auth) storeCoreRegs() error {
 	err := a.storage.MigrateServiceRegs()
@@ -2634,7 +2710,7 @@ func (a *Auth) storeCoreRegs() error {
 	}
 
 	// Setup "auth" registration for token validation
-	authReg := model.ServiceRegistration{Registration: authservice.ServiceReg{ServiceID: authServiceID, Host: a.host, PubKey: a.authPrivKey.PubKey}, CoreHost: a.host,
+	authReg := model.ServiceRegistration{Registration: authservice.ServiceReg{ServiceID: authServiceID, Host: a.host, PubKey: a.currentAuthPrivKey.PubKey}, CoreHost: a.host,
 		Name: "ROKWIRE Auth Service", Description: "The Auth Service is a subsystem of the Core Building Block that manages authentication and authorization.", FirstParty: true}
 	err = a.storage.SaveServiceReg(&authReg, true)
 	if err != nil {
@@ -2642,7 +2718,7 @@ func (a *Auth) storeCoreRegs() error {
 	}
 
 	// Setup core registration for signature validation
-	coreReg := model.ServiceRegistration{Registration: authservice.ServiceReg{ServiceID: a.serviceID, ServiceAccountID: a.serviceID, Host: a.host, PubKey: a.authPrivKey.PubKey}, CoreHost: a.host,
+	coreReg := model.ServiceRegistration{Registration: authservice.ServiceReg{ServiceID: a.serviceID, ServiceAccountID: a.serviceID, Host: a.host, PubKey: a.currentAuthPrivKey.PubKey}, CoreHost: a.host,
 		Name: "ROKWIRE Core Building Block", Description: "The Core Building Block manages user, auth, and organization data for the ROKWIRE platform.", FirstParty: true}
 	err = a.storage.SaveServiceReg(&coreReg, true)
 	if err != nil {

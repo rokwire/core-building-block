@@ -15,6 +15,7 @@
 package model
 
 import (
+	"core-building-block/utils"
 	"fmt"
 	"time"
 
@@ -67,10 +68,11 @@ type AuthConfigData struct {
 
 // GetConfigData returns a pointer to the given config's Data as the given type T
 func GetConfigData[T ConfigData](c Config) (*T, error) {
-	if data, ok := c.Data.(T); ok {
-		return &data, nil
+	data, err := utils.JSONConvert[T, interface{}](c.Data)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionParse, TypeConfigData, &logutils.FieldArgs{"type": c.Type}, err)
 	}
-	return nil, errors.ErrorData(logutils.StatusInvalid, TypeConfigData, &logutils.FieldArgs{"type": c.Type})
+	return data, err
 }
 
 // ConfigData represents any set of data that may be stored in a config

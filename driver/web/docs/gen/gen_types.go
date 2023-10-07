@@ -211,6 +211,7 @@ type Account struct {
 	Profile                 *Profile                 `json:"profile,omitempty"`
 	Roles                   *[]AppOrgRole            `json:"roles,omitempty"`
 	Scopes                  *[]string                `json:"scopes,omitempty"`
+	Secrets                 *map[string]interface{}  `json:"secrets"`
 	System                  *bool                    `json:"system,omitempty"`
 	SystemConfigs           *map[string]interface{}  `json:"system_configs"`
 	// Deprecated:

@@ -36,6 +36,7 @@ type account struct {
 	MFATypes []mfaType `bson:"mfa_types,omitempty"`
 
 	Preferences   map[string]interface{} `bson:"preferences"`
+	Secrets       map[string]interface{} `bson:"secrets"`
 	SystemConfigs map[string]interface{} `bson:"system_configs"`
 	Profile       profile                `bson:"profile"`
 

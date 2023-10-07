@@ -326,7 +326,7 @@ func (s *servicesImpl) SerDeleteAccount(id string) error {
 }
 
 func (s *servicesImpl) SerGetAccount(accountID string) (*model.Account, error) {
-	return s.app.serGetAccount(accountID)
+	return s.app.sharedGetAccount(accountID)
 }
 
 func (s *servicesImpl) SerGetProfile(accountID string) (*model.Profile, error) {
@@ -351,6 +351,10 @@ func (s *servicesImpl) SerUpdateAccountProfile(accountID string, profile model.P
 
 func (s *servicesImpl) SerUpdateAccountPrivacy(accountID string, privacy model.Privacy) error {
 	return s.app.serUpdateAccountPrivacy(accountID, privacy)
+}
+
+func (s *servicesImpl) SerUpdateAccountSecrets(accountID string, secrets map[string]interface{}) error {
+	return s.app.serUpdateAccountSecrets(accountID, secrets)
 }
 
 func (s *servicesImpl) SerUpdateAccountUsername(accountID string, appID string, orgID string, username string) error {
@@ -505,7 +509,7 @@ func (s *administrationImpl) AdmGetAccounts(limit int, offset int, appID string,
 }
 
 func (s *administrationImpl) AdmGetAccount(accountID string) (*model.Account, error) {
-	return s.app.admGetAccount(accountID)
+	return s.app.sharedGetAccount(accountID)
 }
 
 func (s *administrationImpl) AdmGetFilterAccounts(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]map[string]interface{}, error) {

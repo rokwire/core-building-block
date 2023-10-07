@@ -67,6 +67,8 @@ const (
 	TypeJSONWebKeySet logutils.MessageDataType = "jwks"
 	//TypePubKey pub key type
 	TypePubKey logutils.MessageDataType = "pub key"
+	//TypeKey key type
+	TypeKey logutils.MessageDataType = "key"
 	//TypeAPIKey api key type
 	TypeAPIKey logutils.MessageDataType = "api key"
 	//TypeCreds cred type
@@ -231,6 +233,15 @@ type LoginState struct {
 
 	State       map[string]interface{} `bson:"state"`
 	DateCreated time.Time              `bson:"date_created"`
+}
+
+// Key represents a service key and any associataed data
+type Key struct {
+	Name string `bson:"name"`
+	Key  string `bson:"key"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
 }
 
 // APIKey represents an API key entity

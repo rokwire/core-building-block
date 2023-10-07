@@ -81,6 +81,8 @@ paths:
     $ref: "./resources/services/account/profile.yaml"
   /services/account/privacy:
     $ref: "./resources/services/account/privacy.yaml"
+  /services/account/secrets:
+    $ref: "./resources/services/account/secrets.yaml"
   /services/account/system-configs:
     $ref: "./resources/services/account/system-configs.yaml"
   /services/account/username:
