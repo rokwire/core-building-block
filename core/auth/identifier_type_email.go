@@ -21,7 +21,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
-	"regexp"
 	"strings"
 	"time"
 
@@ -72,8 +71,7 @@ func (a *emailIdentifierImpl) withIdentifier(creds string) (identifierType, erro
 	}
 
 	email := strings.TrimSpace(requestCreds.Email)
-	validEmail := regexp.MustCompile(`^[a-zA-Z0-9.!#\$%&'*+/=?^_{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?(?:.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?)*$`)
-	if !validEmail.MatchString(email) {
+	if !utils.IsValidEmail(email) {
 		return nil, errors.ErrorData(logutils.StatusInvalid, typeEmailIdentifier, &logutils.FieldArgs{"email": email})
 	}
 

@@ -373,9 +373,14 @@ func (sa *Adapter) migrateAccounts(context TransactionContext, appOrg model.Appl
 			authTypes = append(authTypes, newAat)
 		}
 
+		// if there are no valid auth types then the account is inaccessible, so do not re-insert it
+		if len(authTypes) == 0 {
+			continue
+		}
+
 		now := time.Now().UTC()
-		// add profile email to identifiers if not already there
-		if acct.Profile.Email != nil && *acct.Profile.Email != "" {
+		// add profile email to identifiers if valid and not already there
+		if acct.Profile.Email != nil && utils.IsValidEmail(*acct.Profile.Email) {
 			foundEmail := false
 			for _, identifier := range identifiers {
 				if identifier.Code == "email" && identifier.Identifier == *acct.Profile.Email {
@@ -384,12 +389,11 @@ func (sa *Adapter) migrateAccounts(context TransactionContext, appOrg model.Appl
 				}
 			}
 			if !foundEmail {
-				emailIdentifier := accountIdentifier{ID: uuid.NewString(), Code: "email", Identifier: *acct.Profile.Email, Sensitive: true, DateCreated: now}
-				identifiers = append(identifiers, emailIdentifier)
+				identifiers = append(identifiers, accountIdentifier{ID: uuid.NewString(), Code: "email", Identifier: *acct.Profile.Email, Sensitive: true, DateCreated: now})
 			}
 		}
-		// add profile phone to identifiers if not already there
-		if acct.Profile.Phone != nil && *acct.Profile.Phone != "" {
+		// add profile phone to identifiers if valid and not already there
+		if acct.Profile.Phone != nil && utils.IsValidPhone(*acct.Profile.Phone) {
 			foundPhone := false
 			for _, identifier := range identifiers {
 				if identifier.Code == "phone" && identifier.Identifier == *acct.Profile.Phone {
