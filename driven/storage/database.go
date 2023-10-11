@@ -38,7 +38,8 @@ type database struct {
 	apiKeys                         *collectionWrapper
 	authTypes                       *collectionWrapper
 	identityProviders               *collectionWrapper
-	accounts                        *collectionWrapper
+	accounts                        *collectionWrapper //deprecated
+	accountsIdentities              *collectionWrapper
 	devices                         *collectionWrapper
 	credentials                     *collectionWrapper
 	loginsSessions                  *collectionWrapper
