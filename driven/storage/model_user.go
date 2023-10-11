@@ -58,6 +58,48 @@ type account struct {
 }
 
 type accountIdentity struct {
+	ID string `bson:"_id"`
+
+	AppsOrgsMemberships []appsOrgsMembership `bson:"apps_orgs_memberships"`
+
+	Scopes []string `bson:"scopes,omitempty"`
+
+	AuthTypes []accountAuthType `bson:"auth_types,omitempty"`
+
+	MFATypes []mfaType `bson:"mfa_types,omitempty"`
+
+	Username    string            `bson:"username"`
+	ExternalIDs map[string]string `bson:"external_ids"`
+
+	SystemConfigs map[string]interface{} `bson:"system_configs"`
+	Profile       profile                `bson:"profile"`
+
+	Devices []userDevice `bson:"devices,omitempty"`
+
+	Anonymous bool          `bson:"anonymous"`
+	Privacy   model.Privacy `bson:"privacy"`
+	Verified  bool          `bson:"verified"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
+
+	IsFollowing bool `bson:"is_following"`
+
+	LastLoginDate       *time.Time `bson:"last_login_date"`
+	LastAccessTokenDate *time.Time `bson:"last_access_token_date"`
+}
+
+type appsOrgsMembership struct {
+	ID       string `bson:"id"`
+	AppOrgID string `bson:"app_org_id,omitempty"`
+
+	Permissions []model.Permission `bson:"permissions,omitempty"`
+	Roles       []accountRole      `bson:"roles,omitempty"`
+	Groups      []accountGroup     `bson:"groups,omitempty"`
+
+	Preferences map[string]interface{} `bson:"preferences"`
+
+	MostRecentClientVersion *string `bson:"most_recent_client_version"`
 }
 
 type accountRole struct {
