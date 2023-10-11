@@ -616,6 +616,7 @@ func (a *Auth) applyAuthType(supportedAuthType model.SupportedAuthType, appOrg m
 
 	var account *model.Account
 	if identifierImpl == nil {
+		// if given an account identifier ID, find the account and attempt sign in
 		if accountIdentifierID != nil {
 			account, err = a.storage.FindAccountByIdentifierID(nil, *accountIdentifierID)
 			if err != nil {
@@ -2599,6 +2600,11 @@ func (a *Auth) updateExternalIdentifiers(account *model.Account, accountAuthType
 					primary := (externalUser.Email == externalUser.Identifier)
 					account.Identifiers[i].Identifier = externalUser.Email
 					account.Identifiers[i].Primary = &primary
+					// if the external email is not already verified, set verified to the default setting
+					if !account.Identifiers[i].Verified {
+						account.Identifiers[i].Verified = externalUser.IsEmailVerified
+					}
+
 					updated = true
 				}
 				if hasExternalEmail {

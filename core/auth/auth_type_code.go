@@ -99,14 +99,14 @@ func (a *codeAuthImpl) checkCredentials(identifierImpl identifierType, accountID
 	if identifierChannel.requiresCodeGeneration() {
 		if incomingCode == "" {
 			// generate a new code
-			code := strconv.Itoa(utils.GenerateRandomInt(1000000))
-			padLen := 6 - len(code)
+			incomingCode = strconv.Itoa(utils.GenerateRandomInt(1000000))
+			padLen := 6 - len(incomingCode)
 			if padLen > 0 {
-				code = strings.Repeat("0", padLen) + code
+				incomingCode = strings.Repeat("0", padLen) + incomingCode
 			}
 
 			// store generated codes in login state collection
-			state := map[string]interface{}{stateKeyCode: code}
+			state := map[string]interface{}{stateKeyCode: incomingCode}
 			loginState := model.LoginState{ID: uuid.NewString(), AppID: appOrg.Application.ID, OrgID: appOrg.Organization.ID, AccountID: accountID, State: state, DateCreated: time.Now().UTC()}
 			err := a.auth.storage.InsertLoginState(loginState)
 			if err != nil {
@@ -123,6 +123,11 @@ func (a *codeAuthImpl) checkCredentials(identifierImpl identifierType, accountID
 
 			if loginState == nil {
 				return "", "", errors.ErrorData(logutils.StatusInvalid, "code", logutils.StringArgs(*incomingCreds.Code))
+			}
+
+			err = a.auth.storage.DeleteLoginState(nil, loginState.ID)
+			if err != nil {
+				return "", "", errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginState, nil, err)
 			}
 
 			return "", "", nil
