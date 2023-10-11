@@ -17,13 +17,12 @@ package utils
 import (
 	crand "crypto/rand"
 	"crypto/sha256"
-	"encoding/base64"
-	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"math/rand"
 	"net/http"
 	"reflect"
+	"regexp"
 	"strings"
 	"time"
 
@@ -58,22 +57,10 @@ const (
 	special string = "!@#$%^&*()"
 )
 
-// SetRandomSeed sets the seed for random number generation
-func SetRandomSeed() error {
-	seed := make([]byte, 8)
-	_, err := crand.Read(seed)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionGenerate, "math/rand seed", nil, err)
-	}
-
-	rand.Seed(int64(binary.LittleEndian.Uint64(seed)))
-	return nil
-}
-
 // GenerateRandomBytes returns securely generated random bytes
 func GenerateRandomBytes(n int) ([]byte, error) {
 	b := make([]byte, n)
-	_, err := rand.Read(b)
+	_, err := crand.Read(b)
 	if err != nil {
 		return nil, err
 	}
@@ -82,9 +69,13 @@ func GenerateRandomBytes(n int) ([]byte, error) {
 }
 
 // GenerateRandomString returns a URL-safe, base64 encoded securely generated random string
-func GenerateRandomString(s int) (string, error) {
-	b, err := GenerateRandomBytes(s)
-	return base64.URLEncoding.EncodeToString(b), err
+func GenerateRandomString(s int) string {
+	chars := []rune("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+	b := make([]rune, s)
+	for i := range b {
+		b[i] = chars[rand.Intn(len(chars))]
+	}
+	return string(b)
 }
 
 // GenerateRandomInt returns a random integer between 0 and max
@@ -105,13 +96,36 @@ func GenerateRandomPassword(s int) string {
 	return string(password)
 }
 
-// ConvertToJSON converts to json
-func ConvertToJSON(data interface{}) ([]byte, error) {
-	dataJSON, err := json.Marshal(data)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionMarshal, "map to json", nil, err)
+// JSONConvert json marshals and unmarshals data into result (result should be passed as a pointer)
+func JSONConvert[T any, F any](val F) (*T, error) {
+	if IsNil(val) {
+		return nil, nil
 	}
-	return dataJSON, nil
+
+	bytes, err := json.Marshal(val)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionMarshal, "value", nil, err)
+	}
+
+	var out T
+	err = json.Unmarshal(bytes, &out)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, "value", nil, err)
+	}
+
+	return &out, nil
+}
+
+// IsNil determines whether the given interface has a nil value
+func IsNil(i interface{}) bool {
+	if i == nil {
+		return true
+	}
+	switch reflect.TypeOf(i).Kind() {
+	case reflect.Ptr, reflect.Map, reflect.Array, reflect.Chan, reflect.Slice:
+		return reflect.ValueOf(i).IsNil()
+	}
+	return false
 }
 
 // DeepEqual checks whether a and b are “deeply equal,”
@@ -158,6 +172,18 @@ func GetLogValue(value string, n int) string {
 	}
 	lastN := value[len(value)-n:]
 	return fmt.Sprintf("***%s", lastN)
+}
+
+// IsValidPhone reports whether phone is a valid phone number
+func IsValidPhone(phone string) bool {
+	validPhone := regexp.MustCompile(`^\+[1-9]\d{1,14}$`)
+	return validPhone.MatchString(phone)
+}
+
+// IsValidEmail reports whether email is a valid email address
+func IsValidEmail(email string) bool {
+	validEmail := regexp.MustCompile(`^[a-zA-Z0-9.!#\$%&'*+/=?^_{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?(?:.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?)*$`)
+	return validEmail.MatchString(email)
 }
 
 // FormatTime formats the time value which this pointer points. Gives empty string if the pointer is nil

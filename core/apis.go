@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/rokwire/core-auth-library-go/v3/authutils"
 	"github.com/rokwire/core-auth-library-go/v3/tokenauth"
 	"github.com/rokwire/logging-library-go/v2/errors"
 	"github.com/rokwire/logging-library-go/v2/logs"
@@ -47,7 +48,9 @@ type APIs struct {
 	systemAccountEmail      string
 	systemAccountPassword   string
 
-	verifyEmail bool
+	verifyEmail    bool
+	verifyWaitTime int
+	verifyExpiry   int
 
 	logger *logs.Logger
 }
@@ -84,23 +87,56 @@ func (c *APIs) storeSystemData() error {
 	transaction := func(context storage.TransactionContext) error {
 		createAccount := false
 
-		//1. insert email auth type if does not exist
-		emailAuthType, err := c.app.storage.FindAuthType(auth.AuthTypeEmail)
+		//1. insert password auth type if does not exist
+		passwordAuthType, err := c.app.storage.FindAuthType(auth.AuthTypePassword)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAuthType, nil, err)
 		}
-		if emailAuthType == nil {
+		if passwordAuthType == nil {
 			newDocuments["auth_type"] = uuid.NewString()
-			params := map[string]interface{}{"verify_email": c.verifyEmail}
-			emailAuthType = &model.AuthType{ID: newDocuments["auth_type"], Code: auth.AuthTypeEmail, Description: "Authentication type relying on email and password",
-				IsExternal: false, IsAnonymous: false, UseCredentials: true, IgnoreMFA: false, Params: params}
-			_, err = c.app.storage.InsertAuthType(context, *emailAuthType)
+			passwordAuthType = &model.AuthType{ID: newDocuments["auth_type"], Code: auth.AuthTypePassword, Description: "Authentication type relying on password",
+				IsExternal: false, IsAnonymous: false, UseCredentials: true, IgnoreMFA: false, Aliases: []string{auth.IdentifierTypeEmail, auth.IdentifierTypeUsername}}
+			_, err = c.app.storage.InsertAuthType(context, *passwordAuthType)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAuthType, nil, err)
 			}
 		}
 
-		//2. insert system org if does not exist
+		//2. update auth config or insert if it does not exist
+		config, err := c.app.storage.FindConfig(model.ConfigTypeAuth, authutils.AllApps, authutils.AllOrgs)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypeConfig, &logutils.FieldArgs{"type": model.ConfigTypeAuth, "app_id": authutils.AllApps, "org_id": authutils.AllOrgs}, err)
+		}
+		if config == nil {
+			configData := model.AuthConfigData{EmailShouldVerify: &c.verifyEmail, EmailVerifyWaitTime: &c.verifyWaitTime, EmailVerifyExpiry: &c.verifyExpiry}
+			newConfig := model.Config{ID: uuid.NewString(), Type: model.ConfigTypeAuth, AppID: authutils.AllApps, OrgID: authutils.AllOrgs, System: true, Data: configData, DateCreated: time.Now().UTC()}
+			err = c.app.storage.InsertConfig(context, newConfig)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionInsert, model.TypeConfig, &logutils.FieldArgs{"type": model.ConfigTypeAuth, "app_id": authutils.AllApps, "org_id": authutils.AllOrgs}, err)
+			}
+		} else {
+			configData, err := model.GetConfigData[model.AuthConfigData](*config)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionParse, model.TypeAuthConfigData, nil, err)
+			}
+
+			updateShouldVerify := configData.EmailShouldVerify == nil || (*configData.EmailShouldVerify != c.verifyEmail)
+			updateVerifyWaitTime := configData.EmailVerifyWaitTime == nil || (*configData.EmailVerifyWaitTime != c.verifyWaitTime)
+			updateVerifyExpiry := configData.EmailVerifyExpiry == nil || (*configData.EmailVerifyExpiry != c.verifyExpiry)
+			if updateShouldVerify || updateVerifyWaitTime || updateVerifyExpiry {
+				configData.EmailShouldVerify = &c.verifyEmail
+				configData.EmailVerifyWaitTime = &c.verifyWaitTime
+				configData.EmailVerifyExpiry = &c.verifyExpiry
+				config.Data = *configData
+
+				err = c.app.storage.UpdateConfig(context, *config)
+				if err != nil {
+					return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeConfig, &logutils.FieldArgs{"id": config.ID}, err)
+				}
+			}
+		}
+
+		//3. insert system org if does not exist
 		systemOrg, err := c.app.storage.FindSystemOrganization()
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, nil, err)
@@ -118,7 +154,7 @@ func (c *APIs) storeSystemData() error {
 			createAccount = true
 		}
 
-		//3. insert system app and appOrg if they do not exist
+		//4. insert system app and appOrg if they do not exist
 		systemAdminAppOrgs, err := c.app.storage.FindApplicationsOrganizationsByOrgID(systemOrg.ID)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
@@ -142,7 +178,7 @@ func (c *APIs) storeSystemData() error {
 			//insert system admin apporg
 			supportedAuthTypes := make([]model.AuthTypesSupport, len(systemAdminApp.Types))
 			for i, appType := range systemAdminApp.Types {
-				supportedAuthTypes[i] = model.AuthTypesSupport{AppTypeID: appType.ID, SupportedAuthTypes: []model.SupportedAuthType{{AuthTypeID: emailAuthType.ID, Params: nil}}}
+				supportedAuthTypes[i] = model.AuthTypesSupport{AppTypeID: appType.ID, SupportedAuthTypes: []model.SupportedAuthType{{AuthTypeID: passwordAuthType.ID, Params: nil}}}
 			}
 
 			newDocuments["application_organization"] = uuid.NewString()
@@ -159,7 +195,7 @@ func (c *APIs) storeSystemData() error {
 
 		systemAppOrg := systemAdminAppOrgs[0]
 
-		//4. insert api key if does not exist
+		//5. insert api key if does not exist
 		apiKeys, err := c.Auth.GetApplicationAPIKeys(systemAppOrg.Application.ID)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAPIKey, nil, err)
@@ -177,7 +213,7 @@ func (c *APIs) storeSystemData() error {
 			}
 		}
 
-		//5. insert all_system_core permission and grant_all_permissions permission if they do not exist
+		//6. insert all_system_core permission and grant_all_permissions permission if they do not exist
 		requiredPermissions := map[string]string{
 			model.PermissionAllSystemCore:       "Gives access to all admin and system APIs",
 			model.PermissionGrantAllPermissions: "Gives the ability to grant any permission",
@@ -222,12 +258,12 @@ func (c *APIs) storeSystemData() error {
 			}
 		}
 
-		//6. insert system account if needed
+		//7. insert system account if needed
 		if createAccount {
 			if c.systemAccountEmail == "" || c.systemAccountPassword == "" {
 				return errors.ErrorData(logutils.StatusMissing, "initial system account email or password", nil)
 			}
-			newDocuments["account"], err = c.Auth.InitializeSystemAccount(context, *emailAuthType, systemAppOrg, model.PermissionAllSystemCore, c.systemAccountEmail, c.systemAccountPassword, "", c.logger.NewRequestLog(nil))
+			newDocuments["account"], err = c.Auth.InitializeSystemAccount(context, *passwordAuthType, systemAppOrg, model.PermissionAllSystemCore, c.systemAccountEmail, c.systemAccountPassword, "", c.logger.NewRequestLog(nil))
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionInitialize, "system account", nil, err)
 			}
@@ -245,7 +281,7 @@ func (c *APIs) storeSystemData() error {
 			}
 			fields := logutils.Fields{key: data}
 			if doc == "auth_type" {
-				fields["code"] = auth.AuthTypeEmail
+				fields["code"] = auth.IdentifierTypeEmail
 			}
 			c.logger.InfoWithFields(fmt.Sprintf("new system %s created", doc), fields)
 		}
@@ -254,7 +290,8 @@ func (c *APIs) storeSystemData() error {
 }
 
 // NewCoreAPIs creates new CoreAPIs
-func NewCoreAPIs(env string, version string, build string, serviceID string, storage Storage, auth auth.APIs, systemInitSettings map[string]string, verifyEmail bool, logger *logs.Logger) *APIs {
+func NewCoreAPIs(env string, version string, build string, serviceID string, storage Storage, auth auth.APIs, systemInitSettings map[string]string, verifyEmail bool,
+	verifyWaitTime int, verifyExpiry int, logger *logs.Logger) *APIs {
 	//add application instance
 	listeners := []ApplicationListener{}
 	application := application{env: env, version: version, build: build, serviceID: serviceID, storage: storage, listeners: listeners, auth: auth}
@@ -271,7 +308,8 @@ func NewCoreAPIs(env string, version string, build string, serviceID string, sto
 	coreAPIs := APIs{Services: servicesImpl, Administration: administrationImpl, Encryption: encryptionImpl,
 		BBs: bbsImpl, TPS: tpsImpl, System: systemImpl, Auth: auth, app: &application, systemAppTypeIdentifier: systemInitSettings["app_type_id"],
 		systemAppTypeName: systemInitSettings["app_type_name"], systemAPIKey: systemInitSettings["api_key"],
-		systemAccountEmail: systemInitSettings["email"], systemAccountPassword: systemInitSettings["password"], verifyEmail: verifyEmail, logger: logger}
+		systemAccountEmail: systemInitSettings["email"], systemAccountPassword: systemInitSettings["password"], verifyEmail: verifyEmail,
+		verifyWaitTime: verifyWaitTime, verifyExpiry: verifyExpiry, logger: logger}
 
 	return &coreAPIs
 }

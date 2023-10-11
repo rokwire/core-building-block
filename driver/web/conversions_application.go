@@ -343,6 +343,14 @@ func identityProviderSettingFromDef(item *Def.IdentityProviderSettings) *model.I
 	if item.ExternalIdFields != nil {
 		externalIDFields = *item.ExternalIdFields
 	}
+	var sensitiveExternalIDs []string
+	if item.SensitiveExternalIds != nil {
+		sensitiveExternalIDs = *item.SensitiveExternalIds
+	}
+	var isEmailVerified bool
+	if item.IsEmailVerified != nil {
+		isEmailVerified = *item.IsEmailVerified
+	}
 	var roles map[string]string
 	if item.Roles != nil {
 		roles = *item.Roles
@@ -361,9 +369,10 @@ func identityProviderSettingFromDef(item *Def.IdentityProviderSettings) *model.I
 	}
 
 	return &model.IdentityProviderSetting{IdentityProviderID: item.IdentityProviderId, UserIdentifierField: item.UserIdentifierField,
-		ExternalIDFields: externalIDFields, FirstNameField: firstNameField, MiddleNameField: middleNameField,
-		LastNameField: lastNameField, EmailField: emailField, RolesField: rolesField, GroupsField: groupsField,
-		UserSpecificFields: userSpecificFields, Roles: roles, Groups: groups, AlwaysSyncProfile: alwaysSyncProfile, IdentityBBBaseURL: identityBBBaseURL}
+		ExternalIDFields: externalIDFields, SensitiveExternalIDs: sensitiveExternalIDs, IsEmailVerified: isEmailVerified,
+		FirstNameField: firstNameField, MiddleNameField: middleNameField, LastNameField: lastNameField, EmailField: emailField, RolesField: rolesField,
+		GroupsField: groupsField, UserSpecificFields: userSpecificFields, Roles: roles, Groups: groups, AlwaysSyncProfile: alwaysSyncProfile,
+		IdentityBBBaseURL: identityBBBaseURL}
 }
 
 func identityProviderSettingsToDef(items []model.IdentityProviderSetting) []Def.IdentityProviderSettings {
@@ -386,6 +395,8 @@ func identityProviderSettingToDef(item *model.IdentityProviderSetting) *Def.Iden
 	}
 
 	externalIDs := item.ExternalIDFields
+	sensitiveExternalIDs := item.SensitiveExternalIDs
+	isEmailVerified := item.IsEmailVerified
 	roles := item.Roles
 	groups := item.Groups
 
@@ -399,9 +410,10 @@ func identityProviderSettingToDef(item *model.IdentityProviderSetting) *Def.Iden
 	alwaysSyncProfile := item.AlwaysSyncProfile
 	identityBBBaseURL := item.IdentityBBBaseURL
 	return &Def.IdentityProviderSettings{IdentityProviderId: item.IdentityProviderID, UserIdentifierField: item.UserIdentifierField,
-		ExternalIdFields: &externalIDs, FirstNameField: &firstNameField, MiddleNameField: &middleNameField,
-		LastNameField: &lastNameField, EmailField: &emailField, RolesField: &rolesField, GroupsField: &groupsField,
-		UserSpecificFields: &userSpecificFields, Roles: &roles, Groups: &groups, AlwaysSyncProfile: &alwaysSyncProfile, IdentityBbBaseUrl: &identityBBBaseURL}
+		ExternalIdFields: &externalIDs, SensitiveExternalIds: &sensitiveExternalIDs, IsEmailVerified: &isEmailVerified,
+		FirstNameField: &firstNameField, MiddleNameField: &middleNameField, LastNameField: &lastNameField, EmailField: &emailField, RolesField: &rolesField,
+		GroupsField: &groupsField, UserSpecificFields: &userSpecificFields, Roles: &roles, Groups: &groups, AlwaysSyncProfile: &alwaysSyncProfile,
+		IdentityBbBaseUrl: &identityBBBaseURL}
 }
 
 // AppOrgRole

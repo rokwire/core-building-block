@@ -25,9 +25,11 @@ import (
 )
 
 const (
-	//TypeLoginSession auth type type
+	//TypeLoginSession login session type
 	TypeLoginSession logutils.MessageDataType = "login session"
-	//TypeAuthType auth type type
+	//TypeLoginState login state type
+	TypeLoginState logutils.MessageDataType = "login state"
+	//TypeAuthType auth type
 	TypeAuthType logutils.MessageDataType = "auth type"
 	//TypeIdentityProvider identity provider type
 	TypeIdentityProvider logutils.MessageDataType = "identity provider"
@@ -90,9 +92,8 @@ type LoginSession struct {
 
 	Anonymous bool
 
-	Identifier      string //it is the account id(anonymous id for anonymous logins)
-	ExternalIDs     map[string]string
-	AccountAuthType *AccountAuthType //it may be nil for anonymous logins
+	Identifier string   //it is the account id(anonymous id for anonymous logins)
+	Account    *Account //it may be nil for anonymous logins
 
 	Device *Device
 
@@ -220,6 +221,18 @@ func (ls LoginSession) LogInfo() string {
 		ls.StateExpires, ls.MfaAttempts, ls.DateRefreshed, ls.DateUpdated, ls.DateCreated)
 }
 
+// LoginState represents a state variable generated during a login request and used to complete that request (by generating a LoginSession)
+type LoginState struct {
+	ID    string `bson:"_id"`
+	AppID string `bson:"app_id"`
+	OrgID string `bson:"org_id"`
+
+	AccountID *string `bson:"account_id"`
+
+	State       map[string]interface{} `bson:"state"`
+	DateCreated time.Time              `bson:"date_created"`
+}
+
 // APIKey represents an API key entity
 type APIKey struct {
 	ID    string `json:"id" bson:"_id"`
@@ -239,6 +252,7 @@ type AuthType struct {
 	UseCredentials bool                   `bson:"use_credentials"` //says if the auth type uses credentials
 	IgnoreMFA      bool                   `bson:"ignore_mfa"`      //says if login using this auth type may bypass account MFA
 	Params         map[string]interface{} `bson:"params"`
+	Aliases        []string               `bson:"aliases,omitempty"`
 }
 
 // IdentityProvider represents identity provider entity

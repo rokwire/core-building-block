@@ -30,12 +30,11 @@ type account struct {
 	Groups      []accountGroup     `bson:"groups,omitempty"`
 	Scopes      []string           `bson:"scopes,omitempty"`
 
-	AuthTypes []accountAuthType `bson:"auth_types,omitempty"`
+	Identifiers []accountIdentifier `bson:"identifiers,omitempty"`
+	AuthTypes   []accountAuthType   `bson:"auth_types,omitempty"`
 
 	MFATypes []mfaType `bson:"mfa_types,omitempty"`
 
-	Username      string                 `bson:"username"`
-	ExternalIDs   map[string]string      `bson:"external_ids"`
 	Preferences   map[string]interface{} `bson:"preferences"`
 	SystemConfigs map[string]interface{} `bson:"system_configs"`
 	Profile       profile                `bson:"profile"`
@@ -54,6 +53,11 @@ type account struct {
 	LastLoginDate           *time.Time `bson:"last_login_date"`
 	LastAccessTokenDate     *time.Time `bson:"last_access_token_date"`
 	MostRecentClientVersion *string    `bson:"most_recent_client_version"`
+
+	// Deprecated:
+	Username *string `bson:"username,omitempty"`
+	// Deprecated:
+	ExternalIDs map[string]string `bson:"external_ids,omitempty"`
 }
 
 type accountRole struct {
@@ -72,12 +76,35 @@ type accountAuthType struct {
 	ID           string                 `bson:"id"`
 	AuthTypeID   string                 `bson:"auth_type_id"`
 	AuthTypeCode string                 `bson:"auth_type_code"`
-	Identifier   string                 `bson:"identifier"`
 	Params       map[string]interface{} `bson:"params"`
 	CredentialID *string                `bson:"credential_id"`
 	Active       bool                   `bson:"active"`
-	Unverified   bool                   `bson:"unverified"`
-	Linked       bool                   `bson:"linked"`
+
+	// Deprecated:
+	Identifier *string `bson:"identifier,omitempty"`
+	// Deprecated:
+	Unverified *bool `bson:"unverified,omitempty"`
+	// Deprecated:
+	Linked *bool `bson:"linked,omitempty"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
+}
+
+type accountIdentifier struct {
+	ID         string `bson:"id"`
+	Code       string `bson:"code"`
+	Identifier string `bson:"identifier"`
+
+	Verified  bool `bson:"verified"`
+	Linked    bool `bson:"linked"`
+	Sensitive bool `bson:"sensitive"`
+
+	AccountAuthTypeID *string `bson:"account_auth_type_id"`
+	Primary           *bool   `bson:"primary,omitempty"`
+
+	VerificationCode   *string    `bson:"verification_code,omitempty"`
+	VerificationExpiry *time.Time `bson:"verification_expiry,omitempty"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
@@ -89,8 +116,6 @@ type profile struct {
 	PhotoURL  string `bson:"photo_url"`
 	FirstName string `bson:"first_name"`
 	LastName  string `bson:"last_name"`
-	Email     string `bson:"email"`
-	Phone     string `bson:"phone"`
 	BirthYear int16  `bson:"birth_year"`
 	Address   string `bson:"address"`
 	ZipCode   string `bson:"zip_code"`
@@ -101,12 +126,17 @@ type profile struct {
 	DateUpdated *time.Time `bson:"date_updated"`
 
 	UnstructuredProperties map[string]interface{} `bson:"unstructured_properties"`
+
+	// Deprecated:
+	Email *string `bson:"email,omitempty"`
+	// Deprecated:
+	Phone *string `bson:"phone,omitempty"`
 }
 
 type userDevice struct {
 	ID string `bson:"_id"`
 
-	DeviceID string `bson:"device_id"`
+	DeviceID *string `bson:"device_id"`
 
 	Type string `bson:"type"`
 	OS   string `bson:"os"`
@@ -118,8 +148,8 @@ type userDevice struct {
 type device struct {
 	ID string `bson:"_id"`
 
-	DeviceID string `bson:"device_id"`
-	Account  string `bson:"account_id"`
+	DeviceID *string `bson:"device_id"`
+	Account  string  `bson:"account_id"`
 
 	Type string `bson:"type"`
 	OS   string `bson:"os"`
@@ -133,7 +163,6 @@ type credential struct {
 
 	AuthTypeID        string                 `bson:"auth_type_id"`
 	AccountsAuthTypes []string               `bson:"account_auth_types"`
-	Verified          bool                   `bson:"verified"`
 	Value             map[string]interface{} `bson:"value"`
 
 	DateCreated time.Time  `bson:"date_created"`

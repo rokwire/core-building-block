@@ -231,7 +231,7 @@ func (app *application) admCreateConfig(config model.Config, claims *tokenauth.C
 
 	config.ID = uuid.NewString()
 	config.DateCreated = time.Now().UTC()
-	err = app.storage.InsertConfig(config)
+	err = app.storage.InsertConfig(nil, config)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeConfig, nil, err)
 	}
@@ -261,11 +261,8 @@ func (app *application) admUpdateConfig(config model.Config, claims *tokenauth.C
 		return errors.WrapErrorAction(logutils.ActionValidate, "config access", nil, err)
 	}
 
-	now := time.Now().UTC()
 	config.ID = oldConfig.ID
-	config.DateUpdated = &now
-
-	err = app.storage.UpdateConfig(config)
+	err = app.storage.UpdateConfig(nil, config)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeConfig, nil, err)
 	}

@@ -1,26 +1,33 @@
 required:
   - auth_type
   - app_type_identifier
-  - creds
 type: object
 properties:
   auth_type:
     type: string
     enum:
-      - email
-      - twilio_phone
+      - password
+      - webauthn
+      - code
       - illinois_oidc
+      - conde_oidc
+      - email
+      - phone
+      - twilio_phone
       - username
   app_type_identifier:
     type: string
   creds:
     anyOf:
-      - $ref: "../../../../../shared/requests/CredsEmail.yaml"
-      - $ref: "../../../../../shared/requests/CredsTwilioPhone.yaml"
+      - $ref: "../../../../../shared/requests/CredsCode.yaml"
       - $ref: "../../../../../shared/requests/CredsOIDC.yaml"
+      - $ref: "../../../../../shared/requests/CredsPassword.yaml"
+      - $ref: "../../../../../shared/requests/CredsWebAuthn.yaml"
+      - $ref: "../../../../../shared/requests/CredsNone.yaml"
   params:
     type: object
     anyOf:
-      - $ref: "../../../../../shared/requests/ParamsEmail.yaml"
       - $ref: "../../../../../shared/requests/ParamsOIDC.yaml"
+      - $ref: "../../../../../shared/requests/ParamsPassword.yaml"
+      - $ref: "../../../../../shared/requests/ParamsWebAuthn.yaml"
       - $ref: "../../../../../shared/requests/ParamsNone.yaml"

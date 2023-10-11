@@ -167,7 +167,7 @@ type Storage interface {
 
 	FindAccountByID(context storage.TransactionContext, id string) (*model.Account, error)
 	FindAccounts(context storage.TransactionContext, limit *int, offset *int, appID string, orgID string, accountID *string, firstName *string, lastName *string, authType *string,
-		authTypeIdentifier *string, anonymous *bool, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error)
+		identifier *string, anonymous *bool, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error)
 	FindPublicAccounts(context storage.TransactionContext, appID string, orgID string, limit *int, offset *int,
 		search *string, firstName *string, lastName *string, username *string, followingID *string, followerID *string, userID string) ([]model.PublicAccount, error)
 	FindAccountsByParams(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]map[string]interface{}, error)
@@ -202,8 +202,8 @@ type Storage interface {
 	FindConfig(configType string, appID string, orgID string) (*model.Config, error)
 	FindConfigByID(id string) (*model.Config, error)
 	FindConfigs(configType *string) ([]model.Config, error)
-	InsertConfig(config model.Config) error
-	UpdateConfig(config model.Config) error
+	InsertConfig(context storage.TransactionContext, config model.Config) error
+	UpdateConfig(context storage.TransactionContext, config model.Config) error
 	DeleteConfig(id string) error
 
 	FindPermissionsByName(context storage.TransactionContext, names []string) ([]model.Permission, error)

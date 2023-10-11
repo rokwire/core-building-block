@@ -1,0 +1,101 @@
+post:
+  tags:
+  - Services
+  summary: Link identifier
+  description: |
+    Link identifier to an existing account
+
+    **Auth:** Requires "authenticated" auth token
+  security:
+    - bearerAuth: []
+  requestBody:
+    content:
+      application/json:
+        schema:
+          $ref: "../../../../../schemas/apis/services/account/identifier/link/request/Link.yaml"
+        examples:
+          email:
+            summary: Email
+            value:
+              identifier:
+                email: test@example.com 
+          phone:
+            summary: Phone
+            value:
+              identifier:
+                phone: "+12223334444"
+          username:
+            summary: Username
+            value:
+              identifier:
+                username: username
+    required: true
+  responses:
+    200:
+      description: Success
+      content:
+        application/json:
+          schema:
+            $ref: "../../../../../schemas/apis/services/account/identifier/link/response/Response.yaml"
+    400:
+      description: Bad request
+    401:
+      description: Unauthorized
+    500:
+      description: Internal error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                enum:
+                  - invalid
+                  - unverified
+                  - verification-expired
+                  - already-exists
+                  - not-found
+                  - not-allowed
+                  - internal-server-error
+                description: |
+                  - `invalid`: Invalid identifier
+                  - `unverified`: Unverified identifier
+                  - `verification-expired`: Identifier verification expired. The verification is restarted
+                  - `already-exists`: Auth type identifier already exists
+                  - `not-found`: Account could not be found when `sign-up=false`
+                  - `not-allowed`: Invalid operation
+                  - `internal-server-error`: An undefined error occurred
+              message:
+                type: string
+delete:
+  tags:
+  - Services
+  summary: Unlink identifier
+  description: |
+    Unlink identifier from an existing account
+
+    **Auth:** Requires "authenticated" auth token
+  security:
+    - bearerAuth: []
+  requestBody:
+    content:
+      application/json:
+        schema:
+          $ref: "../../../../../schemas/apis/services/account/identifier/link/request/Unlink.yaml"
+        example:
+          id: <account identifier ID>
+    required: true
+  responses:
+    200:
+      description: Success
+      content:
+        application/json:
+          schema:
+            $ref: "../../../../../schemas/apis/services/account/identifier/link/response/Response.yaml"
+    400:
+      description: Bad request
+    401:
+      description: Unauthorized
+    500:
+      description: Internal error

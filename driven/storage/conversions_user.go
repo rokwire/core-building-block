@@ -19,27 +19,28 @@ import (
 )
 
 // Account
-func accountFromStorage(item account, appOrg model.ApplicationOrganization) model.Account {
+func accountFromStorage(item account, appOrg model.ApplicationOrganization, sa *Adapter) model.Account {
 	roles := accountRolesFromStorage(item.Roles, appOrg)
 	groups := accountGroupsFromStorage(item.Groups, appOrg)
-	authTypes := accountAuthTypesFromStorage(item.AuthTypes)
+	identifiers := accountIdentifiersFromStorage(item.Identifiers)
+	authTypes := accountAuthTypesFromStorage(item.AuthTypes, sa)
 	mfaTypes := mfaTypesFromStorage(item.MFATypes)
 	profile := profileFromStorage(item.Profile)
 	devices := accountDevicesFromStorage(item)
-	return model.Account{ID: item.ID, AppOrg: appOrg, Anonymous: item.Anonymous, Permissions: item.Permissions, Roles: roles, Groups: groups, Scopes: item.Scopes, AuthTypes: authTypes,
-		MFATypes: mfaTypes, Username: item.Username, ExternalIDs: item.ExternalIDs, Preferences: item.Preferences, Profile: profile, SystemConfigs: item.SystemConfigs,
-		Privacy: item.Privacy, Verified: item.Verified, Devices: devices, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated, LastLoginDate: item.LastLoginDate,
-		LastAccessTokenDate: item.LastAccessTokenDate, MostRecentClientVersion: item.MostRecentClientVersion}
+	return model.Account{ID: item.ID, AppOrg: appOrg, Anonymous: item.Anonymous, Permissions: item.Permissions, Roles: roles, Groups: groups, Scopes: item.Scopes,
+		Identifiers: identifiers, AuthTypes: authTypes, MFATypes: mfaTypes, Preferences: item.Preferences, Profile: profile, SystemConfigs: item.SystemConfigs,
+		Privacy: item.Privacy, Verified: item.Verified, Devices: devices, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated,
+		LastLoginDate: item.LastLoginDate, LastAccessTokenDate: item.LastAccessTokenDate, MostRecentClientVersion: item.MostRecentClientVersion}
 }
 
-func accountsFromStorage(items []account, appOrg model.ApplicationOrganization) []model.Account {
+func accountsFromStorage(items []account, appOrg model.ApplicationOrganization, sa *Adapter) []model.Account {
 	if len(items) == 0 {
 		return make([]model.Account, 0)
 	}
 
 	res := make([]model.Account, len(items))
 	for i, item := range items {
-		res[i] = accountFromStorage(item, appOrg)
+		res[i] = accountFromStorage(item, appOrg, sa)
 	}
 	return res
 }
@@ -50,6 +51,7 @@ func accountToStorage(item *model.Account) *account {
 	permissions := item.Permissions
 	roles := accountRolesToStorage(item.Roles)
 	groups := accountGroupsToStorage(item.Groups)
+	identifiers := accountIdentifiersToStorage(item.Identifiers)
 	authTypes := accountAuthTypesToStorage(item.AuthTypes)
 	mfaTypes := mfaTypesToStorage(item.MFATypes)
 	profile := profileToStorage(item.Profile)
@@ -60,9 +62,10 @@ func accountToStorage(item *model.Account) *account {
 	lastAccessTokenDate := item.LastAccessTokenDate
 	mostRecentClientVersion := item.MostRecentClientVersion
 
-	return &account{ID: id, AppOrgID: appOrgID, Anonymous: item.Anonymous, Permissions: permissions, Roles: roles, Groups: groups, Scopes: item.Scopes, AuthTypes: authTypes, MFATypes: mfaTypes,
-		Privacy: item.Privacy, Verified: item.Verified, Username: item.Username, ExternalIDs: item.ExternalIDs, Preferences: item.Preferences, Profile: profile, SystemConfigs: item.SystemConfigs, Devices: devices,
-		DateCreated: dateCreated, DateUpdated: dateUpdated, LastLoginDate: lastLoginDate, LastAccessTokenDate: lastAccessTokenDate, MostRecentClientVersion: mostRecentClientVersion}
+	return &account{ID: id, AppOrgID: appOrgID, Anonymous: item.Anonymous, Permissions: permissions, Roles: roles, Groups: groups, Scopes: item.Scopes,
+		Identifiers: identifiers, AuthTypes: authTypes, MFATypes: mfaTypes, Privacy: item.Privacy, Verified: item.Verified, Preferences: item.Preferences,
+		Profile: profile, SystemConfigs: item.SystemConfigs, Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated,
+		LastLoginDate: lastLoginDate, LastAccessTokenDate: lastAccessTokenDate, MostRecentClientVersion: mostRecentClientVersion}
 }
 
 func accountDevicesFromStorage(item account) []model.Device {
@@ -94,28 +97,24 @@ func accountDeviceToStorage(item model.Device) userDevice {
 }
 
 // AccountAuthType
-func accountAuthTypeFromStorage(item accountAuthType) model.AccountAuthType {
+func accountAuthTypeFromStorage(item accountAuthType, sa *Adapter) model.AccountAuthType {
 	id := item.ID
-	authType := model.AuthType{ID: item.AuthTypeID, Code: item.AuthTypeCode}
-	identifier := item.Identifier
+
+	authType, _ := sa.FindAuthType(item.AuthTypeID)
 	params := item.Params
 	var credential *model.Credential
 	if item.CredentialID != nil {
 		credential = &model.Credential{ID: *item.CredentialID}
 	}
 	active := item.Active
-	return model.AccountAuthType{ID: id, SupportedAuthType: model.SupportedAuthType{AuthType: authType}, Identifier: identifier, Params: params, Credential: credential,
-		Active: active, Unverified: item.Unverified, Linked: item.Linked, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+	return model.AccountAuthType{ID: id, SupportedAuthType: model.SupportedAuthType{AuthTypeID: item.AuthTypeID, AuthType: *authType}, Params: params, Credential: credential,
+		Active: active, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
-func accountAuthTypesFromStorage(items []accountAuthType) []model.AccountAuthType {
-	if len(items) == 0 {
-		return make([]model.AccountAuthType, 0)
-	}
-
+func accountAuthTypesFromStorage(items []accountAuthType, sa *Adapter) []model.AccountAuthType {
 	res := make([]model.AccountAuthType, len(items))
 	for i, aat := range items {
-		res[i] = accountAuthTypeFromStorage(aat)
+		res[i] = accountAuthTypeFromStorage(aat, sa)
 	}
 	return res
 }
@@ -125,18 +124,43 @@ func accountAuthTypeToStorage(item model.AccountAuthType) accountAuthType {
 	if item.Credential != nil {
 		credentialID = &item.Credential.ID
 	}
-	return accountAuthType{ID: item.ID, AuthTypeID: item.SupportedAuthType.AuthType.ID, AuthTypeCode: item.SupportedAuthType.AuthType.Code, Identifier: item.Identifier,
-		Params: item.Params, CredentialID: credentialID, Active: item.Active, Unverified: item.Unverified, Linked: item.Linked, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+	return accountAuthType{ID: item.ID, AuthTypeID: item.SupportedAuthType.AuthType.ID, AuthTypeCode: item.SupportedAuthType.AuthType.Code,
+		Params: item.Params, CredentialID: credentialID, Active: item.Active, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
 func accountAuthTypesToStorage(items []model.AccountAuthType) []accountAuthType {
-	if len(items) == 0 {
-		return make([]accountAuthType, 0)
-	}
-
 	res := make([]accountAuthType, len(items))
 	for i, aat := range items {
 		res[i] = accountAuthTypeToStorage(aat)
+	}
+	return res
+}
+
+// AccountIdentifier
+func accountIdentifierFromStorage(item accountIdentifier) model.AccountIdentifier {
+	return model.AccountIdentifier{ID: item.ID, Code: item.Code, Identifier: item.Identifier, Verified: item.Verified, Linked: item.Linked,
+		Sensitive: item.Sensitive, AccountAuthTypeID: item.AccountAuthTypeID, Primary: item.Primary, VerificationCode: item.VerificationCode,
+		VerificationExpiry: item.VerificationExpiry, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+}
+
+func accountIdentifiersFromStorage(items []accountIdentifier) []model.AccountIdentifier {
+	res := make([]model.AccountIdentifier, len(items))
+	for i, aat := range items {
+		res[i] = accountIdentifierFromStorage(aat)
+	}
+	return res
+}
+
+func accountIdentifierToStorage(item model.AccountIdentifier) accountIdentifier {
+	return accountIdentifier{ID: item.ID, Code: item.Code, Identifier: item.Identifier, Verified: item.Verified, Linked: item.Linked,
+		Sensitive: item.Sensitive, AccountAuthTypeID: item.AccountAuthTypeID, Primary: item.Primary, VerificationCode: item.VerificationCode,
+		VerificationExpiry: item.VerificationExpiry, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+}
+
+func accountIdentifiersToStorage(items []model.AccountIdentifier) []accountIdentifier {
+	res := make([]accountIdentifier, len(items))
+	for i, aat := range items {
+		res[i] = accountIdentifierToStorage(aat)
 	}
 	return res
 }
@@ -222,12 +246,12 @@ func accountGroupsToStorage(items []model.AccountGroup) []accountGroup {
 // Profile
 func profileFromStorage(item profile) model.Profile {
 	return model.Profile{ID: item.ID, PhotoURL: item.PhotoURL, FirstName: item.FirstName, LastName: item.LastName,
-		Email: item.Email, Phone: item.Phone, BirthYear: item.BirthYear, Address: item.Address, ZipCode: item.ZipCode,
-		State: item.State, Country: item.Country, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated,
+		BirthYear: item.BirthYear, Address: item.Address, ZipCode: item.ZipCode, State: item.State,
+		Country: item.Country, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated,
 		UnstructuredProperties: item.UnstructuredProperties}
 }
 
-func profilesFromStorage(items []account, sa Adapter) []model.Profile {
+func profilesFromStorage(items []account, sa *Adapter) []model.Profile {
 	if len(items) == 0 {
 		return make([]model.Profile, 0)
 	}
@@ -236,7 +260,7 @@ func profilesFromStorage(items []account, sa Adapter) []model.Profile {
 	accounts := make(map[string][]model.Account, len(items))
 	for _, account := range items {
 		appOrg, _ := sa.getCachedApplicationOrganizationByKey(account.AppOrgID)
-		rAccount := accountFromStorage(account, *appOrg)
+		rAccount := accountFromStorage(account, *appOrg, sa)
 
 		//add account to the map
 		profileAccounts := accounts[rAccount.Profile.ID]
@@ -261,8 +285,8 @@ func profilesFromStorage(items []account, sa Adapter) []model.Profile {
 
 func profileToStorage(item model.Profile) profile {
 	return profile{ID: item.ID, PhotoURL: item.PhotoURL, FirstName: item.FirstName, LastName: item.LastName,
-		Email: item.Email, Phone: item.Phone, BirthYear: item.BirthYear, Address: item.Address, ZipCode: item.ZipCode,
-		State: item.State, Country: item.Country, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated,
+		BirthYear: item.BirthYear, Address: item.Address, ZipCode: item.ZipCode, State: item.State,
+		Country: item.Country, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated,
 		UnstructuredProperties: item.UnstructuredProperties}
 }
 
@@ -287,21 +311,33 @@ func credentialFromStorage(item credential) model.Credential {
 		accountAuthTypes[i] = model.AccountAuthType{ID: id}
 	}
 	authType := model.AuthType{ID: item.AuthTypeID}
-	return model.Credential{ID: item.ID, AuthType: authType, AccountsAuthTypes: accountAuthTypes, Verified: item.Verified,
+	return model.Credential{ID: item.ID, AuthType: authType, AccountsAuthTypes: accountAuthTypes,
 		Value: item.Value, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 
-func credentialToStorage(item *model.Credential) *credential {
-	if item == nil {
-		return nil
+func credentialsFromStorage(items []credential) []model.Credential {
+	res := make([]model.Credential, len(items))
+	for i, cred := range items {
+		res[i] = credentialFromStorage(cred)
 	}
+	return res
+}
 
+func credentialToStorage(item model.Credential) credential {
 	accountAuthTypes := make([]string, len(item.AccountsAuthTypes))
 	for i, aat := range item.AccountsAuthTypes {
 		accountAuthTypes[i] = aat.ID
 	}
-	return &credential{ID: item.ID, AuthTypeID: item.AuthType.ID, AccountsAuthTypes: accountAuthTypes, Verified: item.Verified,
+	return credential{ID: item.ID, AuthTypeID: item.AuthType.ID, AccountsAuthTypes: accountAuthTypes,
 		Value: item.Value, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
+}
+
+func credentialsToStorage(items []model.Credential) []credential {
+	res := make([]credential, len(items))
+	for i, cred := range items {
+		res[i] = credentialToStorage(cred)
+	}
+	return res
 }
 
 // MFA
