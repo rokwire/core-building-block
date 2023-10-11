@@ -20,6 +20,7 @@ import (
 	"core-building-block/core/model"
 )
 
+// deprecated
 type account struct {
 	ID string `bson:"_id"`
 
@@ -54,6 +55,9 @@ type account struct {
 	LastLoginDate           *time.Time `bson:"last_login_date"`
 	LastAccessTokenDate     *time.Time `bson:"last_access_token_date"`
 	MostRecentClientVersion *string    `bson:"most_recent_client_version"`
+}
+
+type accountIdentity struct {
 }
 
 type accountRole struct {
