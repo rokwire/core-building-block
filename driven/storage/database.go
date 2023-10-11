@@ -95,8 +95,15 @@ func (m *database) start() error {
 		return err
 	}
 
+	//deprecated
 	accounts := &collectionWrapper{database: m, coll: db.Collection("accounts")}
 	err = m.applyAccountsChecks(accounts)
+	if err != nil {
+		return err
+	}
+
+	accountsIdentities := &collectionWrapper{database: m, coll: db.Collection("accounts_identities")}
+	err = m.applyAccountsIdentitiesChecks(accountsIdentities)
 	if err != nil {
 		return err
 	}
@@ -210,6 +217,7 @@ func (m *database) start() error {
 	m.authTypes = authTypes
 	m.identityProviders = identityProviders
 	m.accounts = accounts
+	m.accountsIdentities = accountsIdentities
 	m.devices = devices
 	m.credentials = credentials
 	m.loginsSessions = loginsSessions
@@ -257,6 +265,7 @@ func (m *database) applyIdentityProvidersChecks(identityProviders *collectionWra
 	return nil
 }
 
+// deprecated
 func (m *database) applyAccountsChecks(accounts *collectionWrapper) error {
 	m.logger.Info("apply accounts checks.....")
 
@@ -291,6 +300,55 @@ func (m *database) applyAccountsChecks(accounts *collectionWrapper) error {
 	// }
 
 	m.logger.Info("accounts check passed")
+	return nil
+}
+
+func (m *database) applyAccountsIdentitiesChecks(accountsIdentities *collectionWrapper) error {
+	m.logger.Info("apply accounts identities checks.....")
+
+	//add profile index
+	err := accountsIdentities.AddIndex(bson.D{primitive.E{Key: "profile.id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	//add auth types index
+	err = accountsIdentities.AddIndex(bson.D{primitive.E{Key: "auth_types.id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	//add auth types identifier
+	err = accountsIdentities.AddIndex(bson.D{primitive.E{Key: "auth_types.identifier", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	//add auth types auth type id
+	err = accountsIdentities.AddIndex(bson.D{primitive.E{Key: "auth_types.auth_type_id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	//add username index
+	err = accountsIdentities.AddIndex(bson.D{primitive.E{Key: "username", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	//add apps orgs memberships id index
+	err = accountsIdentities.AddIndex(bson.D{primitive.E{Key: "apps_orgs_memberships.id", Value: 1}}, true)
+	if err != nil {
+		return err
+	}
+
+	//add apps orgs memberships app org id index
+	err = accountsIdentities.AddIndex(bson.D{primitive.E{Key: "apps_orgs_memberships.app_org_id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	m.logger.Info("accounts identities check passed")
 	return nil
 }
 
