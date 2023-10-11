@@ -604,7 +604,7 @@ func (a *webAuthnAuthImpl) completeLogin(response *protocol.ParsedCredentialAsse
 		credential.Value[credentialKeyCredential] = string(credentialData)
 		transaction := func(context storage.TransactionContext) error {
 			//1. update credential
-			err = a.auth.storage.UpdateCredentialValue(credID, credential.Value)
+			err = a.auth.storage.UpdateCredentialValue(context, credID, credential.Value)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
 			}

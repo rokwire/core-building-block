@@ -1086,7 +1086,7 @@ func (a *Auth) UpdateCredential(accountID string, accountAuthTypeID string, para
 
 	//Update the credential with new password
 	accountAuthType.Credential.Value = authTypeCreds
-	if err = a.storage.UpdateCredentialValue(accountAuthType.Credential.ID, accountAuthType.Credential.Value); err != nil {
+	if err = a.storage.UpdateCredentialValue(nil, accountAuthType.Credential.ID, accountAuthType.Credential.Value); err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
 	}
 
@@ -1139,7 +1139,7 @@ func (a *Auth) ResetForgotCredential(credsID string, resetCode string, params st
 	}
 	//Update the credential with new password
 	credential.Value = authTypeCreds
-	if err = a.storage.UpdateCredentialValue(credential.ID, credential.Value); err != nil {
+	if err = a.storage.UpdateCredentialValue(nil, credential.ID, credential.Value); err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
 	}
 
@@ -1235,7 +1235,7 @@ func (a *Auth) ForgotCredential(authenticationType string, identifierJSON string
 
 	//Update the credential with reset code and expiry
 	credential.Value = authTypeCreds
-	if err = a.storage.UpdateCredentialValue(credential.ID, credential.Value); err != nil {
+	if err = a.storage.UpdateCredentialValue(nil, credential.ID, credential.Value); err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
 	}
 	return nil
