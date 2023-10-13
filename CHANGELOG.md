@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Changed
-- Single identity within the whole ecosystem [#680](https://github.com/rokwire/core-building-block/issues/680)
+- Single identity within an organisation [#680](https://github.com/rokwire/core-building-block/issues/680)
 
 ### Added
 - Searching follows looks for substring matches [#670](https://github.com/rokwire/core-building-block/issues/670)
