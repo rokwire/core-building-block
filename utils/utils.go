@@ -25,6 +25,7 @@ import (
 	"math/rand"
 	"net/http"
 	"reflect"
+	"regexp"
 	"strings"
 	"time"
 
@@ -179,6 +180,18 @@ func GetLogValue(value string, n int) string {
 	}
 	lastN := value[len(value)-n:]
 	return fmt.Sprintf("***%s", lastN)
+}
+
+// IsValidPhone reports whether phone is a valid phone number
+func IsValidPhone(phone string) bool {
+	validPhone := regexp.MustCompile(`^\+[1-9]\d{1,14}$`)
+	return validPhone.MatchString(phone)
+}
+
+// IsValidEmail reports whether email is a valid email address
+func IsValidEmail(email string) bool {
+	validEmail := regexp.MustCompile(`^[a-zA-Z0-9.!#\$%&'*+/=?^_{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?(?:.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?)*$`)
+	return validEmail.MatchString(email)
 }
 
 // FormatTime formats the time value which this pointer points. Gives empty string if the pointer is nil

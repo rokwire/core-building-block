@@ -612,6 +612,21 @@ func (sa *Adapter) InsertLoginState(loginState model.LoginState) error {
 	return nil
 }
 
+// DeleteLoginState inserts a new login state
+func (sa *Adapter) DeleteLoginState(context TransactionContext, id string) error {
+	filter := bson.M{"_id": id}
+
+	res, err := sa.db.loginStates.DeleteOneWithContext(context, filter, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginState, &logutils.FieldArgs{"_id": id}, err)
+	}
+	if res.DeletedCount > 1 {
+		return errors.ErrorAction(logutils.ActionDelete, model.TypeLoginState, &logutils.FieldArgs{"_id": id, "deleted": res.DeletedCount, "expected": 1})
+	}
+
+	return nil
+}
+
 // FindAccount finds an account for app, org, auth type and identifier
 func (sa *Adapter) FindAccount(context TransactionContext, appOrgID string, code string, identifier string) (*model.Account, error) {
 	filter := bson.M{"app_org_id": appOrgID, "identifiers": bson.M{
@@ -1961,7 +1976,7 @@ func (sa *Adapter) UpdateCredential(context TransactionContext, creds *model.Cre
 }
 
 // UpdateCredentialValue updates the value in credentials collection
-func (sa *Adapter) UpdateCredentialValue(ID string, value map[string]interface{}) error {
+func (sa *Adapter) UpdateCredentialValue(context TransactionContext, ID string, value map[string]interface{}) error {
 	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
 	update := bson.D{
 		primitive.E{Key: "$set", Value: bson.D{
@@ -1970,7 +1985,7 @@ func (sa *Adapter) UpdateCredentialValue(ID string, value map[string]interface{}
 		}},
 	}
 
-	res, err := sa.db.credentials.UpdateOne(filter, update, nil)
+	res, err := sa.db.credentials.UpdateOneWithContext(context, filter, update, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
 	}

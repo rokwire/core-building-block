@@ -431,6 +431,12 @@ func (a *webAuthnAuthImpl) completeRegistration(response *protocol.ParsedCredent
 			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountAuthType, &logutils.FieldArgs{"id": accountAuthType.ID, "account_id": accountIDVal}, err)
 		}
 
+		//3. remove the login state
+		err = a.auth.storage.DeleteLoginState(context, loginState.ID)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginState, nil, err)
+		}
+
 		return nil
 	}
 
@@ -596,9 +602,25 @@ func (a *webAuthnAuthImpl) completeLogin(response *protocol.ParsedCredentialAsse
 		}
 
 		credential.Value[credentialKeyCredential] = string(credentialData)
-		err = a.auth.storage.UpdateCredentialValue(credID, credential.Value)
+		transaction := func(context storage.TransactionContext) error {
+			//1. update credential
+			err = a.auth.storage.UpdateCredentialValue(context, credID, credential.Value)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
+			}
+
+			//2. remove the login state
+			err = a.auth.storage.DeleteLoginState(context, loginState.ID)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginState, nil, err)
+			}
+
+			return nil
+		}
+
+		err = a.auth.storage.PerformTransaction(transaction)
 		if err != nil {
-			return "", errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
+			return "", err
 		}
 	}
 

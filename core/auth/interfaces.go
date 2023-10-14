@@ -554,6 +554,7 @@ type Storage interface {
 	//LoginStates
 	FindLoginState(appID string, orgID string, accountID *string, stateParams map[string]interface{}) (*model.LoginState, error)
 	InsertLoginState(loginState model.LoginState) error
+	DeleteLoginState(context storage.TransactionContext, id string) error
 
 	//Accounts
 	FindAccount(context storage.TransactionContext, appOrgID string, code string, identifier string) (*model.Account, error)
@@ -606,7 +607,7 @@ type Storage interface {
 	FindCredential(context storage.TransactionContext, ID string) (*model.Credential, error)
 	FindCredentials(context storage.TransactionContext, ids []string) ([]model.Credential, error)
 	UpdateCredential(context storage.TransactionContext, creds *model.Credential) error
-	UpdateCredentialValue(ID string, value map[string]interface{}) error
+	UpdateCredentialValue(context storage.TransactionContext, ID string, value map[string]interface{}) error
 	DeleteCredential(context storage.TransactionContext, ID string) error
 
 	//MFA

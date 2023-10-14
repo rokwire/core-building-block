@@ -19,7 +19,6 @@ import (
 	"core-building-block/utils"
 	"encoding/json"
 	"net/url"
-	"regexp"
 	"time"
 
 	"github.com/google/uuid"
@@ -68,8 +67,7 @@ func (a *phoneIdentifierImpl) withIdentifier(creds string) (identifierType, erro
 		return nil, errors.WrapErrorAction(logutils.ActionValidate, typePhoneIdentifier, nil, err)
 	}
 
-	validPhone := regexp.MustCompile(`^\+[1-9]\d{1,14}$`)
-	if !validPhone.MatchString(requestCreds.Phone) {
+	if !utils.IsValidPhone(requestCreds.Phone) {
 		return nil, errors.ErrorData(logutils.StatusInvalid, typePhoneNumber, &logutils.FieldArgs{"phone": requestCreds.Phone})
 	}
 
