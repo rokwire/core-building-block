@@ -16,8 +16,6 @@ package storage
 
 import (
 	"context"
-	"core-building-block/core/model"
-	"log"
 	"time"
 
 	"github.com/rokwire/logging-library-go/v2/errors"
@@ -269,14 +267,18 @@ func (m *database) migrateToTenantsAccounts(accountsColl *collectionWrapper, ten
 	transaction := func(context TransactionContext) error {
 
 		//TODO
-		findFilter := bson.M{"_id": "1234"}
-		var accounts []account
-		err := accountsColl.FindWithContext(context, findFilter, &accounts, nil)
-		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
-		}
+		/*	findFilter := bson.M{"_id": "1234"}
+			var accounts []account
+			err := accountsColl.FindWithContext(context, findFilter, &accounts, nil)
+			if err != nil {
+				return err
+			} */
 
-		log.Println(accounts)
+		//log.Println(accounts)
+		_, err := accountsColl.InsertOneWithContext(context, bson.M{"_id": "5555"})
+		if err != nil {
+			return err
+		}
 
 		return nil
 	}
