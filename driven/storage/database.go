@@ -39,7 +39,7 @@ type database struct {
 	authTypes                       *collectionWrapper
 	identityProviders               *collectionWrapper
 	accounts                        *collectionWrapper //deprecated
-	accountsIdentities              *collectionWrapper
+	tenantsAccounts                 *collectionWrapper
 	devices                         *collectionWrapper
 	credentials                     *collectionWrapper
 	loginsSessions                  *collectionWrapper
@@ -102,8 +102,8 @@ func (m *database) start() error {
 		return err
 	}
 
-	accountsIdentities := &collectionWrapper{database: m, coll: db.Collection("accounts_identities")}
-	err = m.applyAccountsIdentitiesChecks(accountsIdentities)
+	tenantsAccounts := &collectionWrapper{database: m, coll: db.Collection("tenants_accounts")}
+	err = m.applyTenantsAccountsIdentitiesChecks(tenantsAccounts)
 	if err != nil {
 		return err
 	}
@@ -217,7 +217,7 @@ func (m *database) start() error {
 	m.authTypes = authTypes
 	m.identityProviders = identityProviders
 	m.accounts = accounts
-	m.accountsIdentities = accountsIdentities
+	m.tenantsAccounts = tenantsAccounts
 	m.devices = devices
 	m.credentials = credentials
 	m.loginsSessions = loginsSessions
@@ -303,52 +303,52 @@ func (m *database) applyAccountsChecks(accounts *collectionWrapper) error {
 	return nil
 }
 
-func (m *database) applyAccountsIdentitiesChecks(accountsIdentities *collectionWrapper) error {
-	m.logger.Info("apply accounts identities checks.....")
+func (m *database) applyTenantsAccountsIdentitiesChecks(tenantAccounts *collectionWrapper) error {
+	m.logger.Info("apply tenants accounts checks.....")
+	/*
+		//add profile index
+		err := accountsIdentities.AddIndex(bson.D{primitive.E{Key: "profile.id", Value: 1}}, false)
+		if err != nil {
+			return err
+		}
 
-	//add profile index
-	err := accountsIdentities.AddIndex(bson.D{primitive.E{Key: "profile.id", Value: 1}}, false)
-	if err != nil {
-		return err
-	}
+		//add auth types index
+		err = accountsIdentities.AddIndex(bson.D{primitive.E{Key: "auth_types.id", Value: 1}}, false)
+		if err != nil {
+			return err
+		}
 
-	//add auth types index
-	err = accountsIdentities.AddIndex(bson.D{primitive.E{Key: "auth_types.id", Value: 1}}, false)
-	if err != nil {
-		return err
-	}
+		//add auth types identifier
+		err = accountsIdentities.AddIndex(bson.D{primitive.E{Key: "auth_types.identifier", Value: 1}}, false)
+		if err != nil {
+			return err
+		}
 
-	//add auth types identifier
-	err = accountsIdentities.AddIndex(bson.D{primitive.E{Key: "auth_types.identifier", Value: 1}}, false)
-	if err != nil {
-		return err
-	}
+		//add auth types auth type id
+		err = accountsIdentities.AddIndex(bson.D{primitive.E{Key: "auth_types.auth_type_id", Value: 1}}, false)
+		if err != nil {
+			return err
+		}
 
-	//add auth types auth type id
-	err = accountsIdentities.AddIndex(bson.D{primitive.E{Key: "auth_types.auth_type_id", Value: 1}}, false)
-	if err != nil {
-		return err
-	}
+		//add username index
+		err = accountsIdentities.AddIndex(bson.D{primitive.E{Key: "username", Value: 1}}, false)
+		if err != nil {
+			return err
+		}
 
-	//add username index
-	err = accountsIdentities.AddIndex(bson.D{primitive.E{Key: "username", Value: 1}}, false)
-	if err != nil {
-		return err
-	}
+		//add apps orgs memberships id index
+		err = accountsIdentities.AddIndex(bson.D{primitive.E{Key: "apps_orgs_memberships.id", Value: 1}}, true)
+		if err != nil {
+			return err
+		}
 
-	//add apps orgs memberships id index
-	err = accountsIdentities.AddIndex(bson.D{primitive.E{Key: "apps_orgs_memberships.id", Value: 1}}, true)
-	if err != nil {
-		return err
-	}
+		//add apps orgs memberships app org id index
+		err = accountsIdentities.AddIndex(bson.D{primitive.E{Key: "apps_orgs_memberships.app_org_id", Value: 1}}, false)
+		if err != nil {
+			return err
+		} */
 
-	//add apps orgs memberships app org id index
-	err = accountsIdentities.AddIndex(bson.D{primitive.E{Key: "apps_orgs_memberships.app_org_id", Value: 1}}, false)
-	if err != nil {
-		return err
-	}
-
-	m.logger.Info("accounts identities check passed")
+	m.logger.Info("tenants accounts check passed")
 	return nil
 }
 
