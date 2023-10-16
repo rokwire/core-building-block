@@ -57,10 +57,11 @@ type account struct {
 	MostRecentClientVersion *string    `bson:"most_recent_client_version"`
 }
 
-type accountIdentity struct {
+type tenantAccount struct {
 	ID string `bson:"_id"`
 
-	AppsOrgsMemberships []appsOrgsMembership `bson:"apps_orgs_memberships"`
+	OrgID              string              `bson:"org_id"`
+	OrgAppsMemberships []orgAppsMembership `bson:"org_apps_memberships"`
 
 	Scopes []string `bson:"scopes,omitempty"`
 
@@ -89,8 +90,8 @@ type accountIdentity struct {
 	LastAccessTokenDate *time.Time `bson:"last_access_token_date"`
 }
 
-type appsOrgsMembership struct {
-	ID       string `bson:"id"`
+type orgAppsMembership struct {
+	ID       string `bson:"id,omitempty"`
 	AppOrgID string `bson:"app_org_id,omitempty"`
 
 	Permissions []model.Permission `bson:"permissions,omitempty"`
