@@ -246,8 +246,24 @@ func (m *database) start() error {
 	go m.applicationConfigs.Watch(nil, m.logger)
 	go m.configs.Watch(nil, m.logger)
 
+	// migrate to tenants accounts
+	err = m.migrateToTenantsAccounts(accounts, tenantsAccounts)
+	if err != nil {
+		return err
+	}
+
 	m.listeners = []Listener{}
 
+	return nil
+}
+
+// migrate to tenants accounts
+func (m *database) migrateToTenantsAccounts(accounts *collectionWrapper, tenantsAccounts *collectionWrapper) error {
+	m.logger.Debug("migrateToTenantsAccounts START")
+
+	//TODO
+
+	m.logger.Debug("migrateToTenantsAccounts END")
 	return nil
 }
 
