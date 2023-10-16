@@ -16,9 +16,13 @@ package storage
 
 import (
 	"context"
+	"core-building-block/core/model"
+	"log"
 	"time"
 
+	"github.com/rokwire/logging-library-go/v2/errors"
 	"github.com/rokwire/logging-library-go/v2/logs"
+	"github.com/rokwire/logging-library-go/v2/logutils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -246,7 +250,7 @@ func (m *database) start() error {
 	go m.applicationConfigs.Watch(nil, m.logger)
 	go m.configs.Watch(nil, m.logger)
 
-	// migrate to tenants accounts
+	// migrate to tenants accounts - remove this code when migrated to all environments
 	err = m.migrateToTenantsAccounts(accounts, tenantsAccounts)
 	if err != nil {
 		return err
@@ -258,13 +262,65 @@ func (m *database) start() error {
 }
 
 // migrate to tenants accounts
-func (m *database) migrateToTenantsAccounts(accounts *collectionWrapper, tenantsAccounts *collectionWrapper) error {
+func (m *database) migrateToTenantsAccounts(accountsColl *collectionWrapper, tenantsAccountsColl *collectionWrapper) error {
 	m.logger.Debug("migrateToTenantsAccounts START")
 
-	//TODO
+	//all in transaction!
+	transaction := func(context TransactionContext) error {
+
+		//TODO
+		findFilter := bson.M{"_id": "1234"}
+		var accounts []account
+		err := accountsColl.FindWithContext(context, findFilter, &accounts, nil)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+		}
+
+		log.Println(accounts)
+
+		return nil
+	}
+
+	err := m.performTransaction(transaction)
+	if err != nil {
+		return err
+	}
 
 	m.logger.Debug("migrateToTenantsAccounts END")
 	return nil
+}
+
+func (m *database) performTransaction(transaction func(context TransactionContext) error) error {
+	// transaction
+	err := m.dbClient.UseSession(context.Background(), func(sessionContext mongo.SessionContext) error {
+		err := sessionContext.StartTransaction()
+		if err != nil {
+			m.abortTransaction(sessionContext)
+			return errors.WrapErrorAction(logutils.ActionStart, logutils.TypeTransaction, nil, err)
+		}
+
+		err = transaction(sessionContext)
+		if err != nil {
+			m.abortTransaction(sessionContext)
+			return errors.WrapErrorAction("performing", logutils.TypeTransaction, nil, err)
+		}
+
+		err = sessionContext.CommitTransaction(sessionContext)
+		if err != nil {
+			m.abortTransaction(sessionContext)
+			return errors.WrapErrorAction(logutils.ActionCommit, logutils.TypeTransaction, nil, err)
+		}
+		return nil
+	})
+
+	return err
+}
+
+func (m *database) abortTransaction(sessionContext mongo.SessionContext) {
+	err := sessionContext.AbortTransaction(sessionContext)
+	if err != nil {
+		m.logger.Errorf("error aborting an accounts transaction - %s", err)
+	}
 }
 
 func (m *database) applyAuthTypesChecks(authenticationTypes *collectionWrapper) error {
