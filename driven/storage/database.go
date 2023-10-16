@@ -305,48 +305,54 @@ func (m *database) applyAccountsChecks(accounts *collectionWrapper) error {
 
 func (m *database) applyTenantsAccountsIdentitiesChecks(tenantAccounts *collectionWrapper) error {
 	m.logger.Info("apply tenants accounts checks.....")
-	/*
-		//add profile index
-		err := accountsIdentities.AddIndex(bson.D{primitive.E{Key: "profile.id", Value: 1}}, false)
-		if err != nil {
-			return err
-		}
 
-		//add auth types index
-		err = accountsIdentities.AddIndex(bson.D{primitive.E{Key: "auth_types.id", Value: 1}}, false)
-		if err != nil {
-			return err
-		}
+	//add org id index
+	err := tenantAccounts.AddIndex(bson.D{primitive.E{Key: "org_id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
 
-		//add auth types identifier
-		err = accountsIdentities.AddIndex(bson.D{primitive.E{Key: "auth_types.identifier", Value: 1}}, false)
-		if err != nil {
-			return err
-		}
+	//add profile index
+	err = tenantAccounts.AddIndex(bson.D{primitive.E{Key: "profile.id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
 
-		//add auth types auth type id
-		err = accountsIdentities.AddIndex(bson.D{primitive.E{Key: "auth_types.auth_type_id", Value: 1}}, false)
-		if err != nil {
-			return err
-		}
+	//add auth types index
+	err = tenantAccounts.AddIndex(bson.D{primitive.E{Key: "auth_types.id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
 
-		//add username index
-		err = accountsIdentities.AddIndex(bson.D{primitive.E{Key: "username", Value: 1}}, false)
-		if err != nil {
-			return err
-		}
+	//add auth types identifier
+	err = tenantAccounts.AddIndex(bson.D{primitive.E{Key: "auth_types.identifier", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
 
-		//add apps orgs memberships id index
-		err = accountsIdentities.AddIndex(bson.D{primitive.E{Key: "apps_orgs_memberships.id", Value: 1}}, true)
-		if err != nil {
-			return err
-		}
+	//add auth types auth type id
+	err = tenantAccounts.AddIndex(bson.D{primitive.E{Key: "auth_types.auth_type_id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
 
-		//add apps orgs memberships app org id index
-		err = accountsIdentities.AddIndex(bson.D{primitive.E{Key: "apps_orgs_memberships.app_org_id", Value: 1}}, false)
-		if err != nil {
-			return err
-		} */
+	//add username index
+	err = tenantAccounts.AddIndex(bson.D{primitive.E{Key: "username", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	//add org apps memberships id index
+	err = tenantAccounts.AddIndex(bson.D{primitive.E{Key: "org_apps_memberships.id", Value: 1}}, true)
+	if err != nil {
+		return err
+	}
+
+	//add org apps memberships app org id index
+	err = tenantAccounts.AddIndex(bson.D{primitive.E{Key: "org_apps_memberships.app_org_id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
 
 	m.logger.Info("tenants accounts check passed")
 	return nil
