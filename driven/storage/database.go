@@ -280,33 +280,40 @@ func (m *database) migrateToTenantsAccounts(accountsColl *collectionWrapper, ten
 			return err
 		}
 		/*
-			db.accounts.aggregate([
-				{
-				  $unwind: "$auth_types"
-				},
-				{
-				  $group: {
-					_id: "$auth_types.identifier",
-					accounts: { $push: "$_id" }
-				  }
-				},
-				{
-				  $group: {
-					_id: null,
-					result: {
-					  $push: {
-						k: "$_id",
-						v: "$accounts"
-					  }
-					}
-				  }
-				},
-				{
-				  $replaceRoot: {
-					newRoot: { $arrayToObject: "$result" }
-				  }
-				}
-			  ]) */
+						db.accounts.aggregate([
+			  {
+			    $unwind: "$auth_types"
+			  },
+			  {
+			    $group: {
+			      _id: "$auth_types.identifier",
+			      accounts: { $push: "$_id" },
+			      count: { $sum: 1 }
+			    }
+			  },
+			  {
+			    $match: {
+			      count: { $gt: 1 }
+			    }
+			  },
+			  {
+			    $group: {
+			      _id: null,
+			      result: {
+			        $push: {
+			          k: "$_id",
+			          v: "$accounts"
+			        }
+			      }
+			    }
+			  },
+			  {
+			    $replaceRoot: {
+			      newRoot: { $arrayToObject: "$result" }
+			    }
+			  }
+			])
+		*/
 
 		return nil
 	}
