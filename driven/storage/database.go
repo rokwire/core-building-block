@@ -282,18 +282,6 @@ func (m *database) migrateToTenantsAccounts(accountsColl *collectionWrapper, ten
 	return nil
 }
 
-type accountItem struct {
-	ID         string `bson:"id"`
-	AppOrgID   string `bson:"app_org_id"`
-	PFirstName string `bson:"p_first_name"`
-	PLastName  string `bson:"p_last_name"`
-}
-
-type identityAccountsItem struct {
-	Identifier string        `bson:"id"`
-	Accounts   []accountItem `bson:"accounts"`
-}
-
 func (m *database) processDuplicateAccounts(context TransactionContext, accountsColl *collectionWrapper, tenantsAccountsColl *collectionWrapper) error {
 	//find the duplicate accounts
 	items, err := m.findDuplicateAccounts(context, accountsColl)
@@ -310,7 +298,7 @@ func (m *database) processDuplicateAccounts(context TransactionContext, accounts
 	return nil
 }
 
-func (m *database) findDuplicateAccounts(context TransactionContext, accountsColl *collectionWrapper) ([]identityAccountsItem, error) {
+func (m *database) findDuplicateAccounts(context TransactionContext, accountsColl *collectionWrapper) (map[string]account, error) {
 	pipeline := []bson.M{
 		{
 			"$unwind": "$auth_types",
@@ -320,10 +308,7 @@ func (m *database) findDuplicateAccounts(context TransactionContext, accountsCol
 				"_id": "$auth_types.identifier",
 				"accounts": bson.M{
 					"$push": bson.M{
-						"id":           "$_id",
-						"app_org_id":   "$app_org_id",
-						"p_first_name": "$profile.first_name",
-						"p_last_name":  "$profile.last_name",
+						"id": "$_id",
 					},
 				},
 				"count": bson.M{
@@ -391,9 +376,6 @@ func (m *database) findDuplicateAccounts(context TransactionContext, accountsCol
 
 			var account accountItem
 			account.ID = accountObj["id"].(string)
-			account.AppOrgID = accountObj["app_org_id"].(string)
-			account.PFirstName = accountObj["p_first_name"].(string)
-			account.PLastName = accountObj["p_last_name"].(string)
 
 			accounts = append(accounts, account)
 		}
@@ -405,7 +387,27 @@ func (m *database) findDuplicateAccounts(context TransactionContext, accountsCol
 
 		resTypeResult = append(resTypeResult, item)
 	}
-	return resTypeResult, nil
+
+	//prepare founded duplicate accounts
+	preparedResponse, err := m.prepareFoundedDuplicateAccounts(context, accountsColl, resTypeResult)
+	if err != nil {
+		return nil, err
+	}
+
+	return preparedResponse, nil
+}
+
+type accountItem struct {
+	ID string `bson:"id"`
+}
+type identityAccountsItem struct {
+	Identifier string        `bson:"id"`
+	Accounts   []accountItem `bson:"accounts"`
+}
+
+func (m *database) prepareFoundedDuplicateAccounts(context TransactionContext, accountsColl *collectionWrapper,
+	foundedItems []identityAccountsItem) (map[string]account, error) {
+	return nil, nil
 }
 
 func (m *database) performTransaction(transaction func(context TransactionContext) error) error {
