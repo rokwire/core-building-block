@@ -412,7 +412,16 @@ func (m *database) prepareFoundedDuplicateAccounts(context TransactionContext, a
 		return nil, nil
 	}
 
-	accountsColl.coll.Find()
+	//load all accounts
+	accountsIDs := []string{}
+	for _, item := range foundedItems {
+		accounts := item.Accounts
+		for _, account := range accounts {
+			accountsIDs = append(accountsIDs, account.ID)
+		}
+	}
+
+	//accountsColl.coll.Find()
 
 	return nil, nil
 }
