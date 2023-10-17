@@ -416,12 +416,18 @@ func (m *database) prepareFoundedDuplicateAccounts(context TransactionContext, a
 	accountsIDs := []string{}
 	for _, item := range foundedItems {
 		accounts := item.Accounts
-		for _, account := range accounts {
-			accountsIDs = append(accountsIDs, account.ID)
+		for _, acc := range accounts {
+			accountsIDs = append(accountsIDs, acc.ID)
 		}
 	}
+	findFilter := bson.M{"_id": bson.M{"$in": accountsIDs}}
+	var accounts []account
+	err := accountsColl.FindWithContext(context, findFilter, &accounts, nil)
+	if err != nil {
+		return nil, err
+	}
 
-	//accountsColl.coll.Find()
+	//TODO
 
 	return nil, nil
 }
