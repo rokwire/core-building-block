@@ -407,6 +407,13 @@ type identityAccountsItem struct {
 
 func (m *database) prepareFoundedDuplicateAccounts(context TransactionContext, accountsColl *collectionWrapper,
 	foundedItems []identityAccountsItem) (map[string]account, error) {
+
+	if len(foundedItems) == 0 {
+		return nil, nil
+	}
+
+	accountsColl.coll.Find()
+
 	return nil, nil
 }
 
