@@ -16,7 +16,6 @@ package storage
 
 import (
 	"context"
-	"log"
 	"time"
 
 	"github.com/rokwire/logging-library-go/v2/errors"
@@ -283,7 +282,35 @@ func (m *database) migrateToTenantsAccounts(accountsColl *collectionWrapper, ten
 	return nil
 }
 
+type accountItem struct {
+	ID         string `bson:"id"`
+	AppOrgID   string `bson:"app_org_id"`
+	PFirstName string `bson:"p_first_name"`
+	PLastName  string `bson:"p_last_name"`
+}
+
+type identityAccountsItem struct {
+	Identifier string        `bson:"id"`
+	Accounts   []accountItem `bson:"accounts"`
+}
+
 func (m *database) processDuplicateAccounts(context TransactionContext, accountsColl *collectionWrapper, tenantsAccountsColl *collectionWrapper) error {
+	//find the duplicate accounts
+	items, err := m.findDuplicateAccounts(context, accountsColl)
+	if err != nil {
+		return err
+	}
+	if len(items) == 0 {
+		m.logger.Info("there is no duplicated accounts")
+		return nil
+	}
+
+	//TODO
+
+	return nil
+}
+
+func (m *database) findDuplicateAccounts(context TransactionContext, accountsColl *collectionWrapper) ([]identityAccountsItem, error) {
 	pipeline := []bson.M{
 		{
 			"$unwind": "$auth_types",
@@ -335,48 +362,34 @@ func (m *database) processDuplicateAccounts(context TransactionContext, accounts
 
 	cursor, err := accountsColl.coll.Aggregate(context, pipeline)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	var result bson.M
 	if cursor.Next(context) {
 		err := cursor.Decode(&result)
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
 
 	if len(result) == 0 {
-		m.logger.Info("There is no duplicated accounts")
-		return nil
+
+		return nil, nil
 	}
 
-	type resTypeAccount struct {
-		ID         string `bson:"id"`
-		AppOrgID   string `bson:"app_org_id"`
-		PFirstName string `bson:"p_first_name"`
-		PLastName  string `bson:"p_last_name"`
-	}
-
-	type resTypeItem struct {
-		Identifier string           `bson:"id"`
-		Accounts   []resTypeAccount `bson:"accounts"`
-	}
-
-	var resTypeResult []resTypeItem
+	var resTypeResult []identityAccountsItem
 
 	for key, value := range result {
-		m.logger.Infof("Identity:%s", key)
-
 		valueM := value.(primitive.M)
 		accountsArr := valueM["accounts"].(primitive.A)
 
-		var accounts []resTypeAccount
+		var accounts []accountItem
 
 		for _, element := range accountsArr {
 			accountObj := element.(primitive.M)
 
-			var account resTypeAccount
+			var account accountItem
 			account.ID = accountObj["id"].(string)
 			account.AppOrgID = accountObj["app_org_id"].(string)
 			account.PFirstName = accountObj["p_first_name"].(string)
@@ -385,17 +398,14 @@ func (m *database) processDuplicateAccounts(context TransactionContext, accounts
 			accounts = append(accounts, account)
 		}
 
-		item := resTypeItem{
+		item := identityAccountsItem{
 			Identifier: key,
 			Accounts:   accounts,
 		}
 
 		resTypeResult = append(resTypeResult, item)
 	}
-
-	log.Println(resTypeResult)
-
-	return nil
+	return resTypeResult, nil
 }
 
 func (m *database) performTransaction(transaction func(context TransactionContext) error) error {
