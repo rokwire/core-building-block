@@ -271,95 +271,6 @@ func (m *database) migrateToTenantsAccounts(accountsColl *collectionWrapper, ten
 
 		m.processDuplicateAccounts(context, accountsColl, tenantsAccountsColl)
 
-		/*	findFilter := bson.M{"_id": "1234"}
-			var accounts []account
-			err := accountsColl.FindWithContext(context, findFilter, &accounts, nil)
-			if err != nil {
-				return err
-			} */
-
-		//log.Println(accounts)
-		/*	_, err := accountsColl.InsertOneWithContext(context, bson.M{"_id": "5555"})
-			if err != nil {
-				return err
-			} */
-		/*
-						db.accounts.aggregate([
-			  {
-			    $unwind: "$auth_types"
-			  },
-			  {
-			    $group: {
-			      _id: "$auth_types.identifier",
-			      accounts: { $push: "$_id" },
-			      count: { $sum: 1 }
-			    }
-			  },
-			  {
-			    $match: {
-			      count: { $gt: 1 }
-			    }
-			  },
-			  {
-			    $group: {
-			      _id: null,
-			      result: {
-			        $push: {
-			          k: "$_id",
-			          v: "$accounts"
-			        }
-			      }
-			    }
-			  },
-			  {
-			    $replaceRoot: {
-			      newRoot: { $arrayToObject: "$result" }
-			    }
-			  }
-			])
-		*/
-
-		//+ names
-		/*	db.accounts.aggregate([
-			{
-			  $unwind: "$auth_types"
-			},
-			{
-			  $group: {
-				_id: "$auth_types.identifier",
-				accounts: {  $push: {
-					id: "$_id",
-					app_org_id: "$app_org_id",
-					p_first_name: "$profile.first_name",
-					p_last_name: "$profile.last_name"
-					}
-				},
-				count: { $sum: 1 }
-			  }
-			},
-			{
-			  $match: {
-				count: { $gt: 1 }
-			  }
-			},
-			{
-			  $group: {
-				_id: null,
-				result: {
-				  $push: {
-					k: "$_id",
-					v: { accounts: "$accounts" }
-				  }
-				}
-			  }
-			},
-			{
-			  $replaceRoot: {
-				newRoot: { $arrayToObject: "$result" }
-			  }
-			}
-		  ]) */
-
 		return nil
 	}
 
@@ -433,10 +344,9 @@ func (m *database) processDuplicateAccounts(context TransactionContext, accounts
 		if err != nil {
 			return err
 		}
-		fmt.Println(result)
-	} else {
-		fmt.Println("Няма резултати.")
 	}
+
+	fmt.Println(result)
 
 	return nil
 }
