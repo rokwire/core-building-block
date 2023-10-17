@@ -16,7 +16,7 @@ package storage
 
 import (
 	"context"
-	"fmt"
+	"log"
 	"time"
 
 	"github.com/rokwire/logging-library-go/v2/errors"
@@ -346,7 +346,54 @@ func (m *database) processDuplicateAccounts(context TransactionContext, accounts
 		}
 	}
 
-	fmt.Println(result)
+	if len(result) == 0 {
+		m.logger.Info("There is no duplicated accounts")
+		return nil
+	}
+
+	type resTypeAccount struct {
+		ID         string `bson:"id"`
+		AppOrgID   string `bson:"app_org_id"`
+		PFirstName string `bson:"p_first_name"`
+		PLastName  string `bson:"p_last_name"`
+	}
+
+	type resTypeItem struct {
+		Identifier string           `bson:"id"`
+		Accounts   []resTypeAccount `bson:"accounts"`
+	}
+
+	var resTypeResult []resTypeItem
+
+	for key, value := range result {
+		m.logger.Infof("Identity:%s", key)
+
+		valueM := value.(primitive.M)
+		accountsArr := valueM["accounts"].(primitive.A)
+
+		var accounts []resTypeAccount
+
+		for _, element := range accountsArr {
+			accountObj := element.(primitive.M)
+
+			var account resTypeAccount
+			account.ID = accountObj["id"].(string)
+			account.AppOrgID = accountObj["app_org_id"].(string)
+			account.PFirstName = accountObj["p_first_name"].(string)
+			account.PLastName = accountObj["p_last_name"].(string)
+
+			accounts = append(accounts, account)
+		}
+
+		item := resTypeItem{
+			Identifier: key,
+			Accounts:   accounts,
+		}
+
+		resTypeResult = append(resTypeResult, item)
+	}
+
+	log.Println(resTypeResult)
 
 	return nil
 }
