@@ -16,6 +16,7 @@ package storage
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -336,6 +337,23 @@ func (m *database) constructTenantsAccounts(context TransactionContext, appsOrgs
 
 	//TODO
 	//illinoisAppOrgIDDefault := "1" //university of illinois / UIUC app
+
+	//print
+	for identifier, dataItem := range data {
+		fmt.Print("\n\n")
+
+		fmt.Printf("%s\n", identifier)
+		for _, orgAccounts := range dataItem {
+			fmt.Printf("\torg_id:%s\n", orgAccounts.OrgID)
+			for _, account := range orgAccounts.Accounts {
+				fmt.Printf("\t\taccount_id:%s\n", account.ID)
+				authTypes := account.AuthTypes
+				for _, authType := range authTypes {
+					fmt.Printf("\t\t\tauth_type_code:%s\tauth_type_identifier:%s\n", authType.AuthTypeCode, authType.Identifier)
+				}
+			}
+		}
+	}
 
 	return nil, nil
 }
