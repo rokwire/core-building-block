@@ -313,7 +313,18 @@ func (m *database) processDuplicateAccounts(context TransactionContext, accounts
 }
 
 func (m *database) constructTenantsAccounts(duplicateAccounts map[string][]account) ([]tenantAccount, error) {
-	appOrgIDSource := "1" //university of illinois / UIUC app
+	//illinoisAppOrgIDDefault := "1" //university of illinois / UIUC app
+
+	//segment by org
+	type orgAccounts struct {
+		OrgID    string
+		Accounts []account
+	}
+	//	data := map[string][]orgAccounts{}
+	for _, accounts := range duplicateAccounts {
+		log.Println(accounts)
+	}
+
 	//TODO
 	return nil, nil
 }
