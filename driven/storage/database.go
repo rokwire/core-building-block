@@ -16,6 +16,7 @@ package storage
 
 import (
 	"context"
+	"log"
 	"time"
 
 	"github.com/rokwire/logging-library-go/v2/errors"
@@ -266,9 +267,13 @@ func (m *database) migrateToTenantsAccounts(accountsColl *collectionWrapper, ten
 	//all in transaction!
 	transaction := func(context TransactionContext) error {
 
-		//TODO
+		//TODO - check if need to apply processing
 
-		m.processDuplicateAccounts(context, accountsColl, tenantsAccountsColl)
+		//process duplicate events
+		err := m.processDuplicateAccounts(context, accountsColl, tenantsAccountsColl)
+		if err != nil {
+			return err
+		}
 
 		return nil
 	}
@@ -293,9 +298,24 @@ func (m *database) processDuplicateAccounts(context TransactionContext, accounts
 		return nil
 	}
 
-	//TODO
+	//construct tenants accounts
+	tenantsAccounts, err := m.constructTenantsAccounts(items)
+	if err != nil {
+		return err
+	}
+
+	//save tenants accounts
+	log.Println(tenantsAccounts)
+
+	//mark the old accounts as processed
 
 	return nil
+}
+
+func (m *database) constructTenantsAccounts(duplicateAccounts map[string][]account) ([]tenantAccount, error) {
+	appOrgIDSource := "1" //university of illinois / UIUC app
+	//TODO
+	return nil, nil
 }
 
 func (m *database) findDuplicateAccounts(context TransactionContext, accountsColl *collectionWrapper) (map[string][]account, error) {
