@@ -250,7 +250,7 @@ func (m *database) start() error {
 	go m.configs.Watch(nil, m.logger)
 
 	// migrate to tenants accounts - remove this code when migrated to all environments
-	err = m.migrateToTenantsAccounts(accounts, tenantsAccounts)
+	err = m.migrateToTenantsAccounts(accounts, tenantsAccounts, applicationsOrganizations)
 	if err != nil {
 		return err
 	}
@@ -261,7 +261,8 @@ func (m *database) start() error {
 }
 
 // migrate to tenants accounts
-func (m *database) migrateToTenantsAccounts(accountsColl *collectionWrapper, tenantsAccountsColl *collectionWrapper) error {
+func (m *database) migrateToTenantsAccounts(accountsColl *collectionWrapper, tenantsAccountsColl *collectionWrapper,
+	appsOrgsColl *collectionWrapper) error {
 	m.logger.Debug("migrateToTenantsAccounts START")
 
 	//all in transaction!
@@ -270,7 +271,7 @@ func (m *database) migrateToTenantsAccounts(accountsColl *collectionWrapper, ten
 		//TODO - check if need to apply processing
 
 		//process duplicate events
-		err := m.processDuplicateAccounts(context, accountsColl, tenantsAccountsColl)
+		err := m.processDuplicateAccounts(context, accountsColl, tenantsAccountsColl, appsOrgsColl)
 		if err != nil {
 			return err
 		}
@@ -287,7 +288,9 @@ func (m *database) migrateToTenantsAccounts(accountsColl *collectionWrapper, ten
 	return nil
 }
 
-func (m *database) processDuplicateAccounts(context TransactionContext, accountsColl *collectionWrapper, tenantsAccountsColl *collectionWrapper) error {
+func (m *database) processDuplicateAccounts(context TransactionContext, accountsColl *collectionWrapper,
+	tenantsAccountsColl *collectionWrapper, appsOrgsColl *collectionWrapper) error {
+
 	//find the duplicate accounts
 	items, err := m.findDuplicateAccounts(context, accountsColl)
 	if err != nil {
@@ -299,7 +302,7 @@ func (m *database) processDuplicateAccounts(context TransactionContext, accounts
 	}
 
 	//construct tenants accounts
-	tenantsAccounts, err := m.constructTenantsAccounts(items)
+	tenantsAccounts, err := m.constructTenantsAccounts(context, appsOrgsColl, items)
 	if err != nil {
 		return err
 	}
@@ -312,18 +315,33 @@ func (m *database) processDuplicateAccounts(context TransactionContext, accounts
 	return nil
 }
 
-func (m *database) constructTenantsAccounts(duplicateAccounts map[string][]account) ([]tenantAccount, error) {
+func (m *database) constructTenantsAccounts(context TransactionContext, appsOrgsColl *collectionWrapper, duplicateAccounts map[string][]account) ([]tenantAccount, error) {
+	//we need to load the apps orgs object from the database as we will need them
+	var allAppsOrgs []applicationOrganization
+	err := appsOrgsColl.FindWithContext(context, bson.D{}, &allAppsOrgs, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Println(allAppsOrgs)
+
 	//illinoisAppOrgIDDefault := "1" //university of illinois / UIUC app
 
 	//segment by org
-	type orgAccounts struct {
-		OrgID    string
-		Accounts []account
-	}
-	//	data := map[string][]orgAccounts{}
-	for _, accounts := range duplicateAccounts {
-		log.Println(accounts)
-	}
+	/*	type orgAccounts struct {
+			OrgID    string
+			Accounts []account
+		}
+		data := map[string][]orgAccounts{}
+		for identifier, accounts := range duplicateAccounts {
+			orgAccounts := []orgAccounts{}
+
+			for _, account := range accounts {
+				currentOrgID := account.AppOrgID.
+			}
+
+			data[identifier] = orgAccounts
+		} */
 
 	//TODO
 	return nil, nil
