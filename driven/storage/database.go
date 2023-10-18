@@ -298,7 +298,7 @@ func (m *database) processDuplicateAccounts(context TransactionContext, accounts
 	return nil
 }
 
-func (m *database) findDuplicateAccounts(context TransactionContext, accountsColl *collectionWrapper) (map[string]account, error) {
+func (m *database) findDuplicateAccounts(context TransactionContext, accountsColl *collectionWrapper) (map[string][]account, error) {
 	pipeline := []bson.M{
 		{
 			"$unwind": "$auth_types",
@@ -406,7 +406,7 @@ type identityAccountsItem struct {
 }
 
 func (m *database) prepareFoundedDuplicateAccounts(context TransactionContext, accountsColl *collectionWrapper,
-	foundedItems []identityAccountsItem) (map[string]account, error) {
+	foundedItems []identityAccountsItem) (map[string][]account, error) {
 
 	if len(foundedItems) == 0 {
 		return nil, nil
@@ -427,9 +427,21 @@ func (m *database) prepareFoundedDuplicateAccounts(context TransactionContext, a
 		return nil, err
 	}
 
-	//TODO
+	//prepare result
+	result := map[string][]account{}
+	for _, item := range foundedItems {
+		identifier := item.Identifier
+		accountsIDs := item.Accounts
 
-	return nil, nil
+		resAccounts := m.getFullAccountsObjects(accountsIDs)
+		result[identifier] = resAccounts
+	}
+
+	return result, nil
+}
+
+func (m *database) getFullAccountsObjects(accountsIDs []accountItem) []account {
+	return nil
 }
 
 func (m *database) performTransaction(transaction func(context TransactionContext) error) error {
