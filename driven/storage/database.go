@@ -323,33 +323,49 @@ func (m *database) constructTenantsAccounts(context TransactionContext, appsOrgs
 		return nil, err
 	}
 
-	//illinoisAppOrgIDDefault := "1" //university of illinois / UIUC app
-
 	//segment by org
-	type orgAccounts struct {
-		OrgID    string
-		Accounts []account
-	}
 	data := map[string][]orgAccounts{}
 	for identifier, accounts := range duplicateAccounts {
-		orgAccounts := []orgAccounts{}
-
-		for _, account := range accounts {
-			currentOrgID, err := m.findOrgIDByAppOrgID(account.AppOrgID, allAppsOrgs)
-			if err != nil {
-				return nil, err
-			}
-
-			//TODO
-			log.Println(currentOrgID)
-
+		orgAccounts, err := m.segmentByOrgID(allAppsOrgs, accounts)
+		if err != nil {
+			return nil, err
 		}
 
 		data[identifier] = orgAccounts
 	}
 
 	//TODO
+	//illinoisAppOrgIDDefault := "1" //university of illinois / UIUC app
+
 	return nil, nil
+}
+
+type orgAccounts struct {
+	OrgID    string
+	Accounts []account
+}
+
+func (m *database) segmentByOrgID(allAppsOrgs []applicationOrganization, accounts []account) ([]orgAccounts, error) {
+	tempMap := map[string][]account{}
+	for _, account := range accounts {
+		currentOrgID, err := m.findOrgIDByAppOrgID(account.AppOrgID, allAppsOrgs)
+		if err != nil {
+			return nil, err
+		}
+
+		orgAccountsMap := tempMap[currentOrgID]
+		orgAccountsMap = append(orgAccountsMap, account)
+		tempMap[currentOrgID] = orgAccountsMap
+
+	}
+
+	result := []orgAccounts{}
+	for orgID, accounts := range tempMap {
+		current := orgAccounts{OrgID: orgID, Accounts: accounts}
+		result = append(result, current)
+	}
+
+	return result, nil
 }
 
 func (m *database) findOrgIDByAppOrgID(appOrgID string, allAppsOrgs []applicationOrganization) (string, error) {
