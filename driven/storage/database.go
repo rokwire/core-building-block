@@ -433,15 +433,35 @@ func (m *database) prepareFoundedDuplicateAccounts(context TransactionContext, a
 		identifier := item.Identifier
 		accountsIDs := item.Accounts
 
-		resAccounts := m.getFullAccountsObjects(accountsIDs)
+		resAccounts, err := m.getFullAccountsObjects(accountsIDs, accounts)
+		if err != nil {
+			return nil, err
+		}
 		result[identifier] = resAccounts
 	}
 
 	return result, nil
 }
 
-func (m *database) getFullAccountsObjects(accountsIDs []accountItem) []account {
-	return nil
+func (m *database) getFullAccountsObjects(accountsIDs []accountItem, allAccounts []account) ([]account, error) {
+	result := []account{}
+	for _, item := range accountsIDs {
+		//find the full account object
+		var resAccount *account
+		for _, acc := range allAccounts {
+			if item.ID == acc.ID {
+				resAccount = &acc
+				break
+			}
+		}
+
+		if resAccount == nil {
+			return nil, errors.Newf("cannot find full account for %s", item.ID)
+		}
+		result = append(result, *resAccount)
+	}
+
+	return result, nil
 }
 
 func (m *database) performTransaction(transaction func(context TransactionContext) error) error {
