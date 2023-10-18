@@ -323,28 +323,42 @@ func (m *database) constructTenantsAccounts(context TransactionContext, appsOrgs
 		return nil, err
 	}
 
-	log.Println(allAppsOrgs)
-
 	//illinoisAppOrgIDDefault := "1" //university of illinois / UIUC app
 
 	//segment by org
-	/*	type orgAccounts struct {
-			OrgID    string
-			Accounts []account
-		}
-		data := map[string][]orgAccounts{}
-		for identifier, accounts := range duplicateAccounts {
-			orgAccounts := []orgAccounts{}
+	type orgAccounts struct {
+		OrgID    string
+		Accounts []account
+	}
+	data := map[string][]orgAccounts{}
+	for identifier, accounts := range duplicateAccounts {
+		orgAccounts := []orgAccounts{}
 
-			for _, account := range accounts {
-				currentOrgID := account.AppOrgID.
+		for _, account := range accounts {
+			currentOrgID, err := m.findOrgIDByAppOrgID(account.AppOrgID, allAppsOrgs)
+			if err != nil {
+				return nil, err
 			}
 
-			data[identifier] = orgAccounts
-		} */
+			//TODO
+			log.Println(currentOrgID)
+
+		}
+
+		data[identifier] = orgAccounts
+	}
 
 	//TODO
 	return nil, nil
+}
+
+func (m *database) findOrgIDByAppOrgID(appOrgID string, allAppsOrgs []applicationOrganization) (string, error) {
+	for _, item := range allAppsOrgs {
+		if item.ID == appOrgID {
+			return item.OrgID, nil
+		}
+	}
+	return "", errors.Newf("no org for app org id - %s", appOrgID)
 }
 
 func (m *database) findDuplicateAccounts(context TransactionContext, accountsColl *collectionWrapper) (map[string][]account, error) {
