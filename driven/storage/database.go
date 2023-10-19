@@ -335,27 +335,35 @@ func (m *database) constructTenantsAccounts(context TransactionContext, appsOrgs
 		data[identifier] = orgAccounts
 	}
 
-	//TODO
-	//illinoisAppOrgIDDefault := "1" //university of illinois / UIUC app
-
 	//print
 	for identifier, dataItem := range data {
 		fmt.Print("\n\n")
 
 		fmt.Printf("%s\n", identifier)
 		for _, orgAccounts := range dataItem {
-			fmt.Printf("\torg_id:%s\n", orgAccounts.OrgID)
+			fmt.Printf("\torg_id:%s\n\n", orgAccounts.OrgID)
 			for _, account := range orgAccounts.Accounts {
-				fmt.Printf("\t\taccount_id:%s\n", account.ID)
+				fmt.Printf("\t\taccount_id:%s\tapp_org_id:%s\n\n", account.ID, account.AppOrgID)
 				authTypes := account.AuthTypes
 				for _, authType := range authTypes {
-					fmt.Printf("\t\t\tauth_type_code:%s\tauth_type_identifier:%s\n", authType.AuthTypeCode, authType.Identifier)
+					fmt.Printf("\t\t\tauth_type_code:%s\tauth_type_identifier:%s\n\n", authType.AuthTypeCode, authType.Identifier)
 				}
 			}
 		}
 	}
 
+	//TODO
+	//illinoisAppOrgIDDefault := "1" //university of illinois / UIUC app
+
+	//use orgAccounts for easier manipulating
+	//orgIDsAccounts := []orgAccounts{}
+
 	return nil, nil
+}
+
+func (m *database) simplifyStructureData(data map[string][]orgAccounts) []orgAccounts {
+	//TODO
+	return nil
 }
 
 type orgAccounts struct {
