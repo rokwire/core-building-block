@@ -335,7 +335,8 @@ func (m *database) constructTenantsAccounts(context TransactionContext, appsOrgs
 		data[identifier] = orgAccounts
 	}
 
-	//print
+	//print 1
+	fmt.Print("print 1\n")
 	for identifier, dataItem := range data {
 		fmt.Print("\n\n")
 
@@ -357,25 +358,49 @@ func (m *database) constructTenantsAccounts(context TransactionContext, appsOrgs
 
 	//use orgAccounts for easier manipulating
 	orgIDsAccounts := m.simplifyStructureData(data)
-	log.Println(orgIDsAccounts)
+	//print 2
+	fmt.Print("print 2\n")
+	for _, item := range orgIDsAccounts {
+		fmt.Print("\n\n")
+
+		fmt.Printf("%s\n", item.OrgID)
+		for _, account := range item.Accounts {
+			fmt.Printf("\t\taccount_id:%s\tapp_org_id:%s\n\n", account.ID, account.AppOrgID)
+			authTypes := account.AuthTypes
+			for _, authType := range authTypes {
+				fmt.Printf("\t\t\tauth_type_code:%s\tauth_type_identifier:%s\n\n", authType.AuthTypeCode, authType.Identifier)
+			}
+		}
+
+	}
 
 	return nil, nil
 }
 
 func (m *database) simplifyStructureData(data map[string][]orgAccounts) []orgAccounts {
-	res := []orgAccounts{}
-
 	temp := map[string][]account{}
+	seen := map[string]struct{}{}
 	for _, dataItem := range data {
 		for _, orgAccounts := range dataItem {
 			orgID := orgAccounts.OrgID
 			orgAllAccounts := temp[orgID]
-			orgAllAccounts = append(orgAllAccounts, orgAccounts.Accounts...)
+
+			for _, acc := range orgAccounts.Accounts {
+				if _, exists := seen[acc.ID]; !exists { // Check if already added
+					seen[acc.ID] = struct{}{}
+					orgAllAccounts = append(orgAllAccounts, acc)
+				}
+			}
+
 			temp[orgID] = orgAllAccounts
 		}
 	}
-	//TODO
 
+	//prepare response
+	res := []orgAccounts{}
+	for orgID, tempItem := range temp {
+		res = append(res, orgAccounts{OrgID: orgID, Accounts: tempItem})
+	}
 	return res
 }
 
