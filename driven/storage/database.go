@@ -356,14 +356,27 @@ func (m *database) constructTenantsAccounts(context TransactionContext, appsOrgs
 	//illinoisAppOrgIDDefault := "1" //university of illinois / UIUC app
 
 	//use orgAccounts for easier manipulating
-	//orgIDsAccounts := []orgAccounts{}
+	orgIDsAccounts := m.simplifyStructureData(data)
+	log.Println(orgIDsAccounts)
 
 	return nil, nil
 }
 
 func (m *database) simplifyStructureData(data map[string][]orgAccounts) []orgAccounts {
+	res := []orgAccounts{}
+
+	temp := map[string][]account{}
+	for _, dataItem := range data {
+		for _, orgAccounts := range dataItem {
+			orgID := orgAccounts.OrgID
+			orgAllAccounts := temp[orgID]
+			orgAllAccounts = append(orgAllAccounts, orgAccounts.Accounts...)
+			temp[orgID] = orgAllAccounts
+		}
+	}
 	//TODO
-	return nil
+
+	return res
 }
 
 type orgAccounts struct {
