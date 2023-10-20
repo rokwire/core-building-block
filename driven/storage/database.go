@@ -353,9 +353,6 @@ func (m *database) constructTenantsAccounts(context TransactionContext, appsOrgs
 		}
 	}
 
-	//TODO
-	//illinoisAppOrgIDDefault := "1" //university of illinois / UIUC app
-
 	//use orgAccounts for easier manipulating
 	orgIDsAccounts := m.simplifyStructureData(data)
 	//print 2
@@ -374,12 +371,24 @@ func (m *database) constructTenantsAccounts(context TransactionContext, appsOrgs
 
 	}
 
-	return nil, nil
+	res := []tenantAccount{}
+	for _, item := range orgIDsAccounts {
+		orgItems, err := m.constructTenantsAccountsForOrg(item.OrgID, item.Accounts)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, orgItems...)
+	}
+
+	return res, nil
 }
 
-func (m *database) constructTenantsAccountsForOrg(orgID string, accounts []account) []tenantAccount {
+func (m *database) constructTenantsAccountsForOrg(orgID string, accounts []account) ([]tenantAccount, error) {
 	//TODO
-	return nil
+	//illinoisAppOrgIDDefault := "1" //university of illinois / UIUC app
+
+	//TODO
+	return nil, nil
 }
 
 func (m *database) simplifyStructureData(data map[string][]orgAccounts) []orgAccounts {
