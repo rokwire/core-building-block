@@ -412,13 +412,39 @@ func (m *database) constructTenantsAccountsForOrg(orgID string, accounts []accou
 			uiucTenantAccounts = append(uiucTenantAccounts, newUIUCTenantAccount)
 		}
 
-		log.Println(uiucTenantAccounts)
+		//now create tenant accounts for the other accounts
+		currentTenantAccounts := uiucTenantAccounts
+		for _, otherAccount := range otherAccounts {
+			//for every account determine if we need to create a new tenant account or to add it to already created
 
-		log.Println(otherAccounts)
+			foundedTenantAccounts := m.findTenantAccountsByIdentities(otherAccount.AuthTypes, currentTenantAccounts)
+			if len(foundedTenantAccounts) == 0 {
+				//it is not there so, create a new one
+
+				newCreated := m.createTenantAccount(orgID, otherAccount)
+				currentTenantAccounts = append(currentTenantAccounts, newCreated)
+			} else if len(foundedTenantAccounts) == 1 {
+				//it is there only once, so add it to it
+
+				//TODO
+			} else if len(foundedTenantAccounts) == 2 {
+				//it is there into two accounts, so merge them first and then add it to the merged one
+
+				//TODO
+			} else {
+				return nil, errors.New("we do not support more than 2 appearings")
+			}
+
+		}
 	}
 
 	//TODO
 	return nil, nil
+}
+
+func (m *database) findTenantAccountsByIdentities(identities []accountAuthType, tenantAccounts []tenantAccount) []tenantAccount {
+	//TODO
+	return nil
 }
 
 func (m *database) createTenantAccount(orgID string, account account) tenantAccount {
