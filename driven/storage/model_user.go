@@ -60,8 +60,8 @@ type account struct {
 type tenantAccount struct {
 	ID string `bson:"_id"`
 
-	OrgID              string              `bson:"org_id"`
-	OrgAppsMemberships []orgAppsMembership `bson:"org_apps_memberships"`
+	OrgID              string             `bson:"org_id"`
+	OrgAppsMemberships []orgAppMembership `bson:"org_apps_memberships"`
 
 	Scopes []string `bson:"scopes,omitempty"`
 
@@ -90,7 +90,7 @@ type tenantAccount struct {
 	LastAccessTokenDate *time.Time `bson:"last_access_token_date"`
 }
 
-type orgAppsMembership struct {
+type orgAppMembership struct {
 	ID       string `bson:"id,omitempty"`
 	AppOrgID string `bson:"app_org_id,omitempty"`
 

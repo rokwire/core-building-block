@@ -20,6 +20,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/rokwire/logging-library-go/v2/errors"
 	"github.com/rokwire/logging-library-go/v2/logs"
 	"github.com/rokwire/logging-library-go/v2/logutils"
@@ -400,12 +401,66 @@ func (m *database) constructTenantsAccountsForOrg(orgID string, accounts []accou
 		//find all UIUC accounts
 		uiucAccounts, otherAccounts := m.findUIUCAccounts(accounts)
 
-		log.Println(uiucAccounts)
+		if len(uiucAccounts) == 0 {
+			return nil, errors.New("no accounts for UIUC")
+		}
+
+		//first create tenant accounts from the UIUC accounts
+		uiucTenantAccounts := []tenantAccount{}
+		for _, uiucAccount := range uiucAccounts {
+			newUIUCTenantAccount := m.createTenantAccount(orgID, uiucAccount)
+			uiucTenantAccounts = append(uiucTenantAccounts, newUIUCTenantAccount)
+		}
+
+		log.Println(uiucTenantAccounts)
+
 		log.Println(otherAccounts)
 	}
 
 	//TODO
 	return nil, nil
+}
+
+func (m *database) createTenantAccount(orgID string, account account) tenantAccount {
+
+	id := account.ID
+	scopes := account.Scopes
+	authTypes := account.AuthTypes
+	mfaTypes := account.MFATypes
+	username := account.Username
+	externalIDs := account.ExternalIDs
+	systemConfigs := account.SystemConfigs
+	profile := account.Profile
+	devices := account.Devices
+	anonymous := account.Anonymous
+	privacy := account.Privacy
+	verified := account.Verified
+	dateCreated := account.DateCreated
+	dateUpdated := account.DateUpdated
+	isFollowing := account.IsFollowing
+	lastLoginDate := account.LastLoginDate
+	lastAccessTokenDate := account.LastAccessTokenDate
+
+	//create org apps membership
+	oaID := uuid.NewString()
+	oaAppOrgID := account.AppOrgID
+	oaPermissions := account.Permissions
+	oaRoles := account.Roles
+	oaGroups := account.Groups
+	oaPreferences := account.Preferences
+	oaMostRecentClientVersion := account.MostRecentClientVersion
+
+	orgAppMembershipObj := orgAppMembership{ID: oaID, AppOrgID: oaAppOrgID,
+		Permissions: oaPermissions, Roles: oaRoles, Groups: oaGroups,
+		Preferences: oaPreferences, MostRecentClientVersion: oaMostRecentClientVersion}
+
+	orgAppsMemberships := []orgAppMembership{orgAppMembershipObj}
+
+	return tenantAccount{ID: id, OrgID: orgID, OrgAppsMemberships: orgAppsMemberships, Scopes: scopes,
+		AuthTypes: authTypes, MFATypes: mfaTypes, Username: username, ExternalIDs: externalIDs,
+		SystemConfigs: systemConfigs, Profile: profile, Devices: devices, Anonymous: anonymous,
+		Privacy: privacy, Verified: verified, DateCreated: dateCreated, DateUpdated: dateUpdated,
+		IsFollowing: isFollowing, LastLoginDate: lastLoginDate, LastAccessTokenDate: lastAccessTokenDate}
 }
 
 func (m *database) findUIUCAccounts(accounts []account) ([]account, []account) {
