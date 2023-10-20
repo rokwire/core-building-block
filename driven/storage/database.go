@@ -386,11 +386,41 @@ func (m *database) constructTenantsAccounts(context TransactionContext, appsOrgs
 }
 
 func (m *database) constructTenantsAccountsForOrg(orgID string, accounts []account) ([]tenantAccount, error) {
-	//TODO
-	//illinoisAppOrgIDDefault := "1" //university of illinois / UIUC app
+	if orgID != "0a2eff20-e2cd-11eb-af68-60f81db5ecc0" { //University of Illinois
+		//we know that we do not have repeatable identities for the other organizations
+
+		//TODO
+		//verify that this is true
+
+		//process them
+
+	} else {
+		//we have repeatable identities for University of Illinois
+
+		//find all UIUC accounts
+		uiucAccounts, otherAccounts := m.findUIUCAccounts(accounts)
+
+		log.Println(uiucAccounts)
+		log.Println(otherAccounts)
+	}
 
 	//TODO
 	return nil, nil
+}
+
+func (m *database) findUIUCAccounts(accounts []account) ([]account, []account) {
+	uiucAccounts := []account{}
+	otherAccounts := []account{}
+
+	for _, account := range accounts {
+		if account.AppOrgID == "1" { //UIUC app / University of Illinois
+			uiucAccounts = append(uiucAccounts, account)
+		} else {
+			otherAccounts = append(uiucAccounts, account)
+		}
+	}
+
+	return uiucAccounts, otherAccounts
 }
 
 func (m *database) simplifyStructureData(data map[string][]orgAccounts) []orgAccounts {
