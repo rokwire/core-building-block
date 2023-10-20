@@ -62,6 +62,8 @@ type database struct {
 	follows                         *collectionWrapper
 
 	listeners []Listener
+
+	uiucAuthTypeCodeMigrationSource string //email or illinois_oidc //to be removed when migration is compelted
 }
 
 func (m *database) start() error {
