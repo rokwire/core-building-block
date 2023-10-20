@@ -377,6 +377,11 @@ func (m *database) constructTenantsAccounts(context TransactionContext, appsOrgs
 	return nil, nil
 }
 
+func (m *database) constructTenantsAccountsForOrg(orgID string, accounts []account) []tenantAccount {
+	//TODO
+	return nil
+}
+
 func (m *database) simplifyStructureData(data map[string][]orgAccounts) []orgAccounts {
 	temp := map[string][]account{}
 	seen := map[string]struct{}{}
