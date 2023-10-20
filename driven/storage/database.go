@@ -412,11 +412,13 @@ func (m *database) findUIUCAccounts(accounts []account) ([]account, []account) {
 	uiucAccounts := []account{}
 	otherAccounts := []account{}
 
-	for _, account := range accounts {
+	for _, accountItem := range accounts {
+		account := accountItem //pointer issue
+
 		if account.AppOrgID == "1" { //UIUC app / University of Illinois
 			uiucAccounts = append(uiucAccounts, account)
 		} else {
-			otherAccounts = append(uiucAccounts, account)
+			otherAccounts = append(otherAccounts, account)
 		}
 	}
 
