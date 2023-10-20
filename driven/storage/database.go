@@ -443,8 +443,25 @@ func (m *database) constructTenantsAccountsForOrg(orgID string, accounts []accou
 }
 
 func (m *database) findTenantAccountsByIdentities(identities []accountAuthType, tenantAccounts []tenantAccount) []tenantAccount {
-	//TODO
-	return nil
+	result := []tenantAccount{}
+
+	for _, tenantAccount := range tenantAccounts {
+		if m.containsIdentity(identities, tenantAccount.AuthTypes) {
+			result = append(result, tenantAccount)
+		}
+	}
+	return result
+}
+
+func (m *database) containsIdentity(aut1 []accountAuthType, aut2 []accountAuthType) bool {
+	for _, aut1Item := range aut1 {
+		for _, aut2Item := range aut2 {
+			if aut1Item.Identifier == aut2Item.Identifier {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func (m *database) createTenantAccount(orgID string, account account) tenantAccount {
