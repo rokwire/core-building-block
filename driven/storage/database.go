@@ -486,16 +486,55 @@ func (m *database) mixTenantAccount(tenantAccount1 tenantAccount, tenantAccount2
 	}
 
 	///add memberships
-	mixedEntity.OrgAppsMemberships = m.mergeMemberships(mixedEntity.OrgAppsMemberships, second.OrgAppsMemberships)
+	mergedMemberships, err := m.mergeMemberships(mixedEntity.OrgAppsMemberships, second.OrgAppsMemberships)
+	if err != nil {
+		return nil, err
+	}
+	mixedEntity.OrgAppsMemberships = mergedMemberships
 
 	return mixedEntity, nil
 }
 
-func (m *database) mergeMemberships(mixedEntityMemberships []orgAppMembership, secondEntityMemberships []orgAppMembership) []orgAppMembership {
-	//first uiuc
+func (m *database) mergeMemberships(mixedEntityMemberships []orgAppMembership, secondEntityMemberships []orgAppMembership) ([]orgAppMembership, error) {
+	result := mixedEntityMemberships
+	for i, current := range secondEntityMemberships {
+		if current.AppOrgID == "1" { //we must merge it
+			mixedUIUCMembership := m.findUIUCMembership(mixedEntityMemberships)
+			if mixedUIUCMembership == nil {
+				return nil, errors.New("no UIUC membership")
+			}
 
-	//after that the rest
-	//nil
+			mergedUIUCMembership := mixedUIUCMembership
+
+			mergedUIUCMembership.Permissions = append(mergedUIUCMembership.Permissions, current.Permissions...)
+			mergedUIUCMembership.Roles = append(mergedUIUCMembership.Roles, current.Roles...)
+			mergedUIUCMembership.Groups = append(mergedUIUCMembership.Groups, current.Groups...)
+
+			mergedUIUCMembership.Preferences = m.mergeMaps(mergedUIUCMembership.Preferences, current.Preferences)
+
+			result[i] = *mergedUIUCMembership
+		} else {
+			result = append(result, current)
+		}
+	}
+	return result, nil
+}
+
+func (m *database) mergeMaps(map1, map2 map[string]interface{}) map[string]interface{} {
+	mergedMap := make(map[string]interface{})
+
+	for key, value := range map1 {
+		mergedMap[key] = value
+	}
+
+	for key, value := range map2 {
+		mergedMap[key] = value
+	}
+
+	return mergedMap
+}
+
+func (m *database) findUIUCMembership(mixedEntityMemberships []orgAppMembership) *orgAppMembership {
 	return nil
 }
 
