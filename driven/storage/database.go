@@ -390,8 +390,11 @@ func (m *database) constructTenantsAccountsForOrg(orgID string, accounts []accou
 	if orgID != "0a2eff20-e2cd-11eb-af68-60f81db5ecc0" { //University of Illinois
 		//we know that we do not have repeatable identities for the other organizations
 
-		//TODO
 		//verify that this is true
+		notExist := m.verifyNotExist(accounts)
+		if !notExist {
+			return nil, errors.Newf("%s has repetable items")
+		}
 
 		//process them
 		resAccounts := []tenantAccount{}
@@ -446,6 +449,32 @@ func (m *database) constructTenantsAccountsForOrg(orgID string, accounts []accou
 
 	//TODO
 	return nil, nil
+}
+
+func (m *database) verifyNotExist(accounts []account) bool {
+	for _, acc := range accounts {
+		for _, acc2 := range accounts {
+			if acc.ID == acc2.ID {
+				continue //skip
+			}
+
+			if m.containsAuthType(acc.AuthTypes, acc2.AuthTypes) {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+func (m *database) containsAuthType(authTypes1 []accountAuthType, authTypes2 []accountAuthType) bool {
+	for _, at := range authTypes1 {
+		for _, at2 := range authTypes2 {
+			if at.Identifier == at2.Identifier {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func (m *database) findTenantAccountsByIdentities(identities []accountAuthType, tenantAccounts []tenantAccount) []tenantAccount {
