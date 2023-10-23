@@ -535,6 +535,11 @@ func (m *database) mergeMaps(map1, map2 map[string]interface{}) map[string]inter
 }
 
 func (m *database) findUIUCMembership(mixedEntityMemberships []orgAppMembership) *orgAppMembership {
+	for _, current := range mixedEntityMemberships {
+		if current.AppOrgID == "1" {
+			return &current
+		}
+	}
 	return nil
 }
 
