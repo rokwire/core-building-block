@@ -441,8 +441,15 @@ func (m *database) constructTenantsAccountsForOrg(orgID string, accounts []accou
 				currentTenantAccounts = m.replaceItem(updatedTenantAccount, currentTenantAccounts)
 			} else if len(foundedTenantAccounts) == 2 {
 				//it is there into two accounts, so merge them first and then add it to the merged one
+				tenantAccount1 := foundedTenantAccounts[0]
+				tenantAccount2 := foundedTenantAccounts[1]
+				mixedTenantAccount, err := m.mixTenantAccount(tenantAccount1, tenantAccount2)
+				if err != nil {
+					return nil, err
+				}
 
 				//TODO
+				log.Println(mixedTenantAccount)
 			} else {
 				return nil, errors.New("we do not support more than 2 appearings")
 			}
@@ -451,6 +458,63 @@ func (m *database) constructTenantsAccountsForOrg(orgID string, accounts []accou
 
 		return currentTenantAccounts, nil
 	}
+}
+
+func (m *database) mixTenantAccount(tenantAccount1 tenantAccount, tenantAccount2 tenantAccount) (*tenantAccount, error) {
+	var source *tenantAccount
+	var second *tenantAccount
+	if m.isUIUCSource(tenantAccount1) {
+		source = &tenantAccount1
+		second = &tenantAccount2
+	} else if m.isUIUCSource(tenantAccount2) {
+		source = &tenantAccount2
+		second = &tenantAccount1
+	}
+	if source == nil || second == nil {
+		return nil, errors.New("no uiuc source")
+	}
+
+	mixedEntity := source
+
+	//add auth types
+	//add only the auth types which are not already in the mixed tenant account
+	newAuthTypes := m.findNewAuthTypes(second.AuthTypes, mixedEntity.AuthTypes)
+	if len(newAuthTypes) > 0 {
+		currentAuthTypes := mixedEntity.AuthTypes
+		currentAuthTypes = append(currentAuthTypes, newAuthTypes...)
+		mixedEntity.AuthTypes = currentAuthTypes
+	}
+
+	//add memberships
+
+	log.Println(second)
+	//TODO
+	return nil, nil
+}
+
+func (m *database) isUIUCSource(tenantAccount tenantAccount) bool {
+	isUIUC := false
+	for _, m := range tenantAccount.OrgAppsMemberships {
+		if m.AppOrgID == "1" { //UIUC/University of Illinois
+			isUIUC = true
+			break
+		}
+	}
+	if !isUIUC {
+		return false
+	}
+
+	hasAuthTypeSource := false
+	for _, at := range tenantAccount.AuthTypes {
+		if at.AuthTypeCode == m.uiucAuthTypeCodeMigrationSource {
+			hasAuthTypeSource = true
+		}
+	}
+	if !hasAuthTypeSource {
+		return false
+	}
+
+	return true
 }
 
 func (m *database) replaceItem(item tenantAccount, list []tenantAccount) []tenantAccount {
@@ -484,7 +548,7 @@ func (m *database) addAccountToTenantAccount(account account, tenantAccount tena
 	tenantAccount.OrgAppsMemberships = current
 
 	//add only the auth types which are not already in the tenant account
-	newAuthTypes := m.findNewAuthTypes(account, tenantAccount)
+	newAuthTypes := m.findNewAuthTypes(account.AuthTypes, tenantAccount.AuthTypes)
 	if len(newAuthTypes) > 0 {
 		currentAuthTypes := tenantAccount.AuthTypes
 		currentAuthTypes = append(currentAuthTypes, newAuthTypes...)
@@ -494,14 +558,14 @@ func (m *database) addAccountToTenantAccount(account account, tenantAccount tena
 	return tenantAccount
 }
 
-func (m *database) findNewAuthTypes(account account, tenantAccount tenantAccount) []accountAuthType {
+func (m *database) findNewAuthTypes(toBeAdded []accountAuthType, currentList []accountAuthType) []accountAuthType {
 	newAuthTypes := []accountAuthType{}
 
-	for _, accAuthType := range account.AuthTypes {
+	for _, accAuthType := range toBeAdded {
 		code := accAuthType.AuthTypeCode
 
 		containsCode := false
-		for _, tenantAuthType := range tenantAccount.AuthTypes {
+		for _, tenantAuthType := range currentList {
 			tenantCode := tenantAuthType.AuthTypeCode
 			if tenantCode == code {
 				containsCode = true
