@@ -394,7 +394,13 @@ func (m *database) constructTenantsAccountsForOrg(orgID string, accounts []accou
 		//verify that this is true
 
 		//process them
+		resAccounts := []tenantAccount{}
+		for _, account := range accounts {
+			newTenantAccount := m.createTenantAccount(orgID, account)
+			resAccounts = append(resAccounts, newTenantAccount)
+		}
 
+		return resAccounts, nil
 	} else {
 		//we have repeatable identities for University of Illinois
 
