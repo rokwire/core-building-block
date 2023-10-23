@@ -435,7 +435,10 @@ func (m *database) constructTenantsAccountsForOrg(orgID string, accounts []accou
 			} else if len(foundedTenantAccounts) == 1 {
 				//it is there only once, so add it to it
 
+				updatedTenantAccount := m.addAccountToTenantAccount(otherAccount, foundedTenantAccounts[0])
+
 				//TODO
+				log.Println(updatedTenantAccount)
 			} else if len(foundedTenantAccounts) == 2 {
 				//it is there into two accounts, so merge them first and then add it to the merged one
 
@@ -449,6 +452,59 @@ func (m *database) constructTenantsAccountsForOrg(orgID string, accounts []accou
 
 	//TODO
 	return nil, nil
+}
+
+func (m *database) addAccountToTenantAccount(account account, tenantAccount tenantAccount) tenantAccount {
+
+	//create org app memberhip
+	oaID := uuid.NewString()
+	oaAppOrgID := account.AppOrgID
+	oaPermissions := account.Permissions
+	oaRoles := account.Roles
+	oaGroups := account.Groups
+	oaPreferences := account.Preferences
+	oaMostRecentClientVersion := account.MostRecentClientVersion
+
+	oaMembership := orgAppMembership{ID: oaID, AppOrgID: oaAppOrgID,
+		Permissions: oaPermissions, Roles: oaRoles, Groups: oaGroups,
+		Preferences: oaPreferences, MostRecentClientVersion: oaMostRecentClientVersion}
+
+	//add the created oa membership to the tenant account
+	current := tenantAccount.OrgAppsMemberships
+	current = append(current, oaMembership)
+	tenantAccount.OrgAppsMemberships = current
+
+	//add only the auth types which are not already in the tenant account
+	newAuthTypes := m.findNewAuthTypes(account, tenantAccount)
+	if len(newAuthTypes) > 0 {
+		currentAuthTypes := tenantAccount.AuthTypes
+		currentAuthTypes = append(currentAuthTypes, newAuthTypes...)
+		tenantAccount.AuthTypes = currentAuthTypes
+	}
+
+	return tenantAccount
+}
+
+func (m *database) findNewAuthTypes(account account, tenantAccount tenantAccount) []accountAuthType {
+	newAuthTypes := []accountAuthType{}
+
+	for _, accAuthType := range account.AuthTypes {
+		code := accAuthType.AuthTypeCode
+
+		containsCode := false
+		for _, tenantAuthType := range tenantAccount.AuthTypes {
+			tenantCode := tenantAuthType.AuthTypeCode
+			if tenantCode == code {
+				containsCode = true
+				break
+			}
+		}
+
+		if !containsCode {
+			newAuthTypes = append(newAuthTypes, accAuthType)
+		}
+	}
+	return newAuthTypes
 }
 
 func (m *database) verifyNotExist(accounts []account) bool {
