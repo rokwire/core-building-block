@@ -437,8 +437,8 @@ func (m *database) constructTenantsAccountsForOrg(orgID string, accounts []accou
 
 				updatedTenantAccount := m.addAccountToTenantAccount(otherAccount, foundedTenantAccounts[0])
 
-				//TODO
-				log.Println(updatedTenantAccount)
+				//replace item
+				currentTenantAccounts = m.replaceItem(updatedTenantAccount, currentTenantAccounts)
 			} else if len(foundedTenantAccounts) == 2 {
 				//it is there into two accounts, so merge them first and then add it to the merged one
 
@@ -448,10 +448,19 @@ func (m *database) constructTenantsAccountsForOrg(orgID string, accounts []accou
 			}
 
 		}
-	}
 
-	//TODO
-	return nil, nil
+		return currentTenantAccounts, nil
+	}
+}
+
+func (m *database) replaceItem(item tenantAccount, list []tenantAccount) []tenantAccount {
+	for i, current := range list {
+		if current.ID == item.ID {
+			list[i] = item
+			break
+		}
+	}
+	return list
 }
 
 func (m *database) addAccountToTenantAccount(account account, tenantAccount tenantAccount) tenantAccount {
