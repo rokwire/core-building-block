@@ -485,11 +485,18 @@ func (m *database) mixTenantAccount(tenantAccount1 tenantAccount, tenantAccount2
 		mixedEntity.AuthTypes = currentAuthTypes
 	}
 
-	//add memberships
+	///add memberships
+	mixedEntity.OrgAppsMemberships = m.mergeMemberships(mixedEntity.OrgAppsMemberships, second.OrgAppsMemberships)
 
-	log.Println(second)
-	//TODO
-	return nil, nil
+	return mixedEntity, nil
+}
+
+func (m *database) mergeMemberships(mixedEntityMemberships []orgAppMembership, secondEntityMemberships []orgAppMembership) []orgAppMembership {
+	//first uiuc
+
+	//after that the rest
+	//nil
+	return nil
 }
 
 func (m *database) isUIUCSource(tenantAccount tenantAccount) bool {
