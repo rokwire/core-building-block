@@ -883,6 +883,9 @@ func (m *database) findOrgIDByAppOrgID(appOrgID string, allAppsOrgs []applicatio
 func (m *database) findDuplicateAccounts(context TransactionContext, accountsColl *collectionWrapper) (map[string][]account, error) {
 	pipeline := []bson.M{
 		{
+			"$match": bson.M{"migrated": bson.M{"$in": []interface{}{nil, false}}}, //iterate only not migrated records
+		},
+		{
 			"$unwind": "$auth_types",
 		},
 		{
