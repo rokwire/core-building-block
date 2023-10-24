@@ -271,10 +271,21 @@ func (m *database) migrateToTenantsAccounts(accountsColl *collectionWrapper, ten
 	//all in transaction!
 	transaction := func(context TransactionContext) error {
 
-		//TODO - check if need to apply processing
+		//check if need to apply processing
+		notMigratedCount, err := m.findNotMigratedCount(context, accountsColl)
+		if err != nil {
+			return err
+		}
+		if *notMigratedCount == 0 {
+			m.logger.Debug("there is no what to be migrated, so do nothing")
+			return nil
+		}
+
+		//WE MUST APPLY MIGRATION
+		m.logger.Debugf("there are %d accounts to be migrated", *notMigratedCount)
 
 		//process duplicate events
-		err := m.processDuplicateAccounts(context, accountsColl, tenantsAccountsColl, appsOrgsColl)
+		err = m.processDuplicateAccounts(context, accountsColl, tenantsAccountsColl, appsOrgsColl)
 		if err != nil {
 			return err
 		}
@@ -289,6 +300,15 @@ func (m *database) migrateToTenantsAccounts(accountsColl *collectionWrapper, ten
 
 	m.logger.Debug("migrateToTenantsAccounts END")
 	return nil
+}
+
+func (m *database) findNotMigratedCount(context TransactionContext, accountsColl *collectionWrapper) (*int64, error) {
+	filter := bson.M{"migrated": bson.M{"$in": []interface{}{nil, false}}}
+	count, err := accountsColl.CountDocumentsWithContext(context, filter)
+	if err != nil {
+		return nil, err
+	}
+	return &count, nil
 }
 
 func (m *database) processDuplicateAccounts(context TransactionContext, accountsColl *collectionWrapper,
