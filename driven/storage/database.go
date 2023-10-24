@@ -17,7 +17,6 @@ package storage
 import (
 	"context"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/google/uuid"
@@ -312,9 +311,31 @@ func (m *database) processDuplicateAccounts(context TransactionContext, accounts
 	}
 
 	//save tenants accounts
-	log.Println(tenantsAccounts)
+	err = m.insertTenantAccounts(context, tenantsAccounts, tenantsAccountsColl)
+	if err != nil {
+		return err
+	}
 
 	//mark the old accounts as processed
+
+	return nil
+}
+
+func (m *database) insertTenantAccounts(context TransactionContext, items []tenantAccount, tenantsAccountsColl *collectionWrapper) error {
+
+	stgItems := make([]interface{}, len(items))
+	for i, p := range items {
+		stgItems[i] = p
+	}
+
+	res, err := tenantsAccountsColl.InsertManyWithContext(context, stgItems, nil)
+	if err != nil {
+		return err
+	}
+
+	if len(res.InsertedIDs) != len(items) {
+		return errors.Newf("inserted:%d items:%d", len(res.InsertedIDs), len(items))
+	}
 
 	return nil
 }
