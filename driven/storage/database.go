@@ -448,6 +448,9 @@ func (m *database) constructTenantsAccountsForOrg(orgID string, accounts []accou
 					return nil, err
 				}
 
+				//replace the two items with the mixed one
+				currentTenantAccounts = m.replaceMixedItems(tenantAccount1, tenantAccount2, *mixedTenantAccount, currentTenantAccounts)
+
 				//TODO
 				log.Println(mixedTenantAccount)
 			} else {
@@ -458,6 +461,20 @@ func (m *database) constructTenantsAccountsForOrg(orgID string, accounts []accou
 
 		return currentTenantAccounts, nil
 	}
+}
+
+func (m *database) replaceMixedItems(item1 tenantAccount, item2 tenantAccount, mixedItem tenantAccount, list []tenantAccount) []tenantAccount {
+	newList := make([]tenantAccount, 0)
+
+	for _, item := range list {
+		if item.ID != item1.ID && item.ID != item2.ID {
+			newList = append(newList, item)
+		}
+	}
+
+	newList = append(newList, mixedItem)
+
+	return newList
 }
 
 func (m *database) mixTenantAccount(tenantAccount1 tenantAccount, tenantAccount2 tenantAccount) (*tenantAccount, error) {
