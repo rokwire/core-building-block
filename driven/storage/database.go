@@ -290,9 +290,28 @@ func (m *database) migrateToTenantsAccounts(accountsColl *collectionWrapper, ten
 			return err
 		}
 
+		//TODO
+		/*	db.accounts.aggregate([
+			{
+				$addFields: {
+					"_id": "$_id",
+					"field2.pp": "$_id",
+					"org_apps_memberships": [
+						{
+							"id": "$_id"
+						}
+					]
+				}
+			},
+			{
+				$out: "tenants_accounts"
+			}
+		]); */
+
 		return nil
 	}
 
+	//TODO - long timeout
 	err := m.performTransaction(transaction)
 	if err != nil {
 		return err
