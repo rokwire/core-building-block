@@ -304,7 +304,7 @@ func (m *database) migrateToTenantsAccounts(accountsColl *collectionWrapper, ten
 			    {
 			        $addFields: {
 			            "_id": "$_id",
-			            "field2.pp": "$_id",
+						"org_id": "TODOOOO",
 			            "org_apps_memberships": [
 			                {
 			                    "id": {
@@ -313,15 +313,44 @@ func (m *database) migrateToTenantsAccounts(accountsColl *collectionWrapper, ten
 										"_",
 										"$_id"
 									]
-								}
+								},
+								"app_org_id": "$app_org_id",
+								"permissions": "$permissions",
+								"roles": "$roles",
+								"groups": "$groups",
+								"preferences": "$preferences",
+								"most_recent_client_version": "$most_recent_client_version"
 			                }
-			            ]
+			            ],
+						"scopes": "$scopes",
+						"auth_types": "$auth_types",
+						"mfa_types": "$mfa_types",
+						"username": "$username",
+						"external_ids": "$external_ids",
+						"system_configs": "$system_configs",
+						"profile": "$profile",
+						"devices": "$devices",
+						"anonymous": "$anonymous",
+						"privacy": "$privacy",
+						"verified": "$verified",
+						"date_created": "$date_created",
+						"date_updated": "$date_updated",
+						"is_following": "$is_following",
+						"last_login_date": "$last_login_date",
+						"last_access_token_date": "$last_access_token_date",
 			        }
 			    },
 			    {
 			        $out: "tenants_accounts"
 			    }
 			]) */
+		/*type tenantAccount struct {
+
+			OrgID              string             `bson:"org_id"`
+
+		} */
+
+		/*	*/
 
 		return nil
 	}
