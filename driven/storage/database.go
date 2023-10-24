@@ -317,6 +317,44 @@ func (m *database) processDuplicateAccounts(context TransactionContext, accounts
 	}
 
 	//mark the old accounts as processed
+	accountsIDs := m.getUniqueAccountsIDs(items)
+	err = m.markAccountsAsProcessed(context, accountsIDs, accountsColl)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *database) getUniqueAccountsIDs(items map[string][]account) []string {
+	uniqueIDs := make(map[string]struct{})
+	var result []string
+
+	for _, accounts := range items {
+		for _, acc := range accounts {
+			if _, found := uniqueIDs[acc.ID]; !found {
+				uniqueIDs[acc.ID] = struct{}{}
+				result = append(result, acc.ID)
+			}
+		}
+	}
+
+	return result
+}
+
+func (m *database) markAccountsAsProcessed(context TransactionContext, accountsIDs []string, accountsColl *collectionWrapper) error {
+	filter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": accountsIDs}}}
+
+	update := bson.D{
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "migrated", Value: true},
+		}},
+	}
+
+	_, err := accountsColl.UpdateManyWithContext(context, filter, update, nil)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

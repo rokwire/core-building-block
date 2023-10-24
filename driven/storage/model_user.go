@@ -55,6 +55,8 @@ type account struct {
 	LastLoginDate           *time.Time `bson:"last_login_date"`
 	LastAccessTokenDate     *time.Time `bson:"last_access_token_date"`
 	MostRecentClientVersion *string    `bson:"most_recent_client_version"`
+
+	Migrated *bool `bson:"migrated"`
 }
 
 type tenantAccount struct {
