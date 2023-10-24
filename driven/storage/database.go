@@ -342,7 +342,12 @@ func (m *database) migrateToTenantsAccounts(accountsColl *collectionWrapper, ten
 			    },
 				{
 					$project: {
-						roles: 0
+						app_org_id: 0,
+						permissions: 0,
+						roles: 0,
+						groups: 0,
+						preferences: 0,
+						most_recent_client_version: 0
 					}
 				},
 			    {
