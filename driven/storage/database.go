@@ -295,8 +295,8 @@ func (m *database) migrateToTenantsAccounts(accountsColl *collectionWrapper, ten
 			    {
 			        $match: {
 			            $or: [
-			               { "migrated": null },
-			                { "migrated": false },
+			               	{ "migrated": null },
+			            	{ "migrated": false },
 			                { "migrated": { $exists: false } }
 			            ]
 			        }
@@ -340,6 +340,11 @@ func (m *database) migrateToTenantsAccounts(accountsColl *collectionWrapper, ten
 						"last_access_token_date": "$last_access_token_date",
 			        }
 			    },
+				{
+					$project: {
+						roles: 0
+					}
+				},
 			    {
 			        $out: "tenants_accounts"
 			    }
