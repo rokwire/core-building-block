@@ -451,12 +451,14 @@ func (m *database) constructTenantsAccountsForOrg(orgID string, accounts []accou
 				//replace the two items with the mixed one
 				currentTenantAccounts = m.replaceMixedItems(tenantAccount1, tenantAccount2, *mixedTenantAccount, currentTenantAccounts)
 
-				//TODO
-				log.Println(mixedTenantAccount)
+				//add to the merged item
+				updatedTenantAccount := m.addAccountToTenantAccount(otherAccount, *mixedTenantAccount)
+
+				//replace item
+				currentTenantAccounts = m.replaceItem(updatedTenantAccount, currentTenantAccounts)
 			} else {
 				return nil, errors.New("we do not support more than 2 appearings")
 			}
-
 		}
 
 		return currentTenantAccounts, nil
