@@ -292,21 +292,36 @@ func (m *database) migrateToTenantsAccounts(accountsColl *collectionWrapper, ten
 
 		//TODO
 		/*	db.accounts.aggregate([
-			{
-				$addFields: {
-					"_id": "$_id",
-					"field2.pp": "$_id",
-					"org_apps_memberships": [
-						{
-							"id": "$_id"
-						}
-					]
-				}
-			},
-			{
-				$out: "tenants_accounts"
-			}
-		]); */
+			    {
+			        $match: {
+			            $or: [
+			               { "migrated": null },
+			                { "migrated": false },
+			                { "migrated": { $exists: false } }
+			            ]
+			        }
+			    },
+			    {
+			        $addFields: {
+			            "_id": "$_id",
+			            "field2.pp": "$_id",
+			            "org_apps_memberships": [
+			                {
+			                    "id": {
+									$concat: [
+										"$app_org_id",
+										"_",
+										"$_id"
+									]
+								}
+			                }
+			            ]
+			        }
+			    },
+			    {
+			        $out: "tenants_accounts"
+			    }
+			]) */
 
 		return nil
 	}
