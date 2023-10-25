@@ -305,17 +305,31 @@ func (m *database) startPhase2(accountsColl *collectionWrapper, tenantsAccountsC
 	if err != nil {
 		return err
 	}
-	//for all orgs + filter by app org id...
+	//prepare the orgs and its aprs orgs items
+	orgsData := m.appsOrgsToMap(allAppsOrgs)
+	for orgID, orgItems := range orgsData {
+		//process for every organization
 
-	//$out/merge cannot be used in a transaction
-	ctx := context.Background()
-	err = m.moveToTenantsAccounts(ctx, accountsColl, "5555", nil)
-	if err != nil {
-		return err
+		//$out/merge cannot be used in a transaction
+		ctx := context.Background()
+		err = m.moveToTenantsAccounts(ctx, accountsColl, orgID, orgItems)
+		if err != nil {
+			return err
+		}
 	}
 
 	m.logger.Debug("startPhase2 END")
 	return nil
+}
+
+func (m *database) appsOrgsToMap(allAppsOrgs []applicationOrganization) map[string][]string {
+	orgMap := make(map[string][]string)
+
+	for _, appOrg := range allAppsOrgs {
+		orgMap[appOrg.OrgID] = append(orgMap[appOrg.OrgID], appOrg.ID)
+	}
+
+	return orgMap
 }
 
 func (m *database) startPhase1(accountsColl *collectionWrapper, tenantsAccountsColl *collectionWrapper,
@@ -347,7 +361,6 @@ func (m *database) startPhase1(accountsColl *collectionWrapper, tenantsAccountsC
 		return nil
 	}
 
-	//TODO - long timeout
 	err := m.performTransaction(transaction)
 	if err != nil {
 		return err
@@ -365,6 +378,7 @@ func (m *database) moveToTenantsAccounts(context context.Context, accountsColl *
 				bson.D{{Key: "migrated", Value: false}},
 				bson.D{{Key: "migrated", Value: bson.D{{Key: "$exists", Value: false}}}},
 			}},
+			{Key: "app_org_id", Value: bson.M{"$in": appsOrgsIDs}},
 		}},
 	}
 
