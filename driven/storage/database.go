@@ -310,9 +310,26 @@ func (m *database) startPhase2(accountsColl *collectionWrapper, tenantsAccountsC
 	for orgID, orgItems := range orgsData {
 		//process for every organization
 
-		//$out/merge cannot be used in a transaction
-		ctx := context.Background()
-		err = m.moveToTenantsAccounts(ctx, accountsColl, orgID, orgItems)
+		//all in transaction!
+		transaction := func(contextTr TransactionContext) error {
+			//first mark the accounts as migrated
+			err = m.markAccountsAsProcessedByAppOrgIDs(contextTr, orgItems, accountsColl)
+			if err != nil {
+				return err
+			}
+
+			//$out/merge cannot be used in a transaction
+			ctx := context.Background()
+			err = m.moveToTenantsAccounts(ctx, accountsColl, orgID, orgItems)
+			if err != nil {
+				return err //rollback if the move fails
+			}
+
+			//we are ok
+			return nil
+		}
+
+		err := m.performTransaction(transaction)
 		if err != nil {
 			return err
 		}
@@ -505,6 +522,23 @@ func (m *database) getUniqueAccountsIDs(items map[string][]account) []string {
 
 func (m *database) markAccountsAsProcessed(context TransactionContext, accountsIDs []string, accountsColl *collectionWrapper) error {
 	filter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": accountsIDs}}}
+
+	update := bson.D{
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "migrated", Value: true},
+		}},
+	}
+
+	_, err := accountsColl.UpdateManyWithContext(context, filter, update, nil)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *database) markAccountsAsProcessedByAppOrgIDs(context TransactionContext, appsOrgsIDs []string, accountsColl *collectionWrapper) error {
+	filter := bson.D{primitive.E{Key: "app_org_id", Value: bson.M{"$in": appsOrgsIDs}}}
 
 	update := bson.D{
 		primitive.E{Key: "$set", Value: bson.D{
