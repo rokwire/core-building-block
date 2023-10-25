@@ -299,10 +299,15 @@ func (m *database) startPhase2(accountsColl *collectionWrapper, tenantsAccountsC
 	//WE MUST APPLY MIGRATION
 	m.logger.Debugf("there are %d accounts to be migrated", *notMigratedCount)
 
-	//TODO
+	//first load all aprs orgs as we need them
+	var allAppsOrgs []applicationOrganization
+	err = appsOrgsColl.Find(bson.D{}, &allAppsOrgs, nil)
+	if err != nil {
+		return err
+	}
 	//for all orgs + filter by app org id...
 
-	//$out cannot be used in a transaction
+	//$out/merge cannot be used in a transaction
 	ctx := context.Background()
 	err = m.moveToTenantsAccounts(ctx, accountsColl, "5555", nil)
 	if err != nil {
