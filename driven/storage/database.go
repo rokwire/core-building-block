@@ -408,11 +408,15 @@ func (m *database) moveToTenantsAccounts(context context.Context, accountsColl *
 		}},
 	}
 
-	outStage := bson.D{
+	/*outStage := bson.D{
 		{Key: "$out", Value: "tenants_accounts"},
+	} */
+
+	mergeStage := bson.D{
+		{Key: "$merge", Value: bson.M{"into": "tenants_accounts", "whenMatched": "keepExisting", "whenNotMatched": "insert"}},
 	}
 
-	_, err := accountsColl.coll.Aggregate(context, mongo.Pipeline{matchStage, addFieldsStage, projectStage, outStage})
+	_, err := accountsColl.coll.Aggregate(context, mongo.Pipeline{matchStage, addFieldsStage, projectStage, mergeStage})
 	if err != nil {
 		return err
 	}
