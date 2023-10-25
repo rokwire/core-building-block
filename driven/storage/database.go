@@ -268,6 +268,55 @@ func (m *database) migrateToTenantsAccounts(accountsColl *collectionWrapper, ten
 	appsOrgsColl *collectionWrapper) error {
 	m.logger.Debug("migrateToTenantsAccounts START")
 
+	err := m.startPhase1(accountsColl, tenantsAccountsColl, appsOrgsColl)
+	if err != nil {
+		return err
+	}
+
+	err = m.startPhase2(accountsColl, tenantsAccountsColl, appsOrgsColl)
+	if err != nil {
+		return err
+	}
+
+	m.logger.Debug("migrateToTenantsAccounts END")
+	return nil
+}
+
+func (m *database) startPhase2(accountsColl *collectionWrapper, tenantsAccountsColl *collectionWrapper,
+	appsOrgsColl *collectionWrapper) error {
+	m.logger.Debug("startPhase2 START")
+
+	//check if need to apply processing
+	notMigratedCount, err := m.findNotMigratedCount(nil, accountsColl)
+	if err != nil {
+		return err
+	}
+	if *notMigratedCount == 0 {
+		m.logger.Debug("there is no what to be migrated, so do nothing")
+		return nil
+	}
+
+	//WE MUST APPLY MIGRATION
+	m.logger.Debugf("there are %d accounts to be migrated", *notMigratedCount)
+
+	//TODO
+	//for all orgs + filter by app org id...
+
+	//$out cannot be used in a transaction
+	ctx := context.Background()
+	err = m.moveToTenantsAccounts(ctx, accountsColl, "5555", nil)
+	if err != nil {
+		return err
+	}
+
+	m.logger.Debug("startPhase2 END")
+	return nil
+}
+
+func (m *database) startPhase1(accountsColl *collectionWrapper, tenantsAccountsColl *collectionWrapper,
+	appsOrgsColl *collectionWrapper) error {
+	m.logger.Debug("startPhase1 START")
+
 	//all in transaction!
 	transaction := func(context TransactionContext) error {
 
@@ -290,83 +339,6 @@ func (m *database) migrateToTenantsAccounts(accountsColl *collectionWrapper, ten
 			return err
 		}
 
-		//TODO
-
-		err = m.moveToTenantsAccounts(context, accountsColl, "5555", nil)
-		if err != nil {
-			return err
-		}
-		/*	db.accounts.aggregate([
-			    {
-			        $match: {
-			            $or: [
-			               	{ "migrated": null },
-			            	{ "migrated": false },
-			                { "migrated": { $exists: false } }
-			            ]
-			        }
-			    },
-			    {
-			        $addFields: {
-			            "_id": "$_id",
-						"org_id": "TODOOOO",
-			            "org_apps_memberships": [
-			                {
-			                    "id": {
-									$concat: [
-										"$app_org_id",
-										"_",
-										"$_id"
-									]
-								},
-								"app_org_id": "$app_org_id",
-								"permissions": "$permissions",
-								"roles": "$roles",
-								"groups": "$groups",
-								"preferences": "$preferences",
-								"most_recent_client_version": "$most_recent_client_version"
-			                }
-			            ],
-						"scopes": "$scopes",
-						"auth_types": "$auth_types",
-						"mfa_types": "$mfa_types",
-						"username": "$username",
-						"external_ids": "$external_ids",
-						"system_configs": "$system_configs",
-						"profile": "$profile",
-						"devices": "$devices",
-						"anonymous": "$anonymous",
-						"privacy": "$privacy",
-						"verified": "$verified",
-						"date_created": "$date_created",
-						"date_updated": "$date_updated",
-						"is_following": "$is_following",
-						"last_login_date": "$last_login_date",
-						"last_access_token_date": "$last_access_token_date",
-			        }
-			    },
-				{
-					$project: {
-						app_org_id: 0,
-						permissions: 0,
-						roles: 0,
-						groups: 0,
-						preferences: 0,
-						most_recent_client_version: 0
-					}
-				},
-			    {
-			        $out: "tenants_accounts"
-			    }
-			]) */
-		/*type tenantAccount struct {
-
-			OrgID              string             `bson:"org_id"`
-
-		} */
-
-		/*	*/
-
 		return nil
 	}
 
@@ -376,15 +348,15 @@ func (m *database) migrateToTenantsAccounts(accountsColl *collectionWrapper, ten
 		return err
 	}
 
-	m.logger.Debug("migrateToTenantsAccounts END")
+	m.logger.Debug("startPhase1 END")
 	return nil
 }
 
-func (m *database) moveToTenantsAccounts(context TransactionContext, accountsColl *collectionWrapper, orgID string, appsOrgsIDs []string) error {
+func (m *database) moveToTenantsAccounts(context context.Context, accountsColl *collectionWrapper, orgID string, appsOrgsIDs []string) error {
 	matchStage := bson.D{
 		{Key: "$match", Value: bson.D{
 			{Key: "$or", Value: bson.A{
-				bson.D{{Key: "migrated", Value: bson.M{"$type": 10}}},
+				bson.D{{Key: "migrated", Value: bson.M{"$type": 10}}}, //10 is the number for null
 				bson.D{{Key: "migrated", Value: false}},
 				bson.D{{Key: "migrated", Value: bson.D{{Key: "$exists", Value: false}}}},
 			}},
@@ -441,7 +413,11 @@ func (m *database) moveToTenantsAccounts(context TransactionContext, accountsCol
 	}
 
 	_, err := accountsColl.coll.Aggregate(context, mongo.Pipeline{matchStage, addFieldsStage, projectStage, outStage})
-	return err
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (m *database) findNotMigratedCount(context TransactionContext, accountsColl *collectionWrapper) (*int64, error) {
