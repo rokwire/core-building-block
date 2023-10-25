@@ -291,6 +291,11 @@ func (m *database) migrateToTenantsAccounts(accountsColl *collectionWrapper, ten
 		}
 
 		//TODO
+
+		err = m.moveToTenantsAccounts(context, accountsColl, "5555", nil)
+		if err != nil {
+			return err
+		}
 		/*	db.accounts.aggregate([
 			    {
 			        $match: {
@@ -373,6 +378,70 @@ func (m *database) migrateToTenantsAccounts(accountsColl *collectionWrapper, ten
 
 	m.logger.Debug("migrateToTenantsAccounts END")
 	return nil
+}
+
+func (m *database) moveToTenantsAccounts(context TransactionContext, accountsColl *collectionWrapper, orgID string, appsOrgsIDs []string) error {
+	matchStage := bson.D{
+		{Key: "$match", Value: bson.D{
+			{Key: "$or", Value: bson.A{
+				bson.D{{Key: "migrated", Value: bson.M{"$type": 10}}},
+				bson.D{{Key: "migrated", Value: false}},
+				bson.D{{Key: "migrated", Value: bson.D{{Key: "$exists", Value: false}}}},
+			}},
+		}},
+	}
+
+	addFieldsStage := bson.D{
+		{Key: "$addFields", Value: bson.D{
+			{Key: "_id", Value: "$_id"},
+			{Key: "org_id", Value: orgID},
+			{Key: "org_apps_memberships", Value: bson.A{
+				bson.D{
+					{Key: "id", Value: bson.D{{Key: "$concat", Value: bson.A{"$app_org_id", "_", "$_id"}}}},
+					{Key: "app_org_id", Value: "$app_org_id"},
+					{Key: "permissions", Value: "$permissions"},
+					{Key: "roles", Value: "$roles"},
+					{Key: "groups", Value: "$groups"},
+					{Key: "preferences", Value: "$preferences"},
+					{Key: "most_recent_client_version", Value: "$most_recent_client_version"},
+				},
+			}},
+			{Key: "scopes", Value: "$scopes"},
+			{Key: "auth_types", Value: "$auth_types"},
+			{Key: "mfa_types", Value: "$mfa_types"},
+			{Key: "username", Value: "$username"},
+			{Key: "external_ids", Value: "$external_ids"},
+			{Key: "system_configs", Value: "$system_configs"},
+			{Key: "profile", Value: "$profile"},
+			{Key: "devices", Value: "$devices"},
+			{Key: "anonymous", Value: "$anonymous"},
+			{Key: "privacy", Value: "$privacy"},
+			{Key: "verified", Value: "$verified"},
+			{Key: "date_created", Value: "$date_created"},
+			{Key: "date_updated", Value: "$date_updated"},
+			{Key: "is_following", Value: "$is_following"},
+			{Key: "last_login_date", Value: "$last_login_date"},
+			{Key: "last_access_token_date", Value: "$last_access_token_date"},
+		}},
+	}
+
+	projectStage := bson.D{
+		{Key: "$project", Value: bson.D{
+			{Key: "app_org_id", Value: 0},
+			{Key: "permissions", Value: 0},
+			{Key: "roles", Value: 0},
+			{Key: "groups", Value: 0},
+			{Key: "preferences", Value: 0},
+			{Key: "most_recent_client_version", Value: 0},
+		}},
+	}
+
+	outStage := bson.D{
+		{Key: "$out", Value: "tenants_accounts"},
+	}
+
+	_, err := accountsColl.coll.Aggregate(context, mongo.Pipeline{matchStage, addFieldsStage, projectStage, outStage})
+	return err
 }
 
 func (m *database) findNotMigratedCount(context TransactionContext, accountsColl *collectionWrapper) (*int64, error) {
