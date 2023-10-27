@@ -278,6 +278,8 @@ func (m *database) migrateToTenantsAccounts(accountsColl *collectionWrapper, ten
 		return err
 	}
 
+	time.Sleep(1 * time.Second) // sleep for 1 second
+
 	err = m.startPhase2(accountsColl, tenantsAccountsColl, appsOrgsColl)
 	if err != nil {
 		return err
