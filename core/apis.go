@@ -57,10 +57,11 @@ func (c *APIs) Start() {
 	c.app.start()
 	c.Auth.Start()
 
+	/* disable this for now because of the tenants accounts
 	err := c.storeSystemData()
 	if err != nil {
 		c.logger.Fatalf("error initializing system data: %s", err.Error())
-	}
+	}*/
 }
 
 // AddListener adds application listener
