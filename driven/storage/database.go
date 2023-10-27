@@ -312,20 +312,20 @@ func (m *database) startPhase2(accountsColl *collectionWrapper, tenantsAccountsC
 
 		//all in transaction!
 		transaction := func(contextTr TransactionContext) error {
-			//first mark the accounts as migrated
+			//1. first mark the accounts as migrated
 			err = m.markAccountsAsProcessedByAppOrgIDs(contextTr, orgItems, accountsColl)
 			if err != nil {
 				return err
 			}
 
-			//$out/merge cannot be used in a transaction
+			//2. $out/merge cannot be used in a transaction
 			ctx := context.Background()
 			err = m.moveToTenantsAccounts(ctx, accountsColl, orgID, orgItems)
 			if err != nil {
 				return err //rollback if the move fails
 			}
 
-			//we are ok
+			//once we know that the huge data operation is sucessfull then we can commit the transaction from step 1
 			return nil
 		}
 
