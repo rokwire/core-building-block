@@ -242,6 +242,13 @@ func (m *database) start() error {
 	m.permissions = permissions
 	m.follows = follows
 
+	// migrate to tenants accounts - remove this code when migrated to all environments
+	err = m.migrateToTenantsAccounts(accounts, tenantsAccounts, applicationsOrganizations)
+	if err != nil {
+		return err
+	}
+	//before the threads below!!
+
 	go m.apiKeys.Watch(nil, m.logger)
 	go m.authTypes.Watch(nil, m.logger)
 	go m.identityProviders.Watch(nil, m.logger)
@@ -251,12 +258,6 @@ func (m *database) start() error {
 	go m.applicationsOrganizations.Watch(nil, m.logger)
 	go m.applicationConfigs.Watch(nil, m.logger)
 	go m.configs.Watch(nil, m.logger)
-
-	// migrate to tenants accounts - remove this code when migrated to all environments
-	err = m.migrateToTenantsAccounts(accounts, tenantsAccounts, applicationsOrganizations)
-	if err != nil {
-		return err
-	}
 
 	m.listeners = []Listener{}
 
