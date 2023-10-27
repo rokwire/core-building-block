@@ -102,6 +102,7 @@ func (m *database) start() error {
 	}
 
 	//deprecated
+	//accounts := &collectionWrapper{database: m, coll: db.Collection("_for_test_accounts")}
 	accounts := &collectionWrapper{database: m, coll: db.Collection("accounts")}
 	err = m.applyAccountsChecks(accounts)
 	if err != nil {
@@ -162,12 +163,14 @@ func (m *database) start() error {
 		return err
 	}
 
+	//organizations := &collectionWrapper{database: m, coll: db.Collection("_for_test_organizations")}
 	organizations := &collectionWrapper{database: m, coll: db.Collection("organizations")}
 	err = m.applyOrganizationsChecks(organizations)
 	if err != nil {
 		return err
 	}
 
+	//applications := &collectionWrapper{database: m, coll: db.Collection("_for_test_applications")}
 	applications := &collectionWrapper{database: m, coll: db.Collection("applications")}
 	err = m.applyApplicationsChecks(applications)
 	if err != nil {
@@ -180,6 +183,7 @@ func (m *database) start() error {
 		return err
 	}
 
+	//applicationsOrganizations := &collectionWrapper{database: m, coll: db.Collection("_for_test_applications_organizations")}
 	applicationsOrganizations := &collectionWrapper{database: m, coll: db.Collection("applications_organizations")}
 	err = m.applyApplicationsOrganizationsChecks(applicationsOrganizations)
 	if err != nil {
@@ -1250,8 +1254,12 @@ func (m *database) getFullAccountsObjects(accountsIDs []accountItem, allAccounts
 }
 
 func (m *database) performTransaction(transaction func(context TransactionContext) error) error {
-	// transaction
-	err := m.dbClient.UseSession(context.Background(), func(sessionContext mongo.SessionContext) error {
+	// Setting a timeout for the transaction
+	desiredTimeout := 10 * time.Minute // adjust as needed
+	ctx, cancel := context.WithTimeout(context.Background(), desiredTimeout)
+	defer cancel()
+
+	err := m.dbClient.UseSession(ctx, func(sessionContext mongo.SessionContext) error {
 		err := sessionContext.StartTransaction()
 		if err != nil {
 			m.abortTransaction(sessionContext)
