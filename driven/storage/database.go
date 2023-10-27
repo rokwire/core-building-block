@@ -310,6 +310,8 @@ func (m *database) startPhase2(accountsColl *collectionWrapper, tenantsAccountsC
 	for orgID, orgItems := range orgsData {
 		//process for every organization
 
+		m.logger.Debugf("...start processing org id %s with apps orgs ids - %s", orgID, orgItems)
+
 		//all in transaction!
 		transaction := func(contextTr TransactionContext) error {
 			//1. first mark the accounts as migrated
@@ -333,6 +335,8 @@ func (m *database) startPhase2(accountsColl *collectionWrapper, tenantsAccountsC
 		if err != nil {
 			return err
 		}
+
+		m.logger.Debugf("...end processing org id %s", orgID)
 	}
 
 	m.logger.Debug("startPhase2 END")
