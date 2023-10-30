@@ -5916,7 +5916,6 @@ components:
         - name
         - multi_tenant
         - admin
-        - shared_identities
       type: object
       properties:
         id:
@@ -5927,8 +5926,6 @@ components:
         multi_tenant:
           type: boolean
         admin:
-          type: boolean
-        shared_identities:
           type: boolean
         types:
           type: array

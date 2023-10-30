@@ -3,7 +3,6 @@ required:
   - name
   - multi_tenant
   - admin
-  - shared_identities
 type: object
 properties:
   id:
@@ -14,8 +13,6 @@ properties:
   multi_tenant:
     type: boolean
   admin:
-    type: boolean
-  shared_identities:
     type: boolean
   types:
     type: array
