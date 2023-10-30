@@ -23,9 +23,8 @@ type application struct {
 	ID   string `bson:"_id"`
 	Name string `bson:"name"`
 
-	MultiTenant      bool `bson:"multi_tenant"`
-	SharedIdentities bool `bson:"shared_identities"`
-	Admin            bool `bson:"admin"`
+	MultiTenant bool `bson:"multi_tenant"`
+	Admin       bool `bson:"admin"`
 
 	Types []applicationType `bson:"types"`
 

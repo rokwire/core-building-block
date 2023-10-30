@@ -24,8 +24,8 @@ import (
 func applicationToDef(item model.Application) Def.Application {
 	types := applicationTypeListToDef(item.Types)
 
-	return Def.Application{Id: &item.ID, Name: item.Name, MultiTenant: item.MultiTenant, Admin: item.Admin,
-		SharedIdentities: item.SharedIdentities, Types: &types}
+	return Def.Application{Id: &item.ID, Name: item.Name, MultiTenant: item.MultiTenant,
+		Admin: item.Admin, Types: &types}
 }
 
 func applicationsToDef(item []model.Application) []Def.Application {

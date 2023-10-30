@@ -132,7 +132,7 @@ func (c *APIs) storeSystemData() error {
 			newDocuments["application"] = uuid.NewString()
 			newAndroidAppType := model.ApplicationType{ID: uuid.NewString(), Identifier: c.systemAppTypeIdentifier, Name: c.systemAppTypeName, Versions: nil}
 			newSystemAdminApp := model.Application{ID: newDocuments["application"], Name: "System Admin application", MultiTenant: false, Admin: true,
-				SharedIdentities: false, Types: []model.ApplicationType{newAndroidAppType}, DateCreated: time.Now().UTC()}
+				Types: []model.ApplicationType{newAndroidAppType}, DateCreated: time.Now().UTC()}
 			_, err = c.app.storage.InsertApplication(context, newSystemAdminApp)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionInsert, model.TypeApplication, nil, err)
@@ -612,12 +612,12 @@ func (s *systemImpl) SysGetOrganization(ID string) (*model.Organization, error) 
 	return s.app.sysGetOrganization(ID)
 }
 
-func (s *systemImpl) SysCreateApplication(name string, multiTenant bool, admin bool, sharedIdentities bool, appTypes []model.ApplicationType) (*model.Application, error) {
-	return s.app.sysCreateApplication(name, multiTenant, admin, sharedIdentities, appTypes)
+func (s *systemImpl) SysCreateApplication(name string, multiTenant bool, admin bool, appTypes []model.ApplicationType) (*model.Application, error) {
+	return s.app.sysCreateApplication(name, multiTenant, admin, appTypes)
 }
 
-func (s *systemImpl) SysUpdateApplication(ID string, name string, multiTenant bool, admin bool, sharedIdentities bool, appTypes []model.ApplicationType) error {
-	return s.app.sysUpdateApplication(ID, name, multiTenant, admin, sharedIdentities, appTypes)
+func (s *systemImpl) SysUpdateApplication(ID string, name string, multiTenant bool, admin bool, appTypes []model.ApplicationType) error {
+	return s.app.sysUpdateApplication(ID, name, multiTenant, admin, appTypes)
 }
 
 func (s *systemImpl) SysGetApplication(ID string) (*model.Application, error) {
