@@ -60,6 +60,19 @@ type Privacy struct {
 	Public bool `json:"public" bson:"public"`
 }
 
+type OrgAppMembership struct {
+	ID     string
+	AppOrg ApplicationOrganization
+
+	Permissions []Permission
+	Roles       []AccountRole
+	Groups      []AccountGroup
+
+	Preferences map[string]interface{}
+
+	MostRecentClientVersion *string
+}
+
 // Account represents account entity
 //
 //	The account is the user himself or herself.
@@ -69,12 +82,18 @@ type Privacy struct {
 type Account struct {
 	ID string //this is ID for the account
 
-	AppOrg ApplicationOrganization
+	OrgID string
 
-	Permissions []Permission
-	Roles       []AccountRole
-	Groups      []AccountGroup
-	Scopes      []string
+	/// Current App Org
+	AppOrg                  ApplicationOrganization
+	Permissions             []Permission
+	Roles                   []AccountRole
+	Groups                  []AccountGroup
+	Preferences             map[string]interface{}
+	MostRecentClientVersion *string
+	/// End Current App Org
+
+	Scopes []string
 
 	AuthTypes []AccountAuthType
 
@@ -82,7 +101,6 @@ type Account struct {
 
 	Username      string
 	ExternalIDs   map[string]string
-	Preferences   map[string]interface{}
 	SystemConfigs map[string]interface{}
 	Profile       Profile //one account has one profile
 	Privacy       Privacy
@@ -95,10 +113,56 @@ type Account struct {
 	DateCreated time.Time
 	DateUpdated *time.Time
 
-	LastLoginDate           *time.Time
-	LastAccessTokenDate     *time.Time
-	MostRecentClientVersion *string
+	LastLoginDate       *time.Time
+	LastAccessTokenDate *time.Time
 }
+
+/*
+type tenantAccount struct {
+	ID string `bson:"_id"`
+
+	OrgID              string             `bson:"org_id"`
+	OrgAppsMemberships []orgAppMembership `bson:"org_apps_memberships"`
+
+	Scopes []string `bson:"scopes,omitempty"`
+
+	AuthTypes []accountAuthType `bson:"auth_types,omitempty"`
+
+	MFATypes []mfaType `bson:"mfa_types,omitempty"`
+
+	Username    string            `bson:"username"`
+	ExternalIDs map[string]string `bson:"external_ids"`
+
+	SystemConfigs map[string]interface{} `bson:"system_configs"`
+	Profile       profile                `bson:"profile"`
+
+	Devices []userDevice `bson:"devices,omitempty"`
+
+	Anonymous bool          `bson:"anonymous"`
+	Privacy   model.Privacy `bson:"privacy"`
+	Verified  bool          `bson:"verified"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
+
+	IsFollowing bool `bson:"is_following"`
+
+	LastLoginDate       *time.Time `bson:"last_login_date"`
+	LastAccessTokenDate *time.Time `bson:"last_access_token_date"`
+}
+
+type orgAppMembership struct {
+	ID       string `bson:"id,omitempty"`
+	AppOrgID string `bson:"app_org_id,omitempty"`
+
+	Permissions []model.Permission `bson:"permissions,omitempty"`
+	Roles       []accountRole      `bson:"roles,omitempty"`
+	Groups      []accountGroup     `bson:"groups,omitempty"`
+
+	Preferences map[string]interface{} `bson:"preferences"`
+
+	MostRecentClientVersion *string `bson:"most_recent_client_version"`
+} */
 
 // GetAccountAuthTypeByID finds account auth type by id
 func (a Account) GetAccountAuthTypeByID(ID string) *AccountAuthType {
