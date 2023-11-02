@@ -252,7 +252,6 @@ func profilesFromStorage(items []account, sa Adapter) []model.Profile {
 	for i, item := range items {
 
 		profile := profileFromStorage(item.Profile)
-		profile.Accounts = accounts[item.Profile.ID]
 
 		res[i] = profile
 	}

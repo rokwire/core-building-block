@@ -84,7 +84,7 @@ type Account struct {
 	ExternalIDs   map[string]string
 	Preferences   map[string]interface{}
 	SystemConfigs map[string]interface{}
-	Profile       Profile //one account has one profile, one profile can be shared between many accounts
+	Profile       Profile //one account has one profile
 	Privacy       Privacy
 
 	Devices []Device
@@ -442,8 +442,6 @@ type Profile struct {
 	ZipCode   string
 	State     string
 	Country   string
-
-	Accounts []Account //the users can share profiles between their applications accounts for some applications
 
 	DateCreated time.Time
 	DateUpdated *time.Time
