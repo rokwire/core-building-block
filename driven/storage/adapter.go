@@ -1225,20 +1225,20 @@ func (sa *Adapter) FindAccount(context TransactionContext, appOrgID string, auth
 	}
 	account := accounts[0]
 
+	//application organization - from cache
+	appOrg, err := sa.getCachedApplicationOrganizationByKey(appOrgID)
+
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeApplicationOrganization, nil, err)
+	}
+
+	if appOrg == nil {
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, nil)
+	}
+
 	log.Println(account)
 	return nil, nil
 	/*
-	   //application organization - from cache
-	   appOrg, err := sa.getCachedApplicationOrganizationByKey(account.AppOrgID)
-
-	   	if err != nil {
-	   		return nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeApplicationOrganization, nil, err)
-	   	}
-
-	   	if appOrg == nil {
-	   		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, nil)
-	   	}
-
 	   modelAccount := accountFromStorage(account, *appOrg)
 	   return &modelAccount, nil
 	*/
