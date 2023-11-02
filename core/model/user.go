@@ -60,6 +60,7 @@ type Privacy struct {
 	Public bool `json:"public" bson:"public"`
 }
 
+// OrgAppMembership represents application organization membership entity
 type OrgAppMembership struct {
 	ID     string
 	AppOrg ApplicationOrganization
@@ -78,20 +79,21 @@ type OrgAppMembership struct {
 //	The account is the user himself or herself.
 //	This is what the person provides to the system so that to use it.
 //
-//	Every account is for an organization within an application
+//	Every account is for an organization
 type Account struct {
 	ID string //this is ID for the account
 
-	OrgID string
+	OrgID              string
+	OrgAppsMemberships []OrgAppMembership
 
-	/// Current App Org
+	/// Current App Org Membership // we keep this for easier migration to tenant accounts
 	AppOrg                  ApplicationOrganization
 	Permissions             []Permission
 	Roles                   []AccountRole
 	Groups                  []AccountGroup
 	Preferences             map[string]interface{}
 	MostRecentClientVersion *string
-	/// End Current App Org
+	/// End Current App Org Membership
 
 	Scopes []string
 
@@ -116,53 +118,6 @@ type Account struct {
 	LastLoginDate       *time.Time
 	LastAccessTokenDate *time.Time
 }
-
-/*
-type tenantAccount struct {
-	ID string `bson:"_id"`
-
-	OrgID              string             `bson:"org_id"`
-	OrgAppsMemberships []orgAppMembership `bson:"org_apps_memberships"`
-
-	Scopes []string `bson:"scopes,omitempty"`
-
-	AuthTypes []accountAuthType `bson:"auth_types,omitempty"`
-
-	MFATypes []mfaType `bson:"mfa_types,omitempty"`
-
-	Username    string            `bson:"username"`
-	ExternalIDs map[string]string `bson:"external_ids"`
-
-	SystemConfigs map[string]interface{} `bson:"system_configs"`
-	Profile       profile                `bson:"profile"`
-
-	Devices []userDevice `bson:"devices,omitempty"`
-
-	Anonymous bool          `bson:"anonymous"`
-	Privacy   model.Privacy `bson:"privacy"`
-	Verified  bool          `bson:"verified"`
-
-	DateCreated time.Time  `bson:"date_created"`
-	DateUpdated *time.Time `bson:"date_updated"`
-
-	IsFollowing bool `bson:"is_following"`
-
-	LastLoginDate       *time.Time `bson:"last_login_date"`
-	LastAccessTokenDate *time.Time `bson:"last_access_token_date"`
-}
-
-type orgAppMembership struct {
-	ID       string `bson:"id,omitempty"`
-	AppOrgID string `bson:"app_org_id,omitempty"`
-
-	Permissions []model.Permission `bson:"permissions,omitempty"`
-	Roles       []accountRole      `bson:"roles,omitempty"`
-	Groups      []accountGroup     `bson:"groups,omitempty"`
-
-	Preferences map[string]interface{} `bson:"preferences"`
-
-	MostRecentClientVersion *string `bson:"most_recent_client_version"`
-} */
 
 // GetAccountAuthTypeByID finds account auth type by id
 func (a Account) GetAccountAuthTypeByID(ID string) *AccountAuthType {
