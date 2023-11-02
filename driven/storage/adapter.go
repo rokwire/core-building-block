@@ -1333,7 +1333,7 @@ func (sa *Adapter) FindAccounts(context TransactionContext, limit *int, offset *
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
 
-	accounts := accountsFromStorage(list, *appOrg)
+	accounts := accountsFromStorageDeprecated(list, *appOrg)
 	return accounts, nil
 }
 
@@ -1534,7 +1534,7 @@ func (sa *Adapter) FindAccountsByAccountID(context TransactionContext, appID str
 	if err != nil {
 		return nil, err
 	}
-	accounts := accountsFromStorage(accountResult, *appOrg)
+	accounts := accountsFromStorageDeprecated(accountResult, *appOrg)
 	return accounts, nil
 }
 
@@ -1555,7 +1555,7 @@ func (sa *Adapter) FindAccountsByUsername(context TransactionContext, appOrg *mo
 		sa.logger.WarnWithFields("duplicate username", logutils.Fields{"number": len(accountResult), "app_org_id": appOrg.ID, "username": username})
 	}
 
-	accounts := accountsFromStorage(accountResult, *appOrg)
+	accounts := accountsFromStorageDeprecated(accountResult, *appOrg)
 	return accounts, nil
 }
 
@@ -1588,7 +1588,7 @@ func (sa *Adapter) findAccount(context TransactionContext, key string, id string
 		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, nil)
 	}
 
-	modelAccount := accountFromStorage(*account, *appOrg)
+	modelAccount := accountFromStorageDeprecated(*account, *appOrg)
 
 	return &modelAccount, nil
 }

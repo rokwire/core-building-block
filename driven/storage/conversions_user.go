@@ -19,7 +19,7 @@ import (
 )
 
 // Account
-func accountFromStorage(item account, appOrg model.ApplicationOrganization) model.Account {
+func accountFromStorageDeprecated(item account, appOrg model.ApplicationOrganization) model.Account {
 	roles := accountRolesFromStorage(item.Roles, appOrg)
 	groups := accountGroupsFromStorage(item.Groups, appOrg)
 	authTypes := accountAuthTypesFromStorage(item.AuthTypes)
@@ -32,14 +32,14 @@ func accountFromStorage(item account, appOrg model.ApplicationOrganization) mode
 		LastAccessTokenDate: item.LastAccessTokenDate, MostRecentClientVersion: item.MostRecentClientVersion}
 }
 
-func accountsFromStorage(items []account, appOrg model.ApplicationOrganization) []model.Account {
+func accountsFromStorageDeprecated(items []account, appOrg model.ApplicationOrganization) []model.Account {
 	if len(items) == 0 {
 		return make([]model.Account, 0)
 	}
 
 	res := make([]model.Account, len(items))
 	for i, item := range items {
-		res[i] = accountFromStorage(item, appOrg)
+		res[i] = accountFromStorageDeprecated(item, appOrg)
 	}
 	return res
 }
@@ -236,7 +236,7 @@ func profilesFromStorage(items []account, sa Adapter) []model.Profile {
 	accounts := make(map[string][]model.Account, len(items))
 	for _, account := range items {
 		appOrg, _ := sa.getCachedApplicationOrganizationByKey(account.AppOrgID)
-		rAccount := accountFromStorage(account, *appOrg)
+		rAccount := accountFromStorageDeprecated(account, *appOrg)
 
 		//add account to the map
 		profileAccounts := accounts[rAccount.Profile.ID]
