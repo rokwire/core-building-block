@@ -18,6 +18,19 @@ import (
 	"core-building-block/core/model"
 )
 
+// OrgAppMembership
+func orgAppMembershipFromStorage(item orgAppMembership, appOrg model.ApplicationOrganization) model.OrgAppMembership {
+	roles := accountRolesFromStorage(item.Roles, appOrg)
+	groups := accountGroupsFromStorage(item.Groups, appOrg)
+	return model.OrgAppMembership{ID: item.ID, AppOrg: appOrg, Permissions: item.Permissions,
+		Roles: roles, Groups: groups, Preferences: item.Preferences,
+		MostRecentClientVersion: item.MostRecentClientVersion}
+}
+
+func orgAppsMembershipsFromStorage(items []orgAppMembership, appsOrgs []*model.ApplicationOrganization) []model.OrgAppMembership {
+	return nil
+}
+
 // Account
 func accountFromStorage(item tenantAccount, currentAppOrg string, membershipsAppsOrgs []*model.ApplicationOrganization) model.Account {
 	/*	type Account struct {
@@ -36,13 +49,11 @@ func accountFromStorage(item tenantAccount, currentAppOrg string, membershipsApp
 
 	} */
 
-	/*roles := accountRolesFromStorage(item.Roles, appOrg)
-	groups := accountGroupsFromStorage(item.Groups, appOrg)
-	*/
 	////////////////
 
 	id := item.ID
 	orgID := item.OrgID
+	orgAppsMemberships := orgAppsMembershipsFromStorage(item.OrgAppsMemberships, membershipsAppsOrgs)
 
 	/// Current App Org Membership
 	/*cAppOrg := appOrg
@@ -68,11 +79,12 @@ func accountFromStorage(item tenantAccount, currentAppOrg string, membershipsApp
 	dateUpdated := item.DateUpdated
 	lastLoginDate := item.LastLoginDate
 	lastAccessTokenDate := item.LastAccessTokenDate
-	return model.Account{ID: id, OrgID: orgID, Scopes: scopes, AuthTypes: authTypes,
-		MFATypes: mfaTypes, Username: username, ExternalIDs: externalIDs,
-		SystemConfigs: systemConfigs, Profile: profile, Privacy: privacy,
-		Devices: devices, Anonymous: anonymous, Verified: verified, DateCreated: dateCreated,
-		DateUpdated: dateUpdated, LastLoginDate: lastLoginDate, LastAccessTokenDate: lastAccessTokenDate}
+	return model.Account{ID: id, OrgID: orgID, OrgAppsMemberships: orgAppsMemberships,
+		Scopes: scopes, AuthTypes: authTypes, MFATypes: mfaTypes, Username: username,
+		ExternalIDs: externalIDs, SystemConfigs: systemConfigs, Profile: profile,
+		Privacy: privacy, Devices: devices, Anonymous: anonymous, Verified: verified,
+		DateCreated: dateCreated, DateUpdated: dateUpdated, LastLoginDate: lastLoginDate,
+		LastAccessTokenDate: lastAccessTokenDate}
 }
 
 func accountFromStorageDeprecated(item account, appOrg model.ApplicationOrganization) model.Account {
