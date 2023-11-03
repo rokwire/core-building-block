@@ -53,32 +53,24 @@ func orgAppsMembershipsFromStorage(items []orgAppMembership, appsOrgs []model.Ap
 
 // Account
 func accountFromStorage(item tenantAccount, currentAppOrg string, membershipsAppsOrgs []model.ApplicationOrganization) model.Account {
-	/*	type Account struct {
-
-		/// Current App Org Membership // we keep this for easier migration to tenant accounts
-		AppOrg                  ApplicationOrganization
-		Permissions             []Permission
-		Roles                   []AccountRole
-		Groups                  []AccountGroup
-		Preferences             map[string]interface{}
-		MostRecentClientVersion *string
-		/// End Current App Org Membership
-
-	} */
-
-	////////////////
-
 	id := item.ID
 	orgID := item.OrgID
 	orgAppsMemberships := orgAppsMembershipsFromStorage(item.OrgAppsMemberships, membershipsAppsOrgs)
 
-	/// Current App Org Membership
-	/*cAppOrg := appOrg
-	cPermissions := item.
-	cRoles := []AccountRole
-	cGroups := []AccountGroup
-	cPreferences := map[string]interface{}
-	cMostRecentClientVersion := *string */
+	/// Set the Current App Org Membership
+	var currentM model.OrgAppMembership
+	for _, oaMembership := range orgAppsMemberships {
+		if oaMembership.AppOrg.ID == currentAppOrg {
+			currentM = oaMembership
+			break
+		}
+	}
+	cAppOrg := currentM.AppOrg
+	cPermissions := currentM.Permissions
+	cRoles := currentM.Roles
+	cGroups := currentM.Groups
+	cPreferences := currentM.Preferences
+	cMostRecentClientVersion := currentM.MostRecentClientVersion
 	/// End Current App Org Membership
 
 	scopes := item.Scopes
@@ -97,6 +89,14 @@ func accountFromStorage(item tenantAccount, currentAppOrg string, membershipsApp
 	lastLoginDate := item.LastLoginDate
 	lastAccessTokenDate := item.LastAccessTokenDate
 	return model.Account{ID: id, OrgID: orgID, OrgAppsMemberships: orgAppsMemberships,
+
+		AppOrg:                  cAppOrg,                  //current membership
+		Permissions:             cPermissions,             //current membership
+		Roles:                   cRoles,                   //current membership
+		Groups:                  cGroups,                  //current membership
+		Preferences:             cPreferences,             //current membership
+		MostRecentClientVersion: cMostRecentClientVersion, //current membership
+
 		Scopes: scopes, AuthTypes: authTypes, MFATypes: mfaTypes, Username: username,
 		ExternalIDs: externalIDs, SystemConfigs: systemConfigs, Profile: profile,
 		Privacy: privacy, Devices: devices, Anonymous: anonymous, Verified: verified,
