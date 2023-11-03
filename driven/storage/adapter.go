@@ -19,7 +19,6 @@ import (
 	"core-building-block/core/model"
 	"core-building-block/utils"
 	"fmt"
-	"log"
 	"reflect"
 	"strconv"
 	"strings"
@@ -1246,15 +1245,6 @@ func (sa *Adapter) FindAccount(context TransactionContext, appOrgID string, auth
 	}
 	account := accounts[0]
 
-	//current application organization - from cache
-	appOrg, err := sa.getCachedApplicationOrganizationByKey(appOrgID)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeApplicationOrganization, nil, err)
-	}
-	if appOrg == nil {
-		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, nil)
-	}
-
 	//all memberships applications organizations - from cache
 	membershipsAppsOrgsIDs := make([]string, len(account.OrgAppsMemberships))
 	for i, aoID := range account.OrgAppsMemberships {
@@ -1264,10 +1254,11 @@ func (sa *Adapter) FindAccount(context TransactionContext, appOrgID string, auth
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeApplicationOrganization, nil, err)
 	}
+	if len(appsOrgs) != len(account.OrgAppsMemberships) {
+		return nil, errors.WrapErrorAction(logutils.ActionCount, "does not match memberships apps orgs ids count", nil, err)
+	}
 
-	log.Println(appsOrgs)
-
-	modelAccount := accountFromStorage(account, *appOrg)
+	modelAccount := accountFromStorage(account, appOrgID, appsOrgs)
 	return &modelAccount, nil
 }
 

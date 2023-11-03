@@ -19,7 +19,7 @@ import (
 )
 
 // Account
-func accountFromStorage(item tenantAccount, currentAppOrg model.ApplicationOrganization) model.Account {
+func accountFromStorage(item tenantAccount, currentAppOrg string, membershipsAppsOrgs []*model.ApplicationOrganization) model.Account {
 	/*	type Account struct {
 
 
