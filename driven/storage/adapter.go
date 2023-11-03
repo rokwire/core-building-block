@@ -19,6 +19,7 @@ import (
 	"core-building-block/core/model"
 	"core-building-block/utils"
 	"fmt"
+	"log"
 	"reflect"
 	"strconv"
 	"strings"
@@ -560,6 +561,27 @@ func (sa *Adapter) getCachedApplicationOrganizationByKey(key string) (*model.App
 		return &appOrg, nil
 	}
 	return nil, nil
+}
+
+func (sa *Adapter) getCachedApplicationOrganizationByKeys(keys []string) ([]*model.ApplicationOrganization, error) {
+	sa.applicationsOrganizationsLock.RLock()
+	defer sa.applicationsOrganizationsLock.RUnlock()
+
+	var result []*model.ApplicationOrganization
+	for _, key := range keys {
+		errArgs := &logutils.FieldArgs{"key": key}
+
+		item, exists := sa.cachedApplicationsOrganizations.Load(key)
+		if exists {
+			appOrg, ok := item.(model.ApplicationOrganization)
+			if !ok {
+				return nil, errors.ErrorAction(logutils.ActionCast, model.TypeApplicationOrganization, errArgs)
+			}
+			result = append(result, &appOrg)
+		}
+	}
+
+	return result, nil
 }
 
 func (sa *Adapter) getCachedApplicationOrganizations() ([]model.ApplicationOrganization, error) {
@@ -1224,16 +1246,26 @@ func (sa *Adapter) FindAccount(context TransactionContext, appOrgID string, auth
 	}
 	account := accounts[0]
 
-	//application organization - from cache
+	//current application organization - from cache
 	appOrg, err := sa.getCachedApplicationOrganizationByKey(appOrgID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeApplicationOrganization, nil, err)
+	}
+	if appOrg == nil {
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, nil)
+	}
 
+	//all memberships applications organizations - from cache
+	membershipsAppsOrgsIDs := make([]string, len(account.OrgAppsMemberships))
+	for i, aoID := range account.OrgAppsMemberships {
+		membershipsAppsOrgsIDs[i] = aoID.AppOrgID
+	}
+	appsOrgs, err := sa.getCachedApplicationOrganizationByKeys(membershipsAppsOrgsIDs)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeApplicationOrganization, nil, err)
 	}
 
-	if appOrg == nil {
-		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, nil)
-	}
+	log.Println(appsOrgs)
 
 	modelAccount := accountFromStorage(account, *appOrg)
 	return &modelAccount, nil

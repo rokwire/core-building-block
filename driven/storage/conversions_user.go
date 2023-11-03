@@ -19,18 +19,60 @@ import (
 )
 
 // Account
-func accountFromStorage(item tenantAccount, appOrg model.ApplicationOrganization) model.Account {
+func accountFromStorage(item tenantAccount, currentAppOrg model.ApplicationOrganization) model.Account {
+	/*	type Account struct {
+
+
+		OrgAppsMemberships []OrgAppMembership
+
+		/// Current App Org Membership // we keep this for easier migration to tenant accounts
+		AppOrg                  ApplicationOrganization
+		Permissions             []Permission
+		Roles                   []AccountRole
+		Groups                  []AccountGroup
+		Preferences             map[string]interface{}
+		MostRecentClientVersion *string
+		/// End Current App Org Membership
+
+	} */
+
 	/*roles := accountRolesFromStorage(item.Roles, appOrg)
 	groups := accountGroupsFromStorage(item.Groups, appOrg)
+	*/
+	////////////////
+
+	id := item.ID
+	orgID := item.OrgID
+
+	/// Current App Org Membership
+	/*cAppOrg := appOrg
+	cPermissions := item.
+	cRoles := []AccountRole
+	cGroups := []AccountGroup
+	cPreferences := map[string]interface{}
+	cMostRecentClientVersion := *string */
+	/// End Current App Org Membership
+
+	scopes := item.Scopes
 	authTypes := accountAuthTypesFromStorage(item.AuthTypes)
 	mfaTypes := mfaTypesFromStorage(item.MFATypes)
+	username := item.Username
+	externalIDs := item.ExternalIDs
+	systemConfigs := item.SystemConfigs
 	profile := profileFromStorage(item.Profile)
-	devices := accountDevicesFromStorage(item)
-	return model.Account{ID: item.ID, AppOrg: appOrg, Anonymous: item.Anonymous, Permissions: item.Permissions, Roles: roles, Groups: groups, Scopes: item.Scopes, AuthTypes: authTypes,
-		MFATypes: mfaTypes, Username: item.Username, ExternalIDs: item.ExternalIDs, Preferences: item.Preferences, Profile: profile, SystemConfigs: item.SystemConfigs,
-		Privacy: item.Privacy, Verified: item.Verified, Devices: devices, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated, LastLoginDate: item.LastLoginDate,
-		LastAccessTokenDate: item.LastAccessTokenDate, MostRecentClientVersion: item.MostRecentClientVersion} */
-	return model.Account{}
+	privacy := item.Privacy
+	devices := accountDevicesFromStorage(item.Devices)
+	anonymous := item.Anonymous
+	verified := item.Verified
+	dateCreated := item.DateCreated
+	dateUpdated := item.DateUpdated
+	lastLoginDate := item.LastLoginDate
+	lastAccessTokenDate := item.LastAccessTokenDate
+	return model.Account{ID: id, OrgID: orgID, Scopes: scopes, AuthTypes: authTypes,
+		MFATypes: mfaTypes, Username: username, ExternalIDs: externalIDs,
+		SystemConfigs: systemConfigs, Profile: profile, Privacy: privacy,
+		Devices: devices, Anonymous: anonymous, Verified: verified, DateCreated: dateCreated,
+		DateUpdated: dateUpdated, LastLoginDate: lastLoginDate, LastAccessTokenDate: lastAccessTokenDate}
 }
 
 func accountFromStorageDeprecated(item account, appOrg model.ApplicationOrganization) model.Account {
@@ -39,7 +81,7 @@ func accountFromStorageDeprecated(item account, appOrg model.ApplicationOrganiza
 	authTypes := accountAuthTypesFromStorage(item.AuthTypes)
 	mfaTypes := mfaTypesFromStorage(item.MFATypes)
 	profile := profileFromStorage(item.Profile)
-	devices := accountDevicesFromStorage(item)
+	devices := accountDevicesFromStorage(item.Devices)
 	return model.Account{ID: item.ID, AppOrg: appOrg, Anonymous: item.Anonymous, Permissions: item.Permissions, Roles: roles, Groups: groups, Scopes: item.Scopes, AuthTypes: authTypes,
 		MFATypes: mfaTypes, Username: item.Username, ExternalIDs: item.ExternalIDs, Preferences: item.Preferences, Profile: profile, SystemConfigs: item.SystemConfigs,
 		Privacy: item.Privacy, Verified: item.Verified, Devices: devices, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated, LastLoginDate: item.LastLoginDate,
@@ -79,10 +121,10 @@ func accountToStorage(item *model.Account) *account {
 		DateCreated: dateCreated, DateUpdated: dateUpdated, LastLoginDate: lastLoginDate, LastAccessTokenDate: lastAccessTokenDate, MostRecentClientVersion: mostRecentClientVersion}
 }
 
-func accountDevicesFromStorage(item account) []model.Device {
-	devices := make([]model.Device, len(item.Devices))
+func accountDevicesFromStorage(accDevices []userDevice) []model.Device {
+	devices := make([]model.Device, len(accDevices))
 
-	for i, device := range item.Devices {
+	for i, device := range accDevices {
 		devices[i] = accountDeviceFromStorage(device)
 	}
 	return devices
