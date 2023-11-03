@@ -28,15 +28,32 @@ func orgAppMembershipFromStorage(item orgAppMembership, appOrg model.Application
 }
 
 func orgAppsMembershipsFromStorage(items []orgAppMembership, appsOrgs []model.ApplicationOrganization) []model.OrgAppMembership {
-	return nil
+	if len(items) == 0 {
+		return make([]model.OrgAppMembership, 0)
+	}
+
+	res := make([]model.OrgAppMembership, len(items))
+	for i, item := range items {
+		//find the application organization
+		var appOrg *model.ApplicationOrganization
+		for _, cAppOrg := range appsOrgs {
+			if cAppOrg.ID == item.AppOrgID {
+				current := cAppOrg
+				appOrg = &current
+				break
+			}
+		}
+
+		if appOrg != nil {
+			res[i] = orgAppMembershipFromStorage(item, *appOrg)
+		}
+	}
+	return res
 }
 
 // Account
 func accountFromStorage(item tenantAccount, currentAppOrg string, membershipsAppsOrgs []model.ApplicationOrganization) model.Account {
 	/*	type Account struct {
-
-
-		OrgAppsMemberships []OrgAppMembership
 
 		/// Current App Org Membership // we keep this for easier migration to tenant accounts
 		AppOrg                  ApplicationOrganization
