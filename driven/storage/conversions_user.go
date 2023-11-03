@@ -27,12 +27,12 @@ func orgAppMembershipFromStorage(item orgAppMembership, appOrg model.Application
 		MostRecentClientVersion: item.MostRecentClientVersion}
 }
 
-func orgAppsMembershipsFromStorage(items []orgAppMembership, appsOrgs []*model.ApplicationOrganization) []model.OrgAppMembership {
+func orgAppsMembershipsFromStorage(items []orgAppMembership, appsOrgs []model.ApplicationOrganization) []model.OrgAppMembership {
 	return nil
 }
 
 // Account
-func accountFromStorage(item tenantAccount, currentAppOrg string, membershipsAppsOrgs []*model.ApplicationOrganization) model.Account {
+func accountFromStorage(item tenantAccount, currentAppOrg string, membershipsAppsOrgs []model.ApplicationOrganization) model.Account {
 	/*	type Account struct {
 
 

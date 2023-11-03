@@ -562,11 +562,11 @@ func (sa *Adapter) getCachedApplicationOrganizationByKey(key string) (*model.App
 	return nil, nil
 }
 
-func (sa *Adapter) getCachedApplicationOrganizationByKeys(keys []string) ([]*model.ApplicationOrganization, error) {
+func (sa *Adapter) getCachedApplicationOrganizationByKeys(keys []string) ([]model.ApplicationOrganization, error) {
 	sa.applicationsOrganizationsLock.RLock()
 	defer sa.applicationsOrganizationsLock.RUnlock()
 
-	var result []*model.ApplicationOrganization
+	var result []model.ApplicationOrganization
 	for _, key := range keys {
 		errArgs := &logutils.FieldArgs{"key": key}
 
@@ -576,7 +576,7 @@ func (sa *Adapter) getCachedApplicationOrganizationByKeys(keys []string) ([]*mod
 			if !ok {
 				return nil, errors.ErrorAction(logutils.ActionCast, model.TypeApplicationOrganization, errArgs)
 			}
-			result = append(result, &appOrg)
+			result = append(result, appOrg)
 		}
 	}
 
