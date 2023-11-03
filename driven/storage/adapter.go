@@ -19,7 +19,6 @@ import (
 	"core-building-block/core/model"
 	"core-building-block/utils"
 	"fmt"
-	"log"
 	"reflect"
 	"strconv"
 	"strings"
@@ -1236,12 +1235,8 @@ func (sa *Adapter) FindAccount(context TransactionContext, appOrgID string, auth
 		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, nil)
 	}
 
-	log.Println(account)
-	return nil, nil
-	/*
-	   modelAccount := accountFromStorage(account, *appOrg)
-	   return &modelAccount, nil
-	*/
+	modelAccount := accountFromStorage(account, *appOrg)
+	return &modelAccount, nil
 }
 
 // FindAccounts finds accounts

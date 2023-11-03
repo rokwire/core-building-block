@@ -19,6 +19,20 @@ import (
 )
 
 // Account
+func accountFromStorage(item tenantAccount, appOrg model.ApplicationOrganization) model.Account {
+	/*roles := accountRolesFromStorage(item.Roles, appOrg)
+	groups := accountGroupsFromStorage(item.Groups, appOrg)
+	authTypes := accountAuthTypesFromStorage(item.AuthTypes)
+	mfaTypes := mfaTypesFromStorage(item.MFATypes)
+	profile := profileFromStorage(item.Profile)
+	devices := accountDevicesFromStorage(item)
+	return model.Account{ID: item.ID, AppOrg: appOrg, Anonymous: item.Anonymous, Permissions: item.Permissions, Roles: roles, Groups: groups, Scopes: item.Scopes, AuthTypes: authTypes,
+		MFATypes: mfaTypes, Username: item.Username, ExternalIDs: item.ExternalIDs, Preferences: item.Preferences, Profile: profile, SystemConfigs: item.SystemConfigs,
+		Privacy: item.Privacy, Verified: item.Verified, Devices: devices, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated, LastLoginDate: item.LastLoginDate,
+		LastAccessTokenDate: item.LastAccessTokenDate, MostRecentClientVersion: item.MostRecentClientVersion} */
+	return model.Account{}
+}
+
 func accountFromStorageDeprecated(item account, appOrg model.ApplicationOrganization) model.Account {
 	roles := accountRolesFromStorage(item.Roles, appOrg)
 	groups := accountGroupsFromStorage(item.Groups, appOrg)
