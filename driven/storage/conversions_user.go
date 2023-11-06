@@ -129,7 +129,7 @@ func accountsFromStorageDeprecated(items []account, appOrg model.ApplicationOrga
 	return res
 }
 
-func accountToStorage(item *model.Account) *account {
+func accountToStorageDeprecated(item *model.Account) *account {
 	id := item.ID
 	appOrgID := item.AppOrg.ID
 	permissions := item.Permissions

@@ -1629,7 +1629,7 @@ func (sa *Adapter) findStorageAccount(context TransactionContext, key string, id
 
 // InsertAccount inserts an account
 func (sa *Adapter) InsertAccount(context TransactionContext, account model.Account) (*model.Account, error) {
-	storageAccount := accountToStorage(&account)
+	storageAccount := accountToStorageDeprecated(&account)
 
 	_, err := sa.db.accounts.InsertOneWithContext(context, storageAccount)
 	if err != nil {
@@ -1645,7 +1645,7 @@ func (sa *Adapter) SaveAccount(context TransactionContext, account *model.Accoun
 		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs("account"))
 	}
 
-	storageAccount := accountToStorage(account)
+	storageAccount := accountToStorageDeprecated(account)
 
 	filter := bson.M{"_id": account.ID}
 	err := sa.db.accounts.ReplaceOneWithContext(context, filter, storageAccount, nil)

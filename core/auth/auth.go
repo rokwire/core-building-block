@@ -1480,30 +1480,11 @@ func (a *Auth) storeNewAccountInfo(context storage.TransactionContext, account m
 		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAccount, nil, err)
 	}
 
-	/*	//insert or update credential
-		if credential != nil {
-			if useSharedProfile {
-				//update credential
-				err = a.storage.UpdateCredential(context, credential)
-				if err != nil {
-					return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, nil, err)
-				}
-			} else { */
 	//create credential
 	err = a.storage.InsertCredential(context, credential)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeCredential, nil, err)
 	}
-	//	}
-	//	}
-
-	/*	//update profile if shared
-		if useSharedProfile {
-			err = a.storage.UpdateAccountProfile(context, profile)
-			if err != nil {
-				return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeProfile, nil, err)
-			}
-		} */
 
 	return nil
 }
