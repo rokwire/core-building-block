@@ -2285,8 +2285,8 @@ func (sa *Adapter) UpdateAccountAuthType(item model.AccountAuthType) error {
 
 		//3. first find the account record
 		findFilter := bson.M{"auth_types.id": item.ID}
-		var accounts []account
-		err = sa.db.accounts.FindWithContext(sessionContext, findFilter, &accounts, nil)
+		var accounts []tenantAccount
+		err = sa.db.tenantsAccounts.FindWithContext(sessionContext, findFilter, &accounts, nil)
 		if err != nil {
 			sa.abortTransaction(sessionContext)
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeUserAuth, &logutils.FieldArgs{"account auth type id": item.ID}, err)
@@ -2311,7 +2311,7 @@ func (sa *Adapter) UpdateAccountAuthType(item model.AccountAuthType) error {
 
 		//4. update the account record
 		replaceFilter := bson.M{"_id": account.ID}
-		err = sa.db.accounts.ReplaceOneWithContext(sessionContext, replaceFilter, account, nil)
+		err = sa.db.tenantsAccounts.ReplaceOneWithContext(sessionContext, replaceFilter, account, nil)
 		if err != nil {
 			sa.abortTransaction(sessionContext)
 			return errors.WrapErrorAction(logutils.ActionReplace, model.TypeAccount, nil, err)
