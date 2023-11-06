@@ -1258,7 +1258,7 @@ func (sa *Adapter) FindAccount(context TransactionContext, appOrgID string, auth
 		return nil, errors.WrapErrorAction(logutils.ActionCount, "does not match memberships apps orgs ids count", nil, err)
 	}
 
-	modelAccount := accountFromStorage(account, appOrgID, appsOrgs)
+	modelAccount := accountFromStorage(account, &appOrgID, appsOrgs)
 	return &modelAccount, nil
 }
 
@@ -1597,24 +1597,28 @@ func (sa *Adapter) findAccount(context TransactionContext, key string, id string
 		return nil, nil
 	}
 
-	//application organization - from cache
-	appOrg, err := sa.getCachedApplicationOrganizationByKey(account.AppOrgID)
+	//all memberships applications organizations - from cache
+	membershipsAppsOrgsIDs := make([]string, len(account.OrgAppsMemberships))
+	for i, aoID := range account.OrgAppsMemberships {
+		membershipsAppsOrgsIDs[i] = aoID.AppOrgID
+	}
+	appsOrgs, err := sa.getCachedApplicationOrganizationByKeys(membershipsAppsOrgsIDs)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeApplicationOrganization, nil, err)
 	}
-	if appOrg == nil {
-		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, nil)
+	if len(appsOrgs) != len(account.OrgAppsMemberships) {
+		return nil, errors.WrapErrorAction(logutils.ActionCount, "does not match memberships apps orgs ids count", nil, err)
 	}
 
-	modelAccount := accountFromStorageDeprecated(*account, *appOrg)
-
+	modelAccount := accountFromStorage(*account, nil, appsOrgs)
 	return &modelAccount, nil
+
 }
 
-func (sa *Adapter) findStorageAccount(context TransactionContext, key string, id string) (*account, error) {
+func (sa *Adapter) findStorageAccount(context TransactionContext, key string, id string) (*tenantAccount, error) {
 	filter := bson.M{key: id}
-	var accounts []account
-	err := sa.db.accounts.FindWithContext(context, filter, &accounts, nil)
+	var accounts []tenantAccount
+	err := sa.db.tenantsAccounts.FindWithContext(context, filter, &accounts, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{key: id}, err)
 	}
@@ -1645,10 +1649,10 @@ func (sa *Adapter) SaveAccount(context TransactionContext, account *model.Accoun
 		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs("account"))
 	}
 
-	storageAccount := accountToStorageDeprecated(account)
+	storageAccount := accountToStorage(account)
 
 	filter := bson.M{"_id": account.ID}
-	err := sa.db.accounts.ReplaceOneWithContext(context, filter, storageAccount, nil)
+	err := sa.db.tenantsAccounts.ReplaceOneWithContext(context, filter, storageAccount, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, nil, err)
 	}
@@ -1672,7 +1676,7 @@ func (sa *Adapter) UpdateAccountUsageInfo(context TransactionContext, accountID 
 	}
 	usageInfoUpdate := bson.M{"$set": update}
 
-	res, err := sa.db.accounts.UpdateOneWithContext(context, filter, usageInfoUpdate, nil)
+	res, err := sa.db.tenantsAccounts.UpdateOneWithContext(context, filter, usageInfoUpdate, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountUsageInfo, nil, err)
 	}
@@ -1688,7 +1692,7 @@ func (sa *Adapter) DeleteAccount(context TransactionContext, id string) error {
 	//TODO - we have to decide what we do on delete user operation - removing all user relations, (or) mark the user disabled etc
 
 	filter := bson.M{"_id": id}
-	res, err := sa.db.accounts.DeleteOneWithContext(context, filter, nil)
+	res, err := sa.db.tenantsAccounts.DeleteOneWithContext(context, filter, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
 	}
@@ -3805,7 +3809,7 @@ func (sa *Adapter) InsertDevice(context TransactionContext, device model.Device)
 			primitive.E{Key: "devices", Value: storageDevice},
 		}},
 	}
-	res, err := sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
+	res, err := sa.db.tenantsAccounts.UpdateOneWithContext(context, filter, update, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, logutils.StringArgs("inserting device"), err)
 	}

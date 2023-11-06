@@ -73,18 +73,22 @@ func orgAppsMembershipsToStorage(items []model.OrgAppMembership) []orgAppMembers
 }
 
 // Account
-func accountFromStorage(item tenantAccount, currentAppOrg string, membershipsAppsOrgs []model.ApplicationOrganization) model.Account {
+func accountFromStorage(item tenantAccount, currentAppOrg *string, membershipsAppsOrgs []model.ApplicationOrganization) model.Account {
 	id := item.ID
 	orgID := item.OrgID
 	orgAppsMemberships := orgAppsMembershipsFromStorage(item.OrgAppsMemberships, membershipsAppsOrgs)
 
 	/// Set the Current App Org Membership
 	var currentM model.OrgAppMembership
-	for _, oaMembership := range orgAppsMemberships {
-		if oaMembership.AppOrg.ID == currentAppOrg {
-			currentM = oaMembership
-			break
+	if currentAppOrg != nil {
+		for _, oaMembership := range orgAppsMemberships {
+			if oaMembership.AppOrg.ID == *currentAppOrg {
+				currentM = oaMembership
+				break
+			}
 		}
+	} else {
+		currentM = model.OrgAppMembership{}
 	}
 	cAppOrg := currentM.AppOrg
 	cPermissions := currentM.Permissions
