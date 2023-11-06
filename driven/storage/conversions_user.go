@@ -51,6 +51,27 @@ func orgAppsMembershipsFromStorage(items []orgAppMembership, appsOrgs []model.Ap
 	return res
 }
 
+func orgAppMembershipToStorage(item model.OrgAppMembership) orgAppMembership {
+	id := item.ID
+	appOrgID := item.AppOrg.ID
+	permissions := item.Permissions
+	roles := accountRolesToStorage(item.Roles)
+	groups := accountGroupsToStorage(item.Groups)
+	preferences := item.Preferences
+	mostRecentClientVersions := item.MostRecentClientVersion
+	return orgAppMembership{ID: id, AppOrgID: appOrgID,
+		Permissions: permissions, Roles: roles, Groups: groups,
+		Preferences: preferences, MostRecentClientVersion: mostRecentClientVersions}
+}
+
+func orgAppsMembershipsToStorage(items []model.OrgAppMembership) []orgAppMembership {
+	res := make([]orgAppMembership, len(items))
+	for i, c := range items {
+		res[i] = orgAppMembershipToStorage(c)
+	}
+	return res
+}
+
 // Account
 func accountFromStorage(item tenantAccount, currentAppOrg string, membershipsAppsOrgs []model.ApplicationOrganization) model.Account {
 	id := item.ID
@@ -127,6 +148,33 @@ func accountsFromStorageDeprecated(items []account, appOrg model.ApplicationOrga
 		res[i] = accountFromStorageDeprecated(item, appOrg)
 	}
 	return res
+}
+
+func accountToStorage(item *model.Account) *tenantAccount {
+	id := item.ID
+	orgID := item.OrgID
+	orgAppsMemberships := orgAppsMembershipsToStorage(item.OrgAppsMemberships)
+	scopes := item.Scopes
+	authTypes := accountAuthTypesToStorage(item.AuthTypes)
+	mfaTypes := mfaTypesToStorage(item.MFATypes)
+	username := item.Username
+	externalIDs := item.ExternalIDs
+	systemConfigs := item.SystemConfigs
+	profile := profileToStorage(item.Profile)
+	devices := accountDevicesToStorage(item)
+	anonymous := item.Anonymous
+	privacy := item.Privacy
+	verified := item.Verified
+	dateCreated := item.DateCreated
+	dateUpdated := item.DateUpdated
+	lastLoginDate := item.LastLoginDate
+	lastAccessTokenDate := item.LastAccessTokenDate
+
+	return &tenantAccount{ID: id, OrgID: orgID, OrgAppsMemberships: orgAppsMemberships,
+		Scopes: scopes, AuthTypes: authTypes, MFATypes: mfaTypes, Username: username,
+		ExternalIDs: externalIDs, SystemConfigs: systemConfigs, Profile: profile, Devices: devices,
+		Anonymous: anonymous, Privacy: privacy, Verified: verified, DateCreated: dateCreated,
+		DateUpdated: dateUpdated, LastLoginDate: lastLoginDate, LastAccessTokenDate: lastAccessTokenDate}
 }
 
 func accountToStorageDeprecated(item *model.Account) *account {

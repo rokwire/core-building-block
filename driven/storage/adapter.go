@@ -1629,9 +1629,9 @@ func (sa *Adapter) findStorageAccount(context TransactionContext, key string, id
 
 // InsertAccount inserts an account
 func (sa *Adapter) InsertAccount(context TransactionContext, account model.Account) (*model.Account, error) {
-	storageAccount := accountToStorageDeprecated(&account)
+	storageAccount := accountToStorage(&account)
 
-	_, err := sa.db.accounts.InsertOneWithContext(context, storageAccount)
+	_, err := sa.db.tenantsAccounts.InsertOneWithContext(context, storageAccount)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeAccount, nil, err)
 	}
