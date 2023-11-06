@@ -1354,27 +1354,27 @@ func (a *Auth) getProfileBBData(authType model.AuthType, identifier string, l *l
 func (a *Auth) registerUser(context storage.TransactionContext, authType model.AuthType, userIdentifier string, accountAuthTypeParams map[string]interface{},
 	appOrg model.ApplicationOrganization, credential *model.Credential, externalIDs map[string]string, profile model.Profile, privacy model.Privacy, preferences map[string]interface{},
 	username string, permissionNames []string, roleIDs []string, groupIDs []string, scopes []string, creatorPermissions []string, clientVersion *string, l *logs.Log) (*model.AccountAuthType, error) {
-	/*
-		//External and anonymous auth is automatically verified, otherwise verified if credential has been verified previously
-		unverified := true
-		if creatorPermissions == nil {
-			if authType.IsExternal || authType.IsAnonymous {
-				unverified = false
-			} else if credential != nil {
-				unverified = !credential.Verified
-			}
-		}
 
-		accountAuthType, err := a.constructAccount(context, authType, userIdentifier, accountAuthTypeParams, appOrg, credential,
-			unverified, externalIDs, profile, privacy, preferences, username, permissionNames, roleIDs, groupIDs, scopes, creatorPermissions, clientVersion, l)
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeAccount, nil, err)
+	//External and anonymous auth is automatically verified, otherwise verified if credential has been verified previously
+	unverified := true
+	if creatorPermissions == nil {
+		if authType.IsExternal || authType.IsAnonymous {
+			unverified = false
+		} else if credential != nil {
+			unverified = !credential.Verified
 		}
+	}
 
-		err = a.storeNewAccountInfo(context, accountAuthType.Account, credential, profile)
-		if err != nil {
-			return nil, errors.WrapErrorAction("storing", "new account information", nil, err)
-		} */
+	accountAuthType, err := a.constructAccount(context, authType, userIdentifier, accountAuthTypeParams, appOrg, credential,
+		unverified, externalIDs, profile, privacy, preferences, username, permissionNames, roleIDs, groupIDs, scopes, creatorPermissions, clientVersion, l)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeAccount, nil, err)
+	}
+
+	err = a.storeNewAccountInfo(context, accountAuthType.Account, credential, profile)
+	if err != nil {
+		return nil, errors.WrapErrorAction("storing", "new account information", nil, err)
+	}
 
 	return accountAuthType, nil
 }
@@ -1451,9 +1451,23 @@ func (a *Auth) constructAccount(context storage.TransactionContext, authType mod
 		scopes = nil
 	}
 
-	account := model.Account{ID: accountID.String(), AppOrg: appOrg, Permissions: permissions,
-		Roles: model.AccountRolesFromAppOrgRoles(roles, true, adminSet), Groups: model.AccountGroupsFromAppOrgGroups(groups, true, adminSet), Scopes: scopes, AuthTypes: authTypes,
-		ExternalIDs: externalIDs, Preferences: preferences, Profile: profile, Privacy: privacy, Username: username, DateCreated: time.Now(), MostRecentClientVersion: clientVersion}
+	orgID := appOrg.Organization.ID
+
+	orgAppMembership := model.OrgAppMembership{ID: uuid.NewString(), AppOrg: appOrg,
+		Permissions: permissions, Roles: model.AccountRolesFromAppOrgRoles(roles, true, adminSet),
+		Groups: model.AccountGroupsFromAppOrgGroups(groups, true, adminSet), Preferences: preferences,
+		MostRecentClientVersion: clientVersion}
+	orgAppsMemberships := []model.OrgAppMembership{orgAppMembership}
+
+	account := model.Account{ID: accountID.String(), OrgID: orgID, OrgAppsMemberships: orgAppsMemberships,
+		AppOrg:                  orgAppMembership.AppOrg,                  //current
+		Permissions:             orgAppMembership.Permissions,             //current
+		Roles:                   orgAppMembership.Roles,                   //current
+		Groups:                  orgAppMembership.Groups,                  //current
+		Preferences:             orgAppMembership.Preferences,             //current
+		MostRecentClientVersion: orgAppMembership.MostRecentClientVersion, //current
+		Scopes:                  scopes, AuthTypes: authTypes,
+		ExternalIDs: externalIDs, Profile: profile, Privacy: privacy, Username: username, DateCreated: time.Now()}
 
 	accountAuthType.Account = account
 	return accountAuthType, nil
