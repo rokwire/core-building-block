@@ -235,15 +235,26 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 		return nil, nil, nil, nil, errors.WrapErrorAction("logging in", "external user", nil, err)
 	}
 
-	//2. check if the user exists
-	account, err := a.storage.FindAccount(nil, appOrg.ID, authType.ID, externalUser.Identifier)
+	//2. find the account for the org and the user identity
+	account, err := a.storage.FindAccountByOrgAndIdentifier(nil, appOrg.Organization.ID, authType.ID, externalUser.Identifier, appOrg.ID)
 	if err != nil {
-		return nil, nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+		return nil, nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err) //TODO add args..
 	}
 	a.setLogContext(account, l)
 
-	canSignIn := a.canSignIn(account, authType.ID, externalUser.Identifier)
-	if canSignIn {
+	//3. check if it is "sign-in" or "org-sign-up" or "app-sign-up"
+	operation, err := a.determineOperationExternal(account, appOrg.ID, l)
+	if err != nil {
+		return nil, nil, nil, nil, errors.WrapErrorAction(logutils.ActionVerify, "determine operation external", nil, err)
+	}
+	//4. apply operation
+	switch operation {
+	case "sign-in":
+		canSignIn := a.canSignInV2(account, authType.ID, externalUser.Identifier, appOrg.ID)
+		if !canSignIn {
+			return nil, nil, nil, nil, errors.Newf("cannot sign in %s %s", authType.ID, externalUser.Identifier)
+		}
+
 		//account exists
 		accountAuthType, err = a.applySignInExternal(account, authType, appOrg, *externalUser, externalCreds, l)
 		if err != nil {
@@ -251,19 +262,37 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 		}
 		mfaTypes = account.GetVerifiedMFATypes()
 		externalIDs = account.ExternalIDs
-	} else if !admin {
+
+		//TODO: make sure we do not return any refresh tokens in extParams
+		return accountAuthType, extParams, mfaTypes, externalIDs, nil
+	case "app-sign-up":
+		if admin {
+			return nil, nil, nil, nil, errors.ErrorData(logutils.StatusInvalid, "sign up", &logutils.FieldArgs{"identifier": externalUser.Identifier,
+				"auth_type": authType.Code, "app_org_id": appOrg.ID, "admin": true}).SetStatus(utils.ErrorStatusNotAllowed)
+		}
+
+		//We have prepared this operation as it is based on the tenants accounts but for now we disable it
+		//as we do not use it(yet) and better not to introduce additional complexity.
+		//Also this would trigger client updates as well for supporting this
+		return nil, nil, nil, nil, errors.New("app-sign-up operation is not supported")
+	case "org-sign-up":
+		if admin {
+			return nil, nil, nil, nil, errors.ErrorData(logutils.StatusInvalid, "sign up", &logutils.FieldArgs{"identifier": externalUser.Identifier,
+				"auth_type": authType.Code, "app_org_id": appOrg.ID, "admin": true}).SetStatus(utils.ErrorStatusNotAllowed)
+		}
+
 		//user does not exist, we need to register it
-		accountAuthType, err = a.applySignUpExternal(nil, authType, appOrg, *externalUser, externalCreds, regProfile, privacy, regPreferences, username, clientVersion, l)
+		accountAuthType, err = a.applyOrgSignUpExternal(nil, authType, appOrg, *externalUser, externalCreds, regProfile, privacy, regPreferences, username, clientVersion, l)
 		if err != nil {
 			return nil, nil, nil, nil, errors.WrapErrorAction(logutils.ActionApply, "external sign up", nil, err)
 		}
 		externalIDs = externalUser.ExternalIDs
-	} else {
-		return nil, nil, nil, nil, errors.ErrorData(logutils.StatusInvalid, "sign up", &logutils.FieldArgs{"identifier": externalUser.Identifier, "auth_type": authType.Code, "app_org_id": appOrg.ID, "admin": true}).SetStatus(utils.ErrorStatusNotAllowed)
+
+		//TODO: make sure we do not return any refresh tokens in extParams
+		return accountAuthType, extParams, mfaTypes, externalIDs, nil
 	}
 
-	//TODO: make sure we do not return any refresh tokens in extParams
-	return accountAuthType, extParams, mfaTypes, externalIDs, nil
+	return nil, nil, nil, nil, errors.Newf("not supported operation - internal auth type")
 }
 
 func (a *Auth) applySignInExternal(account *model.Account, authType model.AuthType, appOrg model.ApplicationOrganization,
@@ -298,7 +327,7 @@ func (a *Auth) applySignInExternal(account *model.Account, authType model.AuthTy
 	return accountAuthType, nil
 }
 
-func (a *Auth) applySignUpExternal(context storage.TransactionContext, authType model.AuthType, appOrg model.ApplicationOrganization, externalUser model.ExternalSystemUser,
+func (a *Auth) applyOrgSignUpExternal(context storage.TransactionContext, authType model.AuthType, appOrg model.ApplicationOrganization, externalUser model.ExternalSystemUser,
 	externalCreds string, regProfile model.Profile, privacy model.Privacy, regPreferences map[string]interface{}, username string, clientVersion *string, l *logs.Log) (*model.AccountAuthType, error) {
 	var accountAuthType *model.AccountAuthType
 
@@ -949,9 +978,8 @@ func (a *Auth) determineOperationInternal(account *model.Account, desiredAppOrgI
 	return a.determineOperation(account, desiredAppOrgID, l)
 }
 
-func (a *Auth) determineOperationExternal() (string, error) {
-	//TODO
-	return "", nil
+func (a *Auth) determineOperationExternal(account *model.Account, desiredAppOrgID string, l *logs.Log) (string, error) {
+	return a.determineOperation(account, desiredAppOrgID, l)
 }
 
 // determine operation
