@@ -119,6 +119,19 @@ type Account struct {
 	LastAccessTokenDate *time.Time
 }
 
+// HasAppMembership checks if there is app membership
+func (a Account) HasAppMembership(appOrgID string) bool {
+	if len(a.OrgAppsMemberships) == 0 {
+		return false
+	}
+	for _, oam := range a.OrgAppsMemberships {
+		if oam.AppOrg.ID == appOrgID {
+			return true
+		}
+	}
+	return false
+}
+
 // GetAccountAuthTypeByID finds account auth type by id
 func (a Account) GetAccountAuthTypeByID(ID string) *AccountAuthType {
 	for _, aat := range a.AuthTypes {

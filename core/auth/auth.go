@@ -630,31 +630,47 @@ func (a *Auth) applyAuthType(authType model.AuthType, appOrg model.ApplicationOr
 	}
 	a.setLogContext(account, l)
 
-	canSignIn := a.canSignIn(account, authType.ID, userIdentifier)
-
-	//check if it is "sign in" or "org sign up" or "app sign up"
-	isSignUp, err := a.isSignUp(canSignIn, params, l)
+	//check if it is "sign-in" or "org-sign-up" or "app-sign-up"
+	operation, err := a.determineOperationInternal(account, appOrg.ID, params, l)
 	if err != nil {
-		return "", nil, nil, nil, errors.WrapErrorAction(logutils.ActionVerify, "is sign up", nil, err)
+		return "", nil, nil, nil, errors.WrapErrorAction(logutils.ActionVerify, "determine operation internal", nil, err)
 	}
-	if isSignUp {
+	switch operation {
+	case "sign-in":
+		canSignIn := a.canSignIn(account, authType.ID, userIdentifier)
+		if !canSignIn {
+			return "", nil, nil, nil, errors.Newf("cannot sign in %s %s", authType.ID, userIdentifier)
+		}
+
+		///apply sign in
+		message, accountAuthType, mfaTypes, externalIDs, err := a.applySignIn(authImpl, authType, account, userIdentifier, creds, l)
+		if err != nil {
+			return "", nil, nil, nil, err
+		}
+		return message, accountAuthType, mfaTypes, externalIDs, nil
+	case "app-sign-up":
 		if admin {
 			return "", nil, nil, nil, errors.ErrorData(logutils.StatusInvalid, "sign up", &logutils.FieldArgs{"identifier": userIdentifier,
 				"auth_type": authType.Code, "app_org_id": appOrg.ID, "admin": true}).SetStatus(utils.ErrorStatusNotAllowed)
 		}
-		message, accountAuthType, err := a.applySignUp(authImpl, account, authType, appOrg, userIdentifier, creds, params, clientVersion,
+
+		//TODO - to be implemented
+		return "", nil, nil, nil, nil
+	case "org-sign-up":
+		if admin {
+			return "", nil, nil, nil, errors.ErrorData(logutils.StatusInvalid, "sign up", &logutils.FieldArgs{"identifier": userIdentifier,
+				"auth_type": authType.Code, "app_org_id": appOrg.ID, "admin": true}).SetStatus(utils.ErrorStatusNotAllowed)
+		}
+
+		message, accountAuthType, err := a.applyOrgSignUp(authImpl, account, authType, appOrg, userIdentifier, creds, params, clientVersion,
 			regProfile, privacy, regPreferences, username, l)
 		if err != nil {
 			return "", nil, nil, nil, err
 		}
 		return message, accountAuthType, nil, nil, nil
 	}
-	///apply sign in
-	message, accountAuthType, mfaTypes, externalIDs, err := a.applySignIn(authImpl, authType, account, userIdentifier, creds, l)
-	if err != nil {
-		return "", nil, nil, nil, err
-	}
-	return message, accountAuthType, mfaTypes, externalIDs, nil
+
+	return "", nil, nil, nil, errors.Newf("not supported operation - internal auth type")
 }
 
 func (a *Auth) applySignIn(authImpl authType, authType model.AuthType, account *model.Account, userIdentifier string,
@@ -736,7 +752,7 @@ func (a *Auth) checkCredentials(authImpl authType, authType model.AuthType, acco
 	return message, nil
 }
 
-func (a *Auth) applySignUp(authImpl authType, account *model.Account, authType model.AuthType, appOrg model.ApplicationOrganization, userIdentifier string, creds string,
+func (a *Auth) applyOrgSignUp(authImpl authType, account *model.Account, authType model.AuthType, appOrg model.ApplicationOrganization, userIdentifier string, creds string,
 	params string, clientVersion *string, regProfile model.Profile, privacy model.Privacy, regPreferences map[string]interface{}, username string, l *logs.Log) (string, *model.AccountAuthType, error) {
 	if account != nil {
 		err := a.handleAccountAuthTypeConflict(*account, authType.ID, userIdentifier, true)
@@ -878,34 +894,64 @@ func (a *Auth) canSignIn(account *model.Account, authTypeID string, userIdentifi
 	return false
 }
 
-// isSignUp checks if the operation is sign in or sign up
+// determineOperationInternal determine the operation
 //
-//	first check if the client has set sign_up field
+//	first check if the client has set sign_up field - first priority
 //	if sign_up field has not been sent then check if the user exists
-func (a *Auth) isSignUp(accountExists bool, params string, l *logs.Log) (bool, error) {
-	//check if sign_up field has been passed
-	useSignUpFieldCheck := strings.Contains(params, "sign_up")
+func (a *Auth) determineOperationInternal(account *model.Account, desiredAppOrgID string, clientParams string, l *logs.Log) (string, error) {
+	//check if sign_up field has been passed - first priority
+	useSignUpFieldCheck := strings.Contains(clientParams, "sign_up")
 
 	if useSignUpFieldCheck {
 		type signUpParams struct {
 			SignUp bool `json:"sign_up"`
 		}
 		var sParams signUpParams
-		err := json.Unmarshal([]byte(params), &sParams)
+		err := json.Unmarshal([]byte(clientParams), &sParams)
 		if err != nil {
-			return false, errors.WrapErrorAction(logutils.ActionUnmarshal, "sign up params", nil, err)
+			return "", errors.WrapErrorAction(logutils.ActionUnmarshal, "sign up params", nil, err)
 		}
 
-		return sParams.SignUp, nil
+		if !sParams.SignUp {
+			return "sign-in", nil //the client wants to apply sign-in operation
+		} else {
+			//the client wants to apply sign up operation but we must analize which one is the correct
+			determinedOperation, err := a.determineOperation(account, desiredAppOrgID, l)
+			if err != nil {
+				return "", errors.WrapErrorAction(logutils.ActionApply, "determine operation - internal - client priority", nil, err)
+			}
+			if determinedOperation == "org-sign-up" || determinedOperation == "app-sign-up" {
+				return determinedOperation, nil
+			} else {
+				return "", errors.New("cannot apply sign up operation")
+			}
+		}
 	}
 
-	if accountExists {
-		//the user exists, so return false
-		return false, nil
+	//if the client has not specified then decide based on that if the user exists
+	return a.determineOperation(account, desiredAppOrgID, l)
+}
+
+func (a *Auth) determineOperationExternal() (string, error) {
+	//TODO
+	return "", nil
+}
+
+// determine operation
+//
+//	"sign-in" or "org-sign-up" or "app-sign-up"
+func (a *Auth) determineOperation(account *model.Account, desiredAppOrgID string, l *logs.Log) (string, error) {
+	if account == nil {
+		return "org-sign-up", nil //first registration for this user identity and organization
 	}
 
-	//the user does not exists, so it has to register
-	return true, nil
+	hasAppMembership := account.HasAppMembership(desiredAppOrgID)
+	if !hasAppMembership {
+		return "app-sign-up", nil //the user identity has registration in the orgnization but does not have for the application
+	}
+
+	//the user identity has both org registration and app membership
+	return "sign-in", nil
 }
 
 func (a *Auth) getAccount(authenticationType string, userIdentifier string, apiKey string, appTypeIdentifier string, orgID string) (*model.Account, string, error) {
