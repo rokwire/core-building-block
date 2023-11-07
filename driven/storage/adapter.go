@@ -1597,10 +1597,13 @@ func (sa *Adapter) FindAccountsByUsername(context TransactionContext, appOrg *mo
 		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, nil)
 	}
 
-	filter := bson.D{primitive.E{Key: "app_org_id", Value: appOrg.ID}, primitive.E{Key: "username", Value: username}}
+	filter := bson.D{
+		primitive.E{Key: "org_apps_memberships.app_org_id", Value: bson.M{"$in": appOrg.ID}},
+		primitive.E{Key: "username", Value: username},
+	}
 
-	var accountResult []account
-	err := sa.db.accounts.Find(filter, &accountResult, nil)
+	var accountResult []tenantAccount
+	err := sa.db.tenantsAccounts.Find(filter, &accountResult, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"app_org_id": appOrg.ID, "username": username}, err)
 	}
@@ -1608,7 +1611,13 @@ func (sa *Adapter) FindAccountsByUsername(context TransactionContext, appOrg *mo
 		sa.logger.WarnWithFields("duplicate username", logutils.Fields{"number": len(accountResult), "app_org_id": appOrg.ID, "username": username})
 	}
 
-	accounts := accountsFromStorageDeprecated(accountResult, *appOrg)
+	//all memberships applications organizations - from cache
+	allAppsOrgs, err := sa.getCachedApplicationOrganizations()
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeApplicationOrganization, nil, err)
+	}
+
+	accounts := accountsFromStorage(accountResult, nil, allAppsOrgs)
 	return accounts, nil
 }
 

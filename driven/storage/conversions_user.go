@@ -129,6 +129,18 @@ func accountFromStorage(item tenantAccount, currentAppOrg *string, membershipsAp
 		LastAccessTokenDate: lastAccessTokenDate}
 }
 
+func accountsFromStorage(items []tenantAccount, currentAppOrg *string, membershipsAppsOrgs []model.ApplicationOrganization) []model.Account {
+	if len(items) == 0 {
+		return make([]model.Account, 0)
+	}
+
+	res := make([]model.Account, len(items))
+	for i, item := range items {
+		res[i] = accountFromStorage(item, currentAppOrg, membershipsAppsOrgs)
+	}
+	return res
+}
+
 func accountFromStorageDeprecated(item account, appOrg model.ApplicationOrganization) model.Account {
 	roles := accountRolesFromStorage(item.Roles, appOrg)
 	groups := accountGroupsFromStorage(item.Groups, appOrg)
