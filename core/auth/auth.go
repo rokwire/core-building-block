@@ -649,7 +649,11 @@ func (a *Auth) applyAuthType(authType model.AuthType, appOrg model.ApplicationOr
 		return message, accountAuthType, nil, nil, nil
 	}
 	///apply sign in
-	return a.applySignIn(authImpl, authType, account, userIdentifier, creds, l)
+	message, accountAuthType, mfaTypes, externalIDs, err := a.applySignIn(authImpl, authType, account, userIdentifier, creds, l)
+	if err != nil {
+		return "", nil, nil, nil, err
+	}
+	return message, accountAuthType, mfaTypes, externalIDs, nil
 }
 
 func (a *Auth) applySignIn(authImpl authType, authType model.AuthType, account *model.Account, userIdentifier string,
