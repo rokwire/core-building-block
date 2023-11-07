@@ -623,8 +623,8 @@ func (a *Auth) applyAuthType(authType model.AuthType, appOrg model.ApplicationOr
 		}
 	}
 
-	//find the account for the org, app and the identifier
-	account, err := a.storage.FindAccountByOrgAppIdentifier(nil, appOrg.Organization.ID, appOrg.ID, authType.ID, userIdentifier)
+	//find the account for the org and the user identity
+	account, err := a.storage.FindAccountByOrgAndIdentifier(nil, appOrg.Organization.ID, authType.ID, userIdentifier)
 	if err != nil {
 		return "", nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err) //TODO add args..
 	}
@@ -632,7 +632,7 @@ func (a *Auth) applyAuthType(authType model.AuthType, appOrg model.ApplicationOr
 
 	canSignIn := a.canSignIn(account, authType.ID, userIdentifier)
 
-	//check if it is sign in or sign up
+	//check if it is "sign in" or "org sign up" or "app sign up"
 	isSignUp, err := a.isSignUp(canSignIn, params, l)
 	if err != nil {
 		return "", nil, nil, nil, errors.WrapErrorAction(logutils.ActionVerify, "is sign up", nil, err)

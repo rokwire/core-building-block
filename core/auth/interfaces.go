@@ -476,7 +476,7 @@ type Storage interface {
 	///
 
 	//Accounts
-	FindAccountByOrgAppIdentifier(context storage.TransactionContext, orgID string, appOrgID string, authTypeID string, accountAuthTypeIdentifier string) (*model.Account, error)
+	FindAccountByOrgAndIdentifier(context storage.TransactionContext, orgID string, authTypeID string, accountAuthTypeIdentifier string) (*model.Account, error)
 	FindAccount(context storage.TransactionContext, appOrgID string, authTypeID string, accountAuthTypeIdentifier string) (*model.Account, error)
 	FindAccountByID(context storage.TransactionContext, id string) (*model.Account, error)
 	FindAccountsByUsername(context storage.TransactionContext, appOrg *model.ApplicationOrganization, username string) ([]model.Account, error)

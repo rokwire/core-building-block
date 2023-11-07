@@ -1229,11 +1229,10 @@ func (sa *Adapter) FindSessionsLazy(appID string, orgID string) ([]model.LoginSe
 	return sessions, nil
 }
 
-// FindAccountByOrgAppIdentifier finds an account for org, app and user identity
-func (sa *Adapter) FindAccountByOrgAppIdentifier(context TransactionContext, orgID string, appOrgID string, authTypeID string, accountAuthTypeIdentifier string) (*model.Account, error) {
+// FindAccountByOrgAndIdentifier finds an account for org and user identity
+func (sa *Adapter) FindAccountByOrgAndIdentifier(context TransactionContext, orgID string, authTypeID string, accountAuthTypeIdentifier string) (*model.Account, error) {
 	filter := bson.D{
 		primitive.E{Key: "org_id", Value: orgID},
-		primitive.E{Key: "org_apps_memberships.app_org_id", Value: appOrgID},
 		primitive.E{Key: "auth_types.auth_type_id", Value: authTypeID},
 		primitive.E{Key: "auth_types.identifier", Value: accountAuthTypeIdentifier}}
 	var accounts []tenantAccount
@@ -1260,7 +1259,7 @@ func (sa *Adapter) FindAccountByOrgAppIdentifier(context TransactionContext, org
 		return nil, errors.WrapErrorAction(logutils.ActionCount, "does not match memberships apps orgs ids count", nil, err)
 	}
 
-	modelAccount := accountFromStorage(account, &appOrgID, appsOrgs)
+	modelAccount := accountFromStorage(account, nil, appsOrgs)
 	return &modelAccount, nil
 }
 
