@@ -1578,9 +1578,11 @@ func (a *Auth) storeNewAccountInfo(context storage.TransactionContext, account m
 	}
 
 	//create credential
-	err = a.storage.InsertCredential(context, credential)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeCredential, nil, err)
+	if credential != nil {
+		err = a.storage.InsertCredential(context, credential)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionInsert, model.TypeCredential, nil, err)
+		}
 	}
 
 	return nil
