@@ -637,7 +637,7 @@ func (a *Auth) applyAuthType(authType model.AuthType, appOrg model.ApplicationOr
 	}
 	switch operation {
 	case "sign-in":
-		canSignIn := a.canSignIn(account, authType.ID, userIdentifier)
+		canSignIn := a.canSignInV2(account, authType.ID, userIdentifier, appOrg.ID)
 		if !canSignIn {
 			return "", nil, nil, nil, errors.Newf("cannot sign in %s %s", authType.ID, userIdentifier)
 		}
@@ -654,8 +654,10 @@ func (a *Auth) applyAuthType(authType model.AuthType, appOrg model.ApplicationOr
 				"auth_type": authType.Code, "app_org_id": appOrg.ID, "admin": true}).SetStatus(utils.ErrorStatusNotAllowed)
 		}
 
-		//TODO - to be implemented
-		return "", nil, nil, nil, nil
+		//We have prepared this operation as it is based on the tenants accounts but for now we disable it
+		//as we do not use it(yet) and better not to introduce additional complexity.
+		//Also this would trigger client updates as well for supporting this
+		return "", nil, nil, nil, errors.New("app-sign-up operation is not supported")
 	case "org-sign-up":
 		if admin {
 			return "", nil, nil, nil, errors.ErrorData(logutils.StatusInvalid, "sign up", &logutils.FieldArgs{"identifier": userIdentifier,
@@ -885,8 +887,23 @@ func (a *Auth) validateAPIKey(apiKey string, appID string) error {
 	return nil
 }
 
+// deprecated
 func (a *Auth) canSignIn(account *model.Account, authTypeID string, userIdentifier string) bool {
 	if account != nil {
+		aat := account.GetAccountAuthType(authTypeID, userIdentifier)
+		return aat == nil || !aat.Linked || !aat.Unverified
+	}
+
+	return false
+}
+
+func (a *Auth) canSignInV2(account *model.Account, authTypeID string, userIdentifier string, desireAppOrgID string) bool {
+	if account != nil {
+		hasAppMembership := account.HasAppMembership(desireAppOrgID)
+		if !hasAppMembership {
+			return false
+		}
+
 		aat := account.GetAccountAuthType(authTypeID, userIdentifier)
 		return aat == nil || !aat.Linked || !aat.Unverified
 	}
