@@ -1614,15 +1614,15 @@ func (sa *Adapter) FindAccountsByUsername(context TransactionContext, appOrg *mo
 
 // FindAccountByID finds an account by id
 func (sa *Adapter) FindAccountByID(context TransactionContext, id string) (*model.Account, error) {
-	return sa.findAccount(context, "_id", id)
+	return sa.findAccount(context, "_id", id, nil)
 }
 
 // FindAccountByAuthTypeID finds an account by auth type id
-func (sa *Adapter) FindAccountByAuthTypeID(context TransactionContext, id string) (*model.Account, error) {
-	return sa.findAccount(context, "auth_types.id", id)
+func (sa *Adapter) FindAccountByAuthTypeID(context TransactionContext, id string, currentAppOrgID *string) (*model.Account, error) {
+	return sa.findAccount(context, "auth_types.id", id, currentAppOrgID)
 }
 
-func (sa *Adapter) findAccount(context TransactionContext, key string, id string) (*model.Account, error) {
+func (sa *Adapter) findAccount(context TransactionContext, key string, id string, currentAppOrgID *string) (*model.Account, error) {
 	account, err := sa.findStorageAccount(context, key, id)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
@@ -1645,7 +1645,7 @@ func (sa *Adapter) findAccount(context TransactionContext, key string, id string
 		return nil, errors.WrapErrorAction(logutils.ActionCount, "does not match memberships apps orgs ids count", nil, err)
 	}
 
-	modelAccount := accountFromStorage(*account, nil, appsOrgs)
+	modelAccount := accountFromStorage(*account, currentAppOrgID, appsOrgs)
 	return &modelAccount, nil
 
 }

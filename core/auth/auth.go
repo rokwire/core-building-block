@@ -529,7 +529,8 @@ func (a *Auth) updateExternalUserIfNeeded(accountAuthType model.AccountAuthType,
 
 	transaction := func(context storage.TransactionContext) error {
 		//1. first find the account record
-		account, err := a.storage.FindAccountByAuthTypeID(context, accountAuthType.ID)
+		currentAppOrgID := appOrg.ID
+		account, err := a.storage.FindAccountByAuthTypeID(context, accountAuthType.ID, &currentAppOrgID)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 		}
@@ -576,11 +577,11 @@ func (a *Auth) updateExternalUserIfNeeded(accountAuthType model.AccountAuthType,
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionGet, "external authorization", nil, err)
 		}
-		rolesUpdated, err := a.updateExternalAccountRoles(account, roles)
+		rolesUpdated, err := a.updateExternalAccountRoles(account, roles, currentAppOrgID)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountRoles, nil, err)
 		}
-		groupsUpdated, err := a.updateExternalAccountGroups(account, groups)
+		groupsUpdated, err := a.updateExternalAccountGroups(account, groups, currentAppOrgID)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountGroups, nil, err)
 		}
@@ -2273,7 +2274,7 @@ func (a *Auth) getExternalUserAuthorization(externalUser model.ExternalSystemUse
 	return roles, groups, nil
 }
 
-func (a *Auth) updateExternalAccountRoles(account *model.Account, newExternalRoleIDs []string) (bool, error) {
+func (a *Auth) updateExternalAccountRoles(account *model.Account, newExternalRoleIDs []string, currentAppOrgID string) (bool, error) {
 	if account == nil {
 		return false, errors.ErrorData(logutils.StatusInvalid, model.TypeAccount, logutils.StringArgs("nil"))
 	}
@@ -2304,11 +2305,23 @@ func (a *Auth) updateExternalAccountRoles(account *model.Account, newExternalRol
 	}
 	newRoles = append(newRoles, model.AccountRolesFromAppOrgRoles(addedRoles, true, false)...)
 
+	//set the new roles
 	account.Roles = newRoles
+	index := -1
+	for i, c := range account.OrgAppsMemberships {
+		if c.AppOrg.ID == currentAppOrgID {
+			index = i
+			break
+		}
+	}
+	if index != -1 {
+		account.OrgAppsMemberships[index].Roles = newRoles
+	}
+
 	return updated, nil
 }
 
-func (a *Auth) updateExternalAccountGroups(account *model.Account, newExternalGroupIDs []string) (bool, error) {
+func (a *Auth) updateExternalAccountGroups(account *model.Account, newExternalGroupIDs []string, currentAppOrgID string) (bool, error) {
 	if account == nil {
 		return false, errors.ErrorData(logutils.StatusInvalid, model.TypeAccount, logutils.StringArgs("nil"))
 	}
@@ -2339,6 +2352,17 @@ func (a *Auth) updateExternalAccountGroups(account *model.Account, newExternalGr
 	newGroups = append(newGroups, model.AccountGroupsFromAppOrgGroups(addedGroups, true, false)...)
 
 	account.Groups = newGroups
+	index := -1
+	for i, c := range account.OrgAppsMemberships {
+		if c.AppOrg.ID == currentAppOrgID {
+			index = i
+			break
+		}
+	}
+	if index != -1 {
+		account.OrgAppsMemberships[index].Groups = newGroups
+	}
+
 	return updated, nil
 }
 

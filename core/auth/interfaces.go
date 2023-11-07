@@ -502,7 +502,7 @@ type Storage interface {
 	DeleteServiceAccountCredential(accountID string, credID string) error
 
 	//AccountAuthTypes
-	FindAccountByAuthTypeID(context storage.TransactionContext, id string) (*model.Account, error)
+	FindAccountByAuthTypeID(context storage.TransactionContext, id string, currentAppOrgID *string) (*model.Account, error)
 	InsertAccountAuthType(item model.AccountAuthType) error
 	UpdateAccountAuthType(item model.AccountAuthType) error
 	DeleteAccountAuthType(context storage.TransactionContext, item model.AccountAuthType) error
