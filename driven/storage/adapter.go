@@ -3301,7 +3301,7 @@ func (sa *Adapter) UpdateAccountPrivacy(context TransactionContext, accountID st
 		}},
 	}
 
-	res, err := sa.db.accounts.UpdateManyWithContext(context, filter, privacyUpdate, nil)
+	res, err := sa.db.tenantsAccounts.UpdateManyWithContext(context, filter, privacyUpdate, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypePrivacy, nil, err)
 	}
