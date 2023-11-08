@@ -24,9 +24,9 @@ import (
 	"github.com/rokwire/logging-library-go/v2/logutils"
 )
 
-func (app *application) serGetProfile(accountID string) (*model.Profile, error) {
+func (app *application) serGetProfile(cOrgID string, cAppID string, accountID string) (*model.Profile, error) {
 	//find the account
-	account, err := app.storage.FindAccountByID(nil, accountID)
+	account, err := app.storage.FindAccountByIDV2(nil, cOrgID, cAppID, accountID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}

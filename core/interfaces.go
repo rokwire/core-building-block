@@ -26,7 +26,7 @@ import (
 type Services interface {
 	SerDeleteAccount(id string) error
 	SerGetAccount(cOrgID string, cAppID string, accountID string) (*model.Account, error)
-	SerGetProfile(accountID string) (*model.Profile, error)
+	SerGetProfile(cOrgID string, cAppID string, accountID string) (*model.Profile, error)
 	SerGetPreferences(accountID string) (map[string]interface{}, error)
 	SerGetAccountSystemConfigs(accountID string) (map[string]interface{}, error)
 	SerUpdateAccountPreferences(id string, appID string, orgID string, anonymous bool, preferences map[string]interface{}, l *logs.Log) (bool, error)

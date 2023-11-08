@@ -627,7 +627,7 @@ func (h ServicesApisHandler) removeMFAType(l *logs.Log, r *http.Request, claims 
 }
 
 func (h ServicesApisHandler) getProfile(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	profile, err := h.coreAPIs.Services.SerGetProfile(claims.Subject)
+	profile, err := h.coreAPIs.Services.SerGetProfile(claims.OrgID, claims.AppID, claims.Subject)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionGet, model.TypeProfile, nil, err, http.StatusInternalServerError, true)
 	}
