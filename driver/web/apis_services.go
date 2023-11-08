@@ -955,13 +955,13 @@ func (h ServicesApisHandler) addFollow(l *logs.Log, r *http.Request, claims *tok
 	}
 
 	// Check to make sure account exists
-	account, err := h.coreAPIs.Services.SerGetAccount(follow.FollowingId)
+	account, err := h.coreAPIs.Services.SerGetAccount(claims.OrgID, claims.AppID, follow.FollowingId)
 	if err != nil || account == nil {
 		return l.HTTPResponseErrorAction(logutils.ActionInsert, model.TypeFollow, nil, err, http.StatusBadRequest, true)
 	}
 
 	// Check to make sure follower account is public
-	followerAccount, err := h.coreAPIs.Services.SerGetAccount(claims.Subject)
+	followerAccount, err := h.coreAPIs.Services.SerGetAccount(claims.OrgID, claims.AppID, claims.Subject)
 	if err != nil || followerAccount == nil || !followerAccount.Privacy.Public {
 		return l.HTTPResponseErrorAction(logutils.ActionInsert, model.TypeFollow, nil, err, http.StatusBadRequest, true)
 	}
