@@ -3282,7 +3282,7 @@ func (sa *Adapter) UpdateAccountProfile(context TransactionContext, profile mode
 		}},
 	}
 
-	res, err := sa.db.accounts.UpdateManyWithContext(context, filter, profileUpdate, nil)
+	res, err := sa.db.tenantsAccounts.UpdateManyWithContext(context, filter, profileUpdate, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeProfile, nil, err)
 	}
