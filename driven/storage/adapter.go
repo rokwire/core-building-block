@@ -1626,6 +1626,19 @@ func (sa *Adapter) FindAccountByID(context TransactionContext, id string) (*mode
 	return sa.findAccount(context, "_id", id, nil)
 }
 
+// FindAccountByIDV2 finds an account by id
+func (sa *Adapter) FindAccountByIDV2(context TransactionContext, cOrgID string, cAppID string, id string) (*model.Account, error) {
+	currentAppOrg, err := sa.getCachedApplicationOrganization(cAppID, cOrgID)
+	if err != nil {
+		return nil, err
+	}
+	if currentAppOrg == nil {
+		return nil, errors.Newf("cannot find app org object for %s %s", cOrgID, cAppID)
+	}
+
+	return sa.findAccount(context, "_id", id, &currentAppOrg.ID)
+}
+
 // FindAccountByAuthTypeID finds an account by auth type id
 func (sa *Adapter) FindAccountByAuthTypeID(context TransactionContext, id string, currentAppOrgID *string) (*model.Account, error) {
 	return sa.findAccount(context, "auth_types.id", id, currentAppOrgID)

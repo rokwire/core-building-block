@@ -25,7 +25,7 @@ import (
 // Services exposes APIs for the driver adapters
 type Services interface {
 	SerDeleteAccount(id string) error
-	SerGetAccount(accountID string) (*model.Account, error)
+	SerGetAccount(cOrgID string, cAppID string, accountID string) (*model.Account, error)
 	SerGetProfile(accountID string) (*model.Profile, error)
 	SerGetPreferences(accountID string) (map[string]interface{}, error)
 	SerGetAccountSystemConfigs(accountID string) (map[string]interface{}, error)
@@ -166,6 +166,7 @@ type Storage interface {
 	DeleteFollow(context storage.TransactionContext, appID string, orgID string, followingID string, followerID string) error
 
 	FindAccountByID(context storage.TransactionContext, id string) (*model.Account, error)
+	FindAccountByIDV2(context storage.TransactionContext, cOrgID string, cAppID string, id string) (*model.Account, error)
 	FindAccounts(context storage.TransactionContext, limit *int, offset *int, appID string, orgID string, accountID *string, firstName *string, lastName *string, authType *string,
 		authTypeIdentifier *string, anonymous *bool, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error)
 	FindPublicAccounts(context storage.TransactionContext, appID string, orgID string, limit *int, offset *int,

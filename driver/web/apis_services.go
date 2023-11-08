@@ -444,7 +444,7 @@ func (h ServicesApisHandler) deleteAccount(l *logs.Log, r *http.Request, claims 
 }
 
 func (h ServicesApisHandler) getAccount(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	account, err := h.coreAPIs.Services.SerGetAccount(claims.Subject)
+	account, err := h.coreAPIs.Services.SerGetAccount(claims.OrgID, claims.AppID, claims.Subject)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionGet, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}

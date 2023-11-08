@@ -72,6 +72,18 @@ func (app *application) getAccount(context storage.TransactionContext, accountID
 	return account, nil
 }
 
+func (app *application) getAccountV2(context storage.TransactionContext, cOrgID string, cAppID string, accountID string) (*model.Account, error) {
+	//find the account
+	account, err := app.storage.FindAccountByIDV2(context, cOrgID, cAppID, accountID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+	if account == nil {
+		return nil, errors.WrapErrorData(logutils.StatusMissing, model.TypeAccount, nil, err)
+	}
+	return account, nil
+}
+
 func (app *application) getApplicationOrganization(appID string, orgID string) (*model.ApplicationOrganization, error) {
 	appOrg, err := app.storage.FindApplicationOrganization(appID, orgID)
 	if err != nil {

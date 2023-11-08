@@ -288,8 +288,8 @@ func (s *servicesImpl) SerDeleteAccount(id string) error {
 	return s.app.serDeleteAccount(id)
 }
 
-func (s *servicesImpl) SerGetAccount(accountID string) (*model.Account, error) {
-	return s.app.serGetAccount(accountID)
+func (s *servicesImpl) SerGetAccount(cOrgID string, cAppID string, accountID string) (*model.Account, error) {
+	return s.app.serGetAccount(cOrgID, cAppID, accountID)
 }
 
 func (s *servicesImpl) SerGetProfile(accountID string) (*model.Profile, error) {

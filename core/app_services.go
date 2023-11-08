@@ -36,8 +36,8 @@ func (app *application) serGetProfile(accountID string) (*model.Profile, error) 
 	return &profile, nil
 }
 
-func (app *application) serGetAccount(accountID string) (*model.Account, error) {
-	return app.getAccount(nil, accountID)
+func (app *application) serGetAccount(cOrgID string, cAppID string, accountID string) (*model.Account, error) {
+	return app.getAccountV2(nil, cOrgID, cAppID, accountID)
 }
 
 func (app *application) serGetPreferences(accountID string) (map[string]interface{}, error) {
