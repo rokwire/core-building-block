@@ -40,9 +40,9 @@ func (app *application) serGetAccount(cOrgID string, cAppID string, accountID st
 	return app.getAccountV2(nil, cOrgID, cAppID, accountID)
 }
 
-func (app *application) serGetPreferences(accountID string) (map[string]interface{}, error) {
+func (app *application) serGetPreferences(cOrgID string, cAppID string, accountID string) (map[string]interface{}, error) {
 	//find the account
-	account, err := app.storage.FindAccountByID(nil, accountID)
+	account, err := app.storage.FindAccountByIDV2(nil, cOrgID, cAppID, accountID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountPreferences, &logutils.FieldArgs{"account_id": accountID}, err)
 	}

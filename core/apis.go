@@ -296,8 +296,8 @@ func (s *servicesImpl) SerGetProfile(cOrgID string, cAppID string, accountID str
 	return s.app.serGetProfile(cOrgID, cAppID, accountID)
 }
 
-func (s *servicesImpl) SerGetPreferences(accountID string) (map[string]interface{}, error) {
-	return s.app.serGetPreferences(accountID)
+func (s *servicesImpl) SerGetPreferences(cOrgID string, cAppID string, accountID string) (map[string]interface{}, error) {
+	return s.app.serGetPreferences(cOrgID, cAppID, accountID)
 }
 
 func (s *servicesImpl) SerGetAccountSystemConfigs(accountID string) (map[string]interface{}, error) {

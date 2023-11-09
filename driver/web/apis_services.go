@@ -707,7 +707,7 @@ func (h ServicesApisHandler) updateAccountPreferences(l *logs.Log, r *http.Reque
 }
 
 func (h ServicesApisHandler) getPreferences(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	preferences, err := h.coreAPIs.Services.SerGetPreferences(claims.Subject)
+	preferences, err := h.coreAPIs.Services.SerGetPreferences(claims.OrgID, claims.AppID, claims.Subject)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionGet, model.TypeAccountPreferences, nil, err, http.StatusInternalServerError, true)
 	}
