@@ -1948,15 +1948,32 @@ func (sa *Adapter) DeleteServiceAccountCredential(accountID string, credID strin
 
 // UpdateAccountPreferences updates account preferences
 func (sa *Adapter) UpdateAccountPreferences(context TransactionContext, cOrgID string, cAppID string, accountID string, preferences map[string]interface{}) error {
-	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
-	update := bson.D{
-		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "preferences", Value: preferences},
-			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
-		}},
+	//get the app org id from the cache
+	appOrg, err := sa.getCachedApplicationOrganization(cAppID, cOrgID)
+	if err != nil {
+		return err
+	}
+	if appOrg == nil {
+		return errors.Newf("no app org found - update preferences")
 	}
 
-	res, err := sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
+	filter := bson.M{
+		"_id": accountID,
+		"org_apps_memberships": bson.M{
+			"$elemMatch": bson.M{
+				"app_org_id": appOrg.ID,
+			},
+		},
+	}
+
+	update := bson.M{
+		"$set": bson.M{
+			"org_apps_memberships.$.preferences": preferences,
+			"date_updated":                       time.Now().UTC(),
+		},
+	}
+
+	res, err := sa.db.tenantsAccounts.UpdateOneWithContext(context, filter, update, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountPreferences, nil, err)
 	}
