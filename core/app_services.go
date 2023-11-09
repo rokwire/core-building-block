@@ -97,7 +97,7 @@ func (app *application) serUpdateAccountPreferences(id string, appID string, org
 	if anonymous {
 		created := false
 		transaction := func(context storage.TransactionContext) error {
-			//1. verify that the account is for the current app/org
+			/*//1. verify that the account is for the current app/org
 			account, err := app.storage.FindAccountByID(context, id)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountSystemConfigs, &logutils.FieldArgs{"account_id": id}, err)
@@ -113,7 +113,7 @@ func (app *application) serUpdateAccountPreferences(id string, appID string, org
 			err = app.storage.UpdateAccountPreferences(context, id, preferences)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountPreferences, nil, err)
-			}
+			}*/
 			return nil
 		}
 
@@ -124,7 +124,7 @@ func (app *application) serUpdateAccountPreferences(id string, appID string, org
 		return created, nil
 	}
 
-	err := app.storage.UpdateAccountPreferences(nil, id, preferences)
+	err := app.storage.UpdateAccountPreferences(nil, orgID, appID, id, preferences)
 	if err != nil {
 		return false, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountPreferences, nil, err)
 	}

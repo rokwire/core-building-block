@@ -1947,7 +1947,7 @@ func (sa *Adapter) DeleteServiceAccountCredential(accountID string, credID strin
 }
 
 // UpdateAccountPreferences updates account preferences
-func (sa *Adapter) UpdateAccountPreferences(context TransactionContext, accountID string, preferences map[string]interface{}) error {
+func (sa *Adapter) UpdateAccountPreferences(context TransactionContext, cOrgID string, cAppID string, accountID string, preferences map[string]interface{}) error {
 	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
 	update := bson.D{
 		primitive.E{Key: "$set", Value: bson.D{
