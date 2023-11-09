@@ -16,7 +16,6 @@ package core
 
 import (
 	"core-building-block/core/model"
-	"core-building-block/driven/storage"
 
 	"github.com/google/uuid"
 	"github.com/rokwire/logging-library-go/v2/errors"
@@ -94,11 +93,12 @@ func (app *application) serUpdateAccountPrivacy(accountID string, privacy model.
 }
 
 func (app *application) serUpdateAccountPreferences(id string, appID string, orgID string, anonymous bool, preferences map[string]interface{}, l *logs.Log) (bool, error) {
-	if anonymous {
+	//Disable this for now
+	/*if anonymous {
 		created := false
 		transaction := func(context storage.TransactionContext) error {
-			/*//1. verify that the account is for the current app/org
-			account, err := app.storage.FindAccountByID(context, id)
+			//1. verify that the account is for the current app/org
+			account, err := app.storage.FindAccountByIDV2(context, orgID, appID, id)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountSystemConfigs, &logutils.FieldArgs{"account_id": id}, err)
 			}
@@ -110,10 +110,10 @@ func (app *application) serUpdateAccountPreferences(id string, appID string, org
 				}
 				return nil
 			}
-			err = app.storage.UpdateAccountPreferences(context, id, preferences)
+			err = app.storage.UpdateAccountPreferences(context, orgID, appID, id, preferences)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountPreferences, nil, err)
-			}*/
+			}
 			return nil
 		}
 
@@ -122,7 +122,7 @@ func (app *application) serUpdateAccountPreferences(id string, appID string, org
 			return false, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, nil, err)
 		}
 		return created, nil
-	}
+	} */
 
 	err := app.storage.UpdateAccountPreferences(nil, orgID, appID, id, preferences)
 	if err != nil {
