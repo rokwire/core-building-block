@@ -824,7 +824,19 @@ func (a *Auth) applySignUpAdmin(context storage.TransactionContext, authImpl aut
 
 func (a *Auth) applyCreateAnonymousAccount(context storage.TransactionContext, appOrg model.ApplicationOrganization, anonymousID string,
 	preferences map[string]interface{}, systemConfigs map[string]interface{}, l *logs.Log) (*model.Account, error) {
-	account := model.Account{ID: anonymousID, AppOrg: appOrg, Preferences: preferences, SystemConfigs: systemConfigs, Anonymous: true, DateCreated: time.Now()}
+
+	id := anonymousID
+	orgID := appOrg.Organization.ID
+
+	orgAppMembership := model.OrgAppMembership{ID: uuid.NewString(), AppOrg: appOrg, Preferences: preferences}
+	orgAppsMemberships := []model.OrgAppMembership{orgAppMembership}
+
+	aSystemConfigs := systemConfigs
+	anonymous := true
+	dateCreated := time.Now()
+
+	account := model.Account{ID: id, OrgID: orgID, OrgAppsMemberships: orgAppsMemberships, SystemConfigs: aSystemConfigs, Anonymous: anonymous, DateCreated: dateCreated}
+
 	return a.storage.InsertAccount(context, account)
 }
 
