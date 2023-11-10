@@ -834,7 +834,7 @@ func (a *Auth) CreateAnonymousAccount(context storage.TransactionContext, appID 
 	transaction := func(context storage.TransactionContext) error {
 		//1. check if the user exists
 		if context == nil || !skipExistsCheck {
-			account, err := a.storage.FindAccountByID(context, anonymousID)
+			account, err := a.storage.FindAccountByIDV2(context, orgID, appID, anonymousID)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 			}
