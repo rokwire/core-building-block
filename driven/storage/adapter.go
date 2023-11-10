@@ -2606,8 +2606,8 @@ func (sa *Adapter) FindMFAType(context TransactionContext, accountID string, ide
 func (sa *Adapter) FindMFATypes(accountID string) ([]model.MFAType, error) {
 	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
 
-	var account account
-	err := sa.db.accounts.FindOne(filter, &account, nil)
+	var account tenantAccount
+	err := sa.db.tenantsAccounts.FindOne(filter, &account, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
