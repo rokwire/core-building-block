@@ -17,6 +17,7 @@ package core
 import (
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/rokwire/logging-library-go/v2/errors"
@@ -157,6 +158,7 @@ func (app *application) serGetPublicAccounts(appID string, orgID string, limit i
 
 func (app *application) serAddFollow(follow model.Follow) error {
 	follow.ID = uuid.NewString()
+	follow.DateCreated = time.Now()
 	err := app.storage.InsertFollow(nil, follow)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeFollow, nil, err)
