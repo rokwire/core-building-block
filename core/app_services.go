@@ -54,9 +54,9 @@ func (app *application) serGetPreferences(cOrgID string, cAppID string, accountI
 	return preferences, nil
 }
 
-func (app *application) serGetAccountSystemConfigs(accountID string) (map[string]interface{}, error) {
+func (app *application) serGetAccountSystemConfigs(cOrgID string, cAppID string, accountID string) (map[string]interface{}, error) {
 	//find the account
-	account, err := app.storage.FindAccountByID(nil, accountID)
+	account, err := app.storage.FindAccountByIDV2(nil, cOrgID, cAppID, accountID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountSystemConfigs, &logutils.FieldArgs{"account_id": accountID}, err)
 	}

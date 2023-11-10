@@ -723,7 +723,7 @@ func (h ServicesApisHandler) getPreferences(l *logs.Log, r *http.Request, claims
 }
 
 func (h ServicesApisHandler) getAccountSystemConfigs(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	configs, err := h.coreAPIs.Services.SerGetAccountSystemConfigs(claims.Subject)
+	configs, err := h.coreAPIs.Services.SerGetAccountSystemConfigs(claims.OrgID, claims.AppID, claims.Subject)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionGet, model.TypeAccountSystemConfigs, nil, err, http.StatusInternalServerError, true)
 	}

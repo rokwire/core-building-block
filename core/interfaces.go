@@ -28,7 +28,7 @@ type Services interface {
 	SerGetAccount(cOrgID string, cAppID string, accountID string) (*model.Account, error)
 	SerGetProfile(cOrgID string, cAppID string, accountID string) (*model.Profile, error)
 	SerGetPreferences(cOrgID string, cAppID string, accountID string) (map[string]interface{}, error)
-	SerGetAccountSystemConfigs(accountID string) (map[string]interface{}, error)
+	SerGetAccountSystemConfigs(cOrgID string, cAppID string, accountID string) (map[string]interface{}, error)
 	SerUpdateAccountPreferences(id string, appID string, orgID string, anonymous bool, preferences map[string]interface{}, l *logs.Log) (bool, error)
 	SerUpdateAccountProfile(accountID string, profile model.Profile) error
 	SerUpdateAccountPrivacy(accountID string, privacy model.Privacy) error

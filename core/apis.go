@@ -300,8 +300,8 @@ func (s *servicesImpl) SerGetPreferences(cOrgID string, cAppID string, accountID
 	return s.app.serGetPreferences(cOrgID, cAppID, accountID)
 }
 
-func (s *servicesImpl) SerGetAccountSystemConfigs(accountID string) (map[string]interface{}, error) {
-	return s.app.serGetAccountSystemConfigs(accountID)
+func (s *servicesImpl) SerGetAccountSystemConfigs(cOrgID string, cAppID string, accountID string) (map[string]interface{}, error) {
+	return s.app.serGetAccountSystemConfigs(cOrgID, cAppID, accountID)
 }
 
 func (s *servicesImpl) SerUpdateAccountPreferences(id string, appID string, orgID string, anonymous bool, preferences map[string]interface{}, l *logs.Log) (bool, error) {
