@@ -16,6 +16,7 @@ package core
 
 import (
 	"core-building-block/core/model"
+	"core-building-block/driven/storage"
 
 	"github.com/google/uuid"
 	"github.com/rokwire/logging-library-go/v2/errors"
@@ -93,8 +94,7 @@ func (app *application) serUpdateAccountPrivacy(accountID string, privacy model.
 }
 
 func (app *application) serUpdateAccountPreferences(id string, appID string, orgID string, anonymous bool, preferences map[string]interface{}, l *logs.Log) (bool, error) {
-	//Disable this for now
-	/*if anonymous {
+	if anonymous {
 		created := false
 		transaction := func(context storage.TransactionContext) error {
 			//1. verify that the account is for the current app/org
@@ -122,7 +122,7 @@ func (app *application) serUpdateAccountPreferences(id string, appID string, org
 			return false, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, nil, err)
 		}
 		return created, nil
-	} */
+	}
 
 	err := app.storage.UpdateAccountPreferences(nil, orgID, appID, id, preferences)
 	if err != nil {
