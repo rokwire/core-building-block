@@ -1598,7 +1598,7 @@ func (sa *Adapter) FindAccountsByUsername(context TransactionContext, appOrg *mo
 	}
 
 	filter := bson.D{
-		primitive.E{Key: "org_apps_memberships.app_org_id", Value: bson.M{"$in": appOrg.ID}},
+		primitive.E{Key: "org_apps_memberships.app_org_id", Value: appOrg.ID},
 		primitive.E{Key: "username", Value: username},
 	}
 
@@ -2084,7 +2084,7 @@ func (sa *Adapter) UpdateAccountUsername(context TransactionContext, accountID s
 		}},
 	}
 
-	res, err := sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
+	res, err := sa.db.tenantsAccounts.UpdateOneWithContext(context, filter, update, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"id": accountID}, err)
 	}
