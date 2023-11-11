@@ -62,6 +62,7 @@ type oidcAuthConfig struct {
 	TokenURL           string            `json:"token_url"`
 	UserInfoURL        string            `json:"userinfo_url"`
 	Scopes             string            `json:"scopes"`
+	RequestParams      map[string]string `json:"request_params"`
 	UseRefresh         bool              `json:"use_refresh"`
 	UsePKCE            bool              `json:"use_pkce"`
 	ClientID           string            `json:"client_id" validate:"required"`
@@ -205,6 +206,10 @@ func (a *oidcAuthImpl) getLoginURL(authType model.AuthType, appType model.Applic
 		authURL = oidcConfig.AuthorizeURL
 	}
 
+	for key, val := range oidcConfig.RequestParams {
+		bodyData[key] = val
+	}
+	
 	query := url.Values{}
 	for k, v := range bodyData {
 		query.Set(k, v)
