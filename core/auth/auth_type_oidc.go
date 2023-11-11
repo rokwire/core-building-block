@@ -209,7 +209,7 @@ func (a *oidcAuthImpl) getLoginURL(authType model.AuthType, appType model.Applic
 	for key, val := range oidcConfig.RequestParams {
 		bodyData[key] = val
 	}
-	
+
 	query := url.Values{}
 	for k, v := range bodyData {
 		query.Set(k, v)
