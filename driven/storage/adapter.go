@@ -1316,7 +1316,7 @@ func (sa *Adapter) FindAccounts(context TransactionContext, limit *int, offset *
 	if accountID != nil {
 		filter = append(filter, primitive.E{Key: "_id", Value: *accountID})
 	}
-	filter = append(filter, primitive.E{Key: "app_org_id", Value: appOrg.ID})
+	filter = append(filter, primitive.E{Key: "org_apps_memberships.app_org_id", Value: appOrg.ID})
 	if firstName != nil {
 		filter = append(filter, primitive.E{Key: "profile.first_name", Value: *firstName})
 	}
