@@ -1368,7 +1368,7 @@ func (sa *Adapter) FindAccounts(context TransactionContext, limit *int, offset *
 		}
 	}
 
-	var list []account
+	var list []tenantAccount
 	var findOptions *options.FindOptions
 	if limit != nil {
 		findOptions = options.Find()
@@ -1381,12 +1381,18 @@ func (sa *Adapter) FindAccounts(context TransactionContext, limit *int, offset *
 		findOptions.SetSkip(int64(*offset))
 	}
 
-	err = sa.db.accounts.FindWithContext(context, filter, &list, findOptions)
+	err = sa.db.tenantsAccounts.FindWithContext(context, filter, &list, findOptions)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
 
-	accounts := accountsFromStorageDeprecated(list, *appOrg)
+	//all memberships applications organizations - from cache
+	allAppsOrgs, err := sa.getCachedApplicationOrganizations()
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeApplicationOrganization, nil, err)
+	}
+
+	accounts := accountsFromStorage(list, &appOrg.ID, allAppsOrgs)
 	return accounts, nil
 }
 
