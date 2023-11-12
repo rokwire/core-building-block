@@ -1343,28 +1343,28 @@ func (sa *Adapter) FindAccounts(context TransactionContext, limit *int, offset *
 	//authorization filters
 	overrideHasPermissions := false
 	if len(permissions) > 0 {
-		filter = append(filter, primitive.E{Key: "permissions.name", Value: bson.M{"$in": permissions}})
+		filter = append(filter, primitive.E{Key: "org_apps_memberships.permissions.name", Value: bson.M{"$in": permissions}})
 		overrideHasPermissions = true
 	}
 	if len(roleIDs) > 0 {
-		filter = append(filter, primitive.E{Key: "roles.role._id", Value: bson.M{"$in": roleIDs}})
+		filter = append(filter, primitive.E{Key: "org_apps_memberships.roles.role._id", Value: bson.M{"$in": roleIDs}})
 		overrideHasPermissions = true
 	}
 	if len(groupIDs) > 0 {
-		filter = append(filter, primitive.E{Key: "groups.group._id", Value: bson.M{"$in": groupIDs}})
+		filter = append(filter, primitive.E{Key: "org_apps_memberships.groups.group._id", Value: bson.M{"$in": groupIDs}})
 		overrideHasPermissions = true
 	}
 	if !overrideHasPermissions && hasPermissions != nil {
 		if *hasPermissions {
 			filter = append(filter, primitive.E{Key: "$or", Value: bson.A{
-				bson.M{"permissions.0": bson.M{"$exists": true}},
-				bson.M{"roles.0": bson.M{"$exists": true}},
-				bson.M{"groups.0": bson.M{"$exists": true}},
+				bson.M{"org_apps_memberships.permissions.0": bson.M{"$exists": true}},
+				bson.M{"org_apps_memberships.roles.0": bson.M{"$exists": true}},
+				bson.M{"org_apps_memberships.groups.0": bson.M{"$exists": true}},
 			}})
 		} else {
-			filter = append(filter, primitive.E{Key: "permissions.0", Value: bson.M{"$exists": false}})
-			filter = append(filter, primitive.E{Key: "roles.0", Value: bson.M{"$exists": false}})
-			filter = append(filter, primitive.E{Key: "groups.0", Value: bson.M{"$exists": false}})
+			filter = append(filter, primitive.E{Key: "org_apps_memberships.permissions.0", Value: bson.M{"$exists": false}})
+			filter = append(filter, primitive.E{Key: "org_apps_memberships.roles.0", Value: bson.M{"$exists": false}})
+			filter = append(filter, primitive.E{Key: "org_apps_memberships.groups.0", Value: bson.M{"$exists": false}})
 		}
 	}
 
