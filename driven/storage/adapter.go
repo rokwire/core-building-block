@@ -1483,8 +1483,8 @@ func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, 
 		pipeline = append(pipeline, bson.M{"$limit": *limit})
 	}
 
-	var accounts []account
-	err = sa.db.accounts.Aggregate(pipeline, &accounts, nil)
+	var accounts []tenantAccount
+	err = sa.db.tenantsAccounts.Aggregate(pipeline, &accounts, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"app_id": appID, "org_id": orgID, "search": searchStr, "first_name": firstNameStr, "last_name": lastNameStr, "username": usernameStr, "following_id": followingIDStr, "follower_id": followerIDStr}, err)
 	}
