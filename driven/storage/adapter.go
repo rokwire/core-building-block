@@ -2243,13 +2243,11 @@ func (sa *Adapter) RemoveAccountsGroup(context TransactionContext, groupID strin
 func (sa *Adapter) UpdateAccountRoles(context TransactionContext, accountID string, appOrgID string, roles []model.AccountRole) error {
 	stgRoles := accountRolesToStorage(roles)
 
-	// Филтър за намиране на съответния акаунт
 	filter := bson.D{
 		primitive.E{Key: "_id", Value: accountID},
 		primitive.E{Key: "org_apps_memberships.app_org_id", Value: appOrgID},
 	}
 
-	// Обновление на полето roles
 	update := bson.D{
 		primitive.E{Key: "$set", Value: bson.D{
 			primitive.E{Key: "org_apps_memberships.$.roles", Value: stgRoles},
@@ -2294,18 +2292,21 @@ func (sa *Adapter) DeleteAccountRoles(context TransactionContext, accountID stri
 }
 
 // UpdateAccountGroups updates the account groups
-func (sa *Adapter) UpdateAccountGroups(context TransactionContext, accountID string, groups []model.AccountGroup) error {
+func (sa *Adapter) UpdateAccountGroups(context TransactionContext, accountID string, appOrgID string, groups []model.AccountGroup) error {
 	stgGroups := accountGroupsToStorage(groups)
 
-	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
+	filter := bson.D{
+		primitive.E{Key: "_id", Value: accountID},
+		primitive.E{Key: "org_apps_memberships.app_org_id", Value: appOrgID}}
+
 	update := bson.D{
 		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "groups", Value: stgGroups},
+			primitive.E{Key: "org_apps_memberships.$.groups", Value: stgGroups},
 			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
 		}},
 	}
 
-	res, err := sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
+	res, err := sa.db.tenantsAccounts.UpdateOneWithContext(context, filter, update, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"id": accountID}, err)
 	}

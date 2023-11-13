@@ -585,7 +585,7 @@ type Storage interface {
 	//ApplicationGroups
 	FindAppOrgGroupsByIDs(context storage.TransactionContext, ids []string, appOrgID string) ([]model.AppOrgGroup, error)
 	//AccountGroups
-	UpdateAccountGroups(context storage.TransactionContext, accountID string, groups []model.AccountGroup) error
+	UpdateAccountGroups(context storage.TransactionContext, accountID string, appOrgID string, groups []model.AccountGroup) error
 	InsertAccountGroups(context storage.TransactionContext, accountID string, appOrgID string, groups []model.AccountGroup) error
 }
 

@@ -766,7 +766,7 @@ func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID
 			}
 
 			newAccountGroups := model.AccountGroupsFromAppOrgGroups(newGroups, true, true)
-			err = a.storage.UpdateAccountGroups(context, account.ID, newAccountGroups)
+			err = a.storage.UpdateAccountGroups(context, account.ID, appOrg.ID, newAccountGroups)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionUpdate, "admin account groups", nil, err)
 			}
