@@ -651,12 +651,12 @@ func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID
 		if account == nil {
 			return errors.ErrorData(logutils.StatusMissing, model.TypeAccount, &logutils.FieldArgs{"app_org_id": appOrg.ID, "auth_type": authType.Code, "identifier": identifier})
 		}
-
-		//2. check if the user's auth type is verified
-		accountAuthType := account.GetAccountAuthType(authType.ID, identifier)
-		if accountAuthType == nil || accountAuthType.Unverified {
-			return errors.ErrorData("Unverified", model.TypeAccountAuthType, &logutils.FieldArgs{"app_org_id": appOrg.ID, "auth_type": authType.Code, "identifier": identifier}).SetStatus(utils.ErrorStatusUnverified)
-		}
+		/*
+			//2. check if the user's auth type is verified
+			accountAuthType := account.GetAccountAuthType(authType.ID, identifier)
+			if accountAuthType == nil || accountAuthType.Unverified {
+				return errors.ErrorData("Unverified", model.TypeAccountAuthType, &logutils.FieldArgs{"app_org_id": appOrg.ID, "auth_type": authType.Code, "identifier": identifier}).SetStatus(utils.ErrorStatusUnverified)
+			} */
 
 		//3. update account permissions
 		updatedAccount = account
