@@ -728,7 +728,7 @@ func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID
 			}
 
 			newAccountRoles := model.AccountRolesFromAppOrgRoles(newRoles, true, true)
-			err = a.storage.UpdateAccountRoles(context, account.ID, newAccountRoles)
+			err = a.storage.UpdateAccountRoles(context, account.ID, appOrg.ID, newAccountRoles)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionUpdate, "admin account roles", nil, err)
 			}

@@ -577,7 +577,7 @@ type Storage interface {
 	//ApplicationRoles
 	FindAppOrgRolesByIDs(context storage.TransactionContext, ids []string, appOrgID string) ([]model.AppOrgRole, error)
 	//AccountRoles
-	UpdateAccountRoles(context storage.TransactionContext, accountID string, roles []model.AccountRole) error
+	UpdateAccountRoles(context storage.TransactionContext, accountID string, appOrgID string, roles []model.AccountRole) error
 	InsertAccountRoles(context storage.TransactionContext, accountID string, appOrgID string, roles []model.AccountRole) error
 
 	UpdateAccountScopes(context storage.TransactionContext, accountID string, scopes []string) error

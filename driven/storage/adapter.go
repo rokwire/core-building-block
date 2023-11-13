@@ -2240,23 +2240,29 @@ func (sa *Adapter) RemoveAccountsGroup(context TransactionContext, groupID strin
 }
 
 // UpdateAccountRoles updates the account roles
-func (sa *Adapter) UpdateAccountRoles(context TransactionContext, accountID string, roles []model.AccountRole) error {
+func (sa *Adapter) UpdateAccountRoles(context TransactionContext, accountID string, appOrgID string, roles []model.AccountRole) error {
 	stgRoles := accountRolesToStorage(roles)
 
-	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
+	// Филтър за намиране на съответния акаунт
+	filter := bson.D{
+		primitive.E{Key: "_id", Value: accountID},
+		primitive.E{Key: "org_apps_memberships.app_org_id", Value: appOrgID},
+	}
+
+	// Обновление на полето roles
 	update := bson.D{
 		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "roles", Value: stgRoles},
+			primitive.E{Key: "org_apps_memberships.$.roles", Value: stgRoles},
 			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
 		}},
 	}
 
-	res, err := sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
+	res, err := sa.db.tenantsAccounts.UpdateOneWithContext(context, filter, update, nil)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"id": accountID}, err)
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, nil, err)
 	}
 	if res.ModifiedCount != 1 {
-		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"id": accountID, "modified": res.ModifiedCount, "expected": 1})
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
 	}
 
 	return nil
