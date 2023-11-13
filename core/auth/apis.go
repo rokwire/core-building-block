@@ -690,7 +690,7 @@ func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID
 				newPermissions = append(newPermissions, unchangedPermissions...)
 			}
 
-			err = a.storage.UpdateAccountPermissions(context, account.ID, newPermissions)
+			err = a.storage.UpdateAccountPermissions(context, account.ID, appOrg.ID, newPermissions)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionUpdate, "admin account permissions", nil, err)
 			}

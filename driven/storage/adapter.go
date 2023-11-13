@@ -2035,16 +2035,20 @@ func (sa *Adapter) InsertAccountPermissions(context TransactionContext, accountI
 }
 
 // UpdateAccountPermissions updates account permissions
-func (sa *Adapter) UpdateAccountPermissions(context TransactionContext, accountID string, permissions []model.Permission) error {
-	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
+func (sa *Adapter) UpdateAccountPermissions(context TransactionContext, accountID string, appOrgID string, permissions []model.Permission) error {
+	filter := bson.D{
+		primitive.E{Key: "_id", Value: accountID},
+		primitive.E{Key: "org_apps_memberships.app_org_id", Value: appOrgID},
+	}
+
 	update := bson.D{
 		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "permissions", Value: permissions},
+			primitive.E{Key: "org_apps_memberships.$.permissions", Value: permissions},
 			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
 		}},
 	}
 
-	res, err := sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
+	res, err := sa.db.tenantsAccounts.UpdateOneWithContext(context, filter, update, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, nil, err)
 	}

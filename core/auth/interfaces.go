@@ -572,7 +572,7 @@ type Storage interface {
 	FindPermissions(context storage.TransactionContext, ids []string) ([]model.Permission, error)
 	FindPermissionsByName(context storage.TransactionContext, names []string) ([]model.Permission, error)
 	InsertAccountPermissions(context storage.TransactionContext, accountID string, permissions []model.Permission) error
-	UpdateAccountPermissions(context storage.TransactionContext, accountID string, permissions []model.Permission) error
+	UpdateAccountPermissions(context storage.TransactionContext, accountID string, appOrgID string, permissions []model.Permission) error
 
 	//ApplicationRoles
 	FindAppOrgRolesByIDs(context storage.TransactionContext, ids []string, appOrgID string) ([]model.AppOrgRole, error)
