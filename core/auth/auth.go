@@ -1012,31 +1012,31 @@ func (a *Auth) determineOperation(account *model.Account, desiredAppOrgID string
 	return "sign-in", nil
 }
 
-func (a *Auth) getAccount(authenticationType string, userIdentifier string, apiKey string, appTypeIdentifier string, orgID string) (*model.Account, string, error) {
+func (a *Auth) getAccount(authenticationType string, userIdentifier string, apiKey string, appTypeIdentifier string, orgID string) (*model.Account, string, *model.ApplicationOrganization, error) {
 	//validate if the provided auth type is supported by the provided application and organization
 	authType, _, appOrg, err := a.validateAuthType(authenticationType, appTypeIdentifier, orgID)
 	if err != nil {
-		return nil, "", errors.WrapErrorAction(logutils.ActionValidate, model.TypeAuthType, nil, err)
+		return nil, "", nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeAuthType, nil, err)
 	}
 
 	//do not allow for admins
 	if appOrg.Application.Admin {
-		return nil, "", errors.ErrorData(logutils.StatusInvalid, model.TypeApplication, logutils.StringArgs("not allowed for admins"))
+		return nil, "", nil, errors.ErrorData(logutils.StatusInvalid, model.TypeApplication, logutils.StringArgs("not allowed for admins"))
 	}
 
 	//TODO: Ideally we would not make many database calls before validating the API key. Currently needed to get app ID
 	err = a.validateAPIKey(apiKey, appOrg.Application.ID)
 	if err != nil {
-		return nil, "", errors.WrapErrorData(logutils.StatusInvalid, model.TypeAPIKey, nil, err)
+		return nil, "", nil, errors.WrapErrorData(logutils.StatusInvalid, model.TypeAPIKey, nil, err)
 	}
 
 	//check if the account exists check
 	account, err := a.storage.FindAccount(nil, appOrg.ID, authType.ID, userIdentifier)
 	if err != nil {
-		return nil, "", errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+		return nil, "", nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
 
-	return account, authType.ID, nil
+	return account, authType.ID, appOrg, nil
 }
 
 func (a *Auth) findAccountAuthType(account *model.Account, authType *model.AuthType, identifier string) (*model.AccountAuthType, error) {

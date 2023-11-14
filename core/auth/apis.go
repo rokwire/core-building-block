@@ -205,7 +205,7 @@ func (a *Auth) Logout(appID string, orgID string, currentAccountID string, sessi
 //	Returns:
 //		accountExisted (bool): valid when error is nil
 func (a *Auth) AccountExists(authenticationType string, userIdentifier string, apiKey string, appTypeIdentifier string, orgID string) (bool, error) {
-	account, _, err := a.getAccount(authenticationType, userIdentifier, apiKey, appTypeIdentifier, orgID)
+	account, _, _, err := a.getAccount(authenticationType, userIdentifier, apiKey, appTypeIdentifier, orgID)
 	if err != nil {
 		return false, errors.WrapErrorAction(logutils.ActionGet, model.TypeAccount, nil, err)
 	}
@@ -225,12 +225,12 @@ func (a *Auth) AccountExists(authenticationType string, userIdentifier string, a
 //	Returns:
 //		canSignIn (bool): valid when error is nil
 func (a *Auth) CanSignIn(authenticationType string, userIdentifier string, apiKey string, appTypeIdentifier string, orgID string) (bool, error) {
-	account, authTypeID, err := a.getAccount(authenticationType, userIdentifier, apiKey, appTypeIdentifier, orgID)
+	account, authTypeID, appOrg, err := a.getAccount(authenticationType, userIdentifier, apiKey, appTypeIdentifier, orgID)
 	if err != nil {
 		return false, errors.WrapErrorAction(logutils.ActionGet, model.TypeAccount, nil, err)
 	}
 
-	return a.canSignIn(account, authTypeID, userIdentifier), nil
+	return a.canSignInV2(account, authTypeID, userIdentifier, appOrg.ID), nil
 }
 
 // CanLink checks if a user can link a new auth type
@@ -245,7 +245,7 @@ func (a *Auth) CanSignIn(authenticationType string, userIdentifier string, apiKe
 //	Returns:
 //		canLink (bool): valid when error is nil
 func (a *Auth) CanLink(authenticationType string, userIdentifier string, apiKey string, appTypeIdentifier string, orgID string) (bool, error) {
-	account, authTypeID, err := a.getAccount(authenticationType, userIdentifier, apiKey, appTypeIdentifier, orgID)
+	account, authTypeID, _, err := a.getAccount(authenticationType, userIdentifier, apiKey, appTypeIdentifier, orgID)
 	if err != nil {
 		return false, errors.WrapErrorAction(logutils.ActionGet, model.TypeAccount, nil, err)
 	}
