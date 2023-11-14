@@ -1056,7 +1056,7 @@ func (sa *Adapter) buildLoginSession(context TransactionContext, ls *loginSessio
 	var account *model.Account
 	var err error
 	if ls.AccountAuthTypeID != nil {
-		account, err = sa.FindAccountByID(context, ls.Identifier)
+		account, err = sa.FindAccountByIDV2(context, ls.OrgID, ls.AppID, ls.Identifier)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"_id": ls.Identifier}, err)
 		}
