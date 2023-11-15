@@ -2603,8 +2603,8 @@ func (sa *Adapter) FindMFAType(context TransactionContext, accountID string, ide
 		primitive.E{Key: "mfa_types.params.identifier", Value: identifier},
 	}
 
-	var account account
-	err := sa.db.accounts.FindOneWithContext(context, filter, &account, nil)
+	var account tenantAccount
+	err := sa.db.tenantsAccounts.FindOneWithContext(context, filter, &account, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
