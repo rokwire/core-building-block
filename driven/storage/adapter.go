@@ -2350,7 +2350,7 @@ func (sa *Adapter) InsertAccountAuthType(item model.AccountAuthType) error {
 		}},
 	}
 
-	res, err := sa.db.accounts.UpdateOne(filter, update, nil)
+	res, err := sa.db.tenantsAccounts.UpdateOne(filter, update, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAccountAuthType, nil, err)
 	}
@@ -2458,7 +2458,7 @@ func (sa *Adapter) UpdateAccountExternalIDs(accountID string, externalIDs map[st
 		}},
 	}
 
-	res, err := sa.db.accounts.UpdateOne(filter, update, nil)
+	res, err := sa.db.tenantsAccounts.UpdateOne(filter, update, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, "account external IDs", &logutils.FieldArgs{"_id": accountID}, err)
 	}
