@@ -2121,7 +2121,7 @@ func (sa *Adapter) UpdateAccountVerified(context TransactionContext, accountID s
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": appID, "org_id": orgID}, err)
 	}
 
-	filter := bson.M{"_id": accountID, "app_org_id": appOrg.ID}
+	filter := bson.M{"_id": accountID, "org_apps_memberships.app_org_id": appOrg.ID}
 	update := bson.D{
 		primitive.E{Key: "$set", Value: bson.D{
 			primitive.E{Key: "verified", Value: verified},
@@ -2129,7 +2129,7 @@ func (sa *Adapter) UpdateAccountVerified(context TransactionContext, accountID s
 		}},
 	}
 
-	res, err := sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
+	res, err := sa.db.tenantsAccounts.UpdateOneWithContext(context, filter, update, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"id": accountID, "app_id": appID, "org_id": orgID}, err)
 	}
