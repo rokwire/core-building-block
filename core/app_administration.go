@@ -1081,7 +1081,7 @@ func (app *application) admGetAccount(cOrgID string, cAppID string, accountID st
 
 func (app *application) admGetAccountSystemConfigs(appID string, orgID string, accountID string, l *logs.Log) (map[string]interface{}, error) {
 	//find the account
-	account, err := app.getAccount(nil, accountID)
+	account, err := app.getAccountV2(nil, orgID, appID, accountID)
 	if err != nil {
 		return nil, err
 	}
