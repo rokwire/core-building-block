@@ -1538,7 +1538,7 @@ func (sa *Adapter) FindAccountsByParams(searchParams map[string]interface{}, app
 		options.SetProjection(sa.getProjectionForKeys(approvedKeys))
 	}
 
-	err = sa.db.accounts.Find(filter, &accounts, options)
+	err = sa.db.tenantsAccounts.Find(filter, &accounts, options)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
