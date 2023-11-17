@@ -1525,7 +1525,7 @@ func (sa *Adapter) FindAccountsByParams(searchParams map[string]interface{}, app
 	for i, appOrg := range appOrgs {
 		appOrgIDs[i] = appOrg.ID
 	}
-	searchParams["app_org_id"] = appOrgIDs
+	searchParams["org_apps_memberships.app_org_id"] = appOrgIDs
 	filter := sa.getFilterForParams(searchParams)
 
 	var accounts []map[string]interface{}
