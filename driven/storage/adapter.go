@@ -1587,13 +1587,22 @@ func (sa *Adapter) FindAccountsByAccountID(context TransactionContext, appID str
 		return nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeApplicationOrganization, nil, err)
 	}
 
-	accountFilter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": accountIDs}}, primitive.E{Key: "app_org_id", Value: appOrg.ID}}
-	var accountResult []account
-	err = sa.db.accounts.FindWithContext(context, accountFilter, &accountResult, nil)
+	accountFilter := bson.D{
+		primitive.E{Key: "_id", Value: bson.M{"$in": accountIDs}},
+		primitive.E{Key: "org_apps_memberships.app_org_id", Value: appOrg.ID}}
+	var accountResult []tenantAccount
+	err = sa.db.tenantsAccounts.FindWithContext(context, accountFilter, &accountResult, nil)
 	if err != nil {
 		return nil, err
 	}
-	accounts := accountsFromStorageDeprecated(accountResult, *appOrg)
+
+	//all memberships applications organizations - from cache
+	allAppsOrgs, err := sa.getCachedApplicationOrganizations()
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeApplicationOrganization, nil, err)
+	}
+
+	accounts := accountsFromStorage(accountResult, &appOrg.ID, allAppsOrgs)
 	return accounts, nil
 }
 
