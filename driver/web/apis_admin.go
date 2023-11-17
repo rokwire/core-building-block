@@ -890,7 +890,7 @@ func (h AdminApisHandler) deleteApplicationConfig(l *logs.Log, r *http.Request, 
 }
 
 func (h AdminApisHandler) getAccount(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	account, err := h.coreAPIs.Administration.AdmGetAccount(claims.Subject)
+	account, err := h.coreAPIs.Administration.AdmGetAccount(claims.OrgID, claims.AppID, claims.Subject)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionGet, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}

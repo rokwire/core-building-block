@@ -467,8 +467,8 @@ func (s *administrationImpl) AdmGetAccounts(limit int, offset int, appID string,
 	return s.app.admGetAccounts(limit, offset, appID, orgID, accountID, firstName, lastName, authType, authTypeIdentifier, anonymous, hasPermissions, permissions, roleIDs, groupIDs)
 }
 
-func (s *administrationImpl) AdmGetAccount(accountID string) (*model.Account, error) {
-	return s.app.admGetAccount(accountID)
+func (s *administrationImpl) AdmGetAccount(cOrgID string, cAppID string, accountID string) (*model.Account, error) {
+	return s.app.admGetAccount(cOrgID, cAppID, accountID)
 }
 
 func (s *administrationImpl) AdmGetFilterAccounts(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]map[string]interface{}, error) {

@@ -1075,8 +1075,8 @@ func (app *application) admGetAccounts(limit int, offset int, appID string, orgI
 	return accounts, nil
 }
 
-func (app *application) admGetAccount(accountID string) (*model.Account, error) {
-	return app.getAccount(nil, accountID)
+func (app *application) admGetAccount(cOrgID string, cAppID string, accountID string) (*model.Account, error) {
+	return app.getAccountV2(nil, cOrgID, cAppID, accountID)
 }
 
 func (app *application) admGetAccountSystemConfigs(appID string, orgID string, accountID string, l *logs.Log) (map[string]interface{}, error) {
