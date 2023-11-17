@@ -1564,10 +1564,10 @@ func (sa *Adapter) CountAccountsByParams(searchParams map[string]interface{}, ap
 	for i, appOrg := range appOrgs {
 		appOrgIDs[i] = appOrg.ID
 	}
-	searchParams["app_org_id"] = appOrgIDs
+	searchParams["org_apps_memberships.app_org_id"] = appOrgIDs
 	filter := sa.getFilterForParams(searchParams)
 
-	count, err := sa.db.accounts.CountDocuments(filter)
+	count, err := sa.db.tenantsAccounts.CountDocuments(filter)
 	if err != nil {
 		return -1, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
