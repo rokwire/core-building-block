@@ -2517,9 +2517,9 @@ func (sa *Adapter) CountAccountsByRoleID(roleID string) (*int64, error) {
 
 // CountAccountsByGroupID counts how many accounts there are with the passed group id
 func (sa *Adapter) CountAccountsByGroupID(groupID string) (*int64, error) {
-	filter := bson.D{primitive.E{Key: "groups.group._id", Value: groupID}}
+	filter := bson.D{primitive.E{Key: "org_apps_memberships.groups.group._id", Value: groupID}}
 
-	count, err := sa.db.accounts.CountDocuments(filter)
+	count, err := sa.db.tenantsAccounts.CountDocuments(filter)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCount, model.TypeAccount, &logutils.FieldArgs{"groups._id": groupID}, err)
 	}
