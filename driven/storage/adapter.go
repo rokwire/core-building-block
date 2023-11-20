@@ -2199,20 +2199,23 @@ func (sa *Adapter) InsertAccountsGroup(context TransactionContext, appOrgID stri
 	}
 
 	//prepare filter
-	filter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": accountIDs}}}
+	filter := bson.D{
+		primitive.E{Key: "_id", Value: bson.M{"$in": accountIDs}},
+		primitive.E{Key: "org_apps_memberships.app_org_id", Value: appOrgID},
+	}
 
 	//update
 	storageGroup := accountGroupToStorage(group)
 	update := bson.D{
 		primitive.E{Key: "$push", Value: bson.D{
-			primitive.E{Key: "groups", Value: storageGroup},
+			primitive.E{Key: "org_apps_memberships.$.groups", Value: storageGroup},
 		}},
 		primitive.E{Key: "$set", Value: bson.D{
 			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
 		}},
 	}
 
-	res, err := sa.db.accounts.UpdateManyWithContext(context, filter, update, nil)
+	res, err := sa.db.tenantsAccounts.UpdateManyWithContext(context, filter, update, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, nil, err)
 	}
