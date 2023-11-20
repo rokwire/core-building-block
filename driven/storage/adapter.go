@@ -2224,22 +2224,26 @@ func (sa *Adapter) InsertAccountsGroup(context TransactionContext, appOrgID stri
 }
 
 // RemoveAccountsGroup removes accounts from a group
-func (sa *Adapter) RemoveAccountsGroup(context TransactionContext, groupID string, accountIDs []string) error {
+func (sa *Adapter) RemoveAccountsGroup(context TransactionContext, appOrgID string, groupID string, accountIDs []string) error {
 	if len(accountIDs) == 0 {
 		return nil
 	}
 
-	filter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": accountIDs}}}
+	filter := bson.D{
+		primitive.E{Key: "_id", Value: bson.M{"$in": accountIDs}},
+		primitive.E{Key: "org_apps_memberships.app_org_id", Value: appOrgID},
+	}
+
 	update := bson.D{
 		primitive.E{Key: "$pull", Value: bson.D{
-			primitive.E{Key: "groups", Value: bson.M{"group._id": groupID}},
+			primitive.E{Key: "org_apps_memberships.$.groups", Value: bson.M{"group._id": groupID}},
 		}},
 		primitive.E{Key: "$set", Value: bson.D{
 			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
 		}},
 	}
 
-	res, err := sa.db.accounts.UpdateManyWithContext(context, filter, update, nil)
+	res, err := sa.db.tenantsAccounts.UpdateManyWithContext(context, filter, update, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"group_id": groupID}, err)
 	}

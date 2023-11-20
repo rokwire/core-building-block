@@ -815,8 +815,10 @@ func (app *application) admRemoveAccountsFromGroup(appID string, orgID string, g
 			return errors.ErrorData(logutils.StatusMissing, model.TypeAccount, &logutils.FieldArgs{"ids": accountIDs})
 		}
 
+		appOrgID := accounts[0].AppOrg.ID
+
 		//2. find group
-		group, err := app.getAppOrgGroup(context, groupID, accounts[0].AppOrg.ID, nil)
+		group, err := app.getAppOrgGroup(context, groupID, appOrgID, nil)
 		if err != nil {
 			return err
 		}
@@ -836,7 +838,7 @@ func (app *application) admRemoveAccountsFromGroup(appID string, orgID string, g
 		}
 
 		//5. remove the accounts from the group
-		err = app.storage.RemoveAccountsGroup(context, group.ID, updateAccounts)
+		err = app.storage.RemoveAccountsGroup(context, appOrgID, group.ID, updateAccounts)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccountGroups, &logutils.FieldArgs{"id": groupID}, err)
 		}
