@@ -2193,7 +2193,7 @@ func (sa *Adapter) InsertAccountGroups(context TransactionContext, accountID str
 }
 
 // InsertAccountsGroup inserts accounts into a group
-func (sa *Adapter) InsertAccountsGroup(context TransactionContext, group model.AccountGroup, accountIDs []string) error {
+func (sa *Adapter) InsertAccountsGroup(context TransactionContext, appOrgID string, group model.AccountGroup, accountIDs []string) error {
 	if len(accountIDs) == 0 {
 		return nil
 	}

@@ -184,7 +184,7 @@ type Storage interface {
 	UpdateAccountVerified(context storage.TransactionContext, accountID string, appID string, orgID string, verified bool) error
 	InsertAccountRoles(context storage.TransactionContext, accountID string, appOrgID string, roles []model.AccountRole) error
 	DeleteAccountRoles(context storage.TransactionContext, accountID string, roleIDs []string) error
-	InsertAccountsGroup(context storage.TransactionContext, group model.AccountGroup, accountIDs []string) error
+	InsertAccountsGroup(context storage.TransactionContext, appOrgID string, group model.AccountGroup, accountIDs []string) error
 	RemoveAccountsGroup(context storage.TransactionContext, groupID string, accountIDs []string) error
 	CountAccountsByRoleID(roleID string) (*int64, error)
 	CountAccountsByGroupID(groupID string) (*int64, error)

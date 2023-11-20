@@ -442,74 +442,75 @@ func (app *application) admGetApplications(orgID string) ([]model.Application, e
 }
 
 func (app *application) admCreateAppOrgGroup(name string, description string, system bool, permissionNames []string, rolesIDs []string, accountIDs []string, appID string, orgID string, assignerPermissions []string, systemClaim bool, l *logs.Log) (*model.AppOrgGroup, error) {
-	if len(assignerPermissions) == 0 {
-		return nil, errors.ErrorData(logutils.StatusMissing, "assigner permissions", nil)
-	}
-
-	var newGroup *model.AppOrgGroup
-	transaction := func(context storage.TransactionContext) error {
-		//1. get application organization entity
-		appOrg, err := app.getApplicationOrganization(appID, orgID)
-		if err != nil {
-			return err
+	/*	if len(assignerPermissions) == 0 {
+			return nil, errors.ErrorData(logutils.StatusMissing, "assigner permissions", nil)
 		}
 
-		//2. validate permissions
-		permissions, err := app.auth.CheckPermissions(context, []model.ApplicationOrganization{*appOrg}, permissionNames, assignerPermissions, false)
-		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionValidate, model.TypePermission, nil, err)
-		}
-
-		//3. check roles
-		roles, err := app.auth.CheckRoles(context, appOrg, rolesIDs, assignerPermissions, false)
-		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionValidate, model.TypeAppOrgRole, nil, err)
-		}
-
-		//4. create and insert group
-		id, _ := uuid.NewUUID()
-		now := time.Now()
-		group := model.AppOrgGroup{ID: id.String(), Name: name, Description: description, Roles: roles, Permissions: permissions, AppOrg: *appOrg, System: systemClaim && system, DateCreated: now}
-		err = app.storage.InsertAppOrgGroup(context, group)
-		if err != nil {
-			return err
-		}
-
-		newGroup = &group
-
-		//5. assign group to given accounts
-		if len(accountIDs) > 0 {
-			//the group must be assignable because it was just created by the assigner
-
-			accounts, err := app.storage.FindAccountsByAccountID(context, appID, orgID, accountIDs)
+		var newGroup *model.AppOrgGroup
+		transaction := func(context storage.TransactionContext) error {
+			//1. get application organization entity
+			appOrg, err := app.getApplicationOrganization(appID, orgID)
 			if err != nil {
-				return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+				return err
 			}
-			if len(accounts) < len(accountIDs) {
-				if missing := model.GetMissingAccountIDs(accounts, accountIDs); len(missing) > 0 {
-					return errors.ErrorData(logutils.StatusMissing, model.TypeAccount, &logutils.FieldArgs{"ids": missing})
+
+			//2. validate permissions
+			permissions, err := app.auth.CheckPermissions(context, []model.ApplicationOrganization{*appOrg}, permissionNames, assignerPermissions, false)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionValidate, model.TypePermission, nil, err)
+			}
+
+			//3. check roles
+			roles, err := app.auth.CheckRoles(context, appOrg, rolesIDs, assignerPermissions, false)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionValidate, model.TypeAppOrgRole, nil, err)
+			}
+
+			//4. create and insert group
+			id, _ := uuid.NewUUID()
+			now := time.Now()
+			group := model.AppOrgGroup{ID: id.String(), Name: name, Description: description, Roles: roles, Permissions: permissions, AppOrg: *appOrg, System: systemClaim && system, DateCreated: now}
+			err = app.storage.InsertAppOrgGroup(context, group)
+			if err != nil {
+				return err
+			}
+
+			newGroup = &group
+
+			//5. assign group to given accounts
+			if len(accountIDs) > 0 {
+				//the group must be assignable because it was just created by the assigner
+
+				accounts, err := app.storage.FindAccountsByAccountID(context, appID, orgID, accountIDs)
+				if err != nil {
+					return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+				}
+				if len(accounts) < len(accountIDs) {
+					if missing := model.GetMissingAccountIDs(accounts, accountIDs); len(missing) > 0 {
+						return errors.ErrorData(logutils.StatusMissing, model.TypeAccount, &logutils.FieldArgs{"ids": missing})
+					}
+				}
+
+				accountGroup := model.AccountGroup{Group: group, Active: true, AdminSet: true}
+				err = app.storage.InsertAccountsGroup(context, accountGroup, accountIDs)
+				if err != nil {
+					return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAppOrgGroup, &logutils.FieldArgs{"id": group.ID}, err)
 				}
 			}
 
-			accountGroup := model.AccountGroup{Group: group, Active: true, AdminSet: true}
-			err = app.storage.InsertAccountsGroup(context, accountGroup, accountIDs)
-			if err != nil {
-				return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAppOrgGroup, &logutils.FieldArgs{"id": group.ID}, err)
-			}
+			return nil
 		}
 
-		return nil
-	}
-
-	err := app.storage.PerformTransaction(transaction)
-	if err != nil {
-		return nil, err
-	}
-	return newGroup, nil
+		err := app.storage.PerformTransaction(transaction)
+		if err != nil {
+			return nil, err
+		}
+		return newGroup, nil */
+	return nil, nil
 }
 
 func (app *application) admUpdateAppOrgGroup(ID string, name string, description string, system bool, permissionNames []string, rolesIDs []string, accountIDs []string, appID string, orgID string, assignerPermissions []string, systemClaim bool, l *logs.Log) (*model.AppOrgGroup, error) {
-	var updatedGroup *model.AppOrgGroup
+	/*var updatedGroup *model.AppOrgGroup
 	transaction := func(context storage.TransactionContext) error {
 		//1. get application organization entity
 		appOrg, err := app.storage.FindApplicationOrganization(appID, orgID)
@@ -667,7 +668,8 @@ func (app *application) admUpdateAppOrgGroup(ID string, name string, description
 	if err != nil {
 		return nil, err
 	}
-	return updatedGroup, nil
+	return updatedGroup, nil */
+	return nil, nil
 }
 
 func (app *application) admGetAppOrgGroups(appID string, orgID string) ([]model.AppOrgGroup, error) {
@@ -753,8 +755,10 @@ func (app *application) admAddAccountsToGroup(appID string, orgID string, groupI
 			return errors.ErrorData(logutils.StatusInvalid, "account id", &logutils.FieldArgs{"ids": accountIDs})
 		}
 
+		appOrgID := accounts[0].AppOrg.ID
+
 		//2. find group
-		group, err := app.getAppOrgGroup(context, groupID, accounts[0].AppOrg.ID, nil)
+		group, err := app.getAppOrgGroup(context, groupID, appOrgID, nil)
 		if err != nil {
 			return err
 		}
@@ -778,7 +782,7 @@ func (app *application) admAddAccountsToGroup(appID string, orgID string, groupI
 
 		//5. insert accounts to group
 		accountGroup := model.AccountGroup{Group: *group, Active: true, AdminSet: true}
-		err = app.storage.InsertAccountsGroup(context, accountGroup, updateAccounts)
+		err = app.storage.InsertAccountsGroup(context, appOrgID, accountGroup, updateAccounts)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"ids": updateAccounts, "group_id": groupID}, err)
 		}
