@@ -3190,19 +3190,25 @@ func (sa *Adapter) updateAppOrgGroup(context TransactionContext, item model.AppO
 	}
 
 	// update all accounts that have the group
-	accountsFilter := bson.D{primitive.E{Key: "groups.group._id", Value: item.ID}}
-	accountsUpdate := bson.D{
-		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "groups.$.group.name", Value: item.Name},
-			primitive.E{Key: "groups.$.group.description", Value: item.Description},
-			primitive.E{Key: "groups.$.group.permissions", Value: item.Permissions},
-			primitive.E{Key: "groups.$.group.roles", Value: roles},
-			primitive.E{Key: "groups.$.group.system", Value: item.System},
-			primitive.E{Key: "groups.$.group.date_updated", Value: item.DateUpdated},
-		}},
+	accountsFilter := bson.M{"org_apps_memberships.groups.group._id": item.ID}
+	accountsUpdate := bson.M{
+		"$set": bson.M{
+			"org_apps_memberships.$[element].groups.$[groupElement].group.name":         item.Name,
+			"org_apps_memberships.$[element].groups.$[groupElement].group.description":  item.Description,
+			"org_apps_memberships.$[element].groups.$[groupElement].group.permissions":  item.Permissions,
+			"org_apps_memberships.$[element].groups.$[groupElement].group.roles":        item.Roles,
+			"org_apps_memberships.$[element].groups.$[groupElement].group.system":       item.System,
+			"org_apps_memberships.$[element].groups.$[groupElement].group.date_updated": item.DateUpdated,
+		},
 	}
-
-	res, err = sa.db.accounts.UpdateManyWithContext(context, accountsFilter, accountsUpdate, nil)
+	accountsArrayFilters := options.ArrayFilters{
+		Filters: []interface{}{
+			bson.M{"element.groups.group._id": item.ID},
+			bson.M{"groupElement.group._id": item.ID},
+		},
+	}
+	updateOptions := options.Update().SetArrayFilters(accountsArrayFilters)
+	res, err = sa.db.tenantsAccounts.UpdateManyWithContext(context, accountsFilter, accountsUpdate, updateOptions)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"groups.group.id": item.ID}, err)
 	}

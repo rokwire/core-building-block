@@ -509,7 +509,7 @@ func (app *application) admCreateAppOrgGroup(name string, description string, sy
 }
 
 func (app *application) admUpdateAppOrgGroup(ID string, name string, description string, system bool, permissionNames []string, rolesIDs []string, accountIDs []string, appID string, orgID string, assignerPermissions []string, systemClaim bool, l *logs.Log) (*model.AppOrgGroup, error) {
-	/*var updatedGroup *model.AppOrgGroup
+	var updatedGroup *model.AppOrgGroup
 	transaction := func(context storage.TransactionContext) error {
 		//1. get application organization entity
 		appOrg, err := app.storage.FindApplicationOrganization(appID, orgID)
@@ -635,7 +635,7 @@ func (app *application) admUpdateAppOrgGroup(ID string, name string, description
 			added, removed, _ = utils.StringListDiff(accountIDs, currentAccountIDs)
 			if len(added) > 0 {
 				accountGroup := model.AccountGroup{Group: *group, Active: true, AdminSet: true}
-				err = app.storage.InsertAccountsGroup(context, accountGroup, added)
+				err = app.storage.InsertAccountsGroup(context, appOrg.ID, accountGroup, added)
 				if err != nil {
 					return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAppOrgGroup, &logutils.FieldArgs{"id": group.ID}, err)
 				}
@@ -653,7 +653,7 @@ func (app *application) admUpdateAppOrgGroup(ID string, name string, description
 					}
 				}
 				//remove the accounts from the group
-				err = app.storage.RemoveAccountsGroup(context, group.ID, removed)
+				err = app.storage.RemoveAccountsGroup(context, appOrg.ID, group.ID, removed)
 				if err != nil {
 					return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAppOrgGroup, &logutils.FieldArgs{"id": group.ID}, err)
 				}
@@ -667,8 +667,7 @@ func (app *application) admUpdateAppOrgGroup(ID string, name string, description
 	if err != nil {
 		return nil, err
 	}
-	return updatedGroup, nil */
-	return nil, nil
+	return updatedGroup, nil
 }
 
 func (app *application) admGetAppOrgGroups(appID string, orgID string) ([]model.AppOrgGroup, error) {
