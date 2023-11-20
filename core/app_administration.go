@@ -1197,7 +1197,7 @@ func (app *application) admDeleteApplicationLoginSession(appID string, orgID str
 
 func (app *application) admGetApplicationAccountDevices(appID string, orgID string, accountID string, l *logs.Log) ([]model.Device, error) {
 	//1. find the account
-	account, err := app.getAccount(nil, accountID)
+	account, err := app.getAccountV2(nil, orgID, appID, accountID)
 	if err != nil {
 		return nil, err
 	}
