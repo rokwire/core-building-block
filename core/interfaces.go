@@ -141,8 +141,8 @@ type System interface {
 	SysGetOrganization(ID string) (*model.Organization, error)
 	SysUpdateOrganization(ID string, name string, requestType string, organizationDomains []string) error
 
-	SysCreateApplication(name string, multiTenant bool, admin bool, code *string, appTypes []model.ApplicationType) (*model.Application, error)
-	SysUpdateApplication(ID string, name string, multiTenant bool, admin bool, code *string, appTypes []model.ApplicationType) error
+	SysCreateApplication(name string, multiTenant bool, admin bool, code string, appTypes []model.ApplicationType) (*model.Application, error)
+	SysUpdateApplication(ID string, name string, multiTenant bool, admin bool, code string, appTypes []model.ApplicationType) error
 	SysGetApplication(ID string) (*model.Application, error)
 	SysGetApplications() ([]model.Application, error)
 

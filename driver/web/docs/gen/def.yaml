@@ -5916,6 +5916,7 @@ components:
         - name
         - multi_tenant
         - admin
+        - code
       type: object
       properties:
         id:

@@ -247,7 +247,7 @@ type AppOrgRole struct {
 // Application defines model for Application.
 type Application struct {
 	Admin       bool               `json:"admin"`
-	Code        *string            `json:"code,omitempty"`
+	Code        string             `json:"code"`
 	Id          *string            `json:"id,omitempty"`
 	MultiTenant bool               `json:"multi_tenant"`
 	Name        string             `json:"name"`

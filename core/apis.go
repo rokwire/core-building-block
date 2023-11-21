@@ -612,11 +612,11 @@ func (s *systemImpl) SysGetOrganization(ID string) (*model.Organization, error) 
 	return s.app.sysGetOrganization(ID)
 }
 
-func (s *systemImpl) SysCreateApplication(name string, multiTenant bool, admin bool, code *string, appTypes []model.ApplicationType) (*model.Application, error) {
+func (s *systemImpl) SysCreateApplication(name string, multiTenant bool, admin bool, code string, appTypes []model.ApplicationType) (*model.Application, error) {
 	return s.app.sysCreateApplication(name, multiTenant, admin, code, appTypes)
 }
 
-func (s *systemImpl) SysUpdateApplication(ID string, name string, multiTenant bool, admin bool, code *string, appTypes []model.ApplicationType) error {
+func (s *systemImpl) SysUpdateApplication(ID string, name string, multiTenant bool, admin bool, code string, appTypes []model.ApplicationType) error {
 	return s.app.sysUpdateApplication(ID, name, multiTenant, admin, code, appTypes)
 }
 
