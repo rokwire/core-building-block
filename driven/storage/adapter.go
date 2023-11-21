@@ -3012,19 +3012,25 @@ func (sa *Adapter) updateAppOrgRole(context TransactionContext, item model.AppOr
 	}
 
 	// update all accounts that have the role
-	accountsFilter := bson.D{primitive.E{Key: "roles.role._id", Value: item.ID}}
-	accountsUpdate := bson.D{
-		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "roles.$.role.name", Value: item.Name},
-			primitive.E{Key: "roles.$.role.description", Value: item.Description},
-			primitive.E{Key: "roles.$.role.permissions", Value: item.Permissions},
-			primitive.E{Key: "roles.$.role.scopes", Value: item.Scopes},
-			primitive.E{Key: "roles.$.role.system", Value: item.System},
-			primitive.E{Key: "roles.$.role.date_updated", Value: item.DateUpdated},
-		}},
+	accountsFilter := bson.M{"org_apps_memberships.roles.role._id": item.ID}
+	accountsUpdate := bson.M{
+		"$set": bson.M{
+			"org_apps_memberships.$[element].roles.$[roleElement].role.name":         item.Name,
+			"org_apps_memberships.$[element].roles.$[roleElement].role.description":  item.Description,
+			"org_apps_memberships.$[element].roles.$[roleElement].role.permissions":  item.Permissions,
+			"org_apps_memberships.$[element].roles.$[roleElement].role.scopes":       item.Scopes,
+			"org_apps_memberships.$[element].roles.$[roleElement].role.system":       item.System,
+			"org_apps_memberships.$[element].roles.$[roleElement].role.date_updated": item.DateUpdated,
+		},
 	}
-
-	res, err = sa.db.accounts.UpdateManyWithContext(context, accountsFilter, accountsUpdate, nil)
+	accountsArrayFilters := options.ArrayFilters{
+		Filters: []interface{}{
+			bson.M{"element.roles.role._id": item.ID},
+			bson.M{"roleElement.role._id": item.ID},
+		},
+	}
+	updateOptions := options.Update().SetArrayFilters(accountsArrayFilters)
+	res, err = sa.db.tenantsAccounts.UpdateManyWithContext(context, accountsFilter, accountsUpdate, updateOptions)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"roles.role._id": item.ID}, err)
 	}
