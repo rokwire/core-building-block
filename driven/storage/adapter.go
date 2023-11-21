@@ -2518,9 +2518,9 @@ func (sa *Adapter) UpdateLoginSessionExternalIDs(accountID string, externalIDs m
 
 // CountAccountsByRoleID counts how many accounts there are with the passed role id
 func (sa *Adapter) CountAccountsByRoleID(roleID string) (*int64, error) {
-	filter := bson.D{primitive.E{Key: "roles.role._id", Value: roleID}}
+	filter := bson.D{primitive.E{Key: "org_apps_memberships.roles.role._id", Value: roleID}}
 
-	count, err := sa.db.accounts.CountDocuments(filter)
+	count, err := sa.db.tenantsAccounts.CountDocuments(filter)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCount, model.TypeAccount, &logutils.FieldArgs{"roles._id": roleID}, err)
 	}
