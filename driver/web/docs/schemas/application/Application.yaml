@@ -14,6 +14,8 @@ properties:
     type: boolean
   admin:
     type: boolean
+  code:
+    type: string
   types:
     type: array
     items:

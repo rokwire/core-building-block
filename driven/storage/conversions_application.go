@@ -44,7 +44,7 @@ func applicationsFromStorage(itemsList []application) []model.Application {
 func applicationToStorage(item *model.Application) *application {
 	applicationTypes := applicationTypesToStorage(item.Types)
 
-	return &application{ID: item.ID, Name: item.Name, MultiTenant: item.MultiTenant, Admin: item.Admin,
+	return &application{ID: item.ID, Name: item.Name, MultiTenant: item.MultiTenant, Admin: item.Admin, Code: item.Code,
 		Types: applicationTypes, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }
 

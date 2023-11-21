@@ -131,7 +131,7 @@ func (c *APIs) storeSystemData() error {
 			}
 			newDocuments["application"] = uuid.NewString()
 			newAndroidAppType := model.ApplicationType{ID: uuid.NewString(), Identifier: c.systemAppTypeIdentifier, Name: c.systemAppTypeName, Versions: nil}
-			newSystemAdminApp := model.Application{ID: newDocuments["application"], Name: "System Admin application", MultiTenant: false, Admin: true,
+			newSystemAdminApp := model.Application{ID: newDocuments["application"], Name: "System Admin application", MultiTenant: false, Admin: true, Code: "",
 				Types: []model.ApplicationType{newAndroidAppType}, DateCreated: time.Now().UTC()}
 			_, err = c.app.storage.InsertApplication(context, newSystemAdminApp)
 			if err != nil {
