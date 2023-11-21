@@ -1293,7 +1293,7 @@ func (app *application) admGrantAccountRoles(appID string, orgID string, account
 
 	transaction := func(context storage.TransactionContext) error {
 		//1. verify that the account is for the current app/org
-		account, err := app.getAccount(context, accountID)
+		account, err := app.getAccountV2(context, orgID, appID, accountID)
 		if err != nil {
 			return err
 		}
@@ -1328,7 +1328,7 @@ func (app *application) admRevokeAccountRoles(appID string, orgID string, accoun
 
 	transaction := func(context storage.TransactionContext) error {
 		//1. verify that the account is for the current app/org
-		account, err := app.getAccount(context, accountID)
+		account, err := app.getAccountV2(context, orgID, appID, accountID)
 		if err != nil {
 			return err
 		}

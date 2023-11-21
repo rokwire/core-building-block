@@ -237,7 +237,7 @@ func (app *application) grantOrRevokeRoles(context storage.TransactionContext, c
 		{
 			if revoke {
 				//delete roles from an account
-				err = app.storage.DeleteAccountRoles(context, c.ID, checkRoles)
+				err = app.storage.DeleteAccountRoles(context, c.ID, appOrg.ID, checkRoles)
 				if err != nil {
 					return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccountRoles, &logutils.FieldArgs{"ids": checkRoles}, err)
 				}
