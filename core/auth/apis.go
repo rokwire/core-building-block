@@ -1787,6 +1787,7 @@ func (a *Auth) InitializeSystemAccount(context storage.TransactionContext, authT
 	return accountAuthType.Account.ID, nil
 }
 
+/*
 // GrantAccountPermissions grants new permissions to an account after validating the assigner has required permissions
 func (a *Auth) GrantAccountPermissions(context storage.TransactionContext, account *model.Account, permissionNames []string, assignerPermissions []string) error {
 	//check if there is data
@@ -1820,7 +1821,7 @@ func (a *Auth) GrantAccountPermissions(context storage.TransactionContext, accou
 
 	account.Permissions = append(account.Permissions, permissions...)
 	return nil
-}
+} */
 
 // CheckPermissions loads permissions by names from storage and checks that they are assignable and valid for the given appOrgs or revocable
 func (a *Auth) CheckPermissions(context storage.TransactionContext, appOrgs []model.ApplicationOrganization, permissionNames []string, assignerPermissions []string, revoke bool) ([]model.Permission, error) {

@@ -171,7 +171,7 @@ func (app *application) grantOrRevokePermissions(context storage.TransactionCont
 				}
 			} else {
 				//add permissions to account
-				err = app.storage.InsertAccountPermissions(context, c.ID, permissions)
+				err = app.storage.InsertAccountPermissions(context, c.ID, appOrg.ID, permissions)
 				if err != nil {
 					return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAccountPermissions, &logutils.FieldArgs{"names": checkPermissions}, err)
 				}

@@ -178,7 +178,7 @@ type Storage interface {
 
 	UpdateAccountPreferences(context storage.TransactionContext, cOrgID string, cAppID string, accountID string, preferences map[string]interface{}) error
 	UpdateAccountSystemConfigs(context storage.TransactionContext, accountID string, configs map[string]interface{}) error
-	InsertAccountPermissions(context storage.TransactionContext, accountID string, permissions []model.Permission) error
+	InsertAccountPermissions(context storage.TransactionContext, accountID string, appOrgID string, permissions []model.Permission) error
 	DeleteAccountPermissions(context storage.TransactionContext, accountID string, permissionNames []string) error
 	UpdateAccountUsername(context storage.TransactionContext, accountID, username string) error
 	UpdateAccountVerified(context storage.TransactionContext, accountID string, appID string, orgID string, verified bool) error
