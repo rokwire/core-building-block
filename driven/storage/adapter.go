@@ -2292,21 +2292,24 @@ func (sa *Adapter) UpdateAccountRoles(context TransactionContext, accountID stri
 }
 
 // DeleteAccountRoles deletes account roles
-func (sa *Adapter) DeleteAccountRoles(context TransactionContext, accountID string, roleIDs []string) error {
+func (sa *Adapter) DeleteAccountRoles(context TransactionContext, accountID string, appOrgID string, roleIDs []string) error {
 	//filter
-	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
+	filter := bson.D{
+		primitive.E{Key: "_id", Value: accountID},
+		primitive.E{Key: "org_apps_memberships.app_org_id", Value: appOrgID},
+	}
 
 	//update
 	update := bson.D{
 		primitive.E{Key: "$pull", Value: bson.D{
-			primitive.E{Key: "roles", Value: bson.M{"role._id": bson.M{"$in": roleIDs}}},
+			primitive.E{Key: "org_apps_memberships.$.roles", Value: bson.M{"role._id": bson.M{"$in": roleIDs}}},
 		}},
 		primitive.E{Key: "$set", Value: bson.D{
 			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
 		}},
 	}
 
-	res, err := sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
+	res, err := sa.db.tenantsAccounts.UpdateOneWithContext(context, filter, update, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"id": accountID}, err)
 	}
