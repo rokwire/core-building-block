@@ -159,7 +159,7 @@ func (app *application) grantOrRevokePermissions(context storage.TransactionCont
 		{
 			if revoke {
 				//delete permissions from an account
-				err = app.storage.DeleteAccountPermissions(context, c.ID, checkPermissions)
+				err = app.storage.DeleteAccountPermissions(context, c.ID, appOrg.ID, checkPermissions)
 				if err != nil {
 					return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccountPermissions, &logutils.FieldArgs{"names": checkPermissions}, err)
 				}
