@@ -177,6 +177,7 @@ type APIKey struct {
 type Account struct {
 	Anonymous               *bool                    `json:"anonymous,omitempty"`
 	AppOrg                  *ApplicationOrganization `json:"app_org"`
+	Apps                    *[]Application           `json:"apps,omitempty"`
 	AuthTypes               *[]AccountAuthType       `json:"auth_types,omitempty"`
 	Devices                 *[]Device                `json:"devices,omitempty"`
 	ExternalIds             *map[string]interface{}  `json:"external_ids"`

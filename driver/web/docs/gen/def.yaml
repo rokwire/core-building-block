@@ -6604,6 +6604,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AppOrgRole'
+        apps:
+          type: array
+          items:
+            $ref: '#/components/schemas/Application'
         groups:
           type: array
           items:
