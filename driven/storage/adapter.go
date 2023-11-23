@@ -2180,17 +2180,20 @@ func (sa *Adapter) InsertAccountGroups(context TransactionContext, accountID str
 	stgGroups := accountGroupsToStorage(groups)
 
 	//appID included in search to prevent accidentally assigning permissions to account from different application
-	filter := bson.D{primitive.E{Key: "_id", Value: accountID}, primitive.E{Key: "app_org_id", Value: appOrgID}}
+	filter := bson.D{
+		primitive.E{Key: "_id", Value: accountID},
+		primitive.E{Key: "org_apps_memberships.app_org_id", Value: appOrgID},
+	}
 	update := bson.D{
 		primitive.E{Key: "$push", Value: bson.D{
-			primitive.E{Key: "groups", Value: bson.M{"$each": stgGroups}},
+			primitive.E{Key: "org_apps_memberships.$.groups", Value: bson.M{"$each": stgGroups}},
 		}},
 		primitive.E{Key: "$set", Value: bson.D{
 			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
 		}},
 	}
 
-	res, err := sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
+	res, err := sa.db.tenantsAccounts.UpdateOneWithContext(context, filter, update, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"_id": accountID, "app_org_id": appOrgID}, err)
 	}

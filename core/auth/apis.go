@@ -1950,7 +1950,6 @@ func (a *Auth) CheckRoles(context storage.TransactionContext, appOrg *model.Appl
 	return roles, nil
 }
 
-/*
 // GrantAccountGroups grants new groups to an account after validating the assigner has required permissions
 func (a *Auth) GrantAccountGroups(context storage.TransactionContext, account *model.Account, groupIDs []string, assignerPermissions []string) error {
 	//check if there is data
@@ -1985,7 +1984,7 @@ func (a *Auth) GrantAccountGroups(context storage.TransactionContext, account *m
 
 	account.Groups = append(account.Groups, accountGroups...)
 	return nil
-} */
+}
 
 // CheckGroups loads appOrg groups by IDs from storage and checks that they are assignable or revocable
 func (a *Auth) CheckGroups(context storage.TransactionContext, appOrg *model.ApplicationOrganization, groupIDs []string, assignerPermissions []string, revoke bool) ([]model.AppOrgGroup, error) {

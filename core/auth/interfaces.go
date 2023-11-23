@@ -407,7 +407,7 @@ type APIs interface {
 	CheckRoles(context storage.TransactionContext, appOrg *model.ApplicationOrganization, roleIDs []string, assignerPermissions []string, revoke bool) ([]model.AppOrgRole, error)
 
 	//GrantAccountGroups grants new groups to an account after validating the assigner has required permissions
-	//GrantAccountGroups(context storage.TransactionContext, account *model.Account, groupIDs []string, assignerPermissions []string) error
+	GrantAccountGroups(context storage.TransactionContext, account *model.Account, groupIDs []string, assignerPermissions []string) error
 
 	//CheckGroups loads appOrg groups by IDs from storage and checks that they are assignable or revocable
 	CheckGroups(context storage.TransactionContext, appOrg *model.ApplicationOrganization, groupIDs []string, assignerPermissions []string, revoke bool) ([]model.AppOrgGroup, error)
