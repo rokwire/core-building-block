@@ -3387,6 +3387,7 @@ func (sa *Adapter) UpdateAccountPrivacy(context TransactionContext, accountID st
 	return nil
 }
 
+/* not used and also no more relevant as one account has a profile
 // FindAccountProfiles finds profiles by app id, authtype id and account auth type identifier
 func (sa *Adapter) FindAccountProfiles(appID string, authTypeID string, accountAuthTypeIdentifier string) ([]model.Profile, error) {
 	pipeline := []bson.M{
@@ -3411,7 +3412,7 @@ func (sa *Adapter) FindAccountProfiles(appID string, authTypeID string, accountA
 
 	result := profilesFromStorage(accounts, *sa)
 	return result, nil
-}
+} */
 
 // loadConfigs loads configs
 func (sa *Adapter) loadConfigs() ([]model.Config, error) {
