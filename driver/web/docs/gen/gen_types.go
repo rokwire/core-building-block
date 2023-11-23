@@ -177,7 +177,7 @@ type APIKey struct {
 type Account struct {
 	Anonymous               *bool                    `json:"anonymous,omitempty"`
 	AppOrg                  *ApplicationOrganization `json:"app_org"`
-	Apps                    *[]Application           `json:"apps,omitempty"`
+	Apps                    *[]Apps                  `json:"apps,omitempty"`
 	AuthTypes               *[]AccountAuthType       `json:"auth_types,omitempty"`
 	Devices                 *[]Device                `json:"devices,omitempty"`
 	ExternalIds             *map[string]interface{}  `json:"external_ids"`
@@ -283,6 +283,13 @@ type ApplicationType struct {
 	Identifier string    `json:"identifier"`
 	Name       *string   `json:"name,omitempty"`
 	Versions   *[]string `json:"versions,omitempty"`
+}
+
+// Apps defines model for Apps.
+type Apps struct {
+	Code string  `json:"code"`
+	Id   *string `json:"id,omitempty"`
+	Name string  `json:"name"`
 }
 
 // AuthServiceReg Service registration record used for auth

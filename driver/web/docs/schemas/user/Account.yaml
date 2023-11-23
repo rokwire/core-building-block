@@ -43,7 +43,7 @@ properties:
   apps:
     type: array
     items:
-      $ref: "../application/Application.yaml"    
+      $ref: "../application/Apps.yaml"    
   groups:
     type: array
     items:

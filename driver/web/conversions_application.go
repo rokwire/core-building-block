@@ -20,6 +20,20 @@ import (
 	"core-building-block/utils"
 )
 
+// Apps
+func appToDef(item model.Application) Def.Apps {
+
+	return Def.Apps{Id: &item.ID, Name: item.Name, Code: item.Code}
+}
+
+func appsToDef(item []model.Application) []Def.Apps {
+	result := make([]Def.Apps, len(item))
+	for i, item := range item {
+		result[i] = appToDef(item)
+	}
+	return result
+}
+
 // Application
 func applicationToDef(item model.Application) Def.Application {
 	types := applicationTypeListToDef(item.Types)

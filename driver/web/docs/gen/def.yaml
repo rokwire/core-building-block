@@ -6235,6 +6235,20 @@ components:
           type: boolean
         time_since_login_period:
           type: integer
+    Apps:
+      required:
+        - id
+        - name
+        - code
+      type: object
+      properties:
+        id:
+          readOnly: true
+          type: string
+        name:
+          type: string
+        code:
+          type: string
     LoginSession:
       type: object
       properties:
@@ -6607,7 +6621,7 @@ components:
         apps:
           type: array
           items:
-            $ref: '#/components/schemas/Application'
+            $ref: '#/components/schemas/Apps'
         groups:
           type: array
           items:
