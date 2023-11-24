@@ -6699,6 +6699,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AppOrgGroup'
+        apps:
+          type: array
+          items:
+            $ref: '#/components/schemas/Apps'
         scopes:
           type: array
           items:

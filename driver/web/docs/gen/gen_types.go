@@ -520,6 +520,7 @@ type OrganizationConfig struct {
 type PartialAccount struct {
 	Anonymous     bool                    `json:"anonymous"`
 	AppId         string                  `json:"app_id"`
+	Apps          *[]Apps                 `json:"apps,omitempty"`
 	AuthTypes     []AccountAuthType       `json:"auth_types"`
 	DateCreated   *string                 `json:"date_created,omitempty"`
 	DateUpdated   *string                 `json:"date_updated"`
