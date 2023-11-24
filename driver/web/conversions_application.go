@@ -20,11 +20,25 @@ import (
 	"core-building-block/utils"
 )
 
+// PartialApp
+func partialAppToDef(item model.Application) Def.PartialApp {
+
+	return Def.PartialApp{Id: &item.ID, Name: item.Name, Code: item.Code}
+}
+
+func partialAppsToDef(item []model.Application) []Def.PartialApp {
+	result := make([]Def.PartialApp, len(item))
+	for i, item := range item {
+		result[i] = partialAppToDef(item)
+	}
+	return result
+}
+
 // Application
 func applicationToDef(item model.Application) Def.Application {
 	types := applicationTypeListToDef(item.Types)
 
-	return Def.Application{Id: &item.ID, Name: item.Name, MultiTenant: item.MultiTenant,
+	return Def.Application{Id: &item.ID, Name: item.Name, MultiTenant: item.MultiTenant, Code: item.Code,
 		Admin: item.Admin, Types: &types}
 }
 

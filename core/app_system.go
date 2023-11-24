@@ -123,7 +123,7 @@ func (app *application) sysGetApplication(ID string) (*model.Application, error)
 	return appAdm, nil
 }
 
-func (app *application) sysCreateApplication(name string, multiTenant bool, admin bool, appTypes []model.ApplicationType) (*model.Application, error) {
+func (app *application) sysCreateApplication(name string, multiTenant bool, admin bool, code string, appTypes []model.ApplicationType) (*model.Application, error) {
 	now := time.Now()
 
 	// application
@@ -136,7 +136,7 @@ func (app *application) sysCreateApplication(name string, multiTenant bool, admi
 			appTypes[i].Versions[vidx].DateCreated = now
 		}
 	}
-	application := model.Application{ID: uuid.NewString(), Name: name, MultiTenant: multiTenant, Admin: admin,
+	application := model.Application{ID: uuid.NewString(), Name: name, MultiTenant: multiTenant, Admin: admin, Code: code,
 		Types: appTypes, DateCreated: now}
 
 	insertedApplication, err := app.storage.InsertApplication(nil, application)
@@ -146,7 +146,7 @@ func (app *application) sysCreateApplication(name string, multiTenant bool, admi
 	return insertedApplication, nil
 }
 
-func (app *application) sysUpdateApplication(ID string, name string, multiTenant bool, admin bool, appTypes []model.ApplicationType) error {
+func (app *application) sysUpdateApplication(ID string, name string, multiTenant bool, admin bool, code string, appTypes []model.ApplicationType) error {
 	transaction := func(context storage.TransactionContext) error {
 		//1. find application
 		application, err := app.storage.FindApplication(context, ID)
@@ -185,9 +185,9 @@ func (app *application) sysUpdateApplication(ID string, name string, multiTenant
 		}
 
 		//3. update if app types or other application params were updated
-		updated = updated || (name != application.Name) || (multiTenant != application.MultiTenant) || (admin != application.Admin)
+		updated = updated || (name != application.Name) || (multiTenant != application.MultiTenant) || (admin != application.Admin) || (code != application.Code)
 		if updated {
-			updatedApp := model.Application{ID: application.ID, Name: name, MultiTenant: multiTenant, Admin: admin,
+			updatedApp := model.Application{ID: application.ID, Name: name, MultiTenant: multiTenant, Admin: admin, Code: code,
 				Types: appTypes, DateCreated: application.DateCreated, DateUpdated: &now}
 			err = app.storage.SaveApplication(context, updatedApp)
 			if err != nil {

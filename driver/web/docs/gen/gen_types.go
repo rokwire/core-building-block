@@ -177,6 +177,7 @@ type APIKey struct {
 type Account struct {
 	Anonymous               *bool                    `json:"anonymous,omitempty"`
 	AppOrg                  *ApplicationOrganization `json:"app_org"`
+	Apps                    *[]PartialApp            `json:"apps,omitempty"`
 	AuthTypes               *[]AccountAuthType       `json:"auth_types,omitempty"`
 	Devices                 *[]Device                `json:"devices,omitempty"`
 	ExternalIds             *map[string]interface{}  `json:"external_ids"`
@@ -247,6 +248,7 @@ type AppOrgRole struct {
 // Application defines model for Application.
 type Application struct {
 	Admin       bool               `json:"admin"`
+	Code        string             `json:"code"`
 	Id          *string            `json:"id,omitempty"`
 	MultiTenant bool               `json:"multi_tenant"`
 	Name        string             `json:"name"`
@@ -511,6 +513,7 @@ type OrganizationConfig struct {
 type PartialAccount struct {
 	Anonymous     bool                    `json:"anonymous"`
 	AppId         string                  `json:"app_id"`
+	Apps          *[]PartialApp           `json:"apps,omitempty"`
 	AuthTypes     []AccountAuthType       `json:"auth_types"`
 	DateCreated   *string                 `json:"date_created,omitempty"`
 	DateUpdated   *string                 `json:"date_updated"`
@@ -529,6 +532,13 @@ type PartialAccount struct {
 	SystemConfigs *map[string]interface{} `json:"system_configs"`
 	Username      *string                 `json:"username,omitempty"`
 	Verified      *bool                   `json:"verified,omitempty"`
+}
+
+// PartialApp defines model for PartialApp.
+type PartialApp struct {
+	Code string  `json:"code"`
+	Id   *string `json:"id,omitempty"`
+	Name string  `json:"name"`
 }
 
 // Permission defines model for Permission.

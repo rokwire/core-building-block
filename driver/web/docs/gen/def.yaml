@@ -5916,6 +5916,7 @@ components:
         - name
         - multi_tenant
         - admin
+        - code
       type: object
       properties:
         id:
@@ -5927,6 +5928,8 @@ components:
           type: boolean
         admin:
           type: boolean
+        code:
+          type: string
         types:
           type: array
           items:
@@ -6232,6 +6235,20 @@ components:
           type: boolean
         time_since_login_period:
           type: integer
+    PartialApp:
+      required:
+        - id
+        - name
+        - code
+      type: object
+      properties:
+        id:
+          readOnly: true
+          type: string
+        name:
+          type: string
+        code:
+          type: string
     LoginSession:
       type: object
       properties:
@@ -6601,6 +6618,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AppOrgRole'
+        apps:
+          type: array
+          items:
+            $ref: '#/components/schemas/PartialApp'
         groups:
           type: array
           items:
@@ -6678,6 +6699,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AppOrgGroup'
+        apps:
+          type: array
+          items:
+            $ref: '#/components/schemas/PartialApp'
         scopes:
           type: array
           items:

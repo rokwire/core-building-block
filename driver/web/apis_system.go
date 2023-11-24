@@ -753,7 +753,7 @@ func (h SystemApisHandler) createApplication(l *logs.Log, r *http.Request, claim
 		appTypes = applicationTypeListFromDef(*requestData.Types)
 	}
 
-	_, err = h.coreAPIs.System.SysCreateApplication(requestData.Name, requestData.MultiTenant, requestData.Admin, appTypes)
+	_, err = h.coreAPIs.System.SysCreateApplication(requestData.Name, requestData.MultiTenant, requestData.Admin, requestData.Code, appTypes)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionCreate, model.TypeApplication, nil, err, http.StatusInternalServerError, true)
 	}
@@ -784,7 +784,7 @@ func (h SystemApisHandler) updateApplication(l *logs.Log, r *http.Request, claim
 		appTypes = applicationTypeListFromDef(*requestData.Types)
 	}
 
-	err = h.coreAPIs.System.SysUpdateApplication(ID, requestData.Name, requestData.MultiTenant, requestData.Admin, appTypes)
+	err = h.coreAPIs.System.SysUpdateApplication(ID, requestData.Name, requestData.MultiTenant, requestData.Admin, requestData.Code, appTypes)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUpdate, model.TypeApplication, nil, err, http.StatusInternalServerError, true)
 	}
