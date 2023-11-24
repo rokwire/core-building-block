@@ -176,8 +176,8 @@ type APIKey struct {
 // Account defines model for Account.
 type Account struct {
 	Anonymous               *bool                    `json:"anonymous,omitempty"`
+	App                     *[]App                   `json:"app,omitempty"`
 	AppOrg                  *ApplicationOrganization `json:"app_org"`
-	Apps                    *[]Apps                  `json:"apps,omitempty"`
 	AuthTypes               *[]AccountAuthType       `json:"auth_types,omitempty"`
 	Devices                 *[]Device                `json:"devices,omitempty"`
 	ExternalIds             *map[string]interface{}  `json:"external_ids"`
@@ -211,6 +211,13 @@ type AccountAuthType struct {
 // AdminToken defines model for AdminToken.
 type AdminToken struct {
 	Token string `json:"token"`
+}
+
+// App defines model for App.
+type App struct {
+	Code string  `json:"code"`
+	Id   *string `json:"id,omitempty"`
+	Name string  `json:"name"`
 }
 
 // AppOrgGroup defines model for AppOrgGroup.
@@ -283,13 +290,6 @@ type ApplicationType struct {
 	Identifier string    `json:"identifier"`
 	Name       *string   `json:"name,omitempty"`
 	Versions   *[]string `json:"versions,omitempty"`
-}
-
-// Apps defines model for Apps.
-type Apps struct {
-	Code string  `json:"code"`
-	Id   *string `json:"id,omitempty"`
-	Name string  `json:"name"`
 }
 
 // AuthServiceReg Service registration record used for auth
@@ -519,8 +519,8 @@ type OrganizationConfig struct {
 // PartialAccount defines model for PartialAccount.
 type PartialAccount struct {
 	Anonymous     bool                    `json:"anonymous"`
+	App           *[]App                  `json:"app,omitempty"`
 	AppId         string                  `json:"app_id"`
-	Apps          *[]Apps                 `json:"apps,omitempty"`
 	AuthTypes     []AccountAuthType       `json:"auth_types"`
 	DateCreated   *string                 `json:"date_created,omitempty"`
 	DateUpdated   *string                 `json:"date_updated"`

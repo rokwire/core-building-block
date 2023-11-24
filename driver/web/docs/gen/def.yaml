@@ -6235,7 +6235,7 @@ components:
           type: boolean
         time_since_login_period:
           type: integer
-    Apps:
+    App:
       required:
         - id
         - name
@@ -6618,10 +6618,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AppOrgRole'
-        apps:
+        app:
           type: array
           items:
-            $ref: '#/components/schemas/Apps'
+            $ref: '#/components/schemas/App'
         groups:
           type: array
           items:
@@ -6699,10 +6699,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AppOrgGroup'
-        apps:
+        app:
           type: array
           items:
-            $ref: '#/components/schemas/Apps'
+            $ref: '#/components/schemas/App'
         scopes:
           type: array
           items:

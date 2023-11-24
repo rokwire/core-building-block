@@ -40,10 +40,10 @@ properties:
     type: array
     items:
       $ref: "../application/AppOrgRole.yaml"
-  apps:
+  app:
     type: array
     items:
-      $ref: "../application/Apps.yaml"    
+      $ref: "../application/App.yaml"    
   groups:
     type: array
     items:

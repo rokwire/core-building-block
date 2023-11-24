@@ -20,14 +20,14 @@ import (
 	"core-building-block/utils"
 )
 
-// Apps
-func appToDef(item model.Application) Def.Apps {
+// App
+func appToDef(item model.Application) Def.App {
 
-	return Def.Apps{Id: &item.ID, Name: item.Name, Code: item.Code}
+	return Def.App{Id: &item.ID, Name: item.Name, Code: item.Code}
 }
 
-func appsToDef(item []model.Application) []Def.Apps {
-	result := make([]Def.Apps, len(item))
+func appsToDef(item []model.Application) []Def.App {
+	result := make([]Def.App, len(item))
 	for i, item := range item {
 		result[i] = appToDef(item)
 	}
