@@ -1,7 +1,0 @@
-type: object
-description: Auth login params for auth_type="oidc" (or variants)
-properties:
-  redirect_uri:
-    type: string
-  pkce_verifier:
-    type: string
