@@ -7124,7 +7124,7 @@ components:
       type: string
       description: |
         Auth login creds for auth_type="oidc" (or variants)
-         - full redirect URI received from OIDC provider
+          - full redirect URI received from OIDC provider
     _shared_req_CredsUsername:
       required:
         - username
