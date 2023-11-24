@@ -6618,7 +6618,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AppOrgRole'
-        app:
+        apps:
           type: array
           items:
             $ref: '#/components/schemas/PartialApp'
@@ -6699,7 +6699,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AppOrgGroup'
-        app:
+        apps:
           type: array
           items:
             $ref: '#/components/schemas/PartialApp'

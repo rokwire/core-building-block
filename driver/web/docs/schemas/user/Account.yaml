@@ -40,7 +40,7 @@ properties:
     type: array
     items:
       $ref: "../application/AppOrgRole.yaml"
-  app:
+  apps:
     type: array
     items:
       $ref: "../application/PartialApp.yaml"    

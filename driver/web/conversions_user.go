@@ -66,7 +66,7 @@ func accountToDef(item model.Account) *Def.Account {
 	}
 	apps := partialAppsToDef(as)
 
-	return &Def.Account{Id: &item.ID, App: &apps, Anonymous: &item.Anonymous, System: &item.AppOrg.Organization.System, Permissions: &permissions, Roles: &roles, Groups: &groups,
+	return &Def.Account{Id: &item.ID, Apps: &apps, Anonymous: &item.Anonymous, System: &item.AppOrg.Organization.System, Permissions: &permissions, Roles: &roles, Groups: &groups,
 		Privacy: privacy, Verified: &item.Verified, Scopes: &scopes, AuthTypes: &authTypes, Username: username, Profile: profile, Preferences: preferences, SystemConfigs: systemConfigs,
 		LastLoginDate: &lastLoginDate, LastAccessTokenDate: &lastAccessTokenDate, MostRecentClientVersion: item.MostRecentClientVersion, ExternalIds: &externalIds}
 }
@@ -135,7 +135,7 @@ func partialAccountToDef(item model.Account, params map[string]interface{}) *Def
 	}
 	apps := partialAppsToDef(as)
 
-	return &Def.PartialAccount{Id: &item.ID, App: &apps, Anonymous: item.Anonymous, AppId: item.AppOrg.Application.ID, OrgId: item.AppOrg.Organization.ID, FirstName: item.Profile.FirstName,
+	return &Def.PartialAccount{Id: &item.ID, Apps: &apps, Anonymous: item.Anonymous, AppId: item.AppOrg.Application.ID, OrgId: item.AppOrg.Organization.ID, FirstName: item.Profile.FirstName,
 		LastName: item.Profile.LastName, Username: username, System: &item.AppOrg.Organization.System, Permissions: permissions, Roles: roles, Groups: groups,
 		Privacy: privacy, Verified: &item.Verified, Scopes: &scopes, SystemConfigs: systemConfigs, AuthTypes: authTypes, DateCreated: &dateCreated,
 		DateUpdated: dateUpdated, Params: paramsData, ExternalIds: &externalIds}

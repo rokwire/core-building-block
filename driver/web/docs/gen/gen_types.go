@@ -176,8 +176,8 @@ type APIKey struct {
 // Account defines model for Account.
 type Account struct {
 	Anonymous               *bool                    `json:"anonymous,omitempty"`
-	App                     *[]PartialApp            `json:"app,omitempty"`
 	AppOrg                  *ApplicationOrganization `json:"app_org"`
+	Apps                    *[]PartialApp            `json:"apps,omitempty"`
 	AuthTypes               *[]AccountAuthType       `json:"auth_types,omitempty"`
 	Devices                 *[]Device                `json:"devices,omitempty"`
 	ExternalIds             *map[string]interface{}  `json:"external_ids"`
@@ -512,8 +512,8 @@ type OrganizationConfig struct {
 // PartialAccount defines model for PartialAccount.
 type PartialAccount struct {
 	Anonymous     bool                    `json:"anonymous"`
-	App           *[]PartialApp           `json:"app,omitempty"`
 	AppId         string                  `json:"app_id"`
+	Apps          *[]PartialApp           `json:"apps,omitempty"`
 	AuthTypes     []AccountAuthType       `json:"auth_types"`
 	DateCreated   *string                 `json:"date_created,omitempty"`
 	DateUpdated   *string                 `json:"date_updated"`
