@@ -37,8 +37,8 @@ InactiveExpirePolicy:
   $ref: "./application/InactiveExpirePolicy.yaml"
 TSLExpirePolicy:
   $ref: "./application/TSLExpirePolicy.yaml"
-App:
-  $ref: "./application/App.yaml"  
+PartialApp:
+  $ref: "./application/PartialApp.yaml"  
 
 # auth
 LoginSession:

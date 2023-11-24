@@ -42,7 +42,7 @@ properties:
   app:
     type: array
     items:
-      $ref: "../application/App.yaml"      
+      $ref: "../application/PartialApp.yaml"      
   scopes:
     type: array
     items:

@@ -20,16 +20,16 @@ import (
 	"core-building-block/utils"
 )
 
-// App
-func appToDef(item model.Application) Def.App {
+// PartialApp
+func partialAppToDef(item model.Application) Def.PartialApp {
 
-	return Def.App{Id: &item.ID, Name: item.Name, Code: item.Code}
+	return Def.PartialApp{Id: &item.ID, Name: item.Name, Code: item.Code}
 }
 
-func appsToDef(item []model.Application) []Def.App {
-	result := make([]Def.App, len(item))
+func partialAppsToDef(item []model.Application) []Def.PartialApp {
+	result := make([]Def.PartialApp, len(item))
 	for i, item := range item {
-		result[i] = appToDef(item)
+		result[i] = partialAppToDef(item)
 	}
 	return result
 }
