@@ -1159,6 +1159,15 @@ paths:
         **Auth:** Requires auth token
       security:
         - bearerAuth: []
+      parameters:
+        - name: apps
+          in: query
+          description: A comma-separated list of app_ids
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
       responses:
         '200':
           description: Success

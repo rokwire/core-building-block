@@ -1353,6 +1353,12 @@ type GetBbsServiceRegsParams struct {
 	Ids string `form:"ids" json:"ids"`
 }
 
+// DeleteServicesAccountParams defines parameters for DeleteServicesAccount.
+type DeleteServicesAccountParams struct {
+	// Apps A comma-separated list of app_ids
+	Apps *string `form:"apps,omitempty" json:"apps,omitempty"`
+}
+
 // PutServicesAccountPreferencesJSONBody defines parameters for PutServicesAccountPreferences.
 type PutServicesAccountPreferencesJSONBody = map[string]interface{}
 
