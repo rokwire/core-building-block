@@ -24,7 +24,7 @@ import (
 
 // Services exposes APIs for the driver adapters
 type Services interface {
-	SerDeleteAccount(id string) error
+	SerDeleteAccount(id string, apps []string) error
 	SerGetAccount(cOrgID string, cAppID string, accountID string) (*model.Account, error)
 	SerGetProfile(cOrgID string, cAppID string, accountID string) (*model.Profile, error)
 	SerGetPreferences(cOrgID string, cAppID string, accountID string) (map[string]interface{}, error)

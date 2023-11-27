@@ -132,7 +132,7 @@ func (app *application) serUpdateAccountPreferences(id string, appID string, org
 	return false, nil
 }
 
-func (app *application) serDeleteAccount(id string) error {
+func (app *application) serDeleteAccount(id string, apps []string) error {
 	return app.auth.DeleteAccount(id)
 }
 
