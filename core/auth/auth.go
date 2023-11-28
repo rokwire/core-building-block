@@ -1934,10 +1934,12 @@ func (a *Auth) deleteAccount(context storage.TransactionContext, account model.A
 
 func (a *Auth) deleteAccountFromApps(context storage.TransactionContext, account model.Account, fromAppsIDs []string) error {
 	for _, idToDelete := range fromAppsIDs {
-		orgApps, _ := a.deleteApps(context, account.OrgAppsMemberships, idToDelete)
-		account.OrgAppsMemberships = orgApps
+		orgApps, err := a.deleteApps(context, account.OrgAppsMemberships, idToDelete)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
+		}
 
-		err := a.storage.DeleteAccountOrgAppsMemberships(context, account.ID, orgApps)
+		err = a.storage.DeleteAccountOrgAppsMemberships(context, account.ID, orgApps)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
 		}
