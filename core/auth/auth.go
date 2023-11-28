@@ -1920,16 +1920,20 @@ func (a *Auth) deleteAccount(context storage.TransactionContext, account model.A
 		}
 	}
 
-	//validate and determine if we should remove the whole account or just ot unattach it from specific apps
-	//allAccountApps := account.GetApps()
-
-	//	log.Println(allAccountApps)
-
-	return a.deleteFullAccount(context, account)
+	//we are sure that all passed apps are available for the account
+	//now we have to decide if we have to remove the while account or just to unattach it from specific apps
+	allAccountApps := account.GetApps()
+	if len(allAccountApps) == len(fromAppsIDs) {
+		//means remove all apps => remove the whole account
+		return a.deleteFullAccount(context, account)
+	} else {
+		//means remove specific apps only, so unattach only them
+		return a.deleteAccountFromApps(context, account, fromAppsIDs)
+	}
 }
 
 func (a *Auth) deleteAccountFromApps(context storage.TransactionContext, account model.Account, fromAppsIDs []string) error {
-	//TODO
+	//TODO - Stefan
 	return nil
 }
 
