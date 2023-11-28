@@ -1908,6 +1908,17 @@ func (a *Auth) removeAccountAuthTypeCredential(context storage.TransactionContex
 }
 
 func (a *Auth) deleteAccount(context storage.TransactionContext, account model.Account, fromAppsIDs []string) error {
+	//TODO
+
+	return a.deleteFullAccount(context, account)
+}
+
+func (a *Auth) deleteAccountFromApps(context storage.TransactionContext, account model.Account, fromAppsIDs []string) error {
+	//TODO
+	return nil
+}
+
+func (a *Auth) deleteFullAccount(context storage.TransactionContext, account model.Account) error {
 	//1. delete the account record
 	err := a.storage.DeleteAccount(context, account.ID)
 	if err != nil {
