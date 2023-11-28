@@ -1754,7 +1754,7 @@ func (a *Auth) DeleteAccount(id string, apps []string) error {
 			return errors.ErrorData(logutils.StatusMissing, model.TypeAccount, nil)
 		}
 
-		err = a.deleteAccount(context, *account)
+		err = a.deleteAccount(context, *account, apps)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
 		}

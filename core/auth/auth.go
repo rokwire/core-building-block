@@ -1828,7 +1828,12 @@ func (a *Auth) handleAccountAuthTypeConflict(account model.Account, authTypeID s
 			return errors.ErrorData("existing", model.TypeAccount, nil).SetStatus(utils.ErrorStatusAlreadyExists)
 		}
 		//if linked to a different unverified account, remove whole account
-		err := a.deleteAccount(nil, account)
+		accountApps := account.GetApps()
+		accountAppsIDs := make([]string, len(accountApps))
+		for i, c := range accountApps {
+			accountAppsIDs[i] = c.ID
+		}
+		err := a.deleteAccount(nil, account, accountAppsIDs) //from all apps
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
 		}
@@ -1902,7 +1907,7 @@ func (a *Auth) removeAccountAuthTypeCredential(context storage.TransactionContex
 	return nil
 }
 
-func (a *Auth) deleteAccount(context storage.TransactionContext, account model.Account) error {
+func (a *Auth) deleteAccount(context storage.TransactionContext, account model.Account, fromAppsIDs []string) error {
 	//1. delete the account record
 	err := a.storage.DeleteAccount(context, account.ID)
 	if err != nil {
