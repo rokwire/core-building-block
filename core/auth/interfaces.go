@@ -413,7 +413,7 @@ type APIs interface {
 	CheckGroups(context storage.TransactionContext, appOrg *model.ApplicationOrganization, groupIDs []string, assignerPermissions []string, revoke bool) ([]model.AppOrgGroup, error)
 
 	//DeleteAccount deletes an account for the given id
-	DeleteAccount(id string) error
+	DeleteAccount(id string, apps []string) error
 
 	//GetAdminToken returns an admin token for the specified application and organization
 	GetAdminToken(claims tokenauth.Claims, appID string, orgID string, l *logs.Log) (string, error)
