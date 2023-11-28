@@ -2322,6 +2322,30 @@ func (sa *Adapter) DeleteAccountRoles(context TransactionContext, accountID stri
 	return nil
 }
 
+// DeleteAccountOrgAppsMemberships deletes account org_apps_membership
+func (sa *Adapter) DeleteAccountOrgAppsMemberships(context TransactionContext, accountID string, orgApps []model.OrgAppMembership) error {
+	//filter
+	filter := bson.D{
+		primitive.E{Key: "_id", Value: accountID},
+	}
+
+	update := bson.D{
+		primitive.E{Key: "$set", Value: bson.D{
+			primitive.E{Key: "org_apps_memberships", Value: orgApps},
+			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
+		}},
+	}
+
+	res, err := sa.db.tenantsAccounts.UpdateOneWithContext(context, filter, update, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"_id": accountID}, err)
+	}
+	if res.ModifiedCount != 1 {
+		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"_id": accountID, "modified": res.ModifiedCount, "expected": 1})
+	}
+	return nil
+}
+
 // UpdateAccountGroups updates the account groups
 func (sa *Adapter) UpdateAccountGroups(context TransactionContext, accountID string, appOrgID string, groups []model.AccountGroup) error {
 	stgGroups := accountGroupsToStorage(groups)

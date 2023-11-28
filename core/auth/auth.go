@@ -1933,8 +1933,27 @@ func (a *Auth) deleteAccount(context storage.TransactionContext, account model.A
 }
 
 func (a *Auth) deleteAccountFromApps(context storage.TransactionContext, account model.Account, fromAppsIDs []string) error {
-	//TODO - Stefan
+	for _, idToDelete := range fromAppsIDs {
+		orgApps, _ := a.deleteApps(context, account.OrgAppsMemberships, idToDelete)
+		account.OrgAppsMemberships = orgApps
+
+		err := a.storage.DeleteAccountOrgAppsMemberships(context, account.ID, orgApps)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
+		}
+	}
+
 	return nil
+}
+func (a *Auth) deleteApps(context storage.TransactionContext, orgApp []model.OrgAppMembership, fromAppsIDs string) ([]model.OrgAppMembership, error) {
+	for i, membership := range orgApp {
+		if membership.AppOrg.Application.ID == fromAppsIDs {
+			// Found the matching ID, remove it from the slice
+			orgApp = append(orgApp[:i], orgApp[i+1:]...)
+			break
+		}
+	}
+	return orgApp, nil
 }
 
 func (a *Auth) deleteFullAccount(context storage.TransactionContext, account model.Account) error {
