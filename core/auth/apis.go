@@ -1743,7 +1743,7 @@ func (a *Auth) UnlinkAccountAuthType(accountID string, authenticationType string
 }
 
 // DeleteAccount deletes an account for the given id
-func (a *Auth) DeleteAccount(id string) error {
+func (a *Auth) DeleteAccount(id string, apps []string) error {
 	transaction := func(context storage.TransactionContext) error {
 		//1. first find the account record
 		account, err := a.storage.FindAccountByID(context, id)
