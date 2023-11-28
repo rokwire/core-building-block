@@ -132,6 +132,19 @@ func (a Account) HasAppMembership(appOrgID string) bool {
 	return false
 }
 
+// HasApp checks if there is app
+func (a Account) HasApp(appID string) bool {
+	if len(a.OrgAppsMemberships) == 0 {
+		return false
+	}
+	for _, oam := range a.OrgAppsMemberships {
+		if oam.AppOrg.Application.ID == appID {
+			return true
+		}
+	}
+	return false
+}
+
 // GetApps gives the account applications
 func (a Account) GetApps() []Application {
 	if len(a.OrgAppsMemberships) == 0 {

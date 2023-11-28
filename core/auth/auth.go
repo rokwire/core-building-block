@@ -1908,7 +1908,22 @@ func (a *Auth) removeAccountAuthTypeCredential(context storage.TransactionContex
 }
 
 func (a *Auth) deleteAccount(context storage.TransactionContext, account model.Account, fromAppsIDs []string) error {
-	//TODO
+	if len(fromAppsIDs) == 0 {
+		return errors.Newf("no apps specified")
+	}
+
+	//check that every passed app is available for the account
+	for _, c := range fromAppsIDs {
+		hasApp := account.HasApp(c)
+		if !hasApp {
+			return errors.Newf("%s does not have %s app", account.ID, c)
+		}
+	}
+
+	//validate and determine if we should remove the whole account or just ot unattach it from specific apps
+	//allAccountApps := account.GetApps()
+
+	//	log.Println(allAccountApps)
 
 	return a.deleteFullAccount(context, account)
 }
