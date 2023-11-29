@@ -1828,7 +1828,12 @@ func (a *Auth) handleAccountAuthTypeConflict(account model.Account, authTypeID s
 			return errors.ErrorData("existing", model.TypeAccount, nil).SetStatus(utils.ErrorStatusAlreadyExists)
 		}
 		//if linked to a different unverified account, remove whole account
-		err := a.deleteAccount(nil, account)
+		accountApps := account.GetApps()
+		accountAppsIDs := make([]string, len(accountApps))
+		for i, c := range accountApps {
+			accountAppsIDs[i] = c.ID
+		}
+		err := a.deleteAccount(nil, account, accountAppsIDs) //from all apps
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
 		}
@@ -1902,7 +1907,51 @@ func (a *Auth) removeAccountAuthTypeCredential(context storage.TransactionContex
 	return nil
 }
 
-func (a *Auth) deleteAccount(context storage.TransactionContext, account model.Account) error {
+func (a *Auth) deleteAccount(context storage.TransactionContext, account model.Account, fromAppsIDs []string) error {
+	if len(fromAppsIDs) == 0 {
+		return errors.Newf("no apps specified")
+	}
+
+	//check that every passed app is available for the account
+	for _, c := range fromAppsIDs {
+		hasApp := account.HasApp(c)
+		if !hasApp {
+			return errors.Newf("%s does not have %s app", account.ID, c)
+		}
+	}
+
+	//we are sure that all passed apps are available for the account
+	//now we have to decide if we have to remove the while account or just to unattach it from specific apps
+	allAccountApps := account.GetApps()
+	if len(allAccountApps) == len(fromAppsIDs) {
+		//means remove all apps => remove the whole account
+		return a.deleteFullAccount(context, account)
+	} else {
+		//means remove specific apps only, so unattach only them
+		return a.deleteAccountFromApps(context, account, fromAppsIDs)
+	}
+}
+
+func (a *Auth) deleteAccountFromApps(context storage.TransactionContext, account model.Account, fromAppsIDs []string) error {
+	// compare the applicationIDs and find the matching IDs for the org_app_memberships
+	var membershipsIDs []string
+	for _, a := range account.OrgAppsMemberships {
+		for _, b := range fromAppsIDs {
+			if a.AppOrg.Application.ID == b {
+				membershipsIDs = append(membershipsIDs, a.ID)
+			}
+		}
+	}
+
+	err := a.storage.DeleteOrgAppsMemberships(context, account.ID, membershipsIDs)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
+	}
+
+	return nil
+}
+
+func (a *Auth) deleteFullAccount(context storage.TransactionContext, account model.Account) error {
 	//1. delete the account record
 	err := a.storage.DeleteAccount(context, account.ID)
 	if err != nil {

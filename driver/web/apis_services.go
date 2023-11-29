@@ -436,7 +436,16 @@ func (h ServicesApisHandler) getServiceRegistrations(l *logs.Log, r *http.Reques
 }
 
 func (h ServicesApisHandler) deleteAccount(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	err := h.coreAPIs.Services.SerDeleteAccount(claims.Subject)
+	//apps
+	var apps []string
+	appsArg := r.URL.Query().Get("apps")
+	if appsArg != "" {
+		apps = strings.Split(appsArg, ",")
+	} else {
+		apps = append(apps, claims.AppID)
+	}
+
+	err := h.coreAPIs.Services.SerDeleteAccount(claims.Subject, apps)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}

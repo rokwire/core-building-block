@@ -132,6 +132,32 @@ func (a Account) HasAppMembership(appOrgID string) bool {
 	return false
 }
 
+// HasApp checks if there is app
+func (a Account) HasApp(appID string) bool {
+	if len(a.OrgAppsMemberships) == 0 {
+		return false
+	}
+	for _, oam := range a.OrgAppsMemberships {
+		if oam.AppOrg.Application.ID == appID {
+			return true
+		}
+	}
+	return false
+}
+
+// GetApps gives the account applications
+func (a Account) GetApps() []Application {
+	if len(a.OrgAppsMemberships) == 0 {
+		return []Application{}
+	}
+
+	res := make([]Application, len(a.OrgAppsMemberships))
+	for i, oam := range a.OrgAppsMemberships {
+		res[i] = oam.AppOrg.Application
+	}
+	return res
+}
+
 // GetAccountAuthTypeByID finds account auth type by id
 func (a Account) GetAccountAuthTypeByID(ID string) *AccountAuthType {
 	for _, aat := range a.AuthTypes {

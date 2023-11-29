@@ -284,8 +284,8 @@ type servicesImpl struct {
 	app *application
 }
 
-func (s *servicesImpl) SerDeleteAccount(id string) error {
-	return s.app.serDeleteAccount(id)
+func (s *servicesImpl) SerDeleteAccount(id string, apps []string) error {
+	return s.app.serDeleteAccount(id, apps)
 }
 
 func (s *servicesImpl) SerGetAccount(cOrgID string, cAppID string, accountID string) (*model.Account, error) {
