@@ -973,17 +973,17 @@ func (a *Auth) determineOperationInternal(account *model.Account, desiredAppOrgI
 
 		if !sParams.SignUp {
 			return "sign-in", nil //the client wants to apply sign-in operation
+		}
+
+		//the client wants to apply sign up operation but we must analize which one is the correct
+		determinedOperation, err := a.determineOperation(account, desiredAppOrgID, l)
+		if err != nil {
+			return "", errors.WrapErrorAction(logutils.ActionApply, "determine operation - internal - client priority", nil, err)
+		}
+		if determinedOperation == "org-sign-up" || determinedOperation == "app-sign-up" {
+			return determinedOperation, nil
 		} else {
-			//the client wants to apply sign up operation but we must analize which one is the correct
-			determinedOperation, err := a.determineOperation(account, desiredAppOrgID, l)
-			if err != nil {
-				return "", errors.WrapErrorAction(logutils.ActionApply, "determine operation - internal - client priority", nil, err)
-			}
-			if determinedOperation == "org-sign-up" || determinedOperation == "app-sign-up" {
-				return determinedOperation, nil
-			} else {
-				return "", errors.New("cannot apply sign up operation")
-			}
+			return "", errors.New("cannot apply sign up operation")
 		}
 	}
 
