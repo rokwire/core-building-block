@@ -2322,20 +2322,22 @@ func (sa *Adapter) DeleteAccountRoles(context TransactionContext, accountID stri
 	return nil
 }
 
-// UpdateAccountOrgAppsMembershipsObject update the whole account org_apps_memberships object
-func (sa *Adapter) UpdateAccountOrgAppsMembershipsObject(context TransactionContext, accountID string, orgApps []model.OrgAppMembership) error {
+// DeleteOrgAppsMembershipsObject delete the whole account org_apps_memberships object
+func (sa *Adapter) DeleteOrgAppsMembershipsObject(context TransactionContext, accountID string, membershipsIDs []string) error {
 	//filter
 	filter := bson.D{
 		primitive.E{Key: "_id", Value: accountID},
 	}
 
+	// update
 	update := bson.D{
+		primitive.E{Key: "$pull", Value: bson.D{
+			primitive.E{Key: "org_apps_memberships", Value: bson.M{"id": bson.M{"$in": membershipsIDs}}},
+		}},
 		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "org_apps_memberships", Value: orgApps},
 			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
 		}},
 	}
-
 	res, err := sa.db.tenantsAccounts.UpdateOneWithContext(context, filter, update, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"_id": accountID}, err)

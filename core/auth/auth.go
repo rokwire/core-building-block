@@ -1933,31 +1933,22 @@ func (a *Auth) deleteAccount(context storage.TransactionContext, account model.A
 }
 
 func (a *Auth) deleteAccountFromApps(context storage.TransactionContext, account model.Account, fromAppsIDs []string) error {
-	var orgApps []model.OrgAppMembership
-	for _, idToDelete := range fromAppsIDs {
-		orgA, err := a.giveMembershipsByAppsIds(context, account.OrgAppsMemberships, idToDelete)
-		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
+	// compare the applicationIDs and find the matching IDs for the org_app_memberships
+	var membershipsIDs []string
+	for _, a := range account.OrgAppsMemberships {
+		for _, b := range fromAppsIDs {
+			if a.AppOrg.Application.ID == b {
+				membershipsIDs = append(membershipsIDs, a.ID)
+			}
 		}
-		orgApps = orgA
 	}
 
-	err := a.storage.UpdateAccountOrgAppsMembershipsObject(context, account.ID, orgApps)
+	err := a.storage.DeleteOrgAppsMembershipsObject(context, account.ID, membershipsIDs)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
 	}
 
 	return nil
-}
-func (a *Auth) giveMembershipsByAppsIds(context storage.TransactionContext, orgApp []model.OrgAppMembership, fromAppsIDs string) ([]model.OrgAppMembership, error) {
-	for i, membership := range orgApp {
-		if membership.AppOrg.Application.ID == fromAppsIDs {
-			// Found the matching ID, remove it from the slice
-			orgApp = append(orgApp[:i], orgApp[i+1:]...)
-			break
-		}
-	}
-	return orgApp, nil
 }
 
 func (a *Auth) deleteFullAccount(context storage.TransactionContext, account model.Account) error {
