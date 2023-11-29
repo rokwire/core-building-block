@@ -669,65 +669,66 @@ func (m *database) constructTenantsAccountsForOrg(orgID string, accounts []accou
 		}
 
 		return resAccounts, nil
-	} else {
-		//we have repeatable identities for University of Illinois
-
-		//find all UIUC accounts
-		uiucAccounts, otherAccounts := m.findUIUCAccounts(accounts)
-
-		if len(uiucAccounts) == 0 {
-			return nil, errors.New("no accounts for UIUC")
-		}
-
-		//first create tenant accounts from the UIUC accounts
-		uiucTenantAccounts := []tenantAccount{}
-		for _, uiucAccount := range uiucAccounts {
-			newUIUCTenantAccount := m.createTenantAccount(orgID, uiucAccount)
-			uiucTenantAccounts = append(uiucTenantAccounts, newUIUCTenantAccount)
-		}
-
-		//now create tenant accounts for the other accounts
-		currentTenantAccounts := uiucTenantAccounts
-		for _, otherAccount := range otherAccounts {
-			//for every account determine if we need to create a new tenant account or to add it to already created
-
-			foundedTenantAccounts := m.findTenantAccountsByIdentities(otherAccount.AuthTypes, currentTenantAccounts)
-			if len(foundedTenantAccounts) == 0 {
-				//it is not there so, create a new one
-
-				newCreated := m.createTenantAccount(orgID, otherAccount)
-				currentTenantAccounts = append(currentTenantAccounts, newCreated)
-			} else if len(foundedTenantAccounts) == 1 {
-				//it is there only once, so add it to it
-
-				updatedTenantAccount := m.addAccountToTenantAccount(otherAccount, foundedTenantAccounts[0])
-
-				//replace item
-				currentTenantAccounts = m.replaceItem(updatedTenantAccount, currentTenantAccounts)
-			} else if len(foundedTenantAccounts) == 2 {
-				//it is there into two accounts, so merge them first and then add it to the merged one
-				tenantAccount1 := foundedTenantAccounts[0]
-				tenantAccount2 := foundedTenantAccounts[1]
-				mixedTenantAccount, err := m.mixTenantAccount(tenantAccount1, tenantAccount2)
-				if err != nil {
-					return nil, err
-				}
-
-				//replace the two items with the mixed one
-				currentTenantAccounts = m.replaceMixedItems(tenantAccount1, tenantAccount2, *mixedTenantAccount, currentTenantAccounts)
-
-				//add to the merged item
-				updatedTenantAccount := m.addAccountToTenantAccount(otherAccount, *mixedTenantAccount)
-
-				//replace item
-				currentTenantAccounts = m.replaceItem(updatedTenantAccount, currentTenantAccounts)
-			} else {
-				return nil, errors.New("we do not support more than 2 appearings")
-			}
-		}
-
-		return currentTenantAccounts, nil
 	}
+
+	//we have repeatable identities for University of Illinois
+
+	//find all UIUC accounts
+	uiucAccounts, otherAccounts := m.findUIUCAccounts(accounts)
+
+	if len(uiucAccounts) == 0 {
+		return nil, errors.New("no accounts for UIUC")
+	}
+
+	//first create tenant accounts from the UIUC accounts
+	uiucTenantAccounts := []tenantAccount{}
+	for _, uiucAccount := range uiucAccounts {
+		newUIUCTenantAccount := m.createTenantAccount(orgID, uiucAccount)
+		uiucTenantAccounts = append(uiucTenantAccounts, newUIUCTenantAccount)
+	}
+
+	//now create tenant accounts for the other accounts
+	currentTenantAccounts := uiucTenantAccounts
+	for _, otherAccount := range otherAccounts {
+		//for every account determine if we need to create a new tenant account or to add it to already created
+
+		foundedTenantAccounts := m.findTenantAccountsByIdentities(otherAccount.AuthTypes, currentTenantAccounts)
+		if len(foundedTenantAccounts) == 0 {
+			//it is not there so, create a new one
+
+			newCreated := m.createTenantAccount(orgID, otherAccount)
+			currentTenantAccounts = append(currentTenantAccounts, newCreated)
+		} else if len(foundedTenantAccounts) == 1 {
+			//it is there only once, so add it to it
+
+			updatedTenantAccount := m.addAccountToTenantAccount(otherAccount, foundedTenantAccounts[0])
+
+			//replace item
+			currentTenantAccounts = m.replaceItem(updatedTenantAccount, currentTenantAccounts)
+		} else if len(foundedTenantAccounts) == 2 {
+			//it is there into two accounts, so merge them first and then add it to the merged one
+			tenantAccount1 := foundedTenantAccounts[0]
+			tenantAccount2 := foundedTenantAccounts[1]
+			mixedTenantAccount, err := m.mixTenantAccount(tenantAccount1, tenantAccount2)
+			if err != nil {
+				return nil, err
+			}
+
+			//replace the two items with the mixed one
+			currentTenantAccounts = m.replaceMixedItems(tenantAccount1, tenantAccount2, *mixedTenantAccount, currentTenantAccounts)
+
+			//add to the merged item
+			updatedTenantAccount := m.addAccountToTenantAccount(otherAccount, *mixedTenantAccount)
+
+			//replace item
+			currentTenantAccounts = m.replaceItem(updatedTenantAccount, currentTenantAccounts)
+		} else {
+			return nil, errors.New("we do not support more than 2 appearings")
+		}
+	}
+
+	return currentTenantAccounts, nil
+
 }
 
 func (m *database) replaceMixedItems(item1 tenantAccount, item2 tenantAccount, mixedItem tenantAccount, list []tenantAccount) []tenantAccount {

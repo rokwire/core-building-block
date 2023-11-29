@@ -982,9 +982,8 @@ func (a *Auth) determineOperationInternal(account *model.Account, desiredAppOrgI
 		}
 		if determinedOperation == "org-sign-up" || determinedOperation == "app-sign-up" {
 			return determinedOperation, nil
-		} else {
-			return "", errors.New("cannot apply sign up operation")
 		}
+		return "", errors.New("cannot apply sign up operation")
 	}
 
 	//if the client has not specified then decide based on that if the user exists
@@ -1926,10 +1925,9 @@ func (a *Auth) deleteAccount(context storage.TransactionContext, account model.A
 	if len(allAccountApps) == len(fromAppsIDs) {
 		//means remove all apps => remove the whole account
 		return a.deleteFullAccount(context, account)
-	} else {
-		//means remove specific apps only, so unattach only them
-		return a.deleteAccountFromApps(context, account, fromAppsIDs)
 	}
+	//means remove specific apps only, so unattach only them
+	return a.deleteAccountFromApps(context, account, fromAppsIDs)
 }
 
 func (a *Auth) deleteAccountFromApps(context storage.TransactionContext, account model.Account, fromAppsIDs []string) error {
