@@ -1943,7 +1943,7 @@ func (a *Auth) deleteAccountFromApps(context storage.TransactionContext, account
 		}
 	}
 
-	err := a.storage.DeleteOrgAppsMembershipsObject(context, account.ID, membershipsIDs)
+	err := a.storage.DeleteOrgAppsMemberships(context, account.ID, membershipsIDs)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
 	}

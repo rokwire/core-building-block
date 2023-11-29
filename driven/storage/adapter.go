@@ -2322,8 +2322,8 @@ func (sa *Adapter) DeleteAccountRoles(context TransactionContext, accountID stri
 	return nil
 }
 
-// DeleteOrgAppsMembershipsObject delete the whole account org_apps_memberships object
-func (sa *Adapter) DeleteOrgAppsMembershipsObject(context TransactionContext, accountID string, membershipsIDs []string) error {
+// DeleteOrgAppsMemberships deletes org apps memberships from the account
+func (sa *Adapter) DeleteOrgAppsMemberships(context TransactionContext, accountID string, membershipsIDs []string) error {
 	//filter
 	filter := bson.D{
 		primitive.E{Key: "_id", Value: accountID},

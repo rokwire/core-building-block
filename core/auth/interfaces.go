@@ -487,7 +487,7 @@ type Storage interface {
 	SaveAccount(context storage.TransactionContext, account *model.Account) error
 	DeleteAccount(context storage.TransactionContext, id string) error
 	UpdateAccountUsageInfo(context storage.TransactionContext, accountID string, updateLoginTime bool, updateAccessTokenTime bool, clientVersion *string) error
-	DeleteOrgAppsMembershipsObject(context storage.TransactionContext, accountID string, membershipsIDs []string) error
+	DeleteOrgAppsMemberships(context storage.TransactionContext, accountID string, membershipsIDs []string) error
 
 	//Profiles
 	UpdateAccountProfile(context storage.TransactionContext, profile model.Profile) error
