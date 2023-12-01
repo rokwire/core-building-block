@@ -1497,12 +1497,19 @@ func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, 
 
 	var publicAccounts []model.PublicAccount
 	for _, account := range accounts {
+
+		//not used?
+		verified := false
+		if account.Verified != nil && *account.Verified {
+			verified = true
+		}
+
 		publicAccounts = append(publicAccounts, model.PublicAccount{
 			ID:          account.ID,
 			Username:    account.Username,
 			FirstName:   account.Profile.FirstName,
 			LastName:    account.Profile.LastName,
-			Verified:    account.Verified,
+			Verified:    verified,
 			IsFollowing: account.IsFollowing,
 		})
 	}

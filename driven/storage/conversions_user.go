@@ -108,7 +108,13 @@ func accountFromStorage(item tenantAccount, currentAppOrg *string, membershipsAp
 	privacy := item.Privacy
 	devices := accountDevicesFromStorage(item.Devices)
 	anonymous := item.Anonymous
-	verified := item.Verified
+
+	//not used?
+	verified := false
+	if item.Verified != nil && *item.Verified {
+		verified = true
+	}
+
 	dateCreated := item.DateCreated
 	dateUpdated := item.DateUpdated
 	lastLoginDate := item.LastLoginDate
@@ -155,7 +161,12 @@ func accountToStorage(item *model.Account) *tenantAccount {
 	devices := accountDevicesToStorage(item)
 	anonymous := item.Anonymous
 	privacy := item.Privacy
-	verified := item.Verified
+
+	var verified *bool //not used?
+	if item.Verified {
+		verified = &item.Verified
+	}
+
 	dateCreated := item.DateCreated
 	dateUpdated := item.DateUpdated
 	lastLoginDate := item.LastLoginDate
