@@ -81,7 +81,7 @@ type tenantAccount struct {
 
 	Anonymous bool          `bson:"anonymous"`
 	Privacy   model.Privacy `bson:"privacy"`
-	Verified  *bool         `bson:"verified"`
+	Verified  *bool         `bson:"verified,omitempty"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
