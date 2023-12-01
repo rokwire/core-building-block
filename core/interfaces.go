@@ -24,11 +24,11 @@ import (
 
 // Services exposes APIs for the driver adapters
 type Services interface {
-	SerDeleteAccount(id string) error
-	SerGetAccount(accountID string) (*model.Account, error)
-	SerGetProfile(accountID string) (*model.Profile, error)
-	SerGetPreferences(accountID string) (map[string]interface{}, error)
-	SerGetAccountSystemConfigs(accountID string) (map[string]interface{}, error)
+	SerDeleteAccount(id string, apps []string) error
+	SerGetAccount(cOrgID string, cAppID string, accountID string) (*model.Account, error)
+	SerGetProfile(cOrgID string, cAppID string, accountID string) (*model.Profile, error)
+	SerGetPreferences(cOrgID string, cAppID string, accountID string) (map[string]interface{}, error)
+	SerGetAccountSystemConfigs(cOrgID string, cAppID string, accountID string) (map[string]interface{}, error)
 	SerUpdateAccountPreferences(id string, appID string, orgID string, anonymous bool, preferences map[string]interface{}, l *logs.Log) (bool, error)
 	SerUpdateAccountProfile(accountID string, profile model.Profile) error
 	SerUpdateAccountPrivacy(accountID string, privacy model.Privacy) error
@@ -79,7 +79,7 @@ type Administration interface {
 
 	AdmGetAccounts(limit int, offset int, appID string, orgID string, accountID *string, firstName *string, lastName *string, authType *string,
 		authTypeIdentifier *string, anonymous *bool, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error)
-	AdmGetAccount(accountID string) (*model.Account, error)
+	AdmGetAccount(cOrgID string, cAppID string, accountID string) (*model.Account, error)
 
 	AdmGetFilterAccounts(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]map[string]interface{}, error)
 	AdmGetFilterAccountsCount(searchParams map[string]interface{}, appID string, orgID string) (int64, error)
@@ -141,8 +141,8 @@ type System interface {
 	SysGetOrganization(ID string) (*model.Organization, error)
 	SysUpdateOrganization(ID string, name string, requestType string, organizationDomains []string) error
 
-	SysCreateApplication(name string, multiTenant bool, admin bool, sharedIdentities bool, appTypes []model.ApplicationType) (*model.Application, error)
-	SysUpdateApplication(ID string, name string, multiTenant bool, admin bool, sharedIdentities bool, appTypes []model.ApplicationType) error
+	SysCreateApplication(name string, multiTenant bool, admin bool, code string, appTypes []model.ApplicationType) (*model.Application, error)
+	SysUpdateApplication(ID string, name string, multiTenant bool, admin bool, code string, appTypes []model.ApplicationType) error
 	SysGetApplication(ID string) (*model.Application, error)
 	SysGetApplications() ([]model.Application, error)
 
@@ -166,6 +166,7 @@ type Storage interface {
 	DeleteFollow(context storage.TransactionContext, appID string, orgID string, followingID string, followerID string) error
 
 	FindAccountByID(context storage.TransactionContext, id string) (*model.Account, error)
+	FindAccountByIDV2(context storage.TransactionContext, cOrgID string, cAppID string, id string) (*model.Account, error)
 	FindAccounts(context storage.TransactionContext, limit *int, offset *int, appID string, orgID string, accountID *string, firstName *string, lastName *string, authType *string,
 		authTypeIdentifier *string, anonymous *bool, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error)
 	FindPublicAccounts(context storage.TransactionContext, appID string, orgID string, limit *int, offset *int,
@@ -175,16 +176,16 @@ type Storage interface {
 	FindAccountsByAccountID(context storage.TransactionContext, appID string, orgID string, accountIDs []string) ([]model.Account, error)
 	FindAccountsByUsername(context storage.TransactionContext, appOrg *model.ApplicationOrganization, username string) ([]model.Account, error)
 
-	UpdateAccountPreferences(context storage.TransactionContext, accountID string, preferences map[string]interface{}) error
+	UpdateAccountPreferences(context storage.TransactionContext, cOrgID string, cAppID string, accountID string, preferences map[string]interface{}) error
 	UpdateAccountSystemConfigs(context storage.TransactionContext, accountID string, configs map[string]interface{}) error
-	InsertAccountPermissions(context storage.TransactionContext, accountID string, permissions []model.Permission) error
-	DeleteAccountPermissions(context storage.TransactionContext, accountID string, permissionNames []string) error
+	InsertAccountPermissions(context storage.TransactionContext, accountID string, appOrgID string, permissions []model.Permission) error
+	DeleteAccountPermissions(context storage.TransactionContext, accountID string, appOrgID string, permissionNames []string) error
 	UpdateAccountUsername(context storage.TransactionContext, accountID, username string) error
 	UpdateAccountVerified(context storage.TransactionContext, accountID string, appID string, orgID string, verified bool) error
 	InsertAccountRoles(context storage.TransactionContext, accountID string, appOrgID string, roles []model.AccountRole) error
-	DeleteAccountRoles(context storage.TransactionContext, accountID string, roleIDs []string) error
-	InsertAccountsGroup(context storage.TransactionContext, group model.AccountGroup, accountIDs []string) error
-	RemoveAccountsGroup(context storage.TransactionContext, groupID string, accountIDs []string) error
+	DeleteAccountRoles(context storage.TransactionContext, accountID string, appOrgID string, roleIDs []string) error
+	InsertAccountsGroup(context storage.TransactionContext, appOrgID string, group model.AccountGroup, accountIDs []string) error
+	RemoveAccountsGroup(context storage.TransactionContext, appOrgID string, groupID string, accountIDs []string) error
 	CountAccountsByRoleID(roleID string) (*int64, error)
 	CountAccountsByGroupID(groupID string) (*int64, error)
 

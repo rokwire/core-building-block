@@ -57,10 +57,11 @@ func (c *APIs) Start() {
 	c.app.start()
 	c.Auth.Start()
 
+	/* disable this for now because of the tenants accounts
 	err := c.storeSystemData()
 	if err != nil {
 		c.logger.Fatalf("error initializing system data: %s", err.Error())
-	}
+	}*/
 }
 
 // AddListener adds application listener
@@ -130,8 +131,8 @@ func (c *APIs) storeSystemData() error {
 			}
 			newDocuments["application"] = uuid.NewString()
 			newAndroidAppType := model.ApplicationType{ID: uuid.NewString(), Identifier: c.systemAppTypeIdentifier, Name: c.systemAppTypeName, Versions: nil}
-			newSystemAdminApp := model.Application{ID: newDocuments["application"], Name: "System Admin application", MultiTenant: false, Admin: true,
-				SharedIdentities: false, Types: []model.ApplicationType{newAndroidAppType}, DateCreated: time.Now().UTC()}
+			newSystemAdminApp := model.Application{ID: newDocuments["application"], Name: "System Admin application", MultiTenant: false, Admin: true, Code: "",
+				Types: []model.ApplicationType{newAndroidAppType}, DateCreated: time.Now().UTC()}
 			_, err = c.app.storage.InsertApplication(context, newSystemAdminApp)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionInsert, model.TypeApplication, nil, err)
@@ -283,24 +284,24 @@ type servicesImpl struct {
 	app *application
 }
 
-func (s *servicesImpl) SerDeleteAccount(id string) error {
-	return s.app.serDeleteAccount(id)
+func (s *servicesImpl) SerDeleteAccount(id string, apps []string) error {
+	return s.app.serDeleteAccount(id, apps)
 }
 
-func (s *servicesImpl) SerGetAccount(accountID string) (*model.Account, error) {
-	return s.app.serGetAccount(accountID)
+func (s *servicesImpl) SerGetAccount(cOrgID string, cAppID string, accountID string) (*model.Account, error) {
+	return s.app.serGetAccount(cOrgID, cAppID, accountID)
 }
 
-func (s *servicesImpl) SerGetProfile(accountID string) (*model.Profile, error) {
-	return s.app.serGetProfile(accountID)
+func (s *servicesImpl) SerGetProfile(cOrgID string, cAppID string, accountID string) (*model.Profile, error) {
+	return s.app.serGetProfile(cOrgID, cAppID, accountID)
 }
 
-func (s *servicesImpl) SerGetPreferences(accountID string) (map[string]interface{}, error) {
-	return s.app.serGetPreferences(accountID)
+func (s *servicesImpl) SerGetPreferences(cOrgID string, cAppID string, accountID string) (map[string]interface{}, error) {
+	return s.app.serGetPreferences(cOrgID, cAppID, accountID)
 }
 
-func (s *servicesImpl) SerGetAccountSystemConfigs(accountID string) (map[string]interface{}, error) {
-	return s.app.serGetAccountSystemConfigs(accountID)
+func (s *servicesImpl) SerGetAccountSystemConfigs(cOrgID string, cAppID string, accountID string) (map[string]interface{}, error) {
+	return s.app.serGetAccountSystemConfigs(cOrgID, cAppID, accountID)
 }
 
 func (s *servicesImpl) SerUpdateAccountPreferences(id string, appID string, orgID string, anonymous bool, preferences map[string]interface{}, l *logs.Log) (bool, error) {
@@ -466,8 +467,8 @@ func (s *administrationImpl) AdmGetAccounts(limit int, offset int, appID string,
 	return s.app.admGetAccounts(limit, offset, appID, orgID, accountID, firstName, lastName, authType, authTypeIdentifier, anonymous, hasPermissions, permissions, roleIDs, groupIDs)
 }
 
-func (s *administrationImpl) AdmGetAccount(accountID string) (*model.Account, error) {
-	return s.app.admGetAccount(accountID)
+func (s *administrationImpl) AdmGetAccount(cOrgID string, cAppID string, accountID string) (*model.Account, error) {
+	return s.app.admGetAccount(cOrgID, cAppID, accountID)
 }
 
 func (s *administrationImpl) AdmGetFilterAccounts(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]map[string]interface{}, error) {
@@ -611,12 +612,12 @@ func (s *systemImpl) SysGetOrganization(ID string) (*model.Organization, error) 
 	return s.app.sysGetOrganization(ID)
 }
 
-func (s *systemImpl) SysCreateApplication(name string, multiTenant bool, admin bool, sharedIdentities bool, appTypes []model.ApplicationType) (*model.Application, error) {
-	return s.app.sysCreateApplication(name, multiTenant, admin, sharedIdentities, appTypes)
+func (s *systemImpl) SysCreateApplication(name string, multiTenant bool, admin bool, code string, appTypes []model.ApplicationType) (*model.Application, error) {
+	return s.app.sysCreateApplication(name, multiTenant, admin, code, appTypes)
 }
 
-func (s *systemImpl) SysUpdateApplication(ID string, name string, multiTenant bool, admin bool, sharedIdentities bool, appTypes []model.ApplicationType) error {
-	return s.app.sysUpdateApplication(ID, name, multiTenant, admin, sharedIdentities, appTypes)
+func (s *systemImpl) SysUpdateApplication(ID string, name string, multiTenant bool, admin bool, code string, appTypes []model.ApplicationType) error {
+	return s.app.sysUpdateApplication(ID, name, multiTenant, admin, code, appTypes)
 }
 
 func (s *systemImpl) SysGetApplication(ID string) (*model.Application, error) {

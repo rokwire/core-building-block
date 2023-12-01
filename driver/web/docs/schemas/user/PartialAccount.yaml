@@ -39,6 +39,10 @@ properties:
     type: array
     items:
       $ref: "../application/AppOrgGroup.yaml"
+  apps:
+    type: array
+    items:
+      $ref: "../application/PartialApp.yaml"      
   scopes:
     type: array
     items:

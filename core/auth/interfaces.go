@@ -366,6 +366,8 @@ type APIs interface {
 	//LinkAccountAuthType links new credentials to an existing account.
 	//The authentication method must be one of the supported for the application.
 	//	Input:
+	//		orgID (string): Org id
+	//		appID (string): App id
 	//		accountID (string): ID of the account to link the creds to
 	//		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
 	//		appTypeIdentifier (string): identifier of the app type/client that the user is logging in from
@@ -375,7 +377,7 @@ type APIs interface {
 	//	Returns:
 	//		message (*string): response message
 	//		account (*model.Account): account data after the operation
-	LinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, creds string, params string, l *logs.Log) (*string, *model.Account, error)
+	LinkAccountAuthType(orgID string, appID string, accountID string, authenticationType string, appTypeIdentifier string, creds string, params string, l *logs.Log) (*string, *model.Account, error)
 
 	//UnlinkAccountAuthType unlinks credentials from an existing account.
 	//The authentication method must be one of the supported for the application.
@@ -393,7 +395,7 @@ type APIs interface {
 	InitializeSystemAccount(context storage.TransactionContext, authType model.AuthType, appOrg model.ApplicationOrganization, allSystemPermission string, email string, password string, clientVersion string, l *logs.Log) (string, error)
 
 	//GrantAccountPermissions grants new permissions to an account after validating the assigner has required permissions
-	GrantAccountPermissions(context storage.TransactionContext, account *model.Account, permissionNames []string, assignerPermissions []string) error
+	//GrantAccountPermissions(context storage.TransactionContext, account *model.Account, permissionNames []string, assignerPermissions []string) error
 
 	//CheckPermissions loads permissions by names from storage and checks that they are assignable and valid for the given appOrgs or revocable
 	CheckPermissions(context storage.TransactionContext, appOrgs []model.ApplicationOrganization, permissionNames []string, assignerPermissions []string, revoke bool) ([]model.Permission, error)
@@ -411,7 +413,7 @@ type APIs interface {
 	CheckGroups(context storage.TransactionContext, appOrg *model.ApplicationOrganization, groupIDs []string, assignerPermissions []string, revoke bool) ([]model.AppOrgGroup, error)
 
 	//DeleteAccount deletes an account for the given id
-	DeleteAccount(id string) error
+	DeleteAccount(id string, apps []string) error
 
 	//GetAdminToken returns an admin token for the specified application and organization
 	GetAdminToken(claims tokenauth.Claims, appID string, orgID string, l *logs.Log) (string, error)
@@ -476,17 +478,21 @@ type Storage interface {
 	///
 
 	//Accounts
+	FindAccountByOrgAndIdentifier(context storage.TransactionContext, orgID string, authTypeID string, accountAuthTypeIdentifier string, currentAppOrgID string) (*model.Account, error)
 	FindAccount(context storage.TransactionContext, appOrgID string, authTypeID string, accountAuthTypeIdentifier string) (*model.Account, error)
 	FindAccountByID(context storage.TransactionContext, id string) (*model.Account, error)
+	FindAccountByIDV2(context storage.TransactionContext, cOrgID string, cAppID string, id string) (*model.Account, error)
 	FindAccountsByUsername(context storage.TransactionContext, appOrg *model.ApplicationOrganization, username string) ([]model.Account, error)
 	InsertAccount(context storage.TransactionContext, account model.Account) (*model.Account, error)
 	SaveAccount(context storage.TransactionContext, account *model.Account) error
 	DeleteAccount(context storage.TransactionContext, id string) error
 	UpdateAccountUsageInfo(context storage.TransactionContext, accountID string, updateLoginTime bool, updateAccessTokenTime bool, clientVersion *string) error
+	DeleteOrgAppsMemberships(context storage.TransactionContext, accountID string, membershipsIDs []string) error
 
 	//Profiles
 	UpdateAccountProfile(context storage.TransactionContext, profile model.Profile) error
-	FindAccountProfiles(appID string, authTypeID string, accountAuthTypeIdentifier string) ([]model.Profile, error)
+	//not used and also no more relevant as one account has a profile
+	//FindAccountProfiles(appID string, authTypeID string, accountAuthTypeIdentifier string) ([]model.Profile, error)
 
 	//ServiceAccounts
 	FindServiceAccount(context storage.TransactionContext, accountID string, appID string, orgID string) (*model.ServiceAccount, error)
@@ -501,7 +507,7 @@ type Storage interface {
 	DeleteServiceAccountCredential(accountID string, credID string) error
 
 	//AccountAuthTypes
-	FindAccountByAuthTypeID(context storage.TransactionContext, id string) (*model.Account, error)
+	FindAccountByAuthTypeID(context storage.TransactionContext, id string, currentAppOrgID *string) (*model.Account, error)
 	InsertAccountAuthType(item model.AccountAuthType) error
 	UpdateAccountAuthType(item model.AccountAuthType) error
 	DeleteAccountAuthType(context storage.TransactionContext, item model.AccountAuthType) error
@@ -569,13 +575,13 @@ type Storage interface {
 	//Permissions
 	FindPermissions(context storage.TransactionContext, ids []string) ([]model.Permission, error)
 	FindPermissionsByName(context storage.TransactionContext, names []string) ([]model.Permission, error)
-	InsertAccountPermissions(context storage.TransactionContext, accountID string, permissions []model.Permission) error
-	UpdateAccountPermissions(context storage.TransactionContext, accountID string, permissions []model.Permission) error
+	InsertAccountPermissions(context storage.TransactionContext, accountID string, appOrgID string, permissions []model.Permission) error
+	UpdateAccountPermissions(context storage.TransactionContext, accountID string, appOrgID string, permissions []model.Permission) error
 
 	//ApplicationRoles
 	FindAppOrgRolesByIDs(context storage.TransactionContext, ids []string, appOrgID string) ([]model.AppOrgRole, error)
 	//AccountRoles
-	UpdateAccountRoles(context storage.TransactionContext, accountID string, roles []model.AccountRole) error
+	UpdateAccountRoles(context storage.TransactionContext, accountID string, appOrgID string, roles []model.AccountRole) error
 	InsertAccountRoles(context storage.TransactionContext, accountID string, appOrgID string, roles []model.AccountRole) error
 
 	UpdateAccountScopes(context storage.TransactionContext, accountID string, scopes []string) error
@@ -583,7 +589,7 @@ type Storage interface {
 	//ApplicationGroups
 	FindAppOrgGroupsByIDs(context storage.TransactionContext, ids []string, appOrgID string) ([]model.AppOrgGroup, error)
 	//AccountGroups
-	UpdateAccountGroups(context storage.TransactionContext, accountID string, groups []model.AccountGroup) error
+	UpdateAccountGroups(context storage.TransactionContext, accountID string, appOrgID string, groups []model.AccountGroup) error
 	InsertAccountGroups(context storage.TransactionContext, accountID string, appOrgID string, groups []model.AccountGroup) error
 }
 

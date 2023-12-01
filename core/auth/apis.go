@@ -205,7 +205,7 @@ func (a *Auth) Logout(appID string, orgID string, currentAccountID string, sessi
 //	Returns:
 //		accountExisted (bool): valid when error is nil
 func (a *Auth) AccountExists(authenticationType string, userIdentifier string, apiKey string, appTypeIdentifier string, orgID string) (bool, error) {
-	account, _, err := a.getAccount(authenticationType, userIdentifier, apiKey, appTypeIdentifier, orgID)
+	account, _, _, err := a.getAccount(authenticationType, userIdentifier, apiKey, appTypeIdentifier, orgID)
 	if err != nil {
 		return false, errors.WrapErrorAction(logutils.ActionGet, model.TypeAccount, nil, err)
 	}
@@ -225,12 +225,12 @@ func (a *Auth) AccountExists(authenticationType string, userIdentifier string, a
 //	Returns:
 //		canSignIn (bool): valid when error is nil
 func (a *Auth) CanSignIn(authenticationType string, userIdentifier string, apiKey string, appTypeIdentifier string, orgID string) (bool, error) {
-	account, authTypeID, err := a.getAccount(authenticationType, userIdentifier, apiKey, appTypeIdentifier, orgID)
+	account, authTypeID, appOrg, err := a.getAccount(authenticationType, userIdentifier, apiKey, appTypeIdentifier, orgID)
 	if err != nil {
 		return false, errors.WrapErrorAction(logutils.ActionGet, model.TypeAccount, nil, err)
 	}
 
-	return a.canSignIn(account, authTypeID, userIdentifier), nil
+	return a.canSignInV2(account, authTypeID, userIdentifier, appOrg.ID), nil
 }
 
 // CanLink checks if a user can link a new auth type
@@ -245,7 +245,7 @@ func (a *Auth) CanSignIn(authenticationType string, userIdentifier string, apiKe
 //	Returns:
 //		canLink (bool): valid when error is nil
 func (a *Auth) CanLink(authenticationType string, userIdentifier string, apiKey string, appTypeIdentifier string, orgID string) (bool, error) {
-	account, authTypeID, err := a.getAccount(authenticationType, userIdentifier, apiKey, appTypeIdentifier, orgID)
+	account, authTypeID, _, err := a.getAccount(authenticationType, userIdentifier, apiKey, appTypeIdentifier, orgID)
 	if err != nil {
 		return false, errors.WrapErrorAction(logutils.ActionGet, model.TypeAccount, nil, err)
 	}
@@ -690,7 +690,7 @@ func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID
 				newPermissions = append(newPermissions, unchangedPermissions...)
 			}
 
-			err = a.storage.UpdateAccountPermissions(context, account.ID, newPermissions)
+			err = a.storage.UpdateAccountPermissions(context, account.ID, appOrg.ID, newPermissions)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionUpdate, "admin account permissions", nil, err)
 			}
@@ -728,7 +728,7 @@ func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID
 			}
 
 			newAccountRoles := model.AccountRolesFromAppOrgRoles(newRoles, true, true)
-			err = a.storage.UpdateAccountRoles(context, account.ID, newAccountRoles)
+			err = a.storage.UpdateAccountRoles(context, account.ID, appOrg.ID, newAccountRoles)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionUpdate, "admin account roles", nil, err)
 			}
@@ -766,7 +766,7 @@ func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID
 			}
 
 			newAccountGroups := model.AccountGroupsFromAppOrgGroups(newGroups, true, true)
-			err = a.storage.UpdateAccountGroups(context, account.ID, newAccountGroups)
+			err = a.storage.UpdateAccountGroups(context, account.ID, appOrg.ID, newAccountGroups)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionUpdate, "admin account groups", nil, err)
 			}
@@ -834,7 +834,7 @@ func (a *Auth) CreateAnonymousAccount(context storage.TransactionContext, appID 
 	transaction := func(context storage.TransactionContext) error {
 		//1. check if the user exists
 		if context == nil || !skipExistsCheck {
-			account, err := a.storage.FindAccountByID(context, anonymousID)
+			account, err := a.storage.FindAccountByIDV2(context, orgID, appID, anonymousID)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 			}
@@ -1677,6 +1677,8 @@ func (a *Auth) GetAdminToken(claims tokenauth.Claims, appID string, orgID string
 // The authentication method must be one of the supported for the application.
 //
 //	Input:
+//		orgID (string): Org id
+//		appID (string): App id
 //		accountID (string): ID of the account to link the creds to
 //		authenticationType (string): Name of the authentication method for provided creds (eg. "email", "username", "illinois_oidc")
 //		appTypeIdentifier (string): identifier of the app type/client that the user is logging in from
@@ -1686,11 +1688,11 @@ func (a *Auth) GetAdminToken(claims tokenauth.Claims, appID string, orgID string
 //	Returns:
 //		message (*string): response message
 //		account (*model.Account): account data after the operation
-func (a *Auth) LinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, creds string, params string, l *logs.Log) (*string, *model.Account, error) {
+func (a *Auth) LinkAccountAuthType(orgID string, appID string, accountID string, authenticationType string, appTypeIdentifier string, creds string, params string, l *logs.Log) (*string, *model.Account, error) {
 	message := ""
 	var newAccountAuthType *model.AccountAuthType
 
-	account, err := a.storage.FindAccountByID(nil, accountID)
+	account, err := a.storage.FindAccountByIDV2(nil, orgID, appID, accountID)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
@@ -1741,7 +1743,7 @@ func (a *Auth) UnlinkAccountAuthType(accountID string, authenticationType string
 }
 
 // DeleteAccount deletes an account for the given id
-func (a *Auth) DeleteAccount(id string) error {
+func (a *Auth) DeleteAccount(id string, apps []string) error {
 	transaction := func(context storage.TransactionContext) error {
 		//1. first find the account record
 		account, err := a.storage.FindAccountByID(context, id)
@@ -1752,7 +1754,7 @@ func (a *Auth) DeleteAccount(id string) error {
 			return errors.ErrorData(logutils.StatusMissing, model.TypeAccount, nil)
 		}
 
-		err = a.deleteAccount(context, *account)
+		err = a.deleteAccount(context, *account, apps)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
 		}
@@ -1785,6 +1787,7 @@ func (a *Auth) InitializeSystemAccount(context storage.TransactionContext, authT
 	return accountAuthType.Account.ID, nil
 }
 
+/*
 // GrantAccountPermissions grants new permissions to an account after validating the assigner has required permissions
 func (a *Auth) GrantAccountPermissions(context storage.TransactionContext, account *model.Account, permissionNames []string, assignerPermissions []string) error {
 	//check if there is data
@@ -1818,7 +1821,7 @@ func (a *Auth) GrantAccountPermissions(context storage.TransactionContext, accou
 
 	account.Permissions = append(account.Permissions, permissions...)
 	return nil
-}
+} */
 
 // CheckPermissions loads permissions by names from storage and checks that they are assignable and valid for the given appOrgs or revocable
 func (a *Auth) CheckPermissions(context storage.TransactionContext, appOrgs []model.ApplicationOrganization, permissionNames []string, assignerPermissions []string, revoke bool) ([]model.Permission, error) {
