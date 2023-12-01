@@ -977,7 +977,11 @@ func (m *database) createTenantAccount(orgID string, account account) tenantAcco
 	devices := account.Devices
 	anonymous := account.Anonymous
 	privacy := account.Privacy
-	verified := account.Verified
+
+	//We disable this as neiyher on prod and dev this field is set and if we leave it then all new tenant account will be verified false.
+	//I do not think this is used.
+	//verified := account.Verified
+
 	dateCreated := account.DateCreated
 	dateUpdated := account.DateUpdated
 	isFollowing := account.IsFollowing
@@ -1002,7 +1006,7 @@ func (m *database) createTenantAccount(orgID string, account account) tenantAcco
 	return tenantAccount{ID: id, OrgID: orgID, OrgAppsMemberships: orgAppsMemberships, Scopes: scopes,
 		AuthTypes: authTypes, MFATypes: mfaTypes, Username: username, ExternalIDs: externalIDs,
 		SystemConfigs: systemConfigs, Profile: profile, Devices: devices, Anonymous: anonymous,
-		Privacy: privacy, Verified: verified, DateCreated: dateCreated, DateUpdated: dateUpdated,
+		Privacy: privacy /*Verified: verified,*/, DateCreated: dateCreated, DateUpdated: dateUpdated,
 		IsFollowing: isFollowing, LastLoginDate: lastLoginDate, LastAccessTokenDate: lastAccessTokenDate}
 }
 
