@@ -4257,8 +4257,28 @@ func (sa *Adapter) CheckAuthTypesExists() (bool, error) {
 		fmt.Printf("The collection '%s' exists.\n", collectionName)
 	} else {
 		fmt.Printf("The collection '%s' does not exist.\n", collectionName)
+
 	}
 	return collectionExists, nil
+}
+
+func (sa *Adapter) CreateAuthTypesCollection() error {
+	client := sa.db.dbClient
+	dbName := sa.db.mongoDBName
+	collectionName := "auth_types"
+	// Accessing a database
+	database := client.Database(dbName)
+
+	// Creating a collection
+	collection := database.Collection(collectionName)
+	_, err := collection.InsertOne(nil, collection)
+	if err != nil {
+		return err
+	}
+	// You can perform additional configuration or operations on the collection if needed
+
+	fmt.Printf("Collection %s created in database %s\n", collectionName, dbName)
+	return nil
 }
 
 func (sa *Adapter) getFilterForParams(params map[string]interface{}) bson.M {
