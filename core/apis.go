@@ -57,11 +57,11 @@ func (c *APIs) Start() {
 	c.app.start()
 	c.Auth.Start()
 
-	/* disable this for now because of the tenants accounts
+	// disable this for now because of the tenants accounts
 	err := c.storeSystemData()
 	if err != nil {
 		c.logger.Fatalf("error initializing system data: %s", err.Error())
-	}*/
+	}
 }
 
 // AddListener adds application listener
@@ -81,6 +81,9 @@ func (c *APIs) GetServiceID() string {
 
 func (c *APIs) storeSystemData() error {
 	newDocuments := make(map[string]string)
+
+	col, err := c.app.storage.CheckAuthTypesExists()
+	fmt.Print(col)
 
 	transaction := func(context storage.TransactionContext) error {
 		createAccount := false
@@ -237,7 +240,7 @@ func (c *APIs) storeSystemData() error {
 		return nil
 	}
 
-	err := c.app.storage.PerformTransaction(transaction)
+	err = c.app.storage.PerformTransaction(transaction)
 	if err == nil {
 		for doc, data := range newDocuments {
 			key := "id"

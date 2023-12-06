@@ -262,6 +262,8 @@ type Storage interface {
 	UpdateApplicationOrganization(context storage.TransactionContext, applicationOrganization model.ApplicationOrganization) error
 
 	InsertAPIKey(context storage.TransactionContext, apiKey model.APIKey) (*model.APIKey, error)
+
+	CheckAuthTypesExists() (bool, error)
 }
 
 // StorageListener listenes for change data storage events

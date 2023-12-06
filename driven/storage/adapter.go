@@ -19,6 +19,7 @@ import (
 	"core-building-block/core/model"
 	"core-building-block/utils"
 	"fmt"
+	"log"
 	"reflect"
 	"strconv"
 	"strings"
@@ -4229,6 +4230,35 @@ func (sa *Adapter) DeleteDevice(context TransactionContext, id string) error {
 	}
 
 	return nil
+}
+
+func (sa *Adapter) CheckAuthTypesExists() (bool, error) {
+
+	client := sa.db.dbClient
+	dbName := sa.db.mongoDBName
+	collectionName := "auth_types"
+
+	opts := options.FindOne()
+
+	database := client.Database(dbName)
+	collections, err := database.ListCollectionNames(nil, opts)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	collectionExists := false
+	for _, coll := range collections {
+		if coll == collectionName {
+			collectionExists = true
+			break
+		}
+	}
+	if collectionExists {
+		fmt.Printf("The collection '%s' exists.\n", collectionName)
+	} else {
+		fmt.Printf("The collection '%s' does not exist.\n", collectionName)
+	}
+	return collectionExists, nil
 }
 
 func (sa *Adapter) getFilterForParams(params map[string]interface{}) bson.M {
