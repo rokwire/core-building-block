@@ -4232,6 +4232,7 @@ func (sa *Adapter) DeleteDevice(context TransactionContext, id string) error {
 	return nil
 }
 
+// CheckAuthTypesExists check if auth_types collection exists
 func (sa *Adapter) CheckAuthTypesExists() (bool, error) {
 
 	client := sa.db.dbClient
@@ -4262,6 +4263,7 @@ func (sa *Adapter) CheckAuthTypesExists() (bool, error) {
 	return collectionExists, nil
 }
 
+// CreateAuthTypesCollection creates check if auth_types collection
 func (sa *Adapter) CreateAuthTypesCollection() error {
 	client := sa.db.dbClient
 	dbName := sa.db.mongoDBName
