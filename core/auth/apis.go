@@ -19,7 +19,6 @@ import (
 	"core-building-block/driven/storage"
 	"core-building-block/utils"
 	"fmt"
-	"log"
 	"strings"
 	"time"
 
@@ -583,22 +582,18 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appID string, orgID
 	var newAccount *model.Account
 	var params map[string]interface{}
 	transaction := func(context storage.TransactionContext) error {
-		//1. check if the user exists
-
 		//find the account for the org and the user identity
 		foundedAccount, err := a.storage.FindAccountByOrgAndIdentifier(nil, appOrg.Organization.ID, authType.ID, identifier, appOrg.ID)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 		}
 
-		log.Println(foundedAccount)
-		/*	account, err := a.storage.FindAccount(context, appOrg.ID, authType.ID, identifier)
-			if err != nil {
-				return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
-			}
-			if account != nil {
-				return errors.ErrorData(logutils.StatusFound, model.TypeAccount, &logutils.FieldArgs{"app_org_id": appOrg.ID, "auth_type": authType.Code, "identifier": identifier})
-			}*/
+		//check if the account exists for this app
+		if foundedAccount != nil && foundedAccount.HasApp(appID) {
+			return errors.Newf("there is already account for %s in %s application", identifier, appID)
+		}
+
+		//TODO
 
 		//2. account does not exist, so apply sign up
 		profile.DateCreated = time.Now().UTC()
