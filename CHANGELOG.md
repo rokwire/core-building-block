@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Fixed
+- Handle Create Admin account API issue [#687](https://github.com/rokwire/core-building-block/issues/687)
 - Fix storeSystemData [#685](https://github.com/rokwire/core-building-block/issues/685)
 
 ## [1.35.0] - 2023-12-01
