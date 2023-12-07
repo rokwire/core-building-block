@@ -15,9 +15,9 @@ type Storage struct {
 	mock.Mock
 }
 
-// CheckAuthTypesExists provides a mock function with given fields:
-func (_m *Storage) CheckAuthTypesExists() (bool, error) {
-	ret := _m.Called()
+// CheckAuthTypesExists provides a mock function with given fields: collectionName
+func (_m *Storage) CheckAuthTypesExists(collectionName string) (bool, error) {
+	ret := _m.Called(collectionName)
 
 	if len(ret) == 0 {
 		panic("no return value specified for CheckAuthTypesExists")
@@ -25,17 +25,17 @@ func (_m *Storage) CheckAuthTypesExists() (bool, error) {
 
 	var r0 bool
 	var r1 error
-	if rf, ok := ret.Get(0).(func() (bool, error)); ok {
-		return rf()
+	if rf, ok := ret.Get(0).(func(string) (bool, error)); ok {
+		return rf(collectionName)
 	}
-	if rf, ok := ret.Get(0).(func() bool); ok {
-		r0 = rf()
+	if rf, ok := ret.Get(0).(func(string) bool); ok {
+		r0 = rf(collectionName)
 	} else {
 		r0 = ret.Get(0).(bool)
 	}
 
-	if rf, ok := ret.Get(1).(func() error); ok {
-		r1 = rf()
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(collectionName)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -161,17 +161,17 @@ func (_m *Storage) CountGroupsByRoleID(roleID string) (*int64, error) {
 	return r0, r1
 }
 
-// CreateAuthTypesCollection provides a mock function with given fields:
-func (_m *Storage) CreateAuthTypesCollection() error {
-	ret := _m.Called()
+// CreateAuthTypesCollection provides a mock function with given fields: collectionName
+func (_m *Storage) CreateAuthTypesCollection(collectionName string) error {
+	ret := _m.Called(collectionName)
 
 	if len(ret) == 0 {
 		panic("no return value specified for CreateAuthTypesCollection")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func() error); ok {
-		r0 = rf()
+	if rf, ok := ret.Get(0).(func(string) error); ok {
+		r0 = rf(collectionName)
 	} else {
 		r0 = ret.Error(0)
 	}

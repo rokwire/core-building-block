@@ -57,7 +57,6 @@ func (c *APIs) Start() {
 	c.app.start()
 	c.Auth.Start()
 
-	// disable this for now because of the tenants accounts
 	err := c.storeSystemData()
 	if err != nil {
 		c.logger.Fatalf("error initializing system data: %s", err.Error())
@@ -81,20 +80,20 @@ func (c *APIs) GetServiceID() string {
 
 func (c *APIs) storeSystemData() error {
 	newDocuments := make(map[string]string)
+	collectionName := "auth_types"
 	//check if auth_types collection exists
-	col, err := c.app.storage.CheckAuthTypesExists()
+	col, err := c.app.storage.CheckAuthTypesExists(collectionName)
 	if err != nil {
 		return err
 	}
 	// if it doesn't exist create one
-	if col != true {
-		err := c.app.storage.CreateAuthTypesCollection()
+	if !col {
+		err := c.app.storage.CreateAuthTypesCollection(collectionName)
 		if err != nil {
 			return err
 		}
 	}
 
-	fmt.Print(col)
 	transaction := func(context storage.TransactionContext) error {
 		createAccount := false
 

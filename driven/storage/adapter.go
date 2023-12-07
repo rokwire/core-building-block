@@ -19,7 +19,6 @@ import (
 	"core-building-block/core/model"
 	"core-building-block/utils"
 	"fmt"
-	"log"
 	"reflect"
 	"strconv"
 	"strings"
@@ -4233,18 +4232,17 @@ func (sa *Adapter) DeleteDevice(context TransactionContext, id string) error {
 }
 
 // CheckAuthTypesExists check if auth_types collection exists
-func (sa *Adapter) CheckAuthTypesExists() (bool, error) {
+func (sa *Adapter) CheckAuthTypesExists(collectionName string) (bool, error) {
 
 	client := sa.db.dbClient
 	dbName := sa.db.mongoDBName
-	collectionName := "auth_types"
 
 	opts := options.FindOne()
 
 	database := client.Database(dbName)
 	collections, err := database.ListCollectionNames(nil, opts)
 	if err != nil {
-		log.Fatal(err)
+		return false, nil
 	}
 
 	collectionExists := false
@@ -4255,19 +4253,17 @@ func (sa *Adapter) CheckAuthTypesExists() (bool, error) {
 		}
 	}
 	if collectionExists {
-		fmt.Printf("The collection '%s' exists.\n", collectionName)
+		sa.logger.Infof("The collection '%s' exists.\n", collectionName)
 	} else {
-		fmt.Printf("The collection '%s' does not exist.\n", collectionName)
-
+		sa.logger.Infof("The collection '%s' does not exist.\n", collectionName)
 	}
 	return collectionExists, nil
 }
 
 // CreateAuthTypesCollection creates check if auth_types collection
-func (sa *Adapter) CreateAuthTypesCollection() error {
+func (sa *Adapter) CreateAuthTypesCollection(collectionName string) error {
 	client := sa.db.dbClient
 	dbName := sa.db.mongoDBName
-	collectionName := "auth_types"
 	// Accessing a database
 	database := client.Database(dbName)
 
@@ -4278,8 +4274,7 @@ func (sa *Adapter) CreateAuthTypesCollection() error {
 		return err
 	}
 	// You can perform additional configuration or operations on the collection if needed
-
-	fmt.Printf("Collection %s created in database %s\n", collectionName, dbName)
+	sa.logger.Infof("Collection %s created in database %s\n", collectionName, dbName)
 	return nil
 }
 
