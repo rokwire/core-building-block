@@ -1441,10 +1441,6 @@ func (a *Auth) getProfileBBData(authType model.AuthType, identifier string, l *l
 	return profile, preferences, nil
 }
 
-// TODO permissions, roles etc.
-//
-//	permissions []string, roleIDs []string, groupIDs []string, creatorPermissions []string, clientVersion *string, l *logs.Log
-
 // sign up an account to a specific application in the organization
 //
 //	Input:
@@ -1463,7 +1459,10 @@ func (a *Auth) appSignUp(context storage.TransactionContext, account model.Accou
 	l *logs.Log) (*model.Account, error) {
 
 	//TODO - check permissions etc
-	return nil, errors.New("not implemented")
+	//return nil, errors.New("not implemented")
+
+	//TODO
+	return &account, nil
 }
 
 // registerUser registers account for an organization in an application
