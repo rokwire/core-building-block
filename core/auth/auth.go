@@ -809,7 +809,7 @@ func (a *Auth) applyOrgSignUp(authImpl authType, account *model.Account, authTyp
 	return message, accountAuthType, nil
 }
 
-func (a *Auth) applySignUpAdmin(context storage.TransactionContext, authImpl authType, account *model.Account, authType model.AuthType, appOrg model.ApplicationOrganization, identifier string, password string,
+func (a *Auth) applySignUpAdmin(context storage.TransactionContext, authImpl authType, authType model.AuthType, appOrg model.ApplicationOrganization, identifier string, password string,
 	regProfile model.Profile, privacy model.Privacy, username string, permissions []string, roles []string, groups []string, scopes []string, creatorPermissions []string, clientVersion *string, l *logs.Log) (map[string]interface{}, *model.AccountAuthType, error) {
 
 	if username != "" {
