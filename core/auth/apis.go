@@ -19,6 +19,7 @@ import (
 	"core-building-block/driven/storage"
 	"core-building-block/utils"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -578,41 +579,49 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appID string, orgID
 	}
 
 	// create account
-	var accountAuthType *model.AccountAuthType
+	//var accountAuthType *model.AccountAuthType
 	var newAccount *model.Account
 	var params map[string]interface{}
 	transaction := func(context storage.TransactionContext) error {
 		//1. check if the user exists
-		account, err := a.storage.FindAccount(context, appOrg.ID, authType.ID, identifier)
+
+		//find the account for the org and the user identity
+		foundedAccount, err := a.storage.FindAccountByOrgAndIdentifier(nil, appOrg.Organization.ID, authType.ID, identifier, appOrg.ID)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 		}
-		if account != nil {
-			return errors.ErrorData(logutils.StatusFound, model.TypeAccount, &logutils.FieldArgs{"app_org_id": appOrg.ID, "auth_type": authType.Code, "identifier": identifier})
-		}
 
-		//2. account does not exist, so apply sign up
-		profile.DateCreated = time.Now().UTC()
-		if authType.IsExternal {
-			externalUser := model.ExternalSystemUser{Identifier: identifier}
-			accountAuthType, err = a.applySignUpAdminExternal(context, *authType, *appOrg, externalUser, profile, privacy, username, permissions, roleIDs, groupIDs, scopes, creatorPermissions, clientVersion, l)
+		log.Println(foundedAccount)
+		/*	account, err := a.storage.FindAccount(context, appOrg.ID, authType.ID, identifier)
 			if err != nil {
-				return errors.WrapErrorAction(logutils.ActionRegister, "admin user", &logutils.FieldArgs{"auth_type": authType.Code, "identifier": identifier}, err)
+				return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 			}
-		} else {
-			authImpl, err := a.getAuthTypeImpl(*authType)
-			if err != nil {
-				return errors.WrapErrorAction(logutils.ActionLoadCache, typeExternalAuthType, nil, err)
+			if account != nil {
+				return errors.ErrorData(logutils.StatusFound, model.TypeAccount, &logutils.FieldArgs{"app_org_id": appOrg.ID, "auth_type": authType.Code, "identifier": identifier})
 			}
 
-			profile.Email = identifier
-			params, accountAuthType, err = a.applySignUpAdmin(context, authImpl, account, *authType, *appOrg, identifier, "", profile, privacy, username, permissions, roleIDs, groupIDs, scopes, creatorPermissions, clientVersion, l)
-			if err != nil {
-				return errors.WrapErrorAction(logutils.ActionRegister, "admin user", &logutils.FieldArgs{"auth_type": authType.Code, "identifier": identifier}, err)
-			}
-		}
+			//2. account does not exist, so apply sign up
+			profile.DateCreated = time.Now().UTC()
+			if authType.IsExternal {
+				externalUser := model.ExternalSystemUser{Identifier: identifier}
+				accountAuthType, err = a.applySignUpAdminExternal(context, *authType, *appOrg, externalUser, profile, privacy, username, permissions, roleIDs, groupIDs, scopes, creatorPermissions, clientVersion, l)
+				if err != nil {
+					return errors.WrapErrorAction(logutils.ActionRegister, "admin user", &logutils.FieldArgs{"auth_type": authType.Code, "identifier": identifier}, err)
+				}
+			} else {
+				authImpl, err := a.getAuthTypeImpl(*authType)
+				if err != nil {
+					return errors.WrapErrorAction(logutils.ActionLoadCache, typeExternalAuthType, nil, err)
+				}
 
-		newAccount = &accountAuthType.Account
+				profile.Email = identifier
+				params, accountAuthType, err = a.applySignUpAdmin(context, authImpl, account, *authType, *appOrg, identifier, "", profile, privacy, username, permissions, roleIDs, groupIDs, scopes, creatorPermissions, clientVersion, l)
+				if err != nil {
+					return errors.WrapErrorAction(logutils.ActionRegister, "admin user", &logutils.FieldArgs{"auth_type": authType.Code, "identifier": identifier}, err)
+				}
+			}
+
+			newAccount = &accountAuthType.Account */
 		return nil
 	}
 
