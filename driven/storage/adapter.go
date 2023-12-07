@@ -4231,6 +4231,53 @@ func (sa *Adapter) DeleteDevice(context TransactionContext, id string) error {
 	return nil
 }
 
+// CheckAuthTypesExists check if auth_types collection exists
+func (sa *Adapter) CheckAuthTypesExists(collectionName string) (bool, error) {
+
+	client := sa.db.dbClient
+	dbName := sa.db.mongoDBName
+
+	opts := options.FindOne()
+
+	database := client.Database(dbName)
+	collections, err := database.ListCollectionNames(nil, opts)
+	if err != nil {
+		return false, nil
+	}
+
+	collectionExists := false
+	for _, coll := range collections {
+		if coll == collectionName {
+			collectionExists = true
+			break
+		}
+	}
+	if collectionExists {
+		sa.logger.Infof("The collection '%s' exists.\n", collectionName)
+	} else {
+		sa.logger.Infof("The collection '%s' does not exist.\n", collectionName)
+	}
+	return collectionExists, nil
+}
+
+// CreateAuthTypesCollection creates check if auth_types collection
+func (sa *Adapter) CreateAuthTypesCollection(collectionName string) error {
+	client := sa.db.dbClient
+	dbName := sa.db.mongoDBName
+	// Accessing a database
+	database := client.Database(dbName)
+
+	// Creating a collection
+	collection := database.Collection(collectionName)
+	_, err := collection.InsertOne(nil, collection)
+	if err != nil {
+		return err
+	}
+	// You can perform additional configuration or operations on the collection if needed
+	sa.logger.Infof("Collection %s created in database %s\n", collectionName, dbName)
+	return nil
+}
+
 func (sa *Adapter) getFilterForParams(params map[string]interface{}) bson.M {
 	filter := bson.M{}
 	for k, v := range params {
