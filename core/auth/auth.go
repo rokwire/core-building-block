@@ -1441,6 +1441,19 @@ func (a *Auth) getProfileBBData(authType model.AuthType, identifier string, l *l
 	return profile, preferences, nil
 }
 
+// TODO permissions, roles etc..
+// sign up an account to a specific application in the organization
+//
+//	Input:
+//		account (Account): The account
+//		appOrg (ApplicationOrganization): The application organization where this account will be attached
+//	Returns:
+//		Updated account (Account): The updated account object
+func (a *Auth) appSignUp(context storage.TransactionContext, account model.Account, appOrg model.ApplicationOrganization) (*model.Account, error) {
+	//TODO
+	return nil, errors.New("not implemented")
+}
+
 // registerUser registers account for an organization in an application
 //
 //	Input:

@@ -578,9 +578,9 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appID string, orgID
 	}
 
 	// create account
-	var accountAuthType *model.AccountAuthType
 	var newAccount *model.Account
 	var params map[string]interface{}
+
 	transaction := func(context storage.TransactionContext) error {
 		//find the account for the org and the user identity
 		foundedAccount, err := a.storage.FindAccountByOrgAndIdentifier(nil, appOrg.Organization.ID, authType.ID, identifier, appOrg.ID)
@@ -602,13 +602,20 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appID string, orgID
 		//apply operation
 		switch operation {
 		case "app-sign-up":
+			// account exists in the organization but not for the application
 
-			//TODO
+			udatedAccount, err := a.appSignUp(context, *foundedAccount, *appOrg)
+			if err != nil {
+				return errors.WrapErrorAction("app sign up", "", nil, err)
+			}
 
-			return errors.New("app-sign-upto be implemented")
+			newAccount = udatedAccount
+			return nil
 		case "org-sign-up":
-
 			// account does not exist in the organization
+
+			var accountAuthType *model.AccountAuthType
+
 			profile.DateCreated = time.Now().UTC()
 			if authType.IsExternal {
 				externalUser := model.ExternalSystemUser{Identifier: identifier}
