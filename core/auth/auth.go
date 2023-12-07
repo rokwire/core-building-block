@@ -1441,16 +1441,28 @@ func (a *Auth) getProfileBBData(authType model.AuthType, identifier string, l *l
 	return profile, preferences, nil
 }
 
-// TODO permissions, roles etc..
+// TODO permissions, roles etc.
+//
+//	permissions []string, roleIDs []string, groupIDs []string, creatorPermissions []string, clientVersion *string, l *logs.Log
+
 // sign up an account to a specific application in the organization
 //
 //	Input:
 //		account (Account): The account
 //		appOrg (ApplicationOrganization): The application organization where this account will be attached
+//		permissionNames ([]string): set of permissions to assign
+//		roleIDs ([]string): set of roles to assign
+//		groupIDs ([]string): set of groups to assign
+//		clientVersion (*string): client version
+//		creatorPermissions ([]string): creator permissions
 //	Returns:
 //		Updated account (Account): The updated account object
-func (a *Auth) appSignUp(context storage.TransactionContext, account model.Account, appOrg model.ApplicationOrganization) (*model.Account, error) {
-	//TODO
+func (a *Auth) appSignUp(context storage.TransactionContext, account model.Account, appOrg model.ApplicationOrganization,
+	permissionNames []string, roleIDs []string, groupIDs []string, clientVersion *string,
+	creatorPermissions []string,
+	l *logs.Log) (*model.Account, error) {
+
+	//TODO - check permissions etc
 	return nil, errors.New("not implemented")
 }
 

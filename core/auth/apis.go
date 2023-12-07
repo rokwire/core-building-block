@@ -604,7 +604,7 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appID string, orgID
 		case "app-sign-up":
 			// account exists in the organization but not for the application
 
-			udatedAccount, err := a.appSignUp(context, *foundedAccount, *appOrg)
+			udatedAccount, err := a.appSignUp(context, *foundedAccount, *appOrg, permissions, roleIDs, groupIDs, clientVersion, creatorPermissions, l)
 			if err != nil {
 				return errors.WrapErrorAction("app sign up", "", nil, err)
 			}
