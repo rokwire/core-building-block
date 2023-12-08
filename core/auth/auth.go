@@ -1489,7 +1489,8 @@ func (a *Auth) appSignUp(context storage.TransactionContext, account model.Accou
 		return nil, err
 	}
 
-	//TODO - set current membership
+	//set current membership
+	account.SetCurrentMembership(newAppMembership)
 
 	return &account, nil
 }
