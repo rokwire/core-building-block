@@ -2801,6 +2801,7 @@ func (sa *Adapter) FindConfigs(configType *string) ([]model.Config, error) {
 
 // InsertConfig inserts a new config
 func (sa *Adapter) InsertConfig(context TransactionContext, config model.Config) error {
+	sa.setCachedConfigs([]model.Config{config})
 	_, err := sa.db.configs.InsertOneWithContext(context, config)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeConfig, nil, err)
