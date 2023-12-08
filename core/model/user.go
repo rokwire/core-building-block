@@ -158,6 +158,16 @@ func (a Account) GetApps() []Application {
 	return res
 }
 
+// SetCurrentMembership sets current membership
+func (a *Account) SetCurrentMembership(current OrgAppMembership) {
+	a.AppOrg = current.AppOrg
+	a.Permissions = current.Permissions
+	a.Roles = current.Roles
+	a.Groups = current.Groups
+	a.Preferences = current.Preferences
+	a.MostRecentClientVersion = current.MostRecentClientVersion
+}
+
 // GetAccountAuthTypeByID finds account auth type by id
 func (a Account) GetAccountAuthTypeByID(ID string) *AccountAuthType {
 	for _, aat := range a.AuthTypes {
