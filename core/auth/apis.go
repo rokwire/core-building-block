@@ -657,7 +657,10 @@ func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID
 	//TODO: when elevating existing accounts to application level admin, need to enforce any authentication policies set up for the app org
 	// when demoting from application level admin to standard user, may want to inform user of applicable authentication policy changes
 
-	if authenticationType != AuthTypeOidc && authenticationType != AuthTypeEmail && !strings.HasSuffix(authenticationType, "_oidc") {
+	if authenticationType != AuthTypeOidc &&
+		authenticationType != AuthTypeEmail &&
+		!strings.HasSuffix(authenticationType, "_oidc") &&
+		authenticationType != AuthTypeTwilioPhone { //Once we have tenants accounts this means that phone is also valid
 		return nil, nil, errors.ErrorData(logutils.StatusInvalid, "auth type", nil)
 	}
 
