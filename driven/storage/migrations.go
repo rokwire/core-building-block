@@ -115,6 +115,9 @@ func (sa *Adapter) migrateCredentials(context TransactionContext, removedAuthTyp
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
 	}
+	if len(allCredentials) == 0 {
+		return nil, nil
+	}
 
 	type passwordCreds struct {
 		Password string `json:"password"`
