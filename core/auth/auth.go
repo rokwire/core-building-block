@@ -1458,10 +1458,39 @@ func (a *Auth) appSignUp(context storage.TransactionContext, account model.Accou
 	creatorPermissions []string,
 	l *logs.Log) (*model.Account, error) {
 
-	//TODO - check permissions etc
-	//return nil, errors.New("not implemented")
+	//check permissions, roles and groups
+	permissions, err := a.CheckPermissions(context, []model.ApplicationOrganization{appOrg}, permissionNames, creatorPermissions, false)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypePermission, nil, err)
+	}
 
-	//TODO
+	roles, err := a.CheckRoles(context, &appOrg, roleIDs, creatorPermissions, false)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeAppOrgRole, nil, err)
+	}
+
+	groups, err := a.CheckGroups(context, &appOrg, groupIDs, creatorPermissions, false)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeAppOrgGroup, nil, err)
+	}
+
+	//create new app membership
+	rolesItems := model.AccountRolesFromAppOrgRoles(roles, true, true)
+	groupsItems := model.AccountGroupsFromAppOrgGroups(groups, true, true)
+	newAppMembership := model.OrgAppMembership{ID: uuid.NewString(), AppOrg: appOrg,
+		Permissions: permissions, Roles: rolesItems, Groups: groupsItems, MostRecentClientVersion: clientVersion}
+
+	//add it to the account
+	account.OrgAppsMemberships = append(account.OrgAppsMemberships, newAppMembership)
+
+	//save the account
+	err = a.storage.SaveAccount(context, &account)
+	if err != nil {
+		return nil, err
+	}
+
+	//TODO - set current membership
+
 	return &account, nil
 }
 
