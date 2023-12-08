@@ -578,42 +578,69 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appID string, orgID
 	}
 
 	// create account
-	var accountAuthType *model.AccountAuthType
 	var newAccount *model.Account
 	var params map[string]interface{}
+
 	transaction := func(context storage.TransactionContext) error {
-		//1. check if the user exists
-		account, err := a.storage.FindAccount(context, appOrg.ID, authType.ID, identifier)
+		//find the account for the org and the user identity
+		foundedAccount, err := a.storage.FindAccountByOrgAndIdentifier(nil, appOrg.Organization.ID, authType.ID, identifier, appOrg.ID)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 		}
-		if account != nil {
-			return errors.ErrorData(logutils.StatusFound, model.TypeAccount, &logutils.FieldArgs{"app_org_id": appOrg.ID, "auth_type": authType.Code, "identifier": identifier})
+
+		//check if the account exists for this app
+		if foundedAccount != nil && foundedAccount.HasApp(appID) {
+			return errors.Newf("there is already account for %s in %s application", identifier, appID)
 		}
 
-		//2. account does not exist, so apply sign up
-		profile.DateCreated = time.Now().UTC()
-		if authType.IsExternal {
-			externalUser := model.ExternalSystemUser{Identifier: identifier}
-			accountAuthType, err = a.applySignUpAdminExternal(context, *authType, *appOrg, externalUser, profile, privacy, username, permissions, roleIDs, groupIDs, scopes, creatorPermissions, clientVersion, l)
-			if err != nil {
-				return errors.WrapErrorAction(logutils.ActionRegister, "admin user", &logutils.FieldArgs{"auth_type": authType.Code, "identifier": identifier}, err)
-			}
-		} else {
-			authImpl, err := a.getAuthTypeImpl(*authType)
-			if err != nil {
-				return errors.WrapErrorAction(logutils.ActionLoadCache, typeExternalAuthType, nil, err)
-			}
-
-			profile.Email = identifier
-			params, accountAuthType, err = a.applySignUpAdmin(context, authImpl, account, *authType, *appOrg, identifier, "", profile, privacy, username, permissions, roleIDs, groupIDs, scopes, creatorPermissions, clientVersion, l)
-			if err != nil {
-				return errors.WrapErrorAction(logutils.ActionRegister, "admin user", &logutils.FieldArgs{"auth_type": authType.Code, "identifier": identifier}, err)
-			}
+		//determine operation - "org-sign-up" or "app-sign-up"
+		operation, err := a.determineOperation(foundedAccount, appOrg.ID, l)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 		}
 
-		newAccount = &accountAuthType.Account
-		return nil
+		//apply operation
+		switch operation {
+		case "app-sign-up":
+			// account exists in the organization but not for the application
+
+			udatedAccount, err := a.appSignUp(context, *foundedAccount, *appOrg, permissions, roleIDs, groupIDs, clientVersion, creatorPermissions, l)
+			if err != nil {
+				return errors.WrapErrorAction("app sign up", "", nil, err)
+			}
+
+			newAccount = udatedAccount
+			return nil
+		case "org-sign-up":
+			// account does not exist in the organization
+
+			var accountAuthType *model.AccountAuthType
+
+			profile.DateCreated = time.Now().UTC()
+			if authType.IsExternal {
+				externalUser := model.ExternalSystemUser{Identifier: identifier}
+				accountAuthType, err = a.applySignUpAdminExternal(context, *authType, *appOrg, externalUser, profile, privacy, username, permissions, roleIDs, groupIDs, scopes, creatorPermissions, clientVersion, l)
+				if err != nil {
+					return errors.WrapErrorAction(logutils.ActionRegister, "admin user", &logutils.FieldArgs{"auth_type": authType.Code, "identifier": identifier}, err)
+				}
+			} else {
+				authImpl, err := a.getAuthTypeImpl(*authType)
+				if err != nil {
+					return errors.WrapErrorAction(logutils.ActionLoadCache, typeExternalAuthType, nil, err)
+				}
+
+				profile.Email = identifier
+				params, accountAuthType, err = a.applySignUpAdmin(context, authImpl, *authType, *appOrg, identifier, "", profile, privacy, username, permissions, roleIDs, groupIDs, scopes, creatorPermissions, clientVersion, l)
+				if err != nil {
+					return errors.WrapErrorAction(logutils.ActionRegister, "admin user", &logutils.FieldArgs{"auth_type": authType.Code, "identifier": identifier}, err)
+				}
+			}
+
+			newAccount = &accountAuthType.Account
+			return nil
+		}
+
+		return errors.Newf("not supported operation - create account via admin API")
 	}
 
 	err = a.storage.PerformTransaction(transaction)
@@ -630,7 +657,10 @@ func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID
 	//TODO: when elevating existing accounts to application level admin, need to enforce any authentication policies set up for the app org
 	// when demoting from application level admin to standard user, may want to inform user of applicable authentication policy changes
 
-	if authenticationType != AuthTypeOidc && authenticationType != AuthTypeEmail && !strings.HasSuffix(authenticationType, "_oidc") {
+	if authenticationType != AuthTypeOidc &&
+		authenticationType != AuthTypeEmail &&
+		!strings.HasSuffix(authenticationType, "_oidc") &&
+		authenticationType != AuthTypeTwilioPhone { //Once we have tenants accounts this means that phone is also valid
 		return nil, nil, errors.ErrorData(logutils.StatusInvalid, "auth type", nil)
 	}
 
@@ -1779,7 +1809,7 @@ func (a *Auth) InitializeSystemAccount(context storage.TransactionContext, authT
 	privacy := model.Privacy{Public: false}
 	permissions := []string{allSystemPermission}
 
-	_, accountAuthType, err := a.applySignUpAdmin(context, authImpl, nil, authType, appOrg, email, password, profile, privacy, "", permissions, nil, nil, nil, permissions, &clientVersion, l)
+	_, accountAuthType, err := a.applySignUpAdmin(context, authImpl, authType, appOrg, email, password, profile, privacy, "", permissions, nil, nil, nil, permissions, &clientVersion, l)
 	if err != nil {
 		return "", errors.WrapErrorAction(logutils.ActionRegister, "initial system user", &logutils.FieldArgs{"email": email}, err)
 	}

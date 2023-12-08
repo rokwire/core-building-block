@@ -809,7 +809,7 @@ func (a *Auth) applyOrgSignUp(authImpl authType, account *model.Account, authTyp
 	return message, accountAuthType, nil
 }
 
-func (a *Auth) applySignUpAdmin(context storage.TransactionContext, authImpl authType, account *model.Account, authType model.AuthType, appOrg model.ApplicationOrganization, identifier string, password string,
+func (a *Auth) applySignUpAdmin(context storage.TransactionContext, authImpl authType, authType model.AuthType, appOrg model.ApplicationOrganization, identifier string, password string,
 	regProfile model.Profile, privacy model.Privacy, username string, permissions []string, roles []string, groups []string, scopes []string, creatorPermissions []string, clientVersion *string, l *logs.Log) (map[string]interface{}, *model.AccountAuthType, error) {
 
 	if username != "" {
@@ -1439,6 +1439,60 @@ func (a *Auth) getProfileBBData(authType model.AuthType, identifier string, l *l
 		}
 	}
 	return profile, preferences, nil
+}
+
+// sign up an account to a specific application in the organization
+//
+//	Input:
+//		account (Account): The account
+//		appOrg (ApplicationOrganization): The application organization where this account will be attached
+//		permissionNames ([]string): set of permissions to assign
+//		roleIDs ([]string): set of roles to assign
+//		groupIDs ([]string): set of groups to assign
+//		clientVersion (*string): client version
+//		creatorPermissions ([]string): creator permissions
+//	Returns:
+//		Updated account (Account): The updated account object
+func (a *Auth) appSignUp(context storage.TransactionContext, account model.Account, appOrg model.ApplicationOrganization,
+	permissionNames []string, roleIDs []string, groupIDs []string, clientVersion *string,
+	creatorPermissions []string,
+	l *logs.Log) (*model.Account, error) {
+
+	//check permissions, roles and groups
+	permissions, err := a.CheckPermissions(context, []model.ApplicationOrganization{appOrg}, permissionNames, creatorPermissions, false)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypePermission, nil, err)
+	}
+
+	roles, err := a.CheckRoles(context, &appOrg, roleIDs, creatorPermissions, false)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeAppOrgRole, nil, err)
+	}
+
+	groups, err := a.CheckGroups(context, &appOrg, groupIDs, creatorPermissions, false)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeAppOrgGroup, nil, err)
+	}
+
+	//create new app membership
+	rolesItems := model.AccountRolesFromAppOrgRoles(roles, true, true)
+	groupsItems := model.AccountGroupsFromAppOrgGroups(groups, true, true)
+	newAppMembership := model.OrgAppMembership{ID: uuid.NewString(), AppOrg: appOrg,
+		Permissions: permissions, Roles: rolesItems, Groups: groupsItems, MostRecentClientVersion: clientVersion}
+
+	//add it to the account
+	account.OrgAppsMemberships = append(account.OrgAppsMemberships, newAppMembership)
+
+	//save the account
+	err = a.storage.SaveAccount(context, &account)
+	if err != nil {
+		return nil, err
+	}
+
+	//set current membership
+	account.SetCurrentMembership(newAppMembership)
+
+	return &account, nil
 }
 
 // registerUser registers account for an organization in an application
