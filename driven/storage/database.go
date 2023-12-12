@@ -330,9 +330,23 @@ func (m *database) startPhase2(accountsColl *collectionWrapper, tenantsAccountsC
 func (m *database) processPhase2ForOrg(accountsColl *collectionWrapper, orgID string, orgApps []string) error {
 	m.logger.Debugf("...start processing org id %s with apps orgs ids - %s", orgID, orgApps)
 
+	//process one piece - while!!!!
+	idsList := []string{"1"} //TODO
+	err := m.processPhase2ForOrgPiece(accountsColl, idsList, orgID, orgApps)
+	if err != nil {
+		return err
+	}
+
+	m.logger.Debugf("...end processing org id %s", orgID)
+	return nil
+}
+
+func (m *database) processPhase2ForOrgPiece(accountsColl *collectionWrapper, idsList []string, orgID string, orgApps []string) error {
 	//all in transaction!
 	transaction := func(contextTr TransactionContext) error {
 		//1. first mark the accounts as migrated
+
+		//TODO - idsList
 		err := m.markAccountsAsProcessedByAppOrgIDs(contextTr, orgApps, accountsColl)
 		if err != nil {
 			return err
@@ -340,7 +354,7 @@ func (m *database) processPhase2ForOrg(accountsColl *collectionWrapper, orgID st
 
 		//2. $out/merge cannot be used in a transaction
 		ctx := context.Background()
-		err = m.moveToTenantsAccounts(ctx, accountsColl, orgID, orgApps)
+		err = m.moveToTenantsAccounts(ctx, accountsColl, idsList, orgID, orgApps)
 		if err != nil {
 			return err //rollback if the move fails
 		}
@@ -354,7 +368,6 @@ func (m *database) processPhase2ForOrg(accountsColl *collectionWrapper, orgID st
 		return err
 	}
 
-	m.logger.Debugf("...end processing org id %s", orgID)
 	return nil
 }
 
@@ -406,9 +419,10 @@ func (m *database) startPhase1(accountsColl *collectionWrapper, tenantsAccountsC
 	return nil
 }
 
-func (m *database) moveToTenantsAccounts(context context.Context, accountsColl *collectionWrapper, orgID string, appsOrgsIDs []string) error {
+func (m *database) moveToTenantsAccounts(context context.Context, accountsColl *collectionWrapper, idsList []string, orgID string, appsOrgsIDs []string) error {
 	matchStage := bson.D{
 		{Key: "$match", Value: bson.D{
+			{Key: "_id", Value: bson.M{"$in": idsList}},
 			{Key: "$or", Value: bson.A{
 				bson.D{{Key: "migrated", Value: bson.M{"$type": 10}}}, //10 is the number for null
 				bson.D{{Key: "migrated", Value: false}},
