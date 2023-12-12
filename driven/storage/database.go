@@ -102,8 +102,8 @@ func (m *database) start() error {
 	}
 
 	//deprecated
-	accounts := &collectionWrapper{database: m, coll: db.Collection("_for_test_accounts")}
-	//accounts := &collectionWrapper{database: m, coll: db.Collection("accounts")}
+	//accounts := &collectionWrapper{database: m, coll: db.Collection("_for_test_accounts")}
+	accounts := &collectionWrapper{database: m, coll: db.Collection("accounts")}
 	err = m.applyAccountsChecks(accounts)
 	if err != nil {
 		return err
@@ -163,15 +163,15 @@ func (m *database) start() error {
 		return err
 	}
 
-	organizations := &collectionWrapper{database: m, coll: db.Collection("_for_test_organizations")}
-	//organizations := &collectionWrapper{database: m, coll: db.Collection("organizations")}
+	//organizations := &collectionWrapper{database: m, coll: db.Collection("_for_test_organizations")}
+	organizations := &collectionWrapper{database: m, coll: db.Collection("organizations")}
 	err = m.applyOrganizationsChecks(organizations)
 	if err != nil {
 		return err
 	}
 
-	applications := &collectionWrapper{database: m, coll: db.Collection("_for_test_applications")}
-	//applications := &collectionWrapper{database: m, coll: db.Collection("applications")}
+	//applications := &collectionWrapper{database: m, coll: db.Collection("_for_test_applications")}
+	applications := &collectionWrapper{database: m, coll: db.Collection("applications")}
 	err = m.applyApplicationsChecks(applications)
 	if err != nil {
 		return err
@@ -183,8 +183,8 @@ func (m *database) start() error {
 		return err
 	}
 
-	applicationsOrganizations := &collectionWrapper{database: m, coll: db.Collection("_for_test_applications_organizations")}
-	//applicationsOrganizations := &collectionWrapper{database: m, coll: db.Collection("applications_organizations")}
+	//applicationsOrganizations := &collectionWrapper{database: m, coll: db.Collection("_for_test_applications_organizations")}
+	applicationsOrganizations := &collectionWrapper{database: m, coll: db.Collection("applications_organizations")}
 	err = m.applyApplicationsOrganizationsChecks(applicationsOrganizations)
 	if err != nil {
 		return err
