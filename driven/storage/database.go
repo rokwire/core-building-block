@@ -345,9 +345,7 @@ func (m *database) processPhase2ForOrgPiece(accountsColl *collectionWrapper, ids
 	//all in transaction!
 	transaction := func(contextTr TransactionContext) error {
 		//1. first mark the accounts as migrated
-
-		//TODO - idsList
-		err := m.markAccountsAsProcessedByAppOrgIDs(contextTr, orgApps, accountsColl)
+		err := m.markAccountsAsProcessed(contextTr, idsList, accountsColl)
 		if err != nil {
 			return err
 		}
@@ -555,23 +553,6 @@ func (m *database) getUniqueAccountsIDs(items map[string][]account) []string {
 
 func (m *database) markAccountsAsProcessed(context TransactionContext, accountsIDs []string, accountsColl *collectionWrapper) error {
 	filter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": accountsIDs}}}
-
-	update := bson.D{
-		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "migrated", Value: true},
-		}},
-	}
-
-	_, err := accountsColl.UpdateManyWithContext(context, filter, update, nil)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (m *database) markAccountsAsProcessedByAppOrgIDs(context TransactionContext, appsOrgsIDs []string, accountsColl *collectionWrapper) error {
-	filter := bson.D{primitive.E{Key: "app_org_id", Value: bson.M{"$in": appsOrgsIDs}}}
 
 	update := bson.D{
 		primitive.E{Key: "$set", Value: bson.D{
