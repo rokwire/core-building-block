@@ -330,15 +330,54 @@ func (m *database) startPhase2(accountsColl *collectionWrapper, tenantsAccountsC
 func (m *database) processPhase2ForOrg(accountsColl *collectionWrapper, orgID string, orgApps []string) error {
 	m.logger.Debugf("...start processing org id %s with apps orgs ids - %s", orgID, orgApps)
 
-	//process one piece - while!!!!
-	idsList := []string{"1"} //TODO
-	err := m.processPhase2ForOrgPiece(accountsColl, idsList, orgID, orgApps)
-	if err != nil {
-		return err
+	i := 0
+	for {
+		ids, err := m.loadAccountsIDsForMigration(nil, accountsColl)
+		if err != nil {
+			return err
+		}
+		if len(ids) == 0 {
+			break //no more records
+		}
+
+		// process
+		err = m.processPhase2ForOrgPiece(accountsColl, ids, orgID, orgApps)
+		if err != nil {
+			return err
+		}
+
+		m.logger.Infof("Iteration:%d", i)
+
+		// 1 second sleep
+		time.Sleep(time.Second)
+
+		i++
 	}
 
 	m.logger.Debugf("...end processing org id %s", orgID)
 	return nil
+}
+
+func (m *database) loadAccountsIDsForMigration(context TransactionContext, accountsColl *collectionWrapper) ([]string, error) {
+	filter := bson.M{"migrated": bson.M{"$in": []interface{}{nil, false}}}
+
+	findOptions := options.Find()
+	findOptions.SetLimit(int64(5000))
+
+	var accountsResult []account
+	err := accountsColl.FindWithContext(context, filter, &accountsResult, findOptions)
+	if err != nil {
+		return nil, err
+	}
+	if len(accountsResult) == 0 {
+		return []string{}, nil //empty
+	}
+
+	res := make([]string, len(accountsResult))
+	for i, c := range accountsResult {
+		res[i] = c.ID
+	}
+	return res, nil
 }
 
 func (m *database) processPhase2ForOrgPiece(accountsColl *collectionWrapper, idsList []string, orgID string, orgApps []string) error {
