@@ -102,8 +102,8 @@ func (m *database) start() error {
 	}
 
 	//deprecated
-	//accounts := &collectionWrapper{database: m, coll: db.Collection("_for_test_accounts")}
-	accounts := &collectionWrapper{database: m, coll: db.Collection("accounts")}
+	accounts := &collectionWrapper{database: m, coll: db.Collection("_for_test_accounts")}
+	//accounts := &collectionWrapper{database: m, coll: db.Collection("accounts")}
 	err = m.applyAccountsChecks(accounts)
 	if err != nil {
 		return err
@@ -163,15 +163,15 @@ func (m *database) start() error {
 		return err
 	}
 
-	//organizations := &collectionWrapper{database: m, coll: db.Collection("_for_test_organizations")}
-	organizations := &collectionWrapper{database: m, coll: db.Collection("organizations")}
+	organizations := &collectionWrapper{database: m, coll: db.Collection("_for_test_organizations")}
+	//organizations := &collectionWrapper{database: m, coll: db.Collection("organizations")}
 	err = m.applyOrganizationsChecks(organizations)
 	if err != nil {
 		return err
 	}
 
-	//applications := &collectionWrapper{database: m, coll: db.Collection("_for_test_applications")}
-	applications := &collectionWrapper{database: m, coll: db.Collection("applications")}
+	applications := &collectionWrapper{database: m, coll: db.Collection("_for_test_applications")}
+	//applications := &collectionWrapper{database: m, coll: db.Collection("applications")}
 	err = m.applyApplicationsChecks(applications)
 	if err != nil {
 		return err
@@ -183,8 +183,8 @@ func (m *database) start() error {
 		return err
 	}
 
-	//applicationsOrganizations := &collectionWrapper{database: m, coll: db.Collection("_for_test_applications_organizations")}
-	applicationsOrganizations := &collectionWrapper{database: m, coll: db.Collection("applications_organizations")}
+	applicationsOrganizations := &collectionWrapper{database: m, coll: db.Collection("_for_test_applications_organizations")}
+	//applicationsOrganizations := &collectionWrapper{database: m, coll: db.Collection("applications_organizations")}
 	err = m.applyApplicationsOrganizationsChecks(applicationsOrganizations)
 	if err != nil {
 		return err
@@ -317,36 +317,44 @@ func (m *database) startPhase2(accountsColl *collectionWrapper, tenantsAccountsC
 	for orgID, orgItems := range orgsData {
 		//process for every organization
 
-		m.logger.Debugf("...start processing org id %s with apps orgs ids - %s", orgID, orgItems)
-
-		//all in transaction!
-		transaction := func(contextTr TransactionContext) error {
-			//1. first mark the accounts as migrated
-			err = m.markAccountsAsProcessedByAppOrgIDs(contextTr, orgItems, accountsColl)
-			if err != nil {
-				return err
-			}
-
-			//2. $out/merge cannot be used in a transaction
-			ctx := context.Background()
-			err = m.moveToTenantsAccounts(ctx, accountsColl, orgID, orgItems)
-			if err != nil {
-				return err //rollback if the move fails
-			}
-
-			//once we know that the huge data operation is sucessfull then we can commit the transaction from step 1
-			return nil
+		err := m.processPhase2ForOrg(accountsColl, orgID, orgItems)
+		if err != nil {
+			return err
 		}
+	}
 
-		err := m.performTransaction(transaction)
+	m.logger.Debug("startPhase2 END")
+	return nil
+}
+
+func (m *database) processPhase2ForOrg(accountsColl *collectionWrapper, orgID string, orgApps []string) error {
+	m.logger.Debugf("...start processing org id %s with apps orgs ids - %s", orgID, orgApps)
+
+	//all in transaction!
+	transaction := func(contextTr TransactionContext) error {
+		//1. first mark the accounts as migrated
+		err := m.markAccountsAsProcessedByAppOrgIDs(contextTr, orgApps, accountsColl)
 		if err != nil {
 			return err
 		}
 
-		m.logger.Debugf("...end processing org id %s", orgID)
+		//2. $out/merge cannot be used in a transaction
+		ctx := context.Background()
+		err = m.moveToTenantsAccounts(ctx, accountsColl, orgID, orgApps)
+		if err != nil {
+			return err //rollback if the move fails
+		}
+
+		//once we know that the huge data operation is sucessfull then we can commit the transaction from step 1
+		return nil
 	}
 
-	m.logger.Debug("startPhase2 END")
+	err := m.performTransaction(transaction)
+	if err != nil {
+		return err
+	}
+
+	m.logger.Debugf("...end processing org id %s", orgID)
 	return nil
 }
 
