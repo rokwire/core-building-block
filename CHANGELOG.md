@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+
+## [1.36.0] - 2023-12-13
 ### Changed
 - Accounts to tenants account migration improvement [#690](https://github.com/rokwire/core-building-block/issues/690)
 
@@ -418,7 +420,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Users authentication polish [#155](https://github.com/rokwire/core-building-block/issues/155)
 - Optimise the Mongo DB collections indexes usage [#146](https://github.com/rokwire/core-building-block/issues/146)
 
-[Unreleased]: https://github.com/rokwire/core-building-block/compare/v1.35.1...HEAD
+[Unreleased]: https://github.com/rokwire/core-building-block/compare/v1.36.0...HEAD
+[1.36.0]: https://github.com/rokwire/core-building-block/compare/v1.35.1...v1.36.0
 [1.35.1]: https://github.com/rokwire/core-building-block/compare/v1.35.0...v1.35.1
 [1.35.0]: https://github.com/rokwire/core-building-block/compare/v1.34.0...v1.35.0
 [1.34.0]: https://github.com/rokwire/core-building-block/compare/v1.33.0...v1.34.0
