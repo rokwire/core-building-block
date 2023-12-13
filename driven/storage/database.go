@@ -317,36 +317,94 @@ func (m *database) startPhase2(accountsColl *collectionWrapper, tenantsAccountsC
 	for orgID, orgItems := range orgsData {
 		//process for every organization
 
-		m.logger.Debugf("...start processing org id %s with apps orgs ids - %s", orgID, orgItems)
+		err := m.processPhase2ForOrg(accountsColl, orgID, orgItems)
+		if err != nil {
+			return err
+		}
+	}
 
-		//all in transaction!
-		transaction := func(contextTr TransactionContext) error {
-			//1. first mark the accounts as migrated
-			err = m.markAccountsAsProcessedByAppOrgIDs(contextTr, orgItems, accountsColl)
-			if err != nil {
-				return err
-			}
+	m.logger.Debug("startPhase2 END")
+	return nil
+}
 
-			//2. $out/merge cannot be used in a transaction
-			ctx := context.Background()
-			err = m.moveToTenantsAccounts(ctx, accountsColl, orgID, orgItems)
-			if err != nil {
-				return err //rollback if the move fails
-			}
+func (m *database) processPhase2ForOrg(accountsColl *collectionWrapper, orgID string, orgApps []string) error {
+	m.logger.Debugf("...start processing org id %s with apps orgs ids - %s", orgID, orgApps)
 
-			//once we know that the huge data operation is sucessfull then we can commit the transaction from step 1
-			return nil
+	i := 0
+	for {
+		ids, err := m.loadAccountsIDsForMigration(nil, accountsColl)
+		if err != nil {
+			return err
+		}
+		if len(ids) == 0 {
+			break //no more records
 		}
 
-		err := m.performTransaction(transaction)
+		// process
+		err = m.processPhase2ForOrgPiece(accountsColl, ids, orgID, orgApps)
 		if err != nil {
 			return err
 		}
 
-		m.logger.Debugf("...end processing org id %s", orgID)
+		m.logger.Infof("Iteration:%d", i)
+
+		// 1 second sleep
+		time.Sleep(time.Second)
+
+		i++
 	}
 
-	m.logger.Debug("startPhase2 END")
+	m.logger.Debugf("...end processing org id %s", orgID)
+	return nil
+}
+
+func (m *database) loadAccountsIDsForMigration(context TransactionContext, accountsColl *collectionWrapper) ([]string, error) {
+	filter := bson.M{"migrated": bson.M{"$in": []interface{}{nil, false}}}
+
+	findOptions := options.Find()
+	findOptions.SetLimit(int64(5000))
+
+	var accountsResult []account
+	err := accountsColl.FindWithContext(context, filter, &accountsResult, findOptions)
+	if err != nil {
+		return nil, err
+	}
+	if len(accountsResult) == 0 {
+		return []string{}, nil //empty
+	}
+
+	res := make([]string, len(accountsResult))
+	for i, c := range accountsResult {
+		res[i] = c.ID
+	}
+	return res, nil
+}
+
+func (m *database) processPhase2ForOrgPiece(accountsColl *collectionWrapper, idsList []string, orgID string, orgApps []string) error {
+	//all in transaction!
+	transaction := func(contextTr TransactionContext) error {
+		//1. first mark the accounts as migrated
+		err := m.markAccountsAsProcessed(contextTr, idsList, accountsColl)
+		if err != nil {
+			return err
+		}
+
+		//2. $out/merge cannot be used in a transaction
+		ctx := context.Background()
+		err = m.moveToTenantsAccounts(ctx, accountsColl, idsList, orgID, orgApps)
+		if err != nil {
+			return err //rollback if the move fails
+		}
+
+		//once we know that the huge data operation is sucessfull then we can commit the transaction from step 1
+		return nil
+	}
+
+	err := m.performTransaction(transaction)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -398,9 +456,10 @@ func (m *database) startPhase1(accountsColl *collectionWrapper, tenantsAccountsC
 	return nil
 }
 
-func (m *database) moveToTenantsAccounts(context context.Context, accountsColl *collectionWrapper, orgID string, appsOrgsIDs []string) error {
+func (m *database) moveToTenantsAccounts(context context.Context, accountsColl *collectionWrapper, idsList []string, orgID string, appsOrgsIDs []string) error {
 	matchStage := bson.D{
 		{Key: "$match", Value: bson.D{
+			{Key: "_id", Value: bson.M{"$in": idsList}},
 			{Key: "$or", Value: bson.A{
 				bson.D{{Key: "migrated", Value: bson.M{"$type": 10}}}, //10 is the number for null
 				bson.D{{Key: "migrated", Value: false}},
@@ -533,23 +592,6 @@ func (m *database) getUniqueAccountsIDs(items map[string][]account) []string {
 
 func (m *database) markAccountsAsProcessed(context TransactionContext, accountsIDs []string, accountsColl *collectionWrapper) error {
 	filter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": accountsIDs}}}
-
-	update := bson.D{
-		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "migrated", Value: true},
-		}},
-	}
-
-	_, err := accountsColl.UpdateManyWithContext(context, filter, update, nil)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (m *database) markAccountsAsProcessedByAppOrgIDs(context TransactionContext, appsOrgsIDs []string, accountsColl *collectionWrapper) error {
-	filter := bson.D{primitive.E{Key: "app_org_id", Value: bson.M{"$in": appsOrgsIDs}}}
 
 	update := bson.D{
 		primitive.E{Key: "$set", Value: bson.D{
