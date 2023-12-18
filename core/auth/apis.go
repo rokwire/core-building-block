@@ -160,11 +160,12 @@ func (a *Auth) Login(ipAddress string, deviceType string, deviceOS *string, devi
 
 	if loginSession.State == "" {
 		if loginSession.Account != nil {
-			decryptedSecrets, err := a.DecryptSecrets(loginSession.Account.Secrets)
-			if err != nil {
-				return nil, nil, nil, errors.WrapErrorAction(logutils.ActionDecrypt, model.TypeAccountSecrets, nil, err)
-			}
-			loginSession.Account.Secrets = decryptedSecrets
+			// decryptedSecrets, err := a.DecryptSecrets(loginSession.Account.Secrets)
+			// if err != nil {
+			// 	return nil, nil, nil, errors.WrapErrorAction(logutils.ActionDecrypt, model.TypeAccountSecrets, nil, err)
+			// }
+			// loginSession.Account.Secrets = decryptedSecrets
+			loginSession.Account.Secrets = nil
 		}
 
 		return nil, loginSession, nil, nil
