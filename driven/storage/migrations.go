@@ -226,7 +226,11 @@ func (sa *Adapter) migrateAppOrgs(context TransactionContext, removedAuthTypes m
 						updatedIDs = append(updatedIDs, newAuthType.ID)
 					} else {
 						// remove the obsolete supported auth type if the newID is already included in the list
-						appType.SupportedAuthTypes = append(appType.SupportedAuthTypes[:j], appType.SupportedAuthTypes[j+1:]...)
+						if len(appType.SupportedAuthTypes) > j {
+							appType.SupportedAuthTypes = append(appType.SupportedAuthTypes[:j], appType.SupportedAuthTypes[j+1:]...)
+						} else {
+							appType.SupportedAuthTypes = appType.SupportedAuthTypes[:j]
+						}
 					}
 				}
 			}
@@ -265,8 +269,8 @@ func (sa *Adapter) migrateAccounts(context TransactionContext, appOrg model.Appl
 		return nil
 	}
 
-	migratedAccounts := make([]interface{}, len(accounts))
-	for i, acct := range accounts {
+	migratedAccounts := []interface{}{}
+	for _, acct := range accounts {
 		migrated := acct
 		identifiers := make([]accountIdentifier, 0)
 		authTypes := make([]accountAuthType, 0)
@@ -428,7 +432,7 @@ func (sa *Adapter) migrateAccounts(context TransactionContext, appOrg model.Appl
 		migrated.Profile.Email = nil
 		migrated.Profile.Phone = nil
 		migrated.Username = nil
-		migratedAccounts[i] = migrated
+		migratedAccounts = append(migratedAccounts, migrated)
 	}
 
 	_, err = sa.db.accounts.DeleteManyWithContext(context, filter, nil)
@@ -436,9 +440,12 @@ func (sa *Adapter) migrateAccounts(context TransactionContext, appOrg model.Appl
 		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
 	}
 
-	_, err = sa.db.accounts.InsertManyWithContext(context, migratedAccounts, nil)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAccount, nil, err)
+	if len(migratedAccounts) > 0 {
+		_, err = sa.db.accounts.InsertManyWithContext(context, migratedAccounts, nil)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAccount, nil, err)
+		}
+
 	}
 
 	return nil

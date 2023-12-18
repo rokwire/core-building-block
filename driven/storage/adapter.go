@@ -1036,9 +1036,12 @@ func (sa *Adapter) findStorageAccount(context TransactionContext, key string, id
 	if len(accounts) == 0 {
 		//not found
 		return nil, nil
+	} else if len(accounts) > 1 {
+		return nil, errors.ErrorData(logutils.StatusInvalid, "account count", &logutils.FieldArgs{"count": len(accounts)})
 	}
-
 	account := accounts[0]
+	sa.logger.Infof("account found for %v: %s", filter, account.ID)
+
 	return &account, nil
 }
 
