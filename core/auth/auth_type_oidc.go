@@ -71,11 +71,12 @@ type oidcAuthConfig struct {
 	Claims             map[string]string `json:"claims" validate:"required"`
 	RequiredPopulation string            `json:"required_population"`
 	Populations        map[string]string `json:"populations"`
+	RedirectURI        string            `json:"redirect_uri"`
 }
 
 type oidcLoginParams struct {
 	CodeVerifier string `json:"pkce_verifier"`
-	RedirectURI  string `json:"redirect_uri" validate:"required"`
+	RedirectURI  string `json:"redirect_uri"`
 }
 
 type oidcToken struct {
@@ -257,17 +258,22 @@ func (a *oidcAuthImpl) checkToken(idToken string, authType model.AuthType, appTy
 }
 
 func (a *oidcAuthImpl) newToken(code string, authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, params *oidcLoginParams, oidcConfig *oidcAuthConfig, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, string, error) {
+	redirectURI := params.RedirectURI
+	if oidcConfig.RedirectURI != "" {
+		redirectURI = oidcConfig.RedirectURI
+	}
+
 	bodyData := map[string]string{
 		"code":         code,
 		"grant_type":   "authorization_code",
-		"redirect_uri": params.RedirectURI,
+		"redirect_uri": redirectURI,
 		"client_id":    oidcConfig.ClientID,
 	}
 	if len(params.CodeVerifier) > 0 {
 		bodyData["code_verifier"] = params.CodeVerifier
 	}
 
-	return a.loadOidcTokensAndInfo(bodyData, oidcConfig, authType, appType, appOrg, params.RedirectURI, l)
+	return a.loadOidcTokensAndInfo(bodyData, oidcConfig, authType, appType, appOrg, redirectURI, l)
 }
 
 func (a *oidcAuthImpl) refreshToken(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization,
