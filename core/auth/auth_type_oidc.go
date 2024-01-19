@@ -32,6 +32,7 @@ import (
 	"gopkg.in/go-playground/validator.v9"
 
 	"github.com/coreos/go-oidc"
+	"github.com/google/uuid"
 	"github.com/rokwire/core-auth-library-go/v3/authutils"
 	"github.com/rokwire/logging-library-go/v2/errors"
 	"github.com/rokwire/logging-library-go/v2/logs"
@@ -294,7 +295,7 @@ func (a *oidcAuthImpl) refreshToken(authType model.AuthType, appType model.Appli
 
 func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcConfig *oidcAuthConfig, authType model.AuthType, appType model.ApplicationType,
 	appOrg model.ApplicationOrganization, redirectURI string, l *logs.Log) (*model.ExternalSystemUser, map[string]interface{}, string, error) {
-	token, err := a.loadOidcTokenWithParams(bodyData, oidcConfig)
+	token, err := a.loadOidcTokenWithParams(bodyData, oidcConfig, l)
 	if err != nil {
 		return nil, nil, "", errors.WrapErrorAction(logutils.ActionGet, typeOidcToken, nil, err)
 	}
@@ -397,7 +398,7 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 	return &externalUser, params, token.AccessToken, nil
 }
 
-func (a *oidcAuthImpl) loadOidcTokenWithParams(params map[string]string, oidcConfig *oidcAuthConfig) (*oidcToken, error) {
+func (a *oidcAuthImpl) loadOidcTokenWithParams(params map[string]string, oidcConfig *oidcAuthConfig, l *logs.Log) (*oidcToken, error) {
 	tokenURI := ""
 	oidcTokenURL := oidcConfig.Host + "/idp/profile/oidc/token"
 	if len(oidcConfig.TokenURL) > 0 {
@@ -417,10 +418,14 @@ func (a *oidcAuthImpl) loadOidcTokenWithParams(params map[string]string, oidcCon
 	for k, v := range params {
 		data.Set(k, v)
 	}
+
+	requestID := uuid.New().String()
 	headers := map[string]string{
 		"Content-Type":   "application/x-www-form-urlencoded",
 		"Content-Length": strconv.Itoa(len(data.Encode())),
+		"X-Request-ID":   requestID,
 	}
+	l.AddContext("auth_request_id", requestID)
 
 	req, err := http.NewRequest(http.MethodPost, tokenURI, strings.NewReader(data.Encode()))
 	if err != nil {
@@ -440,7 +445,7 @@ func (a *oidcAuthImpl) loadOidcTokenWithParams(params map[string]string, oidcCon
 		return nil, errors.WrapErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err)
 	}
 	if resp.StatusCode != 200 {
-		return nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeResponse, &logutils.FieldArgs{"status_code": resp.StatusCode, "error": string(body)})
+		return nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeResponse, &logutils.FieldArgs{"status_code": resp.StatusCode, "error": string(body), "auth_request_id": requestID})
 	}
 
 	var authToken oidcToken
