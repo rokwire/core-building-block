@@ -111,9 +111,13 @@ func (a *passwordAuthImpl) signUp(identifierImpl identifierType, accountID *stri
 }
 
 func (a *passwordAuthImpl) signUpAdmin(identifierImpl identifierType, appOrg model.ApplicationOrganization, creds string) (map[string]interface{}, *model.AccountIdentifier, *model.Credential, error) {
-	credentials, err := a.parseCreds(creds, false)
-	if err != nil {
-		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionParse, typePasswordCreds, nil, err)
+	credentials := &passwordCreds{}
+	var err error
+	if creds != "" {
+		credentials, err = a.parseCreds(creds, false)
+		if err != nil {
+			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionParse, typePasswordCreds, nil, err)
+		}
 	}
 
 	if credentials.Password == "" {
