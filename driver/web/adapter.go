@@ -51,6 +51,8 @@ type Adapter struct {
 	testServerURL        string
 	developmentServerURL string
 
+	exposeDocs bool
+
 	cachedYamlDoc []byte
 
 	openAPIRouter routers.Router
@@ -326,6 +328,11 @@ func (we Adapter) serveWebAuthnTest(w http.ResponseWriter, r *http.Request) {
 }
 
 func (we Adapter) serveDoc(w http.ResponseWriter, r *http.Request) {
+	if !we.exposeDocs {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
 	w.Header().Add("access-control-allow-origin", "*")
 
 	if we.cachedYamlDoc != nil {
@@ -551,8 +558,8 @@ func (we Adapter) completeResponse(w http.ResponseWriter, response logs.HTTPResp
 }
 
 // NewWebAdapter creates new WebAdapter instance
-func NewWebAdapter(env string, serviceRegManager *authservice.ServiceRegManager, port string, coreAPIs *core.APIs, host string, corsAllowedOrigins []string,
-	corsAllowedHeaders []string, baseServerURL string, prodServerURL string, testServerURL string, devServerURL string, logger *logs.Logger) Adapter {
+func NewWebAdapter(env string, serviceRegManager *authservice.ServiceRegManager, port string, coreAPIs *core.APIs, host string, exposeDocs bool,
+	corsAllowedOrigins []string, corsAllowedHeaders []string, baseServerURL string, prodServerURL string, testServerURL string, devServerURL string, logger *logs.Logger) Adapter {
 	//openAPI doc
 	loader := &openapi3.Loader{Context: context.Background(), IsExternalRefsAllowed: true}
 	// doc, err := loader.LoadFromFile("driver/web/docs/gen/def.yaml")
@@ -603,7 +610,7 @@ func NewWebAdapter(env string, serviceRegManager *authservice.ServiceRegManager,
 	return Adapter{env: env, port: port, productionServerURL: prodServerURL, testServerURL: testServerURL, developmentServerURL: devServerURL, cachedYamlDoc: yamlDoc,
 		openAPIRouter: openAPIRouter, host: host, auth: auth, logger: logger, defaultApisHandler: defaultApisHandler, servicesApisHandler: servicesApisHandler, adminApisHandler: adminApisHandler,
 		encApisHandler: encApisHandler, bbsApisHandler: bbsApisHandler, tpsApisHandler: tpsApisHandler, systemApisHandler: systemApisHandler, coreAPIs: coreAPIs,
-		corsAllowedOrigins: corsAllowedOrigins, corsAllowedHeaders: corsAllowedHeaders}
+		corsAllowedOrigins: corsAllowedOrigins, corsAllowedHeaders: corsAllowedHeaders, exposeDocs: exposeDocs}
 }
 
 // AppListener implements core.ApplicationListener interface

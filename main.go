@@ -225,9 +225,15 @@ func main() {
 		corsAllowedOrigins = envData.CORSAllowedOrigins
 	}
 
+	exposeDocs := false
+	exposeDocsVar := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_EXPOSE_DOCS", false, false)
+	if strings.ToLower(exposeDocsVar) == "true" {
+		exposeDocs = true
+	}
+
 	//web adapter
-	webAdapter := web.NewWebAdapter(env, authImpl.ServiceRegManager, port, coreAPIs, host, corsAllowedOrigins,
-		corsAllowedHeaders, baseServerURL, prodServerURL, testServerURL, devServerURL, logger)
+	webAdapter := web.NewWebAdapter(env, authImpl.ServiceRegManager, port, coreAPIs, host, exposeDocs,
+		corsAllowedOrigins, corsAllowedHeaders, baseServerURL, prodServerURL, testServerURL, devServerURL, logger)
 	webAdapter.Start()
 }
 
