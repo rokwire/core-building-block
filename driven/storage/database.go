@@ -359,7 +359,7 @@ func (m *database) processPhase2ForOrg(accountsColl *collectionWrapper, orgID st
 }
 
 func (m *database) loadAccountsIDsForMigration(context TransactionContext, accountsColl *collectionWrapper) ([]string, error) {
-	filter := bson.M{"migrated": bson.M{"$in": []interface{}{nil, false}}}
+	filter := bson.M{"migrated_2": bson.M{"$in": []interface{}{nil, false}}}
 
 	findOptions := options.Find()
 	findOptions.SetLimit(int64(5000))
@@ -461,9 +461,9 @@ func (m *database) moveToTenantsAccounts(context context.Context, accountsColl *
 		{Key: "$match", Value: bson.D{
 			{Key: "_id", Value: bson.M{"$in": idsList}},
 			{Key: "$or", Value: bson.A{
-				bson.D{{Key: "migrated", Value: bson.M{"$type": 10}}}, //10 is the number for null
-				bson.D{{Key: "migrated", Value: false}},
-				bson.D{{Key: "migrated", Value: bson.D{{Key: "$exists", Value: false}}}},
+				bson.D{{Key: "migrated_2", Value: bson.M{"$type": 10}}}, //10 is the number for null
+				bson.D{{Key: "migrated_2", Value: false}},
+				bson.D{{Key: "migrated_2", Value: bson.D{{Key: "$exists", Value: false}}}},
 			}},
 			{Key: "app_org_id", Value: bson.M{"$in": appsOrgsIDs}},
 		}},
@@ -531,7 +531,7 @@ func (m *database) moveToTenantsAccounts(context context.Context, accountsColl *
 }
 
 func (m *database) findNotMigratedCount(context TransactionContext, accountsColl *collectionWrapper) (*int64, error) {
-	filter := bson.M{"migrated": bson.M{"$in": []interface{}{nil, false}}}
+	filter := bson.M{"migrated_2": bson.M{"$in": []interface{}{nil, false}}}
 	count, err := accountsColl.CountDocumentsWithContext(context, filter)
 	if err != nil {
 		return nil, err
@@ -595,7 +595,7 @@ func (m *database) markAccountsAsProcessed(context TransactionContext, accountsI
 
 	update := bson.D{
 		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "migrated", Value: true},
+			primitive.E{Key: "migrated_2", Value: true},
 		}},
 	}
 
@@ -1137,7 +1137,7 @@ func (m *database) findOrgIDByAppOrgID(appOrgID string, allAppsOrgs []applicatio
 func (m *database) findDuplicateAccounts(context TransactionContext, accountsColl *collectionWrapper) (map[string][]account, error) {
 	pipeline := []bson.M{
 		{
-			"$match": bson.M{"migrated": bson.M{"$in": []interface{}{nil, false}}}, //iterate only not migrated records
+			"$match": bson.M{"migrated_2": bson.M{"$in": []interface{}{nil, false}}}, //iterate only not migrated records
 		},
 		{
 			"$unwind": "$auth_types",
