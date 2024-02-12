@@ -109,7 +109,7 @@ func (m *database) start() error {
 		return err
 	}
 
-	tenantsAccounts := &collectionWrapper{database: m, coll: db.Collection("tenants_accounts")}
+	tenantsAccounts := &collectionWrapper{database: m, coll: db.Collection("orgs_accounts")}
 	err = m.applyTenantsAccountsIdentitiesChecks(tenantsAccounts)
 	if err != nil {
 		return err
@@ -519,7 +519,7 @@ func (m *database) moveToTenantsAccounts(context context.Context, accountsColl *
 	} */
 
 	mergeStage := bson.D{
-		{Key: "$merge", Value: bson.M{"into": "tenants_accounts", "whenMatched": "keepExisting", "whenNotMatched": "insert"}},
+		{Key: "$merge", Value: bson.M{"into": "orgs_accounts", "whenMatched": "keepExisting", "whenNotMatched": "insert"}},
 	}
 
 	_, err := accountsColl.coll.Aggregate(context, mongo.Pipeline{matchStage, addFieldsStage, projectStage, mergeStage})
