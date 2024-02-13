@@ -349,6 +349,10 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 			l.Infof("error refreshing external auth type on refresh - %s", refreshToken)
 			return nil, errors.WrapErrorAction(logutils.ActionRefresh, "external auth type", nil, err)
 		}
+		if externalUser == nil {
+			l.Errorf("externalUser is nil for some reasons - %s", loginSession.Identifier)
+			return nil, errors.Newf("ext auth type error")
+		}
 
 		//check if need to update the account data
 		newAccount, err := a.updateExternalUserIfNeeded(*loginSession.AccountAuthType, *externalUser, loginSession.AuthType, loginSession.AppOrg, externalCreds, l)
