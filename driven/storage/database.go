@@ -332,13 +332,16 @@ func (m *database) processPhase2ForOrg(accountsColl *collectionWrapper, orgID st
 
 	i := 0
 	for {
-		ids, err := m.loadAccountsIDsForMigration(nil, accountsColl)
+		ids, err := m.loadAccountsIDsForMigration(nil, accountsColl, orgApps)
 		if err != nil {
 			return err
 		}
 		if len(ids) == 0 {
+			m.logger.Debugf("no more records for %s - %s", orgID, orgApps)
 			break //no more records
 		}
+
+		m.logger.Debugf("loaded %d accounts for %s - %s", len(ids), orgID, orgApps)
 
 		// process
 		err = m.processPhase2ForOrgPiece(accountsColl, ids, orgID, orgApps)
@@ -346,7 +349,7 @@ func (m *database) processPhase2ForOrg(accountsColl *collectionWrapper, orgID st
 			return err
 		}
 
-		m.logger.Infof("Iteration:%d", i)
+		m.logger.Debugf("iteration:%d", i)
 
 		// 1 second sleep
 		time.Sleep(time.Second)
@@ -358,8 +361,11 @@ func (m *database) processPhase2ForOrg(accountsColl *collectionWrapper, orgID st
 	return nil
 }
 
-func (m *database) loadAccountsIDsForMigration(context TransactionContext, accountsColl *collectionWrapper) ([]string, error) {
-	filter := bson.M{"migrated_2": bson.M{"$in": []interface{}{nil, false}}}
+func (m *database) loadAccountsIDsForMigration(context TransactionContext, accountsColl *collectionWrapper, orgApps []string) ([]string, error) {
+	filter := bson.M{
+		"migrated_2": bson.M{"$in": []interface{}{nil, false}},
+		"app_org_id": bson.M{"$in": orgApps}, //we process only org accounts
+	}
 
 	findOptions := options.Find()
 	findOptions.SetLimit(int64(5000))
