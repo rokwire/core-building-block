@@ -109,7 +109,7 @@ func (m *database) start() error {
 		return err
 	}
 
-	tenantsAccounts := &collectionWrapper{database: m, coll: db.Collection("tenants_accounts")}
+	tenantsAccounts := &collectionWrapper{database: m, coll: db.Collection("orgs_accounts")}
 	err = m.applyTenantsAccountsIdentitiesChecks(tenantsAccounts)
 	if err != nil {
 		return err
@@ -332,13 +332,16 @@ func (m *database) processPhase2ForOrg(accountsColl *collectionWrapper, orgID st
 
 	i := 0
 	for {
-		ids, err := m.loadAccountsIDsForMigration(nil, accountsColl)
+		ids, err := m.loadAccountsIDsForMigration(nil, accountsColl, orgApps)
 		if err != nil {
 			return err
 		}
 		if len(ids) == 0 {
+			m.logger.Debugf("no more records for %s - %s", orgID, orgApps)
 			break //no more records
 		}
+
+		m.logger.Debugf("loaded %d accounts for %s - %s", len(ids), orgID, orgApps)
 
 		// process
 		err = m.processPhase2ForOrgPiece(accountsColl, ids, orgID, orgApps)
@@ -346,7 +349,7 @@ func (m *database) processPhase2ForOrg(accountsColl *collectionWrapper, orgID st
 			return err
 		}
 
-		m.logger.Infof("Iteration:%d", i)
+		m.logger.Debugf("iteration:%d", i)
 
 		// 1 second sleep
 		time.Sleep(time.Second)
@@ -358,8 +361,11 @@ func (m *database) processPhase2ForOrg(accountsColl *collectionWrapper, orgID st
 	return nil
 }
 
-func (m *database) loadAccountsIDsForMigration(context TransactionContext, accountsColl *collectionWrapper) ([]string, error) {
-	filter := bson.M{"migrated": bson.M{"$in": []interface{}{nil, false}}}
+func (m *database) loadAccountsIDsForMigration(context TransactionContext, accountsColl *collectionWrapper, orgApps []string) ([]string, error) {
+	filter := bson.M{
+		"migrated_2": bson.M{"$in": []interface{}{nil, false}},
+		"app_org_id": bson.M{"$in": orgApps}, //we process only org accounts
+	}
 
 	findOptions := options.Find()
 	findOptions.SetLimit(int64(5000))
@@ -461,9 +467,9 @@ func (m *database) moveToTenantsAccounts(context context.Context, accountsColl *
 		{Key: "$match", Value: bson.D{
 			{Key: "_id", Value: bson.M{"$in": idsList}},
 			{Key: "$or", Value: bson.A{
-				bson.D{{Key: "migrated", Value: bson.M{"$type": 10}}}, //10 is the number for null
-				bson.D{{Key: "migrated", Value: false}},
-				bson.D{{Key: "migrated", Value: bson.D{{Key: "$exists", Value: false}}}},
+				bson.D{{Key: "migrated_2", Value: bson.M{"$type": 10}}}, //10 is the number for null
+				bson.D{{Key: "migrated_2", Value: false}},
+				bson.D{{Key: "migrated_2", Value: bson.D{{Key: "$exists", Value: false}}}},
 			}},
 			{Key: "app_org_id", Value: bson.M{"$in": appsOrgsIDs}},
 		}},
@@ -519,7 +525,7 @@ func (m *database) moveToTenantsAccounts(context context.Context, accountsColl *
 	} */
 
 	mergeStage := bson.D{
-		{Key: "$merge", Value: bson.M{"into": "tenants_accounts", "whenMatched": "keepExisting", "whenNotMatched": "insert"}},
+		{Key: "$merge", Value: bson.M{"into": "orgs_accounts", "whenMatched": "keepExisting", "whenNotMatched": "insert"}},
 	}
 
 	_, err := accountsColl.coll.Aggregate(context, mongo.Pipeline{matchStage, addFieldsStage, projectStage, mergeStage})
@@ -531,7 +537,7 @@ func (m *database) moveToTenantsAccounts(context context.Context, accountsColl *
 }
 
 func (m *database) findNotMigratedCount(context TransactionContext, accountsColl *collectionWrapper) (*int64, error) {
-	filter := bson.M{"migrated": bson.M{"$in": []interface{}{nil, false}}}
+	filter := bson.M{"migrated_2": bson.M{"$in": []interface{}{nil, false}}}
 	count, err := accountsColl.CountDocumentsWithContext(context, filter)
 	if err != nil {
 		return nil, err
@@ -595,7 +601,7 @@ func (m *database) markAccountsAsProcessed(context TransactionContext, accountsI
 
 	update := bson.D{
 		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "migrated", Value: true},
+			primitive.E{Key: "migrated_2", Value: true},
 		}},
 	}
 
@@ -1137,7 +1143,7 @@ func (m *database) findOrgIDByAppOrgID(appOrgID string, allAppsOrgs []applicatio
 func (m *database) findDuplicateAccounts(context TransactionContext, accountsColl *collectionWrapper) (map[string][]account, error) {
 	pipeline := []bson.M{
 		{
-			"$match": bson.M{"migrated": bson.M{"$in": []interface{}{nil, false}}}, //iterate only not migrated records
+			"$match": bson.M{"migrated_2": bson.M{"$in": []interface{}{nil, false}}}, //iterate only not migrated records
 		},
 		{
 			"$unwind": "$auth_types",
