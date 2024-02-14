@@ -113,10 +113,7 @@ func oidcRefreshParamsFromMap(val map[string]interface{}) (*oidcRefreshParams, e
 	if !ok {
 		return nil, errors.ErrorData(logutils.StatusMissing, "refresh token", nil)
 	}
-	redirectURI, ok := val["redirect_uri"].(string)
-	if !ok {
-		return nil, errors.ErrorData(logutils.StatusMissing, "redirect uri", nil)
-	}
+	redirectURI, _ := val["redirect_uri"].(string)
 
 	return &oidcRefreshParams{RefreshToken: refreshToken, RedirectURI: redirectURI}, nil
 }
@@ -170,6 +167,10 @@ func (a *oidcAuthImpl) getLoginURL(authType model.AuthType, appType model.Applic
 	oidcConfig, err := a.getOidcAuthConfig(authType, appType.ID)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionGet, typeOidcAuthConfig, nil, err)
+	}
+
+	if oidcConfig.RedirectURI != "" {
+		redirectURI = oidcConfig.RedirectURI
 	}
 
 	responseParams := map[string]interface{}{
@@ -283,10 +284,18 @@ func (a *oidcAuthImpl) refreshToken(authType model.AuthType, appType model.Appli
 		return nil, nil, "", errors.ErrorData(logutils.StatusDisabled, "refresh tokens", &logutils.FieldArgs{"app_id": appOrg.Application.ID, "org_id": appOrg.Organization.ID})
 	}
 
+	redirectURI := params.RedirectURI
+	if oidcConfig.RedirectURI != "" {
+		redirectURI = oidcConfig.RedirectURI
+	}
+	if redirectURI == "" {
+		return nil, nil, "", errors.ErrorData(logutils.StatusMissing, "redirect uri", nil)
+	}
+
 	bodyData := map[string]string{
 		"refresh_token": params.RefreshToken,
 		"grant_type":    "refresh_token",
-		"redirect_uri":  params.RedirectURI,
+		"redirect_uri":  redirectURI,
 		"client_id":     oidcConfig.ClientID,
 	}
 
