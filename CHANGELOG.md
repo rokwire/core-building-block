@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Fixed
-- Fix get accounts TPS API [#694](https://github.com/rokwire/core-building-block/issues/694)
+- Fix nil pointer [#694](https://github.com/rokwire/core-building-block/issues/694)
 
 ## [1.37.0] - 2024-02-13
 ### Fixed
