@@ -240,12 +240,12 @@ func (a *Auth) CanSignIn(identifierJSON string, apiKey string, appTypeIdentifier
 	code := identifierImpl.getCode()
 	identifier := identifierImpl.getIdentifier()
 
-	account, err := a.getAccount(code, identifier, apiKey, appTypeIdentifier, orgID)
+	account, _, appOrg, err := a.getAccount(code, identifier, apiKey, appTypeIdentifier, orgID)
 	if err != nil {
 		return false, errors.WrapErrorAction(logutils.ActionGet, model.TypeAccount, nil, err)
 	}
 
-	return a.canSignIn(account, code, identifier), nil
+	return a.canSignIn(account, code, identifier, appOrg.ID), nil
 }
 
 // CanLink checks if a user can link a new auth type
@@ -424,6 +424,14 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 		if err != nil {
 			l.Infof("error refreshing external auth type on refresh - %s", refreshToken)
 			return nil, errors.WrapErrorAction(logutils.ActionRefresh, "external auth type", nil, err)
+		}
+		if externalUser == nil {
+			l.Errorf("externalUser is nil for some reasons - %s", loginSession.Identifier)
+			return nil, errors.Newf("ext auth type error")
+		}
+		if loginSession.AccountAuthType == nil {
+			l.Errorf("loginSession.AccountAuthType is nil for some reasons - %s", loginSession.Identifier)
+			return nil, errors.Newf("ext la auth type error")
 		}
 
 		if loginSession.Account == nil {
@@ -678,45 +686,107 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appID string, orgID
 	// create account
 	var newAccount *model.Account
 	var params map[string]interface{}
+
 	transaction := func(context storage.TransactionContext) error {
-		//1. check if the user exists
-		account, err := a.storage.FindAccount(context, appOrg.ID, identifierImpl.getCode(), identifier)
+		/*
+			//1. check if the user exists
+			account, err := a.storage.FindAccount(context, appOrg.ID, identifierImpl.getCode(), identifier)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+			}
+			if account != nil {
+				return errors.ErrorData(logutils.StatusFound, model.TypeAccount, &logutils.FieldArgs{"app_org_id": appOrg.ID, "identifier": identifier})
+			}
+
+			//2. account does not exist, so apply sign up
+			profile.DateCreated = time.Now().UTC()
+			if supportedAuthType.AuthType.IsExternal {
+				identityProviderID, _ := supportedAuthType.AuthType.Params["identity_provider"].(string)
+				identityProviderSetting := appOrg.FindIdentityProviderSetting(identityProviderID)
+				if identityProviderSetting == nil {
+					return errors.ErrorData(logutils.StatusMissing, model.TypeIdentityProviderConfig, &logutils.FieldArgs{"app_org": appOrg.ID, "identity_provider_id": identityProviderID})
+				}
+
+				externalIDs := make(map[string]string)
+				for k, v := range identityProviderSetting.ExternalIDFields {
+					if v == identityProviderSetting.UserIdentifierField {
+						externalIDs[k] = identifier
+						break
+					}
+				}
+				externalUser := model.ExternalSystemUser{Identifier: identifier, ExternalIDs: externalIDs, SensitiveExternalIDs: identityProviderSetting.SensitiveExternalIDs}
+				newAccount, err = a.applySignUpAdminExternal(context, *supportedAuthType, *appOrg, externalUser, profile, privacy, permissions, roleIDs, groupIDs, scopes, creatorPermissions, clientVersion, l)
+				if err != nil {
+					return errors.WrapErrorAction(logutils.ActionRegister, "admin user", &logutils.FieldArgs{"auth_type": supportedAuthType.AuthType.Code, "identifier": identifier}, err)
+				}
+			} else {
+				params, newAccount, err = a.signUpNewAccount(context, identifierImpl, *supportedAuthType, *appOrg, nil, "", "", clientVersion, profile, privacy, nil, permissions, roleIDs, groupIDs, scopes, creatorPermissions, l)
+				if err != nil {
+					return errors.WrapErrorAction(logutils.ActionRegister, "admin user", &logutils.FieldArgs{"auth_type": supportedAuthType.AuthType.Code, "identifier": identifier}, err)
+				}
+			}
+
+			return nil
+		*/
+		//find the account for the org and the user identity
+		foundedAccount, err := a.storage.FindAccountByOrgAndIdentifier(nil, appOrg.Organization.ID, authType.ID, identifier, appOrg.ID)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 		}
-		if account != nil {
-			return errors.ErrorData(logutils.StatusFound, model.TypeAccount, &logutils.FieldArgs{"app_org_id": appOrg.ID, "identifier": identifier})
+
+		//check if the account exists for this app
+		if foundedAccount != nil && foundedAccount.HasApp(appID) {
+			return errors.Newf("there is already account for %s in %s application", identifier, appID)
 		}
 
-		//2. account does not exist, so apply sign up
-		profile.DateCreated = time.Now().UTC()
-		if supportedAuthType.AuthType.IsExternal {
-			identityProviderID, _ := supportedAuthType.AuthType.Params["identity_provider"].(string)
-			identityProviderSetting := appOrg.FindIdentityProviderSetting(identityProviderID)
-			if identityProviderSetting == nil {
-				return errors.ErrorData(logutils.StatusMissing, model.TypeIdentityProviderConfig, &logutils.FieldArgs{"app_org": appOrg.ID, "identity_provider_id": identityProviderID})
+		//determine operation - "org-sign-up" or "app-sign-up"
+		operation, err := a.determineOperation(foundedAccount, appOrg.ID, l)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+		}
+
+		//apply operation
+		switch operation {
+		case "app-sign-up":
+			// account exists in the organization but not for the application
+
+			udatedAccount, err := a.appSignUp(context, *foundedAccount, *appOrg, permissions, roleIDs, groupIDs, clientVersion, creatorPermissions, l)
+			if err != nil {
+				return errors.WrapErrorAction("app sign up", "", nil, err)
 			}
 
-			externalIDs := make(map[string]string)
-			for k, v := range identityProviderSetting.ExternalIDFields {
-				if v == identityProviderSetting.UserIdentifierField {
-					externalIDs[k] = identifier
-					break
+			newAccount = udatedAccount
+			return nil
+		case "org-sign-up":
+			// account does not exist in the organization
+
+			var accountAuthType *model.AccountAuthType
+
+			profile.DateCreated = time.Now().UTC()
+			if authType.IsExternal {
+				externalUser := model.ExternalSystemUser{Identifier: identifier}
+				accountAuthType, err = a.applySignUpAdminExternal(context, *authType, *appOrg, externalUser, profile, privacy, username, permissions, roleIDs, groupIDs, scopes, creatorPermissions, clientVersion, l)
+				if err != nil {
+					return errors.WrapErrorAction(logutils.ActionRegister, "admin user", &logutils.FieldArgs{"auth_type": authType.Code, "identifier": identifier}, err)
+				}
+			} else {
+				authImpl, err := a.getAuthTypeImpl(*authType)
+				if err != nil {
+					return errors.WrapErrorAction(logutils.ActionLoadCache, typeExternalAuthType, nil, err)
+				}
+
+				profile.Email = identifier
+				params, accountAuthType, err = a.applySignUpAdmin(context, authImpl, *authType, *appOrg, identifier, "", profile, privacy, username, permissions, roleIDs, groupIDs, scopes, creatorPermissions, clientVersion, l)
+				if err != nil {
+					return errors.WrapErrorAction(logutils.ActionRegister, "admin user", &logutils.FieldArgs{"auth_type": authType.Code, "identifier": identifier}, err)
 				}
 			}
-			externalUser := model.ExternalSystemUser{Identifier: identifier, ExternalIDs: externalIDs, SensitiveExternalIDs: identityProviderSetting.SensitiveExternalIDs}
-			newAccount, err = a.applySignUpAdminExternal(context, *supportedAuthType, *appOrg, externalUser, profile, privacy, permissions, roleIDs, groupIDs, scopes, creatorPermissions, clientVersion, l)
-			if err != nil {
-				return errors.WrapErrorAction(logutils.ActionRegister, "admin user", &logutils.FieldArgs{"auth_type": supportedAuthType.AuthType.Code, "identifier": identifier}, err)
-			}
-		} else {
-			params, newAccount, err = a.signUpNewAccount(context, identifierImpl, *supportedAuthType, *appOrg, nil, "", "", clientVersion, profile, privacy, nil, permissions, roleIDs, groupIDs, scopes, creatorPermissions, l)
-			if err != nil {
-				return errors.WrapErrorAction(logutils.ActionRegister, "admin user", &logutils.FieldArgs{"auth_type": supportedAuthType.AuthType.Code, "identifier": identifier}, err)
-			}
+
+			newAccount = &accountAuthType.Account
+			return nil
 		}
 
-		return nil
+		return errors.Newf("not supported operation - create account via admin API")
 	}
 
 	err = a.storage.PerformTransaction(transaction)
@@ -792,7 +862,7 @@ func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID
 				newPermissions = append(newPermissions, unchangedPermissions...)
 			}
 
-			err = a.storage.UpdateAccountPermissions(context, account.ID, newPermissions)
+			err = a.storage.UpdateAccountPermissions(context, account.ID, appOrg.ID, newPermissions)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionUpdate, "admin account permissions", nil, err)
 			}
@@ -830,7 +900,7 @@ func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID
 			}
 
 			newAccountRoles := model.AccountRolesFromAppOrgRoles(newRoles, true, true)
-			err = a.storage.UpdateAccountRoles(context, account.ID, newAccountRoles)
+			err = a.storage.UpdateAccountRoles(context, account.ID, appOrg.ID, newAccountRoles)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionUpdate, "admin account roles", nil, err)
 			}
@@ -868,7 +938,7 @@ func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID
 			}
 
 			newAccountGroups := model.AccountGroupsFromAppOrgGroups(newGroups, true, true)
-			err = a.storage.UpdateAccountGroups(context, account.ID, newAccountGroups)
+			err = a.storage.UpdateAccountGroups(context, account.ID, appOrg.ID, newAccountGroups)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionUpdate, "admin account groups", nil, err)
 			}
@@ -936,7 +1006,7 @@ func (a *Auth) CreateAnonymousAccount(context storage.TransactionContext, appID 
 	transaction := func(context storage.TransactionContext) error {
 		//1. check if the user exists
 		if context == nil || !skipExistsCheck {
-			account, err := a.storage.FindAccountByID(context, anonymousID)
+			account, err := a.storage.FindAccountByIDV2(context, orgID, appID, anonymousID)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 			}
@@ -1808,6 +1878,8 @@ func (a *Auth) GetAdminToken(claims tokenauth.Claims, appID string, orgID string
 // The authentication method must be one of the supported for the application.
 //
 //	Input:
+//		orgID (string): Org id
+//		appID (string): App id
 //		accountID (string): ID of the account to link the creds to
 //		authenticationType (string): Name of the authentication method for provided creds (eg. "password", "webauthn", "illinois_oidc")
 //		appTypeIdentifier (string): Identifier of the app type/client that the user is logging in from
@@ -1817,11 +1889,11 @@ func (a *Auth) GetAdminToken(claims tokenauth.Claims, appID string, orgID string
 //	Returns:
 //		message (*string): response message
 //		account (*model.Account): account data after the operation
-func (a *Auth) LinkAccountAuthType(accountID string, authenticationType string, appTypeIdentifier string, creds string, params string, l *logs.Log) (*string, *model.Account, error) {
+func (a *Auth) LinkAccountAuthType(orgID string, appID string, accountID string, authenticationType string, appTypeIdentifier string, creds string, params string, l *logs.Log) (*string, *model.Account, error) {
 	var message *string
 	var newAccountAuthType *model.AccountAuthType
 
-	account, err := a.storage.FindAccountByID(nil, accountID)
+	account, err := a.storage.FindAccountByIDV2(nil, orgID, appID, accountID)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
@@ -1920,7 +1992,7 @@ func (a *Auth) UnlinkAccountIdentifier(accountID string, accountIdentifierID str
 }
 
 // DeleteAccount deletes an account for the given id
-func (a *Auth) DeleteAccount(id string) error {
+func (a *Auth) DeleteAccount(id string, apps []string) error {
 	transaction := func(context storage.TransactionContext) error {
 		//1. first find the account record
 		account, err := a.storage.FindAccountByID(context, id)
@@ -1931,7 +2003,7 @@ func (a *Auth) DeleteAccount(id string) error {
 			return errors.ErrorData(logutils.StatusMissing, model.TypeAccount, nil)
 		}
 
-		err = a.deleteAccount(context, *account)
+		err = a.deleteAccount(context, *account, apps)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
 		}
@@ -1971,6 +2043,7 @@ func (a *Auth) InitializeSystemAccount(context storage.TransactionContext, authT
 	return account.ID, nil
 }
 
+/*
 // GrantAccountPermissions grants new permissions to an account after validating the assigner has required permissions
 func (a *Auth) GrantAccountPermissions(context storage.TransactionContext, account *model.Account, permissionNames []string, assignerPermissions []string) error {
 	//check if there is data
@@ -2004,7 +2077,7 @@ func (a *Auth) GrantAccountPermissions(context storage.TransactionContext, accou
 
 	account.Permissions = append(account.Permissions, permissions...)
 	return nil
-}
+} */
 
 // CheckPermissions loads permissions by names from storage and checks that they are assignable and valid for the given appOrgs or revocable
 func (a *Auth) CheckPermissions(context storage.TransactionContext, appOrgs []model.ApplicationOrganization, permissionNames []string, assignerPermissions []string, revoke bool) ([]model.Permission, error) {

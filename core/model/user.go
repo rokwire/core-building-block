@@ -64,31 +64,52 @@ type Privacy struct {
 	Public bool `json:"public" bson:"public"`
 }
 
-// Account represents account entity
-//
-//	The account is the user himself or herself.
-//	This is what the person provides to the system so that to use it.
-//
-//	Every account is for an organization within an application
-type Account struct {
-	ID string //this is ID for the account
-
+// OrgAppMembership represents application organization membership entity
+type OrgAppMembership struct {
+	ID     string
 	AppOrg ApplicationOrganization
 
 	Permissions []Permission
 	Roles       []AccountRole
 	Groups      []AccountGroup
-	Scopes      []string
+
+	Secrets     map[string]interface{}
+	Preferences map[string]interface{}
+
+	MostRecentClientVersion *string
+}
+
+// Account represents account entity
+//
+//	The account is the user himself or herself.
+//	This is what the person provides to the system so that to use it.
+//
+//	Every account is for an organization
+type Account struct {
+	ID string //this is ID for the account
+
+	OrgID              string
+	OrgAppsMemberships []OrgAppMembership
+
+	/// Current App Org Membership // we keep this for easier migration to tenant accounts
+	AppOrg                  ApplicationOrganization
+	Permissions             []Permission
+	Roles                   []AccountRole
+	Groups                  []AccountGroup
+	Secrets                 map[string]interface{}
+	Preferences             map[string]interface{}
+	MostRecentClientVersion *string
+	/// End Current App Org Membership
+
+	Scopes []string
 
 	Identifiers []AccountIdentifier
 	AuthTypes   []AccountAuthType
 
 	MFATypes []MFAType
 
-	Preferences   map[string]interface{}
-	Secrets       map[string]interface{}
 	SystemConfigs map[string]interface{}
-	Profile       Profile //one account has one profile, one profile can be shared between many accounts
+	Profile       Profile //one account has one profile
 	Privacy       Privacy
 
 	Devices []Device
@@ -99,9 +120,57 @@ type Account struct {
 	DateCreated time.Time
 	DateUpdated *time.Time
 
-	LastLoginDate           *time.Time
-	LastAccessTokenDate     *time.Time
-	MostRecentClientVersion *string
+	LastLoginDate       *time.Time
+	LastAccessTokenDate *time.Time
+}
+
+// HasAppMembership checks if there is app membership
+func (a Account) HasAppMembership(appOrgID string) bool {
+	if len(a.OrgAppsMemberships) == 0 {
+		return false
+	}
+	for _, oam := range a.OrgAppsMemberships {
+		if oam.AppOrg.ID == appOrgID {
+			return true
+		}
+	}
+	return false
+}
+
+// HasApp checks if there is app
+func (a Account) HasApp(appID string) bool {
+	if len(a.OrgAppsMemberships) == 0 {
+		return false
+	}
+	for _, oam := range a.OrgAppsMemberships {
+		if oam.AppOrg.Application.ID == appID {
+			return true
+		}
+	}
+	return false
+}
+
+// GetApps gives the account applications
+func (a Account) GetApps() []Application {
+	if len(a.OrgAppsMemberships) == 0 {
+		return []Application{}
+	}
+
+	res := make([]Application, len(a.OrgAppsMemberships))
+	for i, oam := range a.OrgAppsMemberships {
+		res[i] = oam.AppOrg.Application
+	}
+	return res
+}
+
+// SetCurrentMembership sets current membership
+func (a *Account) SetCurrentMembership(current OrgAppMembership) {
+	a.AppOrg = current.AppOrg
+	a.Permissions = current.Permissions
+	a.Roles = current.Roles
+	a.Groups = current.Groups
+	a.Preferences = current.Preferences
+	a.MostRecentClientVersion = current.MostRecentClientVersion
 }
 
 // GetAccountAuthTypeByID finds account auth type by id
@@ -531,8 +600,6 @@ type Profile struct {
 	ZipCode   string
 	State     string
 	Country   string
-
-	Accounts []Account //the users can share profiles between their applications accounts for some applications
 
 	DateCreated time.Time
 	DateUpdated *time.Time

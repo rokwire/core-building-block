@@ -3,7 +3,7 @@ required:
   - name
   - multi_tenant
   - admin
-  - shared_identities
+  - code
 type: object
 properties:
   id:
@@ -15,8 +15,8 @@ properties:
     type: boolean
   admin:
     type: boolean
-  shared_identities:
-    type: boolean
+  code:
+    type: string
   types:
     type: array
     items:

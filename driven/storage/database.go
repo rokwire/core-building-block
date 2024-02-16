@@ -39,7 +39,8 @@ type database struct {
 	apiKeys                         *collectionWrapper
 	authTypes                       *collectionWrapper
 	identityProviders               *collectionWrapper
-	accounts                        *collectionWrapper
+	accounts                        *collectionWrapper //deprecated
+	tenantsAccounts                 *collectionWrapper
 	devices                         *collectionWrapper
 	credentials                     *collectionWrapper
 	loginsSessions                  *collectionWrapper
@@ -59,6 +60,8 @@ type database struct {
 	follows                         *collectionWrapper
 
 	listeners []Listener
+
+	uiucAuthTypeCodeMigrationSource string //email or illinois_oidc //to be removed when migration is compelted
 }
 
 func (m *database) start() error {
@@ -102,8 +105,16 @@ func (m *database) start() error {
 		return err
 	}
 
+	//deprecated
+	//accounts := &collectionWrapper{database: m, coll: db.Collection("_for_test_accounts")}
 	accounts := &collectionWrapper{database: m, coll: db.Collection("accounts")}
 	err = m.applyAccountsChecks(accounts)
+	if err != nil {
+		return err
+	}
+
+	tenantsAccounts := &collectionWrapper{database: m, coll: db.Collection("orgs_accounts")}
+	err = m.applyTenantsAccountsIdentitiesChecks(tenantsAccounts)
 	if err != nil {
 		return err
 	}
@@ -162,12 +173,14 @@ func (m *database) start() error {
 		return err
 	}
 
+	//organizations := &collectionWrapper{database: m, coll: db.Collection("_for_test_organizations")}
 	organizations := &collectionWrapper{database: m, coll: db.Collection("organizations")}
 	err = m.applyOrganizationsChecks(organizations)
 	if err != nil {
 		return err
 	}
 
+	//applications := &collectionWrapper{database: m, coll: db.Collection("_for_test_applications")}
 	applications := &collectionWrapper{database: m, coll: db.Collection("applications")}
 	err = m.applyApplicationsChecks(applications)
 	if err != nil {
@@ -180,6 +193,7 @@ func (m *database) start() error {
 		return err
 	}
 
+	//applicationsOrganizations := &collectionWrapper{database: m, coll: db.Collection("_for_test_applications_organizations")}
 	applicationsOrganizations := &collectionWrapper{database: m, coll: db.Collection("applications_organizations")}
 	err = m.applyApplicationsOrganizationsChecks(applicationsOrganizations)
 	if err != nil {
@@ -224,6 +238,7 @@ func (m *database) start() error {
 	m.authTypes = authTypes
 	m.identityProviders = identityProviders
 	m.accounts = accounts
+	m.tenantsAccounts = tenantsAccounts
 	m.devices = devices
 	m.credentials = credentials
 	m.loginsSessions = loginsSessions
@@ -291,6 +306,7 @@ func (m *database) applyIdentityProvidersChecks(identityProviders *collectionWra
 	return nil
 }
 
+// deprecated
 func (m *database) applyAccountsChecks(accounts *collectionWrapper) error {
 	m.logger.Info("apply accounts checks.....")
 
@@ -335,6 +351,61 @@ func (m *database) applyAccountsChecks(accounts *collectionWrapper) error {
 	// }
 
 	m.logger.Info("accounts check passed")
+	return nil
+}
+
+func (m *database) applyTenantsAccountsIdentitiesChecks(tenantAccounts *collectionWrapper) error {
+	m.logger.Info("apply tenants accounts checks.....")
+
+	//add org id index
+	err := tenantAccounts.AddIndex(bson.D{primitive.E{Key: "org_id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	//add profile index
+	err = tenantAccounts.AddIndex(bson.D{primitive.E{Key: "profile.id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	//add auth types index
+	err = tenantAccounts.AddIndex(bson.D{primitive.E{Key: "auth_types.id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	//add auth types identifier
+	err = tenantAccounts.AddIndex(bson.D{primitive.E{Key: "auth_types.identifier", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	//add auth types auth type id
+	err = tenantAccounts.AddIndex(bson.D{primitive.E{Key: "auth_types.auth_type_id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	//add username index
+	err = tenantAccounts.AddIndex(bson.D{primitive.E{Key: "username", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	//add org apps memberships id index
+	err = tenantAccounts.AddIndex(bson.D{primitive.E{Key: "org_apps_memberships.id", Value: 1}}, true)
+	if err != nil {
+		return err
+	}
+
+	//add org apps memberships app org id index
+	err = tenantAccounts.AddIndex(bson.D{primitive.E{Key: "org_apps_memberships.app_org_id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	m.logger.Info("tenants accounts check passed")
 	return nil
 }
 

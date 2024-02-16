@@ -67,8 +67,8 @@ func (app *application) sharedGetAppConfig(appTypeIdentifier string, orgID *stri
 	return appConfigs, nil
 }
 
-func (app *application) sharedGetAccount(accountID string) (*model.Account, error) {
-	account, err := app.getAccount(nil, accountID)
+func (app *application) sharedGetAccount(cOrgID string, cAppID string, accountID string) (*model.Account, error) {
+	account, err := app.getAccountV2(nil, cOrgID, cAppID, accountID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeAccount, nil, err)
 	}

@@ -18,34 +18,165 @@ import (
 	"core-building-block/core/model"
 )
 
-// Account
-func accountFromStorage(item account, appOrg model.ApplicationOrganization, sa *Adapter) model.Account {
+// OrgAppMembership
+func orgAppMembershipFromStorage(item orgAppMembership, appOrg model.ApplicationOrganization) model.OrgAppMembership {
 	roles := accountRolesFromStorage(item.Roles, appOrg)
 	groups := accountGroupsFromStorage(item.Groups, appOrg)
+	return model.OrgAppMembership{ID: item.ID, AppOrg: appOrg, Permissions: item.Permissions,
+		Roles: roles, Groups: groups, Preferences: item.Preferences,
+		MostRecentClientVersion: item.MostRecentClientVersion}
+}
+
+func orgAppsMembershipsFromStorage(items []orgAppMembership, appsOrgs []model.ApplicationOrganization) []model.OrgAppMembership {
+	if len(items) == 0 {
+		return make([]model.OrgAppMembership, 0)
+	}
+
+	res := make([]model.OrgAppMembership, len(items))
+	for i, item := range items {
+		//find the application organization
+		var appOrg *model.ApplicationOrganization
+		for _, cAppOrg := range appsOrgs {
+			if cAppOrg.ID == item.AppOrgID {
+				current := cAppOrg
+				appOrg = &current
+				break
+			}
+		}
+
+		if appOrg != nil {
+			res[i] = orgAppMembershipFromStorage(item, *appOrg)
+		}
+	}
+	return res
+}
+
+func orgAppMembershipToStorage(item model.OrgAppMembership) orgAppMembership {
+	id := item.ID
+	appOrgID := item.AppOrg.ID
+	permissions := item.Permissions
+	roles := accountRolesToStorage(item.Roles)
+	groups := accountGroupsToStorage(item.Groups)
+	preferences := item.Preferences
+	mostRecentClientVersions := item.MostRecentClientVersion
+	return orgAppMembership{ID: id, AppOrgID: appOrgID,
+		Permissions: permissions, Roles: roles, Groups: groups,
+		Preferences: preferences, MostRecentClientVersion: mostRecentClientVersions}
+}
+
+func orgAppsMembershipsToStorage(items []model.OrgAppMembership) []orgAppMembership {
+	res := make([]orgAppMembership, len(items))
+	for i, c := range items {
+		res[i] = orgAppMembershipToStorage(c)
+	}
+	return res
+}
+
+// Account
+func accountFromStorage(item tenantAccount, currentAppOrg *string, membershipsAppsOrgs []model.ApplicationOrganization, sa *Adapter) model.Account {
+	id := item.ID
+	orgID := item.OrgID
+	orgAppsMemberships := orgAppsMembershipsFromStorage(item.OrgAppsMemberships, membershipsAppsOrgs)
+
+	/// Set the Current App Org Membership
+	var currentM model.OrgAppMembership
+	if currentAppOrg != nil {
+		for _, oaMembership := range orgAppsMemberships {
+			if oaMembership.AppOrg.ID == *currentAppOrg {
+				currentM = oaMembership
+				break
+			}
+		}
+	} else {
+		currentM = model.OrgAppMembership{}
+	}
+	cAppOrg := currentM.AppOrg
+	cPermissions := currentM.Permissions
+	cRoles := currentM.Roles
+	cGroups := currentM.Groups
+	cSecrets := currentM.Secrets
+	cPreferences := currentM.Preferences
+	cMostRecentClientVersion := currentM.MostRecentClientVersion
+	/// End Current App Org Membership
+
+	scopes := item.Scopes
 	identifiers := accountIdentifiersFromStorage(item.Identifiers)
 	authTypes := accountAuthTypesFromStorage(item.AuthTypes, sa)
 	mfaTypes := mfaTypesFromStorage(item.MFATypes)
+	systemConfigs := item.SystemConfigs
 	profile := profileFromStorage(item.Profile)
-	devices := accountDevicesFromStorage(item)
-	return model.Account{ID: item.ID, AppOrg: appOrg, Anonymous: item.Anonymous, Permissions: item.Permissions, Roles: roles, Groups: groups, Scopes: item.Scopes,
-		Identifiers: identifiers, AuthTypes: authTypes, MFATypes: mfaTypes, Preferences: item.Preferences, Profile: profile, SystemConfigs: item.SystemConfigs,
-		Secrets: item.Secrets, Privacy: item.Privacy, Verified: item.Verified, Devices: devices, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated,
-		LastLoginDate: item.LastLoginDate, LastAccessTokenDate: item.LastAccessTokenDate, MostRecentClientVersion: item.MostRecentClientVersion}
+	privacy := item.Privacy
+	devices := accountDevicesFromStorage(item.Devices)
+	anonymous := item.Anonymous
+
+	//not used?
+	verified := false
+	if item.Verified != nil && *item.Verified {
+		verified = true
+	}
+
+	dateCreated := item.DateCreated
+	dateUpdated := item.DateUpdated
+	lastLoginDate := item.LastLoginDate
+	lastAccessTokenDate := item.LastAccessTokenDate
+	return model.Account{ID: id, OrgID: orgID, OrgAppsMemberships: orgAppsMemberships,
+
+		AppOrg:                  cAppOrg,                  //current membership
+		Permissions:             cPermissions,             //current membership
+		Roles:                   cRoles,                   //current membership
+		Groups:                  cGroups,                  //current membership
+		Preferences:             cPreferences,             //current membership
+		MostRecentClientVersion: cMostRecentClientVersion, //current membership
+
+		Scopes: scopes, Identifiers: identifiers, AuthTypes: authTypes, MFATypes: mfaTypes,
+		Secrets: cSecrets, SystemConfigs: systemConfigs, Profile: profile,
+		Privacy: privacy, Devices: devices, Anonymous: anonymous, Verified: verified,
+		DateCreated: dateCreated, DateUpdated: dateUpdated, LastLoginDate: lastLoginDate,
+		LastAccessTokenDate: lastAccessTokenDate}
 }
 
-func accountsFromStorage(items []account, appOrg model.ApplicationOrganization, sa *Adapter) []model.Account {
+func accountsFromStorage(items []tenantAccount, currentAppOrg *string, membershipsAppsOrgs []model.ApplicationOrganization, sa *Adapter) []model.Account {
 	if len(items) == 0 {
 		return make([]model.Account, 0)
 	}
 
 	res := make([]model.Account, len(items))
 	for i, item := range items {
-		res[i] = accountFromStorage(item, appOrg, sa)
+		res[i] = accountFromStorage(item, currentAppOrg, membershipsAppsOrgs, sa)
 	}
 	return res
 }
 
-func accountToStorage(item *model.Account) *account {
+func accountToStorage(item *model.Account) *tenantAccount {
+	id := item.ID
+	orgID := item.OrgID
+	orgAppsMemberships := orgAppsMembershipsToStorage(item.OrgAppsMemberships)
+	scopes := item.Scopes
+	authTypes := accountAuthTypesToStorage(item.AuthTypes)
+	mfaTypes := mfaTypesToStorage(item.MFATypes)
+	systemConfigs := item.SystemConfigs
+	profile := profileToStorage(item.Profile)
+	devices := accountDevicesToStorage(item)
+	anonymous := item.Anonymous
+	privacy := item.Privacy
+
+	var verified *bool //not used?
+	if item.Verified {
+		verified = &item.Verified
+	}
+
+	dateCreated := item.DateCreated
+	dateUpdated := item.DateUpdated
+	lastLoginDate := item.LastLoginDate
+	lastAccessTokenDate := item.LastAccessTokenDate
+
+	return &tenantAccount{ID: id, OrgID: orgID, OrgAppsMemberships: orgAppsMemberships, Scopes: scopes,
+		AuthTypes: authTypes, MFATypes: mfaTypes, SystemConfigs: systemConfigs, Profile: profile,
+		Devices: devices, Anonymous: anonymous, Privacy: privacy, Verified: verified, DateCreated: dateCreated,
+		DateUpdated: dateUpdated, LastLoginDate: lastLoginDate, LastAccessTokenDate: lastAccessTokenDate}
+}
+
+func accountToStorageDeprecated(item *model.Account) *account {
 	id := item.ID
 	appOrgID := item.AppOrg.ID
 	permissions := item.Permissions
@@ -68,10 +199,10 @@ func accountToStorage(item *model.Account) *account {
 		LastLoginDate: lastLoginDate, LastAccessTokenDate: lastAccessTokenDate, MostRecentClientVersion: mostRecentClientVersion}
 }
 
-func accountDevicesFromStorage(item account) []model.Device {
-	devices := make([]model.Device, len(item.Devices))
+func accountDevicesFromStorage(accDevices []userDevice) []model.Device {
+	devices := make([]model.Device, len(accDevices))
 
-	for i, device := range item.Devices {
+	for i, device := range accDevices {
 		devices[i] = accountDeviceFromStorage(device)
 	}
 	return devices

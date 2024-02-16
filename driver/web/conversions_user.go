@@ -51,6 +51,15 @@ func accountToDef(item model.Account) *Def.Account {
 		scopes = []string{}
 	}
 
+	//app
+	var as []model.Application
+	if item.OrgAppsMemberships != nil {
+		for _, a := range item.OrgAppsMemberships {
+			as = append(as, a.AppOrg.Application)
+		}
+	}
+	apps := partialAppsToDef(as)
+
 	// maintain backwards compatibility
 	var username *string
 	if usernameIdentifier := item.GetAccountIdentifier("username", ""); usernameIdentifier != nil {
@@ -63,7 +72,7 @@ func accountToDef(item model.Account) *Def.Account {
 		profile.Phone = &phoneIdentifier.Identifier
 	}
 
-	return &Def.Account{Id: &item.ID, Anonymous: &item.Anonymous, System: &item.AppOrg.Organization.System, Permissions: &permissions, Roles: &roles, Groups: &groups,
+	return &Def.Account{Id: &item.ID, Apps: &apps, Anonymous: &item.Anonymous, System: &item.AppOrg.Organization.System, Permissions: &permissions, Roles: &roles, Groups: &groups,
 		Privacy: privacy, Verified: &item.Verified, Scopes: &scopes, Identifiers: &identifiers, AuthTypes: &authTypes, Profile: profile, Preferences: preferences, Secrets: secrets,
 		SystemConfigs: systemConfigs, LastLoginDate: &lastLoginDate, LastAccessTokenDate: &lastAccessTokenDate, MostRecentClientVersion: item.MostRecentClientVersion, Username: username}
 }
@@ -114,13 +123,22 @@ func partialAccountToDef(item model.Account, params map[string]interface{}) *Def
 
 	privacy := privacyToDef(&item.Privacy)
 
+	//app
+	var as []model.Application
+	if item.OrgAppsMemberships != nil {
+		for _, a := range item.OrgAppsMemberships {
+			as = append(as, a.AppOrg.Application)
+		}
+	}
+	apps := partialAppsToDef(as)
+
 	// maintain backwards compatibility
 	var username *string
 	if usernameIdentifier := item.GetAccountIdentifier("username", ""); usernameIdentifier != nil {
 		username = &usernameIdentifier.Identifier
 	}
 
-	return &Def.PartialAccount{Id: &item.ID, Anonymous: item.Anonymous, AppId: item.AppOrg.Application.ID, OrgId: item.AppOrg.Organization.ID, FirstName: item.Profile.FirstName,
+	return &Def.PartialAccount{Id: &item.ID, Apps: &apps, Anonymous: item.Anonymous, AppId: item.AppOrg.Application.ID, OrgId: item.AppOrg.Organization.ID, FirstName: item.Profile.FirstName,
 		LastName: item.Profile.LastName, System: &item.AppOrg.Organization.System, Permissions: permissions, Roles: roles, Groups: groups,
 		Privacy: privacy, Verified: &item.Verified, Scopes: &scopes, SystemConfigs: systemConfigs, Identifiers: identifiers, AuthTypes: authTypes,
 		DateCreated: &dateCreated, DateUpdated: dateUpdated, Params: paramsData, Username: username}

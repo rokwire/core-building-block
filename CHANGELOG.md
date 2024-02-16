@@ -16,6 +16,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Decouple authentication and verification mechanisms [#665](https://github.com/rokwire/core-building-block/issues/665)
 - Refactor account auth types [#674](https://github.com/rokwire/core-building-block/issues/674)
 
+## [1.37.1] - 2024-02-14
+### Fixed
+- Fix nil pointer [#694](https://github.com/rokwire/core-building-block/issues/694)
+
+## [1.37.0] - 2024-02-13
+### Fixed
+- Migration issue [#692](https://github.com/rokwire/core-building-block/issues/692)
+
+## [1.36.0] - 2023-12-13
+### Changed
+- Accounts to tenants account migration improvement [#690](https://github.com/rokwire/core-building-block/issues/690)
+
+## [1.35.1] - 2023-12-08
+### Fixed
+- Handle Create Admin account API issue [#687](https://github.com/rokwire/core-building-block/issues/687)
+- Fix storeSystemData [#685](https://github.com/rokwire/core-building-block/issues/685)
+
+## [1.35.0] - 2023-12-01
+### Changed
+- Single identity within an organisation [#680](https://github.com/rokwire/core-building-block/issues/680)
+
 ## [1.34.0] - 2023-07-06
 ### Added
 - Enable CORS [#632](https://github.com/rokwire/core-building-block/issues/632)
@@ -409,7 +430,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Users authentication polish [#155](https://github.com/rokwire/core-building-block/issues/155)
 - Optimise the Mongo DB collections indexes usage [#146](https://github.com/rokwire/core-building-block/issues/146)
 
-[Unreleased]: https://github.com/rokwire/core-building-block/compare/v1.34.0...HEAD
+[Unreleased]: https://github.com/rokwire/core-building-block/compare/v1.36.0...HEAD
+[1.36.0]: https://github.com/rokwire/core-building-block/compare/v1.35.1...v1.36.0
+[1.35.1]: https://github.com/rokwire/core-building-block/compare/v1.35.0...v1.35.1
+[1.35.0]: https://github.com/rokwire/core-building-block/compare/v1.34.0...v1.35.0
 [1.34.0]: https://github.com/rokwire/core-building-block/compare/v1.33.0...v1.34.0
 [1.33.0]: https://github.com/rokwire/core-building-block/compare/v1.32.2...v1.33.0
 [1.32.2]: https://github.com/rokwire/core-building-block/compare/v1.32.1...v1.32.2

@@ -60,9 +60,9 @@ func (app *application) notifyListeners(message string, data interface{}) {
 	}()
 }
 
-func (app *application) getAccount(context storage.TransactionContext, accountID string) (*model.Account, error) {
+func (app *application) getAccountV2(context storage.TransactionContext, cOrgID string, cAppID string, accountID string) (*model.Account, error) {
 	//find the account
-	account, err := app.storage.FindAccountByID(context, accountID)
+	account, err := app.storage.FindAccountByIDV2(context, cOrgID, cAppID, accountID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
@@ -147,7 +147,7 @@ func (app *application) grantOrRevokePermissions(context storage.TransactionCont
 		{
 			if revoke {
 				//delete permissions from an account
-				err = app.storage.DeleteAccountPermissions(context, c.ID, checkPermissions)
+				err = app.storage.DeleteAccountPermissions(context, c.ID, appOrg.ID, checkPermissions)
 				if err != nil {
 					return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccountPermissions, &logutils.FieldArgs{"names": checkPermissions}, err)
 				}
@@ -159,7 +159,7 @@ func (app *application) grantOrRevokePermissions(context storage.TransactionCont
 				}
 			} else {
 				//add permissions to account
-				err = app.storage.InsertAccountPermissions(context, c.ID, permissions)
+				err = app.storage.InsertAccountPermissions(context, c.ID, appOrg.ID, permissions)
 				if err != nil {
 					return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAccountPermissions, &logutils.FieldArgs{"names": checkPermissions}, err)
 				}
@@ -225,7 +225,7 @@ func (app *application) grantOrRevokeRoles(context storage.TransactionContext, c
 		{
 			if revoke {
 				//delete roles from an account
-				err = app.storage.DeleteAccountRoles(context, c.ID, checkRoles)
+				err = app.storage.DeleteAccountRoles(context, c.ID, appOrg.ID, checkRoles)
 				if err != nil {
 					return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccountRoles, &logutils.FieldArgs{"ids": checkRoles}, err)
 				}

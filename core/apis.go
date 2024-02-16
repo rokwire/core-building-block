@@ -83,6 +83,19 @@ func (c *APIs) GetServiceID() string {
 
 func (c *APIs) storeSystemData() error {
 	newDocuments := make(map[string]string)
+	collectionName := "auth_types"
+	//check if auth_types collection exists
+	col, err := c.app.storage.CheckAuthTypesExists(collectionName)
+	if err != nil {
+		return err
+	}
+	// if it doesn't exist create one
+	if !col {
+		err := c.app.storage.CreateAuthTypesCollection(collectionName)
+		if err != nil {
+			return err
+		}
+	}
 
 	transaction := func(context storage.TransactionContext) error {
 		createAccount := false
@@ -166,8 +179,8 @@ func (c *APIs) storeSystemData() error {
 			}
 			newDocuments["application"] = uuid.NewString()
 			newAndroidAppType := model.ApplicationType{ID: uuid.NewString(), Identifier: c.systemAppTypeIdentifier, Name: c.systemAppTypeName, Versions: nil}
-			newSystemAdminApp := model.Application{ID: newDocuments["application"], Name: "System Admin application", MultiTenant: false, Admin: true,
-				SharedIdentities: false, Types: []model.ApplicationType{newAndroidAppType}, DateCreated: time.Now().UTC()}
+			newSystemAdminApp := model.Application{ID: newDocuments["application"], Name: "System Admin application", MultiTenant: false, Admin: true, Code: "",
+				Types: []model.ApplicationType{newAndroidAppType}, DateCreated: time.Now().UTC()}
 			_, err = c.app.storage.InsertApplication(context, newSystemAdminApp)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionInsert, model.TypeApplication, nil, err)
@@ -272,7 +285,7 @@ func (c *APIs) storeSystemData() error {
 		return nil
 	}
 
-	err := c.app.storage.PerformTransaction(transaction)
+	err = c.app.storage.PerformTransaction(transaction)
 	if err == nil {
 		for doc, data := range newDocuments {
 			key := "id"
@@ -321,24 +334,24 @@ type servicesImpl struct {
 	app *application
 }
 
-func (s *servicesImpl) SerDeleteAccount(id string) error {
-	return s.app.serDeleteAccount(id)
+func (s *servicesImpl) SerDeleteAccount(id string, apps []string) error {
+	return s.app.serDeleteAccount(id, apps)
 }
 
-func (s *servicesImpl) SerGetAccount(accountID string) (*model.Account, error) {
-	return s.app.sharedGetAccount(accountID)
+func (s *servicesImpl) SerGetAccount(cOrgID string, cAppID string, accountID string) (*model.Account, error) {
+	return s.app.sharedGetAccount(cOrgID, cAppID, accountID)
 }
 
-func (s *servicesImpl) SerGetProfile(accountID string) (*model.Profile, error) {
-	return s.app.serGetProfile(accountID)
+func (s *servicesImpl) SerGetProfile(cOrgID string, cAppID string, accountID string) (*model.Profile, error) {
+	return s.app.serGetProfile(cOrgID, cAppID, accountID)
 }
 
-func (s *servicesImpl) SerGetPreferences(accountID string) (map[string]interface{}, error) {
-	return s.app.serGetPreferences(accountID)
+func (s *servicesImpl) SerGetPreferences(cOrgID string, cAppID string, accountID string) (map[string]interface{}, error) {
+	return s.app.serGetPreferences(cOrgID, cAppID, accountID)
 }
 
-func (s *servicesImpl) SerGetAccountSystemConfigs(accountID string) (map[string]interface{}, error) {
-	return s.app.serGetAccountSystemConfigs(accountID)
+func (s *servicesImpl) SerGetAccountSystemConfigs(cOrgID string, cAppID string, accountID string) (map[string]interface{}, error) {
+	return s.app.serGetAccountSystemConfigs(cOrgID, cAppID, accountID)
 }
 
 func (s *servicesImpl) SerUpdateAccountPreferences(id string, appID string, orgID string, anonymous bool, preferences map[string]interface{}, l *logs.Log) (bool, error) {
@@ -508,8 +521,8 @@ func (s *administrationImpl) AdmGetAccounts(limit int, offset int, appID string,
 	return s.app.admGetAccounts(limit, offset, appID, orgID, accountID, firstName, lastName, authType, authTypeIdentifier, anonymous, hasPermissions, permissions, roleIDs, groupIDs)
 }
 
-func (s *administrationImpl) AdmGetAccount(accountID string) (*model.Account, error) {
-	return s.app.sharedGetAccount(accountID)
+func (s *administrationImpl) AdmGetAccount(cOrgID string, cAppID string, accountID string) (*model.Account, error) {
+	return s.app.sharedGetAccount(cOrgID, cAppID, accountID)
 }
 
 func (s *administrationImpl) AdmGetFilterAccounts(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]map[string]interface{}, error) {
@@ -653,12 +666,12 @@ func (s *systemImpl) SysGetOrganization(ID string) (*model.Organization, error) 
 	return s.app.sysGetOrganization(ID)
 }
 
-func (s *systemImpl) SysCreateApplication(name string, multiTenant bool, admin bool, sharedIdentities bool, appTypes []model.ApplicationType) (*model.Application, error) {
-	return s.app.sysCreateApplication(name, multiTenant, admin, sharedIdentities, appTypes)
+func (s *systemImpl) SysCreateApplication(name string, multiTenant bool, admin bool, code string, appTypes []model.ApplicationType) (*model.Application, error) {
+	return s.app.sysCreateApplication(name, multiTenant, admin, code, appTypes)
 }
 
-func (s *systemImpl) SysUpdateApplication(ID string, name string, multiTenant bool, admin bool, sharedIdentities bool, appTypes []model.ApplicationType) error {
-	return s.app.sysUpdateApplication(ID, name, multiTenant, admin, sharedIdentities, appTypes)
+func (s *systemImpl) SysUpdateApplication(ID string, name string, multiTenant bool, admin bool, code string, appTypes []model.ApplicationType) error {
+	return s.app.sysUpdateApplication(ID, name, multiTenant, admin, code, appTypes)
 }
 
 func (s *systemImpl) SysGetApplication(ID string) (*model.Application, error) {
