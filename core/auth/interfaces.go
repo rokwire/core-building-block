@@ -561,17 +561,13 @@ type Storage interface {
 	//Accounts
 	FindAccountByOrgAndIdentifier(context storage.TransactionContext, orgID string, code string, identifier string, currentAppOrgID string) (*model.Account, error)
 	FindAccount(context storage.TransactionContext, appOrgID string, code string, identifier string) (*model.Account, error)
-	FindAccountByID(context storage.TransactionContext, id string) (*model.Account, error)
-	FindAccountByIDV2(context storage.TransactionContext, cOrgID string, cAppID string, id string) (*model.Account, error)
+	FindAccountByID(context storage.TransactionContext, cOrgID string, cAppID string, id string) (*model.Account, error)
 	FindAccountsByUsername(context storage.TransactionContext, appOrg *model.ApplicationOrganization, username string) ([]model.Account, error)
 	InsertAccount(context storage.TransactionContext, account model.Account) (*model.Account, error)
 	SaveAccount(context storage.TransactionContext, account *model.Account) error
 	DeleteAccount(context storage.TransactionContext, id string) error
 	UpdateAccountUsageInfo(context storage.TransactionContext, accountID string, updateLoginTime bool, updateAccessTokenTime bool, clientVersion *string) error
 	DeleteOrgAppsMemberships(context storage.TransactionContext, accountID string, membershipsIDs []string) error
-
-	//Profiles
-	UpdateAccountProfile(context storage.TransactionContext, profile model.Profile) error
 
 	//ServiceAccounts
 	FindServiceAccount(context storage.TransactionContext, accountID string, appID string, orgID string) (*model.ServiceAccount, error)

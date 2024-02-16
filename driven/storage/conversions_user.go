@@ -23,7 +23,7 @@ func orgAppMembershipFromStorage(item orgAppMembership, appOrg model.Application
 	roles := accountRolesFromStorage(item.Roles, appOrg)
 	groups := accountGroupsFromStorage(item.Groups, appOrg)
 	return model.OrgAppMembership{ID: item.ID, AppOrg: appOrg, Permissions: item.Permissions,
-		Roles: roles, Groups: groups, Preferences: item.Preferences,
+		Roles: roles, Groups: groups, Secrets: item.Secrets, Preferences: item.Preferences,
 		MostRecentClientVersion: item.MostRecentClientVersion}
 }
 
@@ -57,10 +57,11 @@ func orgAppMembershipToStorage(item model.OrgAppMembership) orgAppMembership {
 	permissions := item.Permissions
 	roles := accountRolesToStorage(item.Roles)
 	groups := accountGroupsToStorage(item.Groups)
+	secrets := item.Secrets
 	preferences := item.Preferences
 	mostRecentClientVersions := item.MostRecentClientVersion
 	return orgAppMembership{ID: id, AppOrgID: appOrgID,
-		Permissions: permissions, Roles: roles, Groups: groups,
+		Permissions: permissions, Roles: roles, Groups: groups, Secrets: secrets,
 		Preferences: preferences, MostRecentClientVersion: mostRecentClientVersions}
 }
 
@@ -125,11 +126,12 @@ func accountFromStorage(item tenantAccount, currentAppOrg *string, membershipsAp
 		Permissions:             cPermissions,             //current membership
 		Roles:                   cRoles,                   //current membership
 		Groups:                  cGroups,                  //current membership
+		Secrets:                 cSecrets,                 //current membership
 		Preferences:             cPreferences,             //current membership
 		MostRecentClientVersion: cMostRecentClientVersion, //current membership
 
 		Scopes: scopes, Identifiers: identifiers, AuthTypes: authTypes, MFATypes: mfaTypes,
-		Secrets: cSecrets, SystemConfigs: systemConfigs, Profile: profile,
+		SystemConfigs: systemConfigs, Profile: profile,
 		Privacy: privacy, Devices: devices, Anonymous: anonymous, Verified: verified,
 		DateCreated: dateCreated, DateUpdated: dateUpdated, LastLoginDate: lastLoginDate,
 		LastAccessTokenDate: lastAccessTokenDate}
@@ -176,6 +178,7 @@ func accountToStorage(item *model.Account) *tenantAccount {
 		DateUpdated: dateUpdated, LastLoginDate: lastLoginDate, LastAccessTokenDate: lastAccessTokenDate}
 }
 
+/*
 func accountToStorageDeprecated(item *model.Account) *account {
 	id := item.ID
 	appOrgID := item.AppOrg.ID
@@ -198,6 +201,7 @@ func accountToStorageDeprecated(item *model.Account) *account {
 		Profile: profile, Secrets: item.Secrets, SystemConfigs: item.SystemConfigs, Devices: devices, DateCreated: dateCreated, DateUpdated: dateUpdated,
 		LastLoginDate: lastLoginDate, LastAccessTokenDate: lastAccessTokenDate, MostRecentClientVersion: mostRecentClientVersion}
 }
+*/
 
 func accountDevicesFromStorage(accDevices []userDevice) []model.Device {
 	devices := make([]model.Device, len(accDevices))

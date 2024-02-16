@@ -584,11 +584,11 @@ func NewWebAdapter(env string, serviceRegManager *authservice.ServiceRegManager,
 	doc.Servers = nil
 
 	//To correctly route traffic to base path, we must add to all paths since servers are ignored
-	paths := make(openapi3.Paths, len(doc.Paths))
-	for path, obj := range doc.Paths {
-		paths["/core"+path] = obj
+	pathsWithBase := new(openapi3.Paths)
+	for path, obj := range doc.Paths.Map() {
+		pathsWithBase.Set("/core"+path, obj)
 	}
-	doc.Paths = paths
+	doc.Paths = pathsWithBase
 
 	openAPIRouter, err := gorillamux.NewRouter(doc)
 	if err != nil {

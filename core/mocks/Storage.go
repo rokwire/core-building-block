@@ -377,42 +377,12 @@ func (_m *Storage) DeletePermission(id string) error {
 	return r0
 }
 
-// FindAccountByID provides a mock function with given fields: context, id
-func (_m *Storage) FindAccountByID(context storage.TransactionContext, id string) (*model.Account, error) {
-	ret := _m.Called(context, id)
-
-	if len(ret) == 0 {
-		panic("no return value specified for FindAccountByID")
-	}
-
-	var r0 *model.Account
-	var r1 error
-	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string) (*model.Account, error)); ok {
-		return rf(context, id)
-	}
-	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string) *model.Account); ok {
-		r0 = rf(context, id)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*model.Account)
-		}
-	}
-
-	if rf, ok := ret.Get(1).(func(storage.TransactionContext, string) error); ok {
-		r1 = rf(context, id)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// FindAccountByIDV2 provides a mock function with given fields: context, cOrgID, cAppID, id
-func (_m *Storage) FindAccountByIDV2(context storage.TransactionContext, cOrgID string, cAppID string, id string) (*model.Account, error) {
+// FindAccountByID provides a mock function with given fields: context, cOrgID, cAppID, id
+func (_m *Storage) FindAccountByID(context storage.TransactionContext, cOrgID string, cAppID string, id string) (*model.Account, error) {
 	ret := _m.Called(context, cOrgID, cAppID, id)
 
 	if len(ret) == 0 {
-		panic("no return value specified for FindAccountByIDV2")
+		panic("no return value specified for FindAccountByID")
 	}
 
 	var r0 *model.Account
@@ -1870,17 +1840,17 @@ func (_m *Storage) UpdateAccountPrivacy(context storage.TransactionContext, acco
 	return r0
 }
 
-// UpdateAccountProfile provides a mock function with given fields: context, profile
-func (_m *Storage) UpdateAccountProfile(context storage.TransactionContext, profile model.Profile) error {
-	ret := _m.Called(context, profile)
+// UpdateAccountProfile provides a mock function with given fields: context, accountID, profile
+func (_m *Storage) UpdateAccountProfile(context storage.TransactionContext, accountID string, profile model.Profile) error {
+	ret := _m.Called(context, accountID, profile)
 
 	if len(ret) == 0 {
 		panic("no return value specified for UpdateAccountProfile")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(storage.TransactionContext, model.Profile) error); ok {
-		r0 = rf(context, profile)
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, model.Profile) error); ok {
+		r0 = rf(context, accountID, profile)
 	} else {
 		r0 = ret.Error(0)
 	}

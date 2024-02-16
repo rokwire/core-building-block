@@ -606,6 +606,27 @@ func (sa *Adapter) getCachedApplicationOrganizationByKey(key string) (*model.App
 	return nil, nil
 }
 
+func (sa *Adapter) getCachedApplicationOrganizationByKeys(keys []string) ([]model.ApplicationOrganization, error) {
+	sa.applicationsOrganizationsLock.RLock()
+	defer sa.applicationsOrganizationsLock.RUnlock()
+
+	var result []model.ApplicationOrganization
+	for _, key := range keys {
+		errArgs := &logutils.FieldArgs{"key": key}
+
+		item, exists := sa.cachedApplicationsOrganizations.Load(key)
+		if exists {
+			appOrg, ok := item.(model.ApplicationOrganization)
+			if !ok {
+				return nil, errors.ErrorAction(logutils.ActionCast, model.TypeApplicationOrganization, errArgs)
+			}
+			result = append(result, appOrg)
+		}
+	}
+
+	return result, nil
+}
+
 func (sa *Adapter) getCachedApplicationOrganizations() ([]model.ApplicationOrganization, error) {
 	sa.applicationsOrganizationsLock.RLock()
 	defer sa.applicationsOrganizationsLock.RUnlock()

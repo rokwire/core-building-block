@@ -724,7 +724,7 @@ func (h ServicesApisHandler) removeMFAType(l *logs.Log, r *http.Request, claims 
 }
 
 func (h ServicesApisHandler) getProfile(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	profile, err := h.coreAPIs.Services.SerGetProfile(claims.OrgID, claims.AppID, claims.Subject)
+	profile, email, phone, err := h.coreAPIs.Services.SerGetProfile(claims.OrgID, claims.AppID, claims.Subject)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionGet, model.TypeProfile, nil, err, http.StatusInternalServerError, true)
 	}
@@ -732,14 +732,8 @@ func (h ServicesApisHandler) getProfile(l *logs.Log, r *http.Request, claims *to
 	profileResp := profileToDef(profile)
 
 	// maintain backwards compatibility
-	if len(profile.Accounts) == 1 {
-		if emailIdentifier := profile.Accounts[0].GetAccountIdentifier("email", ""); emailIdentifier != nil {
-			profileResp.Email = &emailIdentifier.Identifier
-		}
-		if phoneIdentifier := profile.Accounts[0].GetAccountIdentifier("phone", ""); phoneIdentifier != nil {
-			profileResp.Phone = &phoneIdentifier.Identifier
-		}
-	}
+	profileResp.Email = email
+	profileResp.Phone = phone
 
 	data, err := json.Marshal(profileResp)
 	if err != nil {

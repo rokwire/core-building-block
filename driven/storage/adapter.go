@@ -416,7 +416,7 @@ func (sa *Adapter) buildLoginSession(context TransactionContext, ls *loginSessio
 	var account *model.Account
 	var err error
 	if !ls.Anonymous {
-		account, err = sa.FindAccountByIDV2(context, ls.OrgID, ls.AppID, ls.Identifier)
+		account, err = sa.FindAccountByID(context, ls.OrgID, ls.AppID, ls.Identifier)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"_id": ls.Identifier}, err)
 		}
@@ -1061,12 +1061,7 @@ func (sa *Adapter) FindAccountsByUsername(context TransactionContext, appOrg *mo
 }
 
 // FindAccountByID finds an account by id
-func (sa *Adapter) FindAccountByID(context TransactionContext, id string) (*model.Account, error) {
-	return sa.findAccount(context, "_id", id, nil)
-}
-
-// FindAccountByIDV2 finds an account by id
-func (sa *Adapter) FindAccountByIDV2(context TransactionContext, cOrgID string, cAppID string, id string) (*model.Account, error) {
+func (sa *Adapter) FindAccountByID(context TransactionContext, cOrgID string, cAppID string, id string) (*model.Account, error) {
 	currentAppOrg, err := sa.getCachedApplicationOrganization(cAppID, cOrgID)
 	if err != nil {
 		return nil, err
@@ -2897,8 +2892,8 @@ func (sa *Adapter) LoadIdentityProviders() ([]model.IdentityProvider, error) {
 }
 
 // UpdateAccountProfile updates a profile
-func (sa *Adapter) UpdateAccountProfile(context TransactionContext, profile model.Profile) error {
-	filter := bson.D{primitive.E{Key: "profile.id", Value: profile.ID}}
+func (sa *Adapter) UpdateAccountProfile(context TransactionContext, accountID string, profile model.Profile) error {
+	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
 
 	now := time.Now().UTC()
 	profileUpdate := bson.D{
@@ -2916,7 +2911,7 @@ func (sa *Adapter) UpdateAccountProfile(context TransactionContext, profile mode
 		}},
 	}
 
-	res, err := sa.db.tenantsAccounts.UpdateManyWithContext(context, filter, profileUpdate, nil)
+	res, err := sa.db.tenantsAccounts.UpdateOneWithContext(context, filter, profileUpdate, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeProfile, nil, err)
 	}
