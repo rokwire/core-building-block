@@ -128,12 +128,11 @@ func (sa *Adapter) Start() error {
 		return errors.WrapErrorAction(logutils.ActionCache, model.TypeConfig, nil, err)
 	}
 
-	// migrate to tenants accounts - remove this code when migrated to all environments
-	err = sa.migrateToTenantsAccounts(accounts, tenantsAccounts, applicationsOrganizations)
+	// migrate to tenants accounts
+	err = sa.migrateToTenantsAccounts()
 	if err != nil {
 		return err
 	}
-	//before the threads below!!
 
 	err = sa.migrateAuthTypes()
 	if err != nil {
@@ -274,7 +273,7 @@ func (sa *Adapter) FindLoginSessions(context TransactionContext, identifier stri
 	}
 
 	//account - from storage
-	account, err := sa.FindAccountByID(context, identifier)
+	account, err := sa.FindAccountByID(context, nil, nil, identifier)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"_id": identifier}, err)
 	}
@@ -416,7 +415,7 @@ func (sa *Adapter) buildLoginSession(context TransactionContext, ls *loginSessio
 	var account *model.Account
 	var err error
 	if !ls.Anonymous {
-		account, err = sa.FindAccountByID(context, ls.OrgID, ls.AppID, ls.Identifier)
+		account, err = sa.FindAccountByID(context, &ls.OrgID, &ls.AppID, ls.Identifier)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"_id": ls.Identifier}, err)
 		}
@@ -634,44 +633,9 @@ func (sa *Adapter) DeleteLoginState(context TransactionContext, id string) error
 	return nil
 }
 
-// FindAccountByOrgAndIdentifier finds an account for org and user identity
-func (sa *Adapter) FindAccountByOrgAndIdentifier(context TransactionContext, orgID string, code string, identifier string, currentAppOrgID string) (*model.Account, error) {
-	filter := bson.D{
-		primitive.E{Key: "org_id", Value: orgID},
-		primitive.E{Key: "auth_types.auth_type_id", Value: authTypeID},
-		primitive.E{Key: "auth_types.identifier", Value: accountAuthTypeIdentifier}}
-	var accounts []tenantAccount
-	err := sa.db.tenantsAccounts.FindWithContext(context, filter, &accounts, nil)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
-	}
-	if len(accounts) == 0 {
-		//not found
-		return nil, nil
-	}
-	account := accounts[0]
-
-	//all memberships applications organizations - from cache
-	membershipsAppsOrgsIDs := make([]string, len(account.OrgAppsMemberships))
-	for i, aoID := range account.OrgAppsMemberships {
-		membershipsAppsOrgsIDs[i] = aoID.AppOrgID
-	}
-	appsOrgs, err := sa.getCachedApplicationOrganizationByKeys(membershipsAppsOrgsIDs)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeApplicationOrganization, nil, err)
-	}
-	if len(appsOrgs) != len(account.OrgAppsMemberships) {
-		return nil, errors.WrapErrorAction(logutils.ActionCount, "does not match memberships apps orgs ids count", nil, err)
-	}
-
-	modelAccount := accountFromStorage(account, &currentAppOrgID, appsOrgs, sa)
-	return &modelAccount, nil
-}
-
-// FindAccount finds an account for app, org, auth type and account auth type identifier
-func (sa *Adapter) FindAccount(context TransactionContext, appOrgID string, code string, identifier string) (*model.Account, error) {
+// FindAccount finds an account for account identifier and identifier code and optional orgID and appOrgID
+func (sa *Adapter) FindAccount(context TransactionContext, code string, identifier string, orgID *string, currentAppOrgID *string) (*model.Account, error) {
 	filter := bson.M{
-		"org_apps_memberships.app_org_id": appOrgID,
 		"identifiers": bson.M{
 			"$elemMatch": bson.M{
 				"code":       code,
@@ -679,6 +643,13 @@ func (sa *Adapter) FindAccount(context TransactionContext, appOrgID string, code
 			},
 		},
 	}
+	if orgID != nil {
+		filter["org_id"] = *orgID
+	}
+	if currentAppOrgID != nil {
+		filter["org_apps_memberships.app_org_id"] = *currentAppOrgID
+	}
+
 	var accounts []tenantAccount
 	err := sa.db.tenantsAccounts.FindWithContext(context, filter, &accounts, nil)
 	if err != nil {
@@ -700,10 +671,10 @@ func (sa *Adapter) FindAccount(context TransactionContext, appOrgID string, code
 		return nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeApplicationOrganization, nil, err)
 	}
 	if len(appsOrgs) != len(account.OrgAppsMemberships) {
-		return nil, errors.WrapErrorAction(logutils.ActionCount, "does not match memberships apps orgs ids count", nil, err)
+		return nil, errors.ErrorData(logutils.StatusInvalid, "org app membership count", &logutils.FieldArgs{"app_orgs": len(appsOrgs), "org_apps_memberships": len(account.OrgAppsMemberships)})
 	}
 
-	modelAccount := accountFromStorage(account, &appOrgID, appsOrgs, sa)
+	modelAccount := accountFromStorage(account, currentAppOrgID, appsOrgs, sa)
 	return &modelAccount, nil
 }
 
@@ -1061,16 +1032,21 @@ func (sa *Adapter) FindAccountsByUsername(context TransactionContext, appOrg *mo
 }
 
 // FindAccountByID finds an account by id
-func (sa *Adapter) FindAccountByID(context TransactionContext, cOrgID string, cAppID string, id string) (*model.Account, error) {
-	currentAppOrg, err := sa.getCachedApplicationOrganization(cAppID, cOrgID)
-	if err != nil {
-		return nil, err
-	}
-	if currentAppOrg == nil {
-		return nil, errors.Newf("cannot find app org object for %s %s", cOrgID, cAppID)
+func (sa *Adapter) FindAccountByID(context TransactionContext, cOrgID *string, cAppID *string, id string) (*model.Account, error) {
+	var currentAppOrgID *string
+
+	if cOrgID != nil && cAppID != nil {
+		currentAppOrg, err := sa.getCachedApplicationOrganization(*cAppID, *cOrgID)
+		if err != nil {
+			return nil, err
+		}
+		if currentAppOrg == nil {
+			return nil, errors.Newf("cannot find app org object for %s %s", cOrgID, cAppID)
+		}
+		currentAppOrgID = &currentAppOrg.ID
 	}
 
-	return sa.findAccount(context, "_id", id, &currentAppOrg.ID)
+	return sa.findAccount(context, "_id", id, currentAppOrgID)
 }
 
 // FindAccountByAuthTypeID finds an account by auth type id
@@ -1079,13 +1055,13 @@ func (sa *Adapter) FindAccountByAuthTypeID(context TransactionContext, id string
 }
 
 // FindAccountByCredentialID finds an account by auth type id
-func (sa *Adapter) FindAccountByCredentialID(context TransactionContext, id string) (*model.Account, error) {
-	return sa.findAccount(context, "auth_types.credential_id", id)
+func (sa *Adapter) FindAccountByCredentialID(context TransactionContext, id string, currentAppOrgID *string) (*model.Account, error) {
+	return sa.findAccount(context, "auth_types.credential_id", id, currentAppOrgID)
 }
 
 // FindAccountByIdentifierID finds an account by identifier id
-func (sa *Adapter) FindAccountByIdentifierID(context TransactionContext, id string) (*model.Account, error) {
-	return sa.findAccount(context, "identifiers.id", id)
+func (sa *Adapter) FindAccountByIdentifierID(context TransactionContext, id string, currentAppOrgID *string) (*model.Account, error) {
+	return sa.findAccount(context, "identifiers.id", id, currentAppOrgID)
 }
 
 func (sa *Adapter) findAccount(context TransactionContext, key string, id string, currentAppOrgID *string) (*model.Account, error) {

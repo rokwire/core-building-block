@@ -546,14 +546,14 @@ func (a *webAuthnAuthImpl) completeLogin(response *protocol.ParsedCredentialAsse
 			legacyUserHandle := false
 
 			// find account by userHandle (should match an account ID)
-			account, err := a.auth.storage.FindAccountByID(nil, string(userHandle))
+			account, err := a.auth.storage.FindAccountByID(nil, &appOrg.Organization.ID, &appOrg.Application.ID, string(userHandle))
 			if err != nil {
 				return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"userHandle": string(userHandle)}, err)
 			}
 			if account == nil {
 				// backwards compatibility: user handles (user IDs) used to be credential IDs
 				// check if the user handle matches any of the user's webauthn credential IDs
-				account, err = a.auth.storage.FindAccountByCredentialID(nil, string(userHandle))
+				account, err = a.auth.storage.FindAccountByCredentialID(nil, string(userHandle), &appOrg.ID)
 				if err != nil {
 					return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"userHandle": string(userHandle), "legacy": true}, err)
 				}

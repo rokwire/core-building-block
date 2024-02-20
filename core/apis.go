@@ -342,8 +342,8 @@ func (s *servicesImpl) SerGetAccount(cOrgID string, cAppID string, accountID str
 	return s.app.sharedGetAccount(cOrgID, cAppID, accountID)
 }
 
-func (s *servicesImpl) SerGetProfile(cOrgID string, cAppID string, accountID string) (*model.Profile, *string, *string, error) {
-	return s.app.serGetProfile(cOrgID, cAppID, accountID)
+func (s *servicesImpl) SerGetProfile(accountID string) (*model.Profile, *string, *string, error) {
+	return s.app.serGetProfile(accountID)
 }
 
 func (s *servicesImpl) SerGetPreferences(cOrgID string, cAppID string, accountID string) (map[string]interface{}, error) {

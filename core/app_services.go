@@ -25,9 +25,9 @@ import (
 	"github.com/rokwire/logging-library-go/v2/logutils"
 )
 
-func (app *application) serGetProfile(cOrgID string, cAppID string, accountID string) (*model.Profile, *string, *string, error) {
+func (app *application) serGetProfile(accountID string) (*model.Profile, *string, *string, error) {
 	//find the account
-	account, err := app.storage.FindAccountByID(nil, cOrgID, cAppID, accountID)
+	account, err := app.storage.FindAccountByID(nil, nil, nil, accountID)
 	if err != nil {
 		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
@@ -48,7 +48,7 @@ func (app *application) serGetProfile(cOrgID string, cAppID string, accountID st
 
 func (app *application) serGetPreferences(cOrgID string, cAppID string, accountID string) (map[string]interface{}, error) {
 	//find the account
-	account, err := app.storage.FindAccountByID(nil, cOrgID, cAppID, accountID)
+	account, err := app.storage.FindAccountByID(nil, &cOrgID, &cAppID, accountID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountPreferences, &logutils.FieldArgs{"account_id": accountID}, err)
 	}
@@ -62,7 +62,7 @@ func (app *application) serGetPreferences(cOrgID string, cAppID string, accountI
 
 func (app *application) serGetAccountSystemConfigs(cOrgID string, cAppID string, accountID string) (map[string]interface{}, error) {
 	//find the account
-	account, err := app.storage.FindAccountByID(nil, cOrgID, cAppID, accountID)
+	account, err := app.storage.FindAccountByID(nil, &cOrgID, &cAppID, accountID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountSystemConfigs, &logutils.FieldArgs{"account_id": accountID}, err)
 	}
@@ -94,7 +94,7 @@ func (app *application) serUpdateAccountPreferences(id string, appID string, org
 		created := false
 		transaction := func(context storage.TransactionContext) error {
 			//1. verify that the account is for the current app/org
-			account, err := app.storage.FindAccountByID(context, orgID, appID, id)
+			account, err := app.storage.FindAccountByID(context, &orgID, &appID, id)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountSystemConfigs, &logutils.FieldArgs{"account_id": id}, err)
 			}

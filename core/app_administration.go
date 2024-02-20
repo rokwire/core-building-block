@@ -1078,7 +1078,7 @@ func (app *application) admGetAccounts(limit int, offset int, appID string, orgI
 
 func (app *application) admGetAccountSystemConfigs(appID string, orgID string, accountID string, l *logs.Log) (map[string]interface{}, error) {
 	//find the account
-	account, err := app.getAccountV2(nil, orgID, appID, accountID)
+	account, err := app.getAccount(nil, orgID, appID, accountID)
 	if err != nil {
 		return nil, err
 	}
@@ -1098,7 +1098,7 @@ func (app *application) admUpdateAccountSystemConfigs(appID string, orgID string
 	created := false
 	transaction := func(context storage.TransactionContext) error {
 		//1. verify that the account is for the current app/org
-		account, err := app.getAccountV2(context, orgID, appID, accountID)
+		account, err := app.getAccount(context, orgID, appID, accountID)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountSystemConfigs, &logutils.FieldArgs{"account_id": accountID}, err)
 		}
@@ -1190,7 +1190,7 @@ func (app *application) admDeleteApplicationLoginSession(appID string, orgID str
 
 func (app *application) admGetApplicationAccountDevices(appID string, orgID string, accountID string, l *logs.Log) ([]model.Device, error) {
 	//1. find the account
-	account, err := app.getAccountV2(nil, orgID, appID, accountID)
+	account, err := app.getAccount(nil, orgID, appID, accountID)
 	if err != nil {
 		return nil, err
 	}
@@ -1219,7 +1219,7 @@ func (app *application) admGrantAccountPermissions(appID string, orgID string, a
 
 	transaction := func(context storage.TransactionContext) error {
 		//1. verify that the account is for the current app/org
-		account, err := app.getAccountV2(context, orgID, appID, accountID)
+		account, err := app.getAccount(context, orgID, appID, accountID)
 		if err != nil {
 			return err
 		}
@@ -1254,7 +1254,7 @@ func (app *application) admRevokeAccountPermissions(appID string, orgID string, 
 
 	transaction := func(context storage.TransactionContext) error {
 		//1. verify that the account is for the current app/org
-		account, err := app.getAccountV2(context, orgID, appID, accountID)
+		account, err := app.getAccount(context, orgID, appID, accountID)
 		if err != nil {
 			return err
 		}
@@ -1286,7 +1286,7 @@ func (app *application) admGrantAccountRoles(appID string, orgID string, account
 
 	transaction := func(context storage.TransactionContext) error {
 		//1. verify that the account is for the current app/org
-		account, err := app.getAccountV2(context, orgID, appID, accountID)
+		account, err := app.getAccount(context, orgID, appID, accountID)
 		if err != nil {
 			return err
 		}
@@ -1321,7 +1321,7 @@ func (app *application) admRevokeAccountRoles(appID string, orgID string, accoun
 
 	transaction := func(context storage.TransactionContext) error {
 		//1. verify that the account is for the current app/org
-		account, err := app.getAccountV2(context, orgID, appID, accountID)
+		account, err := app.getAccount(context, orgID, appID, accountID)
 		if err != nil {
 			return err
 		}

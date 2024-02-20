@@ -73,6 +73,10 @@ const (
 
 	typeVerificationCode string = "verification code"
 
+	operationSignIn    string = "sign-in"
+	operationAppSignUp string = "app-sign-up"
+	operationOrgSignUp string = "org-sign-up"
+
 	refreshTokenLength int = 256
 
 	sessionDeletePeriod int = 24 // hours
@@ -271,23 +275,23 @@ func (a *Auth) applyExternalAuthType(supportedAuthType model.SupportedAuthType, 
 		code = IdentifierTypeEmail
 	}
 
-	account, err := a.storage.FindAccountByOrgAndIdentifier(nil, appOrg.Organization.ID, code, externalUser.Identifier, appOrg.ID)
+	account, err := a.storage.FindAccount(nil, code, externalUser.Identifier, &appOrg.Organization.ID, &appOrg.ID)
 	if err != nil {
 		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
 	a.setLogContext(account, l)
 
-	//3. check if it is "sign-in" or "org-sign-up" or "app-sign-up"
-	operation, err := a.determineOperationExternal(account, appOrg.ID, l)
+	//3. check if it is operationSignIn or operationOrgSignUp or operationAppSignUp
+	operation, err := a.determineOperation(account, appOrg.ID, l)
 	if err != nil {
-		return nil, nil, nil, nil, errors.WrapErrorAction(logutils.ActionVerify, "determine operation external", nil, err)
+		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionVerify, "determine operation external", nil, err)
 	}
 	//4. apply operation
 	switch operation {
-	case "sign-in":
+	case operationSignIn:
 		canSignIn := a.canSignIn(account, code, externalUser.Identifier, appOrg.ID)
 		if !canSignIn {
-			return nil, nil, nil, nil, errors.Newf("cannot sign in %s %s", authType.ID, externalUser.Identifier)
+			return nil, nil, nil, errors.ErrorData(logutils.StatusInvalid, model.TypeAccount, &logutils.FieldArgs{"app_org_id": appOrg.ID, "code": code, "identifier": externalUser.Identifier})
 		}
 
 		//account exists
@@ -296,38 +300,36 @@ func (a *Auth) applyExternalAuthType(supportedAuthType model.SupportedAuthType, 
 			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionApply, "external sign in", nil, err)
 		}
 		mfaTypes = account.GetVerifiedMFATypes()
-		externalIDs = account.ExternalIDs
 
 		//TODO: make sure we do not return any refresh tokens in extParams
-		return accountAuthType, extParams, mfaTypes, externalIDs, nil
-	case "app-sign-up":
+		return extParams, newAccount, mfaTypes, nil
+	case operationAppSignUp:
 		if admin {
-			return nil, nil, nil, nil, errors.ErrorData(logutils.StatusInvalid, "sign up", &logutils.FieldArgs{"identifier": externalUser.Identifier,
-				"auth_type": authType.Code, "app_org_id": appOrg.ID, "admin": true}).SetStatus(utils.ErrorStatusNotAllowed)
+			return nil, nil, nil, errors.ErrorData(logutils.StatusInvalid, "sign up", &logutils.FieldArgs{"code": code, "identifier": externalUser.Identifier,
+				"app_org_id": appOrg.ID, "admin": true}).SetStatus(utils.ErrorStatusNotAllowed)
 		}
 
 		//We have prepared this operation as it is based on the tenants accounts but for now we disable it
 		//as we do not use it(yet) and better not to introduce additional complexity.
 		//Also this would trigger client updates as well for supporting this
-		return nil, nil, nil, nil, errors.New("app-sign-up operation is not supported")
-	case "org-sign-up":
+		return nil, nil, nil, errors.New("app-sign-up operation is not supported")
+	case operationOrgSignUp:
 		if admin {
-			return nil, nil, nil, nil, errors.ErrorData(logutils.StatusInvalid, "sign up", &logutils.FieldArgs{"identifier": externalUser.Identifier,
-				"auth_type": authType.Code, "app_org_id": appOrg.ID, "admin": true}).SetStatus(utils.ErrorStatusNotAllowed)
+			return nil, nil, nil, errors.ErrorData(logutils.StatusInvalid, "sign up", &logutils.FieldArgs{"code": code, "identifier": externalUser.Identifier,
+				"app_org_id": appOrg.ID, "admin": true}).SetStatus(utils.ErrorStatusNotAllowed)
 		}
 
 		//user does not exist, we need to register it
-		newAccount, err = a.applySignUpExternal(nil, supportedAuthType, appOrg, *externalUser, externalCreds, regProfile, privacy, regPreferences, clientVersion, l)
+		newAccount, err = a.applyOrgSignUpExternal(nil, supportedAuthType, appOrg, *externalUser, externalCreds, regProfile, privacy, regPreferences, clientVersion, l)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionApply, "external sign up", nil, err)
 		}
-		externalIDs = externalUser.ExternalIDs
 
 		//TODO: make sure we do not return any refresh tokens in extParams
 		return extParams, newAccount, mfaTypes, nil
 	}
 
-	return nil, nil, nil, nil, errors.Newf("not supported operation - internal auth type")
+	return nil, nil, nil, errors.Newf("not supported operation - internal auth type")
 }
 
 func (a *Auth) applySignInExternal(account *model.Account, supportedAuthType model.SupportedAuthType, appOrg model.ApplicationOrganization,
@@ -615,7 +617,7 @@ func (a *Auth) applyAnonymousAuthType(authType model.AuthType, creds string) (st
 		return "", nil, nil, errors.WrapErrorAction(logutils.ActionValidate, model.TypeCreds, nil, err)
 	}
 
-	account, err := a.storage.FindAccountByID(nil, anonymousID)
+	account, err := a.storage.FindAccountByID(nil, nil, nil, anonymousID)
 	if err != nil {
 		return "", nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"id": anonymousID}, err)
 	}
@@ -638,10 +640,11 @@ func (a *Auth) applyAuthType(supportedAuthType model.SupportedAuthType, appOrg m
 	}
 
 	var account *model.Account
+	appOrgID := &appOrg.ID
 	if identifierImpl == nil {
 		// if given an account identifier ID, find the account and attempt sign in
 		if accountIdentifierID != nil {
-			account, err = a.storage.FindAccountByIdentifierID(nil, *accountIdentifierID)
+			account, err = a.storage.FindAccountByIdentifierID(nil, *accountIdentifierID, appOrgID)
 			if err != nil {
 				return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"identifier.id": *accountIdentifierID}, err)
 			}
@@ -664,7 +667,7 @@ func (a *Auth) applyAuthType(supportedAuthType model.SupportedAuthType, appOrg m
 			return map[string]interface{}{"message": *message}, nil, nil, nil
 		}
 
-		account, err := a.storage.FindAccountByCredentialID(nil, credID)
+		account, err := a.storage.FindAccountByCredentialID(nil, credID, appOrgID)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"credential_id": credID}, err)
 		}
@@ -685,31 +688,31 @@ func (a *Auth) applyAuthType(supportedAuthType model.SupportedAuthType, appOrg m
 	code := identifierImpl.getCode()
 	identifier := identifierImpl.getIdentifier()
 	//find the account for the org and the user identity
-	account, err := a.storage.FindAccountByOrgAndIdentifier(nil, appOrg.Organization.ID, code, identifier, appOrg.ID)
+	account, err = a.storage.FindAccount(nil, code, identifier, &appOrg.Organization.ID, appOrgID)
 	if err != nil {
 		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"app_org_id": appOrg.ID, "code": code, "identifier": identifier}, err)
 	}
 	a.setLogContext(account, l)
 
-	//check if it is "sign-in" or "org-sign-up" or "app-sign-up"
+	//check if it is operationSignIn or operationOrgSignUp or operationAppSignUp
 	operation, err := a.determineOperationInternal(account, appOrg.ID, params, l)
 	if err != nil {
-		return "", nil, nil, nil, errors.WrapErrorAction(logutils.ActionVerify, "determine operation internal", nil, err)
+		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionVerify, "determine operation internal", nil, err)
 	}
 	switch operation {
-	case "sign-in":
-		canSignIn := a.canSignIn(account, authType.ID, userIdentifier, appOrg.ID)
+	case operationSignIn:
+		canSignIn := a.canSignIn(account, code, identifier, appOrg.ID)
 		if !canSignIn {
-			return "", nil, nil, nil, errors.Newf("cannot sign in %s %s", authType.ID, userIdentifier)
+			return nil, nil, nil, errors.ErrorData(logutils.StatusInvalid, model.TypeAccount, &logutils.FieldArgs{"app_org_id": appOrg.ID, "code": code, "identifier": identifier})
 		}
 
 		///apply sign in
 		retParams, verifiedMFATypes, err := a.applySignIn(identifierImpl, authImpl, supportedAuthType, appOrg, account, creds, params, nil, l)
 		if err != nil {
-			return "", nil, nil, nil, err
+			return nil, nil, nil, err
 		}
 		return retParams, account, verifiedMFATypes, err
-	case "app-sign-up":
+	case operationAppSignUp:
 		if admin {
 			return nil, nil, nil, errors.ErrorData(logutils.StatusInvalid, "sign up", &logutils.FieldArgs{"identifier": identifier,
 				"auth_type": supportedAuthType.AuthType.Code, "app_org_id": appOrg.ID, "admin": true}).SetStatus(utils.ErrorStatusNotAllowed)
@@ -718,14 +721,14 @@ func (a *Auth) applyAuthType(supportedAuthType model.SupportedAuthType, appOrg m
 		//We have prepared this operation as it is based on the tenants accounts but for now we disable it
 		//as we do not use it(yet) and better not to introduce additional complexity.
 		//Also this would trigger client updates as well for supporting this
-		return "", nil, nil, nil, errors.New("app-sign-up operation is not supported")
-	case "org-sign-up":
+		return nil, nil, nil, errors.New("app-sign-up operation is not supported")
+	case operationOrgSignUp:
 		if admin {
-			return "", nil, nil, nil, errors.ErrorData(logutils.StatusInvalid, "sign up", &logutils.FieldArgs{"identifier": userIdentifier,
-				"auth_type": authType.Code, "app_org_id": appOrg.ID, "admin": true}).SetStatus(utils.ErrorStatusNotAllowed)
+			return nil, nil, nil, errors.ErrorData(logutils.StatusInvalid, "sign up", &logutils.FieldArgs{"identifier": identifier,
+				"auth_type": supportedAuthType.AuthType.Code, "app_org_id": appOrg.ID, "admin": true}).SetStatus(utils.ErrorStatusNotAllowed)
 		}
 
-		retParams, account, err := a.applySignUp(identifierImpl, account, supportedAuthType, appOrg, appType, creds, params, clientVersion, regProfile, privacy, regPreferences, l)
+		retParams, account, err := a.applyOrgSignUp(identifierImpl, account, supportedAuthType, appOrg, appType, creds, params, clientVersion, regProfile, privacy, regPreferences, l)
 		if err != nil {
 			return nil, nil, nil, err
 		}
@@ -984,7 +987,7 @@ func (a *Auth) determineOperationInternal(account *model.Account, desiredAppOrgI
 		}
 
 		if !sParams.SignUp {
-			return "sign-in", nil //the client wants to apply sign-in operation
+			return operationSignIn, nil //the client wants to apply sign-in operation
 		}
 
 		//the client wants to apply sign up operation but we must analize which one is the correct
@@ -992,7 +995,7 @@ func (a *Auth) determineOperationInternal(account *model.Account, desiredAppOrgI
 		if err != nil {
 			return "", errors.WrapErrorAction(logutils.ActionApply, "determine operation - internal - client priority", nil, err)
 		}
-		if determinedOperation == "org-sign-up" || determinedOperation == "app-sign-up" {
+		if determinedOperation == operationOrgSignUp || determinedOperation == operationAppSignUp {
 			return determinedOperation, nil
 		}
 		return "", errors.New("cannot apply sign up operation")
@@ -1002,25 +1005,21 @@ func (a *Auth) determineOperationInternal(account *model.Account, desiredAppOrgI
 	return a.determineOperation(account, desiredAppOrgID, l)
 }
 
-func (a *Auth) determineOperationExternal(account *model.Account, desiredAppOrgID string, l *logs.Log) (string, error) {
-	return a.determineOperation(account, desiredAppOrgID, l)
-}
-
 // determine operation
 //
-//	"sign-in" or "org-sign-up" or "app-sign-up"
+//	operationSignIn or operationOrgSignUp or operationAppSignUp
 func (a *Auth) determineOperation(account *model.Account, desiredAppOrgID string, l *logs.Log) (string, error) {
 	if account == nil {
-		return "org-sign-up", nil //first registration for this user identity and organization
+		return operationOrgSignUp, nil //first registration for this user identity and organization
 	}
 
 	hasAppMembership := account.HasAppMembership(desiredAppOrgID)
 	if !hasAppMembership {
-		return "app-sign-up", nil //the user identity has registration in the orgnization but does not have for the application
+		return operationAppSignUp, nil //the user identity has registration in the orgnization but does not have for the application
 	}
 
 	//the user identity has both org registration and app membership
-	return "sign-in", nil
+	return operationSignIn, nil
 }
 
 func (a *Auth) getAccount(code string, identifier string, apiKey string, appTypeIdentifier string, orgID string) (*model.Account, *model.ApplicationOrganization, error) {
@@ -1042,7 +1041,7 @@ func (a *Auth) getAccount(code string, identifier string, apiKey string, appType
 	}
 
 	//check if the account exists check
-	account, err := a.storage.FindAccount(nil, appOrg.ID, code, identifier)
+	account, err := a.storage.FindAccount(nil, code, identifier, &orgID, &appOrg.ID)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"app_org_id": appOrg.ID, "code": code, "identifier": identifier}, err)
 	}
@@ -1860,7 +1859,7 @@ func (a *Auth) linkAccountAuthTypeExternal(account *model.Account, supportedAuth
 
 	var accountAuthType *model.AccountAuthType
 	transaction := func(context storage.TransactionContext) error {
-		newCredsAccount, err := a.storage.FindAccount(context, appOrg.ID, code, externalUser.Identifier)
+		newCredsAccount, err := a.storage.FindAccount(context, code, externalUser.Identifier, &appOrg.Organization.ID, &appOrg.ID)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 		}
@@ -1919,7 +1918,7 @@ func (a *Auth) registerAccountAuthType(context storage.TransactionContext, accou
 }
 
 func (a *Auth) unlinkAccountAuthType(accountID string, accountAuthTypeID *string, authenticationType *string, identifier *string, admin bool) (*model.Account, error) {
-	account, err := a.storage.FindAccountByID(nil, accountID)
+	account, err := a.storage.FindAccountByID(nil, nil, nil, accountID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
@@ -1968,7 +1967,7 @@ func (a *Auth) unlinkAccountAuthType(accountID string, accountAuthTypeID *string
 func (a *Auth) linkAccountIdentifier(context storage.TransactionContext, account *model.Account, identifierImpl identifierType) (*string, error) {
 	identifier := identifierImpl.getIdentifier()
 
-	existingIdentifierAccount, err := a.storage.FindAccount(context, account.AppOrg.ID, identifierImpl.getCode(), identifier)
+	existingIdentifierAccount, err := a.storage.FindAccount(context, identifierImpl.getCode(), identifier, nil, &account.AppOrg.ID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}

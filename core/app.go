@@ -60,9 +60,9 @@ func (app *application) notifyListeners(message string, data interface{}) {
 	}()
 }
 
-func (app *application) getAccountV2(context storage.TransactionContext, cOrgID string, cAppID string, accountID string) (*model.Account, error) {
+func (app *application) getAccount(context storage.TransactionContext, cOrgID string, cAppID string, accountID string) (*model.Account, error) {
 	//find the account
-	account, err := app.storage.FindAccountByID(context, cOrgID, cAppID, accountID)
+	account, err := app.storage.FindAccountByID(context, &cOrgID, &cAppID, accountID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}

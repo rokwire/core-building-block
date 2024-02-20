@@ -378,7 +378,7 @@ func (_m *Storage) DeletePermission(id string) error {
 }
 
 // FindAccountByID provides a mock function with given fields: context, cOrgID, cAppID, id
-func (_m *Storage) FindAccountByID(context storage.TransactionContext, cOrgID string, cAppID string, id string) (*model.Account, error) {
+func (_m *Storage) FindAccountByID(context storage.TransactionContext, cOrgID *string, cAppID *string, id string) (*model.Account, error) {
 	ret := _m.Called(context, cOrgID, cAppID, id)
 
 	if len(ret) == 0 {
@@ -387,10 +387,10 @@ func (_m *Storage) FindAccountByID(context storage.TransactionContext, cOrgID st
 
 	var r0 *model.Account
 	var r1 error
-	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, string, string) (*model.Account, error)); ok {
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, *string, *string, string) (*model.Account, error)); ok {
 		return rf(context, cOrgID, cAppID, id)
 	}
-	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, string, string) *model.Account); ok {
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, *string, *string, string) *model.Account); ok {
 		r0 = rf(context, cOrgID, cAppID, id)
 	} else {
 		if ret.Get(0) != nil {
@@ -398,7 +398,7 @@ func (_m *Storage) FindAccountByID(context storage.TransactionContext, cOrgID st
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(storage.TransactionContext, string, string, string) error); ok {
+	if rf, ok := ret.Get(1).(func(storage.TransactionContext, *string, *string, string) error); ok {
 		r1 = rf(context, cOrgID, cAppID, id)
 	} else {
 		r1 = ret.Error(1)

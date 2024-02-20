@@ -18,7 +18,6 @@ import (
 	"context"
 	"core-building-block/core/model"
 	"core-building-block/utils"
-	"fmt"
 	"strings"
 	"time"
 
@@ -491,18 +490,17 @@ func (sa *Adapter) migrateLoginSessions(context TransactionContext, removedAuthT
 }
 
 // migrate to tenants accounts
-func (sa *Adapter) migrateToTenantsAccounts(accountsColl *collectionWrapper, tenantsAccountsColl *collectionWrapper,
-	appsOrgsColl *collectionWrapper) error {
+func (sa *Adapter) migrateToTenantsAccounts() error {
 	sa.logger.Debug("migrateToTenantsAccounts START")
 
-	err := sa.startPhase1(accountsColl, tenantsAccountsColl, appsOrgsColl)
+	err := sa.startPhase1()
 	if err != nil {
 		return err
 	}
 
 	time.Sleep(1 * time.Second) // sleep for 1 second
 
-	err = sa.startPhase2(accountsColl, tenantsAccountsColl, appsOrgsColl)
+	err = sa.startPhase2()
 	if err != nil {
 		return err
 	}
@@ -511,12 +509,11 @@ func (sa *Adapter) migrateToTenantsAccounts(accountsColl *collectionWrapper, ten
 	return nil
 }
 
-func (sa *Adapter) startPhase2(accountsColl *collectionWrapper, tenantsAccountsColl *collectionWrapper,
-	appsOrgsColl *collectionWrapper) error {
+func (sa *Adapter) startPhase2() error {
 	sa.logger.Debug("startPhase2 START")
 
 	//check if need to apply processing
-	notMigratedCount, err := sa.findNotMigratedCount(nil, accountsColl)
+	notMigratedCount, err := sa.findNotMigratedCount(nil)
 	if err != nil {
 		return err
 	}
@@ -529,8 +526,7 @@ func (sa *Adapter) startPhase2(accountsColl *collectionWrapper, tenantsAccountsC
 	sa.logger.Debugf("there are %d accounts to be migrated", *notMigratedCount)
 
 	//first load all aprs orgs as we need them
-	var allAppsOrgs []applicationOrganization
-	err = appsOrgsColl.Find(bson.D{}, &allAppsOrgs, nil)
+	allAppsOrgs, err := sa.getCachedApplicationOrganizations()
 	if err != nil {
 		return err
 	}
@@ -539,7 +535,7 @@ func (sa *Adapter) startPhase2(accountsColl *collectionWrapper, tenantsAccountsC
 	for orgID, orgItems := range orgsData {
 		//process for every organization
 
-		err := sa.processPhase2ForOrg(accountsColl, orgID, orgItems)
+		err := sa.processPhase2ForOrg(orgID, orgItems)
 		if err != nil {
 			return err
 		}
@@ -549,12 +545,12 @@ func (sa *Adapter) startPhase2(accountsColl *collectionWrapper, tenantsAccountsC
 	return nil
 }
 
-func (sa *Adapter) processPhase2ForOrg(accountsColl *collectionWrapper, orgID string, orgApps []string) error {
+func (sa *Adapter) processPhase2ForOrg(orgID string, orgApps []string) error {
 	sa.logger.Debugf("...start processing org id %s with apps orgs ids - %s", orgID, orgApps)
 
 	i := 0
 	for {
-		ids, err := sa.loadAccountsIDsForMigration(nil, accountsColl, orgApps)
+		ids, err := sa.loadAccountsIDsForMigration(nil, orgApps)
 		if err != nil {
 			return err
 		}
@@ -566,7 +562,7 @@ func (sa *Adapter) processPhase2ForOrg(accountsColl *collectionWrapper, orgID st
 		sa.logger.Debugf("loaded %d accounts for %s - %s", len(ids), orgID, orgApps)
 
 		// process
-		err = sa.processPhase2ForOrgPiece(accountsColl, ids, orgID, orgApps)
+		err = sa.processPhase2ForOrgPiece(ids, orgID, orgApps)
 		if err != nil {
 			return err
 		}
@@ -583,7 +579,7 @@ func (sa *Adapter) processPhase2ForOrg(accountsColl *collectionWrapper, orgID st
 	return nil
 }
 
-func (sa *Adapter) loadAccountsIDsForMigration(context TransactionContext, accountsColl *collectionWrapper, orgApps []string) ([]string, error) {
+func (sa *Adapter) loadAccountsIDsForMigration(context TransactionContext, orgApps []string) ([]string, error) {
 	filter := bson.M{
 		"migrated_2": bson.M{"$in": []interface{}{nil, false}},
 		"app_org_id": bson.M{"$in": orgApps}, //we process only org accounts
@@ -593,7 +589,7 @@ func (sa *Adapter) loadAccountsIDsForMigration(context TransactionContext, accou
 	findOptions.SetLimit(int64(5000))
 
 	var accountsResult []account
-	err := accountsColl.FindWithContext(context, filter, &accountsResult, findOptions)
+	err := sa.db.accounts.FindWithContext(context, filter, &accountsResult, findOptions)
 	if err != nil {
 		return nil, err
 	}
@@ -608,18 +604,18 @@ func (sa *Adapter) loadAccountsIDsForMigration(context TransactionContext, accou
 	return res, nil
 }
 
-func (sa *Adapter) processPhase2ForOrgPiece(accountsColl *collectionWrapper, idsList []string, orgID string, orgApps []string) error {
+func (sa *Adapter) processPhase2ForOrgPiece(idsList []string, orgID string, orgApps []string) error {
 	//all in transaction!
 	transaction := func(contextTr TransactionContext) error {
 		//1. first mark the accounts as migrated
-		err := sa.markAccountsAsProcessed(contextTr, idsList, accountsColl)
+		err := sa.markAccountsAsProcessed(contextTr, idsList)
 		if err != nil {
 			return err
 		}
 
 		//2. $out/merge cannot be used in a transaction
 		ctx := context.Background()
-		err = sa.moveToTenantsAccounts(ctx, accountsColl, idsList, orgID, orgApps)
+		err = sa.moveToTenantsAccounts(ctx, idsList, orgID, orgApps)
 		if err != nil {
 			return err //rollback if the move fails
 		}
@@ -628,7 +624,7 @@ func (sa *Adapter) processPhase2ForOrgPiece(accountsColl *collectionWrapper, ids
 		return nil
 	}
 
-	err := sa.performTransaction(transaction)
+	err := sa.PerformTransaction(transaction)
 	if err != nil {
 		return err
 	}
@@ -636,25 +632,24 @@ func (sa *Adapter) processPhase2ForOrgPiece(accountsColl *collectionWrapper, ids
 	return nil
 }
 
-func (sa *Adapter) appsOrgsToMap(allAppsOrgs []applicationOrganization) map[string][]string {
+func (sa *Adapter) appsOrgsToMap(allAppsOrgs []model.ApplicationOrganization) map[string][]string {
 	orgMap := make(map[string][]string)
 
 	for _, appOrg := range allAppsOrgs {
-		orgMap[appOrg.OrgID] = append(orgMap[appOrg.OrgID], appOrg.ID)
+		orgMap[appOrg.Organization.ID] = append(orgMap[appOrg.Organization.ID], appOrg.ID)
 	}
 
 	return orgMap
 }
 
-func (sa *Adapter) startPhase1(accountsColl *collectionWrapper, tenantsAccountsColl *collectionWrapper,
-	appsOrgsColl *collectionWrapper) error {
+func (sa *Adapter) startPhase1() error {
 	sa.logger.Debug("startPhase1 START")
 
 	//all in transaction!
 	transaction := func(context TransactionContext) error {
 
 		//check if need to apply processing
-		notMigratedCount, err := sa.findNotMigratedCount(context, accountsColl)
+		notMigratedCount, err := sa.findNotMigratedCount(context)
 		if err != nil {
 			return err
 		}
@@ -667,7 +662,7 @@ func (sa *Adapter) startPhase1(accountsColl *collectionWrapper, tenantsAccountsC
 		sa.logger.Debugf("there are %d accounts to be migrated", *notMigratedCount)
 
 		//process duplicate events
-		err = sa.processDuplicateAccounts(context, accountsColl, tenantsAccountsColl, appsOrgsColl)
+		err = sa.processDuplicateAccounts(context)
 		if err != nil {
 			return err
 		}
@@ -675,7 +670,7 @@ func (sa *Adapter) startPhase1(accountsColl *collectionWrapper, tenantsAccountsC
 		return nil
 	}
 
-	err := sa.performTransaction(transaction)
+	err := sa.PerformTransaction(transaction)
 	if err != nil {
 		return err
 	}
@@ -684,7 +679,7 @@ func (sa *Adapter) startPhase1(accountsColl *collectionWrapper, tenantsAccountsC
 	return nil
 }
 
-func (sa *Adapter) moveToTenantsAccounts(context context.Context, accountsColl *collectionWrapper, idsList []string, orgID string, appsOrgsIDs []string) error {
+func (sa *Adapter) moveToTenantsAccounts(context context.Context, idsList []string, orgID string, appsOrgsIDs []string) error {
 	matchStage := bson.D{
 		{Key: "$match", Value: bson.D{
 			{Key: "_id", Value: bson.M{"$in": idsList}},
@@ -750,7 +745,7 @@ func (sa *Adapter) moveToTenantsAccounts(context context.Context, accountsColl *
 		{Key: "$merge", Value: bson.M{"into": "orgs_accounts", "whenMatched": "keepExisting", "whenNotMatched": "insert"}},
 	}
 
-	_, err := accountsColl.coll.Aggregate(context, mongo.Pipeline{matchStage, addFieldsStage, projectStage, mergeStage})
+	err := sa.db.accounts.Aggregate(context, mongo.Pipeline{matchStage, addFieldsStage, projectStage, mergeStage}, nil)
 	if err != nil {
 		return err
 	}
@@ -758,20 +753,19 @@ func (sa *Adapter) moveToTenantsAccounts(context context.Context, accountsColl *
 	return nil
 }
 
-func (sa *Adapter) findNotMigratedCount(context TransactionContext, accountsColl *collectionWrapper) (*int64, error) {
+func (sa *Adapter) findNotMigratedCount(context TransactionContext) (*int64, error) {
 	filter := bson.M{"migrated_2": bson.M{"$in": []interface{}{nil, false}}}
-	count, err := accountsColl.CountDocumentsWithContext(context, filter)
+	count, err := sa.db.accounts.CountDocumentsWithContext(context, filter)
 	if err != nil {
 		return nil, err
 	}
 	return &count, nil
 }
 
-func (sa *Adapter) processDuplicateAccounts(context TransactionContext, accountsColl *collectionWrapper,
-	tenantsAccountsColl *collectionWrapper, appsOrgsColl *collectionWrapper) error {
+func (sa *Adapter) processDuplicateAccounts(context TransactionContext) error {
 
 	//find the duplicate accounts
-	items, err := sa.findDuplicateAccounts(context, accountsColl)
+	items, err := sa.findDuplicateAccounts(context)
 	if err != nil {
 		return err
 	}
@@ -781,20 +775,20 @@ func (sa *Adapter) processDuplicateAccounts(context TransactionContext, accounts
 	}
 
 	//construct tenants accounts
-	tenantsAccounts, err := sa.constructTenantsAccounts(context, appsOrgsColl, items)
+	tenantsAccounts, err := sa.constructTenantsAccounts(context, items)
 	if err != nil {
 		return err
 	}
 
 	//save tenants accounts
-	err = sa.insertTenantAccounts(context, tenantsAccounts, tenantsAccountsColl)
+	err = sa.insertTenantAccounts(context, tenantsAccounts)
 	if err != nil {
 		return err
 	}
 
 	//mark the old accounts as processed
 	accountsIDs := sa.getUniqueAccountsIDs(items)
-	err = sa.markAccountsAsProcessed(context, accountsIDs, accountsColl)
+	err = sa.markAccountsAsProcessed(context, accountsIDs)
 	if err != nil {
 		return err
 	}
@@ -818,7 +812,7 @@ func (sa *Adapter) getUniqueAccountsIDs(items map[string][]account) []string {
 	return result
 }
 
-func (sa *Adapter) markAccountsAsProcessed(context TransactionContext, accountsIDs []string, accountsColl *collectionWrapper) error {
+func (sa *Adapter) markAccountsAsProcessed(context TransactionContext, accountsIDs []string) error {
 	filter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": accountsIDs}}}
 
 	update := bson.D{
@@ -827,7 +821,7 @@ func (sa *Adapter) markAccountsAsProcessed(context TransactionContext, accountsI
 		}},
 	}
 
-	_, err := accountsColl.UpdateManyWithContext(context, filter, update, nil)
+	_, err := sa.db.accounts.UpdateManyWithContext(context, filter, update, nil)
 	if err != nil {
 		return err
 	}
@@ -835,14 +829,14 @@ func (sa *Adapter) markAccountsAsProcessed(context TransactionContext, accountsI
 	return nil
 }
 
-func (sa *Adapter) insertTenantAccounts(context TransactionContext, items []tenantAccount, tenantsAccountsColl *collectionWrapper) error {
+func (sa *Adapter) insertTenantAccounts(context TransactionContext, items []tenantAccount) error {
 
 	stgItems := make([]interface{}, len(items))
 	for i, p := range items {
 		stgItems[i] = p
 	}
 
-	res, err := tenantsAccountsColl.InsertManyWithContext(context, stgItems, nil)
+	res, err := sa.db.tenantsAccounts.InsertManyWithContext(context, stgItems, nil)
 	if err != nil {
 		return err
 	}
@@ -854,10 +848,9 @@ func (sa *Adapter) insertTenantAccounts(context TransactionContext, items []tena
 	return nil
 }
 
-func (sa *Adapter) constructTenantsAccounts(context TransactionContext, appsOrgsColl *collectionWrapper, duplicateAccounts map[string][]account) ([]tenantAccount, error) {
+func (sa *Adapter) constructTenantsAccounts(context TransactionContext, duplicateAccounts map[string][]account) ([]tenantAccount, error) {
 	//we need to load the apps orgs object from the database as we will need them
-	var allAppsOrgs []applicationOrganization
-	err := appsOrgsColl.FindWithContext(context, bson.D{}, &allAppsOrgs, nil)
+	allAppsOrgs, err := sa.getCachedApplicationOrganizations()
 	if err != nil {
 		return nil, err
 	}
@@ -873,41 +866,8 @@ func (sa *Adapter) constructTenantsAccounts(context TransactionContext, appsOrgs
 		data[identifier] = orgAccounts
 	}
 
-	//print 1
-	fmt.Print("print 1\n")
-	for identifier, dataItem := range data {
-		fmt.Print("\n\n")
-
-		fmt.Printf("%s\n", identifier)
-		for _, orgAccounts := range dataItem {
-			fmt.Printf("\torg_id:%s\n\n", orgAccounts.OrgID)
-			for _, account := range orgAccounts.Accounts {
-				fmt.Printf("\t\taccount_id:%s\tapp_org_id:%s\n\n", account.ID, account.AppOrgID)
-				authTypes := account.AuthTypes
-				for _, authType := range authTypes {
-					fmt.Printf("\t\t\tauth_type_code:%s\tauth_type_identifier:%s\n\n", authType.AuthTypeCode, authType.Identifier)
-				}
-			}
-		}
-	}
-
 	//use orgAccounts for easier manipulating
 	orgIDsAccounts := sa.simplifyStructureData(data)
-	//print 2
-	fmt.Print("print 2\n")
-	for _, item := range orgIDsAccounts {
-		fmt.Print("\n\n")
-
-		fmt.Printf("%s\n", item.OrgID)
-		for _, account := range item.Accounts {
-			fmt.Printf("\t\taccount_id:%s\tapp_org_id:%s\n\n", account.ID, account.AppOrgID)
-			authTypes := account.AuthTypes
-			for _, authType := range authTypes {
-				fmt.Printf("\t\t\tauth_type_code:%s\tauth_type_identifier:%s\n\n", authType.AuthTypeCode, authType.Identifier)
-			}
-		}
-
-	}
 
 	res := []tenantAccount{}
 	for _, item := range orgIDsAccounts {
@@ -1112,7 +1072,7 @@ func (sa *Adapter) isUIUCSource(tenantAccount tenantAccount) bool {
 
 	hasAuthTypeSource := false
 	for _, at := range tenantAccount.AuthTypes {
-		if at.AuthTypeCode == m.uiucAuthTypeCodeMigrationSource {
+		if at.AuthTypeCode == sa.db.uiucAuthTypeCodeMigrationSource {
 			hasAuthTypeSource = true
 		}
 	}
@@ -1330,7 +1290,7 @@ type orgAccounts struct {
 	Accounts []account
 }
 
-func (sa *Adapter) segmentByOrgID(allAppsOrgs []applicationOrganization, accounts []account) ([]orgAccounts, error) {
+func (sa *Adapter) segmentByOrgID(allAppsOrgs []model.ApplicationOrganization, accounts []account) ([]orgAccounts, error) {
 	tempMap := map[string][]account{}
 	for _, account := range accounts {
 		currentOrgID, err := sa.findOrgIDByAppOrgID(account.AppOrgID, allAppsOrgs)
@@ -1353,16 +1313,16 @@ func (sa *Adapter) segmentByOrgID(allAppsOrgs []applicationOrganization, account
 	return result, nil
 }
 
-func (sa *Adapter) findOrgIDByAppOrgID(appOrgID string, allAppsOrgs []applicationOrganization) (string, error) {
+func (sa *Adapter) findOrgIDByAppOrgID(appOrgID string, allAppsOrgs []model.ApplicationOrganization) (string, error) {
 	for _, item := range allAppsOrgs {
 		if item.ID == appOrgID {
-			return item.OrgID, nil
+			return item.Organization.ID, nil
 		}
 	}
 	return "", errors.Newf("no org for app org id - %s", appOrgID)
 }
 
-func (sa *Adapter) findDuplicateAccounts(context TransactionContext, accountsColl *collectionWrapper) (map[string][]account, error) {
+func (sa *Adapter) findDuplicateAccounts(context TransactionContext) (map[string][]account, error) {
 	pipeline := []bson.M{
 		{
 			"$match": bson.M{"migrated_2": bson.M{"$in": []interface{}{nil, false}}}, //iterate only not migrated records
@@ -1412,7 +1372,7 @@ func (sa *Adapter) findDuplicateAccounts(context TransactionContext, accountsCol
 		},
 	}
 
-	cursor, err := accountsColl.coll.Aggregate(context, pipeline)
+	cursor, err := sa.db.accounts.coll.Aggregate(context, pipeline)
 	if err != nil {
 		return nil, err
 	}
@@ -1456,7 +1416,7 @@ func (sa *Adapter) findDuplicateAccounts(context TransactionContext, accountsCol
 	}
 
 	//prepare founded duplicate accounts
-	preparedResponse, err := sa.prepareFoundedDuplicateAccounts(context, accountsColl, resTypeResult)
+	preparedResponse, err := sa.prepareFoundedDuplicateAccounts(context, resTypeResult)
 	if err != nil {
 		return nil, err
 	}
@@ -1472,8 +1432,7 @@ type identityAccountsItem struct {
 	Accounts   []accountItem `bson:"accounts"`
 }
 
-func (sa *Adapter) prepareFoundedDuplicateAccounts(context TransactionContext, accountsColl *collectionWrapper,
-	foundedItems []identityAccountsItem) (map[string][]account, error) {
+func (sa *Adapter) prepareFoundedDuplicateAccounts(context TransactionContext, foundedItems []identityAccountsItem) (map[string][]account, error) {
 
 	if len(foundedItems) == 0 {
 		return nil, nil
@@ -1489,7 +1448,7 @@ func (sa *Adapter) prepareFoundedDuplicateAccounts(context TransactionContext, a
 	}
 	findFilter := bson.M{"_id": bson.M{"$in": accountsIDs}}
 	var accounts []account
-	err := accountsColl.FindWithContext(context, findFilter, &accounts, nil)
+	err := sa.db.accounts.FindWithContext(context, findFilter, &accounts, nil)
 	if err != nil {
 		return nil, err
 	}

@@ -386,38 +386,6 @@ func profileFromStorage(item profile) model.Profile {
 		UnstructuredProperties: item.UnstructuredProperties}
 }
 
-func profilesFromStorage(items []account, sa *Adapter) []model.Profile {
-	if len(items) == 0 {
-		return make([]model.Profile, 0)
-	}
-
-	//prepare accounts
-	accounts := make(map[string][]model.Account, len(items))
-	for _, account := range items {
-		appOrg, _ := sa.getCachedApplicationOrganizationByKey(account.AppOrgID)
-		rAccount := accountFromStorage(account, *appOrg, sa)
-
-		//add account to the map
-		profileAccounts := accounts[rAccount.Profile.ID]
-		if profileAccounts == nil {
-			profileAccounts = []model.Account{}
-		}
-		profileAccounts = append(profileAccounts, rAccount)
-		accounts[rAccount.Profile.ID] = profileAccounts
-	}
-
-	//prepare profiles
-	res := make([]model.Profile, len(items))
-	for i, item := range items {
-
-		profile := profileFromStorage(item.Profile)
-		profile.Accounts = accounts[item.Profile.ID]
-
-		res[i] = profile
-	}
-	return res
-}
-
 func profileToStorage(item model.Profile) profile {
 	return profile{ID: item.ID, PhotoURL: item.PhotoURL, FirstName: item.FirstName, LastName: item.LastName,
 		BirthYear: item.BirthYear, Address: item.Address, ZipCode: item.ZipCode, State: item.State,

@@ -26,7 +26,7 @@ import (
 type Services interface {
 	SerDeleteAccount(id string, apps []string) error
 	SerGetAccount(cOrgID string, cAppID string, accountID string) (*model.Account, error)
-	SerGetProfile(cOrgID string, cAppID string, accountID string) (*model.Profile, *string, *string, error)
+	SerGetProfile(accountID string) (*model.Profile, *string, *string, error)
 	SerGetPreferences(cOrgID string, cAppID string, accountID string) (map[string]interface{}, error)
 	SerGetAccountSystemConfigs(cOrgID string, cAppID string, accountID string) (map[string]interface{}, error)
 	SerUpdateAccountPreferences(id string, appID string, orgID string, anonymous bool, preferences map[string]interface{}, l *logs.Log) (bool, error)
@@ -166,7 +166,7 @@ type Storage interface {
 	InsertFollow(context storage.TransactionContext, follow model.Follow) error
 	DeleteFollow(context storage.TransactionContext, appID string, orgID string, followingID string, followerID string) error
 
-	FindAccountByID(context storage.TransactionContext, cOrgID string, cAppID string, id string) (*model.Account, error)
+	FindAccountByID(context storage.TransactionContext, cOrgID *string, cAppID *string, id string) (*model.Account, error)
 	FindAccounts(context storage.TransactionContext, limit *int, offset *int, appID string, orgID string, accountID *string, firstName *string, lastName *string, authType *string,
 		identifier *string, anonymous *bool, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error)
 	FindPublicAccounts(context storage.TransactionContext, appID string, orgID string, limit *int, offset *int,

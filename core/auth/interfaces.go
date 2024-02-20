@@ -559,9 +559,8 @@ type Storage interface {
 	DeleteLoginState(context storage.TransactionContext, id string) error
 
 	//Accounts
-	FindAccountByOrgAndIdentifier(context storage.TransactionContext, orgID string, code string, identifier string, currentAppOrgID string) (*model.Account, error)
-	FindAccount(context storage.TransactionContext, appOrgID string, code string, identifier string) (*model.Account, error)
-	FindAccountByID(context storage.TransactionContext, cOrgID string, cAppID string, id string) (*model.Account, error)
+	FindAccount(context storage.TransactionContext, code string, identifier string, orgID *string, currentAppOrgID *string) (*model.Account, error)
+	FindAccountByID(context storage.TransactionContext, cOrgID *string, cAppID *string, id string) (*model.Account, error)
 	FindAccountsByUsername(context storage.TransactionContext, appOrg *model.ApplicationOrganization, username string) ([]model.Account, error)
 	InsertAccount(context storage.TransactionContext, account model.Account) (*model.Account, error)
 	SaveAccount(context storage.TransactionContext, account *model.Account) error
@@ -583,13 +582,13 @@ type Storage interface {
 
 	//AccountAuthTypes
 	FindAccountByAuthTypeID(context storage.TransactionContext, id string, currentAppOrgID *string) (*model.Account, error)
-	FindAccountByCredentialID(context storage.TransactionContext, id string) (*model.Account, error)
+	FindAccountByCredentialID(context storage.TransactionContext, id string, currentAppOrgID *string) (*model.Account, error)
 	InsertAccountAuthType(context storage.TransactionContext, item model.AccountAuthType) error
 	UpdateAccountAuthType(context storage.TransactionContext, item model.AccountAuthType) error
 	DeleteAccountAuthType(context storage.TransactionContext, item model.AccountAuthType) error
 
 	//AccountIdentifiers
-	FindAccountByIdentifierID(context storage.TransactionContext, id string) (*model.Account, error)
+	FindAccountByIdentifierID(context storage.TransactionContext, id string, currentAppOrgID *string) (*model.Account, error)
 	InsertAccountIdentifier(context storage.TransactionContext, item model.AccountIdentifier) error
 	UpdateAccountIdentifier(context storage.TransactionContext, item model.AccountIdentifier) error
 	UpdateAccountIdentifiers(context storage.TransactionContext, accountID string, items []model.AccountIdentifier) error
