@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Rokwire Core Building Block API
   description: Core Building Block API Documentation
-  version: 1.37.1
+  version: 1.37.2
 servers:
   - url: https://api.rokwire.illinois.edu/core
     description: Production server
