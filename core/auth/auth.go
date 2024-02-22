@@ -111,10 +111,11 @@ type Auth struct {
 	ServiceRegManager *authservice.ServiceRegManager
 	SignatureAuth     *sigauth.SignatureAuth
 
-	serviceID   string
-	host        string //Service host
-	minTokenExp int64  //Minimum access token expiration time in minutes
-	maxTokenExp int64  //Maximum access token expiration time in minutes
+	serviceID       string
+	host            string //Service host
+	defaultTokenExp int64  //Default access token expiration time in minutes
+	minTokenExp     int64  //Minimum access token expiration time in minutes
+	maxTokenExp     int64  //Maximum access token expiration time in minutes
 
 	profileBB  ProfileBuildingBlock
 	identityBB IdentityBuildingBlock
@@ -134,7 +135,12 @@ type Auth struct {
 
 // NewAuth creates a new auth instance
 func NewAuth(serviceID string, host string, currentAuthPrivKey *keys.PrivKey, oldAuthPrivKey *keys.PrivKey, authService *authservice.AuthService, storage Storage, emailer Emailer,
-	phoneVerifier PhoneVerifier, profileBB ProfileBuildingBlock, minTokenExp *int64, maxTokenExp *int64, supportLegacySigs bool, version string, logger *logs.Logger) (*Auth, error) {
+	phoneVerifier PhoneVerifier, profileBB ProfileBuildingBlock, defaultTokenExp *int64, minTokenExp *int64, maxTokenExp *int64, supportLegacySigs bool, version string, logger *logs.Logger) (*Auth, error) {
+	if defaultTokenExp == nil {
+		var defaultTokenExpVal int64 = 30
+		defaultTokenExp = &defaultTokenExpVal
+	}
+
 	if minTokenExp == nil {
 		var minTokenExpVal int64 = 5
 		minTokenExp = &minTokenExpVal
@@ -2465,7 +2471,7 @@ func (a *Auth) getStandardClaims(sub string, name string, email string, phone st
 
 func (a *Auth) getExp(exp *int64) int64 {
 	if exp == nil {
-		defaultTime := time.Now().Add(30 * time.Minute) //TODO: Set up org configs for default token exp
+		defaultTime := time.Now().Add(time.Duration(a.defaultTokenExp) * time.Minute) //TODO: Set up org configs for default token exp
 		return defaultTime.Unix()
 	}
 	expTime := time.Unix(*exp, 0)
