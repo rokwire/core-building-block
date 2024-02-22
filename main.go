@@ -82,8 +82,7 @@ func main() {
 	mongoDBAuth := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_MONGO_AUTH", true, true)
 	mongoDBName := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_MONGO_DATABASE", true, false)
 	mongoTimeout := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_MONGO_TIMEOUT", false, false)
-	uiucAuthTypeCodeMigrationSource := envLoader.GetAndLogEnvVar("ROKWIRE_TAM_AUTH_TYPE_CODE_SOURCE", true, false) //TAM - TENANT_ACCOUNTS_MIGRATION
-	storageAdapter := storage.NewStorageAdapter(host, mongoDBAuth, mongoDBName, mongoTimeout, uiucAuthTypeCodeMigrationSource, logger)
+	storageAdapter := storage.NewStorageAdapter(host, mongoDBAuth, mongoDBName, mongoTimeout, logger)
 	err := storageAdapter.Start()
 	if err != nil {
 		logger.Fatalf("Cannot start the mongoDB adapter: %v", err)

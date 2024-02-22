@@ -882,268 +882,20 @@ func (sa *Adapter) constructTenantsAccounts(context TransactionContext, duplicat
 }
 
 func (sa *Adapter) constructTenantsAccountsForOrg(orgID string, accounts []account) ([]tenantAccount, error) {
-	if orgID != "0a2eff20-e2cd-11eb-af68-60f81db5ecc0" { //University of Illinois
-		//we know that we do not have repeatable identities for the other organizations
-
-		//verify that this is true
-		notExist := sa.verifyNotExist(accounts)
-		if !notExist {
-			return nil, errors.Newf("%s has repetable items")
-		}
-
-		//process them
-		resAccounts := []tenantAccount{}
-		for _, account := range accounts {
-			newTenantAccount := sa.createTenantAccount(orgID, account)
-			resAccounts = append(resAccounts, newTenantAccount)
-		}
-
-		return resAccounts, nil
+	//verify that there are no repeated identities across org applications
+	notExist := sa.verifyNotExist(accounts)
+	if !notExist {
+		return nil, errors.Newf("%s has repetable items")
 	}
 
-	//we have repeatable identities for University of Illinois
-
-	//find all UIUC accounts
-	uiucAccounts, otherAccounts := sa.findUIUCAccounts(accounts)
-
-	if len(uiucAccounts) == 0 {
-		return nil, errors.New("no accounts for UIUC")
+	//process them
+	resAccounts := []tenantAccount{}
+	for _, account := range accounts {
+		newTenantAccount := sa.createTenantAccount(orgID, account)
+		resAccounts = append(resAccounts, newTenantAccount)
 	}
 
-	//first create tenant accounts from the UIUC accounts
-	uiucTenantAccounts := []tenantAccount{}
-	for _, uiucAccount := range uiucAccounts {
-		newUIUCTenantAccount := sa.createTenantAccount(orgID, uiucAccount)
-		uiucTenantAccounts = append(uiucTenantAccounts, newUIUCTenantAccount)
-	}
-
-	//now create tenant accounts for the other accounts
-	currentTenantAccounts := uiucTenantAccounts
-	for _, otherAccount := range otherAccounts {
-		//for every account determine if we need to create a new tenant account or to add it to already created
-
-		foundedTenantAccounts := sa.findTenantAccountsByIdentities(otherAccount.AuthTypes, currentTenantAccounts)
-		if len(foundedTenantAccounts) == 0 {
-			//it is not there so, create a new one
-
-			newCreated := sa.createTenantAccount(orgID, otherAccount)
-			currentTenantAccounts = append(currentTenantAccounts, newCreated)
-		} else if len(foundedTenantAccounts) == 1 {
-			//it is there only once, so add it to it
-
-			updatedTenantAccount := sa.addAccountToTenantAccount(otherAccount, foundedTenantAccounts[0])
-
-			//replace item
-			currentTenantAccounts = sa.replaceItem(updatedTenantAccount, currentTenantAccounts)
-		} else if len(foundedTenantAccounts) == 2 {
-			//it is there into two accounts, so merge them first and then add it to the merged one
-			tenantAccount1 := foundedTenantAccounts[0]
-			tenantAccount2 := foundedTenantAccounts[1]
-			mixedTenantAccount, err := sa.mixTenantAccount(tenantAccount1, tenantAccount2)
-			if err != nil {
-				return nil, err
-			}
-
-			//replace the two items with the mixed one
-			currentTenantAccounts = sa.replaceMixedItems(tenantAccount1, tenantAccount2, *mixedTenantAccount, currentTenantAccounts)
-
-			//add to the merged item
-			updatedTenantAccount := sa.addAccountToTenantAccount(otherAccount, *mixedTenantAccount)
-
-			//replace item
-			currentTenantAccounts = sa.replaceItem(updatedTenantAccount, currentTenantAccounts)
-		} else {
-			return nil, errors.New("we do not support more than 2 appearings")
-		}
-	}
-
-	return currentTenantAccounts, nil
-
-}
-
-func (sa *Adapter) replaceMixedItems(item1 tenantAccount, item2 tenantAccount, mixedItem tenantAccount, list []tenantAccount) []tenantAccount {
-	newList := make([]tenantAccount, 0)
-
-	for _, item := range list {
-		if item.ID != item1.ID && item.ID != item2.ID {
-			newList = append(newList, item)
-		}
-	}
-
-	newList = append(newList, mixedItem)
-
-	return newList
-}
-
-func (sa *Adapter) mixTenantAccount(tenantAccount1 tenantAccount, tenantAccount2 tenantAccount) (*tenantAccount, error) {
-	var source *tenantAccount
-	var second *tenantAccount
-	if sa.isUIUCSource(tenantAccount1) {
-		source = &tenantAccount1
-		second = &tenantAccount2
-	} else if sa.isUIUCSource(tenantAccount2) {
-		source = &tenantAccount2
-		second = &tenantAccount1
-	}
-	if source == nil || second == nil {
-		return nil, errors.New("no uiuc source")
-	}
-
-	mixedEntity := source
-
-	//add auth types
-	//add only the auth types which are not already in the mixed tenant account
-	newAuthTypes := sa.findNewAuthTypes(second.AuthTypes, mixedEntity.AuthTypes)
-	if len(newAuthTypes) > 0 {
-		currentAuthTypes := mixedEntity.AuthTypes
-		currentAuthTypes = append(currentAuthTypes, newAuthTypes...)
-		mixedEntity.AuthTypes = currentAuthTypes
-	}
-
-	///add memberships
-	mergedMemberships, err := sa.mergeMemberships(mixedEntity.OrgAppsMemberships, second.OrgAppsMemberships)
-	if err != nil {
-		return nil, err
-	}
-	mixedEntity.OrgAppsMemberships = mergedMemberships
-
-	return mixedEntity, nil
-}
-
-func (sa *Adapter) mergeMemberships(mixedEntityMemberships []orgAppMembership, secondEntityMemberships []orgAppMembership) ([]orgAppMembership, error) {
-	result := mixedEntityMemberships
-	for i, current := range secondEntityMemberships {
-		if current.AppOrgID == "1" { //we must merge it
-			mixedUIUCMembership := sa.findUIUCMembership(mixedEntityMemberships)
-			if mixedUIUCMembership == nil {
-				return nil, errors.New("no UIUC membership")
-			}
-
-			mergedUIUCMembership := mixedUIUCMembership
-
-			mergedUIUCMembership.Permissions = append(mergedUIUCMembership.Permissions, current.Permissions...)
-			mergedUIUCMembership.Roles = append(mergedUIUCMembership.Roles, current.Roles...)
-			mergedUIUCMembership.Groups = append(mergedUIUCMembership.Groups, current.Groups...)
-
-			mergedUIUCMembership.Preferences = sa.mergeMaps(mergedUIUCMembership.Preferences, current.Preferences)
-
-			result[i] = *mergedUIUCMembership
-		} else {
-			result = append(result, current)
-		}
-	}
-	return result, nil
-}
-
-func (sa *Adapter) mergeMaps(map1, map2 map[string]interface{}) map[string]interface{} {
-	mergedMap := make(map[string]interface{})
-
-	for key, value := range map1 {
-		mergedMap[key] = value
-	}
-
-	for key, value := range map2 {
-		mergedMap[key] = value
-	}
-
-	return mergedMap
-}
-
-func (sa *Adapter) findUIUCMembership(mixedEntityMemberships []orgAppMembership) *orgAppMembership {
-	for _, current := range mixedEntityMemberships {
-		if current.AppOrgID == "1" {
-			return &current
-		}
-	}
-	return nil
-}
-
-func (sa *Adapter) isUIUCSource(tenantAccount tenantAccount) bool {
-	isUIUC := false
-	for _, m := range tenantAccount.OrgAppsMemberships {
-		if m.AppOrgID == "1" { //UIUC/University of Illinois
-			isUIUC = true
-			break
-		}
-	}
-	if !isUIUC {
-		return false
-	}
-
-	hasAuthTypeSource := false
-	for _, at := range tenantAccount.AuthTypes {
-		if at.AuthTypeCode == sa.db.uiucAuthTypeCodeMigrationSource {
-			hasAuthTypeSource = true
-		}
-	}
-	if !hasAuthTypeSource {
-		return false
-	}
-
-	return true
-}
-
-func (sa *Adapter) replaceItem(item tenantAccount, list []tenantAccount) []tenantAccount {
-	for i, current := range list {
-		if current.ID == item.ID {
-			list[i] = item
-			break
-		}
-	}
-	return list
-}
-
-func (sa *Adapter) addAccountToTenantAccount(account account, tenantAccount tenantAccount) tenantAccount {
-
-	//create org app memberhip
-	oaID := uuid.NewString()
-	oaAppOrgID := account.AppOrgID
-	oaPermissions := account.Permissions
-	oaRoles := account.Roles
-	oaGroups := account.Groups
-	oaPreferences := account.Preferences
-	oaMostRecentClientVersion := account.MostRecentClientVersion
-
-	oaMembership := orgAppMembership{ID: oaID, AppOrgID: oaAppOrgID,
-		Permissions: oaPermissions, Roles: oaRoles, Groups: oaGroups,
-		Preferences: oaPreferences, MostRecentClientVersion: oaMostRecentClientVersion}
-
-	//add the created oa membership to the tenant account
-	current := tenantAccount.OrgAppsMemberships
-	current = append(current, oaMembership)
-	tenantAccount.OrgAppsMemberships = current
-
-	//add only the auth types which are not already in the tenant account
-	newAuthTypes := sa.findNewAuthTypes(account.AuthTypes, tenantAccount.AuthTypes)
-	if len(newAuthTypes) > 0 {
-		currentAuthTypes := tenantAccount.AuthTypes
-		currentAuthTypes = append(currentAuthTypes, newAuthTypes...)
-		tenantAccount.AuthTypes = currentAuthTypes
-	}
-
-	return tenantAccount
-}
-
-func (sa *Adapter) findNewAuthTypes(toBeAdded []accountAuthType, currentList []accountAuthType) []accountAuthType {
-	newAuthTypes := []accountAuthType{}
-
-	for _, accAuthType := range toBeAdded {
-		code := accAuthType.AuthTypeCode
-
-		containsCode := false
-		for _, tenantAuthType := range currentList {
-			tenantCode := tenantAuthType.AuthTypeCode
-			if tenantCode == code {
-				containsCode = true
-				break
-			}
-		}
-
-		if !containsCode {
-			newAuthTypes = append(newAuthTypes, accAuthType)
-		}
-	}
-	return newAuthTypes
+	return resAccounts, nil
 }
 
 func (sa *Adapter) verifyNotExist(accounts []account) bool {
@@ -1153,7 +905,7 @@ func (sa *Adapter) verifyNotExist(accounts []account) bool {
 				continue //skip
 			}
 
-			if sa.containsAuthType(acc.AuthTypes, acc2.AuthTypes) {
+			if sa.containsIdentifier(acc.Identifiers, acc2.Identifiers) {
 				return false
 			}
 		}
@@ -1161,32 +913,10 @@ func (sa *Adapter) verifyNotExist(accounts []account) bool {
 	return true
 }
 
-func (sa *Adapter) containsAuthType(authTypes1 []accountAuthType, authTypes2 []accountAuthType) bool {
-	for _, at := range authTypes1 {
-		for _, at2 := range authTypes2 {
-			if at.Identifier == at2.Identifier {
-				return true
-			}
-		}
-	}
-	return false
-}
-
-func (sa *Adapter) findTenantAccountsByIdentities(identities []accountAuthType, tenantAccounts []tenantAccount) []tenantAccount {
-	result := []tenantAccount{}
-
-	for _, tenantAccount := range tenantAccounts {
-		if sa.containsIdentity(identities, tenantAccount.AuthTypes) {
-			result = append(result, tenantAccount)
-		}
-	}
-	return result
-}
-
-func (sa *Adapter) containsIdentity(aut1 []accountAuthType, aut2 []accountAuthType) bool {
-	for _, aut1Item := range aut1 {
-		for _, aut2Item := range aut2 {
-			if aut1Item.Identifier == aut2Item.Identifier {
+func (sa *Adapter) containsIdentifier(identifiers1 []accountIdentifier, identifiers2 []accountIdentifier) bool {
+	for _, id := range identifiers1 {
+		for _, id2 := range identifiers2 {
+			if id.Identifier == id2.Identifier {
 				return true
 			}
 		}
@@ -1225,14 +955,13 @@ func (sa *Adapter) createTenantAccount(orgID string, account account) tenantAcco
 	oaPermissions := account.Permissions
 	oaRoles := account.Roles
 	oaGroups := account.Groups
+	oaSecrets := account.Secrets
 	oaPreferences := account.Preferences
 	oaMostRecentClientVersion := account.MostRecentClientVersion
 
-	orgAppMembershipObj := orgAppMembership{ID: oaID, AppOrgID: oaAppOrgID,
-		Permissions: oaPermissions, Roles: oaRoles, Groups: oaGroups,
-		Preferences: oaPreferences, MostRecentClientVersion: oaMostRecentClientVersion}
-
-	orgAppsMemberships := []orgAppMembership{orgAppMembershipObj}
+	orgAppsMemberships := []orgAppMembership{{ID: oaID, AppOrgID: oaAppOrgID,
+		Permissions: oaPermissions, Roles: oaRoles, Groups: oaGroups, Secrets: oaSecrets,
+		Preferences: oaPreferences, MostRecentClientVersion: oaMostRecentClientVersion}}
 
 	return tenantAccount{ID: id, OrgID: orgID, OrgAppsMemberships: orgAppsMemberships, Scopes: scopes,
 		AuthTypes: authTypes, MFATypes: mfaTypes, Username: username, ExternalIDs: externalIDs,
@@ -1241,34 +970,17 @@ func (sa *Adapter) createTenantAccount(orgID string, account account) tenantAcco
 		IsFollowing: isFollowing, LastLoginDate: lastLoginDate, LastAccessTokenDate: lastAccessTokenDate}
 }
 
-func (sa *Adapter) findUIUCAccounts(accounts []account) ([]account, []account) {
-	uiucAccounts := []account{}
-	otherAccounts := []account{}
-
-	for _, accountItem := range accounts {
-		account := accountItem //pointer issue
-
-		if account.AppOrgID == "1" { //UIUC app / University of Illinois
-			uiucAccounts = append(uiucAccounts, account)
-		} else {
-			otherAccounts = append(otherAccounts, account)
-		}
-	}
-
-	return uiucAccounts, otherAccounts
-}
-
 func (sa *Adapter) simplifyStructureData(data map[string][]orgAccounts) []orgAccounts {
 	temp := map[string][]account{}
-	seen := map[string]struct{}{}
+	seen := []string{}
 	for _, dataItem := range data {
 		for _, orgAccounts := range dataItem {
 			orgID := orgAccounts.OrgID
 			orgAllAccounts := temp[orgID]
 
 			for _, acc := range orgAccounts.Accounts {
-				if _, exists := seen[acc.ID]; !exists { // Check if already added
-					seen[acc.ID] = struct{}{}
+				if !utils.Contains(seen, acc.ID) { // Check if already added
+					seen = append(seen, acc.ID)
 					orgAllAccounts = append(orgAllAccounts, acc)
 				}
 			}
@@ -1328,11 +1040,11 @@ func (sa *Adapter) findDuplicateAccounts(context TransactionContext) (map[string
 			"$match": bson.M{"migrated_2": bson.M{"$in": []interface{}{nil, false}}}, //iterate only not migrated records
 		},
 		{
-			"$unwind": "$auth_types",
+			"$unwind": "$identifiers",
 		},
 		{
 			"$group": bson.M{
-				"_id": "$auth_types.identifier",
+				"_id": "$identifiers.identifier",
 				"accounts": bson.M{
 					"$push": bson.M{
 						"id": "$_id",

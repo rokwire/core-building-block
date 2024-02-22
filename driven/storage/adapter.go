@@ -3689,7 +3689,7 @@ func (sa *Adapter) abortTransaction(sessionContext mongo.SessionContext) {
 }
 
 // NewStorageAdapter creates a new storage adapter instance
-func NewStorageAdapter(host string, mongoDBAuth string, mongoDBName string, mongoTimeout string, uiucAuthTypeCodeMigrationSource string, logger *logs.Logger) *Adapter {
+func NewStorageAdapter(host string, mongoDBAuth string, mongoDBName string, mongoTimeout string, logger *logs.Logger) *Adapter {
 	timeoutInt, err := strconv.Atoi(mongoTimeout)
 	if err != nil {
 		logger.Warn("Setting default Mongo timeout - 500")
@@ -3721,7 +3721,7 @@ func NewStorageAdapter(host string, mongoDBAuth string, mongoDBName string, mong
 	cachedKeys := &syncmap.Map{}
 	keysLock := &sync.RWMutex{}
 
-	db := &database{mongoDBAuth: mongoDBAuth, mongoDBName: mongoDBName, mongoTimeout: timeout, logger: logger, uiucAuthTypeCodeMigrationSource: uiucAuthTypeCodeMigrationSource}
+	db := &database{mongoDBAuth: mongoDBAuth, mongoDBName: mongoDBName, mongoTimeout: timeout, logger: logger}
 	return &Adapter{db: db, logger: logger, host: host, cachedServiceRegs: cachedServiceRegs, serviceRegsLock: serviceRegsLock,
 		cachedOrganizations: cachedOrganizations, organizationsLock: organizationsLock,
 		cachedApplications: cachedApplications, applicationsLock: applicationsLock,
