@@ -400,11 +400,19 @@ type IdentityProviderSetting struct {
 
 // LoginsSessionsSetting represents logins sessions setting for an organization in an application
 type LoginsSessionsSetting struct {
-	MaxConcurrentSessions int `bson:"max_concurrent_sessions"`
+	MaxConcurrentSessions       int                         `bson:"max_concurrent_sessions"`
+	AccessTokenExpirationPolicy AccessTokenExpirationPolicy `bson:"access_token_expiration_policy"`
 
 	InactivityExpirePolicy InactivityExpirePolicy `bson:"inactivity_expire_policy"`
 	TSLExpirePolicy        TSLExpirePolicy        `bson:"time_since_login_expire_policy"`
 	YearlyExpirePolicy     YearlyExpirePolicy     `bson:"yearly_expire_policy"`
+}
+
+// AccessTokenExpirationPolicy represents the expiration policy for access tokens
+type AccessTokenExpirationPolicy struct {
+	DefaultExp int `bson:"default_exp"` //Default access token expiration time in minutes
+	MinExp     int `bson:"min_exp"`     //Minimum access token expiration time in minutes
+	MaxExp     int `bson:"max_exp"`     //Maximum access token expiration time in minutes
 }
 
 // InactivityExpirePolicy represents expires policy based on inactivity
