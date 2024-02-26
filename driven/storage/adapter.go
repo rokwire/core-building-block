@@ -4305,6 +4305,9 @@ func (sa *Adapter) getFilterForParams(params map[string]interface{}) bson.M {
 			filter[k] = v
 		} else if v == "$exists" {
 			filter[k] = bson.M{"$exists": true}
+		} else if reflect.TypeOf(v).Kind() == reflect.String {
+			// If v is a string, convert it to a slice of strings
+			filter[k] = bson.M{"$in": []string{v.(string)}}
 		} else {
 			filter[k] = v
 		}
