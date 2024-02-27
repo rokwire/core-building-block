@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+### Added
+- Create multiple admin accounts [#702](https://github.com/rokwire/core-building-block/issues/702)
 
 ## [1.37.2] - 2024-02-14
 ### Changed
