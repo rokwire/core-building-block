@@ -218,6 +218,7 @@ func (sa *Adapter) migrateAppOrgs(context TransactionContext, removedAuthTypes m
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
 	}
 
+	orgIDs := make(map[string]model.IdentityProviderSetting)
 	for _, appOrg := range appOrgs {
 		updated := false
 		for i, appType := range appOrg.SupportedAuthTypes {
@@ -251,22 +252,32 @@ func (sa *Adapter) migrateAppOrgs(context TransactionContext, removedAuthTypes m
 			}
 		}
 
-		err = sa.migrateAccounts(context, appOrg, removedAuthTypes, removedCredentials)
+		if _, exists := orgIDs[appOrg.Organization.ID]; !exists {
+			if len(appOrg.IdentityProvidersSettings) > 0 {
+				orgIDs[appOrg.Organization.ID] = appOrg.IdentityProvidersSettings[0] // use the first identity provider setting for all apps in this organization
+			} else {
+				orgIDs[appOrg.Organization.ID] = model.IdentityProviderSetting{}
+			}
+		}
+	}
+
+	for orgID, identityProviderSettings := range orgIDs {
+		err = sa.migrateAccounts(context, orgID, identityProviderSettings, removedAuthTypes, removedCredentials)
 		if err != nil {
-			return errors.WrapErrorAction("migrating", model.TypeAccount, &logutils.FieldArgs{"app_org_id": appOrg.ID}, err)
+			return errors.WrapErrorAction("migrating", model.TypeAccount, &logutils.FieldArgs{"org_id": orgID}, err)
 		}
 	}
 
 	return nil
 }
 
-func (sa *Adapter) migrateAccounts(context TransactionContext, appOrg model.ApplicationOrganization, removedAuthTypes map[string]model.AuthType, removedCredentials []string) error {
-	filter := bson.M{"app_org_id": appOrg.ID}
-	var accounts []account
+func (sa *Adapter) migrateAccounts(context TransactionContext, orgID string, identityProviderSettings model.IdentityProviderSetting, removedAuthTypes map[string]model.AuthType, removedCredentials []string) error {
+	filter := bson.M{"org_id": orgID}
+	var accounts []tenantAccount
 
-	err := sa.db.accounts.Find(filter, &accounts, nil)
+	err := sa.db.tenantsAccounts.Find(filter, &accounts, nil)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"app_org_id": appOrg.ID}, err)
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"org_id": orgID}, err)
 	}
 	if len(accounts) == 0 {
 		return nil
@@ -342,8 +353,8 @@ func (sa *Adapter) migrateAccounts(context TransactionContext, appOrg model.Appl
 					// add the primary external identifier
 					code := ""
 					primary := true
-					for k, v := range appOrg.IdentityProvidersSettings[0].ExternalIDFields {
-						if v == appOrg.IdentityProvidersSettings[0].UserIdentifierField {
+					for k, v := range identityProviderSettings.ExternalIDFields {
+						if v == identityProviderSettings.UserIdentifierField {
 							code = k
 							break
 						}
@@ -438,17 +449,16 @@ func (sa *Adapter) migrateAccounts(context TransactionContext, appOrg model.Appl
 		migratedAccounts = append(migratedAccounts, migrated)
 	}
 
-	_, err = sa.db.accounts.DeleteManyWithContext(context, filter, nil)
+	_, err = sa.db.tenantsAccounts.DeleteManyWithContext(context, filter, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
 	}
 
 	if len(migratedAccounts) > 0 {
-		_, err = sa.db.accounts.InsertManyWithContext(context, migratedAccounts, nil)
+		_, err = sa.db.tenantsAccounts.InsertManyWithContext(context, migratedAccounts, nil)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAccount, nil, err)
 		}
-
 	}
 
 	return nil
@@ -498,12 +508,12 @@ func (sa *Adapter) migrateToTenantsAccounts() error {
 		return err
 	}
 
-	time.Sleep(1 * time.Second) // sleep for 1 second
+	// time.Sleep(1 * time.Second) // sleep for 1 second
 
-	err = sa.startPhase2()
-	if err != nil {
-		return err
-	}
+	// err = sa.startPhase2()
+	// if err != nil {
+	// 	return err
+	// }
 
 	sa.logger.Debug("migrateToTenantsAccounts END")
 	return nil
@@ -581,7 +591,7 @@ func (sa *Adapter) processPhase2ForOrg(orgID string, orgApps []string) error {
 
 func (sa *Adapter) loadAccountsIDsForMigration(context TransactionContext, orgApps []string) ([]string, error) {
 	filter := bson.M{
-		"migrated_2": bson.M{"$in": []interface{}{nil, false}},
+		"migrated":   bson.M{"$in": []interface{}{nil, false}},
 		"app_org_id": bson.M{"$in": orgApps}, //we process only org accounts
 	}
 
@@ -684,9 +694,9 @@ func (sa *Adapter) moveToTenantsAccounts(context context.Context, idsList []stri
 		{Key: "$match", Value: bson.D{
 			{Key: "_id", Value: bson.M{"$in": idsList}},
 			{Key: "$or", Value: bson.A{
-				bson.D{{Key: "migrated_2", Value: bson.M{"$type": 10}}}, //10 is the number for null
-				bson.D{{Key: "migrated_2", Value: false}},
-				bson.D{{Key: "migrated_2", Value: bson.D{{Key: "$exists", Value: false}}}},
+				bson.D{{Key: "migrated", Value: bson.M{"$type": 10}}}, //10 is the number for null
+				bson.D{{Key: "migrated", Value: false}},
+				bson.D{{Key: "migrated", Value: bson.D{{Key: "$exists", Value: false}}}},
 			}},
 			{Key: "app_org_id", Value: bson.M{"$in": appsOrgsIDs}},
 		}},
@@ -703,15 +713,15 @@ func (sa *Adapter) moveToTenantsAccounts(context context.Context, idsList []stri
 					{Key: "permissions", Value: "$permissions"},
 					{Key: "roles", Value: "$roles"},
 					{Key: "groups", Value: "$groups"},
+					{Key: "secrets", Value: "$secrets"},
 					{Key: "preferences", Value: "$preferences"},
 					{Key: "most_recent_client_version", Value: "$most_recent_client_version"},
 				},
 			}},
 			{Key: "scopes", Value: "$scopes"},
 			{Key: "auth_types", Value: "$auth_types"},
+			{Key: "identifiers", Value: "$identifiers"},
 			{Key: "mfa_types", Value: "$mfa_types"},
-			{Key: "username", Value: "$username"},
-			{Key: "external_ids", Value: "$external_ids"},
 			{Key: "system_configs", Value: "$system_configs"},
 			{Key: "profile", Value: "$profile"},
 			{Key: "devices", Value: "$devices"},
@@ -732,6 +742,7 @@ func (sa *Adapter) moveToTenantsAccounts(context context.Context, idsList []stri
 			{Key: "permissions", Value: 0},
 			{Key: "roles", Value: 0},
 			{Key: "groups", Value: 0},
+			{Key: "secrets", Value: 0},
 			{Key: "preferences", Value: 0},
 			{Key: "most_recent_client_version", Value: 0},
 		}},
@@ -754,7 +765,7 @@ func (sa *Adapter) moveToTenantsAccounts(context context.Context, idsList []stri
 }
 
 func (sa *Adapter) findNotMigratedCount(context TransactionContext) (*int64, error) {
-	filter := bson.M{"migrated_2": bson.M{"$in": []interface{}{nil, false}}}
+	filter := bson.M{"migrated": bson.M{"$in": []interface{}{nil, false}}}
 	count, err := sa.db.accounts.CountDocumentsWithContext(context, filter)
 	if err != nil {
 		return nil, err
@@ -797,13 +808,11 @@ func (sa *Adapter) processDuplicateAccounts(context TransactionContext) error {
 }
 
 func (sa *Adapter) getUniqueAccountsIDs(items map[string][]account) []string {
-	uniqueIDs := make(map[string]struct{})
 	var result []string
 
 	for _, accounts := range items {
 		for _, acc := range accounts {
-			if _, found := uniqueIDs[acc.ID]; !found {
-				uniqueIDs[acc.ID] = struct{}{}
+			if !utils.Contains(result, acc.ID) {
 				result = append(result, acc.ID)
 			}
 		}
@@ -817,7 +826,7 @@ func (sa *Adapter) markAccountsAsProcessed(context TransactionContext, accountsI
 
 	update := bson.D{
 		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "migrated_2", Value: true},
+			primitive.E{Key: "migrated", Value: true},
 		}},
 	}
 
@@ -885,7 +894,7 @@ func (sa *Adapter) constructTenantsAccountsForOrg(orgID string, accounts []accou
 	//verify that there are no repeated identities across org applications
 	notExist := sa.verifyNotExist(accounts)
 	if !notExist {
-		return nil, errors.Newf("%s has repetable items")
+		return nil, errors.Newf("%s has repeated items")
 	}
 
 	//process them
@@ -906,6 +915,7 @@ func (sa *Adapter) verifyNotExist(accounts []account) bool {
 			}
 
 			if sa.containsIdentifier(acc.Identifiers, acc2.Identifiers) {
+				// sa.logger.ErrorWithFields("duplicate identifier", logutils.Fields{"account1_id": acc.ID, "account2_id": acc2.ID})
 				return false
 			}
 		}
@@ -917,6 +927,7 @@ func (sa *Adapter) containsIdentifier(identifiers1 []accountIdentifier, identifi
 	for _, id := range identifiers1 {
 		for _, id2 := range identifiers2 {
 			if id.Identifier == id2.Identifier {
+				// sa.logger.ErrorWithFields("duplicate identifier", logutils.Fields{"identifier1": id.Identifier, "identifier2": id2.Identifier})
 				return true
 			}
 		}
@@ -928,10 +939,9 @@ func (sa *Adapter) createTenantAccount(orgID string, account account) tenantAcco
 
 	id := account.ID
 	scopes := account.Scopes
+	identifiers := account.Identifiers
 	authTypes := account.AuthTypes
 	mfaTypes := account.MFATypes
-	username := account.Username
-	externalIDs := account.ExternalIDs
 	systemConfigs := account.SystemConfigs
 	profile := account.Profile
 	devices := account.Devices
@@ -964,7 +974,7 @@ func (sa *Adapter) createTenantAccount(orgID string, account account) tenantAcco
 		Preferences: oaPreferences, MostRecentClientVersion: oaMostRecentClientVersion}}
 
 	return tenantAccount{ID: id, OrgID: orgID, OrgAppsMemberships: orgAppsMemberships, Scopes: scopes,
-		AuthTypes: authTypes, MFATypes: mfaTypes, Username: username, ExternalIDs: externalIDs,
+		Identifiers: identifiers, AuthTypes: authTypes, MFATypes: mfaTypes,
 		SystemConfigs: systemConfigs, Profile: profile, Devices: devices, Anonymous: anonymous,
 		Privacy: privacy, Verified: verified, DateCreated: dateCreated, DateUpdated: dateUpdated,
 		IsFollowing: isFollowing, LastLoginDate: lastLoginDate, LastAccessTokenDate: lastAccessTokenDate}
@@ -1037,7 +1047,7 @@ func (sa *Adapter) findOrgIDByAppOrgID(appOrgID string, allAppsOrgs []model.Appl
 func (sa *Adapter) findDuplicateAccounts(context TransactionContext) (map[string][]account, error) {
 	pipeline := []bson.M{
 		{
-			"$match": bson.M{"migrated_2": bson.M{"$in": []interface{}{nil, false}}}, //iterate only not migrated records
+			"$match": bson.M{"migrated": bson.M{"$in": []interface{}{nil, false}}}, //iterate only not migrated records
 		},
 		{
 			"$unwind": "$identifiers",
