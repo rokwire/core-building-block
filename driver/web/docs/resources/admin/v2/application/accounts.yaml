@@ -1,9 +1,9 @@
 post:
   tags:
   - Admin
-  summary: Create admin accounts - TODO
+  summary: Create accounts
   description: |
-    Create a new admin account
+    Create accounts
 
     **Auth:** Requires admin access token with `create_accounts` or `all_accounts` permission
   security:
@@ -14,15 +14,13 @@ post:
     content:
       application/json:
         schema:
-          $ref: "../../../../schemas/apis/shared/requests/create-account/Request.yaml"
+            type: array
+            items:
+              $ref: "../../../../schemas/apis/shared/requests/create-account/Request.yaml"
     required: true
   responses:
     200:
       description: Success
-      content:
-        application/json:
-          schema:
-            $ref: "../../../../schemas/user/PartialAccount.yaml" 
     400:
       description: Bad request
     401:

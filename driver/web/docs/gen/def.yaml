@@ -2341,9 +2341,9 @@ paths:
     post:
       tags:
         - Admin
-      summary: Create admin accounts - TODO
+      summary: Create accounts
       description: |
-        Create a new admin account
+        Create accounts
 
         **Auth:** Requires admin access token with `create_accounts` or `all_accounts` permission
       security:
@@ -2354,15 +2354,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_shared_req_CreateAccount'
+              type: array
+              items:
+                $ref: '#/components/schemas/_shared_req_CreateAccount'
         required: true
       responses:
         '200':
           description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PartialAccount'
         '400':
           description: Bad request
         '401':
