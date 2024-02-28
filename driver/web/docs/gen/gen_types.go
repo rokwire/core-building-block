@@ -1706,6 +1706,9 @@ type PostAdminConfigsJSONRequestBody = AdminReqCreateUpdateConfig
 // PutAdminConfigsIdJSONRequestBody defines body for PutAdminConfigsId for application/json ContentType.
 type PutAdminConfigsIdJSONRequestBody = AdminReqCreateUpdateConfig
 
+// PostAdminV2ApplicationAccountsJSONRequestBody defines body for PostAdminV2ApplicationAccounts for application/json ContentType.
+type PostAdminV2ApplicationAccountsJSONRequestBody = SharedReqCreateAccount
+
 // PostBbsAccessTokenJSONRequestBody defines body for PostBbsAccessToken for application/json ContentType.
 type PostBbsAccessTokenJSONRequestBody = ServicesReqServiceAccountsAccessToken
 

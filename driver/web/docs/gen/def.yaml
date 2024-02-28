@@ -2336,6 +2336,38 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+  /admin/v2/application/accounts:
+    post:
+      tags:
+        - Admin
+      summary: Create admin accounts - TODO
+      description: |
+        Create a new admin account
+
+        **Auth:** Requires admin access token with `create_accounts` or `all_accounts` permission
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: |
+          User account details and parameters
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_shared_req_CreateAccount'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PartialAccount'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   '/admin/application/accounts/{id}/devices':
     get:
       tags:
