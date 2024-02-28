@@ -204,6 +204,7 @@ func (we Adapter) Start() {
 
 	adminSubrouter.HandleFunc("/application/accounts", we.wrapFunc(we.adminApisHandler.getApplicationAccounts, we.auth.admin.Permissions)).Methods("GET")
 	adminSubrouter.HandleFunc("/application/accounts", we.wrapFunc(we.adminApisHandler.createAdminAccount, we.auth.admin.Permissions)).Methods("POST")
+	adminSubrouter.HandleFunc("/v2/application/accounts", we.wrapFunc(we.adminApisHandler.createApplicationAccounts, we.auth.admin.Permissions)).Methods("POST")
 	adminSubrouter.HandleFunc("/application/accounts", we.wrapFunc(we.adminApisHandler.updateAdminAccount, we.auth.admin.Permissions)).Methods("PUT")
 
 	adminSubrouter.HandleFunc("/application/filter/accounts", we.wrapFunc(we.adminApisHandler.getFilterAccounts, we.auth.admin.Permissions)).Methods("POST")

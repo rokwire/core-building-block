@@ -964,6 +964,12 @@ func (h AdminApisHandler) createAdminAccount(l *logs.Log, r *http.Request, claim
 	return l.HTTPResponseSuccessJSON(data)
 }
 
+func (h AdminApisHandler) createApplicationAccounts(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
+
+	//TODO
+	return l.HTTPResponseSuccess()
+}
+
 func (h AdminApisHandler) updateAdminAccount(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
