@@ -116,6 +116,7 @@ post:
   tags:
   - Admin
   summary: Create admin accounts
+  deprecated: true
   description: |
     Create a new admin account
 
