@@ -3279,9 +3279,6 @@ func (sa *Adapter) UpdateApplicationOrganization(context TransactionContext, app
 	if res.ModifiedCount != 1 {
 		return errors.ErrorAction(logutils.ActionUpdate, model.TypeApplicationOrganization, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
 	}
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeApplicationOrganization, nil, err)
-	}
 
 	return nil
 }

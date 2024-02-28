@@ -15,7 +15,6 @@
 package storage
 
 import (
-	"context"
 	"core-building-block/core/model"
 	"core-building-block/utils"
 	"strings"
@@ -26,8 +25,6 @@ import (
 	"github.com/rokwire/logging-library-go/v2/logutils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 // Database Migration functions
@@ -508,148 +505,8 @@ func (sa *Adapter) migrateToTenantsAccounts() error {
 		return err
 	}
 
-	// time.Sleep(1 * time.Second) // sleep for 1 second
-
-	// err = sa.startPhase2()
-	// if err != nil {
-	// 	return err
-	// }
-
 	sa.logger.Debug("migrateToTenantsAccounts END")
 	return nil
-}
-
-func (sa *Adapter) startPhase2() error {
-	sa.logger.Debug("startPhase2 START")
-
-	//check if need to apply processing
-	notMigratedCount, err := sa.findNotMigratedCount(nil)
-	if err != nil {
-		return err
-	}
-	if *notMigratedCount == 0 {
-		sa.logger.Debug("there is no what to be migrated, so do nothing")
-		return nil
-	}
-
-	//WE MUST APPLY MIGRATION
-	sa.logger.Debugf("there are %d accounts to be migrated", *notMigratedCount)
-
-	//first load all aprs orgs as we need them
-	allAppsOrgs, err := sa.getCachedApplicationOrganizations()
-	if err != nil {
-		return err
-	}
-	//prepare the orgs and its aprs orgs items
-	orgsData := sa.appsOrgsToMap(allAppsOrgs)
-	for orgID, orgItems := range orgsData {
-		//process for every organization
-
-		err := sa.processPhase2ForOrg(orgID, orgItems)
-		if err != nil {
-			return err
-		}
-	}
-
-	sa.logger.Debug("startPhase2 END")
-	return nil
-}
-
-func (sa *Adapter) processPhase2ForOrg(orgID string, orgApps []string) error {
-	sa.logger.Debugf("...start processing org id %s with apps orgs ids - %s", orgID, orgApps)
-
-	i := 0
-	for {
-		ids, err := sa.loadAccountsIDsForMigration(nil, orgApps)
-		if err != nil {
-			return err
-		}
-		if len(ids) == 0 {
-			sa.logger.Debugf("no more records for %s - %s", orgID, orgApps)
-			break //no more records
-		}
-
-		sa.logger.Debugf("loaded %d accounts for %s - %s", len(ids), orgID, orgApps)
-
-		// process
-		err = sa.processPhase2ForOrgPiece(ids, orgID, orgApps)
-		if err != nil {
-			return err
-		}
-
-		sa.logger.Debugf("iteration:%d", i)
-
-		// 1 second sleep
-		time.Sleep(time.Second)
-
-		i++
-	}
-
-	sa.logger.Debugf("...end processing org id %s", orgID)
-	return nil
-}
-
-func (sa *Adapter) loadAccountsIDsForMigration(context TransactionContext, orgApps []string) ([]string, error) {
-	filter := bson.M{
-		"migrated":   bson.M{"$in": []interface{}{nil, false}},
-		"app_org_id": bson.M{"$in": orgApps}, //we process only org accounts
-	}
-
-	findOptions := options.Find()
-	findOptions.SetLimit(int64(5000))
-
-	var accountsResult []account
-	err := sa.db.accounts.FindWithContext(context, filter, &accountsResult, findOptions)
-	if err != nil {
-		return nil, err
-	}
-	if len(accountsResult) == 0 {
-		return []string{}, nil //empty
-	}
-
-	res := make([]string, len(accountsResult))
-	for i, c := range accountsResult {
-		res[i] = c.ID
-	}
-	return res, nil
-}
-
-func (sa *Adapter) processPhase2ForOrgPiece(idsList []string, orgID string, orgApps []string) error {
-	//all in transaction!
-	transaction := func(contextTr TransactionContext) error {
-		//1. first mark the accounts as migrated
-		err := sa.markAccountsAsProcessed(contextTr, idsList)
-		if err != nil {
-			return err
-		}
-
-		//2. $out/merge cannot be used in a transaction
-		ctx := context.Background()
-		err = sa.moveToTenantsAccounts(ctx, idsList, orgID, orgApps)
-		if err != nil {
-			return err //rollback if the move fails
-		}
-
-		//once we know that the huge data operation is sucessfull then we can commit the transaction from step 1
-		return nil
-	}
-
-	err := sa.PerformTransaction(transaction)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (sa *Adapter) appsOrgsToMap(allAppsOrgs []model.ApplicationOrganization) map[string][]string {
-	orgMap := make(map[string][]string)
-
-	for _, appOrg := range allAppsOrgs {
-		orgMap[appOrg.Organization.ID] = append(orgMap[appOrg.Organization.ID], appOrg.ID)
-	}
-
-	return orgMap
 }
 
 func (sa *Adapter) startPhase1() error {
@@ -689,81 +546,6 @@ func (sa *Adapter) startPhase1() error {
 	return nil
 }
 
-func (sa *Adapter) moveToTenantsAccounts(context context.Context, idsList []string, orgID string, appsOrgsIDs []string) error {
-	matchStage := bson.D{
-		{Key: "$match", Value: bson.D{
-			{Key: "_id", Value: bson.M{"$in": idsList}},
-			{Key: "$or", Value: bson.A{
-				bson.D{{Key: "migrated", Value: bson.M{"$type": 10}}}, //10 is the number for null
-				bson.D{{Key: "migrated", Value: false}},
-				bson.D{{Key: "migrated", Value: bson.D{{Key: "$exists", Value: false}}}},
-			}},
-			{Key: "app_org_id", Value: bson.M{"$in": appsOrgsIDs}},
-		}},
-	}
-
-	addFieldsStage := bson.D{
-		{Key: "$addFields", Value: bson.D{
-			{Key: "_id", Value: "$_id"},
-			{Key: "org_id", Value: orgID},
-			{Key: "org_apps_memberships", Value: bson.A{
-				bson.D{
-					{Key: "id", Value: bson.D{{Key: "$concat", Value: bson.A{"$app_org_id", "_", "$_id"}}}},
-					{Key: "app_org_id", Value: "$app_org_id"},
-					{Key: "permissions", Value: "$permissions"},
-					{Key: "roles", Value: "$roles"},
-					{Key: "groups", Value: "$groups"},
-					{Key: "secrets", Value: "$secrets"},
-					{Key: "preferences", Value: "$preferences"},
-					{Key: "most_recent_client_version", Value: "$most_recent_client_version"},
-				},
-			}},
-			{Key: "scopes", Value: "$scopes"},
-			{Key: "auth_types", Value: "$auth_types"},
-			{Key: "identifiers", Value: "$identifiers"},
-			{Key: "mfa_types", Value: "$mfa_types"},
-			{Key: "system_configs", Value: "$system_configs"},
-			{Key: "profile", Value: "$profile"},
-			{Key: "devices", Value: "$devices"},
-			{Key: "anonymous", Value: "$anonymous"},
-			{Key: "privacy", Value: "$privacy"},
-			{Key: "verified", Value: "$verified"},
-			{Key: "date_created", Value: "$date_created"},
-			{Key: "date_updated", Value: "$date_updated"},
-			{Key: "is_following", Value: "$is_following"},
-			{Key: "last_login_date", Value: "$last_login_date"},
-			{Key: "last_access_token_date", Value: "$last_access_token_date"},
-		}},
-	}
-
-	projectStage := bson.D{
-		{Key: "$project", Value: bson.D{
-			{Key: "app_org_id", Value: 0},
-			{Key: "permissions", Value: 0},
-			{Key: "roles", Value: 0},
-			{Key: "groups", Value: 0},
-			{Key: "secrets", Value: 0},
-			{Key: "preferences", Value: 0},
-			{Key: "most_recent_client_version", Value: 0},
-		}},
-	}
-
-	/*outStage := bson.D{
-		{Key: "$out", Value: "tenants_accounts"},
-	} */
-
-	mergeStage := bson.D{
-		{Key: "$merge", Value: bson.M{"into": "orgs_accounts", "whenMatched": "keepExisting", "whenNotMatched": "insert"}},
-	}
-
-	err := sa.db.accounts.Aggregate(context, mongo.Pipeline{matchStage, addFieldsStage, projectStage, mergeStage}, nil)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (sa *Adapter) findNotMigratedCount(context TransactionContext) (*int64, error) {
 	filter := bson.M{"migrated": bson.M{"$in": []interface{}{nil, false}}}
 	count, err := sa.db.accounts.CountDocumentsWithContext(context, filter)
@@ -786,7 +568,7 @@ func (sa *Adapter) processDuplicateAccounts(context TransactionContext) error {
 	}
 
 	//construct tenants accounts
-	tenantsAccounts, err := sa.constructTenantsAccounts(context, items)
+	tenantsAccounts, err := sa.constructTenantsAccounts(items)
 	if err != nil {
 		return err
 	}
@@ -857,7 +639,7 @@ func (sa *Adapter) insertTenantAccounts(context TransactionContext, items []tena
 	return nil
 }
 
-func (sa *Adapter) constructTenantsAccounts(context TransactionContext, duplicateAccounts map[string][]account) ([]tenantAccount, error) {
+func (sa *Adapter) constructTenantsAccounts(duplicateAccounts map[string][]account) ([]tenantAccount, error) {
 	//we need to load the apps orgs object from the database as we will need them
 	allAppsOrgs, err := sa.getCachedApplicationOrganizations()
 	if err != nil {
@@ -1065,13 +847,13 @@ func (sa *Adapter) findDuplicateAccounts(context TransactionContext) (map[string
 				},
 			},
 		},
-		{
-			"$match": bson.M{
-				"count": bson.M{
-					"$gt": 1,
-				},
-			},
-		},
+		// {
+		// 	"$match": bson.M{
+		// 		"count": bson.M{
+		// 			"$gt": 1,
+		// 		},
+		// 	},
+		// },
 		{
 			"$group": bson.M{
 				"_id": nil,

@@ -19,7 +19,7 @@ post:
             value:
               profile.first_name: Example
               preferences.privacy_level: 4
-              external_ids.uin: "123456789"
+              identifiers.identifier: "123456789"
           multiple_value:
             summary: Some single-value, some multi-value search parameters
             value:
@@ -28,7 +28,7 @@ post:
                 - 3
                 - 4
                 - 5
-              external_ids.uin: "123456789"
+              identifiers.identifier: "123456789"
     required: true
   responses:
     200:
