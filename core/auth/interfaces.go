@@ -238,7 +238,7 @@ type APIs interface {
 		roleIDs []string, groupIDs []string, scopes []string, creatorPermissions []string, clientVersion *string, l *logs.Log) (*model.Account, map[string]interface{}, error)
 
 	//CreateAdminAccounts creates an accounts for a new admin user
-	CreateAdminAccounts(partialAccount []model.PartialAccount, creatorPermissions []string, clientVersion *string, l *logs.Log) error
+	CreateAdminAccounts(partialAccount []model.PartialAccount, creatorPermissions []string, clientVersion *string, l *logs.Log) ([]model.Account, map[string]interface{}, error)
 	//UpdateAdminAccount updates an existing user's account with new permissions, roles, and groups
 	UpdateAdminAccount(authenticationType string, appID string, orgID string, identifier string, permissions []string, roleIDs []string,
 		groupIDs []string, scopes []string, updaterPermissions []string, l *logs.Log) (*model.Account, map[string]interface{}, error)
