@@ -659,6 +659,12 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appID string, orgID
 	return newAccount, params, nil
 }
 
+// CreateAdminAccounts creates accounts for a new admin user
+func (a *Auth) CreateAdminAccounts(partialAccount []model.PartialAccount, creatorPermissions []string, clientVersion *string, l *logs.Log) error {
+
+	return nil
+}
+
 // UpdateAdminAccount updates an existing user's account with new permissions, roles, and groups
 func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID string, identifier string, permissions []string, roleIDs []string,
 	groupIDs []string, scopes []string, updaterPermissions []string, l *logs.Log) (*model.Account, map[string]interface{}, error) {
