@@ -220,7 +220,7 @@ func (a *oidcAuthImpl) getLoginURL(authType model.AuthType, appType model.Applic
 	return authURL + "?" + query.Encode(), responseParams, nil
 }
 
-func (a *oidcAuthImpl) checkToken(idToken string, authType model.AuthType, appType model.ApplicationType, oidcConfig *oidcAuthConfig, l *logs.Log) (string, error) {
+func (a *oidcAuthImpl) checkToken(idToken string, authType model.AuthType, appType model.ApplicationType, oidcConfig *oidcAuthConfig) (string, error) {
 	var err error
 	if oidcConfig == nil {
 		oidcConfig, err = a.getOidcAuthConfig(authType, appType.ID)
@@ -312,7 +312,7 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 	sub := ""
 	if token.IDToken != "" {
 		// we should not check the ID token if it is not provided
-		sub, err = a.checkToken(token.IDToken, authType, appType, oidcConfig, l)
+		sub, err = a.checkToken(token.IDToken, authType, appType, oidcConfig)
 		if err != nil {
 			return nil, nil, "", errors.WrapErrorAction(logutils.ActionValidate, typeOidcToken, nil, err)
 		}

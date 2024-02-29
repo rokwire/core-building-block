@@ -696,7 +696,7 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appID string, orgID
 		}
 
 		//2. determine operation - operationOrgSignUp or operationAppSignUp
-		operation, err := a.determineOperation(account, appOrg.ID, l)
+		operation, err := a.determineOperation(account, appOrg.ID)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 		}
@@ -706,7 +706,7 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appID string, orgID
 		case operationAppSignUp:
 			// account exists in the organization but not for the application
 
-			updatedAccount, err := a.appSignUp(context, *account, *appOrg, permissions, roleIDs, groupIDs, clientVersion, creatorPermissions, l)
+			updatedAccount, err := a.appSignUp(context, *account, *appOrg, permissions, roleIDs, groupIDs, clientVersion, creatorPermissions)
 			if err != nil {
 				return errors.WrapErrorAction("app sign up", "", nil, err)
 			}
@@ -977,7 +977,7 @@ func (a *Auth) CreateAnonymousAccount(context storage.TransactionContext, appID 
 			}
 		}
 
-		newAccount, err = a.applyCreateAnonymousAccount(context, *appOrg, anonymousID, preferences, systemConfigs, l)
+		newAccount, err = a.applyCreateAnonymousAccount(context, *appOrg, anonymousID, preferences, systemConfigs)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionCreate, "anonymous account", &logutils.FieldArgs{"account_id": anonymousID}, err)
 		}
