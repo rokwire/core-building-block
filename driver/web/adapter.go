@@ -409,8 +409,6 @@ func (we Adapter) wrapFunc(handler handlerFunc, authorization tokenauth.Handler)
 	return func(w http.ResponseWriter, req *http.Request) {
 		logObj := we.logger.NewRequestLog(req)
 
-		logObj.RequestReceived()
-
 		var err error
 
 		//1. validate request
@@ -429,14 +427,21 @@ func (we Adapter) wrapFunc(handler handlerFunc, authorization tokenauth.Handler)
 		if authorization != nil {
 			responseStatus, claims, err := authorization.Check(req)
 			if err != nil {
+				logObj.SetContext("claims_verified", false)
+			}
+			if claims != nil {
+				logObj.SetContext("account_id", claims.Subject)
+			}
+			logObj.RequestReceived()
+			if err != nil {
 				response = logObj.HTTPResponseErrorAction(logutils.ActionValidate, logutils.TypeRequest, nil, err, responseStatus, true)
 				we.completeResponse(w, response, logObj)
 				return
 			}
 
-			logObj.SetContext("account_id", claims.Subject)
 			response = handler(logObj, req, claims)
 		} else {
+			logObj.RequestReceived()
 			response = handler(logObj, req, nil)
 		}
 
@@ -580,13 +585,13 @@ func NewWebAdapter(env string, serviceRegManager *authservice.ServiceRegManager,
 		logger.Fatalf("error on openapi3 validate - %s", err.Error())
 	}
 
-	//Ignore servers. Validating reqeusts against the documented servers can cause issues when routing traffic through proxies/load-balancers.
+	//Ignore servers. Validating requests against the documented servers can cause issues when routing traffic through proxies/load-balancers.
 	doc.Servers = nil
 
 	//To correctly route traffic to base path, we must add to all paths since servers are ignored
-	paths := make(openapi3.Paths, len(doc.Paths))
-	for path, obj := range doc.Paths {
-		paths["/core"+path] = obj
+	paths := openapi3.NewPaths()
+	for path, obj := range doc.Paths.Map() {
+		paths.Set("/core"+path, obj)
 	}
 	doc.Paths = paths
 

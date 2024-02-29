@@ -32,7 +32,6 @@ import (
 	"gopkg.in/go-playground/validator.v9"
 
 	"github.com/coreos/go-oidc"
-	"github.com/google/uuid"
 	"github.com/rokwire/core-auth-library-go/v3/authutils"
 	"github.com/rokwire/logging-library-go/v2/errors"
 	"github.com/rokwire/logging-library-go/v2/logs"
@@ -428,13 +427,11 @@ func (a *oidcAuthImpl) loadOidcTokenWithParams(params map[string]string, oidcCon
 		data.Set(k, v)
 	}
 
-	requestID := uuid.New().String()
 	headers := map[string]string{
 		"Content-Type":   "application/x-www-form-urlencoded",
 		"Content-Length": strconv.Itoa(len(data.Encode())),
-		"X-Request-ID":   requestID,
+		"X-Request-ID":   l.TraceID(),
 	}
-	l.AddContext("auth_request_id", requestID)
 
 	req, err := http.NewRequest(http.MethodPost, tokenURI, strings.NewReader(data.Encode()))
 	if err != nil {
@@ -454,7 +451,7 @@ func (a *oidcAuthImpl) loadOidcTokenWithParams(params map[string]string, oidcCon
 		return nil, errors.WrapErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err)
 	}
 	if resp.StatusCode != 200 {
-		return nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeResponse, &logutils.FieldArgs{"status_code": resp.StatusCode, "error": string(body), "auth_request_id": requestID})
+		return nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeResponse, &logutils.FieldArgs{"status_code": resp.StatusCode, "error": string(body)})
 	}
 
 	var authToken oidcToken
