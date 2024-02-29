@@ -438,7 +438,7 @@ func (app *application) admGetApplications(orgID string) ([]model.Application, e
 	return apps, nil
 }
 
-func (app *application) admCreateAppOrgGroup(name string, description string, system bool, permissionNames []string, rolesIDs []string, accountIDs []string, appID string, orgID string, assignerPermissions []string, systemClaim bool, l *logs.Log) (*model.AppOrgGroup, error) {
+func (app *application) admCreateAppOrgGroup(name string, description string, system bool, permissionNames []string, rolesIDs []string, accountIDs []string, appID string, orgID string, assignerPermissions []string, systemClaim bool) (*model.AppOrgGroup, error) {
 	if len(assignerPermissions) == 0 {
 		return nil, errors.ErrorData(logutils.StatusMissing, "assigner permissions", nil)
 	}
@@ -505,7 +505,7 @@ func (app *application) admCreateAppOrgGroup(name string, description string, sy
 	return newGroup, nil
 }
 
-func (app *application) admUpdateAppOrgGroup(ID string, name string, description string, system bool, permissionNames []string, rolesIDs []string, accountIDs []string, appID string, orgID string, assignerPermissions []string, systemClaim bool, l *logs.Log) (*model.AppOrgGroup, error) {
+func (app *application) admUpdateAppOrgGroup(ID string, name string, description string, system bool, permissionNames []string, rolesIDs []string, accountIDs []string, appID string, orgID string, assignerPermissions []string, systemClaim bool) (*model.AppOrgGroup, error) {
 	var updatedGroup *model.AppOrgGroup
 	transaction := func(context storage.TransactionContext) error {
 		//1. get application organization entity
@@ -682,7 +682,7 @@ func (app *application) admGetAppOrgGroups(appID string, orgID string) ([]model.
 	return getAppOrgGroups, nil
 }
 
-func (app *application) admDeleteAppOrgGroup(ID string, appID string, orgID string, assignerPermissions []string, system bool, l *logs.Log) error {
+func (app *application) admDeleteAppOrgGroup(ID string, appID string, orgID string, assignerPermissions []string, system bool) error {
 	//1. get application organization entity
 	appOrg, err := app.getApplicationOrganization(appID, orgID)
 	if err != nil {
@@ -728,7 +728,7 @@ func (app *application) admDeleteAppOrgGroup(ID string, appID string, orgID stri
 	return nil
 }
 
-func (app *application) admAddAccountsToGroup(appID string, orgID string, groupID string, accountIDs []string, assignerPermissions []string, l *logs.Log) error {
+func (app *application) admAddAccountsToGroup(appID string, orgID string, groupID string, accountIDs []string, assignerPermissions []string) error {
 	//validate
 	if len(assignerPermissions) == 0 {
 		return errors.ErrorData(logutils.StatusMissing, "assigner permissions", nil)
@@ -788,7 +788,7 @@ func (app *application) admAddAccountsToGroup(appID string, orgID string, groupI
 	return app.storage.PerformTransaction(transaction)
 }
 
-func (app *application) admRemoveAccountsFromGroup(appID string, orgID string, groupID string, accountIDs []string, assignerPermissions []string, l *logs.Log) error {
+func (app *application) admRemoveAccountsFromGroup(appID string, orgID string, groupID string, accountIDs []string, assignerPermissions []string) error {
 	//validate
 	if len(assignerPermissions) == 0 {
 		return errors.ErrorData(logutils.StatusMissing, "assigner permissions", nil)
@@ -844,7 +844,7 @@ func (app *application) admRemoveAccountsFromGroup(appID string, orgID string, g
 	return app.storage.PerformTransaction(transaction)
 }
 
-func (app *application) admCreateAppOrgRole(name string, description string, system bool, permissionNames []string, scopes []string, appID string, orgID string, assignerPermissions []string, systemClaim bool, l *logs.Log) (*model.AppOrgRole, error) {
+func (app *application) admCreateAppOrgRole(name string, description string, system bool, permissionNames []string, scopes []string, appID string, orgID string, assignerPermissions []string, systemClaim bool) (*model.AppOrgRole, error) {
 	var newRole *model.AppOrgRole
 	transaction := func(context storage.TransactionContext) error {
 		//1. get application organization entity
@@ -912,7 +912,7 @@ func (app *application) admGetAppOrgRoles(appID string, orgID string) ([]model.A
 	return getAppOrgRoles, nil
 }
 
-func (app *application) admUpdateAppOrgRole(ID string, name string, description string, system bool, permissionNames []string, scopes []string, appID string, orgID string, assignerPermissions []string, systemClaim bool, l *logs.Log) (*model.AppOrgRole, error) {
+func (app *application) admUpdateAppOrgRole(ID string, name string, description string, system bool, permissionNames []string, scopes []string, appID string, orgID string, assignerPermissions []string, systemClaim bool) (*model.AppOrgRole, error) {
 	var updatedRole *model.AppOrgRole
 	transaction := func(context storage.TransactionContext) error {
 		//1. find application organization
@@ -1004,7 +1004,7 @@ func (app *application) admUpdateAppOrgRole(ID string, name string, description 
 	return updatedRole, nil
 }
 
-func (app *application) admDeleteAppOrgRole(ID string, appID string, orgID string, assignerPermissions []string, system bool, l *logs.Log) error {
+func (app *application) admDeleteAppOrgRole(ID string, appID string, orgID string, assignerPermissions []string, system bool) error {
 	//1. get application organization entity
 	appOrg, err := app.getApplicationOrganization(appID, orgID)
 	if err != nil {
@@ -1051,7 +1051,7 @@ func (app *application) admDeleteAppOrgRole(ID string, appID string, orgID strin
 	return nil
 }
 
-func (app *application) admGetApplicationPermissions(appID string, orgID string, l *logs.Log) ([]model.Permission, error) {
+func (app *application) admGetApplicationPermissions(appID string, orgID string) ([]model.Permission, error) {
 	//1. find application organization
 	appOrg, err := app.getApplicationOrganization(appID, orgID)
 	if err != nil {
@@ -1345,7 +1345,7 @@ func (app *application) admRevokeAccountRoles(appID string, orgID string, accoun
 	return app.storage.PerformTransaction(transaction)
 }
 
-func (app *application) admGrantPermissionsToRole(appID string, orgID string, roleID string, permissionNames []string, assignerPermissions []string, system bool, l *logs.Log) error {
+func (app *application) admGrantPermissionsToRole(appID string, orgID string, roleID string, permissionNames []string, assignerPermissions []string, system bool) error {
 	//check if there is data
 	if len(assignerPermissions) == 0 {
 		return errors.ErrorData(logutils.StatusMissing, "assigner permissions", nil)

@@ -820,7 +820,7 @@ func (h ServicesApisHandler) updateAccountSecrets(l *logs.Log, r *http.Request, 
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, "account secrets update request", nil, err, http.StatusBadRequest, true)
 	}
 
-	err = h.coreAPIs.Services.SerUpdateAccountSecrets(claims.Subject, secrets)
+	err = h.coreAPIs.Services.SerUpdateAccountSecrets(claims.Subject, claims.AppID, claims.OrgID, secrets)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUpdate, model.TypeAccountSecrets, nil, err, http.StatusInternalServerError, true)
 	}

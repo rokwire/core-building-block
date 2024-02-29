@@ -576,6 +576,9 @@ func (sa *Adapter) FindSessionsLazy(appID string, orgID string) ([]model.LoginSe
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": session.AppID, "org_id": session.OrgID}, err)
 		}
+		if appOrg == nil {
+			return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": session.AppID, "org_id": session.OrgID})
+		}
 
 		sessions[i] = loginSessionFromStorage(session, *authType, nil, *appOrg)
 	}
@@ -687,7 +690,7 @@ func (sa *Adapter) FindAccounts(context TransactionContext, limit *int, offset *
 		return nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeApplicationOrganization, nil, err)
 	}
 	if appOrg == nil {
-		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, nil)
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": appID, "org_id": orgID})
 	}
 
 	//find the accounts
@@ -981,6 +984,9 @@ func (sa *Adapter) FindAccountsByAccountID(context TransactionContext, appID str
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeApplicationOrganization, nil, err)
 	}
+	if appOrg == nil {
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": appID, "org_id": orgID})
+	}
 
 	accountFilter := bson.D{
 		primitive.E{Key: "_id", Value: bson.M{"$in": accountIDs}},
@@ -1038,10 +1044,10 @@ func (sa *Adapter) FindAccountByID(context TransactionContext, cOrgID *string, c
 	if cOrgID != nil && cAppID != nil {
 		currentAppOrg, err := sa.getCachedApplicationOrganization(*cAppID, *cOrgID)
 		if err != nil {
-			return nil, err
+			return nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": *cAppID, "org_id": *cOrgID}, err)
 		}
 		if currentAppOrg == nil {
-			return nil, errors.Newf("cannot find app org object for %s %s", cOrgID, cAppID)
+			return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": *cAppID, "org_id": *cOrgID})
 		}
 		currentAppOrgID = &currentAppOrg.ID
 	}
@@ -1084,7 +1090,7 @@ func (sa *Adapter) findAccount(context TransactionContext, key string, id string
 		return nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeApplicationOrganization, nil, err)
 	}
 	if len(appsOrgs) != len(account.OrgAppsMemberships) {
-		return nil, errors.WrapErrorAction(logutils.ActionCount, "does not match memberships apps orgs ids count", nil, err)
+		return nil, errors.ErrorData(logutils.StatusInvalid, "apps orgs memberships count", &logutils.FieldArgs{"app_orgs": len(appsOrgs), "memberships": len(account.OrgAppsMemberships)})
 	}
 
 	modelAccount := accountFromStorage(*account, currentAppOrgID, appsOrgs, sa)
@@ -1106,7 +1112,6 @@ func (sa *Adapter) findStorageAccount(context TransactionContext, key string, id
 		return nil, errors.ErrorData(logutils.StatusInvalid, "account count", &logutils.FieldArgs{"count": len(accounts)})
 	}
 	account := accounts[0]
-	// sa.logger.Infof("account found for %v: %s", filter, account.ID)
 
 	return &account, nil
 }
@@ -1374,10 +1379,10 @@ func (sa *Adapter) UpdateAccountPreferences(context TransactionContext, cOrgID s
 	//get the app org id from the cache
 	appOrg, err := sa.getCachedApplicationOrganization(cAppID, cOrgID)
 	if err != nil {
-		return err
+		return errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": cOrgID, "org_id": cOrgID}, err)
 	}
 	if appOrg == nil {
-		return errors.Newf("no app org found - update preferences")
+		return errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": cOrgID, "org_id": cOrgID})
 	}
 
 	filter := bson.M{
@@ -1408,16 +1413,31 @@ func (sa *Adapter) UpdateAccountPreferences(context TransactionContext, cOrgID s
 }
 
 // UpdateAccountSecrets updates account secrets
-func (sa *Adapter) UpdateAccountSecrets(context TransactionContext, accountID string, secrets map[string]interface{}) error {
-	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
-	update := bson.D{
-		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "secrets", Value: secrets},
-			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
-		}},
+func (sa *Adapter) UpdateAccountSecrets(context TransactionContext, cOrgID string, cAppID string, accountID string, secrets map[string]interface{}) error {
+	appOrg, err := sa.getCachedApplicationOrganization(cAppID, cOrgID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": cOrgID, "org_id": cOrgID}, err)
+	}
+	if appOrg == nil {
+		return errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"app_id": cOrgID, "org_id": cOrgID})
 	}
 
-	res, err := sa.db.accounts.UpdateOne(filter, update, nil)
+	filter := bson.M{
+		"_id": accountID,
+		"org_apps_memberships": bson.M{
+			"$elemMatch": bson.M{
+				"app_org_id": appOrg.ID,
+			},
+		},
+	}
+	update := bson.M{
+		"$set": bson.M{
+			"org_apps_memberships.$.secrets": secrets,
+			"date_updated":                   time.Now().UTC(),
+		},
+	}
+
+	res, err := sa.db.tenantsAccounts.UpdateOneWithContext(context, filter, update, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountSecrets, nil, err)
 	}
@@ -1941,7 +1961,7 @@ func (sa *Adapter) UpdateAccountIdentifier(context TransactionContext, item mode
 		}},
 	}
 
-	res, err := sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
+	res, err := sa.db.tenantsAccounts.UpdateOneWithContext(context, filter, update, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountIdentifier, nil, err)
 	}
@@ -1968,7 +1988,7 @@ func (sa *Adapter) UpdateAccountIdentifiers(context TransactionContext, accountI
 		}},
 	}
 
-	res, err := sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
+	res, err := sa.db.tenantsAccounts.UpdateOneWithContext(context, filter, update, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountIdentifier, nil, err)
 	}
@@ -1991,7 +2011,7 @@ func (sa *Adapter) DeleteAccountIdentifier(context TransactionContext, item mode
 		}},
 	}
 
-	res, err := sa.db.accounts.UpdateOneWithContext(context, filter, update, nil)
+	res, err := sa.db.tenantsAccounts.UpdateOneWithContext(context, filter, update, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccountIdentifier, nil, err)
 	}
@@ -2014,7 +2034,7 @@ func (sa *Adapter) DeleteExternalAccountIdentifiers(context TransactionContext, 
 		}},
 	}
 
-	res, err := sa.db.accounts.UpdateOne(filter, update, nil)
+	res, err := sa.db.tenantsAccounts.UpdateOne(filter, update, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccountIdentifier, nil, err)
 	}

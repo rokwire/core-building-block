@@ -1858,17 +1858,17 @@ func (_m *Storage) UpdateAccountProfile(context storage.TransactionContext, acco
 	return r0
 }
 
-// UpdateAccountSecrets provides a mock function with given fields: context, accountID, secrets
-func (_m *Storage) UpdateAccountSecrets(context storage.TransactionContext, accountID string, secrets map[string]interface{}) error {
-	ret := _m.Called(context, accountID, secrets)
+// UpdateAccountSecrets provides a mock function with given fields: context, cOrgID, cAppID, accountID, secrets
+func (_m *Storage) UpdateAccountSecrets(context storage.TransactionContext, cOrgID string, cAppID string, accountID string, secrets map[string]interface{}) error {
+	ret := _m.Called(context, cOrgID, cAppID, accountID, secrets)
 
 	if len(ret) == 0 {
 		panic("no return value specified for UpdateAccountSecrets")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, map[string]interface{}) error); ok {
-		r0 = rf(context, accountID, secrets)
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, string, string, map[string]interface{}) error); ok {
+		r0 = rf(context, cOrgID, cAppID, accountID, secrets)
 	} else {
 		r0 = ret.Error(0)
 	}

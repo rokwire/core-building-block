@@ -65,7 +65,7 @@ func (h AdminApisHandler) login(l *logs.Log, r *http.Request, claims *tokenauth.
 
 	//get ip
 	ip := utils.GetIP(l, r)
-	if err != nil {
+	if ip == "" {
 		return l.HTTPResponseError("Error getting IP", err, http.StatusInternalServerError, true)
 	}
 

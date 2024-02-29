@@ -312,7 +312,7 @@ func (a *Auth) applyExternalAuthType(supportedAuthType model.SupportedAuthType, 
 		//We have prepared this operation as it is based on the tenants accounts but for now we disable it
 		//as we do not use it(yet) and better not to introduce additional complexity.
 		//Also this would trigger client updates as well for supporting this
-		return nil, nil, nil, errors.New("app-sign-up operation is not supported")
+		return nil, nil, nil, errors.ErrorData(logutils.StatusDisabled, "app sign up", nil)
 	case operationOrgSignUp:
 		if admin {
 			return nil, nil, nil, errors.ErrorData(logutils.StatusInvalid, "sign up", &logutils.FieldArgs{"code": code, "identifier": externalUser.Identifier,
@@ -322,14 +322,14 @@ func (a *Auth) applyExternalAuthType(supportedAuthType model.SupportedAuthType, 
 		//user does not exist, we need to register it
 		newAccount, err = a.applyOrgSignUpExternal(nil, supportedAuthType, appOrg, *externalUser, externalCreds, regProfile, privacy, regPreferences, clientVersion, l)
 		if err != nil {
-			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionApply, "external sign up", nil, err)
+			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionApply, "org external sign up", nil, err)
 		}
 
 		//TODO: make sure we do not return any refresh tokens in extParams
 		return extParams, newAccount, mfaTypes, nil
 	}
 
-	return nil, nil, nil, errors.Newf("not supported operation - internal auth type")
+	return nil, nil, nil, errors.ErrorData(logutils.StatusInvalid, typeExternalAuthType+" operation", nil)
 }
 
 func (a *Auth) applySignInExternal(account *model.Account, supportedAuthType model.SupportedAuthType, appOrg model.ApplicationOrganization,
@@ -688,7 +688,7 @@ func (a *Auth) applyAuthType(supportedAuthType model.SupportedAuthType, appOrg m
 	a.setLogContext(account, l)
 
 	//check if it is operationSignIn or operationOrgSignUp or operationAppSignUp
-	operation, err := a.determineOperationInternal(account, appOrg.ID, params)
+	operation, err := a.determineOperationWithClientParams(account, appOrg.ID, params)
 	if err != nil {
 		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionVerify, "determine operation internal", nil, err)
 	}
@@ -714,7 +714,7 @@ func (a *Auth) applyAuthType(supportedAuthType model.SupportedAuthType, appOrg m
 		//We have prepared this operation as it is based on the tenants accounts but for now we disable it
 		//as we do not use it(yet) and better not to introduce additional complexity.
 		//Also this would trigger client updates as well for supporting this
-		return nil, nil, nil, errors.New("app-sign-up operation is not supported")
+		return nil, nil, nil, errors.ErrorData(logutils.StatusDisabled, "app sign up", nil)
 	case operationOrgSignUp:
 		if admin {
 			return nil, nil, nil, errors.ErrorData(logutils.StatusInvalid, "sign up", &logutils.FieldArgs{"identifier": identifier,
@@ -728,7 +728,7 @@ func (a *Auth) applyAuthType(supportedAuthType model.SupportedAuthType, appOrg m
 		return retParams, account, nil, nil
 	}
 
-	return nil, nil, nil, errors.Newf("not supported operation - internal auth type")
+	return nil, nil, nil, errors.ErrorData(logutils.StatusInvalid, "internal auth type operation", nil)
 }
 
 func (a *Auth) applySignIn(identifierImpl identifierType, authImpl authType, supportedAuthType model.SupportedAuthType, appOrg model.ApplicationOrganization,
@@ -885,15 +885,10 @@ func (a *Auth) signUpNewAccount(context storage.TransactionContext, identifierIm
 	var accountIdentifier *model.AccountIdentifier
 	var credential *model.Credential
 
-	profile := regProfile
-	preferences := regPreferences
-
-	preparedProfile, preparedPreferences, err := a.prepareRegistrationData(supportedAuthType.AuthType, identifierImpl.getIdentifier(), profile, preferences, l)
+	profile, preferences, err := a.prepareRegistrationData(supportedAuthType.AuthType, identifierImpl.getIdentifier(), regProfile, regPreferences, l)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionPrepare, "user registration data", nil, err)
 	}
-	profile = *preparedProfile
-	preferences = preparedPreferences
 
 	//apply sign up
 	authImpl, err := a.getAuthTypeImpl(supportedAuthType)
@@ -929,7 +924,7 @@ func (a *Auth) signUpNewAccount(context storage.TransactionContext, identifierIm
 		accountAuthTypeParams = map[string]interface{}{"app_type_identifier": appType.Identifier}
 	}
 	account, err := a.registerUser(context, []model.AccountIdentifier{*accountIdentifier}, supportedAuthType.AuthType, retParams == nil, accountAuthTypeParams,
-		appOrg, credential, profile, privacy, preferences, permissions, roles, groups, scopes, creatorPermissions, clientVersion, l)
+		appOrg, credential, *profile, privacy, preferences, permissions, roles, groups, scopes, creatorPermissions, clientVersion, l)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAccount, nil, err)
 	}
@@ -961,11 +956,11 @@ func (a *Auth) canSignIn(account *model.Account, code string, identifier string,
 	return false
 }
 
-// determineOperationInternal determine the operation
+// determineOperationWithClientParams determine the operation
 //
 //	first check if the client has set sign_up field - first priority
 //	if sign_up field has not been sent then check if the user exists
-func (a *Auth) determineOperationInternal(account *model.Account, desiredAppOrgID string, clientParams string) (string, error) {
+func (a *Auth) determineOperationWithClientParams(account *model.Account, desiredAppOrgID string, clientParams string) (string, error) {
 	//check if sign_up field has been passed - first priority
 	useSignUpFieldCheck := strings.Contains(clientParams, "sign_up")
 
@@ -1650,10 +1645,6 @@ func (a *Auth) constructAccount(context storage.TransactionContext, accountIdent
 		Scopes:                  scopes, AuthTypes: authTypes, Identifiers: accountIdentifiers,
 		Profile: profile, Privacy: privacy, DateCreated: time.Now()}
 
-	// account.AuthTypes[0].Account = account
-	// for i := range account.Identifiers {
-	// 	account.Identifiers[i].Account = account
-	// }
 	return &account, nil
 }
 
@@ -2127,10 +2118,10 @@ func (a *Auth) deleteAccount(context storage.TransactionContext, account model.A
 		return a.deleteFullAccount(context, account)
 	}
 	//means remove specific apps only, so unattach only them
-	return a.deleteAccountFromApps(context, account, fromAppsIDs)
+	return a.deleteAppsFromAccount(context, account, fromAppsIDs)
 }
 
-func (a *Auth) deleteAccountFromApps(context storage.TransactionContext, account model.Account, fromAppsIDs []string) error {
+func (a *Auth) deleteAppsFromAccount(context storage.TransactionContext, account model.Account, fromAppsIDs []string) error {
 	// compare the applicationIDs and find the matching IDs for the org_app_memberships
 	var membershipsIDs []string
 	for _, a := range account.OrgAppsMemberships {

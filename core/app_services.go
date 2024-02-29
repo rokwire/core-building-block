@@ -127,13 +127,13 @@ func (app *application) serUpdateAccountPreferences(id string, appID string, org
 	return false, nil
 }
 
-func (app *application) serUpdateAccountSecrets(accountID string, secrets map[string]interface{}) error {
+func (app *application) serUpdateAccountSecrets(accountID string, appID string, orgID string, secrets map[string]interface{}) error {
 	encryptedSecrets, err := app.auth.EncryptSecrets(secrets)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionEncrypt, model.TypeAccountSecrets, nil, err)
 	}
 
-	err = app.storage.UpdateAccountSecrets(nil, accountID, encryptedSecrets)
+	err = app.storage.UpdateAccountSecrets(nil, orgID, appID, accountID, encryptedSecrets)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountSecrets, &logutils.FieldArgs{"id": accountID}, err)
 	}
@@ -183,11 +183,11 @@ func (app *application) serDeleteFollow(appID string, orgID string, followingID 
 	return nil
 }
 
-func (app *application) serGetAuthTest(l *logs.Log) string {
+func (app *application) serGetAuthTest() string {
 	return "Services - Auth - test"
 }
 
-func (app *application) serGetCommonTest(l *logs.Log) string {
+func (app *application) serGetCommonTest() string {
 	return "Services - Common - test"
 }
 

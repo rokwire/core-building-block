@@ -366,8 +366,8 @@ func (s *servicesImpl) SerUpdateAccountPrivacy(accountID string, privacy model.P
 	return s.app.serUpdateAccountPrivacy(accountID, privacy)
 }
 
-func (s *servicesImpl) SerUpdateAccountSecrets(accountID string, secrets map[string]interface{}) error {
-	return s.app.serUpdateAccountSecrets(accountID, secrets)
+func (s *servicesImpl) SerUpdateAccountSecrets(accountID string, appID string, orgID string, secrets map[string]interface{}) error {
+	return s.app.serUpdateAccountSecrets(accountID, appID, orgID, secrets)
 }
 
 func (s *servicesImpl) SerUpdateAccountUsername(accountID string, appID string, orgID string, username string) error {
@@ -393,11 +393,11 @@ func (s *servicesImpl) SerDeleteFollow(appID string, orgID string, FolloweeID st
 }
 
 func (s *servicesImpl) SerGetAuthTest(l *logs.Log) string {
-	return s.app.serGetAuthTest(l)
+	return s.app.serGetAuthTest()
 }
 
 func (s *servicesImpl) SerGetCommonTest(l *logs.Log) string {
-	return s.app.serGetCommonTest(l)
+	return s.app.serGetCommonTest()
 }
 
 func (s *servicesImpl) SerGetAppConfig(appTypeIdentifier string, orgID *string, versionNumbers model.VersionNumbers, apiKey *string) (*model.ApplicationConfig, error) {
@@ -469,11 +469,11 @@ func (s *administrationImpl) AdmGetApplications(orgID string) ([]model.Applicati
 }
 
 func (s *administrationImpl) AdmCreateAppOrgGroup(name string, description string, system bool, permissionNames []string, rolesIDs []string, accountIDs []string, appID string, orgID string, assignerPermissions []string, systemClaim bool, l *logs.Log) (*model.AppOrgGroup, error) {
-	return s.app.admCreateAppOrgGroup(name, description, system, permissionNames, rolesIDs, accountIDs, appID, orgID, assignerPermissions, systemClaim, l)
+	return s.app.admCreateAppOrgGroup(name, description, system, permissionNames, rolesIDs, accountIDs, appID, orgID, assignerPermissions, systemClaim)
 }
 
 func (s *administrationImpl) AdmUpdateAppOrgGroup(ID string, name string, description string, system bool, permissionNames []string, rolesIDs []string, accountIDs []string, appID string, orgID string, assignerPermissions []string, systemClaim bool, l *logs.Log) (*model.AppOrgGroup, error) {
-	return s.app.admUpdateAppOrgGroup(ID, name, description, system, permissionNames, rolesIDs, accountIDs, appID, orgID, assignerPermissions, systemClaim, l)
+	return s.app.admUpdateAppOrgGroup(ID, name, description, system, permissionNames, rolesIDs, accountIDs, appID, orgID, assignerPermissions, systemClaim)
 }
 
 func (s *administrationImpl) AdmGetAppOrgGroups(appID string, orgID string) ([]model.AppOrgGroup, error) {
@@ -481,19 +481,19 @@ func (s *administrationImpl) AdmGetAppOrgGroups(appID string, orgID string) ([]m
 }
 
 func (s *administrationImpl) AdmDeleteAppOrgGroup(ID string, appID string, orgID string, assignerPermissions []string, system bool, l *logs.Log) error {
-	return s.app.admDeleteAppOrgGroup(ID, appID, orgID, assignerPermissions, system, l)
+	return s.app.admDeleteAppOrgGroup(ID, appID, orgID, assignerPermissions, system)
 }
 
 func (s *administrationImpl) AdmAddAccountsToGroup(appID string, orgID string, groupID string, accountIDs []string, assignerPermissions []string, l *logs.Log) error {
-	return s.app.admAddAccountsToGroup(appID, orgID, groupID, accountIDs, assignerPermissions, l)
+	return s.app.admAddAccountsToGroup(appID, orgID, groupID, accountIDs, assignerPermissions)
 }
 
 func (s *administrationImpl) AdmRemoveAccountsFromGroup(appID string, orgID string, groupID string, accountIDs []string, assignerPermissions []string, l *logs.Log) error {
-	return s.app.admRemoveAccountsFromGroup(appID, orgID, groupID, accountIDs, assignerPermissions, l)
+	return s.app.admRemoveAccountsFromGroup(appID, orgID, groupID, accountIDs, assignerPermissions)
 }
 
 func (s *administrationImpl) AdmCreateAppOrgRole(name string, description string, system bool, permissionNames []string, scopes []string, appID string, orgID string, assignerPermissions []string, systemClaim bool, l *logs.Log) (*model.AppOrgRole, error) {
-	return s.app.admCreateAppOrgRole(name, description, system, permissionNames, scopes, appID, orgID, assignerPermissions, systemClaim, l)
+	return s.app.admCreateAppOrgRole(name, description, system, permissionNames, scopes, appID, orgID, assignerPermissions, systemClaim)
 }
 
 func (s *administrationImpl) AdmGetAppOrgRoles(appID string, orgID string) ([]model.AppOrgRole, error) {
@@ -501,19 +501,19 @@ func (s *administrationImpl) AdmGetAppOrgRoles(appID string, orgID string) ([]mo
 }
 
 func (s *administrationImpl) AdmDeleteAppOrgRole(ID string, appID string, orgID string, assignerPermissions []string, system bool, l *logs.Log) error {
-	return s.app.admDeleteAppOrgRole(ID, appID, orgID, assignerPermissions, system, l)
+	return s.app.admDeleteAppOrgRole(ID, appID, orgID, assignerPermissions, system)
 }
 
 func (s *administrationImpl) AdmUpdateAppOrgRole(ID string, name string, description string, system bool, permissionNames []string, scopes []string, appID string, orgID string, assignerPermissions []string, systemClaim bool, l *logs.Log) (*model.AppOrgRole, error) {
-	return s.app.admUpdateAppOrgRole(ID, name, description, system, permissionNames, scopes, appID, orgID, assignerPermissions, systemClaim, l)
+	return s.app.admUpdateAppOrgRole(ID, name, description, system, permissionNames, scopes, appID, orgID, assignerPermissions, systemClaim)
 }
 
 func (s *administrationImpl) AdmGrantPermissionsToRole(appID string, orgID string, roleID string, permissionNames []string, assignerPermissions []string, system bool, l *logs.Log) error {
-	return s.app.admGrantPermissionsToRole(appID, orgID, roleID, permissionNames, assignerPermissions, system, l)
+	return s.app.admGrantPermissionsToRole(appID, orgID, roleID, permissionNames, assignerPermissions, system)
 }
 
 func (s *administrationImpl) AdmGetApplicationPermissions(appID string, orgID string, l *logs.Log) ([]model.Permission, error) {
-	return s.app.admGetApplicationPermissions(appID, orgID, l)
+	return s.app.admGetApplicationPermissions(appID, orgID)
 }
 
 func (s *administrationImpl) AdmGetAccounts(limit int, offset int, appID string, orgID string, accountID *string, firstName *string, lastName *string, authType *string,
