@@ -12,7 +12,7 @@ require (
 	github.com/lestrrat-go/jwx v1.2.28
 	github.com/oapi-codegen/runtime v1.1.1
 	github.com/pquerna/otp v1.4.0
-	github.com/rokwire/core-auth-library-go/v3 v3.0.2-0.20240229164508-bda822e2a460
+	github.com/rokwire/core-auth-library-go/v3 v3.2.0
 	github.com/rokwire/logging-library-go/v2 v2.3.0
 	github.com/stretchr/testify v1.8.4
 	github.com/swaggo/http-swagger v1.3.4
