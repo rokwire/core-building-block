@@ -965,8 +965,57 @@ func (h AdminApisHandler) createAdminAccount(l *logs.Log, r *http.Request, claim
 }
 
 func (h AdminApisHandler) createApplicationAccounts(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
+	}
 
-	//TODO
+	clientVersion := r.Header.Get("CLIENT_VERSION")
+	creatorPermissions := strings.Split(claims.Permissions, ",")
+
+	var requestData []Def.SharedReqCreateAccount
+	err = json.Unmarshal(data, &requestData)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("create account request"), nil, err, http.StatusBadRequest, true)
+	}
+
+	var partialAccount []model.PartialAccount
+	//creating the object
+	for _, pa := range requestData {
+		var permissions []string
+		if pa.Permissions != nil {
+			permissions = *pa.Permissions
+		}
+		var roleIDs []string
+		if pa.RoleIds != nil {
+			roleIDs = *pa.RoleIds
+		}
+		var groupIDs []string
+		if pa.GroupIds != nil {
+			groupIDs = *pa.GroupIds
+		}
+		var scopes []string
+		if pa.Scopes != nil {
+			scopes = *pa.Scopes
+		}
+		profile := profileFromDefNullable(pa.Profile)
+		privacy := privacyFromDefNullable(pa.Privacy)
+
+		username := ""
+		if pa.Username != nil {
+			username = *pa.Username
+		}
+		p := model.PartialAccount{AuthType: string(pa.AuthType), GroupIds: &groupIDs, Identifier: pa.Identifier,
+			Permissions: &permissions, Privacy: &privacy, Profile: &profile, RoleIds: &roleIDs, Scopes: &scopes,
+			Username: &username, AppID: claims.AppID, OrgID: claims.OrgID}
+		partialAccount = append(partialAccount, p)
+	}
+
+	_, err = h.coreAPIs.Auth.CreateAdminAccounts()
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionCreate, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
+	}
+
 	return l.HTTPResponseSuccess()
 }
 
