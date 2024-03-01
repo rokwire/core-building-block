@@ -979,7 +979,7 @@ func (h AdminApisHandler) createApplicationAccounts(l *logs.Log, r *http.Request
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("create account request"), nil, err, http.StatusBadRequest, true)
 	}
 
-	var partialAccount []model.PartialAccount
+	var partialAccount []model.AccountData
 	//creating the object
 	for _, pa := range requestData {
 		var permissions []string
@@ -1005,7 +1005,7 @@ func (h AdminApisHandler) createApplicationAccounts(l *logs.Log, r *http.Request
 		if pa.Username != nil {
 			username = *pa.Username
 		}
-		p := model.PartialAccount{AuthType: string(pa.AuthType), GroupIds: &groupIDs, Identifier: pa.Identifier,
+		p := model.AccountData{AuthType: string(pa.AuthType), GroupIds: &groupIDs, Identifier: pa.Identifier,
 			Permissions: &permissions, Privacy: &privacy, Profile: &profile, RoleIds: &roleIDs, Scopes: &scopes,
 			Username: &username, AppID: claims.AppID, OrgID: claims.OrgID}
 		partialAccount = append(partialAccount, p)

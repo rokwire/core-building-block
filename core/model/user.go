@@ -720,8 +720,8 @@ type Follow struct {
 	DateCreated time.Time `json:"date_created" bson:"date_created"`
 }
 
-// PartialAccount shows PartialAccount information
-type PartialAccount struct {
+// AccountData shows AccountData information
+type AccountData struct {
 	AuthType    string    `json:"auth_type"`
 	GroupIds    *[]string `json:"group_ids,omitempty"`
 	Identifier  string    `json:"identifier"`

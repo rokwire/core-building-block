@@ -661,7 +661,7 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appID string, orgID
 
 //CreateAccounts create accounts in the system
 
-func (a *Auth) CreateAccounts(partialAccount []model.PartialAccount, creatorPermissions []string, clientVersion *string, l *logs.Log) ([]model.Account, map[string]interface{}, error) {
+func (a *Auth) CreateAccounts(partialAccount []model.AccountData, creatorPermissions []string, clientVersion *string, l *logs.Log) ([]model.Account, map[string]interface{}, error) {
 	for _, p := range partialAccount {
 		if p.AuthType != AuthTypeOidc && p.AuthType != AuthTypeEmail && !strings.HasSuffix(p.AuthType, "_oidc") {
 			return nil, nil, errors.ErrorData(logutils.StatusInvalid, "auth type", nil)
