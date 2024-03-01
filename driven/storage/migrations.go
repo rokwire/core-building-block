@@ -25,6 +25,7 @@ import (
 	"github.com/rokwire/logging-library-go/v2/logutils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 // Database Migration functions
@@ -58,7 +59,8 @@ func (sa *Adapter) migrateAuthTypes() error {
 		}
 
 		//2. remove old auth types if they exist
-		removedAuthTypeIDs := make(map[string]model.AuthType)
+		removedAuthTypeIDsMap := make(map[string]model.AuthType)
+		removedAuthTypeIDsList := make([]string, 0)
 		removedAuthTypeCodes := map[string]model.AuthType{
 			"email":        newAuthTypes["password"],
 			"username":     newAuthTypes["password"],
@@ -76,7 +78,8 @@ func (sa *Adapter) migrateAuthTypes() error {
 				continue
 			}
 
-			removedAuthTypeIDs[authTypes[0].ID] = new
+			removedAuthTypeIDsMap[authTypes[0].ID] = new
+			removedAuthTypeIDsList = append(removedAuthTypeIDsList, authTypes[0].ID)
 
 			// remove the unwanted auth type, which also updates the cache
 			_, err = sa.db.authTypes.DeleteOneWithContext(context, bson.M{"code": old}, nil)
@@ -85,14 +88,24 @@ func (sa *Adapter) migrateAuthTypes() error {
 			}
 		}
 
-		//3. migrate credentials
-		removedCredentials, err := sa.migrateCredentials(context, removedAuthTypeIDs)
-		if err != nil {
-			return errors.WrapErrorAction("migrating", model.TypeCredential, nil, err)
+		//3. migrate credentials in batches
+		removedCredentialIDs := make([]string, 0)
+		for {
+			removedPermanentlyIDsBatch, err := sa.migrateCredentials(context, removedAuthTypeIDsMap, removedAuthTypeIDsList)
+			if err != nil {
+				return errors.WrapErrorAction("migrating", model.TypeCredential, nil, err)
+			}
+			if removedPermanentlyIDsBatch == nil {
+				break
+			}
+
+			for _, id := range removedPermanentlyIDsBatch {
+				removedPermanentlyIDsBatch = append(removedPermanentlyIDsBatch, id)
+			}
 		}
 
 		//4. migrate app orgs
-		err = sa.migrateAppOrgs(context, removedAuthTypeIDs, removedCredentials)
+		err := sa.migrateAppOrgs(context, removedAuthTypeIDsMap, removedCredentialIDs)
 		if err != nil {
 			return errors.WrapErrorAction("migrating", model.TypeApplicationOrganization, nil, err)
 		}
@@ -109,13 +122,16 @@ func (sa *Adapter) migrateAuthTypes() error {
 	return sa.PerformTransaction(transaction)
 }
 
-func (sa *Adapter) migrateCredentials(context TransactionContext, removedAuthTypes map[string]model.AuthType) ([]string, error) {
-	var allCredentials []credential
-	err := sa.db.credentials.FindWithContext(context, bson.M{}, &allCredentials, nil)
+func (sa *Adapter) migrateCredentials(context TransactionContext, removedAuthTypesMap map[string]model.AuthType, removedAuthTypeIDs []string) ([]string, error) {
+	findOptions := options.Find()
+	findOptions.SetLimit(int64(5000))
+
+	var credentialsBatch []credential
+	err := sa.db.credentials.FindWithContext(context, bson.M{"auth_type_id": bson.M{"$in": removedAuthTypeIDs}}, &credentialsBatch, findOptions)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
 	}
-	if len(allCredentials) == 0 {
+	if len(credentialsBatch) == 0 {
 		return nil, nil
 	}
 
@@ -126,23 +142,21 @@ func (sa *Adapter) migrateCredentials(context TransactionContext, removedAuthTyp
 		ResetExpiry *time.Time `json:"reset_expiry,omitempty"`
 	}
 
-	type webauthnCreds struct {
-		Credential *string `json:"credential,omitempty"`
-		Session    *string `json:"session,omitempty"`
-	}
-
+	credentialsBatchIDs := make([]string, 0)
 	migratedCredentials := make([]interface{}, 0)
-	removedCredentials := make([]string, 0)
-	for _, cred := range allCredentials {
+	removePermanentlyIDs := make([]string, 0)
+	for _, cred := range credentialsBatch {
+		credentialsBatchIDs = append(credentialsBatchIDs, cred.ID)
+
 		var migrated credential
-		if newAuthType, exists := removedAuthTypes[cred.AuthTypeID]; exists && newAuthType.Code == "password" {
+		if newAuthType, exists := removedAuthTypesMap[cred.AuthTypeID]; exists && newAuthType.Code == "password" {
 			// found a password credential, migrate it
-			passwordValue, err := utils.JSONConvert[passwordCreds, map[string]interface{}](cred.Value)
+			passwordValue, err := utils.JSONConvert[passwordCreds](cred.Value)
 			if err != nil {
 				return nil, errors.WrapErrorAction(logutils.ActionParse, "password credential value map", &logutils.FieldArgs{"id": cred.ID}, err)
 			}
 			if passwordValue == nil || passwordValue.Password == "" {
-				removedCredentials = append(removedCredentials, cred.ID)
+				removePermanentlyIDs = append(removePermanentlyIDs, cred.ID)
 				continue
 			}
 			if passwordValue.ResetCode != nil && *passwordValue.ResetCode == "" {
@@ -152,61 +166,39 @@ func (sa *Adapter) migrateCredentials(context TransactionContext, removedAuthTyp
 				passwordValue.ResetExpiry = nil
 			}
 
-			passwordValueMap, err := utils.JSONConvert[map[string]interface{}, passwordCreds](*passwordValue)
+			passwordValueMap, err := utils.JSONConvert[map[string]interface{}](*passwordValue)
 			if err != nil {
 				return nil, errors.WrapErrorAction(logutils.ActionParse, "password credential value", &logutils.FieldArgs{"id": cred.ID}, err)
 			}
 			if passwordValueMap == nil {
-				removedCredentials = append(removedCredentials, cred.ID)
+				removePermanentlyIDs = append(removePermanentlyIDs, cred.ID)
 				continue
 			}
 
 			migrated = credential{ID: cred.ID, AuthTypeID: newAuthType.ID, AccountsAuthTypes: cred.AccountsAuthTypes, Value: *passwordValueMap,
-				DateCreated: cred.DateCreated, DateUpdated: cred.DateUpdated}
-		} else {
-			// found something other than a password credential, try to migrate it as a webauthn credential
-			webauthnValue, err := utils.JSONConvert[webauthnCreds, map[string]interface{}](cred.Value)
-			if err != nil {
-				return nil, errors.WrapErrorAction(logutils.ActionParse, "webauthn credential value map", &logutils.FieldArgs{"id": cred.ID}, err)
-			}
-
-			// credential value is not for webauthn or it is in a hanging state or is missing its credential
-			if webauthnValue == nil || webauthnValue.Session != nil || webauthnValue.Credential == nil {
-				removedCredentials = append(removedCredentials, cred.ID)
-				continue
-			}
-
-			webauthnValueMap, err := utils.JSONConvert[map[string]interface{}, webauthnCreds](*webauthnValue)
-			if err != nil {
-				return nil, errors.WrapErrorAction(logutils.ActionParse, "webauthn credential value", &logutils.FieldArgs{"id": cred.ID}, err)
-			}
-			if webauthnValueMap == nil {
-				removedCredentials = append(removedCredentials, cred.ID)
-				continue
-			}
-
-			migrated = credential{ID: cred.ID, AuthTypeID: cred.AuthTypeID, AccountsAuthTypes: cred.AccountsAuthTypes, Value: *webauthnValueMap,
 				DateCreated: cred.DateCreated, DateUpdated: cred.DateUpdated}
 		}
 
 		if migrated.ID != "" {
 			migratedCredentials = append(migratedCredentials, migrated)
 		} else {
-			removedCredentials = append(removedCredentials, cred.ID)
+			removePermanentlyIDs = append(removePermanentlyIDs, cred.ID)
 		}
 	}
 
-	_, err = sa.db.credentials.DeleteManyWithContext(context, bson.M{}, nil)
+	// delete all the credentials that have been processed
+	_, err = sa.db.credentials.DeleteManyWithContext(context, bson.M{"_id": bson.M{"$in": credentialsBatchIDs}}, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionDelete, model.TypeCredential, nil, err)
 	}
 
+	// re-insert the credentials we want to keep
 	_, err = sa.db.credentials.InsertManyWithContext(context, migratedCredentials, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeCredential, nil, err)
 	}
 
-	return removedCredentials, nil
+	return removePermanentlyIDs, nil
 }
 
 func (sa *Adapter) migrateAppOrgs(context TransactionContext, removedAuthTypes map[string]model.AuthType, removedCredentials []string) error {
@@ -500,6 +492,7 @@ func (sa *Adapter) migrateLoginSessions(context TransactionContext, removedAuthT
 func (sa *Adapter) migrateToTenantsAccounts() error {
 	sa.logger.Debug("migrateToTenantsAccounts START")
 
+	// only need phase 1 when there is only 1 account for a user in each org
 	err := sa.startPhase1()
 	if err != nil {
 		return err
