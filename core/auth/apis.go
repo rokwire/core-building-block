@@ -662,9 +662,9 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appID string, orgID
 //CreateAccounts create accounts in the system
 
 func (a *Auth) CreateAccounts(partialAccount []model.AccountData, creatorPermissions []string, clientVersion *string, l *logs.Log) ([]model.Account, map[string]interface{}, error) {
-	for _, p := range partialAccount {
+	transaction := func(context storage.TransactionContext) error {
+		for _, p := range partialAccount {
 
-		transaction := func(context storage.TransactionContext) error {
 			if p.AuthType != AuthTypeOidc && p.AuthType != AuthTypeEmail && !strings.HasSuffix(p.AuthType, "_oidc") {
 				return errors.ErrorData(logutils.StatusInvalid, "auth type", nil)
 			}
@@ -740,12 +740,11 @@ func (a *Auth) CreateAccounts(partialAccount []model.AccountData, creatorPermiss
 
 			return errors.Newf("not supported operation - create account via admin API")
 		}
-
-		err := a.storage.PerformTransaction(transaction)
-		if err != nil {
-			return nil, nil, errors.WrapErrorAction(logutils.ActionCreate, "admin account", nil, err)
-		}
-		return nil, nil, nil
+		return nil
+	}
+	err := a.storage.PerformTransaction(transaction)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionCreate, "admin account", nil, err)
 	}
 	return nil, nil, nil
 }
