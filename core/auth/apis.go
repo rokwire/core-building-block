@@ -678,7 +678,7 @@ func (a *Auth) CreateAccounts(partialAccount []model.AccountData, creatorPermiss
 			var newAccounts []model.Account
 			var newAccount *model.Account
 			//find the account for the org and the user identity
-			foundedAccount, err := a.storage.FindAccountByOrgAndIdentifier(nil, appOrg.Organization.ID, authType.ID, p.Identifier, appOrg.ID)
+			foundedAccount, err := a.storage.FindAccountByOrgAndIdentifier(context, appOrg.Organization.ID, authType.ID, p.Identifier, appOrg.ID)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 			}
