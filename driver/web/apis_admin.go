@@ -1011,7 +1011,7 @@ func (h AdminApisHandler) createApplicationAccounts(l *logs.Log, r *http.Request
 		partialAccount = append(partialAccount, p)
 	}
 
-	_, _, err = h.coreAPIs.Auth.CreateAdminAccounts(partialAccount, creatorPermissions, &clientVersion, l)
+	_, _, err = h.coreAPIs.Auth.CreateAccounts(partialAccount, creatorPermissions, &clientVersion, l)
 
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionCreate, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
