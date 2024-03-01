@@ -1,0 +1,29 @@
+post:
+  tags:
+  - Admin
+  summary: Create accounts
+  description: |
+    Create accounts
+
+    **Auth:** Requires admin access token with `create_accounts` or `all_accounts` permission
+  security:
+    - bearerAuth: []
+  requestBody:
+    description: |
+      User account details and parameters
+    content:
+      application/json:
+        schema:
+            type: array
+            items:
+              $ref: "../../../../schemas/apis/shared/requests/create-account/Request.yaml"
+    required: true
+  responses:
+    200:
+      description: Success
+    400:
+      description: Bad request
+    401:
+      description: Unauthorized
+    500:
+      description: Internal error

@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+### Added
+- Expose Create multiple accounts admin API [#702](https://github.com/rokwire/core-building-block/issues/702)
+
 ### Changed
 - Update filter accounts API to accept many UIN [#700](https://github.com/rokwire/core-building-block/issues/700)
 

@@ -719,3 +719,18 @@ type Follow struct {
 	FollowingID string    `json:"following_id" bson:"following_id"`
 	DateCreated time.Time `json:"date_created" bson:"date_created"`
 }
+
+// AccountData shows AccountData information
+type AccountData struct {
+	AuthType    string    `json:"auth_type"`
+	GroupIds    *[]string `json:"group_ids,omitempty"`
+	Identifier  string    `json:"identifier"`
+	Permissions *[]string `json:"permissions,omitempty"`
+	Privacy     *Privacy  `json:"privacy"`
+	Profile     *Profile  `json:"profile"`
+	RoleIds     *[]string `json:"role_ids,omitempty"`
+	Scopes      *[]string `json:"scopes,omitempty"`
+	Username    *string   `json:"username"`
+	AppID       string    `json:"app_id"`
+	OrgID       string    `json:"org_id"`
+}

@@ -48,6 +48,7 @@ p, all_accounts, /core/admin/application/roles, (GET),
 p, all_accounts, /core/admin/application/groups, (GET),
 p, get_accounts, /core/admin/application/accounts, (GET), Get accounts
 p, create_accounts, /core/admin/application/accounts, (POST), Create new account
+p, create_accounts, /core/admin/v2/application/accounts, (POST), Create new accounts
 p, create_accounts, /core/admin/application/permissions, (GET),
 p, create_accounts, /core/admin/application/roles, (GET),
 p, create_accounts, /core/admin/application/groups, (GET),

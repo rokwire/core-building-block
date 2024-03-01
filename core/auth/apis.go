@@ -659,6 +659,95 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appID string, orgID
 	return newAccount, params, nil
 }
 
+// CreateAccounts create accounts in the system
+func (a *Auth) CreateAccounts(partialAccount []model.AccountData, creatorPermissions []string, clientVersion *string, l *logs.Log) ([]model.Account, map[string]interface{}, error) {
+	transaction := func(context storage.TransactionContext) error {
+		for _, p := range partialAccount {
+
+			if p.AuthType != AuthTypeOidc && p.AuthType != AuthTypeEmail && !strings.HasSuffix(p.AuthType, "_oidc") {
+				return errors.ErrorData(logutils.StatusInvalid, "auth type", nil)
+			}
+
+			// check if the provided auth type is supported by the provided application and organization
+			authType, appOrg, err := a.validateAuthTypeForAppOrg(p.AuthType, p.AppID, p.OrgID)
+			if err != nil {
+				errors.WrapErrorAction(logutils.ActionValidate, model.TypeAuthType, nil, err)
+			}
+
+			// create account
+			var newAccounts []model.Account
+			var newAccount *model.Account
+			//find the account for the org and the user identity
+			foundedAccount, err := a.storage.FindAccountByOrgAndIdentifier(context, appOrg.Organization.ID, authType.ID, p.Identifier, appOrg.ID)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+			}
+
+			//check if the account exists for this app
+			if foundedAccount != nil && foundedAccount.HasApp(p.AppID) {
+				return errors.Newf("there is already account for %s in %s application", p.Identifier, p.AppID)
+			}
+
+			//determine operation - "org-sign-up" or "app-sign-up"
+			operation, err := a.determineOperation(foundedAccount, appOrg.ID, l)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+			}
+
+			//apply operation
+			switch operation {
+			case "app-sign-up":
+				// account exists in the organization but not for the application
+
+				udatedAccount, err := a.appSignUp(context, *foundedAccount, *appOrg, *p.Permissions, *p.RoleIds, *p.GroupIds, clientVersion, creatorPermissions, l)
+				if err != nil {
+					return errors.WrapErrorAction("app sign up", "", nil, err)
+				}
+
+				newAccount = udatedAccount
+				newAccounts = append(newAccounts, *newAccount)
+				return nil
+			case "org-sign-up":
+				// account does not exist in the organization
+
+				var accountAuthType *model.AccountAuthType
+
+				p.Profile.DateCreated = time.Now().UTC()
+				if authType.IsExternal {
+					externalUser := model.ExternalSystemUser{Identifier: p.Identifier}
+					accountAuthType, err = a.applySignUpAdminExternal(context, *authType, *appOrg, externalUser, *p.Profile, *p.Privacy, *p.Username, *p.Permissions, *p.RoleIds, *p.GroupIds, *p.Scopes, creatorPermissions, clientVersion, l)
+					if err != nil {
+						return errors.WrapErrorAction(logutils.ActionRegister, "admin user", &logutils.FieldArgs{"auth_type": authType.Code, "identifier": p.Identifier}, err)
+					}
+				} else {
+					authImpl, err := a.getAuthTypeImpl(*authType)
+					if err != nil {
+						return errors.WrapErrorAction(logutils.ActionLoadCache, typeExternalAuthType, nil, err)
+					}
+
+					p.Profile.Email = p.Identifier
+					_, accountAuthType, err = a.applySignUpAdmin(context, authImpl, *authType, *appOrg, p.Identifier, "", *p.Profile, *p.Privacy, *p.Username, *p.Permissions, *p.RoleIds, *p.GroupIds, *p.Scopes, creatorPermissions, clientVersion, l)
+					if err != nil {
+						return errors.WrapErrorAction(logutils.ActionRegister, "admin user", &logutils.FieldArgs{"auth_type": authType.Code, "identifier": p.Identifier}, err)
+					}
+				}
+
+				newAccount = &accountAuthType.Account
+				newAccounts = append(newAccounts, *newAccount)
+				return nil
+			}
+
+			return errors.Newf("not supported operation - create account via admin API")
+		}
+		return nil
+	}
+	err := a.storage.PerformTransaction(transaction)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionCreate, "admin account", nil, err)
+	}
+	return nil, nil, nil
+}
+
 // UpdateAdminAccount updates an existing user's account with new permissions, roles, and groups
 func (a *Auth) UpdateAdminAccount(authenticationType string, appID string, orgID string, identifier string, permissions []string, roleIDs []string,
 	groupIDs []string, scopes []string, updaterPermissions []string, l *logs.Log) (*model.Account, map[string]interface{}, error) {

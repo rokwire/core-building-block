@@ -1317,6 +1317,9 @@ type GetAdminConfigsParams struct {
 	Type *string `form:"type,omitempty" json:"type,omitempty"`
 }
 
+// PostAdminV2ApplicationAccountsJSONBody defines parameters for PostAdminV2ApplicationAccounts.
+type PostAdminV2ApplicationAccountsJSONBody = []SharedReqCreateAccount
+
 // PostBbsAccountsJSONBody defines parameters for PostBbsAccounts.
 type PostBbsAccountsJSONBody = map[string]interface{}
 
@@ -1705,6 +1708,9 @@ type PostAdminConfigsJSONRequestBody = AdminReqCreateUpdateConfig
 
 // PutAdminConfigsIdJSONRequestBody defines body for PutAdminConfigsId for application/json ContentType.
 type PutAdminConfigsIdJSONRequestBody = AdminReqCreateUpdateConfig
+
+// PostAdminV2ApplicationAccountsJSONRequestBody defines body for PostAdminV2ApplicationAccounts for application/json ContentType.
+type PostAdminV2ApplicationAccountsJSONRequestBody = PostAdminV2ApplicationAccountsJSONBody
 
 // PostBbsAccessTokenJSONRequestBody defines body for PostBbsAccessToken for application/json ContentType.
 type PostBbsAccessTokenJSONRequestBody = ServicesReqServiceAccountsAccessToken
