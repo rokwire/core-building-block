@@ -659,8 +659,7 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appID string, orgID
 	return newAccount, params, nil
 }
 
-//CreateAccounts create accounts in the system
-
+// CreateAccounts create accounts in the system
 func (a *Auth) CreateAccounts(partialAccount []model.AccountData, creatorPermissions []string, clientVersion *string, l *logs.Log) ([]model.Account, map[string]interface{}, error) {
 	transaction := func(context storage.TransactionContext) error {
 		for _, p := range partialAccount {
