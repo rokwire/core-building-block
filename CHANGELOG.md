@@ -7,7 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Added
-- Create multiple admin accounts [#702](https://github.com/rokwire/core-building-block/issues/702)
+- Expose Create multiple accounts admin API [#702](https://github.com/rokwire/core-building-block/issues/702)
+
 ### Changed
 - Update filter accounts API to accept many UIN [#700](https://github.com/rokwire/core-building-block/issues/700)
 
