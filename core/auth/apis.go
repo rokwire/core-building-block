@@ -743,7 +743,7 @@ func (a *Auth) CreateAccounts(partialAccount []model.AccountData, creatorPermiss
 		return nil, nil, errors.WrapErrorAction(logutils.ActionCreate, "admin account", nil, err)
 	}
 
-	return nil, nil, nil // Return newAccounts slice along with other return values
+	return nil, nil, nil
 }
 
 // UpdateAdminAccount updates an existing user's account with new permissions, roles, and groups
