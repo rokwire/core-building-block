@@ -28,6 +28,10 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+const (
+	migrationBatchSize int = 5000
+)
+
 // Database Migration functions
 
 func (sa *Adapter) migrateAuthTypes() error {
@@ -124,7 +128,7 @@ func (sa *Adapter) migrateAuthTypes() error {
 
 func (sa *Adapter) migrateCredentials(context TransactionContext, removedAuthTypesMap map[string]model.AuthType, removedAuthTypeIDs []string) ([]string, error) {
 	findOptions := options.Find()
-	findOptions.SetLimit(int64(5000))
+	findOptions.SetLimit(int64(migrationBatchSize))
 
 	var credentialsBatch []credential
 	err := sa.db.credentials.FindWithContext(context, bson.M{"auth_type_id": bson.M{"$in": removedAuthTypeIDs}}, &credentialsBatch, findOptions)
@@ -251,29 +255,38 @@ func (sa *Adapter) migrateAppOrgs(context TransactionContext, removedAuthTypes m
 	}
 
 	for orgID, identityProviderSettings := range orgIDs {
-		err = sa.migrateAccounts(context, orgID, identityProviderSettings, removedAuthTypes, removedCredentials)
-		if err != nil {
-			return errors.WrapErrorAction("migrating", model.TypeAccount, &logutils.FieldArgs{"org_id": orgID}, err)
+		for {
+			accountsBatchSize, err := sa.migrateAccounts(context, orgID, identityProviderSettings, removedAuthTypes, removedCredentials)
+			if err != nil {
+				return errors.WrapErrorAction("migrating", model.TypeAccount, &logutils.FieldArgs{"org_id": orgID}, err)
+			}
+			if accountsBatchSize != nil && *accountsBatchSize == 0 {
+				break
+			}
 		}
 	}
 
 	return nil
 }
 
-func (sa *Adapter) migrateAccounts(context TransactionContext, orgID string, identityProviderSettings model.IdentityProviderSetting, removedAuthTypes map[string]model.AuthType, removedCredentials []string) error {
-	filter := bson.M{"org_id": orgID}
-	var accounts []tenantAccount
+func (sa *Adapter) migrateAccounts(context TransactionContext, orgID string, identityProviderSettings model.IdentityProviderSetting, removedAuthTypes map[string]model.AuthType, removedCredentials []string) (*int, error) {
+	findOptions := options.Find()
+	findOptions.SetLimit(int64(migrationBatchSize))
 
-	err := sa.db.tenantsAccounts.Find(filter, &accounts, nil)
+	filter := bson.M{"org_id": orgID, "identifiers": bson.M{"$exists": false}}
+	var accountsBatch []tenantAccount
+	err := sa.db.tenantsAccounts.Find(filter, &accountsBatch, findOptions)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"org_id": orgID}, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"org_id": orgID}, err)
 	}
-	if len(accounts) == 0 {
-		return nil
+
+	numAccounts := len(accountsBatch)
+	if numAccounts == 0 {
+		return &numAccounts, nil
 	}
 
 	migratedAccounts := []interface{}{}
-	for _, acct := range accounts {
+	for _, acct := range accountsBatch {
 		migrated := acct
 		identifiers := make([]accountIdentifier, 0)
 		authTypes := make([]accountAuthType, 0)
@@ -323,9 +336,9 @@ func (sa *Adapter) migrateAccounts(context TransactionContext, orgID string, ide
 				newAat.AuthTypeCode = newAuthType.Code
 			} else if isExternal {
 				// parse the external user from params
-				externalUser, err := utils.JSONConvert[model.ExternalSystemUser, interface{}](aat.Params["user"])
+				externalUser, err := utils.JSONConvert[model.ExternalSystemUser](aat.Params["user"])
 				if err != nil {
-					return errors.WrapErrorAction(logutils.ActionParse, model.TypeExternalSystemUser, &logutils.FieldArgs{"auth_types.id": aat.ID}, err)
+					return nil, errors.WrapErrorAction(logutils.ActionParse, model.TypeExternalSystemUser, &logutils.FieldArgs{"auth_types.id": aat.ID}, err)
 				}
 				if externalUser != nil {
 					externalAatID := aat.ID
@@ -440,17 +453,17 @@ func (sa *Adapter) migrateAccounts(context TransactionContext, orgID string, ide
 
 	_, err = sa.db.tenantsAccounts.DeleteManyWithContext(context, filter, nil)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
 	}
 
 	if len(migratedAccounts) > 0 {
 		_, err = sa.db.tenantsAccounts.InsertManyWithContext(context, migratedAccounts, nil)
 		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionInsert, model.TypeAccount, nil, err)
+			return nil, errors.WrapErrorAction(logutils.ActionInsert, model.TypeAccount, nil, err)
 		}
 	}
 
-	return nil
+	return &numAccounts, nil
 }
 
 func (sa *Adapter) migrateLoginSessions(context TransactionContext, removedAuthTypes map[string]model.AuthType) error {
