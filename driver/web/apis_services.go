@@ -955,7 +955,7 @@ func (h ServicesApisHandler) getAccounts(l *logs.Log, r *http.Request, claims *t
 		return l.HTTPResponseErrorAction("error finding accounts", model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}
 
-	response := partialAccountsToDef(accounts)
+	response := partialAccountsToDef(accounts, nil)
 
 	data, err := json.Marshal(response)
 	if err != nil {

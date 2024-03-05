@@ -692,7 +692,7 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appID string, orgID
 
 		//check if the account exists for this app
 		if account != nil && account.HasApp(appID) {
-			return errors.ErrorData(logutils.StatusFound, model.TypeAccount, &logutils.FieldArgs{"id": account.ID, "app_id": appID, "identifier": identifier})
+			return errors.ErrorData(logutils.StatusFound, model.TypeApplication, &logutils.FieldArgs{"account_id": account.ID, "app_id": appID, "identifier": identifier})
 		}
 
 		//2. determine operation - operationOrgSignUp or operationAppSignUp
@@ -708,7 +708,7 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appID string, orgID
 
 			updatedAccount, err := a.appSignUp(context, *account, *appOrg, permissions, roleIDs, groupIDs, clientVersion, creatorPermissions)
 			if err != nil {
-				return errors.WrapErrorAction("app sign up", "", nil, err)
+				return errors.WrapErrorAction("signing up", model.TypeApplication, nil, err)
 			}
 
 			newAccount = updatedAccount
@@ -747,7 +747,6 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appID string, orgID
 			return nil
 		}
 
-		// return errors.Newf("not supported operation - create account via admin API")
 		return errors.ErrorData(logutils.StatusInvalid, "account creation operation", &logutils.FieldArgs{"app_id": appID, "org_id": orgID, "code": identifierImpl.getCode(), "identifier": identifier})
 	}
 
@@ -757,6 +756,107 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appID string, orgID
 	}
 
 	return newAccount, params, nil
+}
+
+// CreateAccounts create accounts in the system
+func (a *Auth) CreateAccounts(partialAccount []model.AccountData, creatorPermissions []string, clientVersion *string, l *logs.Log) ([]model.Account, []map[string]interface{}, error) {
+	var newAccounts []model.Account
+	var accountParams []map[string]interface{}
+	transaction := func(context storage.TransactionContext) error {
+		for _, p := range partialAccount {
+			// check if the provided auth type is supported by the provided application and organization
+			supportedAuthType, _, appOrg, err := a.validateAuthType(p.AuthType, nil, &p.AppID, p.OrgID)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionValidate, model.TypeAuthType, nil, err)
+			}
+
+			if supportedAuthType.AuthType.Code != AuthTypeOidc && supportedAuthType.AuthType.Code != AuthTypePassword && !strings.HasSuffix(supportedAuthType.AuthType.Code, "_oidc") {
+				return errors.ErrorData(logutils.StatusInvalid, model.TypeAuthType, nil)
+			}
+
+			identifierImpl := a.getIdentifierTypeImpl(p.Identifier, nil, nil)
+			if identifierImpl == nil {
+				return errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, nil)
+			}
+			identifier := identifierImpl.getIdentifier()
+
+			// create account
+			//find the account for the org and the user identity
+			foundedAccount, err := a.storage.FindAccount(context, identifierImpl.getCode(), identifier, &appOrg.ID, &appOrg.Organization.ID)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+			}
+
+			//check if the account exists for this app
+			if foundedAccount != nil && foundedAccount.HasApp(p.AppID) {
+				return errors.ErrorData(logutils.StatusFound, model.TypeApplication, &logutils.FieldArgs{"account_id": foundedAccount.ID, "app_id": p.AppID, "identifier": identifier})
+			}
+
+			//determine operation - operationOrgSignUp or operationAppSignUp
+			operation, err := a.determineOperation(foundedAccount, appOrg.ID)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+			}
+
+			//apply operation
+			var newAccount *model.Account
+			var params map[string]interface{}
+			switch operation {
+			case operationAppSignUp:
+				// account exists in the organization but not for the application
+				updatedAccount, err := a.appSignUp(context, *foundedAccount, *appOrg, *p.Permissions, *p.RoleIds, *p.GroupIds, clientVersion, creatorPermissions)
+				if err != nil {
+					return errors.WrapErrorAction("signing up", model.TypeApplication, nil, err)
+				}
+				newAccount = updatedAccount
+			case operationOrgSignUp:
+				// account does not exist in the organization
+				p.Profile.DateCreated = time.Now().UTC()
+				if supportedAuthType.AuthType.IsExternal {
+					identityProviderID, _ := supportedAuthType.AuthType.Params["identity_provider"].(string)
+					identityProviderSetting := appOrg.FindIdentityProviderSetting(identityProviderID)
+					if identityProviderSetting == nil {
+						return errors.ErrorData(logutils.StatusMissing, model.TypeIdentityProviderConfig, &logutils.FieldArgs{"app_org": appOrg.ID, "identity_provider_id": identityProviderID})
+					}
+
+					externalIDs := make(map[string]string)
+					for k, v := range identityProviderSetting.ExternalIDFields {
+						if v == identityProviderSetting.UserIdentifierField {
+							externalIDs[k] = identifier
+							break
+						}
+					}
+
+					externalUser := model.ExternalSystemUser{Identifier: identifier, ExternalIDs: externalIDs, SensitiveExternalIDs: identityProviderSetting.SensitiveExternalIDs}
+					newAccount, err = a.applySignUpAdminExternal(context, *supportedAuthType, *appOrg, externalUser, *p.Profile, *p.Privacy, *p.Permissions, *p.RoleIds, *p.GroupIds, *p.Scopes, creatorPermissions, clientVersion, l)
+					if err != nil {
+						return errors.WrapErrorAction(logutils.ActionRegister, "admin user", &logutils.FieldArgs{"auth_type": supportedAuthType.AuthType.Code, "identifier": identifier}, err)
+					}
+				} else {
+					params, newAccount, err = a.signUpNewAccount(context, identifierImpl, *supportedAuthType, *appOrg, nil, "", "", clientVersion, *p.Profile, *p.Privacy, nil, *p.Permissions, *p.RoleIds, *p.GroupIds, *p.Scopes, creatorPermissions, l)
+					if err != nil {
+						return errors.WrapErrorAction(logutils.ActionRegister, "admin user", &logutils.FieldArgs{"auth_type": supportedAuthType.AuthType.Code, "identifier": identifier}, err)
+					}
+				}
+
+				return nil
+			default:
+				return errors.ErrorData(logutils.StatusInvalid, "account creation operation", &logutils.FieldArgs{"app_id": p.AppID, "org_id": p.OrgID, "code": identifierImpl.getCode(), "identifier": identifier})
+			}
+
+			newAccounts = append(newAccounts, *newAccount) // Append new account to slice
+			accountParams = append(accountParams, params)
+		}
+
+		return nil
+	}
+
+	err := a.storage.PerformTransaction(transaction)
+	if err != nil {
+		return nil, nil, errors.WrapErrorAction(logutils.ActionCreate, "admin account", nil, err)
+	}
+
+	return newAccounts, accountParams, nil
 }
 
 // UpdateAdminAccount updates an existing user's account with new permissions, roles, and groups

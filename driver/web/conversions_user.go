@@ -144,10 +144,14 @@ func partialAccountToDef(item model.Account, params map[string]interface{}) *Def
 		DateCreated: &dateCreated, DateUpdated: dateUpdated, Params: paramsData, Username: username}
 }
 
-func partialAccountsToDef(items []model.Account) []Def.PartialAccount {
+func partialAccountsToDef(items []model.Account, paramsList []map[string]interface{}) []Def.PartialAccount {
 	result := make([]Def.PartialAccount, len(items))
 	for i, item := range items {
-		result[i] = *partialAccountToDef(item, nil)
+		var params map[string]interface{}
+		if len(paramsList) > i {
+			params = paramsList[i]
+		}
+		result[i] = *partialAccountToDef(item, params)
 	}
 	return result
 }

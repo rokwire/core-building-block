@@ -697,7 +697,7 @@ func (h AdminApisHandler) getApplicationAccounts(l *logs.Log, r *http.Request, c
 		return l.HTTPResponseErrorAction("error finding accounts", model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}
 
-	response := partialAccountsToDef(accounts)
+	response := partialAccountsToDef(accounts, nil)
 
 	data, err := json.Marshal(response)
 	if err != nil {
@@ -922,15 +922,10 @@ func (h AdminApisHandler) getAccount(l *logs.Log, r *http.Request, claims *token
 }
 
 func (h AdminApisHandler) createAdminAccount(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
-
 	clientVersion := r.Header.Get("CLIENT_VERSION")
 
 	var requestData Def.SharedReqCreateAccount
-	err = json.Unmarshal(data, &requestData)
+	err := json.NewDecoder(r.Body).Decode(&requestData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("create account request"), nil, err, http.StatusBadRequest, true)
 	}
@@ -969,7 +964,66 @@ func (h AdminApisHandler) createAdminAccount(l *logs.Log, r *http.Request, claim
 
 	respData := partialAccountToDef(*account, params)
 
-	data, err = json.Marshal(respData)
+	data, err := json.Marshal(respData)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeAccount, nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HTTPResponseSuccessJSON(data)
+}
+
+func (h AdminApisHandler) createApplicationAccounts(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
+	clientVersion := r.Header.Get("CLIENT_VERSION")
+	creatorPermissions := strings.Split(claims.Permissions, ",")
+
+	var requestData []Def.SharedReqCreateAccount
+	err := json.NewDecoder(r.Body).Decode(&requestData)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("create account request"), nil, err, http.StatusBadRequest, true)
+	}
+
+	var partialAccount []model.AccountData
+	//creating the object
+	for _, pa := range requestData {
+		var permissions []string
+		if pa.Permissions != nil {
+			permissions = *pa.Permissions
+		}
+		var roleIDs []string
+		if pa.RoleIds != nil {
+			roleIDs = *pa.RoleIds
+		}
+		var groupIDs []string
+		if pa.GroupIds != nil {
+			groupIDs = *pa.GroupIds
+		}
+		var scopes []string
+		if pa.Scopes != nil {
+			scopes = *pa.Scopes
+		}
+		profile := profileFromDefNullable(pa.Profile)
+		privacy := privacyFromDefNullable(pa.Privacy)
+
+		//identifier
+		requestIdentifier, err := interfaceToJSON(pa.Identifier)
+		if err != nil {
+			return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeCreds, nil, err, http.StatusBadRequest, true)
+		}
+
+		p := model.AccountData{AuthType: string(pa.AuthType), GroupIds: &groupIDs, Identifier: requestIdentifier,
+			Permissions: &permissions, Privacy: &privacy, Profile: &profile, RoleIds: &roleIDs, Scopes: &scopes,
+			AppID: claims.AppID, OrgID: claims.OrgID}
+		partialAccount = append(partialAccount, p)
+	}
+
+	accounts, accountParams, err := h.coreAPIs.Auth.CreateAccounts(partialAccount, creatorPermissions, &clientVersion, l)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionCreate, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
+	}
+
+	respData := partialAccountsToDef(accounts, accountParams)
+
+	data, err := json.Marshal(respData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeAccount, nil, err, http.StatusInternalServerError, false)
 	}
@@ -978,13 +1032,8 @@ func (h AdminApisHandler) createAdminAccount(l *logs.Log, r *http.Request, claim
 }
 
 func (h AdminApisHandler) updateAdminAccount(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, false)
-	}
-
 	var requestData Def.SharedReqUpdateAccount
-	err = json.Unmarshal(data, &requestData)
+	err := json.NewDecoder(r.Body).Decode(&requestData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("update account request"), nil, err, http.StatusBadRequest, true)
 	}
@@ -1021,7 +1070,7 @@ func (h AdminApisHandler) updateAdminAccount(l *logs.Log, r *http.Request, claim
 
 	respData := partialAccountToDef(*account, params)
 
-	data, err = json.Marshal(respData)
+	data, err := json.Marshal(respData)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeAccount, nil, err, http.StatusInternalServerError, false)
 	}
