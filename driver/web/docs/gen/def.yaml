@@ -6433,6 +6433,8 @@ components:
       properties:
         max_concurrent_sessions:
           type: integer
+        access_token_expiration_policy:
+          $ref: '#/components/schemas/AccessTokenExpirationPolicy'
         inactivity_expire_policy:
           $ref: '#/components/schemas/InactiveExpirePolicy'
         time_since_login_expire_policy:
@@ -6477,6 +6479,15 @@ components:
         active:
           type: boolean
         time_since_login_period:
+          type: integer
+    AccessTokenExpirationPolicy:
+      type: object
+      properties:
+        default_exp:
+          type: integer
+        min_exp:
+          type: integer
+        max_exp:
           type: integer
     PartialApp:
       required:

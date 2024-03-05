@@ -193,6 +193,13 @@ type APIKey struct {
 	Key   string  `json:"key"`
 }
 
+// AccessTokenExpirationPolicy defines model for AccessTokenExpirationPolicy.
+type AccessTokenExpirationPolicy struct {
+	DefaultExp *int `json:"default_exp,omitempty"`
+	MaxExp     *int `json:"max_exp,omitempty"`
+	MinExp     *int `json:"min_exp,omitempty"`
+}
+
 // Account defines model for Account.
 type Account struct {
 	Anonymous               *bool                    `json:"anonymous,omitempty"`
@@ -519,10 +526,11 @@ type LoginSession struct {
 
 // LoginSessionSettings defines model for LoginSessionSettings.
 type LoginSessionSettings struct {
-	InactivityExpirePolicy     *InactiveExpirePolicy `json:"inactivity_expire_policy,omitempty"`
-	MaxConcurrentSessions      *int                  `json:"max_concurrent_sessions,omitempty"`
-	TimeSinceLoginExpirePolicy *TSLExpirePolicy      `json:"time_since_login_expire_policy,omitempty"`
-	YearlyExpirePolicy         *YearlyExpirePolicy   `json:"yearly_expire_policy,omitempty"`
+	AccessTokenExpirationPolicy *AccessTokenExpirationPolicy `json:"access_token_expiration_policy,omitempty"`
+	InactivityExpirePolicy      *InactiveExpirePolicy        `json:"inactivity_expire_policy,omitempty"`
+	MaxConcurrentSessions       *int                         `json:"max_concurrent_sessions,omitempty"`
+	TimeSinceLoginExpirePolicy  *TSLExpirePolicy             `json:"time_since_login_expire_policy,omitempty"`
+	YearlyExpirePolicy          *YearlyExpirePolicy          `json:"yearly_expire_policy,omitempty"`
 }
 
 // OIDCDiscovery OpenID Connect Discovery Metadata

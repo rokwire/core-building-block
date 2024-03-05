@@ -205,6 +205,25 @@ func loginSessionSettingsFromDef(item *Def.LoginSessionSettings) *model.LoginsSe
 	if item.MaxConcurrentSessions != nil {
 		maxConcurrentSessions = *item.MaxConcurrentSessions
 	}
+	accessTokenExpPolicy := model.AccessTokenExpirationPolicy{}
+	if item.AccessTokenExpirationPolicy != nil {
+		defaultExpVal := 0
+		defaultExp := item.AccessTokenExpirationPolicy.DefaultExp
+		if defaultExp != nil {
+			defaultExpVal = *defaultExp
+		}
+		maxExpVal := 0
+		maxExp := item.AccessTokenExpirationPolicy.MaxExp
+		if maxExp != nil {
+			maxExpVal = *maxExp
+		}
+		minExpVal := 0
+		minExp := item.AccessTokenExpirationPolicy.MinExp
+		if minExp != nil {
+			minExpVal = *minExp
+		}
+		accessTokenExpPolicy = model.AccessTokenExpirationPolicy{DefaultExp: defaultExpVal, MinExp: minExpVal, MaxExp: maxExpVal}
+	}
 	inactivityExpirePolicy := model.InactivityExpirePolicy{}
 	if item.InactivityExpirePolicy != nil {
 		inactivityExpirePolicy = model.InactivityExpirePolicy{Active: item.InactivityExpirePolicy.Active, InactivityPeriod: item.InactivityExpirePolicy.InactivityPeriod}
@@ -219,19 +238,30 @@ func loginSessionSettingsFromDef(item *Def.LoginSessionSettings) *model.LoginsSe
 			Hour: item.YearlyExpirePolicy.Hour, Min: item.YearlyExpirePolicy.Min}
 	}
 
-	return &model.LoginsSessionsSetting{MaxConcurrentSessions: maxConcurrentSessions, InactivityExpirePolicy: inactivityExpirePolicy,
-		TSLExpirePolicy: tslExpirePolicy, YearlyExpirePolicy: yearlyExpirePolicy}
+	return &model.LoginsSessionsSetting{
+		MaxConcurrentSessions:       maxConcurrentSessions,
+		AccessTokenExpirationPolicy: accessTokenExpPolicy,
+		InactivityExpirePolicy:      inactivityExpirePolicy,
+		TSLExpirePolicy:             tslExpirePolicy,
+		YearlyExpirePolicy:          yearlyExpirePolicy,
+	}
 }
 
 func loginSessionSettingsToDef(item model.LoginsSessionsSetting) Def.LoginSessionSettings {
 	inactivityExpirePolicy := Def.InactiveExpirePolicy{Active: item.InactivityExpirePolicy.Active, InactivityPeriod: item.InactivityExpirePolicy.InactivityPeriod}
+	accessTokenExpPolicy := Def.AccessTokenExpirationPolicy{DefaultExp: &item.AccessTokenExpirationPolicy.DefaultExp, MinExp: &item.AccessTokenExpirationPolicy.MinExp, MaxExp: &item.AccessTokenExpirationPolicy.MaxExp}
 	tslExpirePolicy := Def.TSLExpirePolicy{Active: item.TSLExpirePolicy.Active, TimeSinceLoginPeriod: item.TSLExpirePolicy.TimeSinceLoginPeriod}
 	yearlyExpirePolicy := Def.YearlyExpirePolicy{Active: item.YearlyExpirePolicy.Active, Day: item.YearlyExpirePolicy.Day, Month: item.YearlyExpirePolicy.Month,
 		Hour: item.YearlyExpirePolicy.Hour, Min: item.YearlyExpirePolicy.Min}
 
 	maxConcurrentSessions := item.MaxConcurrentSessions
-	return Def.LoginSessionSettings{MaxConcurrentSessions: &maxConcurrentSessions, InactivityExpirePolicy: &inactivityExpirePolicy,
-		TimeSinceLoginExpirePolicy: &tslExpirePolicy, YearlyExpirePolicy: &yearlyExpirePolicy}
+	return Def.LoginSessionSettings{
+		MaxConcurrentSessions:       &maxConcurrentSessions,
+		AccessTokenExpirationPolicy: &accessTokenExpPolicy,
+		InactivityExpirePolicy:      &inactivityExpirePolicy,
+		TimeSinceLoginExpirePolicy:  &tslExpirePolicy,
+		YearlyExpirePolicy:          &yearlyExpirePolicy,
+	}
 }
 
 func supportedAuthTypesFromDef(items *[]Def.SupportedAuthTypes) []model.AuthTypesSupport {

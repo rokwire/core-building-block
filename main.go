@@ -145,9 +145,18 @@ func main() {
 	}
 	oldAuthPrivKey := parsePrivKeyFromEnvVar("ROKWIRE_CORE_OLD_AUTH_PRIV_KEY", envLoader, oldSupportLegacySigs, logger)
 
+	defaultTokenExpStr := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_DEFAULT_TOKEN_EXP", false, false)
+	var defaultTokenExp *int
+	defaultTokenExpVal, err := strconv.Atoi(defaultTokenExpStr)
+	if err == nil {
+		defaultTokenExp = &defaultTokenExpVal
+	} else {
+		logger.Infof("Error parsing default token exp, applying defaults: %v", err)
+	}
+
 	minTokenExpStr := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_MIN_TOKEN_EXP", false, false)
-	var minTokenExp *int64
-	minTokenExpVal, err := strconv.ParseInt(minTokenExpStr, 10, 64)
+	var minTokenExp *int
+	minTokenExpVal, err := strconv.Atoi(minTokenExpStr)
 	if err == nil {
 		minTokenExp = &minTokenExpVal
 	} else {
@@ -155,8 +164,8 @@ func main() {
 	}
 
 	maxTokenExpStr := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_MAX_TOKEN_EXP", false, false)
-	var maxTokenExp *int64
-	maxTokenExpVal, err := strconv.ParseInt(maxTokenExpStr, 10, 64)
+	var maxTokenExp *int
+	maxTokenExpVal, err := strconv.Atoi(maxTokenExpStr)
 	if err == nil {
 		maxTokenExp = &maxTokenExpVal
 	} else {
@@ -181,7 +190,7 @@ func main() {
 	}
 
 	authImpl, err := auth.NewAuth(serviceID, host, currentAuthPrivKey, oldAuthPrivKey, authService, storageAdapter, emailer, twilioPhoneVerifier, profileBBAdapter,
-		minTokenExp, maxTokenExp, supportLegacySigs, Version, logger)
+		defaultTokenExp, minTokenExp, maxTokenExp, supportLegacySigs, Version, logger)
 	if err != nil {
 		logger.Fatalf("Error initializing auth: %v", err)
 	}

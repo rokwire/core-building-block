@@ -115,10 +115,10 @@ type Auth struct {
 	ServiceRegManager *authservice.ServiceRegManager
 	SignatureAuth     *sigauth.SignatureAuth
 
-	serviceID   string
-	host        string //Service host
-	minTokenExp int64  //Minimum access token expiration time in minutes
-	maxTokenExp int64  //Maximum access token expiration time in minutes
+	serviceID string
+	host      string //Service host
+
+	defaultAccessTokenExpirationPolicy model.AccessTokenExpirationPolicy
 
 	profileBB  ProfileBuildingBlock
 	identityBB IdentityBuildingBlock
@@ -138,15 +138,26 @@ type Auth struct {
 
 // NewAuth creates a new auth instance
 func NewAuth(serviceID string, host string, currentAuthPrivKey *keys.PrivKey, oldAuthPrivKey *keys.PrivKey, authService *authservice.AuthService, storage Storage, emailer Emailer,
-	phoneVerifier PhoneVerifier, profileBB ProfileBuildingBlock, minTokenExp *int64, maxTokenExp *int64, supportLegacySigs bool, version string, logger *logs.Logger) (*Auth, error) {
-	if minTokenExp == nil {
-		var minTokenExpVal int64 = 5
-		minTokenExp = &minTokenExpVal
+	phoneVerifier PhoneVerifier, profileBB ProfileBuildingBlock, defaultTokenExp *int, minTokenExp *int, maxTokenExp *int, supportLegacySigs bool, version string, logger *logs.Logger) (*Auth, error) {
+	defaultTokenExpVal := 30
+	if defaultTokenExp != nil {
+		defaultTokenExpVal = *defaultTokenExp
 	}
 
-	if maxTokenExp == nil {
-		var maxTokenExpVal int64 = 60
-		maxTokenExp = &maxTokenExpVal
+	minTokenExpVal := 5
+	if minTokenExp != nil {
+		minTokenExpVal = *minTokenExp
+	}
+
+	maxTokenExpVal := 60
+	if maxTokenExp != nil {
+		maxTokenExpVal = *maxTokenExp
+	}
+
+	defaultAccessTokenExpirationPolicy := model.AccessTokenExpirationPolicy{
+		DefaultExp: defaultTokenExpVal,
+		MinExp:     minTokenExpVal,
+		MaxExp:     maxTokenExpVal,
 	}
 
 	identifierTypes := map[string]identifierType{}
@@ -166,9 +177,9 @@ func NewAuth(serviceID string, host string, currentAuthPrivKey *keys.PrivKey, ol
 
 	auth := &Auth{storage: storage, emailer: emailer, phoneVerifier: phoneVerifier, logger: logger, identifierTypes: identifierTypes, authTypes: authTypes,
 		externalAuthTypes: externalAuthTypes, anonymousAuthTypes: anonymousAuthTypes, serviceAuthTypes: serviceAuthTypes, mfaTypes: mfaTypes,
-		currentAuthPrivKey: currentAuthPrivKey, oldAuthPrivKey: oldAuthPrivKey, ServiceRegManager: nil, serviceID: serviceID, host: host, minTokenExp: *minTokenExp,
-		maxTokenExp: *maxTokenExp, profileBB: profileBB, cachedIdentityProviders: cachedIdentityProviders, identityProvidersLock: identityProvidersLock,
-		apiKeys: apiKeys, apiKeysLock: apiKeysLock, deleteSessionsTimerDone: deleteSessionsTimerDone, version: version}
+		currentAuthPrivKey: currentAuthPrivKey, oldAuthPrivKey: oldAuthPrivKey, ServiceRegManager: nil, serviceID: serviceID, host: host,
+		defaultAccessTokenExpirationPolicy: defaultAccessTokenExpirationPolicy, profileBB: profileBB, cachedIdentityProviders: cachedIdentityProviders,
+		identityProvidersLock: identityProvidersLock, apiKeys: apiKeys, apiKeysLock: apiKeysLock, deleteSessionsTimerDone: deleteSessionsTimerDone, version: version}
 
 	err := auth.verifyServiceAESKey()
 	if err != nil {
@@ -1287,7 +1298,7 @@ func (a *Auth) createLoginSession(anonymous bool, sub string, authType model.Aut
 			externalIDs[external.Code] = external.Identifier
 		}
 	}
-	claims := a.getStandardClaims(sub, name, email, phone, username, rokwireTokenAud, orgID, appID, authType.Code, externalIDs, nil, anonymous, true, appOrg.Application.Admin, appOrg.Organization.System, false, true, id)
+	claims := a.getStandardClaims(sub, name, email, phone, username, rokwireTokenAud, orgID, appID, authType.Code, externalIDs, nil, anonymous, true, appOrg.Application.Admin, appOrg.Organization.System, false, true, id, &appOrg.LoginsSessionsSetting.AccessTokenExpirationPolicy)
 	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), strings.Join(scopes, " "))
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
@@ -2258,7 +2269,7 @@ func (a *Auth) buildAccessTokenForServiceAccount(account model.ServiceAccount, a
 		aud = strings.Join(services, ",")
 	}
 
-	claims := a.getStandardClaims(account.AccountID, account.Name, "", "", "", aud, orgID, appID, authType, nil, nil, false, true, false, false, true, account.FirstParty, "")
+	claims := a.getStandardClaims(account.AccountID, account.Name, "", "", "", aud, orgID, appID, authType, nil, nil, false, true, false, false, true, account.FirstParty, "", &a.defaultAccessTokenExpirationPolicy)
 	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), scope)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
@@ -2498,7 +2509,7 @@ func (a *Auth) getScopedAccessToken(claims tokenauth.Claims, serviceID string, s
 		aud = append(aud, serviceID)
 	}
 
-	scopedClaims := a.getStandardClaims(claims.Subject, "", "", "", "", strings.Join(aud, ","), claims.OrgID, claims.AppID, claims.AuthType, claims.ExternalIDs, &claims.ExpiresAt, claims.Anonymous, claims.Authenticated, false, false, claims.Service, false, claims.SessionID)
+	scopedClaims := a.getStandardClaims(claims.Subject, "", "", "", "", strings.Join(aud, ","), claims.OrgID, claims.AppID, claims.AuthType, claims.ExternalIDs, &claims.ExpiresAt, claims.Anonymous, claims.Authenticated, false, false, claims.Service, false, claims.SessionID, nil)
 	return a.buildAccessToken(scopedClaims, "", scope)
 }
 
@@ -2516,12 +2527,12 @@ func (a *Auth) tokenDataForScopes(scopes []authorization.Scope) ([]string, strin
 }
 
 func (a *Auth) getStandardClaims(sub string, name string, email string, phone string, username string, aud string, orgID string, appID string, authType string, externalIDs map[string]string,
-	exp *int64, anonymous bool, authenticated bool, admin bool, system bool, service bool, firstParty bool, sessionID string) tokenauth.Claims {
+	exp *int64, anonymous bool, authenticated bool, admin bool, system bool, service bool, firstParty bool, sessionID string, accessTokenExpPolicy *model.AccessTokenExpirationPolicy) tokenauth.Claims {
 	return tokenauth.Claims{
 		StandardClaims: jwt.StandardClaims{
 			Audience:  aud,
 			Subject:   sub,
-			ExpiresAt: a.getExp(exp),
+			ExpiresAt: a.getExp(exp, accessTokenExpPolicy),
 			IssuedAt:  time.Now().Unix(),
 			Issuer:    a.host,
 		}, OrgID: orgID, AppID: appID, AuthType: authType, Name: name, Email: email, Phone: phone, Username: username,
@@ -2530,22 +2541,47 @@ func (a *Auth) getStandardClaims(sub string, name string, email string, phone st
 	}
 }
 
-func (a *Auth) getExp(exp *int64) int64 {
+func (a *Auth) getExp(exp *int64, accessTokenExpPolicy *model.AccessTokenExpirationPolicy) int64 {
+	policy := a.applyDefaultAccessTokenPolicy(accessTokenExpPolicy)
+	defaultExp := a.defaultAccessTokenExpirationPolicy.DefaultExp
+	if policy != nil {
+		defaultExp = policy.DefaultExp
+	}
 	if exp == nil {
-		defaultTime := time.Now().Add(30 * time.Minute) //TODO: Set up org configs for default token exp
+		defaultTime := time.Now().Add(time.Duration(defaultExp) * time.Minute)
 		return defaultTime.Unix()
 	}
-	expTime := time.Unix(*exp, 0)
-	minTime := time.Now().Add(time.Duration(a.minTokenExp) * time.Minute)
-	maxTime := time.Now().Add(time.Duration(a.maxTokenExp) * time.Minute)
 
-	if expTime.Before(minTime) {
-		return minTime.Unix()
-	} else if expTime.After(maxTime) {
-		return maxTime.Unix()
+	if policy != nil {
+		expTime := time.Unix(*exp, 0)
+		minTime := time.Now().Add(time.Duration(policy.MinExp) * time.Minute)
+		maxTime := time.Now().Add(time.Duration(policy.MaxExp) * time.Minute)
+
+		if expTime.Before(minTime) {
+			return minTime.Unix()
+		} else if expTime.After(maxTime) {
+			return maxTime.Unix()
+		}
 	}
 
 	return *exp
+}
+
+func (a *Auth) applyDefaultAccessTokenPolicy(policy *model.AccessTokenExpirationPolicy) *model.AccessTokenExpirationPolicy {
+	if policy == nil {
+		return nil
+	}
+	mergedPolicy := *policy
+	if mergedPolicy.DefaultExp == 0 {
+		mergedPolicy.DefaultExp = a.defaultAccessTokenExpirationPolicy.DefaultExp
+	}
+	if mergedPolicy.MinExp == 0 {
+		mergedPolicy.MinExp = a.defaultAccessTokenExpirationPolicy.MinExp
+	}
+	if mergedPolicy.MaxExp == 0 {
+		mergedPolicy.MaxExp = a.defaultAccessTokenExpirationPolicy.MaxExp
+	}
+	return &mergedPolicy
 }
 
 func (a *Auth) getExternalUserAuthorization(externalUser model.ExternalSystemUser, identityProviderSetting *model.IdentityProviderSetting) ([]string, []string, error) {
