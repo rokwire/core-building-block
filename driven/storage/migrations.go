@@ -64,7 +64,6 @@ func (sa *Adapter) migrateAuthTypes() error {
 
 		//2. remove old auth types if they exist
 		removedAuthTypeIDsMap := make(map[string]model.AuthType)
-		removedAuthTypeIDsList := make([]string, 0)
 		removedAuthTypeCodes := map[string]model.AuthType{
 			"email":        newAuthTypes["password"],
 			"username":     newAuthTypes["password"],
@@ -83,7 +82,6 @@ func (sa *Adapter) migrateAuthTypes() error {
 			}
 
 			removedAuthTypeIDsMap[authTypes[0].ID] = new
-			removedAuthTypeIDsList = append(removedAuthTypeIDsList, authTypes[0].ID)
 
 			// remove the unwanted auth type, which also updates the cache
 			_, err = sa.db.authTypes.DeleteOneWithContext(context, bson.M{"code": old}, nil)
@@ -94,8 +92,9 @@ func (sa *Adapter) migrateAuthTypes() error {
 
 		//3. migrate credentials in batches
 		removedCredentialIDs := make([]string, 0)
+		batch := 0
 		for {
-			removedPermanentlyIDsBatch, err := sa.migrateCredentials(context, removedAuthTypeIDsMap, removedAuthTypeIDsList)
+			removedPermanentlyIDsBatch, err := sa.migrateCredentials(context, batch, removedAuthTypeIDsMap)
 			if err != nil {
 				return errors.WrapErrorAction("migrating", model.TypeCredential, nil, err)
 			}
@@ -106,6 +105,7 @@ func (sa *Adapter) migrateAuthTypes() error {
 			for _, id := range removedPermanentlyIDsBatch {
 				removedPermanentlyIDsBatch = append(removedPermanentlyIDsBatch, id)
 			}
+			batch++
 		}
 
 		//4. migrate app orgs
@@ -126,12 +126,13 @@ func (sa *Adapter) migrateAuthTypes() error {
 	return sa.PerformTransaction(transaction)
 }
 
-func (sa *Adapter) migrateCredentials(context TransactionContext, removedAuthTypesMap map[string]model.AuthType, removedAuthTypeIDs []string) ([]string, error) {
+func (sa *Adapter) migrateCredentials(context TransactionContext, batch int, removedAuthTypes map[string]model.AuthType) ([]string, error) {
 	findOptions := options.Find()
 	findOptions.SetLimit(int64(migrationBatchSize))
+	findOptions.SetSkip(int64(batch * migrationBatchSize))
 
 	var credentialsBatch []credential
-	err := sa.db.credentials.FindWithContext(context, bson.M{"auth_type_id": bson.M{"$in": removedAuthTypeIDs}}, &credentialsBatch, findOptions)
+	err := sa.db.credentials.FindWithContext(context, bson.M{}, &credentialsBatch, findOptions)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeCredential, nil, err)
 	}
@@ -153,7 +154,7 @@ func (sa *Adapter) migrateCredentials(context TransactionContext, removedAuthTyp
 		credentialsBatchIDs = append(credentialsBatchIDs, cred.ID)
 
 		var migrated credential
-		if newAuthType, exists := removedAuthTypesMap[cred.AuthTypeID]; exists && newAuthType.Code == "password" {
+		if newAuthType, exists := removedAuthTypes[cred.AuthTypeID]; exists && newAuthType.Code == "password" {
 			// found a password credential, migrate it
 			passwordValue, err := utils.JSONConvert[passwordCreds](cred.Value)
 			if err != nil {
@@ -255,27 +256,30 @@ func (sa *Adapter) migrateAppOrgs(context TransactionContext, removedAuthTypes m
 	}
 
 	for orgID, identityProviderSettings := range orgIDs {
+		batch := 0
 		for {
-			accountsBatchSize, err := sa.migrateAccounts(context, orgID, identityProviderSettings, removedAuthTypes, removedCredentials)
+			accountsBatchSize, err := sa.migrateAccounts(context, batch, orgID, identityProviderSettings, removedAuthTypes, removedCredentials)
 			if err != nil {
 				return errors.WrapErrorAction("migrating", model.TypeAccount, &logutils.FieldArgs{"org_id": orgID}, err)
 			}
 			if accountsBatchSize != nil && *accountsBatchSize == 0 {
 				break
 			}
+
+			batch++
 		}
 	}
 
 	return nil
 }
 
-func (sa *Adapter) migrateAccounts(context TransactionContext, orgID string, identityProviderSettings model.IdentityProviderSetting, removedAuthTypes map[string]model.AuthType, removedCredentials []string) (*int, error) {
+func (sa *Adapter) migrateAccounts(context TransactionContext, batch int, orgID string, identityProviderSettings model.IdentityProviderSetting, removedAuthTypes map[string]model.AuthType, removedCredentials []string) (*int, error) {
 	findOptions := options.Find()
 	findOptions.SetLimit(int64(migrationBatchSize))
+	findOptions.SetSkip(int64(batch * migrationBatchSize))
 
-	filter := bson.M{"org_id": orgID, "identifiers": bson.M{"$exists": false}}
 	var accountsBatch []tenantAccount
-	err := sa.db.tenantsAccounts.Find(filter, &accountsBatch, findOptions)
+	err := sa.db.tenantsAccounts.Find(bson.M{"org_id": orgID}, &accountsBatch, findOptions)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"org_id": orgID}, err)
 	}
@@ -285,8 +289,10 @@ func (sa *Adapter) migrateAccounts(context TransactionContext, orgID string, ide
 		return &numAccounts, nil
 	}
 
+	accountsBatchIDs := make([]string, len(accountsBatch))
 	migratedAccounts := []interface{}{}
-	for _, acct := range accountsBatch {
+	for i, acct := range accountsBatch {
+		accountsBatchIDs[i] = acct.ID
 		migrated := acct
 		identifiers := make([]accountIdentifier, 0)
 		authTypes := make([]accountAuthType, 0)
@@ -305,11 +311,6 @@ func (sa *Adapter) migrateAccounts(context TransactionContext, orgID string, ide
 						identifierCode = "phone"
 					} else {
 						identifierCode = "username"
-					}
-
-					if strings.Contains(identifier, "-") {
-						identifierParts := strings.Split(identifier, "-")
-						identifier = identifierParts[0]
 					}
 				}
 
@@ -396,8 +397,8 @@ func (sa *Adapter) migrateAccounts(context TransactionContext, orgID string, ide
 			authTypes = append(authTypes, newAat)
 		}
 
-		// if there are no valid auth types then the account is inaccessible, so do not re-insert it
-		if len(authTypes) == 0 {
+		// if there are no valid auth types or identifiers then the account is inaccessible, so do not re-insert it
+		if len(authTypes) == 0 || len(identifiers) == 0 {
 			continue
 		}
 
@@ -451,7 +452,7 @@ func (sa *Adapter) migrateAccounts(context TransactionContext, orgID string, ide
 		migratedAccounts = append(migratedAccounts, migrated)
 	}
 
-	_, err = sa.db.tenantsAccounts.DeleteManyWithContext(context, filter, nil)
+	_, err = sa.db.tenantsAccounts.DeleteManyWithContext(context, bson.M{"_id": bson.M{"$in": accountsBatchIDs}, "org_id": orgID}, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
 	}

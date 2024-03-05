@@ -131,7 +131,7 @@ func (sa *Adapter) Start() error {
 	// migrate to tenants accounts
 	err = sa.migrateToTenantsAccounts()
 	if err != nil {
-		return err
+		return errors.WrapErrorAction("migrating", "accounts to orgs_accounts", nil, err)
 	}
 
 	err = sa.migrateAuthTypes()
