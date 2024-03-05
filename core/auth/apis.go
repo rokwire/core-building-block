@@ -662,8 +662,9 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appID string, orgID
 // CreateAccounts create accounts in the system
 func (a *Auth) CreateAccounts(partialAccount []model.AccountData, creatorPermissions []string, clientVersion *string, l *logs.Log) ([]model.Account, map[string]interface{}, error) {
 	transaction := func(context storage.TransactionContext) error {
-		for _, p := range partialAccount {
+		var newAccounts []model.Account
 
+		for _, p := range partialAccount {
 			if p.AuthType != AuthTypeOidc && p.AuthType != AuthTypeEmail && !strings.HasSuffix(p.AuthType, "_oidc") {
 				return errors.ErrorData(logutils.StatusInvalid, "auth type", nil)
 			}
@@ -671,12 +672,10 @@ func (a *Auth) CreateAccounts(partialAccount []model.AccountData, creatorPermiss
 			// check if the provided auth type is supported by the provided application and organization
 			authType, appOrg, err := a.validateAuthTypeForAppOrg(p.AuthType, p.AppID, p.OrgID)
 			if err != nil {
-				errors.WrapErrorAction(logutils.ActionValidate, model.TypeAuthType, nil, err)
+				return errors.WrapErrorAction(logutils.ActionValidate, model.TypeAuthType, nil, err)
 			}
 
 			// create account
-			var newAccounts []model.Account
-			var newAccount *model.Account
 			//find the account for the org and the user identity
 			foundedAccount, err := a.storage.FindAccountByOrgAndIdentifier(context, appOrg.Organization.ID, authType.ID, p.Identifier, appOrg.ID)
 			if err != nil {
@@ -695,21 +694,17 @@ func (a *Auth) CreateAccounts(partialAccount []model.AccountData, creatorPermiss
 			}
 
 			//apply operation
+			var newAccount *model.Account
 			switch operation {
 			case "app-sign-up":
 				// account exists in the organization but not for the application
-
 				udatedAccount, err := a.appSignUp(context, *foundedAccount, *appOrg, *p.Permissions, *p.RoleIds, *p.GroupIds, clientVersion, creatorPermissions, l)
 				if err != nil {
 					return errors.WrapErrorAction("app sign up", "", nil, err)
 				}
-
 				newAccount = udatedAccount
-				newAccounts = append(newAccounts, *newAccount)
-				return nil
 			case "org-sign-up":
 				// account does not exist in the organization
-
 				var accountAuthType *model.AccountAuthType
 
 				p.Profile.DateCreated = time.Now().UTC()
@@ -733,18 +728,21 @@ func (a *Auth) CreateAccounts(partialAccount []model.AccountData, creatorPermiss
 				}
 
 				newAccount = &accountAuthType.Account
-				newAccounts = append(newAccounts, *newAccount)
-				return nil
+			default:
+				return errors.Newf("not supported operation - create account via admin API")
 			}
 
-			return errors.Newf("not supported operation - create account via admin API")
+			newAccounts = append(newAccounts, *newAccount) // Append new account to slice
 		}
+
 		return nil
 	}
+
 	err := a.storage.PerformTransaction(transaction)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionCreate, "admin account", nil, err)
 	}
+
 	return nil, nil, nil
 }
 
