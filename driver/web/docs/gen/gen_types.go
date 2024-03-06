@@ -202,28 +202,30 @@ type AccessTokenExpirationPolicy struct {
 
 // Account defines model for Account.
 type Account struct {
-	Anonymous               *bool                    `json:"anonymous,omitempty"`
-	AppOrg                  *ApplicationOrganization `json:"app_org"`
-	Apps                    *[]PartialApp            `json:"apps,omitempty"`
-	AuthTypes               *[]AccountAuthType       `json:"auth_types,omitempty"`
-	Devices                 *[]Device                `json:"devices,omitempty"`
-	Groups                  *[]AppOrgGroup           `json:"groups,omitempty"`
-	Id                      *string                  `json:"id,omitempty"`
-	Identifiers             *[]AccountIdentifier     `json:"identifiers,omitempty"`
-	LastAccessTokenDate     *string                  `json:"last_access_token_date,omitempty"`
-	LastLoginDate           *string                  `json:"last_login_date,omitempty"`
-	MostRecentClientVersion *string                  `json:"most_recent_client_version,omitempty"`
-	Permissions             *[]Permission            `json:"permissions,omitempty"`
-	Preferences             *map[string]interface{}  `json:"preferences"`
-	Privacy                 *Privacy                 `json:"privacy,omitempty"`
-	Profile                 *Profile                 `json:"profile,omitempty"`
-	Roles                   *[]AppOrgRole            `json:"roles,omitempty"`
-	Scopes                  *[]string                `json:"scopes,omitempty"`
-	Secrets                 *map[string]interface{}  `json:"secrets"`
-	System                  *bool                    `json:"system,omitempty"`
-	SystemConfigs           *map[string]interface{}  `json:"system_configs"`
+	Anonymous *bool                    `json:"anonymous,omitempty"`
+	AppOrg    *ApplicationOrganization `json:"app_org"`
+	Apps      *[]PartialApp            `json:"apps,omitempty"`
+	AuthTypes *[]AccountAuthType       `json:"auth_types,omitempty"`
+	Devices   *[]Device                `json:"devices,omitempty"`
 	// Deprecated:
-	Username *string `json:"username"`
+	ExternalIds             *map[string]interface{} `json:"external_ids,omitempty"`
+	Groups                  *[]AppOrgGroup          `json:"groups,omitempty"`
+	Id                      *string                 `json:"id,omitempty"`
+	Identifiers             *[]AccountIdentifier    `json:"identifiers,omitempty"`
+	LastAccessTokenDate     *string                 `json:"last_access_token_date,omitempty"`
+	LastLoginDate           *string                 `json:"last_login_date,omitempty"`
+	MostRecentClientVersion *string                 `json:"most_recent_client_version,omitempty"`
+	Permissions             *[]Permission           `json:"permissions,omitempty"`
+	Preferences             *map[string]interface{} `json:"preferences,omitempty"`
+	Privacy                 *Privacy                `json:"privacy,omitempty"`
+	Profile                 *Profile                `json:"profile,omitempty"`
+	Roles                   *[]AppOrgRole           `json:"roles,omitempty"`
+	Scopes                  *[]string               `json:"scopes,omitempty"`
+	Secrets                 *map[string]interface{} `json:"secrets,omitempty"`
+	System                  *bool                   `json:"system,omitempty"`
+	SystemConfigs           *map[string]interface{} `json:"system_configs,omitempty"`
+	// Deprecated:
+	Username *string `json:"username,omitempty"`
 	Verified *bool   `json:"verified,omitempty"`
 }
 
@@ -561,27 +563,29 @@ type OrganizationConfig struct {
 
 // PartialAccount defines model for PartialAccount.
 type PartialAccount struct {
-	Anonymous     bool                    `json:"anonymous"`
-	AppId         string                  `json:"app_id"`
-	Apps          *[]PartialApp           `json:"apps,omitempty"`
-	AuthTypes     []AccountAuthType       `json:"auth_types"`
-	DateCreated   *string                 `json:"date_created,omitempty"`
-	DateUpdated   *string                 `json:"date_updated"`
+	Anonymous   bool              `json:"anonymous"`
+	AppId       string            `json:"app_id"`
+	Apps        *[]PartialApp     `json:"apps,omitempty"`
+	AuthTypes   []AccountAuthType `json:"auth_types"`
+	DateCreated *string           `json:"date_created,omitempty"`
+	DateUpdated *string           `json:"date_updated,omitempty"`
+	// Deprecated:
+	ExternalIds   *map[string]interface{} `json:"external_ids,omitempty"`
 	FirstName     string                  `json:"first_name"`
 	Groups        []AppOrgGroup           `json:"groups"`
 	Id            *string                 `json:"id,omitempty"`
 	Identifiers   []AccountIdentifier     `json:"identifiers"`
 	LastName      string                  `json:"last_name"`
 	OrgId         string                  `json:"org_id"`
-	Params        *map[string]interface{} `json:"params"`
+	Params        *map[string]interface{} `json:"params,omitempty"`
 	Permissions   []Permission            `json:"permissions"`
 	Privacy       *Privacy                `json:"privacy,omitempty"`
 	Roles         []AppOrgRole            `json:"roles"`
 	Scopes        *[]string               `json:"scopes,omitempty"`
 	System        *bool                   `json:"system,omitempty"`
-	SystemConfigs *map[string]interface{} `json:"system_configs"`
+	SystemConfigs *map[string]interface{} `json:"system_configs,omitempty"`
 	// Deprecated:
-	Username *string `json:"username"`
+	Username *string `json:"username,omitempty"`
 	Verified *bool   `json:"verified,omitempty"`
 }
 

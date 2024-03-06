@@ -82,7 +82,7 @@ type Administration interface {
 		authTypeIdentifier *string, anonymous *bool, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error)
 	AdmGetAccount(cOrgID string, cAppID string, accountID string) (*model.Account, error)
 
-	AdmGetFilterAccounts(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]map[string]interface{}, error)
+	AdmGetFilterAccounts(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]model.Account, error)
 	AdmGetFilterAccountsCount(searchParams map[string]interface{}, appID string, orgID string) (int64, error)
 
 	AdmUpdateAccountUsername(accountID string, appID string, orgID string, username string) error
@@ -120,13 +120,13 @@ type Encryption interface {
 type BBs interface {
 	BBsGetTest() string
 
-	BBsGetAccounts(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]map[string]interface{}, error)
+	BBsGetAccounts(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]model.Account, error)
 	BBsGetAccountsCount(searchParams map[string]interface{}, appID string, orgID string) (int64, error)
 }
 
 // TPS exposes user related APIs used by third-party services
 type TPS interface {
-	TPSGetAccounts(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]map[string]interface{}, error)
+	TPSGetAccounts(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]model.Account, error)
 	TPSGetAccountsCount(searchParams map[string]interface{}, appID string, orgID string) (int64, error)
 }
 
@@ -171,7 +171,7 @@ type Storage interface {
 		identifier *string, anonymous *bool, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error)
 	FindPublicAccounts(context storage.TransactionContext, appID string, orgID string, limit *int, offset *int,
 		search *string, firstName *string, lastName *string, username *string, followingID *string, followerID *string, userID string) ([]model.PublicAccount, error)
-	FindAccountsByParams(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]map[string]interface{}, error)
+	FindAccountsByParams(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]model.Account, error)
 	CountAccountsByParams(searchParams map[string]interface{}, appID string, orgID string) (int64, error)
 	FindAccountsByAccountID(context storage.TransactionContext, appID string, orgID string, accountIDs []string) ([]model.Account, error)
 	FindAccountsByUsername(context storage.TransactionContext, appOrg *model.ApplicationOrganization, username string) ([]model.Account, error)

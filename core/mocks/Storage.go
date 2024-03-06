@@ -468,23 +468,23 @@ func (_m *Storage) FindAccountsByAccountID(context storage.TransactionContext, a
 }
 
 // FindAccountsByParams provides a mock function with given fields: searchParams, appID, orgID, limit, offset, allAccess, approvedKeys
-func (_m *Storage) FindAccountsByParams(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]map[string]interface{}, error) {
+func (_m *Storage) FindAccountsByParams(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]model.Account, error) {
 	ret := _m.Called(searchParams, appID, orgID, limit, offset, allAccess, approvedKeys)
 
 	if len(ret) == 0 {
 		panic("no return value specified for FindAccountsByParams")
 	}
 
-	var r0 []map[string]interface{}
+	var r0 []model.Account
 	var r1 error
-	if rf, ok := ret.Get(0).(func(map[string]interface{}, string, string, int, int, bool, []string) ([]map[string]interface{}, error)); ok {
+	if rf, ok := ret.Get(0).(func(map[string]interface{}, string, string, int, int, bool, []string) ([]model.Account, error)); ok {
 		return rf(searchParams, appID, orgID, limit, offset, allAccess, approvedKeys)
 	}
-	if rf, ok := ret.Get(0).(func(map[string]interface{}, string, string, int, int, bool, []string) []map[string]interface{}); ok {
+	if rf, ok := ret.Get(0).(func(map[string]interface{}, string, string, int, int, bool, []string) []model.Account); ok {
 		r0 = rf(searchParams, appID, orgID, limit, offset, allAccess, approvedKeys)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]map[string]interface{})
+			r0 = ret.Get(0).([]model.Account)
 		}
 	}
 

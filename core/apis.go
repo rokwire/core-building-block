@@ -525,7 +525,7 @@ func (s *administrationImpl) AdmGetAccount(cOrgID string, cAppID string, account
 	return s.app.sharedGetAccount(cOrgID, cAppID, accountID)
 }
 
-func (s *administrationImpl) AdmGetFilterAccounts(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]map[string]interface{}, error) {
+func (s *administrationImpl) AdmGetFilterAccounts(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]model.Account, error) {
 	return s.app.sharedGetAccountsByParams(searchParams, appID, orgID, limit, offset, allAccess, approvedKeys)
 }
 
@@ -602,7 +602,7 @@ func (s *bbsImpl) BBsGetTest() string {
 	return s.app.bbsGetTest()
 }
 
-func (s *bbsImpl) BBsGetAccounts(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]map[string]interface{}, error) {
+func (s *bbsImpl) BBsGetAccounts(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]model.Account, error) {
 	return s.app.sharedGetAccountsByParams(searchParams, appID, orgID, limit, offset, allAccess, approvedKeys)
 }
 
@@ -618,7 +618,7 @@ type tpsImpl struct {
 	app *application
 }
 
-func (s *tpsImpl) TPSGetAccounts(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]map[string]interface{}, error) {
+func (s *tpsImpl) TPSGetAccounts(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]model.Account, error) {
 	return s.app.sharedGetAccountsByParams(searchParams, appID, orgID, limit, offset, allAccess, approvedKeys)
 }
 

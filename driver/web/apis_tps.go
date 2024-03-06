@@ -230,7 +230,8 @@ func (h TPSApisHandler) getAccounts(l *logs.Log, r *http.Request, claims *tokena
 		return l.HTTPResponseErrorAction(logutils.ActionGet, model.TypeAccount, &errFields, err, http.StatusInternalServerError, false)
 	}
 
-	respData, err := json.Marshal(accounts)
+	accountsResp := accountsToDef(accounts)
+	respData, err := json.Marshal(accountsResp)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("accounts response"), nil, err, http.StatusInternalServerError, false)
 	}

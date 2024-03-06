@@ -908,7 +908,7 @@ func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, 
 }
 
 // FindAccountsByParams finds accounts by an arbitrary set of search params
-func (sa *Adapter) FindAccountsByParams(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]map[string]interface{}, error) {
+func (sa *Adapter) FindAccountsByParams(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]model.Account, error) {
 	//find app orgs accessed by service
 	appOrgs, err := sa.FindApplicationOrganizations(utils.StringOrNil(appID, authutils.AllApps), utils.StringOrNil(orgID, authutils.AllOrgs))
 	if err != nil {
@@ -926,7 +926,7 @@ func (sa *Adapter) FindAccountsByParams(searchParams map[string]interface{}, app
 	searchParams["org_apps_memberships.app_org_id"] = appOrgIDs
 	filter := sa.getFilterForParams(searchParams)
 
-	var accounts []map[string]interface{}
+	var accounts []tenantAccount
 	options := options.Find()
 	options.SetLimit(int64(limit))
 	options.SetSkip(int64(offset))
@@ -941,9 +941,14 @@ func (sa *Adapter) FindAccountsByParams(searchParams map[string]interface{}, app
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
 
-	sa.convertIDs(accounts)
+	//all memberships applications organizations - from cache
+	allAppsOrgs, err := sa.getCachedApplicationOrganizations()
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeApplicationOrganization, nil, err)
+	}
+	result := accountsFromStorage(accounts, nil, allAppsOrgs, sa)
 
-	return accounts, nil
+	return result, nil
 }
 
 // CountAccountsByParams find accounts by an arbitrary set of search params
@@ -1033,7 +1038,7 @@ func (sa *Adapter) FindAccountsByUsername(context TransactionContext, appOrg *mo
 		return nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeApplicationOrganization, nil, err)
 	}
 
-	accounts := accountsFromStorage(accountResult, nil, allAppsOrgs, sa)
+	accounts := accountsFromStorage(accountResult, &appOrg.ID, allAppsOrgs, sa)
 	return accounts, nil
 }
 
@@ -3633,7 +3638,21 @@ func (sa *Adapter) getFilterForParams(params map[string]interface{}) bson.M {
 		if k == "id" {
 			k = "_id"
 		}
-		if v != nil && reflect.TypeOf(v).Kind() == reflect.Slice {
+
+		// an identifier search param should always have key "identifier.<code>"
+		// for backwards compatibility, the identifier search param may also be "external_ids.<code>"
+		if strings.HasPrefix(k, "identifiers") || strings.HasPrefix(k, "external_ids") {
+			identifierParamParts := strings.Split(k, ".")
+			if len(identifierParamParts) != 2 {
+				continue
+			}
+
+			if v != nil && reflect.TypeOf(v).Kind() == reflect.Slice {
+				filter["identifiers.identifier"] = bson.M{"$elemMatch": bson.M{"code": identifierParamParts[1], "identifier": bson.M{"$in": v}}}
+			} else {
+				filter["identifiers.identifier"] = bson.M{"$elemMatch": bson.M{"code": identifierParamParts[1], "identifier": v}}
+			}
+		} else if v != nil && reflect.TypeOf(v).Kind() == reflect.Slice {
 			filter[k] = bson.M{"$in": v}
 		} else if v != nil && reflect.TypeOf(v).Kind() == reflect.Map {
 			vMap, ok := v.(map[string]interface{})
@@ -3669,33 +3688,15 @@ func (sa *Adapter) getProjectionForKeys(keys []string) bson.D {
 			k = "_id"
 			usesID = true
 		}
+		if k == "external_ids" {
+			k = "identifiers"
+		}
 		projection = append(projection, bson.E{Key: k, Value: 1})
 	}
 	if !usesID {
 		projection = append(projection, bson.E{Key: "_id", Value: 0})
 	}
 	return projection
-}
-
-func (sa *Adapter) convertIDs(results []map[string]interface{}) {
-	for _, result := range results {
-		sa.convertID(result)
-	}
-}
-
-func (sa *Adapter) convertID(result map[string]interface{}) {
-	for k, v := range result {
-		if k == "_id" {
-			result["id"] = v
-			delete(result, "_id")
-		}
-		//TODO: recursively search for embedded _id if necessary
-		// if v != nil && reflect.TypeOf(v).Kind() == reflect.Map {
-		// 	mapVal := v.(map[string]interface{})
-		// 	sa.convertID(mapVal)
-		// 	result[k] = mapVal
-		// }
-	}
 }
 
 func (sa *Adapter) abortTransaction(sessionContext mongo.SessionContext) {

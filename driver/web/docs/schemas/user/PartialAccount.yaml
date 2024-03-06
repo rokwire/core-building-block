@@ -56,10 +56,8 @@ properties:
       $ref: "./AccountAuthType.yaml"
   system_configs:
     type: object
-    nullable: true
   params:
     type: object
-    nullable: true
   anonymous:
     type: boolean
   privacy:
@@ -71,8 +69,9 @@ properties:
     type: string
   date_updated:
     type: string
-    nullable: true
+  external_ids:
+    type: object
+    deprecated: true
   username:
     type: string
-    nullable: true
     deprecated: true

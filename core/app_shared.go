@@ -83,13 +83,13 @@ func (app *application) sharedGetAccount(cOrgID string, cAppID string, accountID
 	return account, nil
 }
 
-func (app *application) sharedGetAccountsByParams(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]map[string]interface{}, error) {
+func (app *application) sharedGetAccountsByParams(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]model.Account, error) {
 	accounts, err := app.storage.FindAccountsByParams(searchParams, appID, orgID, limit, offset, allAccess, approvedKeys)
 	if err != nil {
 		return nil, err
 	}
 	if accounts == nil {
-		return []map[string]interface{}{}, nil
+		return []model.Account{}, nil
 	}
 	return accounts, nil
 }

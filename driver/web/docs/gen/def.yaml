@@ -3171,7 +3171,7 @@ paths:
                 value:
                   profile.first_name: Example
                   preferences.privacy_level: 4
-                  identifiers.identifier:
+                  identifiers.uin:
                     - '123456789'
                     - '12312434'
               multiple_value:
@@ -3182,7 +3182,7 @@ paths:
                     - 3
                     - 4
                     - 5
-                  identifiers.identifier:
+                  identifiers.uin:
                     - '123456789'
                     - '12312434'
         required: true
@@ -3194,7 +3194,7 @@ paths:
               schema:
                 type: array
                 items:
-                  type: object
+                  $ref: '#/components/schemas/Account'
         '400':
           description: Bad request
         '401':
@@ -3225,7 +3225,7 @@ paths:
                 value:
                   profile.first_name: Example
                   preferences.privacy_level: 4
-                  identifiers.identifier:
+                  identifiers.uin:
                     - '123456789'
                     - '12312434'
               multiple_value:
@@ -3236,7 +3236,7 @@ paths:
                     - 3
                     - 4
                     - 5
-                  identifiers.identifier:
+                  identifiers.uin:
                     - '123456789'
                     - '12312434'
         required: true
@@ -4261,7 +4261,7 @@ paths:
                 value:
                   profile.first_name: Example
                   preferences.privacy_level: 4
-                  identifiers.identifier: '123456789'
+                  identifiers.uin: '123456789'
               multiple_value:
                 summary: 'Some single-value, some multi-value search parameters'
                 value:
@@ -4270,7 +4270,7 @@ paths:
                     - 3
                     - 4
                     - 5
-                  identifiers.identifier: '123456789'
+                  identifiers.uin: '123456789'
         required: true
       responses:
         '200':
@@ -4280,7 +4280,7 @@ paths:
               schema:
                 type: array
                 items:
-                  type: object
+                  $ref: '#/components/schemas/Account'
         '400':
           description: Bad request
         '401':
@@ -4330,7 +4330,7 @@ paths:
                 value:
                   profile.first_name: Example
                   preferences.privacy_level: 4
-                  identifiers.identifier: '123456789'
+                  identifiers.uin: '123456789'
               multiple_value:
                 summary: 'Some single-value, some multi-value search parameters'
                 value:
@@ -4339,7 +4339,7 @@ paths:
                     - 3
                     - 4
                     - 5
-                  identifiers.identifier: '123456789'
+                  identifiers.uin: '123456789'
         required: true
       responses:
         '200':
@@ -4602,7 +4602,7 @@ paths:
                 value:
                   profile.first_name: Example
                   preferences.privacy_level: 4
-                  identifiers.identifier: '123456789'
+                  identifiers.uin: '123456789'
               multiple_value:
                 summary: 'Some single-value, some multi-value search parameters'
                 value:
@@ -4611,7 +4611,7 @@ paths:
                     - 3
                     - 4
                     - 5
-                  identifiers.identifier: '123456789'
+                  identifiers.uin: '123456789'
         required: true
       responses:
         '200':
@@ -4621,7 +4621,7 @@ paths:
               schema:
                 type: array
                 items:
-                  type: object
+                  $ref: '#/components/schemas/Account'
         '400':
           description: Bad request
         '401':
@@ -4671,7 +4671,7 @@ paths:
                 value:
                   profile.first_name: Example
                   preferences.privacy_level: 4
-                  identifiers.identifier: '123456789'
+                  identifiers.uin: '123456789'
               multiple_value:
                 summary: 'Some single-value, some multi-value search parameters'
                 value:
@@ -4680,7 +4680,7 @@ paths:
                     - 3
                     - 4
                     - 5
-                  identifiers.identifier: '123456789'
+                  identifiers.uin: '123456789'
         required: true
       responses:
         '200':
@@ -6886,13 +6886,10 @@ components:
           $ref: '#/components/schemas/Privacy'
         preferences:
           type: object
-          nullable: true
         system_configs:
           type: object
-          nullable: true
         secrets:
           type: object
-          nullable: true
         anonymous:
           type: boolean
         verified:
@@ -6937,9 +6934,11 @@ components:
           type: string
         most_recent_client_version:
           type: string
+        external_ids:
+          type: object
+          deprecated: true
         username:
           type: string
-          nullable: true
           deprecated: true
     PublicAccount:
       required:
@@ -7017,10 +7016,8 @@ components:
             $ref: '#/components/schemas/AccountAuthType'
         system_configs:
           type: object
-          nullable: true
         params:
           type: object
-          nullable: true
         anonymous:
           type: boolean
         privacy:
@@ -7032,10 +7029,11 @@ components:
           type: string
         date_updated:
           type: string
-          nullable: true
+        external_ids:
+          type: object
+          deprecated: true
         username:
           type: string
-          nullable: true
           deprecated: true
     Profile:
       required:

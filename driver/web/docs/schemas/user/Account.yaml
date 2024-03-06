@@ -13,13 +13,10 @@ properties:
     $ref: "./Privacy.yaml"
   preferences:
     type: object
-    nullable: true
   system_configs:
     type: object
-    nullable: true
   secrets:
     type: object
-    nullable: true
   anonymous:
     type: boolean
   verified:
@@ -64,7 +61,9 @@ properties:
     type: string
   most_recent_client_version:
     type: string
+  external_ids:
+    type: object
+    deprecated: true
   username:
     type: string
-    nullable: true
     deprecated: true
