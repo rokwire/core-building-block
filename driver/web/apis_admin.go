@@ -494,6 +494,15 @@ func (h AdminApisHandler) getFilterAccounts(l *logs.Log, r *http.Request, claims
 	}
 
 	accountsResp := accountsToDef(accounts)
+	// remove identifiers if not approved (identifiers may be returned when searching by external IDs)
+	if !utils.Contains(approvedKeys, "identifiers") {
+		for i, account := range accountsResp {
+			if account.Identifiers != nil {
+				accountsResp[i].Identifiers = nil
+			}
+		}
+	}
+
 	respData, err := json.Marshal(accountsResp)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("accounts response"), nil, err, http.StatusInternalServerError, false)
