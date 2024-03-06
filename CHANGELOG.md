@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Decouple authentication and verification mechanisms [#665](https://github.com/rokwire/core-building-block/issues/665)
 - Refactor account auth types [#674](https://github.com/rokwire/core-building-block/issues/674)
+- Improve request context logging
 
 ## [1.38.1] - 2024-03-05
 ### Fixed

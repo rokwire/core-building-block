@@ -439,10 +439,11 @@ func (sa *Adapter) migrateAccounts(context TransactionContext, batch int, orgID 
 				}
 			}
 			if !foundUsername {
-				identifiers = append(identifiers, accountIdentifier{ID: uuid.NewString(), Code: "username", Identifier: *acct.Username, Verified: true, DateCreated: now})
+				identifiers = append(identifiers, accountIdentifier{ID: uuid.NewString(), Code: "username", Identifier: strings.TrimSpace(strings.ToLower(*acct.Username)), Verified: true, DateCreated: now})
 			}
 		}
 
+		migrated.OrgAppsMemberships = sa.mergeDuplicateAppMemberships(migrated) // merge multiple orgAppMemberships with the same app_org_id if any are found
 		migrated.AuthTypes = authTypes
 		migrated.Identifiers = identifiers
 		migrated.ExternalIDs = nil
@@ -465,6 +466,93 @@ func (sa *Adapter) migrateAccounts(context TransactionContext, batch int, orgID 
 	}
 
 	return &numAccounts, nil
+}
+
+func (sa *Adapter) mergeDuplicateAppMemberships(account tenantAccount) []orgAppMembership {
+	appMembershipIDs := make(map[string]int)
+	appMemberships := make([]orgAppMembership, 0)
+	for _, appMembership := range account.OrgAppsMemberships {
+		if _, foundID := appMembershipIDs[appMembership.AppOrgID]; !foundID {
+			appMembershipIDs[appMembership.AppOrgID] = len(appMemberships) // appMembershipIDs map value gives the index in updatedMemberships where all memberships with this app_org_id should be merged
+			appMemberships = append(appMemberships, appMembership)
+		} else {
+			index := appMembershipIDs[appMembership.AppOrgID]
+			// merge permissions
+			for _, permission := range appMembership.Permissions {
+				permissionExists := false
+				for _, existingPermission := range appMemberships[index].Permissions {
+					if existingPermission.ID == permission.ID {
+						permissionExists = true
+						break
+					}
+				}
+
+				if !permissionExists {
+					if appMemberships[index].Permissions == nil {
+						appMemberships[index].Permissions = make([]model.Permission, 0)
+					}
+					appMemberships[index].Permissions = append(appMemberships[index].Permissions, permission)
+				}
+			}
+			// merge roles
+			for _, role := range appMembership.Roles {
+				roleExists := false
+				for _, existingRole := range appMemberships[index].Roles {
+					if existingRole.Role.ID == role.Role.ID {
+						roleExists = true
+						break
+					}
+				}
+
+				if !roleExists {
+					if appMemberships[index].Roles == nil {
+						appMemberships[index].Roles = make([]accountRole, 0)
+					}
+					appMemberships[index].Roles = append(appMemberships[index].Roles, role)
+				}
+			}
+			// merge groups
+			for _, group := range appMembership.Groups {
+				groupExists := false
+				for _, existingGroup := range appMemberships[index].Groups {
+					if existingGroup.Group.ID == group.Group.ID {
+						groupExists = true
+						break
+					}
+				}
+
+				if !groupExists {
+					if appMemberships[index].Groups == nil {
+						appMemberships[index].Groups = make([]accountGroup, 0)
+					}
+					appMemberships[index].Groups = append(appMemberships[index].Groups, group)
+				}
+			}
+
+			// merge preferences
+			for k, v := range appMembership.Preferences {
+				if _, foundKey := appMemberships[index].Preferences[k]; !foundKey {
+					appMemberships[index].Preferences[k] = v
+				}
+			}
+			// tenant accounts existing before this migration have no stored secrets (nothing to merge)
+
+			// use the newer of the two most recent client versions
+			if appMemberships[index].MostRecentClientVersion == nil {
+				appMemberships[index].MostRecentClientVersion = appMembership.MostRecentClientVersion
+			} else if appMembership.MostRecentClientVersion != nil {
+				existingClientVersionNumbers := model.VersionNumbersFromString(*appMemberships[index].MostRecentClientVersion)
+				clientVersionNumbers := model.VersionNumbersFromString(*appMembership.MostRecentClientVersion)
+
+				if clientVersionNumbers != nil && !clientVersionNumbers.LessThanOrEqualTo(existingClientVersionNumbers) {
+					versionString := clientVersionNumbers.String()
+					appMemberships[index].MostRecentClientVersion = &versionString
+				}
+			}
+		}
+	}
+
+	return appMemberships
 }
 
 func (sa *Adapter) migrateLoginSessions(context TransactionContext, removedAuthTypes map[string]model.AuthType) error {
