@@ -685,7 +685,7 @@ func (a *Auth) CreateAdminAccount(authenticationType string, appID string, orgID
 
 	transaction := func(context storage.TransactionContext) error {
 		//1. find the account for the org and the user identity
-		account, err := a.storage.FindAccount(context, identifierImpl.getCode(), identifier, &appOrg.ID, &appOrg.Organization.ID)
+		account, err := a.storage.FindAccount(context, identifierImpl.getCode(), identifier, &appOrg.ID, nil) // do not provide an appOrgID because we want to know if there is an account in the organization with the same identifier
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 		}
@@ -782,7 +782,7 @@ func (a *Auth) CreateAccounts(partialAccount []model.AccountData, creatorPermiss
 
 			// create account
 			//find the account for the org and the user identity
-			foundedAccount, err := a.storage.FindAccount(context, identifierImpl.getCode(), identifier, &appOrg.ID, &appOrg.Organization.ID)
+			foundedAccount, err := a.storage.FindAccount(context, identifierImpl.getCode(), identifier, &appOrg.ID, nil) // do not provide an appOrgID because we want to know if there is an account in the organization with the same identifier
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 			}

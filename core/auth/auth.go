@@ -286,7 +286,7 @@ func (a *Auth) applyExternalAuthType(supportedAuthType model.SupportedAuthType, 
 		code = IdentifierTypeEmail
 	}
 
-	account, err := a.storage.FindAccount(nil, code, externalUser.Identifier, &appOrg.Organization.ID, &appOrg.ID)
+	account, err := a.storage.FindAccount(nil, code, externalUser.Identifier, &appOrg.Organization.ID, nil) // do not provide an appOrgID because we want to know if there is an account in the organization with the same identifier
 	if err != nil {
 		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
@@ -646,7 +646,7 @@ func (a *Auth) applyAuthType(supportedAuthType model.SupportedAuthType, appOrg m
 	var account *model.Account
 	appOrgID := &appOrg.ID
 	if identifierImpl == nil {
-		// if given an account identifier ID, find the account and attempt sign in
+		// if given an account identifier ID, find the account and attempt sign in (operationSignIn)
 		if accountIdentifierID != nil {
 			account, err = a.storage.FindAccountByIdentifierID(nil, *accountIdentifierID, appOrgID)
 			if err != nil {
@@ -692,7 +692,7 @@ func (a *Auth) applyAuthType(supportedAuthType model.SupportedAuthType, appOrg m
 	code := identifierImpl.getCode()
 	identifier := identifierImpl.getIdentifier()
 	//find the account for the org and the user identity
-	account, err = a.storage.FindAccount(nil, code, identifier, &appOrg.Organization.ID, appOrgID)
+	account, err = a.storage.FindAccount(nil, code, identifier, &appOrg.Organization.ID, nil) // do not provide an appOrgID because we want to know if there is an account in the organization with the same identifier
 	if err != nil {
 		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"app_org_id": appOrg.ID, "code": code, "identifier": identifier}, err)
 	}
