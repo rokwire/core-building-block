@@ -15,6 +15,7 @@
 package storage
 
 import (
+	"context"
 	"core-building-block/core/model"
 	"core-building-block/utils"
 	"strings"
@@ -25,6 +26,7 @@ import (
 	"github.com/rokwire/logging-library-go/v2/logutils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
@@ -123,7 +125,7 @@ func (sa *Adapter) migrateAuthTypes() error {
 		return nil
 	}
 
-	return sa.PerformTransaction(transaction)
+	return sa.performTransactionWithTimeout(transaction, 10*time.Minute)
 }
 
 func (sa *Adapter) migrateCredentials(context TransactionContext, batch int, removedAuthTypes map[string]model.AuthType) ([]string, error) {
@@ -632,7 +634,7 @@ func (sa *Adapter) startPhase1() error {
 		return nil
 	}
 
-	err := sa.PerformTransaction(transaction)
+	err := sa.performTransactionWithTimeout(transaction, 10*time.Minute)
 	if err != nil {
 		return err
 	}
@@ -651,34 +653,39 @@ func (sa *Adapter) findNotMigratedCount(context TransactionContext) (*int64, err
 }
 
 func (sa *Adapter) processDuplicateAccounts(context TransactionContext) error {
+	// batch the processing of the existing accounts
+	batch := 0
+	for {
+		//find the duplicate accounts
+		items, err := sa.findDuplicateAccounts(context, batch)
+		if err != nil {
+			return err
+		}
+		if len(items) == 0 {
+			sa.logger.Info("there is no more duplicated accounts")
+			break
+		}
 
-	//find the duplicate accounts
-	items, err := sa.findDuplicateAccounts(context)
-	if err != nil {
-		return err
-	}
-	if len(items) == 0 {
-		sa.logger.Info("there is no duplicated accounts")
-		return nil
-	}
+		//construct tenants accounts
+		tenantsAccounts, err := sa.constructTenantsAccounts(items)
+		if err != nil {
+			return err
+		}
 
-	//construct tenants accounts
-	tenantsAccounts, err := sa.constructTenantsAccounts(items)
-	if err != nil {
-		return err
-	}
+		//save tenants accounts
+		err = sa.insertTenantAccounts(context, tenantsAccounts)
+		if err != nil {
+			return err
+		}
 
-	//save tenants accounts
-	err = sa.insertTenantAccounts(context, tenantsAccounts)
-	if err != nil {
-		return err
-	}
+		//mark the old accounts as processed
+		accountsIDs := sa.getUniqueAccountsIDs(items)
+		err = sa.markAccountsAsProcessed(context, accountsIDs)
+		if err != nil {
+			return err
+		}
 
-	//mark the old accounts as processed
-	accountsIDs := sa.getUniqueAccountsIDs(items)
-	err = sa.markAccountsAsProcessed(context, accountsIDs)
-	if err != nil {
-		return err
+		batch++
 	}
 
 	return nil
@@ -921,10 +928,17 @@ func (sa *Adapter) findOrgIDByAppOrgID(appOrgID string, allAppsOrgs []model.Appl
 	return "", errors.Newf("no org for app org id - %s", appOrgID)
 }
 
-func (sa *Adapter) findDuplicateAccounts(context TransactionContext) (map[string][]account, error) {
+func (sa *Adapter) findDuplicateAccounts(context TransactionContext, batch int) (map[string][]account, error) {
 	pipeline := []bson.M{
 		{
 			"$match": bson.M{"migrated": bson.M{"$in": []interface{}{nil, false}}}, //iterate only not migrated records
+		},
+		// batch the matched accounts according to migrationBatchSize
+		{
+			"$skip": batch * migrationBatchSize,
+		},
+		{
+			"$limit": migrationBatchSize,
 		},
 		{
 			"$unwind": "$identifiers",
@@ -942,13 +956,6 @@ func (sa *Adapter) findDuplicateAccounts(context TransactionContext) (map[string
 				},
 			},
 		},
-		// {
-		// 	"$match": bson.M{
-		// 		"count": bson.M{
-		// 			"$gt": 1,
-		// 		},
-		// 	},
-		// },
 		{
 			"$group": bson.M{
 				"_id": nil,
@@ -1087,4 +1094,34 @@ func (sa *Adapter) getFullAccountsObjects(accountsIDs []accountItem, allAccounts
 	}
 
 	return result, nil
+}
+
+func (sa *Adapter) performTransactionWithTimeout(transaction func(context TransactionContext) error, timeout time.Duration) error {
+	// Setting a timeout for the transaction
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	// transaction
+	err := sa.db.dbClient.UseSession(ctx, func(sessionContext mongo.SessionContext) error {
+		err := sessionContext.StartTransaction()
+		if err != nil {
+			sa.abortTransaction(sessionContext)
+			return errors.WrapErrorAction(logutils.ActionStart, logutils.TypeTransaction, nil, err)
+		}
+
+		err = transaction(sessionContext)
+		if err != nil {
+			sa.abortTransaction(sessionContext)
+			return errors.WrapErrorAction("performing", logutils.TypeTransaction, nil, err)
+		}
+
+		err = sessionContext.CommitTransaction(sessionContext)
+		if err != nil {
+			sa.abortTransaction(sessionContext)
+			return errors.WrapErrorAction(logutils.ActionCommit, logutils.TypeTransaction, nil, err)
+		}
+		return nil
+	})
+
+	return err
 }
