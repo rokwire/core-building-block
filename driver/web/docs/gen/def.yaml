@@ -6197,7 +6197,6 @@ components:
         - name
         - multi_tenant
         - admin
-        - code
       type: object
       properties:
         id:
@@ -6209,8 +6208,6 @@ components:
           type: boolean
         admin:
           type: boolean
-        code:
-          type: string
         types:
           type: array
           items:
@@ -6538,15 +6535,12 @@ components:
       required:
         - id
         - name
-        - code
       type: object
       properties:
         id:
           readOnly: true
           type: string
         name:
-          type: string
-        code:
           type: string
     LoginSession:
       type: object

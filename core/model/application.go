@@ -276,7 +276,6 @@ type Application struct {
 
 	MultiTenant bool //safer community is multi-tenant
 	Admin       bool //is this an admin app?
-	Code        string
 	Types       []ApplicationType
 
 	Organizations []ApplicationOrganization

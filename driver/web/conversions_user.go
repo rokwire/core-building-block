@@ -27,11 +27,20 @@ func accountToDef(item model.Account) *Def.Account {
 	//privacy
 	privacy := privacyToDef(&item.Privacy)
 	//preferences
-	preferences := &item.Preferences
+	var preferences *map[string]interface{}
+	if item.Preferences != nil {
+		preferences = &item.Preferences
+	}
 	//secrets
-	secrets := &item.Secrets
+	var secrets *map[string]interface{}
+	if item.Secrets != nil {
+		secrets = &item.Secrets
+	}
 	//systemConfigs
-	systemConfigs := &item.SystemConfigs
+	var systemConfigs *map[string]interface{}
+	if item.SystemConfigs != nil {
+		systemConfigs = &item.SystemConfigs
+	}
 	//permissions
 	permissions := applicationPermissionsToDef(item.Permissions)
 	//roles
@@ -72,14 +81,18 @@ func accountToDef(item model.Account) *Def.Account {
 		profile.Phone = &phoneIdentifier.Identifier
 	}
 
-	var externalIDs map[string]interface{}
+	var externalIDs *map[string]interface{}
+	externalIDsVal := make(map[string]interface{})
 	for _, external := range item.GetExternalAccountIdentifiers() {
-		externalIDs[external.Code] = external.Identifier
+		externalIDsVal[external.Code] = external.Identifier
+	}
+	if len(externalIDsVal) > 0 {
+		externalIDs = &externalIDsVal
 	}
 
 	return &Def.Account{Id: &item.ID, Apps: &apps, Anonymous: &item.Anonymous, System: &item.AppOrg.Organization.System, Permissions: &permissions, Roles: &roles, Groups: &groups,
 		Privacy: privacy, Verified: &item.Verified, Scopes: &scopes, Identifiers: &identifiers, AuthTypes: &authTypes, Profile: profile, Preferences: preferences, Secrets: secrets,
-		SystemConfigs: systemConfigs, LastLoginDate: &lastLoginDate, LastAccessTokenDate: &lastAccessTokenDate, MostRecentClientVersion: item.MostRecentClientVersion, Username: username, ExternalIds: &externalIDs}
+		SystemConfigs: systemConfigs, LastLoginDate: &lastLoginDate, LastAccessTokenDate: &lastAccessTokenDate, MostRecentClientVersion: item.MostRecentClientVersion, Username: username, ExternalIds: externalIDs}
 }
 
 func accountsToDef(items []model.Account) []Def.Account {
@@ -104,7 +117,10 @@ func partialAccountToDef(item model.Account, params map[string]interface{}) *Def
 	}
 
 	//systemConfigs
-	systemConfigs := &item.SystemConfigs
+	var systemConfigs *map[string]interface{}
+	if item.SystemConfigs != nil {
+		systemConfigs = &item.SystemConfigs
+	}
 	//account identifiers
 	identifiers := accountIdentifiersToDef(item.Identifiers)
 	//account auth types
@@ -142,15 +158,19 @@ func partialAccountToDef(item model.Account, params map[string]interface{}) *Def
 	if usernameIdentifier := item.GetAccountIdentifier("username", ""); usernameIdentifier != nil {
 		username = &usernameIdentifier.Identifier
 	}
-	var externalIDs map[string]interface{}
+	var externalIDs *map[string]interface{}
+	externalIDsVal := make(map[string]interface{})
 	for _, external := range item.GetExternalAccountIdentifiers() {
-		externalIDs[external.Code] = external.Identifier
+		externalIDsVal[external.Code] = external.Identifier
+	}
+	if len(externalIDsVal) > 0 {
+		externalIDs = &externalIDsVal
 	}
 
 	return &Def.PartialAccount{Id: &item.ID, Apps: &apps, Anonymous: item.Anonymous, AppId: item.AppOrg.Application.ID, OrgId: item.AppOrg.Organization.ID, FirstName: item.Profile.FirstName,
 		LastName: item.Profile.LastName, System: &item.AppOrg.Organization.System, Permissions: permissions, Roles: roles, Groups: groups,
 		Privacy: privacy, Verified: &item.Verified, Scopes: &scopes, SystemConfigs: systemConfigs, Identifiers: identifiers, AuthTypes: authTypes,
-		DateCreated: &dateCreated, DateUpdated: dateUpdated, Params: paramsData, Username: username, ExternalIds: &externalIDs}
+		DateCreated: &dateCreated, DateUpdated: dateUpdated, Params: paramsData, Username: username, ExternalIds: externalIDs}
 }
 
 func partialAccountsToDef(items []model.Account, paramsList []map[string]interface{}) []Def.PartialAccount {

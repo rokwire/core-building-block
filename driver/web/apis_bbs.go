@@ -225,10 +225,8 @@ func (h BBsApisHandler) getAccounts(l *logs.Log, r *http.Request, claims *tokena
 	accountsResp := accountsToDef(accounts)
 	// remove identifiers if not approved (identifiers may be returned when searching by external IDs)
 	if !utils.Contains(approvedKeys, "identifiers") {
-		for i, account := range accountsResp {
-			if account.Identifiers != nil {
-				accountsResp[i].Identifiers = nil
-			}
+		for i := range accountsResp {
+			accountsResp[i].Identifiers = nil
 		}
 	}
 

@@ -23,7 +23,7 @@ import (
 // PartialApp
 func partialAppToDef(item model.Application) Def.PartialApp {
 
-	return Def.PartialApp{Id: &item.ID, Name: item.Name, Code: item.Code}
+	return Def.PartialApp{Id: &item.ID, Name: item.Name}
 }
 
 func partialAppsToDef(item []model.Application) []Def.PartialApp {
@@ -38,7 +38,7 @@ func partialAppsToDef(item []model.Application) []Def.PartialApp {
 func applicationToDef(item model.Application) Def.Application {
 	types := applicationTypeListToDef(item.Types)
 
-	return Def.Application{Id: &item.ID, Name: item.Name, MultiTenant: item.MultiTenant, Code: item.Code,
+	return Def.Application{Id: &item.ID, Name: item.Name, MultiTenant: item.MultiTenant,
 		Admin: item.Admin, Types: &types}
 }
 
