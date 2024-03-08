@@ -6,13 +6,14 @@ post:
     Returns the default app config for the highest version that is equal to or less than the provided version
 
     **Auth:** Requires a valid API Key for access.
+  deprecated: true
   requestBody:
     description: |
       App config query
     content:
       application/json:
         schema:
-          $ref: "../../../schemas/apis/services/application/configs/request/Request.yaml"
+          $ref: "../../../schemas/apis/shared/requests/app-configs/Request.yaml"
         example:
           version: "1.0.1"
           app_type_identifier: "edu.illinois.rokwire.android"

@@ -10,25 +10,20 @@ post:
     content:
       application/json:
         schema:
-          $ref: "../../schemas/apis/services/service-accounts/access-tokens/request/Request.yaml"
+          $ref: "../../schemas/apis/shared/requests/service-accounts/access-tokens/Request.yaml"
         examples:
           static_token:
             summary: Static token
-            value: |
-              {
-                "account_id": "service_account_id",
-                "auth_type": "static_token",
-                "creds": {
-                  "token": "account_token"
-                }
-              }
+            value:
+              account_id: service_account_id
+              auth_type: static_token
+              creds:
+                token: account_token
           signature:
             summary: Signature
-            value: |
-              {
-                "account_id": "service_account_id",
-                "auth_type": "signature",
-              }
+            value:
+              account_id: service_account_id
+              auth_type: signature
     required: true
   responses:
     200:
@@ -38,7 +33,7 @@ post:
           schema:
             type: array
             items:
-              $ref: "../../schemas/apis/services/service-accounts/access-tokens/response/Response.yaml"
+              $ref: "../../schemas/apis/shared/responses/service-accounts/access-tokens/Response.yaml"
     400:
       description: Bad request
     401:

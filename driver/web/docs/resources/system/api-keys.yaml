@@ -3,7 +3,7 @@ get:
   - System
   summary: Get API key
   description: |
-    Returns API key record
+    Returns API key records for given ID or app ID
 
     **Auth:** Requires system access token with `get_api-keys`, `update_api-keys`, `delete_api-keys`, or `all_api-keys` permission
   security:
@@ -11,8 +11,16 @@ get:
   parameters:
     - name: id
       in: query
-      description: The ID of the API key to return
-      required: true
+      description: The ID of the API key to return. Required if `app_id` is not provided.
+      required: false
+      style: form
+      explode: false
+      schema:
+        type: string
+    - name: app_id
+      in: query
+      description: The app ID of the API keys to return. Required if `id` is not provided.
+      required: false
       style: form
       explode: false
       schema:
@@ -23,7 +31,9 @@ get:
       content:
         application/json:
           schema:
-            $ref: '../../schemas/auth/APIKey.yaml'
+            type: array
+            items: 
+              $ref: '../../schemas/auth/APIKey.yaml'
     400:
       description: Bad request
     401:
@@ -46,11 +56,9 @@ post:
       application/json:
         schema:
           $ref: '../../schemas/auth/APIKey.yaml'
-        example: |
-          {
-            "app_id": "string",
-            "key": "string"
-          }
+        example:
+          app_id: string
+          key: string
     required: true
   responses:
     200:

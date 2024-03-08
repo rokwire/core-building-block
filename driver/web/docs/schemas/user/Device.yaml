@@ -1,6 +1,20 @@
+required:
+  - id
+  - type
 type: object
 properties:
-  fields:
-     $ref: "./DeviceFields.yaml"
-  account:
-    $ref: "./Account.yaml"
+  id:
+    readOnly: true
+    type: string
+  device_id:
+    type: string
+    nullable: true
+  type:
+    type: string
+    enum:
+      - mobile
+      - web
+      - desktop
+      - other
+  os:
+    type: string

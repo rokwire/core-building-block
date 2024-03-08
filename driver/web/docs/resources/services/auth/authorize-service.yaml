@@ -23,40 +23,30 @@ post:
           examples:
             authorized:
               summary: Service authorized
-              value: |
-                {
-                  "access_token": "string",
-                  "token_type": "Bearer",
-                  "approved_scopes": [
-                    "string"
-                  ]
-                }
+              value:
+                access_token: string
+                token_type: Bearer
+                approved_scopes:
+                  - string
             unauthorized:
               summary: Service unauthorized
-              value: |
-                {
-                  "service_reg": {
-                    "service_id": "string",
-                    "service_account_id": "string",
-                    "host": "string",
-                    "pub_key": {
-                      "key_pem": "string",
-                      "alg": "string"
-                    },
-                    "name": "string",
-                    "description": "string",
-                    "info_url": "string",
-                    "logo_url": "string",
-                    "scopes": [
-                      {
-                        "scope": "string",
-                        "required": true,
-                        "explanation": "string"
-                      }
-                    ],
-                    "first_party": true
-                  }
-                }
+              value:
+                service_reg:
+                  service_id: string
+                  service_account_id: string
+                  host: string
+                  pub_key:
+                    key_pem: string
+                    alg: string
+                  name: string
+                  description: string
+                  info_url: string
+                  logo_url: string
+                  scopes:
+                    - scope: string
+                      required: true
+                      explanation: string
+                  first_party: true
     400:
       description: Bad request
     401:

@@ -18,7 +18,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/rokwire/logging-library-go/logs"
+	"github.com/rokwire/logging-library-go/v2/logs"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -38,12 +38,14 @@ type database struct {
 	apiKeys                         *collectionWrapper
 	authTypes                       *collectionWrapper
 	identityProviders               *collectionWrapper
-	accounts                        *collectionWrapper
+	accounts                        *collectionWrapper //deprecated
+	tenantsAccounts                 *collectionWrapper
 	devices                         *collectionWrapper
 	credentials                     *collectionWrapper
 	loginsSessions                  *collectionWrapper
-	globalConfig                    *collectionWrapper
+	configs                         *collectionWrapper
 	serviceRegs                     *collectionWrapper
+	serviceRegistrations            *collectionWrapper
 	serviceAccounts                 *collectionWrapper
 	serviceAuthorizations           *collectionWrapper
 	organizations                   *collectionWrapper
@@ -53,6 +55,7 @@ type database struct {
 	applicationsOrganizationsRoles  *collectionWrapper
 	applicationConfigs              *collectionWrapper
 	permissions                     *collectionWrapper
+	follows                         *collectionWrapper
 
 	listeners []Listener
 }
@@ -92,8 +95,16 @@ func (m *database) start() error {
 		return err
 	}
 
+	//deprecated
+	//accounts := &collectionWrapper{database: m, coll: db.Collection("_for_test_accounts")}
 	accounts := &collectionWrapper{database: m, coll: db.Collection("accounts")}
 	err = m.applyAccountsChecks(accounts)
+	if err != nil {
+		return err
+	}
+
+	tenantsAccounts := &collectionWrapper{database: m, coll: db.Collection("orgs_accounts")}
+	err = m.applyTenantsAccountsIdentitiesChecks(tenantsAccounts)
 	if err != nil {
 		return err
 	}
@@ -116,6 +127,12 @@ func (m *database) start() error {
 		return err
 	}
 
+	serviceRegistrations := &collectionWrapper{database: m, coll: db.Collection("service_registrations")}
+	err = m.applyServiceRegistrationsChecks(serviceRegistrations)
+	if err != nil {
+		return err
+	}
+
 	serviceAccounts := &collectionWrapper{database: m, coll: db.Collection("service_accounts")}
 	err = m.applyServiceAccountsChecks(serviceAccounts)
 	if err != nil {
@@ -134,18 +151,20 @@ func (m *database) start() error {
 		return err
 	}
 
-	globalConfig := &collectionWrapper{database: m, coll: db.Collection("global_config")}
-	err = m.applyGlobalConfigChecks(globalConfig)
+	configs := &collectionWrapper{database: m, coll: db.Collection("configs")}
+	err = m.applyConfigsChecks(configs)
 	if err != nil {
 		return err
 	}
 
+	//organizations := &collectionWrapper{database: m, coll: db.Collection("_for_test_organizations")}
 	organizations := &collectionWrapper{database: m, coll: db.Collection("organizations")}
 	err = m.applyOrganizationsChecks(organizations)
 	if err != nil {
 		return err
 	}
 
+	//applications := &collectionWrapper{database: m, coll: db.Collection("_for_test_applications")}
 	applications := &collectionWrapper{database: m, coll: db.Collection("applications")}
 	err = m.applyApplicationsChecks(applications)
 	if err != nil {
@@ -158,6 +177,7 @@ func (m *database) start() error {
 		return err
 	}
 
+	//applicationsOrganizations := &collectionWrapper{database: m, coll: db.Collection("_for_test_applications_organizations")}
 	applicationsOrganizations := &collectionWrapper{database: m, coll: db.Collection("applications_organizations")}
 	err = m.applyApplicationsOrganizationsChecks(applicationsOrganizations)
 	if err != nil {
@@ -182,6 +202,12 @@ func (m *database) start() error {
 		return err
 	}
 
+	follows := &collectionWrapper{database: m, coll: db.Collection("follows")}
+	err = m.applyFollowsChecks(follows)
+	if err != nil {
+		return err
+	}
+
 	applicationConfigs := &collectionWrapper{database: m, coll: db.Collection("application_configs")}
 	err = m.applyApplicationConfigsChecks(applicationConfigs)
 	if err != nil {
@@ -195,12 +221,14 @@ func (m *database) start() error {
 	m.authTypes = authTypes
 	m.identityProviders = identityProviders
 	m.accounts = accounts
+	m.tenantsAccounts = tenantsAccounts
 	m.devices = devices
 	m.credentials = credentials
 	m.loginsSessions = loginsSessions
-	m.globalConfig = globalConfig
+	m.configs = configs
 	m.apiKeys = apiKeys
 	m.serviceRegs = serviceRegs
+	m.serviceRegistrations = serviceRegistrations
 	m.serviceAccounts = serviceAccounts
 	m.serviceAuthorizations = serviceAuthorizations
 	m.organizations = organizations
@@ -210,15 +238,17 @@ func (m *database) start() error {
 	m.applicationsOrganizationsGroups = applicationsOrganizationsGroups
 	m.applicationsOrganizationsRoles = applicationsOrganizationsRoles
 	m.permissions = permissions
+	m.follows = follows
 
 	go m.apiKeys.Watch(nil, m.logger)
 	go m.authTypes.Watch(nil, m.logger)
 	go m.identityProviders.Watch(nil, m.logger)
-	go m.serviceRegs.Watch(nil, m.logger)
+	go m.serviceRegistrations.Watch(nil, m.logger)
 	go m.organizations.Watch(nil, m.logger)
 	go m.applications.Watch(nil, m.logger)
 	go m.applicationsOrganizations.Watch(nil, m.logger)
 	go m.applicationConfigs.Watch(nil, m.logger)
+	go m.configs.Watch(nil, m.logger)
 
 	m.listeners = []Listener{}
 
@@ -239,11 +269,19 @@ func (m *database) applyIdentityProvidersChecks(identityProviders *collectionWra
 	return nil
 }
 
+// deprecated
 func (m *database) applyAccountsChecks(accounts *collectionWrapper) error {
 	m.logger.Info("apply accounts checks.....")
 
-	//add compound unique index - id + app_org_id
-	err := accounts.AddIndex(bson.D{primitive.E{Key: "_id", Value: 1}, primitive.E{Key: "app_org_id", Value: 1}}, true)
+	//add compound index - auth_type identifier + auth_type_id
+	// Can't be unique because of anonymous accounts
+	err := accounts.AddIndex(bson.D{primitive.E{Key: "auth_types.identifier", Value: 1}, primitive.E{Key: "auth_types.auth_type_id", Value: 1}, primitive.E{Key: "app_org_id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	//add compound index - app_org_id + username
+	err = accounts.AddIndex(bson.D{primitive.E{Key: "app_org_id", Value: 1}, primitive.E{Key: "username", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
@@ -260,7 +298,67 @@ func (m *database) applyAccountsChecks(accounts *collectionWrapper) error {
 		return err
 	}
 
+	// err = accounts.AddIndex(bson.D{primitive.E{Key: "username", Value: "text"}, primitive.E{Key: "profile.first_name", Value: "text"}, primitive.E{Key: "profile.last_name", Value: "text"}}, false)
+	// if err != nil {
+	// 	return err
+	// }
+
 	m.logger.Info("accounts check passed")
+	return nil
+}
+
+func (m *database) applyTenantsAccountsIdentitiesChecks(tenantAccounts *collectionWrapper) error {
+	m.logger.Info("apply tenants accounts checks.....")
+
+	//add org id index
+	err := tenantAccounts.AddIndex(bson.D{primitive.E{Key: "org_id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	//add profile index
+	err = tenantAccounts.AddIndex(bson.D{primitive.E{Key: "profile.id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	//add auth types index
+	err = tenantAccounts.AddIndex(bson.D{primitive.E{Key: "auth_types.id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	//add auth types identifier
+	err = tenantAccounts.AddIndex(bson.D{primitive.E{Key: "auth_types.identifier", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	//add auth types auth type id
+	err = tenantAccounts.AddIndex(bson.D{primitive.E{Key: "auth_types.auth_type_id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	//add username index
+	err = tenantAccounts.AddIndex(bson.D{primitive.E{Key: "username", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	//add org apps memberships id index
+	err = tenantAccounts.AddIndex(bson.D{primitive.E{Key: "org_apps_memberships.id", Value: 1}}, true)
+	if err != nil {
+		return err
+	}
+
+	//add org apps memberships app org id index
+	err = tenantAccounts.AddIndex(bson.D{primitive.E{Key: "org_apps_memberships.app_org_id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	m.logger.Info("tenants accounts check passed")
 	return nil
 }
 
@@ -326,10 +424,15 @@ func (m *database) applyAPIKeysChecks(apiKeys *collectionWrapper) error {
 	return nil
 }
 
-func (m *database) applyGlobalConfigChecks(configs *collectionWrapper) error {
-	m.logger.Info("apply global config checks.....")
+func (m *database) applyConfigsChecks(configs *collectionWrapper) error {
+	m.logger.Info("apply configs checks.....")
 
-	m.logger.Info("global config checks passed")
+	err := configs.AddIndex(bson.D{primitive.E{Key: "type", Value: 1}, primitive.E{Key: "app_id", Value: 1}, primitive.E{Key: "org_id", Value: 1}}, true)
+	if err != nil {
+		return err
+	}
+
+	m.logger.Info("configs checks passed")
 	return nil
 }
 
@@ -343,6 +446,19 @@ func (m *database) applyServiceRegsChecks(serviceRegs *collectionWrapper) error 
 	}
 
 	m.logger.Info("service regs checks passed")
+	return nil
+}
+
+func (m *database) applyServiceRegistrationsChecks(serviceRegistrations *collectionWrapper) error {
+	m.logger.Info("apply service registrations checks.....")
+
+	//add core_host, service_id index - unique
+	err := serviceRegistrations.AddIndex(bson.D{primitive.E{Key: "core_host", Value: 1}, primitive.E{Key: "registration.service_id", Value: 1}}, true)
+	if err != nil {
+		return err
+	}
+
+	m.logger.Info("service registrations checks passed")
 	return nil
 }
 
@@ -507,17 +623,33 @@ func (m *database) applyPermissionsChecks(permissions *collectionWrapper) error 
 	return nil
 }
 
+func (m *database) applyFollowsChecks(follows *collectionWrapper) error {
+	m.logger.Info("apply applications follows checks.....")
+
+	//add follower index
+	err := follows.AddIndex(bson.D{primitive.E{Key: "app_id", Value: 1}, primitive.E{Key: "org_id", Value: 1}, primitive.E{Key: "follower_id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	//add following index
+	err = follows.AddIndex(bson.D{primitive.E{Key: "app_id", Value: 1}, primitive.E{Key: "org_id", Value: 1}, primitive.E{Key: "following_id", Value: 1}, primitive.E{Key: "follower_id", Value: 1}}, true)
+	if err != nil {
+		return err
+	}
+
+	m.logger.Info("applications follows checks passed")
+	return nil
+}
+
 func (m *database) applyApplicationConfigsChecks(applicationConfigs *collectionWrapper) error {
 	m.logger.Info("apply applications configs checks.....")
 
-	//disable the problem index for now! Look at https://github.com/rokwire/core-building-block/issues/424
-	/*
-		//add appconfigs index
-		err := applicationConfigs.AddIndex(bson.D{primitive.E{Key: "app_type_id", Value: 1}, primitive.E{Key: "app_org_id", Value: 1}, primitive.E{Key: "version.version_numbers.major", Value: -1}, primitive.E{Key: "version.version_numbers.minor", Value: -1}, primitive.E{Key: "version.version_numbers.patch", Value: -1}}, true)
-		if err != nil {
-			return err
-		}
-	*/
+	//add appconfigs index
+	err := applicationConfigs.AddIndex(bson.D{primitive.E{Key: "app_type_id", Value: 1}, primitive.E{Key: "app_org_id", Value: 1}, primitive.E{Key: "version.version_numbers.major", Value: -1}, primitive.E{Key: "version.version_numbers.minor", Value: -1}, primitive.E{Key: "version.version_numbers.patch", Value: -1}}, true)
+	if err != nil {
+		return err
+	}
 
 	m.logger.Info("applications configs checks passed")
 	return nil
@@ -554,11 +686,11 @@ func (m *database) onDataChanged(changeDoc map[string]interface{}) {
 		for _, listener := range m.listeners {
 			go listener.OnIdentityProvidersUpdated()
 		}
-	case "service_regs":
-		m.logger.Info("service_regs collection changed")
+	case "service_registrations":
+		m.logger.Info("service_registrations collection changed")
 
 		for _, listener := range m.listeners {
-			go listener.OnServiceRegsUpdated()
+			go listener.OnServiceRegistrationsUpdated()
 		}
 	case "organizations":
 		m.logger.Info("organizations collection changed")
@@ -583,6 +715,12 @@ func (m *database) onDataChanged(changeDoc map[string]interface{}) {
 
 		for _, listener := range m.listeners {
 			go listener.OnApplicationConfigsUpdated()
+		}
+	case "configs":
+		m.logger.Info("configs collection changed")
+
+		for _, listener := range m.listeners {
+			go listener.OnConfigsUpdated()
 		}
 	}
 }

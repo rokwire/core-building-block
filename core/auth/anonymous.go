@@ -15,11 +15,12 @@
 package auth
 
 import (
+	"core-building-block/core/model"
 	"encoding/json"
 
 	"github.com/google/uuid"
-	"github.com/rokwire/logging-library-go/errors"
-	"github.com/rokwire/logging-library-go/logutils"
+	"github.com/rokwire/logging-library-go/v2/errors"
+	"github.com/rokwire/logging-library-go/v2/logutils"
 )
 
 const (
@@ -29,7 +30,7 @@ const (
 	typeAnonymousCreds logutils.MessageDataType = "anonymous creds"
 )
 
-//API Key implementation of authType
+// API Key implementation of authType
 type anonymousAuthImpl struct {
 	auth     *Auth
 	authType string
@@ -57,13 +58,13 @@ func (a *anonymousAuthImpl) checkCredentials(creds string) (string, map[string]i
 	return anonymousID, params, nil
 }
 
-//initAnonymousAuth initializes and registers a new API key auth instance
+// initAnonymousAuth initializes and registers a new API key auth instance
 func initAnonymousAuth(auth *Auth) (*anonymousAuthImpl, error) {
 	anonymous := &anonymousAuthImpl{auth: auth, authType: AuthTypeAnonymous}
 
 	err := auth.registerAnonymousAuthType(anonymous.authType, anonymous)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionRegister, typeAuthType, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAuthType, nil, err)
 	}
 
 	return anonymous, nil

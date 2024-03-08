@@ -16,11 +16,42 @@ package web
 
 import (
 	"encoding/json"
+	"reflect"
 	"time"
 
-	"github.com/rokwire/logging-library-go/errors"
-	"github.com/rokwire/logging-library-go/logutils"
+	"github.com/rokwire/logging-library-go/v2/errors"
+	"github.com/rokwire/logging-library-go/v2/logutils"
 )
+
+func convert[T any, F any](val F) (*T, error) {
+	if isNil(val) {
+		return nil, nil
+	}
+
+	bytes, err := json.Marshal(val)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionMarshal, "value", nil, err)
+	}
+
+	var out T
+	err = json.Unmarshal(bytes, &out)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, "value", nil, err)
+	}
+
+	return &out, nil
+}
+
+func isNil(i interface{}) bool {
+	if i == nil {
+		return true
+	}
+	switch reflect.TypeOf(i).Kind() {
+	case reflect.Ptr, reflect.Map, reflect.Array, reflect.Chan, reflect.Slice:
+		return reflect.ValueOf(i).IsNil()
+	}
+	return false
+}
 
 func defString(pointer *string) string {
 	if pointer == nil {

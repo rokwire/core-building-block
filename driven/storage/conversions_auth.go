@@ -17,11 +17,12 @@ package storage
 import (
 	"core-building-block/core/model"
 
-	"github.com/rokwire/logging-library-go/errors"
-	"github.com/rokwire/logging-library-go/logutils"
+	"github.com/rokwire/core-auth-library-go/v3/authutils"
+	"github.com/rokwire/logging-library-go/v2/errors"
+	"github.com/rokwire/logging-library-go/v2/logutils"
 )
 
-//LoginSession
+// LoginSession
 func loginSessionFromStorage(item loginSession, authType model.AuthType, account *model.Account,
 	appOrg model.ApplicationOrganization) model.LoginSession {
 	id := item.ID
@@ -83,7 +84,7 @@ func loginSessionToStorage(item model.LoginSession) *loginSession {
 	externalIDs := item.ExternalIDs
 	var accountAuthTypeID *string
 	var accountAuthTypeIdentifier *string
-	if item.AccountAuthType != nil {
+	if item.AccountAuthType != nil && len(item.AccountAuthType.ID) != 0 {
 		accountAuthTypeID = &item.AccountAuthType.ID
 		accountAuthTypeIdentifier = &item.AccountAuthType.Identifier
 	}
@@ -119,26 +120,26 @@ func loginSessionToStorage(item model.LoginSession) *loginSession {
 		DateRefreshed: dateRefreshed, DateUpdated: dateUpdated, DateCreated: dateCreated}
 }
 
-//ServiceAccount
+// ServiceAccount
 func serviceAccountFromStorage(item serviceAccount, sa *Adapter) (*model.ServiceAccount, error) {
 	var err error
 	var application *model.Application
-	if item.AppID != model.All {
+	if item.AppID != authutils.AllApps {
 		application, err = sa.getCachedApplication(item.AppID)
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplication, &logutils.FieldArgs{"app_id": item.AppID}, err)
+		if err != nil || application == nil {
+			return nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeApplication, &logutils.FieldArgs{"app_id": item.AppID}, err)
 		}
 	}
 	var organization *model.Organization
-	if item.OrgID != model.All {
+	if item.OrgID != authutils.AllOrgs {
 		organization, err = sa.getCachedOrganization(item.OrgID)
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeOrganization, &logutils.FieldArgs{"org_id": item.OrgID}, err)
+		if err != nil || organization == nil {
+			return nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeOrganization, &logutils.FieldArgs{"org_id": item.OrgID}, err)
 		}
 	}
 
 	return &model.ServiceAccount{AccountID: item.AccountID, Name: item.Name, Application: application, Organization: organization, Permissions: item.Permissions,
-		FirstParty: item.FirstParty, Credentials: item.Credentials, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}, nil
+		Scopes: item.Scopes, FirstParty: item.FirstParty, Credentials: item.Credentials, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}, nil
 }
 
 func serviceAccountListFromStorage(items []serviceAccount, sa *Adapter) []model.ServiceAccount {
@@ -155,15 +156,15 @@ func serviceAccountListFromStorage(items []serviceAccount, sa *Adapter) []model.
 }
 
 func serviceAccountToStorage(item model.ServiceAccount) *serviceAccount {
-	appID := model.All
+	appID := authutils.AllApps
 	if item.Application != nil {
 		appID = item.Application.ID
 	}
-	orgID := model.All
+	orgID := authutils.AllOrgs
 	if item.Organization != nil {
 		orgID = item.Organization.ID
 	}
 
-	return &serviceAccount{AccountID: item.AccountID, Name: item.Name, AppID: appID, OrgID: orgID, Permissions: item.Permissions,
+	return &serviceAccount{AccountID: item.AccountID, Name: item.Name, AppID: appID, OrgID: orgID, Permissions: item.Permissions, Scopes: item.Scopes,
 		FirstParty: item.FirstParty, Credentials: item.Credentials, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated}
 }

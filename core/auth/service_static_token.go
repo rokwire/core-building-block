@@ -22,9 +22,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/rokwire/core-auth-library-go/sigauth"
-	"github.com/rokwire/logging-library-go/errors"
-	"github.com/rokwire/logging-library-go/logutils"
+	"github.com/rokwire/core-auth-library-go/v3/sigauth"
+	"github.com/rokwire/logging-library-go/v2/errors"
+	"github.com/rokwire/logging-library-go/v2/logutils"
 	"gopkg.in/go-playground/validator.v9"
 )
 
@@ -35,7 +35,7 @@ const (
 	TypeStaticTokenCreds logutils.MessageDataType = "static token creds"
 )
 
-//staticTokenCreds represents the creds struct for static token auth
+// staticTokenCreds represents the creds struct for static token auth
 type staticTokenCreds struct {
 	Token string `json:"token" validate:"required"`
 }
@@ -100,21 +100,15 @@ func (s *staticTokenServiceAuthImpl) addCredentials(creds *model.ServiceAccountC
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
 	}
 
-	encodedToken := s.hashAndEncodeToken(token)
-
-	now := time.Now().UTC()
-	id, _ := uuid.NewUUID()
-
-	creds.ID = id.String()
+	creds.ID = uuid.NewString()
 	creds.Secrets = map[string]interface{}{
-		"token": encodedToken,
+		"token": s.hashAndEncodeToken(token),
 	}
-	creds.DateCreated = now
+	creds.DateCreated = time.Now().UTC()
 
 	displayParams := map[string]interface{}{
 		"token": token,
 	}
-
 	return displayParams, nil
 }
 
@@ -123,7 +117,7 @@ func (s *staticTokenServiceAuthImpl) hashAndEncodeToken(token string) string {
 	return base64.StdEncoding.EncodeToString(hashedToken)
 }
 
-//initStaticTokenServiceAuth initializes and registers a new static token service auth instance
+// initStaticTokenServiceAuth initializes and registers a new static token service auth instance
 func initStaticTokenServiceAuth(auth *Auth) (*staticTokenServiceAuthImpl, error) {
 	staticToken := &staticTokenServiceAuthImpl{auth: auth, serviceAuthType: ServiceAuthTypeStaticToken}
 

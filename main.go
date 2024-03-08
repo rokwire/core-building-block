@@ -17,19 +17,25 @@ package main
 import (
 	"core-building-block/core"
 	"core-building-block/core/auth"
+	"core-building-block/core/model"
 	"core-building-block/driven/emailer"
+	"core-building-block/driven/identitybb"
 	"core-building-block/driven/profilebb"
 	"core-building-block/driven/storage"
 	"core-building-block/driver/web"
 	"core-building-block/utils"
-	"io/ioutil"
+	"os"
 	"strconv"
 	"strings"
 
-	"github.com/golang-jwt/jwt"
+	"github.com/rokwire/core-auth-library-go/v3/authservice"
+	"github.com/rokwire/core-auth-library-go/v3/authutils"
 
-	"github.com/rokwire/core-auth-library-go/envloader"
-	"github.com/rokwire/logging-library-go/logs"
+	"github.com/rokwire/core-auth-library-go/v3/envloader"
+	"github.com/rokwire/core-auth-library-go/v3/keys"
+	"github.com/rokwire/logging-library-go/v2/errors"
+	"github.com/rokwire/logging-library-go/v2/logs"
+	"github.com/rokwire/logging-library-go/v2/logutils"
 )
 
 var (
@@ -43,8 +49,11 @@ func main() {
 	if len(Version) == 0 {
 		Version = "dev"
 	}
-	loggerOpts := logs.LoggerOpts{SuppressRequests: []logs.HttpRequestProperties{logs.NewAwsHealthCheckHttpRequestProperties("/core/version")}}
-	logger := logs.NewLogger("core", &loggerOpts)
+
+	serviceID := "core"
+
+	loggerOpts := logs.LoggerOpts{SuppressRequests: logs.NewStandardHealthCheckHTTPRequestProperties(serviceID + "/version")}
+	logger := logs.NewLogger(serviceID, &loggerOpts)
 	envLoader := envloader.NewEnvLoader(Version, logger)
 
 	level := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_LOG_LEVEL", false, false)
@@ -52,6 +61,8 @@ func main() {
 	if logLevel != nil {
 		logger.SetLevel(*logLevel)
 	}
+
+	logger.Infof("Version: %s", Version)
 
 	err := utils.SetRandomSeed()
 	if err != nil {
@@ -65,14 +76,18 @@ func main() {
 		port = "80"
 	}
 
-	serviceID := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SERVICE_ID", true, false)
 	host := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_HOST", true, false)
+
+	baseServerURL := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_BASE_SERVER_URL", false, false)
+	prodServerURL := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_PRODUCTION_SERVER_URL", false, false)
+	testServerURL := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_TEST_SERVER_URL", false, false)
+	devServerURL := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_DEVELOPMENT_SERVER_URL", false, false)
 
 	// mongoDB adapter
 	mongoDBAuth := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_MONGO_AUTH", true, true)
 	mongoDBName := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_MONGO_DATABASE", true, false)
 	mongoTimeout := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_MONGO_TIMEOUT", false, false)
-	storageAdapter := storage.NewStorageAdapter(mongoDBAuth, mongoDBName, mongoTimeout, logger)
+	storageAdapter := storage.NewStorageAdapter(host, mongoDBAuth, mongoDBName, mongoTimeout, logger)
 	err = storageAdapter.Start()
 	if err != nil {
 		logger.Fatalf("Cannot start the mongoDB adapter: %v", err)
@@ -90,24 +105,42 @@ func main() {
 	smtpFrom := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SMTP_EMAIL_FROM", false, false)
 	smtpPortNum, _ := strconv.Atoi(smtpPort)
 
+	verifyEmailRaw := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_VERIFY_EMAIL", false, false)
+	verifyEmail, err := strconv.ParseBool(verifyEmailRaw)
+	if err != nil {
+		logger.Infof("Error parsing ROKWIRE_CORE_VERIFY_EMAIL, applying defaults: %v", err)
+		verifyEmail = true
+	}
+
 	emailer := emailer.NewEmailerAdapter(smtpHost, smtpPortNum, smtpUser, smtpPassword, smtpFrom)
 
-	var authPrivKeyPem []byte
+	supportLegacySigsStr := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SUPPORT_LEGACY_SIGNATURES", false, false)
+	supportLegacySigs, err := strconv.ParseBool(supportLegacySigsStr)
+	if err != nil {
+		logger.Infof("Error parsing legacy signature support, applying defaults: %v", err)
+		supportLegacySigs = true
+	}
+
+	var authPrivKeyPem string
 	authPrivKeyPemString := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_PRIV_KEY", false, true)
 	if authPrivKeyPemString != "" {
-
 		//make it to be a single line - AWS environemnt variable issue
-		authPrivKeyPemString = strings.Replace(authPrivKeyPemString, `\n`, "\n", -1)
-
-		authPrivKeyPem = []byte(authPrivKeyPemString)
+		authPrivKeyPem = strings.ReplaceAll(authPrivKeyPemString, `\n`, "\n")
 	} else {
 		authPrivateKeyPath := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_PRIV_KEY_PATH", true, false)
-		authPrivKeyPem, err = ioutil.ReadFile(authPrivateKeyPath)
+		authPrivKeyPemBytes, err := os.ReadFile(authPrivateKeyPath)
 		if err != nil {
 			logger.Fatalf("Could not find auth priv key file: %v", err)
 		}
+
+		authPrivKeyPem = string(authPrivKeyPemBytes)
 	}
-	authPrivKey, err := jwt.ParseRSAPrivateKeyFromPEM(authPrivKeyPem)
+
+	alg := keys.PS256
+	if supportLegacySigs {
+		alg = keys.RS256
+	}
+	authPrivKey, err := keys.NewPrivKey(alg, authPrivKeyPem)
 	if err != nil {
 		logger.Fatalf("Failed to parse auth priv key: %v", err)
 	}
@@ -141,10 +174,25 @@ func main() {
 	profileBBApiKey := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_PROFILE_BB_API_KEY", false, true)
 	profileBBAdapter := profilebb.NewProfileBBAdapter(migrate, profileBBHost, profileBBApiKey)
 
-	auth, err := auth.NewAuth(serviceID, host, authPrivKey, storageAdapter, emailer, minTokenExp, maxTokenExp, twilioAccountSID, twilioToken, twilioServiceSID, profileBBAdapter, smtpHost, smtpPortNum, smtpUser, smtpPassword, smtpFrom, logger)
+	authService := &authservice.AuthService{
+		ServiceID:   serviceID,
+		ServiceHost: host,
+		FirstParty:  true,
+	}
+
+	authImpl, err := auth.NewAuth(serviceID, host, authPrivKey, authService, storageAdapter, emailer, minTokenExp, maxTokenExp, supportLegacySigs,
+		twilioAccountSID, twilioToken, twilioServiceSID, profileBBAdapter, smtpHost, smtpPortNum, smtpUser, smtpPassword, smtpFrom, logger, Version)
 	if err != nil {
 		logger.Fatalf("Error initializing auth: %v", err)
 	}
+
+	serviceAccountLoader := auth.NewLocalServiceAccountLoader(*authImpl)
+	serviceAccountManager, err := authservice.NewServiceAccountManager(authService, serviceAccountLoader)
+	if err != nil {
+		logger.Fatalf("Error initializing service account manager: %v", err)
+	}
+	identityBBAdapter := identitybb.NewIdentityBBAdapter(serviceAccountManager)
+	authImpl.SetIdentityBB(identityBBAdapter)
 
 	//system account init
 	systemInitSettings := map[string]string{
@@ -166,10 +214,29 @@ func main() {
 	}
 
 	//core
-	coreAPIs := core.NewCoreAPIs(env, Version, Build, storageAdapter, auth, systemInitSettings, deleteAccountsPeriod, logger)
+	coreAPIs := core.NewCoreAPIs(env, Version, Build, serviceID, storageAdapter, authImpl, systemInitSettings, verifyEmail, deleteAccountsPeriod, logger)
 	coreAPIs.Start()
 
+	// read CORS parameters from stored env config
+	var envData *model.EnvConfigData
+	var corsAllowedHeaders []string
+	var corsAllowedOrigins []string
+	config, err := storageAdapter.FindConfig(model.ConfigTypeEnv, authutils.AllApps, authutils.AllOrgs)
+	if err != nil {
+		logger.Fatal(errors.WrapErrorAction(logutils.ActionFind, model.TypeConfig, nil, err).Error())
+	}
+	if config != nil {
+		envData, err = model.GetConfigData[model.EnvConfigData](*config)
+		if err != nil {
+			logger.Fatal(errors.WrapErrorAction(logutils.ActionCast, model.TypeEnvConfigData, nil, err).Error())
+		}
+
+		corsAllowedHeaders = envData.CORSAllowedHeaders
+		corsAllowedOrigins = envData.CORSAllowedOrigins
+	}
+
 	//web adapter
-	webAdapter := web.NewWebAdapter(env, serviceID, auth.ServiceRegManager, port, coreAPIs, host, logger)
+	webAdapter := web.NewWebAdapter(env, authImpl.ServiceRegManager, port, coreAPIs, host, corsAllowedOrigins,
+		corsAllowedHeaders, baseServerURL, prodServerURL, testServerURL, devServerURL, logger)
 	webAdapter.Start()
 }

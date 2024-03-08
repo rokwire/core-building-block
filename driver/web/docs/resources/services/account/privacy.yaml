@@ -1,0 +1,26 @@
+put:
+  tags:
+  - Services
+  summary: Update user privacy
+  description: |
+    Updates a user privacy
+
+    **Auth:** Requires user auth token
+  security:
+    - bearerAuth: []
+  requestBody:
+    description: Privacy update
+    content:
+      application/json:
+        schema:
+          $ref: "../../../schemas/user/Privacy.yaml"
+    required: true
+  responses:
+    200:
+      description: Success
+    400:
+      description: Bad request
+    401:
+      description: Unauthorized
+    500:
+      description: Internal error

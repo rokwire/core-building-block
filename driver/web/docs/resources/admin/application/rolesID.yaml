@@ -1,11 +1,48 @@
- delete:
+put:
+  tags:
+  - Admin
+  summary: Update application role
+  description: |
+    Update application role
+
+    **Auth:** Requires admin access token with `update_auth-roles` or `all_auth-roles` permission
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: id
+      in: path
+      description: The role ID
+      required: true
+      schema:
+        type: string
+  requestBody:
+    description: Application role
+    content:
+      application/json:
+        schema:
+          $ref: "../../../schemas/apis/admin/application/roles/request/Request.yaml"
+    required: true
+  responses:
+    200:
+      description: Success
+      content:
+        application/json:
+          schema:
+            $ref: "../../../schemas/application/AppOrgRole.yaml"
+    400:
+      description: Bad request
+    401:
+      description: Unauthorized
+    500:
+      description: Internal error
+delete:
   tags:
   - Admin
   summary: Delete application role
   description: |
     Delete application role
 
-    **Auth:** Requires admin access token with 'delete_auth-roles' or `all_auth-roles` permission
+    **Auth:** Requires admin access token with `delete_auth-roles` or `all_auth-roles` permission
   security:
     - bearerAuth: []
   parameters:

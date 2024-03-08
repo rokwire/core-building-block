@@ -22,8 +22,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/rokwire/logging-library-go/errors"
-	"github.com/rokwire/logging-library-go/logutils"
+	"github.com/rokwire/logging-library-go/v2/errors"
+	"github.com/rokwire/logging-library-go/v2/logutils"
 )
 
 const (
@@ -97,18 +97,18 @@ func (m *recoveryMfaImpl) enroll(identifier string) (*model.MFAType, error) {
 	return &model.MFAType{ID: id.String(), Type: MfaTypeRecovery, Verified: true, Params: params, DateCreated: time.Now().UTC()}, nil
 }
 
-//sendCode not used for recovery
+// sendCode not used for recovery
 func (m *recoveryMfaImpl) sendCode(identifier string) (string, *time.Time, error) {
 	return "", nil, errors.New(logutils.Unimplemented)
 }
 
-//initRecoveryMfa initializes and registers a new recovery mfa instance
+// initRecoveryMfa initializes and registers a new recovery mfa instance
 func initRecoveryMfa(auth *Auth) (*recoveryMfaImpl, error) {
 	recovery := &recoveryMfaImpl{auth: auth, mfaType: MfaTypeRecovery}
 
 	err := auth.registerMfaType(recovery.mfaType, recovery)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionRegister, typeMfaType, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeMFAType, nil, err)
 	}
 
 	return recovery, nil

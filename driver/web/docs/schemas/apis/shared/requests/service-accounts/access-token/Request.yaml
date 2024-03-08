@@ -1,0 +1,20 @@
+required:
+  - account_id
+  - app_id
+  - org_id
+  - auth_type
+type: object
+properties:
+  account_id:
+    type: string
+  app_id:
+    type: string
+  org_id:
+    type: string
+  auth_type:
+    type: string
+    enum:
+      - static_token
+      - signature
+  creds:
+    $ref: "../CredsStaticToken.yaml"

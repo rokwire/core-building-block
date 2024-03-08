@@ -22,12 +22,12 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/rokwire/logging-library-go/errors"
-	"github.com/rokwire/logging-library-go/logs"
-	"github.com/rokwire/logging-library-go/logutils"
+	"github.com/rokwire/logging-library-go/v2/errors"
+	"github.com/rokwire/logging-library-go/v2/logs"
+	"github.com/rokwire/logging-library-go/v2/logutils"
 )
 
-//Adapter implements the ProfileBuildingBlock interface
+// Adapter implements the ProfileBuildingBlock interface
 type Adapter struct {
 	migrate bool
 	host    string
@@ -118,13 +118,13 @@ type interest struct {
 	Subcategories []string `json:"subcategories"`
 }
 
-//GetProfileBBData gets profile data by queryParams
+// GetProfileBBData gets profile data by queryParams
 func (a *Adapter) GetProfileBBData(queryParams map[string]string, l *logs.Log) (*model.Profile, map[string]interface{}, error) {
 	if !a.migrate {
 		return nil, nil, nil
 	}
 	if a.host == "" || a.apiKey == "" {
-		return nil, nil, errors.New("Profile BB adapter is not configured")
+		return nil, nil, errors.ErrorData(logutils.StatusInvalid, "profile BB adapter", logutils.StringArgs("not configured"))
 	}
 
 	query := url.Values{}
@@ -170,7 +170,7 @@ func (a *Adapter) GetProfileBBData(queryParams map[string]string, l *logs.Log) (
 	now := time.Now()
 	dateCreated, err := parseTime(profileData.PII.DateCreated)
 	if err != nil {
-		l.WarnAction(logutils.ActionParse, "date created", err)
+		l.WarnError(logutils.MessageActionError(logutils.ActionParse, "date created", nil), err)
 		dateCreated = &now
 	}
 	existingProfile := model.Profile{FirstName: profileData.PII.FirstName, LastName: profileData.PII.LastName,
@@ -200,7 +200,7 @@ func (a *Adapter) reformatPreferences(nonPII *profileBBNonPII, l *logs.Log) map[
 
 	dateCreated, err := parseTime(nonPII.CreationDate)
 	if err != nil {
-		l.WarnAction(logutils.ActionParse, "date created", err)
+		l.WarnError(logutils.MessageActionError(logutils.ActionParse, "date created", nil), err)
 		preferences["date_created"] = time.Now()
 	} else {
 		preferences["date_created"] = dateCreated
@@ -219,7 +219,7 @@ func parseTime(timeString string) (*time.Time, error) {
 	return &parsedTime, nil
 }
 
-//NewProfileBBAdapter creates a new profile building block adapter instance
+// NewProfileBBAdapter creates a new profile building block adapter instance
 func NewProfileBBAdapter(migrate bool, profileHost string, apiKey string) *Adapter {
 	return &Adapter{migrate: migrate, host: profileHost, apiKey: apiKey}
 }

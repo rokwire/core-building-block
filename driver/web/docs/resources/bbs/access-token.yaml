@@ -10,29 +10,24 @@ post:
     content:
       application/json:
         schema:
-          $ref: "../../schemas/apis/services/service-accounts/access-token/request/Request.yaml"
+          $ref: "../../schemas/apis/shared/requests/service-accounts/access-token/Request.yaml"
         examples:
           static_token:
             summary: Static token
-            value: |
-              {
-                "account_id": "service_account_id",
-                "app_id": "9766",
-                "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
-                "auth_type": "static_token",
-                "creds": {
-                  "token": "account_token"
-                }
-              }
+            value:
+              account_id: service_account_id
+              app_id: "9766"
+              org_id: 0a2eff20-e2cd-11eb-af68-60f81db5ecc0
+              auth_type: static_token
+              creds:
+                token: account_token
           signature:
             summary: Signature
-            value: |
-              {
-                "account_id": "service_account_id",
-                "app_id": "9766",
-                "org_id": "0a2eff20-e2cd-11eb-af68-60f81db5ecc0",
-                "auth_type": "signature",
-              }
+            value:
+              account_id: service_account_id
+              app_id: "9766"
+              org_id: 0a2eff20-e2cd-11eb-af68-60f81db5ecc0
+              auth_type: signature
     required: true
   responses:
     200:

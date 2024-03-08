@@ -2,10 +2,10 @@
 
 ## Supported Versions
 Patches for **Core Building Block** in this repository will only be applied to the following versions:
-| Version | Supported          |
-| ------- | ------------------ |
-| 1.23.0   | :white_check_mark: |
-| < 1.23.0 | :x:                |
+| Version  | Supported          |
+| -------- | ------------------ |
+| 1.38.1   | :white_check_mark: |
+| < 1.38.1 | :x:                |
 
 ## Reporting a Bug or Vulnerability
 

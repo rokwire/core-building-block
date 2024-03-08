@@ -20,9 +20,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/rokwire/core-auth-library-go/authutils"
-	"github.com/rokwire/logging-library-go/errors"
-	"github.com/rokwire/logging-library-go/logutils"
+	"github.com/rokwire/core-auth-library-go/v3/authutils"
+	"github.com/rokwire/logging-library-go/v2/errors"
+	"github.com/rokwire/logging-library-go/v2/logutils"
 )
 
 const (
@@ -32,6 +32,8 @@ const (
 	TypePermission logutils.MessageDataType = "permission"
 	//TypeAppOrgRole ...
 	TypeAppOrgRole logutils.MessageDataType = "application organization role"
+	//TypeAppOrgRolePermissions ...
+	TypeAppOrgRolePermissions logutils.MessageDataType = "application organization role permissions"
 	//TypeAppOrgGroup ...
 	TypeAppOrgGroup logutils.MessageDataType = "application organization group"
 	//TypeOrganization ...
@@ -50,12 +52,20 @@ const (
 	TypeApplicationConfigsVersion logutils.MessageDataType = "app config version number"
 	//TypeVersionNumbers ...
 	TypeVersionNumbers logutils.MessageDataType = "version numbers"
+
+	//PermissionAllSystemCore ...
+	PermissionAllSystemCore string = "all_system_core"
+	//PermissionGrantAllPermissions ...
+	PermissionGrantAllPermissions string = "grant_all_permissions"
+	//ServiceIDCore ...
+	ServiceIDCore string = "core"
 )
 
-//Permission represents permission entity
+// Permission represents permission entity
 type Permission struct {
-	ID   string `bson:"_id"`
-	Name string `bson:"name"`
+	ID          string `bson:"_id"`
+	Name        string `bson:"name"`
+	Description string `bson:"description"`
 
 	ServiceID string   `bson:"service_id"`
 	Assigners []string `bson:"assigners"`
@@ -64,27 +74,40 @@ type Permission struct {
 	DateUpdated *time.Time `bson:"date_updated"`
 }
 
-//CheckAssigners checks if the passed permissions satisfy the needed assigners for the permission
+// PermissionContainer is a set of functions used to interact with objects containing permissions
+type PermissionContainer interface {
+	// GetPermissionNamed returns the permission for a name if the container has it directly
+	GetPermissionNamed(name string) *Permission
+	// GetAssignedPermissionNames returns a list of names of directly assigned permissions
+	GetAssignedPermissionNames() []string
+	// GetAppOrg returns the container's application organization
+	GetAppOrg() ApplicationOrganization
+}
+
+// CheckAssigners checks if the passed permissions satisfy the needed assigners for the permission
 func (p Permission) CheckAssigners(assignerPermissions []string) error {
+	if authutils.ContainsString(assignerPermissions, PermissionGrantAllPermissions) {
+		return nil
+	}
 	if len(p.Assigners) == 0 {
-		return errors.Newf("not defined assigners for %s permission", p.Name)
+		return errors.ErrorData(logutils.StatusMissing, "assigners", &logutils.FieldArgs{"name": p.Name})
 	}
 
 	authorizedAssigners := p.Assigners
 	for _, authorizedAssigner := range authorizedAssigners {
-		if !authutils.ContainsString(assignerPermissions, authorizedAssigner) {
-			return errors.Newf("assigner %s is not satisfied", authorizedAssigner)
+		if authutils.ContainsString(assignerPermissions, authorizedAssigner) {
+			return nil
 		}
 	}
-	//all assigners are satisfied
-	return nil
+	//no assigners are satisfied
+	return errors.ErrorAction(logutils.ActionValidate, "assigner permissions", &logutils.FieldArgs{"name": p.Name})
 }
 
 func (p Permission) String() string {
 	return fmt.Sprintf("[ID:%s\nName:%s\nServiceID:%s]", p.ID, p.Name, p.ServiceID)
 }
 
-//AppOrgRole represents application organization role entity. It is a collection of permissions
+// AppOrgRole represents application organization role entity. It is a collection of permissions
 type AppOrgRole struct {
 	ID          string
 	Name        string
@@ -93,6 +116,7 @@ type AppOrgRole struct {
 	System bool
 
 	Permissions []Permission
+	Scopes      []string
 
 	AppOrg ApplicationOrganization
 
@@ -100,7 +124,36 @@ type AppOrgRole struct {
 	DateUpdated *time.Time
 }
 
-//GetPermissionNamed returns the permission for a name if the role has it
+// RoleContainer is a set of functions used to interact with objects containing roles
+type RoleContainer interface {
+	// GetRole returns the role for an ID if the container has it directly
+	GetRole(id string) *AppOrgRole
+	// GetAssignedRoleIDs returns a list of ids of directly assigned roles
+	GetAssignedRoleIDs() []string
+	// GetAppOrg returns the container's application organization
+	GetAppOrg() ApplicationOrganization
+}
+
+// CheckAssigners checks if the passed permissions satisfy the needed assigners for all role permissions
+func (c AppOrgRole) CheckAssigners(assignerPermissions []string) error {
+	if authutils.ContainsString(assignerPermissions, PermissionGrantAllPermissions) {
+		return nil
+	}
+	if len(c.Permissions) == 0 {
+		return nil //no permission
+	}
+
+	for _, permission := range c.Permissions {
+		err := permission.CheckAssigners(assignerPermissions)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionValidate, "role permission", &logutils.FieldArgs{"id": c.ID, "name": c.Name}, err)
+		}
+	}
+	//all permissions may be assigned
+	return nil
+}
+
+// GetPermissionNamed returns the permission for a name if the role has it directly
 func (c AppOrgRole) GetPermissionNamed(name string) *Permission {
 	for _, permission := range c.Permissions {
 		if permission.Name == name {
@@ -110,30 +163,29 @@ func (c AppOrgRole) GetPermissionNamed(name string) *Permission {
 	return nil
 }
 
-//CheckAssigners checks if the passed permissions satisfy the needed assigners for all role permissions
-func (c AppOrgRole) CheckAssigners(assignerPermissions []string) error {
-	if len(c.Permissions) == 0 {
-		return nil //no permission
+// GetAssignedPermissionNames returns a list of names of assigned permissions for this role
+func (c AppOrgRole) GetAssignedPermissionNames() []string {
+	names := make([]string, len(c.Permissions))
+	for i, permission := range c.Permissions {
+		names[i] = permission.Name
 	}
+	return names
+}
 
-	for _, permission := range c.Permissions {
-		err := permission.CheckAssigners(assignerPermissions)
-		if err != nil {
-			errors.Wrapf("error checking role permission assigners", err)
-		}
-	}
-	//it satisies all permissions
-	return nil
+// GetAppOrg returns the role's application organization
+func (c AppOrgRole) GetAppOrg() ApplicationOrganization {
+	return c.AppOrg
 }
 
 func (c AppOrgRole) String() string {
 	return fmt.Sprintf("[ID:%s\tName:%s\tPermissions:%s\tAppOrg:%s]", c.ID, c.Name, c.Permissions, c.AppOrg.ID)
 }
 
-//AppOrgGroup represents application organization group entity. It is a collection of users
+// AppOrgGroup represents application organization group entity. It is a collection of users
 type AppOrgGroup struct {
-	ID   string
-	Name string
+	ID          string
+	Name        string
+	Description string
 
 	System bool
 
@@ -146,48 +198,86 @@ type AppOrgGroup struct {
 	DateUpdated *time.Time
 }
 
-//CheckAssigners checks if the passed permissions satisfy the needed assigners for the group
+// CheckAssigners checks if the passed permissions satisfy the needed assigners for the group
 func (cg AppOrgGroup) CheckAssigners(assignerPermissions []string) error {
+	if authutils.ContainsString(assignerPermissions, PermissionGrantAllPermissions) {
+		return nil
+	}
+
 	//check permission
-	if len(cg.Permissions) > 0 {
-		for _, permission := range cg.Permissions {
-			err := permission.CheckAssigners(assignerPermissions)
-			if err != nil {
-				return err
-			}
+	for _, permission := range cg.Permissions {
+		err := permission.CheckAssigners(assignerPermissions)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionValidate, "group permission", &logutils.FieldArgs{"id": cg.ID, "name": cg.Name}, err)
 		}
 	}
 	//check roles
-	if len(cg.Roles) > 0 {
-		for _, role := range cg.Roles {
-			err := role.CheckAssigners(assignerPermissions)
-			if err != nil {
-				return err
-			}
+	for _, role := range cg.Roles {
+		err := role.CheckAssigners(assignerPermissions)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionValidate, "group role", &logutils.FieldArgs{"id": cg.ID, "name": cg.Name}, err)
 		}
 	}
-	//all assigners are satisfied
+	//all permissions and roles may be assigned
 	return nil
+}
+
+// GetAssignedPermissionNames returns a list of names of assigned permissions for this group
+func (cg AppOrgGroup) GetAssignedPermissionNames() []string {
+	names := make([]string, len(cg.Permissions))
+	for i, permission := range cg.Permissions {
+		names[i] = permission.Name
+	}
+	return names
+}
+
+// GetAssignedRoleIDs returns a list of ids of assigned roles for this group
+func (cg AppOrgGroup) GetAssignedRoleIDs() []string {
+	ids := make([]string, len(cg.Roles))
+	for i, role := range cg.Roles {
+		ids[i] = role.ID
+	}
+	return ids
 }
 
 func (cg AppOrgGroup) String() string {
 	return fmt.Sprintf("[ID:%s\nName:%s\nAppOrg:%s]", cg.ID, cg.Name, cg.AppOrg.ID)
 }
 
-//Application represents users application entity - safer community, uuic, etc
+// GetPermissionNamed returns the permission for a name if the group has it directly
+func (cg AppOrgGroup) GetPermissionNamed(name string) *Permission {
+	for _, permission := range cg.Permissions {
+		if permission.Name == name {
+			return &permission
+		}
+	}
+	return nil
+}
+
+// GetRole returns the role for an ID if the group has it
+func (cg AppOrgGroup) GetRole(id string) *AppOrgRole {
+	for _, role := range cg.Roles {
+		if role.ID == id {
+			return &role
+		}
+	}
+	return nil
+}
+
+// GetAppOrg returns the group's application organization
+func (cg AppOrgGroup) GetAppOrg() ApplicationOrganization {
+	return cg.AppOrg
+}
+
+// Application represents users application entity - safer community, uuic, etc
 type Application struct {
 	ID   string
 	Name string //safer community, uuic, etc
 
 	MultiTenant bool //safer community is multi-tenant
 	Admin       bool //is this an admin app?
-
-	//if to share identities between the organizations within the appication or to use e separate identities for every organization
-	//if true - the user uses shared profile between all organizations within the application
-	//if false - the user uses a separate profile for every organization within the application
-	SharedIdentities bool
-
-	Types []ApplicationType
+	Code        string
+	Types       []ApplicationType
 
 	Organizations []ApplicationOrganization
 
@@ -195,7 +285,7 @@ type Application struct {
 	DateUpdated *time.Time
 }
 
-//FindApplicationType finds app type
+// FindApplicationType finds app type
 func (a Application) FindApplicationType(id string) *ApplicationType {
 	for _, appType := range a.Types {
 		if appType.Identifier == id || appType.ID == id {
@@ -205,7 +295,7 @@ func (a Application) FindApplicationType(id string) *ApplicationType {
 	return nil
 }
 
-//Organization represents organization entity
+// Organization represents organization entity
 type Organization struct {
 	ID   string
 	Name string
@@ -225,7 +315,7 @@ func (c Organization) String() string {
 	return fmt.Sprintf("[ID:%s\tName:%s\tType:%s\tConfig:%s]", c.ID, c.Name, c.Type, c.Config)
 }
 
-//ApplicationOrganization represents application organization entity
+// ApplicationOrganization represents application organization entity
 type ApplicationOrganization struct {
 	ID string
 
@@ -244,7 +334,7 @@ type ApplicationOrganization struct {
 	DateUpdated *time.Time
 }
 
-//FindIdentityProviderSetting finds the identity provider setting for the application
+// FindIdentityProviderSetting finds the identity provider setting for the application
 func (ao ApplicationOrganization) FindIdentityProviderSetting(identityProviderID string) *IdentityProviderSetting {
 	for _, idPrSetting := range ao.IdentityProvidersSettings {
 		if idPrSetting.IdentityProviderID == identityProviderID {
@@ -254,7 +344,7 @@ func (ao ApplicationOrganization) FindIdentityProviderSetting(identityProviderID
 	return nil
 }
 
-//IsAuthTypeSupported checks if an auth type is supported for application type
+// IsAuthTypeSupported checks if an auth type is supported for application type
 func (ao ApplicationOrganization) IsAuthTypeSupported(appType ApplicationType, authType AuthType) bool {
 	for _, sat := range ao.SupportedAuthTypes {
 		if sat.AppTypeID == appType.ID {
@@ -268,15 +358,16 @@ func (ao ApplicationOrganization) IsAuthTypeSupported(appType ApplicationType, a
 	return false
 }
 
-//IdentityProviderSetting represents identity provider setting for an organization in an application
-//  User specific fields
-//  For example:
-//		UIUC Application has uiucedu_uin specific field for Illinois identity provider
+// IdentityProviderSetting represents identity provider setting for an organization in an application
 //
-//  Groups mapping: maps an identity provider groups to application groups
-//	For example:
-//  	for the UIUC application the Illinois group "urn:mace:uiuc.edu:urbana:authman:app-rokwire-service-policy-rokwire groups access" is mapped to an application group called "groups access"
-//  	for the Safer Illinois application the Illinois group "urn:mace:uiuc.edu:urbana:authman:app-rokwire-service-policy-rokwire health test verify" is mapped to an application group called "tests verifiers"
+//	 User specific fields
+//	 For example:
+//			UIUC Application has uiucedu_uin specific field for Illinois identity provider
+//
+//	 Groups mapping: maps an identity provider groups to application groups
+//		For example:
+//	 	for the UIUC application the Illinois group "urn:mace:uiuc.edu:urbana:authman:app-rokwire-service-policy-rokwire groups access" is mapped to an application group called "groups access"
+//	 	for the Safer Illinois application the Illinois group "urn:mace:uiuc.edu:urbana:authman:app-rokwire-service-policy-rokwire health test verify" is mapped to an application group called "tests verifiers"
 type IdentityProviderSetting struct {
 	IdentityProviderID string `bson:"identity_provider_id"`
 
@@ -292,11 +383,14 @@ type IdentityProviderSetting struct {
 
 	UserSpecificFields []string `bson:"user_specific_fields"`
 
+	AlwaysSyncProfile bool   `bson:"always_sync_profile"` // if true, profile data will be overwritten with data from external user on each login/refresh
+	IdentityBBBaseURL string `bson:"identity_bb_base_url"`
+
 	Roles  map[string]string `bson:"roles"`  //map[identity_provider_role]app_role_id
 	Groups map[string]string `bson:"groups"` //map[identity_provider_group]app_group_id
 }
 
-//LoginsSessionsSetting represents logins sessions setting for an organization in an application
+// LoginsSessionsSetting represents logins sessions setting for an organization in an application
 type LoginsSessionsSetting struct {
 	MaxConcurrentSessions int `bson:"max_concurrent_sessions"`
 
@@ -305,19 +399,19 @@ type LoginsSessionsSetting struct {
 	YearlyExpirePolicy     YearlyExpirePolicy     `bson:"yearly_expire_policy"`
 }
 
-//InactivityExpirePolicy represents expires policy based on inactivity
+// InactivityExpirePolicy represents expires policy based on inactivity
 type InactivityExpirePolicy struct {
 	Active           bool `bson:"active"`
 	InactivityPeriod int  `bson:"inactivity_period"` //in minutes
 }
 
-//TSLExpirePolicy represents expires policy based on the time since login
+// TSLExpirePolicy represents expires policy based on the time since login
 type TSLExpirePolicy struct {
 	Active               bool `bson:"active"`
 	TimeSinceLoginPeriod int  `bson:"time_since_login_period"` //in minutes
 }
 
-//YearlyExpirePolicy represents expires policy based on fixed date
+// YearlyExpirePolicy represents expires policy based on fixed date
 type YearlyExpirePolicy struct {
 	Active bool `bson:"active"`
 	Day    int  `bson:"day"`
@@ -326,7 +420,7 @@ type YearlyExpirePolicy struct {
 	Min    int  `bson:"min"`
 }
 
-//ApplicationType represents users application type entity - safer community android, safer community ios, safer community web, uuic android etc
+// ApplicationType represents users application type entity - safer community android, safer community ios, safer community web, uuic android etc
 type ApplicationType struct {
 	ID         string
 	Identifier string    //edu.illinois.rokwire etc
@@ -334,19 +428,34 @@ type ApplicationType struct {
 	Versions   []Version //1.1.0, 1.2.0 etc
 
 	Application Application
+
+	DateCreated time.Time
+	DateUpdated *time.Time
 }
 
-//AuthTypesSupport represents supported auth types for an organization in an application type with configs/params
+// FindVersion finds a version by string
+func (at ApplicationType) FindVersion(version string) *Version {
+	for _, v := range at.Versions {
+		if v.VersionNumbers.String() == version {
+			return &v
+		}
+	}
+	return nil
+}
+
+// AuthTypesSupport represents supported auth types for an organization in an application type with configs/params
 type AuthTypesSupport struct {
-	AppTypeID string `bson:"app_type_id"`
-
-	SupportedAuthTypes []struct {
-		AuthTypeID string                 `bson:"auth_type_id"`
-		Params     map[string]interface{} `bson:"params"`
-	} `bson:"supported_auth_types"`
+	AppTypeID          string              `bson:"app_type_id"`
+	SupportedAuthTypes []SupportedAuthType `bson:"supported_auth_types"`
 }
 
-//ApplicationConfig represents app configs
+// SupportedAuthType represents a supported auth type
+type SupportedAuthType struct {
+	AuthTypeID string                 `bson:"auth_type_id"`
+	Params     map[string]interface{} `bson:"params"`
+}
+
+// ApplicationConfig represents app configs
 type ApplicationConfig struct {
 	ID              string
 	ApplicationType ApplicationType
@@ -368,7 +477,7 @@ type Version struct {
 	DateUpdated     *time.Time
 }
 
-//VersionNumbers represents app config version numbers
+// VersionNumbers represents app config version numbers
 type VersionNumbers struct {
 	Major int `json:"major" bson:"major"`
 	Minor int `json:"minor" bson:"minor"`
@@ -401,7 +510,7 @@ func (v VersionNumbers) LessThanOrEqualTo(v1 *VersionNumbers) bool {
 	return false
 }
 
-//VersionNumbersFromString parses a string into a VersionNumbers struct. Returns nil if invalid format.
+// VersionNumbersFromString parses a string into a VersionNumbers struct. Returns nil if invalid format.
 func VersionNumbersFromString(version string) *VersionNumbers {
 	parts := strings.Split(version, ".")
 	if len(parts) != 3 {
@@ -422,4 +531,22 @@ func VersionNumbersFromString(version string) *VersionNumbers {
 	}
 
 	return &VersionNumbers{Major: major, Minor: minor, Patch: patch}
+}
+
+// GetMissingAccountIDs returns a list of account IDs missing from items
+func GetMissingAccountIDs(items []Account, ids []string) []string {
+	missingIDs := make([]string, 0)
+	for _, id := range ids {
+		missing := true
+		for _, e := range items {
+			if e.ID == id {
+				missing = false
+				break
+			}
+		}
+		if missing {
+			missingIDs = append(missingIDs, id)
+		}
+	}
+	return missingIDs
 }

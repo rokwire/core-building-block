@@ -23,9 +23,9 @@ type application struct {
 	ID   string `bson:"_id"`
 	Name string `bson:"name"`
 
-	MultiTenant      bool `bson:"multi_tenant"`
-	SharedIdentities bool `bson:"shared_identities"`
-	Admin            bool `bson:"admin"`
+	MultiTenant bool   `bson:"multi_tenant"`
+	Admin       bool   `bson:"admin"`
+	Code        string `bson:"code"`
 
 	Types []applicationType `bson:"types"`
 
@@ -38,6 +38,9 @@ type applicationType struct {
 	Identifier string    `bson:"identifier"`
 	Name       string    `bson:"name"`
 	Versions   []version `bson:"versions"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
 }
 
 type version struct {
@@ -93,8 +96,9 @@ type applicationOrganization struct {
 }
 
 type appOrgGroup struct {
-	ID   string `bson:"_id"`
-	Name string `bson:"name"`
+	ID          string `bson:"_id"`
+	Name        string `bson:"name"`
+	Description string `bson:"description"`
 
 	System bool `bson:"system"`
 
@@ -117,6 +121,7 @@ type appOrgRole struct {
 	AppOrgID string `bson:"app_org_id"`
 
 	Permissions []model.Permission `bson:"permissions"`
+	Scopes      []string           `bson:"scopes"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`

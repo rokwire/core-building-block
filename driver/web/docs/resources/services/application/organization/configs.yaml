@@ -8,11 +8,12 @@ post:
     **Auth:** Requires auth token
   security:
   - bearerAuth: []
+  deprecated: true
   requestBody:
     content:
       application/json:
         schema:
-          $ref: "../../../../schemas/apis/services/application/organization/configs/request/Request.yaml"
+          $ref: "../../../../schemas/apis/shared/requests/app-configs/organization/Request.yaml"
         example:
           version: "1.0.1"
           app_type_identifier: "edu.illinois.rokwire.android"

@@ -20,6 +20,7 @@ import (
 	"core-building-block/core/model"
 )
 
+// deprecated
 type account struct {
 	ID string `bson:"_id"`
 
@@ -28,21 +29,81 @@ type account struct {
 	Permissions []model.Permission `bson:"permissions,omitempty"`
 	Roles       []accountRole      `bson:"roles,omitempty"`
 	Groups      []accountGroup     `bson:"groups,omitempty"`
+	Scopes      []string           `bson:"scopes,omitempty"`
 
 	AuthTypes []accountAuthType `bson:"auth_types,omitempty"`
 
 	MFATypes []mfaType `bson:"mfa_types,omitempty"`
 
-	ExternalIDs map[string]string      `bson:"external_ids"`
-	Preferences map[string]interface{} `bson:"preferences"`
-	Profile     profile                `bson:"profile"`
+	Username      string                 `bson:"username"`
+	ExternalIDs   map[string]string      `bson:"external_ids"`
+	Preferences   map[string]interface{} `bson:"preferences"`
+	SystemConfigs map[string]interface{} `bson:"system_configs"`
+	Profile       profile                `bson:"profile"`
 
 	Devices []userDevice `bson:"devices,omitempty"`
 
-	Deleted *bool `bson:"deleted,omitempty"`
+	Anonymous bool          `bson:"anonymous"`
+	Privacy   model.Privacy `bson:"privacy"`
+	Verified  bool          `bson:"verified"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
+
+	IsFollowing bool `bson:"is_following"`
+
+	LastLoginDate           *time.Time `bson:"last_login_date"`
+	LastAccessTokenDate     *time.Time `bson:"last_access_token_date"`
+	MostRecentClientVersion *string    `bson:"most_recent_client_version"`
+
+	Migrated *bool `bson:"migrated_2"`
+}
+
+type tenantAccount struct {
+	ID string `bson:"_id"`
+
+	OrgID              string             `bson:"org_id"`
+	OrgAppsMemberships []orgAppMembership `bson:"org_apps_memberships"`
+
+	Scopes []string `bson:"scopes,omitempty"`
+
+	AuthTypes []accountAuthType `bson:"auth_types,omitempty"`
+
+	MFATypes []mfaType `bson:"mfa_types,omitempty"`
+
+	Username    string            `bson:"username"`
+	ExternalIDs map[string]string `bson:"external_ids"`
+
+	SystemConfigs map[string]interface{} `bson:"system_configs"`
+	Profile       profile                `bson:"profile"`
+
+	Devices []userDevice `bson:"devices,omitempty"`
+
+	Anonymous bool          `bson:"anonymous"`
+	Privacy   model.Privacy `bson:"privacy"`
+	Verified  *bool         `bson:"verified,omitempty"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
+
+	IsFollowing bool `bson:"is_following"`
+
+	LastLoginDate       *time.Time `bson:"last_login_date"`
+	LastAccessTokenDate *time.Time `bson:"last_access_token_date"`
+}
+
+type orgAppMembership struct {
+	ID       string `bson:"id,omitempty"`
+	AppOrgID string `bson:"app_org_id,omitempty"`
+
+	Permissions []model.Permission `bson:"permissions,omitempty"`
+	Roles       []accountRole      `bson:"roles,omitempty"`
+	Groups      []accountGroup     `bson:"groups,omitempty"`
+
+	Preferences map[string]interface{} `bson:"preferences"`
+
+	MostRecentClientVersion *string `bson:"most_recent_client_version"`
+	Deleted                 *bool   `bson:"deleted,omitempty"`
 }
 
 type accountRole struct {
@@ -88,12 +149,14 @@ type profile struct {
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
+
+	UnstructuredProperties map[string]interface{} `bson:"unstructured_properties"`
 }
 
 type userDevice struct {
 	ID string `bson:"_id"`
 
-	DeviceID string `bson:"device_id"`
+	DeviceID *string `bson:"device_id"`
 
 	Type string `bson:"type"`
 	OS   string `bson:"os"`
@@ -105,8 +168,8 @@ type userDevice struct {
 type device struct {
 	ID string `bson:"_id"`
 
-	DeviceID string `bson:"device_id"`
-	Account  string `bson:"account_id"`
+	DeviceID *string `bson:"device_id"`
+	Account  string  `bson:"account_id"`
 
 	Type string `bson:"type"`
 	OS   string `bson:"os"`
@@ -136,4 +199,13 @@ type mfaType struct {
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
+}
+
+type follow struct {
+	ID string `bson:"_id"`
+
+	AppOrgID string `bson:"app_org_id,omitempty"`
+
+	FollowerID  string `bson:"follower_id"`
+	FollowingID string `bson:"following_id"`
 }

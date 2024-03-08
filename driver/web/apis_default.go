@@ -20,36 +20,36 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/rokwire/core-auth-library-go/tokenauth"
-	"github.com/rokwire/logging-library-go/logs"
-	"github.com/rokwire/logging-library-go/logutils"
+	"github.com/rokwire/core-auth-library-go/v3/tokenauth"
+	"github.com/rokwire/logging-library-go/v2/logs"
+	"github.com/rokwire/logging-library-go/v2/logutils"
 )
 
-//DefaultApisHandler handles default APIs implementation - version etc
+// DefaultApisHandler handles default APIs implementation - version etc
 type DefaultApisHandler struct {
 	coreAPIs *core.APIs
 }
 
-//getVersion gives the service version
-func (h DefaultApisHandler) getVersion(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+// getVersion gives the service version
+func (h DefaultApisHandler) getVersion(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
 	version := h.coreAPIs.GetVersion()
 
-	return l.HttpResponseSuccessMessage(version)
+	return l.HTTPResponseSuccessMessage(version)
 }
 
-//getOpenIDConfiguration gives the OpenID Connect Discovery page
-func (h DefaultApisHandler) getOpenIDConfiguration(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HttpResponse {
+// getOpenIDConfiguration gives the OpenID Connect Discovery page
+func (h DefaultApisHandler) getOpenIDConfiguration(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
 	discovery := Def.OIDCDiscovery{Issuer: h.coreAPIs.Auth.GetHost(), JwksUri: h.coreAPIs.Auth.GetHost() + "/tps/auth-keys"}
 
 	data, err := json.Marshal(discovery)
 	if err != nil {
-		return l.HttpResponseErrorAction(logutils.ActionMarshal, "openid configs", nil, err, http.StatusInternalServerError, false)
+		return l.HTTPResponseErrorAction(logutils.ActionMarshal, "openid configs", nil, err, http.StatusInternalServerError, false)
 	}
 
-	return l.HttpResponseSuccessJSON(data)
+	return l.HTTPResponseSuccessJSON(data)
 }
 
-//NewDefaultApisHandler creates new rest services Handler instance
+// NewDefaultApisHandler creates new rest services Handler instance
 func NewDefaultApisHandler(coreAPIs *core.APIs) DefaultApisHandler {
 	return DefaultApisHandler{coreAPIs: coreAPIs}
 }

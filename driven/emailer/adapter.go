@@ -19,15 +19,15 @@ import (
 
 	"gopkg.in/gomail.v2"
 
-	"github.com/rokwire/logging-library-go/errors"
-	"github.com/rokwire/logging-library-go/logutils"
+	"github.com/rokwire/logging-library-go/v2/errors"
+	"github.com/rokwire/logging-library-go/v2/logutils"
 )
 
 const (
 	typeMail logutils.MessageDataType = "mail"
 )
 
-//Adapter implements the Emailer interface
+// Adapter implements the Emailer interface
 type Adapter struct {
 	smptHost     string
 	smtpPortNum  int
@@ -37,13 +37,13 @@ type Adapter struct {
 	emailDialer  *gomail.Dialer
 }
 
-//Send is used to send verification and password reset emails using Smtp connection
+// Send is used to send verification and password reset emails using Smtp connection
 func (a *Adapter) Send(toEmail string, subject string, body string, attachmentFilename *string) error {
 	if a.emailDialer == nil {
-		return errors.New("email dialer is nil")
+		return errors.ErrorData(logutils.StatusMissing, "email dialer", nil)
 	}
 	if toEmail == "" {
-		return errors.New("missing email addresses")
+		return errors.ErrorData(logutils.StatusMissing, "email addresses", nil)
 	}
 
 	emails := strings.Split(toEmail, ",")
@@ -63,7 +63,7 @@ func (a *Adapter) Send(toEmail string, subject string, body string, attachmentFi
 	return nil
 }
 
-//NewEmailerAdapter creates a new emailer adapter instance
+// NewEmailerAdapter creates a new emailer adapter instance
 func NewEmailerAdapter(smtpHost string, smtpPortNum int, smtpUser string, smtpPassword string, smtpFrom string) *Adapter {
 	emailDialer := gomail.NewDialer(smtpHost, smtpPortNum, smtpUser, smtpPassword)
 

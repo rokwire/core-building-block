@@ -18,26 +18,56 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/rokwire/logging-library-go/logutils"
+	"github.com/rokwire/logging-library-go/v2/errors"
+	"github.com/rokwire/logging-library-go/v2/logutils"
 )
 
 const (
-	//TypeGlobalConfig ...
-	TypeGlobalConfig logutils.MessageDataType = "global config"
+	// TypeConfig configs type
+	TypeConfig logutils.MessageDataType = "config"
+	// TypeConfigData config data type
+	TypeConfigData logutils.MessageDataType = "config data"
+	// TypeEnvConfigData env configs type
+	TypeEnvConfigData logutils.MessageDataType = "env config data"
 	//TypeOrganizationConfig ...
 	TypeOrganizationConfig logutils.MessageDataType = "org config"
+
+	// ConfigTypeEnv is the Config type for EnvConfigData
+	ConfigTypeEnv string = "env"
 )
 
-//GlobalConfig represents global config for the system
-type GlobalConfig struct {
-	Setting string
+// Config contains generic configs
+type Config struct {
+	ID          string      `bson:"_id"`
+	Type        string      `bson:"type"`
+	AppID       string      `bson:"app_id"`
+	OrgID       string      `bson:"org_id"`
+	System      bool        `bson:"system"`
+	Data        interface{} `bson:"data"`
+	DateCreated time.Time   `bson:"date_created"`
+	DateUpdated *time.Time  `bson:"date_updated"`
 }
 
-func (gc GlobalConfig) String() string {
-	return fmt.Sprintf("[setting:%s]", gc.Setting)
+// EnvConfigData contains environment configs for this service
+type EnvConfigData struct {
+	CORSAllowedOrigins []string `json:"cors_allowed_origins" bson:"cors_allowed_origins"`
+	CORSAllowedHeaders []string `json:"cors_allowed_headers" bson:"cors_allowed_headers"`
 }
 
-//OrganizationConfig represents configuration for an organization
+// GetConfigData returns a pointer to the given config's Data as the given type T
+func GetConfigData[T ConfigData](c Config) (*T, error) {
+	if data, ok := c.Data.(T); ok {
+		return &data, nil
+	}
+	return nil, errors.ErrorData(logutils.StatusInvalid, TypeConfigData, &logutils.FieldArgs{"type": c.Type})
+}
+
+// ConfigData represents any set of data that may be stored in a config
+type ConfigData interface {
+	EnvConfigData | map[string]interface{}
+}
+
+// OrganizationConfig represents configuration for an organization
 type OrganizationConfig struct {
 	ID      string `bson:"id"`
 	Setting string `bson:"setting"`
@@ -51,5 +81,5 @@ type OrganizationConfig struct {
 }
 
 func (cc OrganizationConfig) String() string {
-	return fmt.Sprintf("[ID:%s\tSetting:%s\tDomains:%s\tCustom:%s]", cc.ID, cc.Setting, cc.Domains, cc.Custom)
+	return fmt.Sprintf("[ID:%s\tSetting:%s\tDomains:%s\tCustom:%v]", cc.ID, cc.Setting, cc.Domains, cc.Custom)
 }

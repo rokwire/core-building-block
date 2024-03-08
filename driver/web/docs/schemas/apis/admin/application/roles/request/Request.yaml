@@ -8,7 +8,13 @@ properties:
     type: string
   description:
     type: string
+  system:
+    type: boolean
   permissions:
+    type: array
+    items:
+      type: string
+  scopes:
     type: array
     items:
       type: string

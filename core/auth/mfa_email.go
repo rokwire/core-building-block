@@ -22,8 +22,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/rokwire/logging-library-go/errors"
-	"github.com/rokwire/logging-library-go/logutils"
+	"github.com/rokwire/logging-library-go/v2/errors"
+	"github.com/rokwire/logging-library-go/v2/logutils"
 )
 
 const (
@@ -97,13 +97,13 @@ func (m *emailMfaImpl) sendCode(identifier string) (string, *time.Time, error) {
 	return code, &expires, errors.New(logutils.Unimplemented)
 }
 
-//initEmailMfa initializes and registers a new email mfa instance
+// initEmailMfa initializes and registers a new email mfa instance
 func initEmailMfa(auth *Auth) (*emailMfaImpl, error) {
 	email := &emailMfaImpl{auth: auth, mfaType: MfaTypeEmail}
 
 	err := auth.registerMfaType(email.mfaType, email)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionRegister, typeMfaType, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeMFAType, nil, err)
 	}
 
 	return email, nil

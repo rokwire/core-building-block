@@ -17,9 +17,9 @@ package auth
 import (
 	"core-building-block/core/model"
 
-	"github.com/rokwire/logging-library-go/errors"
-	"github.com/rokwire/logging-library-go/logs"
-	"github.com/rokwire/logging-library-go/logutils"
+	"github.com/rokwire/logging-library-go/v2/errors"
+	"github.com/rokwire/logging-library-go/v2/logs"
+	"github.com/rokwire/logging-library-go/v2/logutils"
 )
 
 const (
@@ -35,6 +35,10 @@ type firebaseAuthImpl struct {
 
 func (a *firebaseAuthImpl) signUp(authType model.AuthType, appOrg model.ApplicationOrganization, creds string, params string, newCredentialID string, l *logs.Log) (string, map[string]interface{}, error) {
 	return "", nil, nil
+}
+
+func (a *firebaseAuthImpl) signUpAdmin(authType model.AuthType, appOrg model.ApplicationOrganization, identifier string, password string, newCredentialID string) (map[string]interface{}, map[string]interface{}, error) {
+	return nil, nil, nil
 }
 
 func (a *firebaseAuthImpl) getUserIdentifier(creds string) (string, error) {
@@ -69,13 +73,13 @@ func (a *firebaseAuthImpl) forgotCredential(credential *model.Credential, identi
 	return nil, nil
 }
 
-//initFirebaseAuth initializes and registers a new Firebase auth instance
+// initFirebaseAuth initializes and registers a new Firebase auth instance
 func initFirebaseAuth(auth *Auth) (*firebaseAuthImpl, error) {
 	firebase := &firebaseAuthImpl{auth: auth, authType: AuthTypeFirebase}
 
 	err := auth.registerAuthType(firebase.authType, firebase)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionRegister, typeAuthType, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionRegister, model.TypeAuthType, nil, err)
 	}
 
 	return firebase, nil
