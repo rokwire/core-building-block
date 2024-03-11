@@ -644,7 +644,7 @@ func (sa *Adapter) startPhase1() error {
 }
 
 func (sa *Adapter) findNotMigratedCount(context TransactionContext) (*int64, error) {
-	filter := bson.M{"migrated": bson.M{"$in": []interface{}{nil, false}}}
+	filter := bson.M{"migrated_2": bson.M{"$in": []interface{}{nil, false}}}
 	count, err := sa.db.accounts.CountDocumentsWithContext(context, filter)
 	if err != nil {
 		return nil, err
@@ -710,7 +710,7 @@ func (sa *Adapter) markAccountsAsProcessed(context TransactionContext, accountsI
 
 	update := bson.D{
 		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "migrated", Value: true},
+			primitive.E{Key: "migrated_2", Value: true},
 		}},
 	}
 
@@ -931,7 +931,7 @@ func (sa *Adapter) findOrgIDByAppOrgID(appOrgID string, allAppsOrgs []model.Appl
 func (sa *Adapter) findDuplicateAccounts(context TransactionContext, batch int) (map[string][]account, error) {
 	pipeline := []bson.M{
 		{
-			"$match": bson.M{"migrated": bson.M{"$in": []interface{}{nil, false}}}, //iterate only not migrated records
+			"$match": bson.M{"migrated_2": bson.M{"$in": []interface{}{nil, false}}}, //iterate only not migrated records
 		},
 		// batch the matched accounts according to migrationBatchSize
 		{

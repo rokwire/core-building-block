@@ -56,7 +56,7 @@ type account struct {
 	LastAccessTokenDate     *time.Time `bson:"last_access_token_date"`
 	MostRecentClientVersion *string    `bson:"most_recent_client_version"`
 
-	Migrated *bool `bson:"migrated"`
+	Migrated *bool `bson:"migrated_2"`
 
 	// Deprecated:
 	Username *string `bson:"username,omitempty"`
