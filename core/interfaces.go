@@ -17,7 +17,6 @@ package core
 import (
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
-	"time"
 
 	"github.com/rokwire/core-auth-library-go/v3/tokenauth"
 	"github.com/rokwire/logging-library-go/v2/logs"
@@ -118,7 +117,7 @@ type Encryption interface {
 
 // BBs exposes users related APIs used by the platform building blocks
 type BBs interface {
-	BBsGetDeletedAccounts(appID string, orgID string) ([]string, error)
+	BBsGetDeletedOrgAppMemberships(appID string, orgID string) (map[string][]model.AppOrgPair, error)
 
 	BBsGetTest() string
 
@@ -180,8 +179,6 @@ type Storage interface {
 	FindAccountsByUsername(context storage.TransactionContext, appOrg *model.ApplicationOrganization, username string) ([]model.Account, error)
 	FindDeletedAccounts(appID string, orgID string) ([]model.Account, error)
 	SaveAccount(context storage.TransactionContext, account *model.Account) error
-	DeleteAccount(context storage.TransactionContext, id string) error
-	DeleteFlaggedAccounts(cutoff time.Time) error
 
 	UpdateAccountPreferences(context storage.TransactionContext, cOrgID string, cAppID string, accountID string, preferences map[string]interface{}) error
 	UpdateAccountSystemConfigs(context storage.TransactionContext, accountID string, configs map[string]interface{}) error

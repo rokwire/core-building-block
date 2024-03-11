@@ -1744,7 +1744,7 @@ func (sa *Adapter) FindDeletedAccounts(appID string, orgID string) ([]model.Acco
 	}
 
 	membershipFilter := bson.M{
-		"deleted": true,
+		"date_deleted": bson.M{"$exists": true},
 	}
 	if len(appOrgIDs) > 0 {
 		membershipFilter["app_org_id"] = bson.M{"$in": appOrgIDs}
@@ -1872,34 +1872,6 @@ func (sa *Adapter) UpdateAccountUsageInfo(context TransactionContext, accountID 
 	}
 	if res.ModifiedCount != 1 {
 		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccountUsageInfo, &logutils.FieldArgs{"unexpected modified count": res.ModifiedCount})
-	}
-
-	return nil
-}
-
-// DeleteAccount deletes an account
-func (sa *Adapter) DeleteAccount(context TransactionContext, id string) error {
-	//TODO - we have to decide what we do on delete user operation - removing all user relations, (or) mark the user disabled etc
-
-	filter := bson.M{"_id": id}
-	res, err := sa.db.tenantsAccounts.DeleteOneWithContext(context, filter, nil)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
-	}
-	if res.DeletedCount != 1 {
-		return errors.ErrorAction(logutils.ActionDelete, model.TypeAccount, logutils.StringArgs("unexpected deleted count"))
-	}
-
-	return nil
-}
-
-// DeleteFlaggedAccounts deletes accounts flagged for deletion
-func (sa *Adapter) DeleteFlaggedAccounts(cutoff time.Time) error {
-	filter := bson.D{primitive.E{Key: "deleted", Value: true}, primitive.E{Key: "date_updated", Value: bson.M{"$lt": cutoff}}}
-
-	_, err := sa.db.accounts.DeleteMany(filter, nil)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, &logutils.FieldArgs{"date_updated": cutoff.Format("2006-01-02T15:04:05.000Z")}, err)
 	}
 
 	return nil
@@ -2452,18 +2424,19 @@ func (sa *Adapter) DeleteAccountRoles(context TransactionContext, accountID stri
 	return nil
 }
 
-// DeleteOrgAppsMemberships deletes org apps memberships from the account
-func (sa *Adapter) DeleteOrgAppsMemberships(context TransactionContext, accountID string, membershipsIDs []string) error {
+// UpdateOrgAppsMembershipsForDeletion marks org apps memberships for deletion by DeleteOrgAppsMemberships
+func (sa *Adapter) UpdateOrgAppsMembershipsForDeletion(context TransactionContext, accountID string, membershipsIDs []string) error {
 	//filter
 	filter := bson.D{
 		primitive.E{Key: "_id", Value: accountID},
 	}
 
-	// update
+	// update (set date_deleted timestamp and remove all data unnecessary for identifying the membership)
+	now := time.Now().UTC()
 	update := bson.D{
 		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "org_apps_memberships.$[membership].deleted", Value: true},
-			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
+			primitive.E{Key: "org_apps_memberships.$[membership].date_deleted", Value: now},
+			primitive.E{Key: "date_updated", Value: now},
 		}},
 		primitive.E{Key: "$unset", Value: bson.D{
 			primitive.E{Key: "org_apps_memberships.$[membership].permissions", Value: 1},
@@ -2486,6 +2459,34 @@ func (sa *Adapter) DeleteOrgAppsMemberships(context TransactionContext, accountI
 	if res.ModifiedCount != 1 {
 		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"_id": accountID, "modified": res.ModifiedCount, "expected": 1})
 	}
+	return nil
+}
+
+// DeleteOrgAppsMemberships deletes orgAppMemberships marked for deletion by UpdateOrgAppsMembershipsForDeletion
+func (sa *Adapter) DeleteOrgAppsMemberships(cutoff time.Time) error {
+	filter := bson.D{}
+	update := bson.D{
+		primitive.E{Key: "$pull", Value: bson.D{
+			primitive.E{Key: "org_apps_memberships", Value: bson.M{"date_deleted": bson.M{"$lt": cutoff}}},
+		}},
+	}
+
+	_, err := sa.db.tenantsAccounts.UpdateMany(filter, update, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, &logutils.FieldArgs{"date_updated": cutoff.Format("2006-01-02T15:04:05.000Z")}, err)
+	}
+
+	return nil
+}
+
+// DeleteAccounts deletes accounts marked for deletion of all orgAppMemberships
+func (sa *Adapter) DeleteAccounts(cutoff time.Time) error {
+	filter := bson.M{"date_deleted": bson.M{"$lt": cutoff}}
+	_, err := sa.db.tenantsAccounts.DeleteMany(filter, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
+	}
+
 	return nil
 }
 

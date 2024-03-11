@@ -23,14 +23,9 @@ func orgAppMembershipFromStorage(item orgAppMembership, appOrg model.Application
 	roles := accountRolesFromStorage(item.Roles, appOrg)
 	groups := accountGroupsFromStorage(item.Groups, appOrg)
 
-	deleted := false
-	if item.Deleted != nil {
-		deleted = *item.Deleted
-	}
-
 	return model.OrgAppMembership{ID: item.ID, AppOrg: appOrg, Permissions: item.Permissions,
 		Roles: roles, Groups: groups, Preferences: item.Preferences,
-		MostRecentClientVersion: item.MostRecentClientVersion, Deleted: deleted}
+		MostRecentClientVersion: item.MostRecentClientVersion, DateDeleted: item.DateDeleted}
 }
 
 func orgAppsMembershipsFromStorage(items []orgAppMembership, appsOrgs []model.ApplicationOrganization) []model.OrgAppMembership {
@@ -64,15 +59,11 @@ func orgAppMembershipToStorage(item model.OrgAppMembership) orgAppMembership {
 	roles := accountRolesToStorage(item.Roles)
 	groups := accountGroupsToStorage(item.Groups)
 	preferences := item.Preferences
-	mostRecentClientVersions := item.MostRecentClientVersion
-
-	var deleted *bool
-	if item.Deleted {
-		deleted = &item.Deleted
-	}
+	mostRecentClientVersion := item.MostRecentClientVersion
+	dateDeleted := item.DateDeleted
 
 	return orgAppMembership{ID: id, AppOrgID: appOrgID, Permissions: permissions, Roles: roles, Groups: groups,
-		Preferences: preferences, MostRecentClientVersion: mostRecentClientVersions, Deleted: deleted}
+		Preferences: preferences, MostRecentClientVersion: mostRecentClientVersion, DateDeleted: dateDeleted}
 }
 
 func orgAppsMembershipsToStorage(items []model.OrgAppMembership) []orgAppMembership {
@@ -128,6 +119,7 @@ func accountFromStorage(item tenantAccount, currentAppOrg *string, membershipsAp
 
 	dateCreated := item.DateCreated
 	dateUpdated := item.DateUpdated
+	dateDeleted := item.DateDeleted
 	lastLoginDate := item.LastLoginDate
 	lastAccessTokenDate := item.LastAccessTokenDate
 	return model.Account{ID: id, OrgID: orgID, OrgAppsMemberships: orgAppsMemberships,
@@ -142,8 +134,8 @@ func accountFromStorage(item tenantAccount, currentAppOrg *string, membershipsAp
 		Scopes: scopes, AuthTypes: authTypes, MFATypes: mfaTypes, Username: username,
 		ExternalIDs: externalIDs, SystemConfigs: systemConfigs, Profile: profile,
 		Privacy: privacy, Devices: devices, Anonymous: anonymous, Verified: verified,
-		DateCreated: dateCreated, DateUpdated: dateUpdated, LastLoginDate: lastLoginDate,
-		LastAccessTokenDate: lastAccessTokenDate}
+		DateCreated: dateCreated, DateUpdated: dateUpdated, DateDeleted: dateDeleted,
+		LastLoginDate: lastLoginDate, LastAccessTokenDate: lastAccessTokenDate}
 }
 
 func accountsFromStorage(items []tenantAccount, currentAppOrg *string, membershipsAppsOrgs []model.ApplicationOrganization) []model.Account {
@@ -180,6 +172,7 @@ func accountToStorage(item *model.Account) *tenantAccount {
 
 	dateCreated := item.DateCreated
 	dateUpdated := item.DateUpdated
+	dateDeleted := item.DateDeleted
 	lastLoginDate := item.LastLoginDate
 	lastAccessTokenDate := item.LastAccessTokenDate
 
@@ -187,7 +180,8 @@ func accountToStorage(item *model.Account) *tenantAccount {
 		Scopes: scopes, AuthTypes: authTypes, MFATypes: mfaTypes, Username: username,
 		ExternalIDs: externalIDs, SystemConfigs: systemConfigs, Profile: profile, Devices: devices,
 		Anonymous: anonymous, Privacy: privacy, Verified: verified, DateCreated: dateCreated,
-		DateUpdated: dateUpdated, LastLoginDate: lastLoginDate, LastAccessTokenDate: lastAccessTokenDate}
+		DateUpdated: dateUpdated, DateDeleted: dateDeleted, LastLoginDate: lastLoginDate,
+		LastAccessTokenDate: lastAccessTokenDate}
 }
 
 func accountToStorageDeprecated(item *model.Account) *account {

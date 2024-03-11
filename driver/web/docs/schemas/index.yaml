@@ -84,6 +84,8 @@ PublicAccount:
   $ref: "./user/PublicAccount.yaml"
 PartialAccount:
   $ref: "./user/PartialAccount.yaml"
+PartialOrgAppMembership:
+  $ref: "./user/PartialOrgAppMembership.yaml"
 Profile:
   $ref: "./user/Profile.yaml"
 ProfileNullable:

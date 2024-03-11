@@ -72,7 +72,12 @@ type OrgAppMembership struct {
 	Preferences map[string]interface{}
 
 	MostRecentClientVersion *string
-	Deleted                 bool
+	DateDeleted             *time.Time
+}
+
+// IsDeleted returns whether this membership has been marked for deletion
+func (m OrgAppMembership) IsDeleted() bool {
+	return m.DateDeleted != nil
 }
 
 // Account represents account entity
@@ -115,6 +120,7 @@ type Account struct {
 
 	DateCreated time.Time
 	DateUpdated *time.Time
+	DateDeleted *time.Time
 
 	LastLoginDate       *time.Time
 	LastAccessTokenDate *time.Time
@@ -154,7 +160,8 @@ func (a Account) GetActiveApps() []Application {
 
 	res := make([]Application, 0)
 	for _, oam := range a.OrgAppsMemberships {
-		if !oam.Deleted {
+		if !oam.IsDeleted() {
+			// if the DateDeleted timestamp is missing, then the membership is active
 			res = append(res, oam.AppOrg.Application)
 		}
 	}

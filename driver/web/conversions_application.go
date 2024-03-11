@@ -34,6 +34,23 @@ func partialAppsToDef(item []model.Application) []Def.PartialApp {
 	return result
 }
 
+// PartialOrgAppMembership
+func partialOrgAppMembershipsToDef(memberships map[string][]model.AppOrgPair) []Def.PartialOrgAppMembership {
+	if len(memberships) == 0 {
+		return nil
+	}
+
+	result := make([]Def.PartialOrgAppMembership, 0)
+	for accountID, membershipIDPairs := range memberships {
+		defPairs := make([]Def.AppOrgPair, len(membershipIDPairs))
+		for i, pair := range membershipIDPairs {
+			defPairs[i] = Def.AppOrgPair{AppId: pair.AppID, OrgId: pair.OrgID}
+		}
+		result = append(result, Def.PartialOrgAppMembership{AccountId: accountID, OrgAppMemberships: defPairs})
+	}
+	return result
+}
+
 // Application
 func applicationToDef(item model.Application) Def.Application {
 	types := applicationTypeListToDef(item.Types)

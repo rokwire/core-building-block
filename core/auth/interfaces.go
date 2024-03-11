@@ -488,9 +488,10 @@ type Storage interface {
 	FindAccountsByUsername(context storage.TransactionContext, appOrg *model.ApplicationOrganization, username string) ([]model.Account, error)
 	InsertAccount(context storage.TransactionContext, account model.Account) (*model.Account, error)
 	SaveAccount(context storage.TransactionContext, account *model.Account) error
-	DeleteAccount(context storage.TransactionContext, id string) error
 	UpdateAccountUsageInfo(context storage.TransactionContext, accountID string, updateLoginTime bool, updateAccessTokenTime bool, clientVersion *string) error
-	DeleteOrgAppsMemberships(context storage.TransactionContext, accountID string, membershipsIDs []string) error
+	UpdateOrgAppsMembershipsForDeletion(context storage.TransactionContext, accountID string, membershipsIDs []string) error
+	DeleteOrgAppsMemberships(cutoff time.Time) error
+	DeleteAccounts(cutoff time.Time) error
 
 	//Profiles
 	UpdateAccountProfile(context storage.TransactionContext, profile model.Profile) error

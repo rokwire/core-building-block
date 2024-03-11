@@ -541,6 +541,12 @@ type PartialApp struct {
 	Name string  `json:"name"`
 }
 
+// PartialOrgAppMembership defines model for PartialOrgAppMembership.
+type PartialOrgAppMembership struct {
+	AccountId         string       `json:"account_id"`
+	OrgAppMemberships []AppOrgPair `json:"org_app_memberships"`
+}
+
 // Permission defines model for Permission.
 type Permission struct {
 	Assigners   *[]string `json:"assigners,omitempty"`

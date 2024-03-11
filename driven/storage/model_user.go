@@ -85,6 +85,7 @@ type tenantAccount struct {
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
+	DateDeleted *time.Time `bson:"date_deleted"`
 
 	IsFollowing bool `bson:"is_following"`
 
@@ -102,8 +103,8 @@ type orgAppMembership struct {
 
 	Preferences map[string]interface{} `bson:"preferences"`
 
-	MostRecentClientVersion *string `bson:"most_recent_client_version"`
-	Deleted                 *bool   `bson:"deleted,omitempty"`
+	MostRecentClientVersion *string    `bson:"most_recent_client_version"`
+	DateDeleted             *time.Time `bson:"date_deleted,omitempty"`
 }
 
 type accountRole struct {

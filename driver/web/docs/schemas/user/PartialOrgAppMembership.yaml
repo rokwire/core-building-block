@@ -1,0 +1,11 @@
+required:
+  - account_id
+  - org_app_memberships
+type: object
+properties:
+  account_id:
+    type: string
+  org_app_memberships:
+    type: array
+    items:
+      $ref: "../auth/AppOrgPair.yaml"

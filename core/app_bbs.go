@@ -21,15 +21,25 @@ import (
 	"github.com/rokwire/logging-library-go/v2/logutils"
 )
 
-func (app *application) bbsGetDeletedAccounts(appID string, orgID string) ([]string, error) {
+func (app *application) bbsGetDeletedOrgAppMemberships(appID string, orgID string) (map[string][]model.AppOrgPair, error) {
 	accounts, err := app.storage.FindDeletedAccounts(appID, orgID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
+	if len(accounts) == 0 {
+		return nil, nil
+	}
 
-	deletedAccounts := make([]string, len(accounts))
-	for i, account := range accounts {
-		deletedAccounts[i] = account.ID
+	deletedAccounts := make(map[string][]model.AppOrgPair)
+	for _, account := range accounts {
+		for _, membership := range account.OrgAppsMemberships {
+			if membership.IsDeleted() {
+				if _, exists := deletedAccounts[account.ID]; !exists {
+					deletedAccounts[account.ID] = make([]model.AppOrgPair, 0)
+				}
+				deletedAccounts[account.ID] = append(deletedAccounts[account.ID], model.AppOrgPair{AppID: membership.AppOrg.Application.ID, OrgID: account.OrgID})
+			}
+		}
 	}
 
 	return deletedAccounts, nil

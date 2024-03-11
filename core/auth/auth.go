@@ -69,6 +69,8 @@ const (
 	sessionDeletePeriod int = 24 // hours
 	maxSessionsDelete   int = 250
 
+	deleteAccountsPeriodDefault int64 = 2 // hours
+
 	sessionIDRateLimit  int = 5
 	sessionIDRatePeriod int = 5 // minutes
 
@@ -116,12 +118,17 @@ type Auth struct {
 	deleteSessionsTimer     *time.Timer
 	deleteSessionsTimerDone chan bool
 
+	//delete accounts timer
+	deleteAccountsPeriod    int64
+	deleteAccountsTimer     *time.Timer
+	deleteAccountsTimerDone chan bool
+
 	version string
 }
 
 // NewAuth creates a new auth instance
 func NewAuth(serviceID string, host string, authPrivKey *keys.PrivKey, authService *authservice.AuthService, storage Storage, emailer Emailer, minTokenExp *int64,
-	maxTokenExp *int64, supportLegacySigs bool, twilioAccountSID string, twilioToken string, twilioServiceSID string, profileBB ProfileBuildingBlock,
+	maxTokenExp *int64, deleteAccountsPeriod *int64, supportLegacySigs bool, twilioAccountSID string, twilioToken string, twilioServiceSID string, profileBB ProfileBuildingBlock,
 	smtpHost string, smtpPortNum int, smtpUser string, smtpPassword string, smtpFrom string, logger *logs.Logger, version string) (*Auth, error) {
 	if minTokenExp == nil {
 		var minTokenExpVal int64 = 5
@@ -146,11 +153,16 @@ func NewAuth(serviceID string, host string, authPrivKey *keys.PrivKey, authServi
 	apiKeysLock := &sync.RWMutex{}
 
 	deleteSessionsTimerDone := make(chan bool)
+	deleteAccountsTimerDone := make(chan bool)
+	deletePeriod := deleteAccountsPeriodDefault
+	if deleteAccountsPeriod != nil {
+		deletePeriod = *deleteAccountsPeriod
+	}
 
 	auth := &Auth{storage: storage, emailer: emailer, logger: logger, authTypes: authTypes, externalAuthTypes: externalAuthTypes, anonymousAuthTypes: anonymousAuthTypes,
 		serviceAuthTypes: serviceAuthTypes, mfaTypes: mfaTypes, authPrivKey: authPrivKey, ServiceRegManager: nil, serviceID: serviceID, host: host, minTokenExp: *minTokenExp,
-		maxTokenExp: *maxTokenExp, profileBB: profileBB, cachedIdentityProviders: cachedIdentityProviders, identityProvidersLock: identityProvidersLock,
-		apiKeys: apiKeys, apiKeysLock: apiKeysLock, deleteSessionsTimerDone: deleteSessionsTimerDone, version: version}
+		maxTokenExp: *maxTokenExp, profileBB: profileBB, cachedIdentityProviders: cachedIdentityProviders, identityProvidersLock: identityProvidersLock, apiKeys: apiKeys,
+		apiKeysLock: apiKeysLock, deleteSessionsTimerDone: deleteSessionsTimerDone, deleteAccountsTimerDone: deleteAccountsTimerDone, deleteAccountsPeriod: deletePeriod, version: version}
 
 	err := auth.storeCoreRegs()
 	if err != nil {
@@ -1995,7 +2007,7 @@ func (a *Auth) deleteAppsFromAccount(context storage.TransactionContext, account
 		}
 	}
 
-	err := a.storage.DeleteOrgAppsMemberships(context, account.ID, membershipsIDs)
+	err := a.storage.UpdateOrgAppsMembershipsForDeletion(context, account.ID, membershipsIDs)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
 	}
@@ -2006,10 +2018,11 @@ func (a *Auth) deleteAppsFromAccount(context storage.TransactionContext, account
 func (a *Auth) deleteFullAccount(context storage.TransactionContext, account model.Account) error {
 	//1. mark account deleted and remove data in storage
 	now := time.Now().UTC()
-	deletedAccount := model.Account{ID: account.ID, OrgID: account.OrgID, OrgAppsMemberships: make([]model.OrgAppMembership, len(account.OrgAppsMemberships)), DateCreated: account.DateCreated, DateUpdated: &now}
+	deletedAccount := model.Account{ID: account.ID, OrgID: account.OrgID, OrgAppsMemberships: make([]model.OrgAppMembership, len(account.OrgAppsMemberships)),
+		DateCreated: account.DateCreated, DateUpdated: &now, DateDeleted: &now}
 	// copy membership identifying info and set to be deleted
 	for i, membership := range account.OrgAppsMemberships {
-		deletedAccount.OrgAppsMemberships[i] = model.OrgAppMembership{ID: membership.ID, AppOrg: membership.AppOrg, Deleted: true}
+		deletedAccount.OrgAppsMemberships[i] = model.OrgAppMembership{ID: membership.ID, AppOrg: membership.AppOrg, DateDeleted: &now}
 	}
 	err := a.storage.SaveAccount(context, &deletedAccount)
 	if err != nil {
@@ -2737,6 +2750,20 @@ func (a *Auth) deleteExpiredSessions() {
 		if err != nil {
 			a.logger.Errorf("error on deleting logins sessions - %s", err)
 		}
+	}
+}
+
+func (a *Auth) deleteAccounts() {
+	duration := time.Hour * time.Duration(a.deleteAccountsPeriod)
+
+	now := time.Now().UTC()
+	err := a.storage.DeleteOrgAppsMemberships(now.Add(-duration))
+	if err != nil {
+		a.logger.Error(err.Error())
+	}
+	err = a.storage.DeleteAccounts(now.Add(-duration))
+	if err != nil {
+		a.logger.Error(err.Error())
 	}
 }
 

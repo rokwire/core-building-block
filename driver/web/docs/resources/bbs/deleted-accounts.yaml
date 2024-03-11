@@ -16,7 +16,7 @@ get:
           schema:
             type: array
             items: 
-              type: string
+              $ref: "../../schemas/user/PartialOrgAppMembership.yaml"
     400:
       description: Bad request
     401:
