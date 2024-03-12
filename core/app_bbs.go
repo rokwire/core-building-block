@@ -21,8 +21,8 @@ import (
 	"github.com/rokwire/logging-library-go/v2/logutils"
 )
 
-func (app *application) bbsGetDeletedOrgAppMemberships(appID string, orgID string) (map[string][]model.AppOrgPair, error) {
-	accounts, err := app.storage.FindDeletedAccounts(appID, orgID)
+func (app *application) bbsGetDeletedOrgAppMemberships(appID string, orgID string) (map[model.AppOrgPair][]string, error) {
+	accounts, err := app.storage.FindDeletedOrgAppMemberships(appID, orgID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
@@ -30,19 +30,20 @@ func (app *application) bbsGetDeletedOrgAppMemberships(appID string, orgID strin
 		return nil, nil
 	}
 
-	deletedAccounts := make(map[string][]model.AppOrgPair)
+	deletedMemberships := make(map[model.AppOrgPair][]string)
 	for _, account := range accounts {
 		for _, membership := range account.OrgAppsMemberships {
 			if membership.IsDeleted() {
-				if _, exists := deletedAccounts[account.ID]; !exists {
-					deletedAccounts[account.ID] = make([]model.AppOrgPair, 0)
+				appOrgPair := model.AppOrgPair{AppID: membership.AppOrg.Application.ID, OrgID: account.OrgID}
+				if _, exists := deletedMemberships[appOrgPair]; !exists {
+					deletedMemberships[appOrgPair] = make([]string, 0)
 				}
-				deletedAccounts[account.ID] = append(deletedAccounts[account.ID], model.AppOrgPair{AppID: membership.AppOrg.Application.ID, OrgID: account.OrgID})
+				deletedMemberships[appOrgPair] = append(deletedMemberships[appOrgPair], account.ID)
 			}
 		}
 	}
 
-	return deletedAccounts, nil
+	return deletedMemberships, nil
 }
 
 func (app *application) bbsGetTest() string {

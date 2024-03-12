@@ -208,6 +208,13 @@ type AccountAuthType struct {
 	Unverified *bool                   `json:"unverified,omitempty"`
 }
 
+// AccountOrgAppMemberships defines model for AccountOrgAppMemberships.
+type AccountOrgAppMemberships struct {
+	AccountIds []string `json:"account_ids"`
+	AppId      string   `json:"app_id"`
+	OrgId      string   `json:"org_id"`
+}
+
 // AdminToken defines model for AdminToken.
 type AdminToken struct {
 	Token string `json:"token"`
@@ -539,12 +546,6 @@ type PartialApp struct {
 	Code string  `json:"code"`
 	Id   *string `json:"id,omitempty"`
 	Name string  `json:"name"`
-}
-
-// PartialOrgAppMembership defines model for PartialOrgAppMembership.
-type PartialOrgAppMembership struct {
-	AccountId         string       `json:"account_id"`
-	OrgAppMemberships []AppOrgPair `json:"org_app_memberships"`
 }
 
 // Permission defines model for Permission.

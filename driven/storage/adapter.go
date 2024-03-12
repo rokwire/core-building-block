@@ -1736,8 +1736,8 @@ func (sa *Adapter) FindAccountByIDV2(context TransactionContext, cOrgID string, 
 	return sa.findAccount(context, "_id", id, &currentAppOrg.ID)
 }
 
-// FindDeletedAccounts finds accounts flagged for deletion
-func (sa *Adapter) FindDeletedAccounts(appID string, orgID string) ([]model.Account, error) {
+// FindDeletedOrgAppMemberships finds accounts with orgAppMemberships flagged for deletion
+func (sa *Adapter) FindDeletedOrgAppMemberships(appID string, orgID string) ([]model.Account, error) {
 	appOrgIDs, err := sa.getAppOrgIDsByAppOrgPair(appID, orgID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGet, "application organization ids", nil, err)

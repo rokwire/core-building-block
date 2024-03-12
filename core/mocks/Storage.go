@@ -1235,12 +1235,12 @@ func (_m *Storage) FindCredential(context storage.TransactionContext, ID string)
 	return r0, r1
 }
 
-// FindDeletedAccounts provides a mock function with given fields: appID, orgID
-func (_m *Storage) FindDeletedAccounts(appID string, orgID string) ([]model.Account, error) {
+// FindDeletedOrgAppMemberships provides a mock function with given fields: appID, orgID
+func (_m *Storage) FindDeletedOrgAppMemberships(appID string, orgID string) ([]model.Account, error) {
 	ret := _m.Called(appID, orgID)
 
 	if len(ret) == 0 {
-		panic("no return value specified for FindDeletedAccounts")
+		panic("no return value specified for FindDeletedOrgAppMemberships")
 	}
 
 	var r0 []model.Account

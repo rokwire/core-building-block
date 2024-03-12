@@ -3984,7 +3984,7 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /bbs/deleted-accounts:
+  /bbs/deleted-memberships:
     get:
       tags:
         - BBs
@@ -4003,7 +4003,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/PartialOrgAppMembership'
+                  $ref: '#/components/schemas/AccountOrgAppMemberships'
         '400':
           description: Bad request
         '401':
@@ -6806,18 +6806,17 @@ components:
         external_ids:
           type: object
           nullable: true
-    PartialOrgAppMembership:
-      required:
-        - account_id
-        - org_app_memberships
-      type: object
-      properties:
-        account_id:
-          type: string
-        org_app_memberships:
-          type: array
-          items:
-            $ref: '#/components/schemas/AppOrgPair'
+    AccountOrgAppMemberships:
+      allOf:
+        - $ref: '#/components/schemas/AppOrgPair'
+        - required:
+            - account_ids
+          type: object
+          properties:
+            account_ids:
+              type: array
+              items:
+                type: string
     Profile:
       required:
         - id

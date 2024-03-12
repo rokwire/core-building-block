@@ -559,7 +559,7 @@ type bbsImpl struct {
 	app *application
 }
 
-func (s *bbsImpl) BBsGetDeletedOrgAppMemberships(appID string, orgID string) (map[string][]model.AppOrgPair, error) {
+func (s *bbsImpl) BBsGetDeletedOrgAppMemberships(appID string, orgID string) (map[model.AppOrgPair][]string, error) {
 	return s.app.bbsGetDeletedOrgAppMemberships(appID, orgID)
 }
 

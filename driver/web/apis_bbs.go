@@ -161,13 +161,13 @@ func (h BBsApisHandler) getServiceAccessTokens(l *logs.Log, r *http.Request, cla
 	return l.HTTPResponseSuccessJSON(respData)
 }
 
-func (h BBsApisHandler) getDeletedAccounts(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
+func (h BBsApisHandler) getDeletedMemberships(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
 	deletedMemberships, err := h.coreAPIs.BBs.BBsGetDeletedOrgAppMemberships(claims.AppID, claims.OrgID)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionGet, "deleted account ids", nil, err, http.StatusInternalServerError, true)
 	}
 
-	deletedMembershipsResp := partialOrgAppMembershipsToDef(deletedMemberships)
+	deletedMembershipsResp := accountOrgAppMembershipsToDef(deletedMemberships)
 	data, err := json.Marshal(deletedMembershipsResp)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionMarshal, "deleted account ids", nil, err, http.StatusInternalServerError, false)
