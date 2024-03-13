@@ -2,6 +2,8 @@ type: object
 properties:
   max_concurrent_sessions:
     type: integer
+  access_token_expiration_policy:
+    $ref: "./AccessTokenExpirationPolicy.yaml"
   inactivity_expire_policy:
     $ref: "./InactiveExpirePolicy.yaml"
   time_since_login_expire_policy:

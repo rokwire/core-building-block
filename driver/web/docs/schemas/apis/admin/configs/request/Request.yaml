@@ -17,3 +17,4 @@ properties:
   data:
     anyOf:
       - $ref: "../../../../config/EnvConfigData.yaml"
+      - $ref: "../../../../config/AuthConfigData.yaml"

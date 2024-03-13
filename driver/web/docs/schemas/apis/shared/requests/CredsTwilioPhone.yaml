@@ -1,9 +1,0 @@
-type: object
-description: Auth login creds for auth_type="twilio_phone"
-required:
-  - phone
-properties:
-  phone:
-    type: string
-  code:
-    type: string

@@ -13,9 +13,11 @@ properties:
   email:
     type: string
     nullable: true
+    deprecated: true
   phone:
     type: string
     nullable: true
+    deprecated: true
   birth_year:
     type: integer
     nullable: true

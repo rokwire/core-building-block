@@ -1,13 +1,13 @@
 get:
   tags:
-    - Services
+    - UI
   summary: Validate verification code
   description: |
-    Validates verification code to verify account ownership
+    Validates verification code to verify account ownership and displays result in an HTML page
   parameters:
     - name: id
       in: query
-      description: Credential ID
+      description: Identifier ID
       required: true
       style: form
       explode: false
@@ -23,12 +23,7 @@ get:
         type: string
   responses:
     200:
-      description: Successful operation
-      content:
-        text/plain:
-          schema:
-            type: string
-            example: Successfully verified code
+      description: Successful operation (HTML page)
     400:
       description: Bad request
     401:

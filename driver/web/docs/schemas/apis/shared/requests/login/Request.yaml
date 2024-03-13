@@ -10,10 +10,15 @@ properties:
     type: string
     enum:
       - email
+      - phone
       - twilio_phone
       - illinois_oidc
+      - conde_oidc
       - anonymous
       - username
+      - password
+      - webauthn
+      - code
   app_type_identifier:
     type: string
   org_id:
@@ -22,18 +27,19 @@ properties:
     type: string
   creds:
     anyOf:
-      - $ref: "../CredsEmail.yaml"
-      - $ref: "../CredsTwilioPhone.yaml"
+      - $ref: "../CredsAnonymous.yaml"
+      - $ref: "../CredsCode.yaml"
       - $ref: "../CredsOIDC.yaml"
-      - $ref: "../CredsAPIKey.yaml"
-      - $ref: "../CredsUsername.yaml"
+      - $ref: "../CredsPassword.yaml"
+      - $ref: "../CredsWebAuthn.yaml"
+      - $ref: "../CredsNone.yaml"
   params:
     type: object
     anyOf:
-      - $ref: "../ParamsEmail.yaml"
       - $ref: "../ParamsOIDC.yaml"
+      - $ref: "../ParamsPassword.yaml"
+      - $ref: "../ParamsWebAuthn.yaml"
       - $ref: "../ParamsNone.yaml"
-      - $ref: "../ParamsUsername.yaml"
   device:
     $ref: "../../../../user/Device.yaml"
   profile:
@@ -43,6 +49,6 @@ properties:
   preferences:
     type: object
     nullable: true
-  username:
+  account_identifier_id:
     type: string
     nullable: true

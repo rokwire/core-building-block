@@ -173,10 +173,9 @@ func (a *Adapter) GetProfileBBData(queryParams map[string]string, l *logs.Log) (
 		l.WarnError(logutils.MessageActionError(logutils.ActionParse, "date created", nil), err)
 		dateCreated = &now
 	}
-	existingProfile := model.Profile{FirstName: profileData.PII.FirstName, LastName: profileData.PII.LastName,
-		Email: profileData.PII.Email, Phone: profileData.PII.Phone, BirthYear: profileData.PII.BirthYear,
-		Address: profileData.PII.Address, ZipCode: profileData.PII.ZipCode, State: profileData.PII.State,
-		Country: profileData.PII.Country, DateCreated: *dateCreated, DateUpdated: &now}
+	existingProfile := model.Profile{FirstName: profileData.PII.FirstName, LastName: profileData.PII.LastName, BirthYear: profileData.PII.BirthYear,
+		Address: profileData.PII.Address, ZipCode: profileData.PII.ZipCode, State: profileData.PII.State, Country: profileData.PII.Country,
+		DateCreated: *dateCreated, DateUpdated: &now}
 
 	preferences := a.reformatPreferences(profileData.NonPII, l)
 

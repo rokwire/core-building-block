@@ -1,0 +1,27 @@
+post:
+  tags:
+  - Services
+  summary: Get account sign-in options
+  description: |
+    Get the sign-in options for the account with the provided parameters
+  requestBody:
+    description: |
+      Account information to be checked
+    content:
+      application/json:
+        schema:
+          $ref: "../../../../schemas/apis/shared/requests/AccountCheck.yaml"
+    required: true
+  responses:
+    200:
+      description: Success
+      content:
+        application/json:
+          schema:
+            $ref: "../../../../schemas/apis/shared/responses/SignInOptions.yaml"
+    400:
+      description: Bad request
+    401:
+      description: Unauthorized
+    500:
+      description: Internal error

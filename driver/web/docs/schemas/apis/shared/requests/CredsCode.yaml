@@ -1,0 +1,7 @@
+type: object
+description: Auth login creds for auth_type="code"
+allOf:
+  - $ref: "./Identifiers.yaml"
+  - properties:
+      code:
+        type: string

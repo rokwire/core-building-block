@@ -7,11 +7,18 @@ properties:
     type: string
   user_identifier_field:
     type: string
-  external_id_fields: # map
+  external_id_fields:
     type: object
     additionalProperties:
       type: string
     nullable: true
+  sensitive_external_ids:
+    type: array
+    items:
+      type: string
+    nullable: true
+  is_email_verified:
+    type: boolean
   first_name_field:
     type: string
   middle_name_field:

@@ -1,0 +1,24 @@
+required:
+  - id
+  - code
+  - identifier
+  - verified
+  - linked
+  - sensitive
+type: object
+properties:
+  id:
+    type: string
+  code:
+    type: string
+  identifier:
+    type: string
+  verified:
+    type: boolean
+  linked:
+    type: boolean
+  sensitive:
+    type: boolean
+  account_auth_type_id:
+    type: string
+    nullable: true

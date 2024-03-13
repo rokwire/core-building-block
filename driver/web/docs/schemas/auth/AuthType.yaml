@@ -13,7 +13,7 @@ properties:
     type: string
   code:
     type: string
-    description: "username or email or phone or illinois_oidc etc"
+    description: "passowrd or code or webauthn or illinois_oidc etc"
   description:
     type: string
   is_external:

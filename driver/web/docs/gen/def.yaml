@@ -211,6 +211,35 @@ paths:
                     type: mobile
                     device_id: '5555'
                     os: Android
+              webauthn-sign_up:
+                summary: WebAuthn - sign up
+                value:
+                  auth_type: webauthn
+                  app_type_identifier: edu.illinois.rokwire
+                  org_id: 0a2eff20-e2cd-11eb-af68-60f81db5ecc0
+                  api_key: 95a463e3-2ce8-450b-ba75-d8506b874738
+                  params:
+                    sign_up: true
+                    name: test
+                    display_name: John Doe
+                  preferences:
+                    key1: value1
+                    key2: value2
+                  profile:
+                    address: address
+                    birth_year: 1990
+                    country: county
+                    email: email
+                    first_name: first name
+                    last_name: last name
+                    phone: '+000000000000'
+                    photo_url: photo url
+                    state: state
+                    zip_code: zip code
+                  device:
+                    type: mobile
+                    device_id: '5555'
+                    os: Android
         required: true
       responses:
         '200':
@@ -377,17 +406,17 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /services/auth/credential/verify:
+  /services/auth/identifier/verify:
     get:
       tags:
         - Services
       summary: Validate verification code
       description: |
-        Validates verification code to verify account ownership
+        Validates verification code to verify account identifier ownership
       parameters:
         - name: id
           in: query
-          description: Credential ID
+          description: Account identifier ID
           required: true
           style: form
           explode: false
@@ -415,7 +444,7 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /services/auth/credential/send-verify:
+  /services/auth/identifier/send-verify:
     post:
       tags:
         - Services
@@ -428,7 +457,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/_services_req_credential_send-verify'
+              $ref: '#/components/schemas/_services_req_identifier_send-verify'
         required: true
       responses:
         '200':
@@ -657,6 +686,136 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+  /services/auth/account/sign-in-options:
+    post:
+      tags:
+        - Services
+      summary: Get account sign-in options
+      description: |
+        Get the sign-in options for the account with the provided parameters
+      requestBody:
+        description: |
+          Account information to be checked
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_shared_req_AccountCheck'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_shared_res_SignInOptions'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /services/auth/account/identifier/link:
+    post:
+      tags:
+        - Services
+      summary: Link identifier
+      description: |
+        Link identifier to an existing account
+
+        **Auth:** Requires "authenticated" auth token
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_services_req_account_identifier-link'
+            examples:
+              email:
+                summary: Email
+                value:
+                  identifier:
+                    email: test@example.com
+              phone:
+                summary: Phone
+                value:
+                  identifier:
+                    phone: '+12223334444'
+              username:
+                summary: Username
+                value:
+                  identifier:
+                    username: username
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_services_res_account_identifier-link'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                      - invalid
+                      - unverified
+                      - verification-expired
+                      - already-exists
+                      - not-found
+                      - not-allowed
+                      - internal-server-error
+                    description: |
+                      - `invalid`: Invalid identifier
+                      - `unverified`: Unverified identifier
+                      - `verification-expired`: Identifier verification expired. The verification is restarted
+                      - `already-exists`: Auth type identifier already exists
+                      - `not-found`: Account could not be found when `sign-up=false`
+                      - `not-allowed`: Invalid operation
+                      - `internal-server-error`: An undefined error occurred
+                  message:
+                    type: string
+    delete:
+      tags:
+        - Services
+      summary: Unlink identifier
+      description: |
+        Unlink identifier from an existing account
+
+        **Auth:** Requires "authenticated" auth token
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_services_req_account_identifier-unlink'
+            example:
+              id: <account identifier ID>
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_services_res_account_identifier-link'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   /services/auth/account/auth-type/link:
     post:
       tags:
@@ -674,34 +833,43 @@ paths:
             schema:
               $ref: '#/components/schemas/_services_req_account_auth-type-link'
             examples:
-              email-sign_up:
-                summary: Email
+              password:
+                summary: Password
                 value:
-                  auth_type: email
+                  auth_type: password
                   app_type_identifier: edu.illinois.rokwire
-                  org_id: 0a2eff20-e2cd-11eb-af68-60f81db5ecc0
-                  api_key: 95a463e3-2ce8-450b-ba75-d8506b874738
                   creds:
-                    email: test@example.com
                     password: test12345
                   params:
                     confirm_password: test12345
-              phone:
-                summary: Phone
+              code:
+                summary: Code
                 value:
-                  auth_type: twilio_phone
+                  auth_type: code
                   app_type_identifier: edu.illinois.rokwire
-                  org_id: 0a2eff20-e2cd-11eb-af68-60f81db5ecc0
-                  api_key: 95a463e3-2ce8-450b-ba75-d8506b874738
                   creds:
                     phone: '+12223334444'
+              webauthn-begin_registration:
+                summary: Webauthn begin registration
+                value:
+                  auth_type: webauthn
+                  app_type_identifier: edu.illinois.rokwire
+                  params:
+                    display_name: Name
+              webauthn-complete_registration:
+                summary: Webauthn complete registration
+                value:
+                  auth_type: webauthn
+                  app_type_identifier: edu.illinois.rokwire
+                  creds:
+                    response: <create credential response>
+                  params:
+                    display_name: Name
               illinois_oidc:
                 summary: Illinois OIDC
                 value:
                   auth_type: illinois_oidc
                   app_type_identifier: edu.illinois.rokwire
-                  org_id: 0a2eff20-e2cd-11eb-af68-60f81db5ecc0
-                  api_key: 95a463e3-2ce8-450b-ba75-d8506b874738
                   creds: 'https://redirect.example.com?code=ai324uith8gSEefesEguorgwsf43'
                   params:
                     redirect_uri: 'https://redirect.example.com'
@@ -733,13 +901,15 @@ paths:
                       - verification-expired
                       - already-exists
                       - not-found
+                      - not-allowed
                       - internal-server-error
                     description: |
                       - `invalid`: Invalid credentials
                       - `unverified`: Unverified credentials
-                      - `verification-expired`: Credentials verification expired. The verification is restarted
-                      - `already-exists`: Auth type identifier already exists
+                      - `verification-expired`: Identifier verification expired. The verification is restarted
+                      - `already-exists`: Auth type already exists
                       - `not-found`: Account could not be found when `sign-up=false`
+                      - `not-allowed`: Invalid operation
                       - `internal-server-error`: An undefined error occurred
                   message:
                     type: string
@@ -758,25 +928,8 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/_services_req_account_auth-type-unlink'
-            examples:
-              email:
-                summary: Email
-                value:
-                  auth_type: email
-                  app_type_identifier: edu.illinois.rokwire
-                  identifier: test@example.com
-              phone:
-                summary: Phone
-                value:
-                  auth_type: twilio_phone
-                  app_type_identifier: edu.illinois.rokwire
-                  identifier: '+12223334444'
-              illinois_oidc:
-                summary: Illinois OIDC
-                value:
-                  auth_type: illinois_oidc
-                  app_type_identifier: edu.illinois.rokwire
-                  identifier: '123456789'
+            example:
+              id: <account auth type ID>
         required: true
       responses:
         '200':
@@ -1437,6 +1590,37 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+  /services/account/secrets:
+    put:
+      tags:
+        - Services
+      summary: Update account secrets
+      description: |
+        Updates account secrets
+
+        **Auth:** Requires user auth token
+      security:
+        - bearerAuth: []
+      requestBody:
+        description: Profile update
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Success
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   /services/account/system-configs:
     get:
       tags:
@@ -1635,6 +1819,36 @@ paths:
           description: Unauthorized
         '404':
           description: AppConfig not found
+        '500':
+          description: Internal error
+  /services/auth/credential/send-verify:
+    post:
+      tags:
+        - Services
+      summary: Send verification code to identifier
+      description: |
+        Sends verification code to identifier to verify account ownership
+      deprecated: true
+      requestBody:
+        description: |
+          Account information to be checked
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_services_req_identifier_send-verify'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Successfully sent verification code
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
         '500':
           description: Internal error
   /services/application/configs:
@@ -2361,6 +2575,12 @@ paths:
       responses:
         '200':
           description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PartialAccount'
         '400':
           description: Bad request
         '401':
@@ -2951,7 +3171,7 @@ paths:
                 value:
                   profile.first_name: Example
                   preferences.privacy_level: 4
-                  external_ids.uin:
+                  identifiers.uin:
                     - '123456789'
                     - '12312434'
               multiple_value:
@@ -2962,7 +3182,7 @@ paths:
                     - 3
                     - 4
                     - 5
-                  external_ids.uin:
+                  identifiers.uin:
                     - '123456789'
                     - '12312434'
         required: true
@@ -2974,7 +3194,7 @@ paths:
               schema:
                 type: array
                 items:
-                  type: object
+                  $ref: '#/components/schemas/Account'
         '400':
           description: Bad request
         '401':
@@ -3005,7 +3225,7 @@ paths:
                 value:
                   profile.first_name: Example
                   preferences.privacy_level: 4
-                  external_ids.uin:
+                  identifiers.uin:
                     - '123456789'
                     - '12312434'
               multiple_value:
@@ -3016,7 +3236,7 @@ paths:
                     - 3
                     - 4
                     - 5
-                  external_ids.uin:
+                  identifiers.uin:
                     - '123456789'
                     - '12312434'
         required: true
@@ -4041,7 +4261,7 @@ paths:
                 value:
                   profile.first_name: Example
                   preferences.privacy_level: 4
-                  external_ids.uin: '123456789'
+                  identifiers.uin: '123456789'
               multiple_value:
                 summary: 'Some single-value, some multi-value search parameters'
                 value:
@@ -4050,7 +4270,7 @@ paths:
                     - 3
                     - 4
                     - 5
-                  external_ids.uin: '123456789'
+                  identifiers.uin: '123456789'
         required: true
       responses:
         '200':
@@ -4060,7 +4280,7 @@ paths:
               schema:
                 type: array
                 items:
-                  type: object
+                  $ref: '#/components/schemas/Account'
         '400':
           description: Bad request
         '401':
@@ -4110,7 +4330,7 @@ paths:
                 value:
                   profile.first_name: Example
                   preferences.privacy_level: 4
-                  external_ids.uin: '123456789'
+                  identifiers.uin: '123456789'
               multiple_value:
                 summary: 'Some single-value, some multi-value search parameters'
                 value:
@@ -4119,7 +4339,7 @@ paths:
                     - 3
                     - 4
                     - 5
-                  external_ids.uin: '123456789'
+                  identifiers.uin: '123456789'
         required: true
       responses:
         '200':
@@ -4382,7 +4602,7 @@ paths:
                 value:
                   profile.first_name: Example
                   preferences.privacy_level: 4
-                  external_ids.uin: '123456789'
+                  identifiers.uin: '123456789'
               multiple_value:
                 summary: 'Some single-value, some multi-value search parameters'
                 value:
@@ -4391,7 +4611,7 @@ paths:
                     - 3
                     - 4
                     - 5
-                  external_ids.uin: '123456789'
+                  identifiers.uin: '123456789'
         required: true
       responses:
         '200':
@@ -4401,7 +4621,7 @@ paths:
               schema:
                 type: array
                 items:
-                  type: object
+                  $ref: '#/components/schemas/Account'
         '400':
           description: Bad request
         '401':
@@ -4451,7 +4671,7 @@ paths:
                 value:
                   profile.first_name: Example
                   preferences.privacy_level: 4
-                  external_ids.uin: '123456789'
+                  identifiers.uin: '123456789'
               multiple_value:
                 summary: 'Some single-value, some multi-value search parameters'
                 value:
@@ -4460,7 +4680,7 @@ paths:
                     - 3
                     - 4
                     - 5
-                  external_ids.uin: '123456789'
+                  identifiers.uin: '123456789'
         required: true
       responses:
         '200':
@@ -5849,7 +6069,7 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
-  /ui/credential/verify:
+  /ui/identifier/verify:
     get:
       tags:
         - UI
@@ -5859,7 +6079,7 @@ paths:
       parameters:
         - name: id
           in: query
-          description: Credential ID
+          description: Identifier ID
           required: true
           style: form
           explode: false
@@ -5938,6 +6158,7 @@ components:
         data:
           anyOf:
             - $ref: '#/components/schemas/EnvConfigData'
+            - $ref: '#/components/schemas/AuthConfigData'
         date_created:
           readOnly: true
           type: string
@@ -5958,13 +6179,24 @@ components:
           items:
             type: string
           nullable: true
+    AuthConfigData:
+      type: object
+      properties:
+        email_should_verify:
+          type: boolean
+          nullable: true
+        email_verify_wait_time:
+          type: integer
+          nullable: true
+        email_verify_expiry:
+          type: integer
+          nullable: true
     Application:
       required:
         - id
         - name
         - multi_tenant
         - admin
-        - code
       type: object
       properties:
         id:
@@ -5976,8 +6208,6 @@ components:
           type: boolean
         admin:
           type: boolean
-        code:
-          type: string
         types:
           type: array
           items:
@@ -6184,6 +6414,13 @@ components:
           additionalProperties:
             type: string
           nullable: true
+        sensitive_external_ids:
+          type: array
+          items:
+            type: string
+          nullable: true
+        is_email_verified:
+          type: boolean
         first_name_field:
           type: string
         middle_name_field:
@@ -6238,6 +6475,8 @@ components:
       properties:
         max_concurrent_sessions:
           type: integer
+        access_token_expiration_policy:
+          $ref: '#/components/schemas/AccessTokenExpirationPolicy'
         inactivity_expire_policy:
           $ref: '#/components/schemas/InactiveExpirePolicy'
         time_since_login_expire_policy:
@@ -6283,19 +6522,25 @@ components:
           type: boolean
         time_since_login_period:
           type: integer
+    AccessTokenExpirationPolicy:
+      type: object
+      properties:
+        default_exp:
+          type: integer
+        min_exp:
+          type: integer
+        max_exp:
+          type: integer
     PartialApp:
       required:
         - id
         - name
-        - code
       type: object
       properties:
         id:
           readOnly: true
           type: string
         name:
-          type: string
-        code:
           type: string
     LoginSession:
       type: object
@@ -6313,10 +6558,6 @@ components:
         app_type_id:
           type: string
         app_type_identifier:
-          type: string
-        account_auth_type_id:
-          type: string
-        account_auth_type_identifier:
           type: string
         device_id:
           type: string
@@ -6356,7 +6597,7 @@ components:
           type: string
         code:
           type: string
-          description: username or email or phone or illinois_oidc etc
+          description: passowrd or code or webauthn or illinois_oidc etc
         description:
           type: string
         is_external:
@@ -6633,27 +6874,26 @@ components:
           type: string
         app_org:
           $ref: '#/components/schemas/ApplicationOrganization'
-        username:
-          type: string
         profile:
           $ref: '#/components/schemas/Profile'
         privacy:
           $ref: '#/components/schemas/Privacy'
         preferences:
           type: object
-          nullable: true
         system_configs:
           type: object
-          nullable: true
+        secrets:
+          type: object
         anonymous:
           type: boolean
         verified:
           type: boolean
         system:
           type: boolean
-        external_ids:
-          type: object
-          nullable: true
+        identifiers:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccountIdentifier'
         auth_types:
           type: array
           items:
@@ -6688,6 +6928,12 @@ components:
           type: string
         most_recent_client_version:
           type: string
+        external_ids:
+          type: object
+          deprecated: true
+        username:
+          type: string
+          deprecated: true
     PublicAccount:
       required:
         - id
@@ -6716,6 +6962,7 @@ components:
         - roles
         - groups
         - anonymous
+        - identifiers
         - auth_types
         - date_created
       type: object
@@ -6733,8 +6980,6 @@ components:
           type: string
         system:
           type: boolean
-        username:
-          type: string
         permissions:
           type: array
           items:
@@ -6755,16 +7000,18 @@ components:
           type: array
           items:
             type: string
+        identifiers:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccountIdentifier'
         auth_types:
           type: array
           items:
             $ref: '#/components/schemas/AccountAuthType'
         system_configs:
           type: object
-          nullable: true
         params:
           type: object
-          nullable: true
         anonymous:
           type: boolean
         privacy:
@@ -6776,10 +7023,12 @@ components:
           type: string
         date_updated:
           type: string
-          nullable: true
         external_ids:
           type: object
-          nullable: true
+          deprecated: true
+        username:
+          type: string
+          deprecated: true
     Profile:
       required:
         - id
@@ -6797,9 +7046,11 @@ components:
         email:
           type: string
           nullable: true
+          deprecated: true
         phone:
           type: string
           nullable: true
+          deprecated: true
         birth_year:
           type: integer
           nullable: true
@@ -6834,9 +7085,11 @@ components:
         email:
           type: string
           nullable: true
+          deprecated: true
         phone:
           type: string
           nullable: true
+          deprecated: true
         birth_year:
           type: integer
           nullable: true
@@ -6877,8 +7130,33 @@ components:
     AccountAuthType:
       required:
         - id
+        - auth_type_code
+      type: object
+      properties:
+        id:
+          type: string
+        auth_type_code:
+          type: string
+        code:
+          type: string
+          deprecated: true
+        identifier:
+          type: string
+          deprecated: true
+        params:
+          type: object
+          additionalProperties: true
+          nullable: true
+        active:
+          type: boolean
+    AccountIdentifier:
+      required:
+        - id
         - code
         - identifier
+        - verified
+        - linked
+        - sensitive
       type: object
       properties:
         id:
@@ -6887,14 +7165,15 @@ components:
           type: string
         identifier:
           type: string
-        params:
-          type: object
-          additionalProperties: true
+        verified:
+          type: boolean
+        linked:
+          type: boolean
+        sensitive:
+          type: boolean
+        account_auth_type_id:
+          type: string
           nullable: true
-        active:
-          type: boolean
-        unverified:
-          type: boolean
     Device:
       required:
         - id
@@ -6944,10 +7223,15 @@ components:
           type: string
           enum:
             - email
+            - phone
             - twilio_phone
             - illinois_oidc
+            - conde_oidc
             - anonymous
             - username
+            - password
+            - webauthn
+            - code
         app_type_identifier:
           type: string
         org_id:
@@ -6956,18 +7240,19 @@ components:
           type: string
         creds:
           anyOf:
-            - $ref: '#/components/schemas/_shared_req_CredsEmail'
-            - $ref: '#/components/schemas/_shared_req_CredsTwilioPhone'
+            - $ref: '#/components/schemas/_shared_req_CredsAnonymous'
+            - $ref: '#/components/schemas/_shared_req_CredsCode'
             - $ref: '#/components/schemas/_shared_req_CredsOIDC'
-            - $ref: '#/components/schemas/_shared_req_CredsAPIKey'
-            - $ref: '#/components/schemas/_shared_req_CredsUsername'
+            - $ref: '#/components/schemas/_shared_req_CredsPassword'
+            - $ref: '#/components/schemas/_shared_req_CredsWebAuthn'
+            - $ref: '#/components/schemas/_shared_req_CredsNone'
         params:
           type: object
           anyOf:
-            - $ref: '#/components/schemas/_shared_req_ParamsEmail'
             - $ref: '#/components/schemas/_shared_req_ParamsOIDC'
+            - $ref: '#/components/schemas/_shared_req_ParamsPassword'
+            - $ref: '#/components/schemas/_shared_req_ParamsWebAuthn'
             - $ref: '#/components/schemas/_shared_req_ParamsNone'
-            - $ref: '#/components/schemas/_shared_req_ParamsUsername'
         device:
           $ref: '#/components/schemas/Device'
         profile:
@@ -6977,7 +7262,7 @@ components:
         preferences:
           type: object
           nullable: true
-        username:
+        account_identifier_id:
           type: string
           nullable: true
     _shared_req_Login_Mfa:
@@ -7023,6 +7308,7 @@ components:
           type: string
           enum:
             - illinois_oidc
+            - conde_oidc
         app_type_identifier:
           type: string
         org_id:
@@ -7066,10 +7352,10 @@ components:
         auth_type:
           type: string
           enum:
-            - email
+            - password
             - illinois_oidc
         identifier:
-          type: string
+          $ref: '#/components/schemas/_shared_req_Identifiers'
         permissions:
           type: array
           items:
@@ -7090,9 +7376,6 @@ components:
           $ref: '#/components/schemas/ProfileNullable'
         privacy:
           $ref: '#/components/schemas/PrivacyNullable'
-        username:
-          type: string
-          nullable: true
     _shared_req_UpdateAccount:
       required:
         - auth_type
@@ -7102,10 +7385,10 @@ components:
         auth_type:
           type: string
           enum:
-            - email
+            - password
             - illinois_oidc
         identifier:
-          type: string
+          $ref: '#/components/schemas/_shared_req_Identifiers'
         permissions:
           type: array
           items:
@@ -7124,81 +7407,93 @@ components:
             type: string
     _shared_req_AccountCheck:
       required:
-        - auth_type
         - app_type_identifier
         - org_id
         - api_key
-        - user_identifier
       type: object
       properties:
-        auth_type:
-          type: string
-          enum:
-            - username
-            - email
-            - twilio_phone
-            - illinois_oidc
-            - anonymous
         app_type_identifier:
           type: string
         org_id:
           type: string
         api_key:
           type: string
+        identifier:
+          $ref: '#/components/schemas/_shared_req_Identifiers'
+        auth_type:
+          type: string
+          enum:
+            - username
+            - email
+            - phone
+            - anonymous
+            - twilio_phone
+            - illinois_oidc
+            - conde_oidc
+          deprecated: true
         user_identifier:
           type: string
-    _shared_req_CredsEmail:
-      required:
-        - email
-        - password
+          deprecated: true
+    _shared_req_CredsNone:
       type: object
-      description: Auth login creds for auth_type="email"
-      properties:
-        email:
-          type: string
-        password:
-          type: string
-    _shared_req_CredsTwilioPhone:
-      type: object
-      description: Auth login creds for auth_type="twilio_phone"
-      required:
-        - phone
-      properties:
-        phone:
-          type: string
-        code:
-          type: string
-    _shared_req_CredsOIDC:
-      type: string
-      description: |
-        Auth login creds for auth_type="oidc" (or variants)
-          - full redirect URI received from OIDC provider
-    _shared_req_CredsUsername:
-      required:
-        - username
-        - password
-      type: object
-      description: Auth login creds for auth_type="username"
-      properties:
-        username:
-          type: string
-        password:
-          type: string
-    _shared_req_CredsAPIKey:
+      description: Auth login request creds for unlisted auth_types (None)
+      nullable: true
+    _shared_req_CredsAnonymous:
       type: object
       description: Auth login creds for auth_type="anonymous"
       properties:
         anonymous_id:
           type: string
-    _shared_req_ParamsEmail:
+    _shared_req_CredsCode:
       type: object
-      description: Auth login params for auth_type="email"
+      description: Auth login creds for auth_type="code"
+      allOf:
+        - $ref: '#/components/schemas/_shared_req_Identifiers'
+        - properties:
+            code:
+              type: string
+    _shared_req_CredsOIDC:
+      type: string
+      description: |
+        Auth login creds for auth_type="oidc" (or variants)
+          - full redirect URI received from OIDC provider
+    _shared_req_CredsPassword:
+      type: object
+      description: Auth login creds for auth_type="password"
+      allOf:
+        - $ref: '#/components/schemas/_shared_req_Identifiers'
+        - required:
+            - password
+          properties:
+            password:
+              type: string
+    _shared_req_CredsWebAuthn:
+      type: object
+      description: Auth login creds for auth_type="webauthn"
+      allOf:
+        - $ref: '#/components/schemas/_shared_req_Identifiers'
+        - properties:
+            response:
+              type: string
+    _shared_req_Identifiers:
+      type: object
+      description: Allowed identifier types
       properties:
-        confirm_password:
+        username:
           type: string
-          description: This should match the `creds` password field when sign_up=true. This should be verified on the client side as well to reduce invalid requests.
-        sign_up:
-          type: boolean
+        email:
+          type: string
+        phone:
+          type: string
+      additionalProperties:
+        type: string
+    _shared_req_IdentifierString:
+      type: string
+      description: User identifier string
+    _shared_req_ParamsNone:
+      type: object
+      description: Auth login request params for unlisted auth_types (None)
+      nullable: true
     _shared_req_ParamsOIDC:
       type: object
       description: Auth login params for auth_type="oidc" (or variants)
@@ -7207,20 +7502,16 @@ components:
           type: string
         pkce_verifier:
           type: string
-    _shared_req_ParamsUsername:
+    _shared_req_ParamsPassword:
       type: object
-      description: Auth login params for auth_type="username"
+      description: Auth login params for auth_type="email"
       properties:
         confirm_password:
           type: string
           description: This should match the `creds` password field when sign_up=true. This should be verified on the client side as well to reduce invalid requests.
         sign_up:
           type: boolean
-    _shared_req_ParamsNone:
-      type: object
-      description: Auth login request params for unlisted auth_types (None)
-      nullable: true
-    _shared_req_ParamsSetEmailCredential:
+    _shared_req_ParamsResetPassword:
       required:
         - new_password
         - confirm_password
@@ -7230,6 +7521,15 @@ components:
           type: string
         confirm_password:
           type: string
+    _shared_req_ParamsWebAuthn:
+      type: object
+      description: Auth login params for auth_type="webauthn"
+      properties:
+        display_name:
+          type: string
+          description: User's account name for display purposes
+        sign_up:
+          type: boolean
     _shared_req_app-configs:
       required:
         - app_type_identifier
@@ -7267,7 +7567,7 @@ components:
           nullable: true
           anyOf:
             - $ref: '#/components/schemas/_shared_res_ParamsOIDC'
-            - $ref: '#/components/schemas/_shared_res_ParamsAPIKey'
+            - $ref: '#/components/schemas/_shared_res_ParamsAnonymous'
             - $ref: '#/components/schemas/_shared_res_ParamsNone'
         message:
           type: string
@@ -7294,7 +7594,7 @@ components:
           nullable: true
           anyOf:
             - $ref: '#/components/schemas/_shared_res_ParamsOIDC'
-            - $ref: '#/components/schemas/_shared_res_ParamsAPIKey'
+            - $ref: '#/components/schemas/_shared_res_ParamsAnonymous'
             - $ref: '#/components/schemas/_shared_res_ParamsNone'
     _shared_res_LoginUrl:
       required:
@@ -7316,7 +7616,7 @@ components:
           nullable: true
           anyOf:
             - $ref: '#/components/schemas/_shared_res_ParamsOIDC'
-            - $ref: '#/components/schemas/_shared_res_ParamsAPIKey'
+            - $ref: '#/components/schemas/_shared_res_ParamsAnonymous'
             - $ref: '#/components/schemas/_shared_res_ParamsNone'
     _shared_res_Mfa:
       type: object
@@ -7329,12 +7629,16 @@ components:
           type: object
     _shared_res_AccountCheck:
       type: boolean
-    _shared_res_ParamsAPIKey:
+    _shared_res_ParamsAnonymous:
       type: object
       description: Auth login response params for auth_type="anonymous"
       properties:
         anonymous_id:
           type: string
+    _shared_res_ParamsNone:
+      type: object
+      description: Auth login response params for unlisted auth_types (None)
+      nullable: true
     _shared_res_ParamsOIDC:
       type: object
       description: Auth login response params for auth_type="oidc" (or variants)
@@ -7352,10 +7656,6 @@ components:
               type: string
         redirect_uri:
           type: string
-    _shared_res_ParamsNone:
-      type: object
-      description: Auth login response params for unlisted auth_types (None)
-      nullable: true
     _shared_res_RokwireToken:
       type: object
       properties:
@@ -7370,49 +7670,71 @@ components:
           type: string
           enum:
             - Bearer
+    _shared_res_SignInOptions:
+      required:
+        - identifiers
+        - auth_types
+      type: object
+      properties:
+        identifiers:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccountIdentifier'
+        auth_types:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccountAuthType'
     _services_req_account_auth-type-link:
       required:
         - auth_type
         - app_type_identifier
-        - creds
       type: object
       properties:
         auth_type:
           type: string
           enum:
-            - email
-            - twilio_phone
+            - password
+            - webauthn
+            - code
             - illinois_oidc
+            - conde_oidc
+            - email
+            - phone
+            - twilio_phone
             - username
         app_type_identifier:
           type: string
         creds:
           anyOf:
-            - $ref: '#/components/schemas/_shared_req_CredsEmail'
-            - $ref: '#/components/schemas/_shared_req_CredsTwilioPhone'
+            - $ref: '#/components/schemas/_shared_req_CredsCode'
             - $ref: '#/components/schemas/_shared_req_CredsOIDC'
+            - $ref: '#/components/schemas/_shared_req_CredsPassword'
+            - $ref: '#/components/schemas/_shared_req_CredsWebAuthn'
+            - $ref: '#/components/schemas/_shared_req_CredsNone'
         params:
           type: object
           anyOf:
-            - $ref: '#/components/schemas/_shared_req_ParamsEmail'
             - $ref: '#/components/schemas/_shared_req_ParamsOIDC'
+            - $ref: '#/components/schemas/_shared_req_ParamsPassword'
+            - $ref: '#/components/schemas/_shared_req_ParamsWebAuthn'
             - $ref: '#/components/schemas/_shared_req_ParamsNone'
     _services_req_account_auth-type-unlink:
-      required:
-        - auth_type
-        - app_type_identifier
-        - identifier
       type: object
       properties:
+        id:
+          type: string
         auth_type:
           type: string
           enum:
-            - email
-            - twilio_phone
+            - password
+            - webauthn
+            - code
             - illinois_oidc
+            - conde_oidc
+            - email
+            - phone
+            - twilio_phone
             - username
-        app_type_identifier:
-          type: string
         identifier:
           type: string
     _services_res_account_auth-type-link:
@@ -7423,10 +7745,62 @@ components:
         message:
           type: string
           nullable: true
+        identifiers:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccountIdentifier'
         auth_types:
           type: array
           items:
             $ref: '#/components/schemas/AccountAuthType'
+    _services_req_account_identifier-link:
+      required:
+        - identifier
+      type: object
+      properties:
+        identifier:
+          $ref: '#/components/schemas/_shared_req_Identifiers'
+    _services_req_account_identifier-unlink:
+      required:
+        - id
+      type: object
+      properties:
+        id:
+          type: string
+    _services_res_account_identifier-link:
+      required:
+        - identifiers
+      type: object
+      properties:
+        message:
+          type: string
+          nullable: true
+        identifiers:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccountIdentifier'
+    _services_req_identifier_send-verify:
+      required:
+        - app_type_identifier
+        - org_id
+        - api_key
+        - identifier
+      type: object
+      properties:
+        identifier:
+          oneOf:
+            - $ref: '#/components/schemas/_shared_req_Identifiers'
+            - $ref: '#/components/schemas/_shared_req_IdentifierString'
+        org_id:
+          type: string
+        api_key:
+          type: string
+        app_type_identifier:
+          type: string
+        auth_type:
+          type: string
+          enum:
+            - email
     _services_req_credential_update:
       required:
         - account_auth_type_id
@@ -7437,48 +7811,30 @@ components:
         params:
           type: object
           anyOf:
-            - $ref: '#/components/schemas/_shared_req_ParamsSetEmailCredential'
-    _services_req_credential_send-verify:
-      required:
-        - auth_type
-        - app_type_identifier
-        - org_id
-        - api_key
-        - identifier
-      type: object
-      properties:
-        identifier:
-          type: string
-        org_id:
-          type: string
-        api_key:
-          type: string
-        app_type_identifier:
-          type: string
-        auth_type:
-          type: string
-          enum:
-            - email
+            - $ref: '#/components/schemas/_shared_req_ParamsResetPassword'
     _services_req_credential_forgot_initiate:
       required:
         - auth_type
+        - identifier
         - app_type_identifier
         - org_id
         - api_key
-        - identifier
       type: object
       properties:
         auth_type:
           type: string
           enum:
+            - password
             - email
+        identifier:
+          oneOf:
+            - $ref: '#/components/schemas/_shared_req_Identifiers'
+            - $ref: '#/components/schemas/_shared_req_IdentifierString'
         app_type_identifier:
           type: string
         org_id:
           type: string
         api_key:
-          type: string
-        identifier:
           type: string
     _services_req_credential_forgot_complete:
       required:
@@ -7493,7 +7849,7 @@ components:
         params:
           type: object
           anyOf:
-            - $ref: '#/components/schemas/_shared_req_ParamsSetEmailCredential'
+            - $ref: '#/components/schemas/_shared_req_ParamsResetPassword'
     _services_req_authorize-service:
       required:
         - service_id
@@ -7727,6 +8083,7 @@ components:
         data:
           anyOf:
             - $ref: '#/components/schemas/EnvConfigData'
+            - $ref: '#/components/schemas/AuthConfigData'
     _system_req_update_service-account:
       type: object
       properties:

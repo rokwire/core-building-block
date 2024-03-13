@@ -3,7 +3,6 @@ required:
   - name
   - multi_tenant
   - admin
-  - code
 type: object
 properties:
   id:
@@ -15,8 +14,6 @@ properties:
     type: boolean
   admin:
     type: boolean
-  code:
-    type: string
   types:
     type: array
     items:

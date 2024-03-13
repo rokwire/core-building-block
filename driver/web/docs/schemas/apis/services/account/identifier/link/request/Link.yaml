@@ -1,0 +1,6 @@
+required:
+  - identifier
+type: object
+properties:
+  identifier:
+    $ref: "../../../../../shared/requests/Identifiers.yaml"

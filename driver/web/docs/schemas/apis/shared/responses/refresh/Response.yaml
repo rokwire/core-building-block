@@ -7,5 +7,5 @@ properties:
     nullable: true
     anyOf:
       - $ref: "../ParamsOIDC.yaml"
-      - $ref: "../ParamsAPIKey.yaml"
+      - $ref: "../ParamsAnonymous.yaml"
       - $ref: "../ParamsNone.yaml"  

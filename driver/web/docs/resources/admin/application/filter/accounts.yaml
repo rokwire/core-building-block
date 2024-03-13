@@ -34,7 +34,7 @@ post:
             value:
               profile.first_name: Example
               preferences.privacy_level: 4
-              external_ids.uin: ["123456789", "12312434"]
+              identifiers.uin: ["123456789", "12312434"]
           multiple_value:
             summary: Some single-value, some multi-value search parameters
             value:
@@ -43,7 +43,7 @@ post:
                 - 3
                 - 4
                 - 5
-              external_ids.uin: ["123456789", "12312434"]
+              identifiers.uin: ["123456789", "12312434"]
     required: true
   responses:
     200:
@@ -53,7 +53,7 @@ post:
           schema:
             type: array
             items:
-              type: object
+              $ref: "../../../../schemas/user/Account.yaml"
     400:
       description: Bad request
     401:

@@ -75,15 +75,12 @@ func configFromDef(item Def.AdminReqCreateUpdateConfig, claims *tokenauth.Claims
 		orgID = authutils.AllOrgs
 	}
 
-	var configData interface{}
-	configBytes, err := json.Marshal(item.Data)
+	configData, err := utils.JSONConvert[interface{}, Def.AdminReqCreateUpdateConfig_Data](item.Data)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionMarshal, model.TypeConfig, nil, err)
+		return nil, errors.WrapErrorAction(logutils.ActionParse, model.TypeConfig, nil, err)
 	}
-
-	err = json.Unmarshal(configBytes, &configData)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, model.TypeConfig, nil, err)
+	if configData == nil {
+		return nil, errors.ErrorData(logutils.StatusInvalid, model.TypeConfigData, nil)
 	}
 	return &model.Config{Type: item.Type, AppID: appID, OrgID: orgID, System: item.System, Data: configData}, nil
 }

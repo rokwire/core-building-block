@@ -14,10 +14,6 @@ properties:
     type: string
   app_type_identifier:
     type: string
-  account_auth_type_id:
-    type: string
-  account_auth_type_identifier:
-    type: string
   device_id:
     type: string
     nullable: true

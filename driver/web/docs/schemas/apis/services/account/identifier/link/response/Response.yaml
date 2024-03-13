@@ -1,0 +1,11 @@
+required:
+  - identifiers
+type: object
+properties:
+  message:
+    type: string
+    nullable: true
+  identifiers:
+    type: array
+    items:
+      $ref: "../../../../../../user/AccountIdentifier.yaml"

@@ -25,6 +25,7 @@ properties:
   data:
     anyOf:
       - $ref: "./EnvConfigData.yaml"
+      - $ref: "./AuthConfigData.yaml"
   date_created:
     readOnly: true
     type: string

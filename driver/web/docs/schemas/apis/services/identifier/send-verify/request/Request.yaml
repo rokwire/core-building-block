@@ -1,5 +1,4 @@
 required:
-  - auth_type
   - app_type_identifier
   - org_id
   - api_key
@@ -7,7 +6,9 @@ required:
 type: object
 properties:
   identifier:
-    type: string
+    oneOf:
+      - $ref: "../../../../shared/requests/Identifiers.yaml"
+      - $ref: "../../../../shared/requests/IdentifierString.yaml"
   org_id:
     type: string
   api_key:
