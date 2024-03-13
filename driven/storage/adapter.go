@@ -128,12 +128,6 @@ func (sa *Adapter) Start() error {
 		return errors.WrapErrorAction(logutils.ActionCache, model.TypeConfig, nil, err)
 	}
 
-	// migrate to tenants accounts
-	err = sa.migrateToTenantsAccounts()
-	if err != nil {
-		return errors.WrapErrorAction("migrating", "accounts to orgs_accounts", nil, err)
-	}
-
 	err = sa.migrateAuthTypes()
 	if err != nil {
 		return errors.WrapErrorAction("migrating", model.TypeAuthType, nil, err)
