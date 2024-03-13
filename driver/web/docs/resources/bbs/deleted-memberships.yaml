@@ -8,6 +8,15 @@ get:
     **Auth:** Requires auth token with permission to get deleted accounts
   security:
     - bearerAuth: []
+  parameters:
+    - name: service_id
+      in: query
+      description: The ID of the service making the request
+      required: true
+      style: form
+      explode: false
+      schema:
+        type: string
   responses:
     200:
       description: Success

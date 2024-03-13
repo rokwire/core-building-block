@@ -21,7 +21,7 @@ import (
 	"github.com/rokwire/logging-library-go/v2/logutils"
 )
 
-func (app *application) bbsGetDeletedOrgAppMemberships(appID string, orgID string) (map[model.AppOrgPair][]string, error) {
+func (app *application) bbsGetDeletedOrgAppMemberships(appID string, orgID string, serviceID string) (map[model.AppOrgPair][]model.DeletedMembershipContext, error) {
 	accounts, err := app.storage.FindDeletedOrgAppMemberships(appID, orgID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
@@ -30,15 +30,15 @@ func (app *application) bbsGetDeletedOrgAppMemberships(appID string, orgID strin
 		return nil, nil
 	}
 
-	deletedMemberships := make(map[model.AppOrgPair][]string)
+	deletedMemberships := make(map[model.AppOrgPair][]model.DeletedMembershipContext)
 	for _, account := range accounts {
 		for _, membership := range account.OrgAppsMemberships {
 			if membership.IsDeleted() {
 				appOrgPair := model.AppOrgPair{AppID: membership.AppOrg.Application.ID, OrgID: account.OrgID}
 				if _, exists := deletedMemberships[appOrgPair]; !exists {
-					deletedMemberships[appOrgPair] = make([]string, 0)
+					deletedMemberships[appOrgPair] = make([]model.DeletedMembershipContext, 0)
 				}
-				deletedMemberships[appOrgPair] = append(deletedMemberships[appOrgPair], account.ID)
+				deletedMemberships[appOrgPair] = append(deletedMemberships[appOrgPair], model.DeletedMembershipContext{AccountID: account.ID, Context: account.GetDeletedMembershipContext(membership.AppOrg.ID, serviceID)})
 			}
 		}
 	}

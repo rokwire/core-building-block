@@ -132,8 +132,8 @@ func (app *application) serUpdateAccountPreferences(id string, appID string, org
 	return false, nil
 }
 
-func (app *application) serDeleteAccount(id string, apps []string) error {
-	return app.auth.DeleteAccount(id, apps)
+func (app *application) serDeleteAccount(id string, apps []string, deleteContext []model.DeletedMembershipContext) error {
+	return app.auth.DeleteAccount(id, apps, deleteContext)
 }
 
 func (app *application) serGetAccounts(limit int, offset int, appID string, orgID string, accountID *string, firstName *string, lastName *string, authType *string,

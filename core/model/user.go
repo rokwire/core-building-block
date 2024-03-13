@@ -80,6 +80,13 @@ func (m OrgAppMembership) IsDeleted() bool {
 	return m.DateDeleted != nil
 }
 
+// DeletedMembershipContext represents some context for other building blocks to consider when deleting some user data for an account app membership
+type DeletedMembershipContext struct {
+	AccountID string
+	AppOrg    ApplicationOrganization
+	Context   map[string]interface{}
+}
+
 // Account represents account entity
 //
 //	The account is the user himself or herself.
@@ -120,7 +127,9 @@ type Account struct {
 
 	DateCreated time.Time
 	DateUpdated *time.Time
-	DateDeleted *time.Time
+
+	DeletedMembershipsContext []DeletedMembershipContext
+	DateDeleted               *time.Time
 
 	LastLoginDate       *time.Time
 	LastAccessTokenDate *time.Time
@@ -176,6 +185,24 @@ func (a *Account) SetCurrentMembership(current OrgAppMembership) {
 	a.Groups = current.Groups
 	a.Preferences = current.Preferences
 	a.MostRecentClientVersion = current.MostRecentClientVersion
+}
+
+// GetDeletedMembershipContext returns the deleted membership context for the given appOrgID and serviceID if it exists
+func (a Account) GetDeletedMembershipContext(appOrgID string, serviceID string) map[string]interface{} {
+	for _, d := range a.DeletedMembershipsContext {
+		if d.AppOrg.ID == appOrgID {
+			serviceContextVal, exists := d.Context[serviceID]
+			if !exists {
+				return nil
+			}
+			serviceContext, ok := serviceContextVal.(map[string]interface{})
+			if !ok {
+				return nil
+			}
+			return serviceContext
+		}
+	}
+	return nil
 }
 
 // GetAccountAuthTypeByID finds account auth type by id

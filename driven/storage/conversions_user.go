@@ -74,6 +74,39 @@ func orgAppsMembershipsToStorage(items []model.OrgAppMembership) []orgAppMembers
 	return res
 }
 
+// DeletedMembershipContext
+func deletedMembershipsContextFromStorage(items []deletedMembershipContext, appsOrgs []model.ApplicationOrganization) []model.DeletedMembershipContext {
+	if len(items) == 0 {
+		return make([]model.DeletedMembershipContext, 0)
+	}
+
+	res := make([]model.DeletedMembershipContext, len(items))
+	for i, item := range items {
+		//find the application organization
+		var appOrg *model.ApplicationOrganization
+		for _, cAppOrg := range appsOrgs {
+			if cAppOrg.ID == item.AppOrgID {
+				current := cAppOrg
+				appOrg = &current
+				break
+			}
+		}
+
+		if appOrg != nil {
+			res[i] = model.DeletedMembershipContext{AppOrg: *appOrg, Context: item.Context}
+		}
+	}
+	return res
+}
+
+func deletedMembershipsContextToStorage(items []model.DeletedMembershipContext) []deletedMembershipContext {
+	res := make([]deletedMembershipContext, len(items))
+	for i, c := range items {
+		res[i] = deletedMembershipContext{AppOrgID: c.AppOrg.ID, Context: c.Context}
+	}
+	return res
+}
+
 // Account
 func accountFromStorage(item tenantAccount, currentAppOrg *string, membershipsAppsOrgs []model.ApplicationOrganization) model.Account {
 	id := item.ID
@@ -120,6 +153,7 @@ func accountFromStorage(item tenantAccount, currentAppOrg *string, membershipsAp
 	dateCreated := item.DateCreated
 	dateUpdated := item.DateUpdated
 	dateDeleted := item.DateDeleted
+	deletedMembershipsContext := deletedMembershipsContextFromStorage(item.DeletedMembershipsContext, membershipsAppsOrgs)
 	lastLoginDate := item.LastLoginDate
 	lastAccessTokenDate := item.LastAccessTokenDate
 	return model.Account{ID: id, OrgID: orgID, OrgAppsMemberships: orgAppsMemberships,
@@ -135,7 +169,8 @@ func accountFromStorage(item tenantAccount, currentAppOrg *string, membershipsAp
 		ExternalIDs: externalIDs, SystemConfigs: systemConfigs, Profile: profile,
 		Privacy: privacy, Devices: devices, Anonymous: anonymous, Verified: verified,
 		DateCreated: dateCreated, DateUpdated: dateUpdated, DateDeleted: dateDeleted,
-		LastLoginDate: lastLoginDate, LastAccessTokenDate: lastAccessTokenDate}
+		DeletedMembershipsContext: deletedMembershipsContext, LastLoginDate: lastLoginDate,
+		LastAccessTokenDate: lastAccessTokenDate}
 }
 
 func accountsFromStorage(items []tenantAccount, currentAppOrg *string, membershipsAppsOrgs []model.ApplicationOrganization) []model.Account {

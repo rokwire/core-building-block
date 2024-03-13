@@ -445,7 +445,17 @@ func (h ServicesApisHandler) deleteAccount(l *logs.Log, r *http.Request, claims 
 		apps = append(apps, claims.AppID)
 	}
 
-	err := h.coreAPIs.Services.SerDeleteAccount(claims.Subject, apps)
+	var deleteContextBody []Def.DeletedMembershipContext
+	err := json.NewDecoder(r.Body).Decode(&deleteContextBody)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, "delete account app memberships context", nil, err, http.StatusBadRequest, true)
+	}
+	deleteContext, err := deletedMembershipsContextFromDef(deleteContextBody)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionParse, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, true)
+	}
+
+	err = h.coreAPIs.Services.SerDeleteAccount(claims.Subject, apps, deleteContext)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}

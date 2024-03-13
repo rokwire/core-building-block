@@ -162,7 +162,12 @@ func (h BBsApisHandler) getServiceAccessTokens(l *logs.Log, r *http.Request, cla
 }
 
 func (h BBsApisHandler) getDeletedMemberships(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	deletedMemberships, err := h.coreAPIs.BBs.BBsGetDeletedOrgAppMemberships(claims.AppID, claims.OrgID)
+	serviceID := r.URL.Query().Get("service_id")
+	if serviceID == "" {
+		return l.HTTPResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("service_id"), nil, http.StatusBadRequest, false)
+	}
+
+	deletedMemberships, err := h.coreAPIs.BBs.BBsGetDeletedOrgAppMemberships(claims.AppID, claims.OrgID, serviceID)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionGet, "deleted account ids", nil, err, http.StatusInternalServerError, true)
 	}

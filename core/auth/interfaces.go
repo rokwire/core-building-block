@@ -416,7 +416,7 @@ type APIs interface {
 	CheckGroups(context storage.TransactionContext, appOrg *model.ApplicationOrganization, groupIDs []string, assignerPermissions []string, revoke bool) ([]model.AppOrgGroup, error)
 
 	//DeleteAccount deletes an account for the given id
-	DeleteAccount(id string, apps []string) error
+	DeleteAccount(id string, apps []string, deleteContext []model.DeletedMembershipContext) error
 
 	//GetAdminToken returns an admin token for the specified application and organization
 	GetAdminToken(claims tokenauth.Claims, appID string, orgID string, l *logs.Log) (string, error)
@@ -488,8 +488,9 @@ type Storage interface {
 	FindAccountsByUsername(context storage.TransactionContext, appOrg *model.ApplicationOrganization, username string) ([]model.Account, error)
 	InsertAccount(context storage.TransactionContext, account model.Account) (*model.Account, error)
 	SaveAccount(context storage.TransactionContext, account *model.Account) error
+	DeleteAccount(context storage.TransactionContext, id string) error
 	UpdateAccountUsageInfo(context storage.TransactionContext, accountID string, updateLoginTime bool, updateAccessTokenTime bool, clientVersion *string) error
-	UpdateOrgAppsMembershipsForDeletion(context storage.TransactionContext, accountID string, membershipsIDs []string) error
+	UpdateOrgAppsMembershipsForDeletion(context storage.TransactionContext, accountID string, membershipsIDs []string, deleteContext []model.DeletedMembershipContext) error
 	DeleteOrgAppsMemberships(cutoff time.Time) error
 	DeleteAccounts(cutoff time.Time) error
 

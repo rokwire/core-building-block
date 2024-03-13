@@ -18,6 +18,9 @@ import (
 	"core-building-block/core/model"
 	Def "core-building-block/driver/web/docs/gen"
 	"core-building-block/utils"
+
+	"github.com/rokwire/logging-library-go/v2/errors"
+	"github.com/rokwire/logging-library-go/v2/logutils"
 )
 
 // PartialApp
@@ -35,16 +38,42 @@ func partialAppsToDef(item []model.Application) []Def.PartialApp {
 }
 
 // AccountOrgAppMemberships
-func accountOrgAppMembershipsToDef(memberships map[model.AppOrgPair][]string) []Def.AccountOrgAppMemberships {
+func accountOrgAppMembershipsToDef(memberships map[model.AppOrgPair][]model.DeletedMembershipContext) []Def.AccountOrgAppMemberships {
 	if len(memberships) == 0 {
 		return nil
 	}
 
 	result := make([]Def.AccountOrgAppMemberships, 0)
-	for appOrgPair, accountIDs := range memberships {
-		memberships := Def.AccountOrgAppMemberships{AppId: appOrgPair.AppID, OrgId: appOrgPair.OrgID, AccountIds: make([]string, len(accountIDs))}
-		copy(memberships.AccountIds, accountIDs)
-		result = append(result, memberships)
+	for appOrgPair, contextList := range memberships {
+		result = append(result, Def.AccountOrgAppMemberships{AppId: appOrgPair.AppID, OrgId: appOrgPair.OrgID, Memberships: deletedMembershipsContextToDef(contextList)})
+	}
+	return result
+}
+
+// DeletedMembershipContext
+func deletedMembershipsContextFromDef(items []Def.DeletedMembershipContext) ([]model.DeletedMembershipContext, error) {
+	result := make([]model.DeletedMembershipContext, len(items))
+	for i, item := range items {
+		if item.AppId == nil {
+			return nil, errors.ErrorData(logutils.StatusMissing, "app_id", nil)
+		}
+		result[i] = deletedMembershipContextFromDef(item)
+	}
+	return result, nil
+}
+
+func deletedMembershipContextFromDef(item Def.DeletedMembershipContext) model.DeletedMembershipContext {
+	var context map[string]interface{}
+	if item.Context != nil {
+		context = *item.Context
+	}
+	return model.DeletedMembershipContext{AppOrg: model.ApplicationOrganization{Application: model.Application{ID: *item.AppId}}, Context: context}
+}
+
+func deletedMembershipsContextToDef(items []model.DeletedMembershipContext) []Def.DeletedMembershipContext {
+	result := make([]Def.DeletedMembershipContext, len(items))
+	for i, item := range items {
+		result[i] = Def.DeletedMembershipContext{AccountId: &item.AccountID, Context: &item.Context}
 	}
 	return result
 }

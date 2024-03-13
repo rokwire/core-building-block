@@ -299,8 +299,8 @@ type servicesImpl struct {
 	app *application
 }
 
-func (s *servicesImpl) SerDeleteAccount(id string, apps []string) error {
-	return s.app.serDeleteAccount(id, apps)
+func (s *servicesImpl) SerDeleteAccount(id string, apps []string, deleteContext []model.DeletedMembershipContext) error {
+	return s.app.serDeleteAccount(id, apps, deleteContext)
 }
 
 func (s *servicesImpl) SerGetAccount(cOrgID string, cAppID string, accountID string) (*model.Account, error) {
@@ -559,8 +559,8 @@ type bbsImpl struct {
 	app *application
 }
 
-func (s *bbsImpl) BBsGetDeletedOrgAppMemberships(appID string, orgID string) (map[model.AppOrgPair][]string, error) {
-	return s.app.bbsGetDeletedOrgAppMemberships(appID, orgID)
+func (s *bbsImpl) BBsGetDeletedOrgAppMemberships(appID string, orgID string, serviceID string) (map[model.AppOrgPair][]model.DeletedMembershipContext, error) {
+	return s.app.bbsGetDeletedOrgAppMemberships(appID, orgID, serviceID)
 }
 
 func (s *bbsImpl) BBsGetTest() string {

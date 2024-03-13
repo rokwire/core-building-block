@@ -1850,6 +1850,20 @@ func (sa *Adapter) SaveAccount(context TransactionContext, account *model.Accoun
 	return nil
 }
 
+// DeleteAccount deletes an account
+func (sa *Adapter) DeleteAccount(context TransactionContext, id string) error {
+	filter := bson.M{"_id": id}
+	res, err := sa.db.tenantsAccounts.DeleteOneWithContext(context, filter, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
+	}
+	if res.DeletedCount != 1 {
+		return errors.ErrorAction(logutils.ActionDelete, model.TypeAccount, logutils.StringArgs("unexpected deleted count"))
+	}
+
+	return nil
+}
+
 // UpdateAccountUsageInfo updates the usage information in accounts
 func (sa *Adapter) UpdateAccountUsageInfo(context TransactionContext, accountID string, updateLoginTime bool, updateAccessTokenTime bool, clientVersion *string) error {
 	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
@@ -2425,7 +2439,7 @@ func (sa *Adapter) DeleteAccountRoles(context TransactionContext, accountID stri
 }
 
 // UpdateOrgAppsMembershipsForDeletion marks org apps memberships for deletion by DeleteOrgAppsMemberships
-func (sa *Adapter) UpdateOrgAppsMembershipsForDeletion(context TransactionContext, accountID string, membershipsIDs []string) error {
+func (sa *Adapter) UpdateOrgAppsMembershipsForDeletion(context TransactionContext, accountID string, membershipsIDs []string, deleteContext []model.DeletedMembershipContext) error {
 	//filter
 	filter := bson.D{
 		primitive.E{Key: "_id", Value: accountID},
@@ -2444,6 +2458,9 @@ func (sa *Adapter) UpdateOrgAppsMembershipsForDeletion(context TransactionContex
 			primitive.E{Key: "org_apps_memberships.$[membership].groups", Value: 1},
 			primitive.E{Key: "org_apps_memberships.$[membership].preferences", Value: 1},
 			primitive.E{Key: "org_apps_memberships.$[membership].most_recent_client_version", Value: 1},
+		}},
+		primitive.E{Key: "$push", Value: bson.D{
+			primitive.E{Key: "deleted_memberships_context", Value: bson.M{"$each": deletedMembershipsContextToStorage(deleteContext)}},
 		}},
 	}
 	membershipFilter := options.ArrayFilters{

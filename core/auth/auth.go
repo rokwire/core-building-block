@@ -1898,7 +1898,7 @@ func (a *Auth) handleAccountAuthTypeConflict(account model.Account, authTypeID s
 		for i, c := range accountApps {
 			accountAppsIDs[i] = c.ID
 		}
-		err := a.deleteAccount(nil, account, accountAppsIDs) //from all apps
+		err := a.deleteAccount(nil, account, accountAppsIDs, nil, true) //from all apps
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
 		}
@@ -1972,7 +1972,7 @@ func (a *Auth) removeAccountAuthTypeCredential(context storage.TransactionContex
 	return nil
 }
 
-func (a *Auth) deleteAccount(context storage.TransactionContext, account model.Account, fromAppsIDs []string) error {
+func (a *Auth) deleteAccount(context storage.TransactionContext, account model.Account, fromAppsIDs []string, deleteContext []model.DeletedMembershipContext, immediate bool) error {
 	if len(fromAppsIDs) == 0 {
 		return errors.ErrorData(logutils.StatusMissing, "application id", nil)
 	}
@@ -1990,13 +1990,13 @@ func (a *Auth) deleteAccount(context storage.TransactionContext, account model.A
 	allAccountApps := account.GetActiveApps()
 	if len(allAccountApps) == len(fromAppsIDs) {
 		//means remove all apps => remove the whole account
-		return a.deleteFullAccount(context, account)
+		return a.deleteFullAccount(context, account, deleteContext, immediate)
 	}
 	//means remove specific apps only, so unattach only them
-	return a.deleteAppsFromAccount(context, account, fromAppsIDs)
+	return a.deleteAppsFromAccount(context, account, fromAppsIDs, deleteContext)
 }
 
-func (a *Auth) deleteAppsFromAccount(context storage.TransactionContext, account model.Account, fromAppsIDs []string) error {
+func (a *Auth) deleteAppsFromAccount(context storage.TransactionContext, account model.Account, fromAppsIDs []string, deleteContext []model.DeletedMembershipContext) error {
 	// compare the applicationIDs and find the matching IDs for the org_app_memberships
 	var membershipsIDs []string
 	for _, a := range account.OrgAppsMemberships {
@@ -2007,7 +2007,7 @@ func (a *Auth) deleteAppsFromAccount(context storage.TransactionContext, account
 		}
 	}
 
-	err := a.storage.UpdateOrgAppsMembershipsForDeletion(context, account.ID, membershipsIDs)
+	err := a.storage.UpdateOrgAppsMembershipsForDeletion(context, account.ID, membershipsIDs, deleteContext)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
 	}
@@ -2015,18 +2015,26 @@ func (a *Auth) deleteAppsFromAccount(context storage.TransactionContext, account
 	return nil
 }
 
-func (a *Auth) deleteFullAccount(context storage.TransactionContext, account model.Account) error {
-	//1. mark account deleted and remove data in storage
-	now := time.Now().UTC()
-	deletedAccount := model.Account{ID: account.ID, OrgID: account.OrgID, OrgAppsMemberships: make([]model.OrgAppMembership, len(account.OrgAppsMemberships)),
-		DateCreated: account.DateCreated, DateUpdated: &now, DateDeleted: &now}
-	// copy membership identifying info and set to be deleted
-	for i, membership := range account.OrgAppsMemberships {
-		deletedAccount.OrgAppsMemberships[i] = model.OrgAppMembership{ID: membership.ID, AppOrg: membership.AppOrg, DateDeleted: &now}
-	}
-	err := a.storage.SaveAccount(context, &deletedAccount)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
+func (a *Auth) deleteFullAccount(context storage.TransactionContext, account model.Account, deleteContext []model.DeletedMembershipContext, immediate bool) error {
+	//1. delete the account record immediately or mark account deleted and remove data in storage
+	var err error
+	if immediate {
+		err = a.storage.DeleteAccount(context, account.ID)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
+		}
+	} else {
+		now := time.Now().UTC()
+		deletedAccount := model.Account{ID: account.ID, OrgID: account.OrgID, OrgAppsMemberships: make([]model.OrgAppMembership, len(account.OrgAppsMemberships)),
+			DateCreated: account.DateCreated, DateUpdated: &now, DateDeleted: &now, DeletedMembershipsContext: deleteContext}
+		// copy membership identifying info and set to be deleted
+		for i, membership := range account.OrgAppsMemberships {
+			deletedAccount.OrgAppsMemberships[i] = model.OrgAppMembership{ID: membership.ID, AppOrg: membership.AppOrg, DateDeleted: &now}
+		}
+		err = a.storage.SaveAccount(context, &deletedAccount)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
+		}
 	}
 
 	//2. remove account auth types from or delete credentials
