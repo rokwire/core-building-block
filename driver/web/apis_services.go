@@ -455,7 +455,7 @@ func (h ServicesApisHandler) deleteAccount(l *logs.Log, r *http.Request, claims 
 		return l.HTTPResponseErrorAction(logutils.ActionParse, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, true)
 	}
 
-	err = h.coreAPIs.Services.SerDeleteAccount(claims.Subject, apps, deleteContext)
+	err = h.coreAPIs.Auth.DeleteAccount(claims.Subject, apps, deleteContext)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}

@@ -4,10 +4,10 @@ required:
 type: object
 properties:
   app_id:
-    readOnly: true
+    writeOnly: true
     type: string
   account_id:
-    writeOnly: true
+    readOnly: true
     type: string
   context:
     type: object

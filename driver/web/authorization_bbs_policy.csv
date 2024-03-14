@@ -1,4 +1,4 @@
-p, get_deleted-accounts, /core/bbs/deleted-accounts, (GET),
+p, get_deleted-memberships, /core/bbs/deleted-memberships, (GET),
 p, all_accounts, /core/bbs/accounts, (POST), All account actions
 p, get_accounts, /core/bbs/accounts, (POST), Get accounts
 p, get_accounts_count, /core/bbs/accounts/count, (POST), Get accounts count

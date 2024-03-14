@@ -39,10 +39,6 @@ func partialAppsToDef(item []model.Application) []Def.PartialApp {
 
 // AccountOrgAppMemberships
 func accountOrgAppMembershipsToDef(memberships map[model.AppOrgPair][]model.DeletedMembershipContext) []Def.AccountOrgAppMemberships {
-	if len(memberships) == 0 {
-		return nil
-	}
-
 	result := make([]Def.AccountOrgAppMemberships, 0)
 	for appOrgPair, contextList := range memberships {
 		result = append(result, Def.AccountOrgAppMemberships{AppId: appOrgPair.AppID, OrgId: appOrgPair.OrgID, Memberships: deletedMembershipsContextToDef(contextList)})
@@ -73,7 +69,11 @@ func deletedMembershipContextFromDef(item Def.DeletedMembershipContext) model.De
 func deletedMembershipsContextToDef(items []model.DeletedMembershipContext) []Def.DeletedMembershipContext {
 	result := make([]Def.DeletedMembershipContext, len(items))
 	for i, item := range items {
-		result[i] = Def.DeletedMembershipContext{AccountId: &item.AccountID, Context: &item.Context}
+		var context *map[string]interface{}
+		if item.Context != nil {
+			context = &item.Context
+		}
+		result[i] = Def.DeletedMembershipContext{AccountId: &item.AccountID, Context: context}
 	}
 	return result
 }

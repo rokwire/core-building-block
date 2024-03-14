@@ -208,6 +208,7 @@ func accountToStorage(item *model.Account) *tenantAccount {
 	dateCreated := item.DateCreated
 	dateUpdated := item.DateUpdated
 	dateDeleted := item.DateDeleted
+	deletedMembershipsContext := deletedMembershipsContextToStorage(item.DeletedMembershipsContext)
 	lastLoginDate := item.LastLoginDate
 	lastAccessTokenDate := item.LastAccessTokenDate
 
@@ -215,8 +216,8 @@ func accountToStorage(item *model.Account) *tenantAccount {
 		Scopes: scopes, AuthTypes: authTypes, MFATypes: mfaTypes, Username: username,
 		ExternalIDs: externalIDs, SystemConfigs: systemConfigs, Profile: profile, Devices: devices,
 		Anonymous: anonymous, Privacy: privacy, Verified: verified, DateCreated: dateCreated,
-		DateUpdated: dateUpdated, DateDeleted: dateDeleted, LastLoginDate: lastLoginDate,
-		LastAccessTokenDate: lastAccessTokenDate}
+		DateUpdated: dateUpdated, DateDeleted: dateDeleted, DeletedMembershipsContext: deletedMembershipsContext,
+		LastLoginDate: lastLoginDate, LastAccessTokenDate: lastAccessTokenDate}
 }
 
 func accountToStorageDeprecated(item *model.Account) *account {

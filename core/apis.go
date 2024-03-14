@@ -299,10 +299,6 @@ type servicesImpl struct {
 	app *application
 }
 
-func (s *servicesImpl) SerDeleteAccount(id string, apps []string, deleteContext []model.DeletedMembershipContext) error {
-	return s.app.serDeleteAccount(id, apps, deleteContext)
-}
-
 func (s *servicesImpl) SerGetAccount(cOrgID string, cAppID string, accountID string) (*model.Account, error) {
 	return s.app.serGetAccount(cOrgID, cAppID, accountID)
 }

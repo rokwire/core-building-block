@@ -2005,6 +2005,12 @@ func (a *Auth) deleteAppsFromAccount(context storage.TransactionContext, account
 				membershipsIDs = append(membershipsIDs, a.ID)
 			}
 		}
+		// need to set AppOrg in context so that the AppOrg ID is saved
+		for j, context := range deleteContext {
+			if context.AppOrg.Application.ID == a.AppOrg.Application.ID {
+				deleteContext[j].AppOrg = a.AppOrg
+			}
+		}
 	}
 
 	err := a.storage.UpdateOrgAppsMembershipsForDeletion(context, account.ID, membershipsIDs, deleteContext)
@@ -2025,12 +2031,20 @@ func (a *Auth) deleteFullAccount(context storage.TransactionContext, account mod
 		}
 	} else {
 		now := time.Now().UTC()
-		deletedAccount := model.Account{ID: account.ID, OrgID: account.OrgID, OrgAppsMemberships: make([]model.OrgAppMembership, len(account.OrgAppsMemberships)),
-			DateCreated: account.DateCreated, DateUpdated: &now, DateDeleted: &now, DeletedMembershipsContext: deleteContext}
+		orgAppMemberships := make([]model.OrgAppMembership, len(account.OrgAppsMemberships))
 		// copy membership identifying info and set to be deleted
 		for i, membership := range account.OrgAppsMemberships {
-			deletedAccount.OrgAppsMemberships[i] = model.OrgAppMembership{ID: membership.ID, AppOrg: membership.AppOrg, DateDeleted: &now}
+			orgAppMemberships[i] = model.OrgAppMembership{ID: membership.ID, AppOrg: membership.AppOrg, DateDeleted: &now}
+			// need to set AppOrg in context so that the AppOrg ID is saved
+			for j, context := range deleteContext {
+				if context.AppOrg.Application.ID == membership.AppOrg.Application.ID {
+					deleteContext[j].AppOrg = membership.AppOrg
+				}
+			}
 		}
+		deletedAccount := model.Account{ID: account.ID, OrgID: account.OrgID, OrgAppsMemberships: orgAppMemberships,
+			DateCreated: account.DateCreated, DateUpdated: &now, DateDeleted: &now, DeletedMembershipsContext: deleteContext}
+
 		err = a.storage.SaveAccount(context, &deletedAccount)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
