@@ -181,6 +181,8 @@ paths:
     $ref: "./resources/bbs/access-token.yaml"
   /bbs/access-tokens:
     $ref: "./resources/bbs/access-tokens.yaml"
+  /bbs/deleted-memberships:
+    $ref: "./resources/bbs/deleted-memberships.yaml"
   /bbs/accounts:
     $ref: "./resources/bbs/accounts.yaml"
   /bbs/accounts/count:

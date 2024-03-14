@@ -16,7 +16,53 @@ delete:
       style: form
       explode: false
       schema:
-        type: string  
+        type: string
+  requestBody:
+    description: optional context data per service that should be considered when deleting user data
+    content:
+      application/json:
+        schema:
+          type: array
+          items:
+            $ref: "../../schemas/user/DeletedMembershipContext.yaml"
+        examples:
+          single_app_surveys:
+            summary: Retain some survey responses
+            value:
+              - app_id: app_id
+                context:
+                  surveys:
+                    retain_responses:
+                      survey_ids:
+                        - survey_id1
+                        - survey_id2
+          single_app_groups:
+            summary: Retain some groups data
+            value:
+              - app_id: app_id
+                context:
+                  groups:
+                    retain_posts:
+                      group_ids:
+                        - group_id1
+                        - group_id2
+          multiple_app_surveys:
+            summary: Retain some survey responses for multiple apps
+            value:
+              - app_id: app_id1
+                context:
+                  surveys:
+                    retain_responses:
+                      survey_ids:
+                        - survey_id1
+                        - survey_id2
+              - app_id: app_id2
+                context:
+                  surveys:
+                    retain_responses:
+                      survey_ids:
+                        - survey_id3
+                        - survey_id4
   responses:
     200:
       description: Success

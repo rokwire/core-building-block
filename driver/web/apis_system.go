@@ -452,11 +452,11 @@ func (h SystemApisHandler) getServiceAccountInstance(l *logs.Log, r *http.Reques
 	}
 
 	appID := r.URL.Query().Get("app_id")
-	if len(id) <= 0 {
+	if len(appID) <= 0 {
 		return l.HTTPResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("app_id"), nil, http.StatusBadRequest, false)
 	}
 	orgID := r.URL.Query().Get("org_id")
-	if len(id) <= 0 {
+	if len(orgID) <= 0 {
 		return l.HTTPResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("org_id"), nil, http.StatusBadRequest, false)
 	}
 
@@ -483,11 +483,11 @@ func (h SystemApisHandler) updateServiceAccountInstance(l *logs.Log, r *http.Req
 	}
 
 	appID := r.URL.Query().Get("app_id")
-	if len(id) <= 0 {
+	if len(appID) <= 0 {
 		return l.HTTPResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("app_id"), nil, http.StatusBadRequest, false)
 	}
 	orgID := r.URL.Query().Get("org_id")
-	if len(id) <= 0 {
+	if len(orgID) <= 0 {
 		return l.HTTPResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("org_id"), nil, http.StatusBadRequest, false)
 	}
 
@@ -534,11 +534,11 @@ func (h SystemApisHandler) deregisterServiceAccountInstance(l *logs.Log, r *http
 	}
 
 	appID := r.URL.Query().Get("app_id")
-	if len(id) <= 0 {
+	if len(appID) <= 0 {
 		return l.HTTPResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("app_id"), nil, http.StatusBadRequest, false)
 	}
 	orgID := r.URL.Query().Get("org_id")
-	if len(id) <= 0 {
+	if len(orgID) <= 0 {
 		return l.HTTPResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("org_id"), nil, http.StatusBadRequest, false)
 	}
 

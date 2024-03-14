@@ -1,0 +1,10 @@
+allOf:
+  - $ref: "../auth/AppOrgPair.yaml"
+  - required:
+      - memberships
+    type: object
+    properties:
+      memberships:
+        type: array
+        items:
+          $ref: "./DeletedMembershipContext.yaml"

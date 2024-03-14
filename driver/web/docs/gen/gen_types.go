@@ -208,6 +208,13 @@ type AccountAuthType struct {
 	Unverified *bool                   `json:"unverified,omitempty"`
 }
 
+// AccountOrgAppMemberships defines model for AccountOrgAppMemberships.
+type AccountOrgAppMemberships struct {
+	AppId       string                     `json:"app_id"`
+	Memberships []DeletedMembershipContext `json:"memberships"`
+	OrgId       string                     `json:"org_id"`
+}
+
 // AdminToken defines model for AdminToken.
 type AdminToken struct {
 	Token string `json:"token"`
@@ -329,6 +336,13 @@ type Config struct {
 // Config_Data defines model for Config.Data.
 type Config_Data struct {
 	union json.RawMessage
+}
+
+// DeletedMembershipContext defines model for DeletedMembershipContext.
+type DeletedMembershipContext struct {
+	AccountId *string                 `json:"account_id,omitempty"`
+	AppId     *string                 `json:"app_id,omitempty"`
+	Context   *map[string]interface{} `json:"context,omitempty"`
 }
 
 // Device defines model for Device.
@@ -1350,11 +1364,20 @@ type PostBbsAccountsCountParams struct {
 	OrgId *string `form:"org_id,omitempty" json:"org_id,omitempty"`
 }
 
+// GetBbsDeletedMembershipsParams defines parameters for GetBbsDeletedMemberships.
+type GetBbsDeletedMembershipsParams struct {
+	// ServiceId The ID of the service making the request
+	ServiceId string `form:"service_id" json:"service_id"`
+}
+
 // GetBbsServiceRegsParams defines parameters for GetBbsServiceRegs.
 type GetBbsServiceRegsParams struct {
 	// Ids A comma-separated list of service IDs to return registrations for
 	Ids string `form:"ids" json:"ids"`
 }
+
+// DeleteServicesAccountJSONBody defines parameters for DeleteServicesAccount.
+type DeleteServicesAccountJSONBody = []DeletedMembershipContext
 
 // DeleteServicesAccountParams defines parameters for DeleteServicesAccount.
 type DeleteServicesAccountParams struct {
@@ -1726,6 +1749,9 @@ type PostBbsAccountsCountJSONRequestBody = PostBbsAccountsCountJSONBody
 
 // PostBbsServiceAccountIdJSONRequestBody defines body for PostBbsServiceAccountId for application/json ContentType.
 type PostBbsServiceAccountIdJSONRequestBody = ServicesReqServiceAccountsParams
+
+// DeleteServicesAccountJSONRequestBody defines body for DeleteServicesAccount for application/json ContentType.
+type DeleteServicesAccountJSONRequestBody = DeleteServicesAccountJSONBody
 
 // PostServicesAccountFollowJSONRequestBody defines body for PostServicesAccountFollow for application/json ContentType.
 type PostServicesAccountFollowJSONRequestBody = Follow

@@ -72,6 +72,19 @@ type OrgAppMembership struct {
 	Preferences map[string]interface{}
 
 	MostRecentClientVersion *string
+	DateDeleted             *time.Time
+}
+
+// IsDeleted returns whether this membership has been marked for deletion
+func (m OrgAppMembership) IsDeleted() bool {
+	return m.DateDeleted != nil
+}
+
+// DeletedMembershipContext represents some context for other building blocks to consider when deleting some user data for an account app membership
+type DeletedMembershipContext struct {
+	AccountID string
+	AppOrg    ApplicationOrganization
+	Context   map[string]interface{}
 }
 
 // Account represents account entity
@@ -115,6 +128,9 @@ type Account struct {
 	DateCreated time.Time
 	DateUpdated *time.Time
 
+	DeletedMembershipsContext []DeletedMembershipContext
+	DateDeleted               *time.Time
+
 	LastLoginDate       *time.Time
 	LastAccessTokenDate *time.Time
 }
@@ -145,15 +161,18 @@ func (a Account) HasApp(appID string) bool {
 	return false
 }
 
-// GetApps gives the account applications
-func (a Account) GetApps() []Application {
+// GetActiveApps gives the account applications that have not been deleted
+func (a Account) GetActiveApps() []Application {
 	if len(a.OrgAppsMemberships) == 0 {
 		return []Application{}
 	}
 
-	res := make([]Application, len(a.OrgAppsMemberships))
-	for i, oam := range a.OrgAppsMemberships {
-		res[i] = oam.AppOrg.Application
+	res := make([]Application, 0)
+	for _, oam := range a.OrgAppsMemberships {
+		if !oam.IsDeleted() {
+			// if the DateDeleted timestamp is missing, then the membership is active
+			res = append(res, oam.AppOrg.Application)
+		}
 	}
 	return res
 }
@@ -166,6 +185,24 @@ func (a *Account) SetCurrentMembership(current OrgAppMembership) {
 	a.Groups = current.Groups
 	a.Preferences = current.Preferences
 	a.MostRecentClientVersion = current.MostRecentClientVersion
+}
+
+// GetDeletedMembershipContext returns the deleted membership context for the given appOrgID and serviceID if it exists
+func (a Account) GetDeletedMembershipContext(appOrgID string, serviceID string) map[string]interface{} {
+	for _, d := range a.DeletedMembershipsContext {
+		if d.AppOrg.ID == appOrgID {
+			serviceContextVal, exists := d.Context[serviceID]
+			if !exists {
+				return nil
+			}
+			serviceContext, ok := serviceContextVal.(map[string]interface{})
+			if !ok {
+				return nil
+			}
+			return serviceContext
+		}
+	}
+	return nil
 }
 
 // GetAccountAuthTypeByID finds account auth type by id

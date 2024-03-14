@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/rokwire/logging-library-go/v2/errors"
+	"github.com/rokwire/logging-library-go/v2/logs"
 	"github.com/rokwire/logging-library-go/v2/logutils"
 )
 
@@ -37,6 +38,8 @@ type application struct {
 	listeners []ApplicationListener
 
 	auth auth.APIs
+
+	logger *logs.Logger
 }
 
 // start starts the core part of the application
