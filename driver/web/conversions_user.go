@@ -62,10 +62,8 @@ func accountToDef(item model.Account) *Def.Account {
 
 	//app
 	var as []model.Application
-	if item.OrgAppsMemberships != nil {
-		for _, a := range item.OrgAppsMemberships {
-			as = append(as, a.AppOrg.Application)
-		}
+	for _, a := range item.OrgAppsMemberships {
+		as = append(as, a.AppOrg.Application)
 	}
 	apps := partialAppsToDef(as)
 
@@ -146,10 +144,8 @@ func partialAccountToDef(item model.Account, params map[string]interface{}) *Def
 
 	//app
 	var as []model.Application
-	if item.OrgAppsMemberships != nil {
-		for _, a := range item.OrgAppsMemberships {
-			as = append(as, a.AppOrg.Application)
-		}
+	for _, a := range item.OrgAppsMemberships {
+		as = append(as, a.AppOrg.Application)
 	}
 	apps := partialAppsToDef(as)
 

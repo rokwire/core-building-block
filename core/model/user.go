@@ -170,6 +170,7 @@ func (a *Account) SetCurrentMembership(current OrgAppMembership) {
 	a.Roles = current.Roles
 	a.Groups = current.Groups
 	a.Preferences = current.Preferences
+	a.Secrets = current.Secrets
 	a.MostRecentClientVersion = current.MostRecentClientVersion
 }
 

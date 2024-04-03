@@ -290,6 +290,11 @@ func (a *Auth) applyExternalAuthType(supportedAuthType model.SupportedAuthType, 
 	if err != nil {
 		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
+	for _, membership := range account.OrgAppsMemberships {
+		if membership.AppOrg.ID == appOrg.ID {
+			account.SetCurrentMembership(membership) // set the current membership because it will not be set by a.storage.FindAccount
+		}
+	}
 	a.setLogContext(account, l)
 
 	//3. check if it is operationSignIn or operationOrgSignUp or operationAppSignUp
@@ -644,11 +649,10 @@ func (a *Auth) applyAuthType(supportedAuthType model.SupportedAuthType, appOrg m
 	}
 
 	var account *model.Account
-	appOrgID := &appOrg.ID
 	if identifierImpl == nil {
 		// if given an account identifier ID, find the account and attempt sign in (operationSignIn)
 		if accountIdentifierID != nil {
-			account, err = a.storage.FindAccountByIdentifierID(nil, *accountIdentifierID, appOrgID)
+			account, err = a.storage.FindAccountByIdentifierID(nil, *accountIdentifierID, &appOrg.ID)
 			if err != nil {
 				return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"identifier.id": *accountIdentifierID}, err)
 			}
@@ -671,7 +675,7 @@ func (a *Auth) applyAuthType(supportedAuthType model.SupportedAuthType, appOrg m
 			return map[string]interface{}{"message": *message}, nil, nil, nil
 		}
 
-		account, err := a.storage.FindAccountByCredentialID(nil, credID, appOrgID)
+		account, err := a.storage.FindAccountByCredentialID(nil, credID, &appOrg.ID)
 		if err != nil {
 			return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"credential_id": credID}, err)
 		}
@@ -695,6 +699,11 @@ func (a *Auth) applyAuthType(supportedAuthType model.SupportedAuthType, appOrg m
 	account, err = a.storage.FindAccount(nil, code, identifier, &appOrg.Organization.ID, nil) // do not provide an appOrgID because we want to know if there is an account in the organization with the same identifier
 	if err != nil {
 		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"app_org_id": appOrg.ID, "code": code, "identifier": identifier}, err)
+	}
+	for _, membership := range account.OrgAppsMemberships {
+		if membership.AppOrg.ID == appOrg.ID {
+			account.SetCurrentMembership(membership) // set the current membership because it will not be set by a.storage.FindAccount
+		}
 	}
 	a.setLogContext(account, l)
 
