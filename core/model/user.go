@@ -205,19 +205,26 @@ func (a Account) SortAccountAuthTypes(id string, authType string) {
 }
 
 // GetAccountIdentifier finds account identifier
-func (a Account) GetAccountIdentifier(code string, identifier string) *AccountIdentifier {
+func (a Account) GetAccountIdentifier(code string, identifier string, requireProfile bool) *AccountIdentifier {
 	for _, id := range a.Identifiers {
-		if code != "" && id.Code == code && identifier != "" && id.Identifier == identifier {
-			id.Account = a
-			return &id
+		if requireProfile && !id.UseForProfile {
+			continue
 		}
-		if code != "" && id.Code == code {
-			id.Account = a
-			return &id
-		}
-		if identifier != "" && id.Identifier == identifier {
-			id.Account = a
-			return &id
+		if code != "" && identifier != "" {
+			if id.Code == code && id.Identifier == identifier {
+				id.Account = a
+				return &id
+			}
+		} else if code != "" {
+			if id.Code == code {
+				id.Account = a
+				return &id
+			}
+		} else if identifier != "" {
+			if id.Identifier == identifier {
+				id.Account = a
+				return &id
+			}
 		}
 	}
 	return nil
@@ -513,9 +520,10 @@ type AccountIdentifier struct {
 	Code       string
 	Identifier string
 
-	Verified  bool
-	Linked    bool
-	Sensitive bool
+	Verified      bool
+	Linked        bool
+	Sensitive     bool
+	UseForProfile bool
 
 	AccountAuthTypeID *string
 	Primary           *bool

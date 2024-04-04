@@ -69,13 +69,13 @@ func accountToDef(item model.Account) *Def.Account {
 
 	// maintain backwards compatibility
 	var username *string
-	if usernameIdentifier := item.GetAccountIdentifier("username", ""); usernameIdentifier != nil {
+	if usernameIdentifier := item.GetAccountIdentifier("username", "", false); usernameIdentifier != nil {
 		username = &usernameIdentifier.Identifier
 	}
-	if emailIdentifier := item.GetAccountIdentifier("email", ""); emailIdentifier != nil {
+	if emailIdentifier := item.GetAccountIdentifier("email", "", true); emailIdentifier != nil {
 		profile.Email = &emailIdentifier.Identifier
 	}
-	if phoneIdentifier := item.GetAccountIdentifier("phone", ""); phoneIdentifier != nil {
+	if phoneIdentifier := item.GetAccountIdentifier("phone", "", true); phoneIdentifier != nil {
 		profile.Phone = &phoneIdentifier.Identifier
 	}
 
@@ -151,7 +151,7 @@ func partialAccountToDef(item model.Account, params map[string]interface{}) *Def
 
 	// maintain backwards compatibility
 	var username *string
-	if usernameIdentifier := item.GetAccountIdentifier("username", ""); usernameIdentifier != nil {
+	if usernameIdentifier := item.GetAccountIdentifier("username", "", false); usernameIdentifier != nil {
 		username = &usernameIdentifier.Identifier
 	}
 	var externalIDs *map[string]interface{}
@@ -304,9 +304,9 @@ func accountGroupsToDef(items []model.AccountGroup) []Def.AppOrgGroup {
 }
 
 // Profile
-func profileFromDef(item *Def.Profile) model.Profile {
+func profileFromDef(item *Def.Profile) (model.Profile, *string, *string) {
 	if item == nil {
-		return model.Profile{}
+		return model.Profile{}, nil, nil
 	}
 
 	var photoURL string
@@ -349,7 +349,7 @@ func profileFromDef(item *Def.Profile) model.Profile {
 
 	return model.Profile{PhotoURL: photoURL, FirstName: firstName, LastName: lastName,
 		BirthYear: int16(birthYear), Address: address, ZipCode: zipCode,
-		State: state, Country: country, UnstructuredProperties: unstructuredProperties}
+		State: state, Country: country, UnstructuredProperties: unstructuredProperties}, item.Email, item.Phone
 }
 
 func profileToDef(item *model.Profile) *Def.Profile {

@@ -17,6 +17,7 @@ package core
 import (
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
+	"core-building-block/utils"
 	"time"
 
 	"github.com/google/uuid"
@@ -35,11 +36,11 @@ func (app *application) serGetProfile(accountID string) (*model.Profile, *string
 	//get the profile for the account
 	profile := account.Profile
 	var email *string
-	if emailIdentifier := account.GetAccountIdentifier("email", ""); emailIdentifier != nil {
+	if emailIdentifier := account.GetAccountIdentifier("email", "", true); emailIdentifier != nil {
 		email = &emailIdentifier.Identifier
 	}
 	var phone *string
-	if phoneIdentifier := account.GetAccountIdentifier("phone", ""); phoneIdentifier != nil {
+	if phoneIdentifier := account.GetAccountIdentifier("phone", "", true); phoneIdentifier != nil {
 		phone = &phoneIdentifier.Identifier
 	}
 
@@ -73,10 +74,103 @@ func (app *application) serGetAccountSystemConfigs(cOrgID string, cAppID string,
 	return account.SystemConfigs, nil
 }
 
-func (app *application) serUpdateAccountProfile(accountID string, profile model.Profile) error {
-	err := app.storage.UpdateAccountProfile(nil, accountID, profile)
+func (app *application) serUpdateAccountProfile(accountID string, profile model.Profile, email *string, phone *string) error {
+	transaction := func(context storage.TransactionContext) error {
+		//1. verify that the account is for the current app/org
+		//find the account
+		account, err := app.storage.FindAccountByID(context, nil, nil, accountID)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"account_id": accountID}, err)
+		}
+		if account == nil {
+			return errors.WrapErrorData(logutils.StatusMissing, model.TypeAccount, &logutils.FieldArgs{"account_id": accountID}, err)
+		}
+
+		var newAccountIdentifiers []model.AccountIdentifier
+		// can update the email used for the profile to any valid email because the client is not needed to verify it
+		if email != nil {
+			profileEmailIdentifier := account.GetAccountIdentifier("email", "", true)
+			// try to update the profile email identifier if it does not exist or is being changed
+			if profileEmailIdentifier == nil || profileEmailIdentifier.Identifier != *email {
+				emailIdentifier := account.GetAccountIdentifier("email", *email, false)
+				if emailIdentifier != nil {
+					// do not use the old profile email identifier for the profile anymore
+					if profileEmailIdentifier != nil {
+						profileEmailIdentifier.UseForProfile = false
+					}
+					emailIdentifier.UseForProfile = true
+				} else if utils.IsValidEmail(*email) {
+					// do not use the old profile email identifier for the profile anymore
+					if profileEmailIdentifier != nil {
+						profileEmailIdentifier.UseForProfile = false
+					}
+					// add to identifiers and send verification code if adding a new valid email
+					newIdentifier := model.AccountIdentifier{ID: uuid.NewString(), Code: "email", Identifier: *email, Linked: true, Sensitive: true, UseForProfile: true, DateCreated: time.Now().UTC()}
+					account.Identifiers = append(account.Identifiers, newIdentifier)
+
+					err := app.auth.SendVerifyIdentifierAuthenticated(context, account, &newIdentifier)
+					if err != nil {
+						return errors.WrapErrorAction(logutils.ActionVerify, model.TypeAccountIdentifier, &logutils.FieldArgs{"code": email, "identifier": *email}, err)
+					}
+				} else {
+					return errors.ErrorData(logutils.StatusInvalid, "profile email", &logutils.FieldArgs{"email": *email})
+				}
+
+				newAccountIdentifiers = make([]model.AccountIdentifier, len(account.Identifiers))
+				for j, aIdentifier := range account.Identifiers {
+					if emailIdentifier != nil && aIdentifier.ID == emailIdentifier.ID {
+						newAccountIdentifiers[j] = *emailIdentifier
+					} else if profileEmailIdentifier != nil && aIdentifier.ID == profileEmailIdentifier.ID {
+						newAccountIdentifiers[j] = *profileEmailIdentifier
+					} else {
+						newAccountIdentifiers[j] = aIdentifier
+					}
+				}
+				account.Identifiers = newAccountIdentifiers
+			}
+		}
+
+		// can only update the phone used for the profile if it is already a verified identifier because clients using the profile phone do not provide a way to verify it
+		if phone != nil {
+			profilePhoneIdentifier := account.GetAccountIdentifier("phone", "", true)
+			// try to update the profile phone identifier if it does not exist or is being changed
+			if profilePhoneIdentifier == nil || profilePhoneIdentifier.Identifier != *phone {
+				phoneIdentifier := account.GetAccountIdentifier("phone", *phone, false)
+				if phoneIdentifier != nil && phoneIdentifier.Verified {
+					// do not use the old profile phone identifier for the profile anymore if the new one is verified
+					if profilePhoneIdentifier != nil {
+						profilePhoneIdentifier.UseForProfile = false
+					}
+					phoneIdentifier.UseForProfile = true
+
+				} else {
+					return errors.ErrorData(logutils.StatusInvalid, "profile phone", &logutils.FieldArgs{"phone": *phone, "verified": false})
+				}
+
+				newAccountIdentifiers = make([]model.AccountIdentifier, len(account.Identifiers))
+				for j, aIdentifier := range account.Identifiers {
+					if phoneIdentifier != nil && aIdentifier.ID == phoneIdentifier.ID {
+						newAccountIdentifiers[j] = *phoneIdentifier
+					} else if profilePhoneIdentifier != nil && aIdentifier.ID == profilePhoneIdentifier.ID {
+						newAccountIdentifiers[j] = *profilePhoneIdentifier
+					} else {
+						newAccountIdentifiers[j] = aIdentifier
+					}
+				}
+				account.Identifiers = newAccountIdentifiers
+			}
+		}
+
+		err = app.storage.UpdateAccountProfile(context, accountID, profile, account.Identifiers)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeProfile, nil, err)
+		}
+		return nil
+	}
+
+	err := app.storage.PerformTransaction(transaction)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeProfile, nil, err)
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, nil, err)
 	}
 	return nil
 }

@@ -150,9 +150,10 @@ type accountIdentifier struct {
 	Code       string `bson:"code"`
 	Identifier string `bson:"identifier"`
 
-	Verified  bool `bson:"verified"`
-	Linked    bool `bson:"linked"`
-	Sensitive bool `bson:"sensitive"`
+	Verified      bool `bson:"verified"`
+	Linked        bool `bson:"linked"`
+	Sensitive     bool `bson:"sensitive"`
+	UseForProfile bool `bson:"use_for_profile"`
 
 	AccountAuthTypeID *string `bson:"account_auth_type_id"`
 	Primary           *bool   `bson:"primary,omitempty"`

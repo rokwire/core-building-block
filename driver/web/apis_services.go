@@ -750,9 +750,9 @@ func (h ServicesApisHandler) updateProfile(l *logs.Log, r *http.Request, claims 
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, "profile update request", nil, err, http.StatusBadRequest, true)
 	}
 
-	profile := profileFromDef(&requestData)
+	profile, email, phone := profileFromDef(&requestData)
 
-	err = h.coreAPIs.Services.SerUpdateAccountProfile(claims.Subject, profile)
+	err = h.coreAPIs.Services.SerUpdateAccountProfile(claims.Subject, profile, email, phone)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionUpdate, model.TypeProfile, nil, err, http.StatusInternalServerError, true)
 	}

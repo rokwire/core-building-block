@@ -248,10 +248,14 @@ func (sa *Adapter) migrateAppOrgs(context TransactionContext, removedAuthTypes m
 			}
 		}
 
-		if _, exists := orgIDs[appOrg.Organization.ID]; !exists {
-			if len(appOrg.IdentityProvidersSettings) > 0 {
-				orgIDs[appOrg.Organization.ID] = appOrg.IdentityProvidersSettings[0] // use the first identity provider setting for all apps in this organization
-			} else {
+		if orgSettings := orgIDs[appOrg.Organization.ID]; orgSettings.IdentityProviderID == "" {
+			for _, settings := range appOrg.IdentityProvidersSettings {
+				if len(settings.ExternalIDFields) > 0 && settings.UserIdentifierField != "" {
+					orgIDs[appOrg.Organization.ID] = settings // use the first identity provider setting with specified ExternalIDFields and UserIdentifierField for all apps in this organization
+					break
+				}
+			}
+			if _, exists := orgIDs[appOrg.Organization.ID]; !exists {
 				orgIDs[appOrg.Organization.ID] = model.IdentityProviderSetting{}
 			}
 		}
@@ -356,21 +360,23 @@ func (sa *Adapter) migrateAccounts(context TransactionContext, batch int, orgID 
 					}
 
 					// add the primary external identifier
-					code := ""
+					primaryIdentifierCode := ""
 					primary := true
 					for k, v := range identityProviderSettings.ExternalIDFields {
 						if v == identityProviderSettings.UserIdentifierField {
-							code = k
+							primaryIdentifierCode = k
 							break
 						}
 					}
-					primaryIdentifier := accountIdentifier{ID: uuid.NewString(), Code: code, Identifier: externalUser.Identifier, Verified: true, Linked: linked,
-						AccountAuthTypeID: &externalAatID, Primary: &primary, DateCreated: aat.DateCreated, DateUpdated: dateUpdated}
-					identifiers = append(identifiers, primaryIdentifier)
+					if primaryIdentifierCode != "" {
+						primaryIdentifier := accountIdentifier{ID: uuid.NewString(), Code: primaryIdentifierCode, Identifier: externalUser.Identifier, Verified: true, Linked: linked,
+							AccountAuthTypeID: &externalAatID, Primary: &primary, DateCreated: aat.DateCreated, DateUpdated: dateUpdated}
+						identifiers = append(identifiers, primaryIdentifier)
+					}
 
 					// add the other external identifiers from external IDs
 					for code, id := range externalUser.ExternalIDs {
-						if code != primaryIdentifier.Code {
+						if code != primaryIdentifierCode {
 							primary := false
 							newIdentifier := accountIdentifier{ID: uuid.NewString(), Code: code, Identifier: id, Verified: true, Linked: linked,
 								AccountAuthTypeID: &externalAatID, Primary: &primary, DateCreated: aat.DateCreated, DateUpdated: dateUpdated}
@@ -408,29 +414,47 @@ func (sa *Adapter) migrateAccounts(context TransactionContext, batch int, orgID 
 		// add profile email to identifiers if valid and not already there
 		if acct.Profile.Email != nil && utils.IsValidEmail(*acct.Profile.Email) {
 			foundEmail := false
-			for _, identifier := range identifiers {
+			for i, identifier := range identifiers {
 				if identifier.Code == "email" && identifier.Identifier == *acct.Profile.Email {
 					foundEmail = true
+					identifiers[i].UseForProfile = true
 					break
 				}
 			}
 			if !foundEmail {
-				identifiers = append(identifiers, accountIdentifier{ID: uuid.NewString(), Code: "email", Identifier: *acct.Profile.Email, Sensitive: true, DateCreated: now})
+				identifiers = append(identifiers, accountIdentifier{ID: uuid.NewString(), Code: "email", Identifier: *acct.Profile.Email, Sensitive: true, UseForProfile: true, DateCreated: now})
+			}
+		} else {
+			for i, identifier := range identifiers {
+				if identifier.Code == "email" {
+					identifiers[i].UseForProfile = true // if no profile email already, use the first email identifier for the profile
+					break
+				}
 			}
 		}
+
 		// add profile phone to identifiers if valid and not already there
 		if acct.Profile.Phone != nil && utils.IsValidPhone(*acct.Profile.Phone) {
 			foundPhone := false
-			for _, identifier := range identifiers {
+			for i, identifier := range identifiers {
 				if identifier.Code == "phone" && identifier.Identifier == *acct.Profile.Phone {
 					foundPhone = true
+					identifiers[i].UseForProfile = true
 					break
 				}
 			}
 			if !foundPhone {
-				identifiers = append(identifiers, accountIdentifier{ID: uuid.NewString(), Code: "phone", Identifier: *acct.Profile.Phone, Sensitive: true, DateCreated: now})
+				identifiers = append(identifiers, accountIdentifier{ID: uuid.NewString(), Code: "phone", Identifier: *acct.Profile.Phone, Sensitive: true, UseForProfile: true, DateCreated: now})
+			}
+		} else {
+			for i, identifier := range identifiers {
+				if identifier.Code == "phone" {
+					identifiers[i].UseForProfile = true // if no profile phone already, use the first phone identifier for the profile
+					break
+				}
 			}
 		}
+
 		// add account username to identifiers if not already there
 		if acct.Username != nil && *acct.Username != "" {
 			foundUsername := false

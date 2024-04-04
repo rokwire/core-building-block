@@ -275,7 +275,7 @@ func (a *Auth) CanLink(identifierJSON string, apiKey string, appTypeIdentifier s
 	}
 
 	if account != nil {
-		ai := account.GetAccountIdentifier(code, identifier)
+		ai := account.GetAccountIdentifier(code, identifier, false)
 		if authenticationType == nil && userIdentifier == nil {
 			// if not an old client, treat as a request to check if can link identifier
 			return (ai != nil && !ai.Verified), nil
@@ -458,13 +458,13 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 		if loginSession.Account == nil {
 			return nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, &logutils.FieldArgs{"session_id": loginSession.ID, "anonymous": false})
 		}
-		if emailIdentifier := loginSession.Account.GetAccountIdentifier(IdentifierTypeEmail, ""); emailIdentifier != nil {
+		if emailIdentifier := loginSession.Account.GetAccountIdentifier(IdentifierTypeEmail, "", true); emailIdentifier != nil {
 			email = emailIdentifier.Identifier
 		}
-		if phoneIdentifier := loginSession.Account.GetAccountIdentifier(IdentifierTypePhone, ""); phoneIdentifier != nil {
+		if phoneIdentifier := loginSession.Account.GetAccountIdentifier(IdentifierTypePhone, "", true); phoneIdentifier != nil {
 			phone = phoneIdentifier.Identifier
 		}
-		if usernameIdentifier := loginSession.Account.GetAccountIdentifier(IdentifierTypeUsername, ""); usernameIdentifier != nil {
+		if usernameIdentifier := loginSession.Account.GetAccountIdentifier(IdentifierTypeUsername, "", false); usernameIdentifier != nil {
 			username = usernameIdentifier.Identifier
 		}
 		name = loginSession.Account.Profile.GetFullName()
@@ -1165,7 +1165,7 @@ func (a *Auth) SendVerifyIdentifier(appTypeIdentifier string, orgID string, apiK
 	}
 	a.setLogContext(account, l)
 
-	accountIdentifier := account.GetAccountIdentifier(code, identifier)
+	accountIdentifier := account.GetAccountIdentifier(code, identifier, false)
 	if accountIdentifier == nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountIdentifier, &logutils.FieldArgs{"identifier": identifier}, err)
 	}
@@ -1183,6 +1183,25 @@ func (a *Auth) SendVerifyIdentifier(appTypeIdentifier string, orgID string, apiK
 	}
 
 	return a.updateAccountIdentifier(nil, account, accountIdentifier)
+}
+
+// SendVerifyIdentifierAuthenticated sends the verification code to the identifier for an authenticated user
+func (a *Auth) SendVerifyIdentifierAuthenticated(context storage.TransactionContext, account *model.Account, accountIdentifier *model.AccountIdentifier) error {
+	identifierImpl := a.getIdentifierTypeImpl("", &accountIdentifier.Code, &accountIdentifier.Identifier)
+	if identifierImpl == nil {
+		return errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, nil)
+	}
+
+	if identifierChannel, ok := identifierImpl.(authCommunicationChannel); ok {
+		_, err := identifierChannel.sendVerifyIdentifier(accountIdentifier, account.AppOrg.Application.Name)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionSend, "verification code", nil, err)
+		}
+	} else {
+		return errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, logutils.StringArgs(accountIdentifier.Code))
+	}
+
+	return a.updateAccountIdentifier(context, account, accountIdentifier)
 }
 
 // UpdateCredential updates the credential object with the new value
@@ -1340,7 +1359,7 @@ func (a *Auth) ForgotCredential(authenticationType string, identifierJSON string
 	}
 	a.setLogContext(account, l)
 
-	accountIdentifier := account.GetAccountIdentifier(code, identifier)
+	accountIdentifier := account.GetAccountIdentifier(code, identifier, false)
 	if accountIdentifier == nil {
 		return errors.ErrorData(logutils.StatusMissing, model.TypeAccountIdentifier, &logutils.FieldArgs{"identifier": identifier})
 	}

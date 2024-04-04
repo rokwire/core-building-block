@@ -318,6 +318,9 @@ type APIs interface {
 	//SendVerifyIdentifier sends verification code to identifier
 	SendVerifyIdentifier(appTypeIdentifier string, orgID string, apiKey string, identifierJSON string, l *logs.Log) error
 
+	// SendVerifyIdentifierAuthenticated sends the verification code to the identifier for an authenticated user
+	SendVerifyIdentifierAuthenticated(context storage.TransactionContext, account *model.Account, accountIdentifier *model.AccountIdentifier) error
+
 	//UpdateCredential updates the credential object with the new value
 	//	Input:
 	//		accountID: id of the associated account to reset

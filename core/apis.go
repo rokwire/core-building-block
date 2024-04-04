@@ -358,8 +358,8 @@ func (s *servicesImpl) SerUpdateAccountPreferences(id string, appID string, orgI
 	return s.app.serUpdateAccountPreferences(id, appID, orgID, anonymous, preferences, l)
 }
 
-func (s *servicesImpl) SerUpdateAccountProfile(accountID string, profile model.Profile) error {
-	return s.app.serUpdateAccountProfile(accountID, profile)
+func (s *servicesImpl) SerUpdateAccountProfile(accountID string, profile model.Profile, email *string, phone *string) error {
+	return s.app.serUpdateAccountProfile(accountID, profile, email, phone)
 }
 
 func (s *servicesImpl) SerUpdateAccountPrivacy(accountID string, privacy model.Privacy) error {

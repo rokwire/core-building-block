@@ -764,7 +764,7 @@ func (a *Auth) applySignIn(identifierImpl identifierType, authImpl authType, sup
 		accountIdentifier = account.GetAccountIdentifierByID(*accountIdentifierID)
 	} else if identifierImpl != nil {
 		identifier = identifierImpl.getIdentifier()
-		accountIdentifier = account.GetAccountIdentifier(identifierImpl.getCode(), identifier)
+		accountIdentifier = account.GetAccountIdentifier(identifierImpl.getCode(), identifier, false)
 	}
 	if accountIdentifier == nil {
 		return nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccountIdentifier, &logutils.FieldArgs{"identifier": identifier})
@@ -969,7 +969,7 @@ func (a *Auth) canSignIn(account *model.Account, code string, identifier string,
 			return false
 		}
 
-		ai := account.GetAccountIdentifier(code, identifier)
+		ai := account.GetAccountIdentifier(code, identifier, false)
 		return ai == nil || !ai.Linked || ai.Verified
 	}
 
@@ -1291,13 +1291,13 @@ func (a *Auth) createLoginSession(anonymous bool, sub string, authType model.Aut
 		if account == nil {
 			return nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, nil)
 		}
-		if emailIdentifier := account.GetAccountIdentifier(IdentifierTypeEmail, ""); emailIdentifier != nil {
+		if emailIdentifier := account.GetAccountIdentifier(IdentifierTypeEmail, "", true); emailIdentifier != nil {
 			email = emailIdentifier.Identifier
 		}
-		if phoneIdentifier := account.GetAccountIdentifier(IdentifierTypePhone, ""); phoneIdentifier != nil {
+		if phoneIdentifier := account.GetAccountIdentifier(IdentifierTypePhone, "", true); phoneIdentifier != nil {
 			phone = phoneIdentifier.Identifier
 		}
-		if usernameIdentifier := account.GetAccountIdentifier(IdentifierTypeUsername, ""); usernameIdentifier != nil {
+		if usernameIdentifier := account.GetAccountIdentifier(IdentifierTypeUsername, "", false); usernameIdentifier != nil {
 			username = usernameIdentifier.Identifier
 		}
 		name = account.Profile.GetFullName()
@@ -1696,7 +1696,7 @@ func (a *Auth) linkAccountAuthType(account *model.Account, supportedAuthType mod
 	tryIdentifierLink := false
 	identifierImpl := a.getIdentifierTypeImpl(creds, nil, nil)
 	if identifierImpl != nil {
-		accountIdentifier = account.GetAccountIdentifier(identifierImpl.getCode(), identifierImpl.getIdentifier())
+		accountIdentifier = account.GetAccountIdentifier(identifierImpl.getCode(), identifierImpl.getIdentifier(), false)
 
 		// only try if an identifier was provided and the account does not already have it (conflicts will be handled if attempted)
 		tryIdentifierLink = (accountIdentifier == nil)
@@ -2029,7 +2029,7 @@ func (a *Auth) unlinkAccountIdentifier(context storage.TransactionContext, accou
 }
 
 func (a *Auth) handleAccountIdentifierConflict(account model.Account, identifierImpl identifierType, newAccount bool) error {
-	accountIdentifier := account.GetAccountIdentifier(identifierImpl.getCode(), identifierImpl.getIdentifier())
+	accountIdentifier := account.GetAccountIdentifier(identifierImpl.getCode(), identifierImpl.getIdentifier(), false)
 	if accountIdentifier == nil || accountIdentifier.Verified {
 		//cannot link creds if a verified account already exists for new creds
 		return errors.ErrorData("existing", model.TypeAccount, nil).SetStatus(utils.ErrorStatusAlreadyExists)
@@ -2715,7 +2715,7 @@ func (a *Auth) updateExternalIdentifiers(account *model.Account, accountAuthType
 	updated := false
 	now := time.Now().UTC()
 	for k, v := range externalUser.ExternalIDs {
-		accountIdentifier := account.GetAccountIdentifier(k, "")
+		accountIdentifier := account.GetAccountIdentifier(k, "", false)
 		if accountIdentifier == nil {
 			primary := (v == externalUser.Identifier)
 			newIdentifier := model.AccountIdentifier{ID: uuid.NewString(), Code: k, Identifier: v, Verified: true, Linked: linked, AccountAuthTypeID: &accountAuthTypeID,
