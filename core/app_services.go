@@ -142,14 +142,13 @@ func (app *application) serUpdateAccountProfile(accountID string, profile model.
 						profilePhoneIdentifier.UseForProfile = false
 					}
 					phoneIdentifier.UseForProfile = true
-
 				} else {
 					return errors.ErrorData(logutils.StatusInvalid, "profile phone", &logutils.FieldArgs{"phone": *phone, "verified": false})
 				}
 
 				newAccountIdentifiers = make([]model.AccountIdentifier, len(account.Identifiers))
 				for j, aIdentifier := range account.Identifiers {
-					if phoneIdentifier != nil && aIdentifier.ID == phoneIdentifier.ID {
+					if aIdentifier.ID == phoneIdentifier.ID {
 						newAccountIdentifiers[j] = *phoneIdentifier
 					} else if profilePhoneIdentifier != nil && aIdentifier.ID == profilePhoneIdentifier.ID {
 						newAccountIdentifiers[j] = *profilePhoneIdentifier
