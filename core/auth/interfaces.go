@@ -560,8 +560,9 @@ type Storage interface {
 	///
 
 	//LoginStates
-	FindLoginState(appID string, orgID string, accountID *string, stateParams map[string]interface{}) (*model.LoginState, error)
-	InsertLoginState(loginState model.LoginState) error
+	FindLoginState(context storage.TransactionContext, appID string, orgID string, accountID *string, stateParams map[string]interface{}) (*model.LoginState, error)
+	FindLoginStates(context storage.TransactionContext, appID string, orgID string, accountID string) ([]model.LoginState, error)
+	InsertLoginState(context storage.TransactionContext, loginState model.LoginState) error
 	DeleteLoginState(context storage.TransactionContext, id string) error
 
 	//Accounts

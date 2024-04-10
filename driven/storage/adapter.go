@@ -581,7 +581,7 @@ func (sa *Adapter) FindSessionsLazy(appID string, orgID string) ([]model.LoginSe
 }
 
 // FindLoginState finds a saved login state
-func (sa *Adapter) FindLoginState(appID string, orgID string, accountID *string, stateParams map[string]interface{}) (*model.LoginState, error) {
+func (sa *Adapter) FindLoginState(context TransactionContext, appID string, orgID string, accountID *string, stateParams map[string]interface{}) (*model.LoginState, error) {
 	filter := bson.M{"app_id": appID, "org_id": orgID}
 
 	if accountID != nil {
@@ -592,9 +592,13 @@ func (sa *Adapter) FindLoginState(appID string, orgID string, accountID *string,
 	}
 
 	var states []model.LoginState
-	err := sa.db.loginStates.Find(filter, &states, nil)
+	err := sa.db.loginStates.FindWithContext(context, filter, &states, nil)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginState, nil, err)
+		errArgs := logutils.FieldArgs{"app_id": appID, "org_id": orgID}
+		if accountID != nil {
+			errArgs["account_id"] = *accountID
+		}
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginState, &errArgs, err)
 	}
 	if len(states) == 0 {
 		//not found
@@ -605,9 +609,22 @@ func (sa *Adapter) FindLoginState(appID string, orgID string, accountID *string,
 	return &loginState, nil
 }
 
+// FindLoginStates finds saved login states for a single account org app membership
+func (sa *Adapter) FindLoginStates(context TransactionContext, appID string, orgID string, accountID string) ([]model.LoginState, error) {
+	filter := bson.M{"app_id": appID, "org_id": orgID, "account_id": accountID}
+
+	var states []model.LoginState
+	err := sa.db.loginStates.FindWithContext(context, filter, &states, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginState, &logutils.FieldArgs{"app_id": appID, "org_id": orgID, "account_id": accountID}, err)
+	}
+
+	return states, nil
+}
+
 // InsertLoginState inserts a new login state
-func (sa *Adapter) InsertLoginState(loginState model.LoginState) error {
-	_, err := sa.db.loginStates.InsertOne(loginState)
+func (sa *Adapter) InsertLoginState(context TransactionContext, loginState model.LoginState) error {
+	_, err := sa.db.loginStates.InsertOneWithContext(context, loginState)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeLoginState, nil, err)
 	}

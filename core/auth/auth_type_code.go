@@ -16,6 +16,7 @@ package auth
 
 import (
 	"core-building-block/core/model"
+	"core-building-block/driven/storage"
 	"core-building-block/utils"
 	"encoding/json"
 	"strconv"
@@ -105,18 +106,44 @@ func (a *codeAuthImpl) checkCredentials(identifierImpl identifierType, accountID
 				incomingCode = strings.Repeat("0", padLen) + incomingCode
 			}
 
-			// store generated codes in login state collection
-			state := map[string]interface{}{stateKeyCode: incomingCode}
-			loginState := model.LoginState{ID: uuid.NewString(), AppID: appOrg.Application.ID, OrgID: appOrg.Organization.ID, AccountID: accountID, State: state, DateCreated: time.Now().UTC()}
-			err := a.auth.storage.InsertLoginState(loginState)
+			// allow up to appOrg.LoginsSessionsSetting.MaxConcurrentSessions concurrent login states per appID, orgID, accountID
+			transaction := func(context storage.TransactionContext) error {
+				sessionLimit := appOrg.LoginsSessionsSetting.MaxConcurrentSessions
+				if sessionLimit > 0 && accountID != nil {
+					existingStates, err := a.auth.storage.FindLoginStates(context, appOrg.Application.ID, appOrg.Organization.ID, *accountID)
+					if err != nil {
+						return errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginState, nil, err)
+					}
+
+					if len(existingStates) >= sessionLimit {
+						// delete first login state in list (sorted by date created)
+						err = a.auth.storage.DeleteLoginState(context, existingStates[0].ID)
+						if err != nil {
+							return errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginState, nil, err)
+						}
+					}
+				}
+
+				// store generated codes in login state collection
+				state := map[string]interface{}{stateKeyCode: incomingCode}
+				loginState := model.LoginState{ID: uuid.NewString(), AppID: appOrg.Application.ID, OrgID: appOrg.Organization.ID, AccountID: accountID, State: state, DateCreated: time.Now().UTC()}
+				err := a.auth.storage.InsertLoginState(nil, loginState)
+				if err != nil {
+					return errors.WrapErrorAction(logutils.ActionCreate, model.TypeLoginState, nil, err)
+				}
+
+				return nil
+			}
+
+			err = a.auth.storage.PerformTransaction(transaction)
 			if err != nil {
-				return "", "", errors.WrapErrorAction(logutils.ActionCreate, model.TypeLoginState, nil, err)
+				return "", "", errors.WrapErrorAction(logutils.ActionSave, model.TypeLoginState, nil, err)
 			}
 		} else {
 			params := map[string]interface{}{
 				stateKeyCode: *incomingCreds.Code,
 			}
-			loginState, err := a.auth.storage.FindLoginState(appOrg.Application.ID, appOrg.Organization.ID, accountID, params)
+			loginState, err := a.auth.storage.FindLoginState(nil, appOrg.Application.ID, appOrg.Organization.ID, accountID, params)
 			if err != nil {
 				return "", "", errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginState, nil, err)
 			}
