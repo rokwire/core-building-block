@@ -276,7 +276,6 @@ type Application struct {
 
 	MultiTenant bool //safer community is multi-tenant
 	Admin       bool //is this an admin app?
-	Code        string
 	Types       []ApplicationType
 
 	Organizations []ApplicationOrganization
@@ -344,18 +343,19 @@ func (ao ApplicationOrganization) FindIdentityProviderSetting(identityProviderID
 	return nil
 }
 
-// IsAuthTypeSupported checks if an auth type is supported for application type
-func (ao ApplicationOrganization) IsAuthTypeSupported(appType ApplicationType, authType AuthType) bool {
+// FindSupportedAuthType finds a supported auth type for application type
+func (ao ApplicationOrganization) FindSupportedAuthType(appType ApplicationType, authType AuthType) *SupportedAuthType {
 	for _, sat := range ao.SupportedAuthTypes {
 		if sat.AppTypeID == appType.ID {
 			for _, at := range sat.SupportedAuthTypes {
 				if at.AuthTypeID == authType.ID {
-					return true
+					at.AuthType = authType
+					return &at
 				}
 			}
 		}
 	}
-	return false
+	return nil
 }
 
 // IdentityProviderSetting represents identity provider setting for an organization in an application
@@ -371,8 +371,10 @@ func (ao ApplicationOrganization) IsAuthTypeSupported(appType ApplicationType, a
 type IdentityProviderSetting struct {
 	IdentityProviderID string `bson:"identity_provider_id"`
 
-	UserIdentifierField string            `bson:"user_identifier_field"`
-	ExternalIDFields    map[string]string `bson:"external_id_fields"`
+	UserIdentifierField  string            `bson:"user_identifier_field"`
+	ExternalIDFields     map[string]string `bson:"external_id_fields"`
+	SensitiveExternalIDs []string          `bson:"sensitive_external_ids"`
+	IsEmailVerified      bool              `bson:"is_email_verified"`
 
 	FirstNameField  string `bson:"first_name_field"`
 	MiddleNameField string `bson:"middle_name_field"`
@@ -392,11 +394,19 @@ type IdentityProviderSetting struct {
 
 // LoginsSessionsSetting represents logins sessions setting for an organization in an application
 type LoginsSessionsSetting struct {
-	MaxConcurrentSessions int `bson:"max_concurrent_sessions"`
+	MaxConcurrentSessions       int                         `bson:"max_concurrent_sessions"`
+	AccessTokenExpirationPolicy AccessTokenExpirationPolicy `bson:"access_token_expiration_policy"`
 
 	InactivityExpirePolicy InactivityExpirePolicy `bson:"inactivity_expire_policy"`
 	TSLExpirePolicy        TSLExpirePolicy        `bson:"time_since_login_expire_policy"`
 	YearlyExpirePolicy     YearlyExpirePolicy     `bson:"yearly_expire_policy"`
+}
+
+// AccessTokenExpirationPolicy represents the expiration policy for access tokens
+type AccessTokenExpirationPolicy struct {
+	DefaultExp int `bson:"default_exp"` //Default access token expiration time in minutes
+	MinExp     int `bson:"min_exp"`     //Minimum access token expiration time in minutes
+	MaxExp     int `bson:"max_exp"`     //Maximum access token expiration time in minutes
 }
 
 // InactivityExpirePolicy represents expires policy based on inactivity
@@ -452,7 +462,8 @@ type AuthTypesSupport struct {
 // SupportedAuthType represents a supported auth type
 type SupportedAuthType struct {
 	AuthTypeID string                 `bson:"auth_type_id"`
-	Params     map[string]interface{} `bson:"params"`
+	Params     map[string]interface{} `bson:"params,omitempty"`
+	AuthType   AuthType               `bson:"-"`
 }
 
 // ApplicationConfig represents app configs

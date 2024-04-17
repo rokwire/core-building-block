@@ -1,0 +1,8 @@
+type: object
+properties:
+  default_exp:
+    type: integer
+  min_exp:
+    type: integer
+  max_exp:
+    type: integer

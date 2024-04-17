@@ -15,6 +15,7 @@
 package model
 
 import (
+	"core-building-block/utils"
 	"fmt"
 	"time"
 
@@ -29,11 +30,15 @@ const (
 	TypeConfigData logutils.MessageDataType = "config data"
 	// TypeEnvConfigData env configs type
 	TypeEnvConfigData logutils.MessageDataType = "env config data"
+	// TypeAuthConfigData auth configs type
+	TypeAuthConfigData logutils.MessageDataType = "auth config data"
 	//TypeOrganizationConfig ...
 	TypeOrganizationConfig logutils.MessageDataType = "org config"
 
 	// ConfigTypeEnv is the Config type for EnvConfigData
 	ConfigTypeEnv string = "env"
+	// ConfigTypeAuth is the Config type for AuthConfigData
+	ConfigTypeAuth string = "auth"
 )
 
 // Config contains generic configs
@@ -54,17 +59,25 @@ type EnvConfigData struct {
 	CORSAllowedHeaders []string `json:"cors_allowed_headers" bson:"cors_allowed_headers"`
 }
 
+// AuthConfigData contains auth configs for this service
+type AuthConfigData struct {
+	EmailShouldVerify   *bool `json:"email_should_verify" bson:"email_should_verify"`
+	EmailVerifyWaitTime *int  `json:"email_verify_wait_time" bson:"email_verify_wait_time"`
+	EmailVerifyExpiry   *int  `json:"email_verify_expiry" bson:"email_verify_expiry"`
+}
+
 // GetConfigData returns a pointer to the given config's Data as the given type T
 func GetConfigData[T ConfigData](c Config) (*T, error) {
-	if data, ok := c.Data.(T); ok {
-		return &data, nil
+	data, err := utils.JSONConvert[T, interface{}](c.Data)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionParse, TypeConfigData, &logutils.FieldArgs{"type": c.Type}, err)
 	}
-	return nil, errors.ErrorData(logutils.StatusInvalid, TypeConfigData, &logutils.FieldArgs{"type": c.Type})
+	return data, err
 }
 
 // ConfigData represents any set of data that may be stored in a config
 type ConfigData interface {
-	EnvConfigData | map[string]interface{}
+	EnvConfigData | AuthConfigData | map[string]interface{}
 }
 
 // OrganizationConfig represents configuration for an organization

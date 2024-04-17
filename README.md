@@ -47,6 +47,7 @@ ROKWIRE_CORE_SMTP_PASSWORD | < string > | no | Password for the user on the SMTP
 ROKWIRE_CORE_SMTP_EMAIL_FROM | < string > | no | "From" email address to be used when sending emails. Email verification will not work without this variable.
 ROKWIRE_CORE_AUTH_PRIV_KEY | < string > | yes | PEM encoded private key for auth service keypair. Not required if ROKWIRE_CORE_AUTH_PRIV_KEY_PATH is set.
 ROKWIRE_CORE_AUTH_PRIV_KEY_PATH | < string > | yes | Path to file containing PEM encoded private key for auth service keypair. Not required if ROKWIRE_CORE_AUTH_PRIV_KEY is set.
+ROKWIRE_CORE_DEFAULT_TOKEN_EXP | < int > | no | Default duration of access tokens to be allowed in minutes. Defaults to 30.
 ROKWIRE_CORE_MIN_TOKEN_EXP | < int > | no | Minimum duration of access tokens to be allowed in minutes. Defaults to 5.
 ROKWIRE_CORE_MAX_TOKEN_EXP | < int > | no | Maximum duration of access tokens to be allowed in minutes. Defaults to 60.
 ROKWIRE_CORE_MIGRATE_PROFILES | < bool > | no | Boolean value indicating whether profiles should be migrated from the Profile Building Block. Defaults to false.
@@ -61,6 +62,7 @@ ROKWIRE_CORE_BASE_SERVER_URL | < string > | false | URL of base server which ove
 ROKWIRE_CORE_PRODUCTION_SERVER_URL | < string > | false | URL of base server which overrides the production server listed in the docs.
 ROKWIRE_CORE_TEST_SERVER_URL | < string > | false | URL of base server which overrides the test server listed in the docs.
 ROKWIRE_CORE_DEVELOPMENT_SERVER_URL | < string > | false | URL of base server which overrides the development server listed in the docs.
+ROKWIRE_CORE_EXPOSE_DOCS | < bool > | false | Whether docs should be exposed by API. Defaults to false.
 USER_AGGREGATE_MINIMUM | < int > | false | value retuned if a service has limited permission and count is less than this value.
 
 ### Run Application

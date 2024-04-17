@@ -51,6 +51,8 @@ type Adapter struct {
 	testServerURL        string
 	developmentServerURL string
 
+	exposeDocs bool
+
 	cachedYamlDoc []byte
 
 	openAPIRouter routers.Router
@@ -93,7 +95,9 @@ func (we Adapter) Start() {
 
 	//ui
 	subRouter.HandleFunc("/ui/credential/reset", we.serveResetCredential)                                                     //Public
-	subRouter.HandleFunc("/ui/credential/verify", we.uiWrapFunc(we.servicesApisHandler.verifyCredential, nil)).Methods("GET") //Public (validates code)
+	subRouter.HandleFunc("/ui/webauthn-test", we.serveWebAuthnTest)                                                           //Public
+	subRouter.HandleFunc("/ui/identifier/verify", we.uiWrapFunc(we.servicesApisHandler.verifyIdentifier, nil)).Methods("GET") //Public (validates code)
+	// subRouter.HandleFunc("/ui/webauthn-test", we.serveWebAuthnTest)                                                           //Public
 
 	///default ///
 	subRouter.HandleFunc("/version", we.wrapFunc(we.defaultApisHandler.getVersion, nil)).Methods("GET")                                      //Public
@@ -107,13 +111,16 @@ func (we Adapter) Start() {
 	servicesSubRouter.HandleFunc("/auth/login-url", we.wrapFunc(we.servicesApisHandler.loginURL, nil)).Methods("POST") //Requires API key in request
 	servicesSubRouter.HandleFunc("/auth/refresh", we.wrapFunc(we.servicesApisHandler.refresh, nil)).Methods("POST")    //Requires API key in request
 	servicesSubRouter.HandleFunc("/auth/logout", we.wrapFunc(we.servicesApisHandler.logout, we.auth.services.User)).Methods("POST")
-	servicesSubRouter.HandleFunc("/auth/account/exists", we.wrapFunc(we.servicesApisHandler.accountExists, nil)).Methods("POST")  //Requires API key in request
-	servicesSubRouter.HandleFunc("/auth/account/can-sign-in", we.wrapFunc(we.servicesApisHandler.canSignIn, nil)).Methods("POST") //Requires API key in request
-	servicesSubRouter.HandleFunc("/auth/account/can-link", we.wrapFunc(we.servicesApisHandler.canLink, nil)).Methods("POST")      //Requires API key in request
+	servicesSubRouter.HandleFunc("/auth/account/exists", we.wrapFunc(we.servicesApisHandler.accountExists, nil)).Methods("POST")          //Requires API key in request
+	servicesSubRouter.HandleFunc("/auth/account/can-sign-in", we.wrapFunc(we.servicesApisHandler.canSignIn, nil)).Methods("POST")         //Requires API key in request
+	servicesSubRouter.HandleFunc("/auth/account/can-link", we.wrapFunc(we.servicesApisHandler.canLink, nil)).Methods("POST")              //Requires API key in request
+	servicesSubRouter.HandleFunc("/auth/account/sign-in-options", we.wrapFunc(we.servicesApisHandler.signInOptions, nil)).Methods("POST") //Requires API key in request
+	servicesSubRouter.HandleFunc("/auth/account/identifier/link", we.wrapFunc(we.servicesApisHandler.linkAccountIdentifier, we.auth.services.Authenticated)).Methods("POST")
+	servicesSubRouter.HandleFunc("/auth/account/identifier/link", we.wrapFunc(we.servicesApisHandler.unlinkAccountIdentifier, we.auth.services.Authenticated)).Methods("DELETE")
 	servicesSubRouter.HandleFunc("/auth/account/auth-type/link", we.wrapFunc(we.servicesApisHandler.linkAccountAuthType, we.auth.services.Authenticated)).Methods("POST")
 	servicesSubRouter.HandleFunc("/auth/account/auth-type/link", we.wrapFunc(we.servicesApisHandler.unlinkAccountAuthType, we.auth.services.Authenticated)).Methods("DELETE")
-	servicesSubRouter.HandleFunc("/auth/credential/verify", we.wrapFunc(we.servicesApisHandler.verifyCredential, nil)).Methods("GET")                   //Public (validates code)
-	servicesSubRouter.HandleFunc("/auth/credential/send-verify", we.wrapFunc(we.servicesApisHandler.sendVerifyCredential, nil)).Methods("POST")         //Requires API key in request
+	servicesSubRouter.HandleFunc("/auth/identifier/verify", we.wrapFunc(we.servicesApisHandler.verifyIdentifier, nil)).Methods("GET")                   //Public (validates code)
+	servicesSubRouter.HandleFunc("/auth/identifier/send-verify", we.wrapFunc(we.servicesApisHandler.sendVerifyIdentifier, nil)).Methods("POST")         //Requires API key in request
 	servicesSubRouter.HandleFunc("/auth/credential/forgot/initiate", we.wrapFunc(we.servicesApisHandler.forgotCredentialInitiate, nil)).Methods("POST") //Requires API key in request
 	servicesSubRouter.HandleFunc("/auth/credential/forgot/complete", we.wrapFunc(we.servicesApisHandler.forgotCredentialComplete, nil)).Methods("POST") //Public
 	servicesSubRouter.HandleFunc("/auth/credential/update", we.wrapFunc(we.servicesApisHandler.updateCredential, we.auth.services.Authenticated)).Methods("POST")
@@ -134,6 +141,7 @@ func (we Adapter) Start() {
 	servicesSubRouter.HandleFunc("/account/profile", we.wrapFunc(we.servicesApisHandler.getProfile, we.auth.services.User)).Methods("GET")
 	servicesSubRouter.HandleFunc("/account/profile", we.wrapFunc(we.servicesApisHandler.updateProfile, we.auth.services.User)).Methods("PUT")
 	servicesSubRouter.HandleFunc("/account/privacy", we.wrapFunc(we.servicesApisHandler.updatePrivacy, we.auth.services.User)).Methods("PUT")
+	servicesSubRouter.HandleFunc("/account/secrets", we.wrapFunc(we.servicesApisHandler.updateAccountSecrets, we.auth.services.User)).Methods("PUT")
 	servicesSubRouter.HandleFunc("/account/system-configs", we.wrapFunc(we.servicesApisHandler.getAccountSystemConfigs, we.auth.services.Standard)).Methods("GET")
 	servicesSubRouter.HandleFunc("/account/username", we.wrapFunc(we.servicesApisHandler.updateAccountUsername, we.auth.services.User)).Methods("PUT")
 	servicesSubRouter.HandleFunc("/account/follow", we.wrapFunc(we.servicesApisHandler.addFollow, we.auth.services.User)).Methods("POST")
@@ -142,8 +150,9 @@ func (we Adapter) Start() {
 	servicesSubRouter.HandleFunc("/app-configs", we.wrapFunc(we.servicesApisHandler.getApplicationConfigs, nil)).Methods("POST") //Requires API key in request
 	servicesSubRouter.HandleFunc("/app-configs/organization", we.wrapFunc(we.servicesApisHandler.getApplicationOrgConfigs, we.auth.services.Standard)).Methods("POST")
 
-	// DEPRECATED
-	servicesSubRouter.HandleFunc("/application/configs", we.wrapFunc(we.servicesApisHandler.getApplicationConfigs, nil)).Methods("POST") //Requires API key in request
+	// Deprecated:
+	servicesSubRouter.HandleFunc("/auth/credential/send-verify", we.wrapFunc(we.servicesApisHandler.sendVerifyIdentifier, nil)).Methods("POST") //Requires API key in request
+	servicesSubRouter.HandleFunc("/application/configs", we.wrapFunc(we.servicesApisHandler.getApplicationConfigs, nil)).Methods("POST")        //Requires API key in request
 	servicesSubRouter.HandleFunc("/application/organization/configs", we.wrapFunc(we.servicesApisHandler.getApplicationOrgConfigs, we.auth.services.Standard)).Methods("POST")
 	///
 
@@ -314,7 +323,17 @@ func (we Adapter) serveResetCredential(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "./driver/web/ui/reset-credential.html")
 }
 
+func (we Adapter) serveWebAuthnTest(w http.ResponseWriter, r *http.Request) {
+	w.Header().Add("access-control-allow-origin", "*")
+	http.ServeFile(w, r, "./driver/web/ui/webauthn-test.html")
+}
+
 func (we Adapter) serveDoc(w http.ResponseWriter, r *http.Request) {
+	if !we.exposeDocs {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
 	w.Header().Add("access-control-allow-origin", "*")
 
 	if we.cachedYamlDoc != nil {
@@ -391,8 +410,6 @@ func (we Adapter) wrapFunc(handler handlerFunc, authorization tokenauth.Handler)
 	return func(w http.ResponseWriter, req *http.Request) {
 		logObj := we.logger.NewRequestLog(req)
 
-		logObj.RequestReceived()
-
 		var err error
 
 		//1. validate request
@@ -411,14 +428,21 @@ func (we Adapter) wrapFunc(handler handlerFunc, authorization tokenauth.Handler)
 		if authorization != nil {
 			responseStatus, claims, err := authorization.Check(req)
 			if err != nil {
+				logObj.SetContext("claims_verified", false)
+			}
+			if claims != nil {
+				logObj.SetContext("account_id", claims.Subject)
+			}
+			logObj.RequestReceived()
+			if err != nil {
 				response = logObj.HTTPResponseErrorAction(logutils.ActionValidate, logutils.TypeRequest, nil, err, responseStatus, true)
 				we.completeResponse(w, response, logObj)
 				return
 			}
 
-			logObj.SetContext("account_id", claims.Subject)
 			response = handler(logObj, req, claims)
 		} else {
+			logObj.RequestReceived()
 			response = handler(logObj, req, nil)
 		}
 
@@ -540,8 +564,8 @@ func (we Adapter) completeResponse(w http.ResponseWriter, response logs.HTTPResp
 }
 
 // NewWebAdapter creates new WebAdapter instance
-func NewWebAdapter(env string, serviceRegManager *authservice.ServiceRegManager, port string, coreAPIs *core.APIs, host string, corsAllowedOrigins []string,
-	corsAllowedHeaders []string, baseServerURL string, prodServerURL string, testServerURL string, devServerURL string, logger *logs.Logger) Adapter {
+func NewWebAdapter(env string, serviceRegManager *authservice.ServiceRegManager, port string, coreAPIs *core.APIs, host string, exposeDocs bool,
+	corsAllowedOrigins []string, corsAllowedHeaders []string, baseServerURL string, prodServerURL string, testServerURL string, devServerURL string, logger *logs.Logger) Adapter {
 	//openAPI doc
 	loader := &openapi3.Loader{Context: context.Background(), IsExternalRefsAllowed: true}
 	// doc, err := loader.LoadFromFile("driver/web/docs/gen/def.yaml")
@@ -562,13 +586,13 @@ func NewWebAdapter(env string, serviceRegManager *authservice.ServiceRegManager,
 		logger.Fatalf("error on openapi3 validate - %s", err.Error())
 	}
 
-	//Ignore servers. Validating reqeusts against the documented servers can cause issues when routing traffic through proxies/load-balancers.
+	//Ignore servers. Validating requests against the documented servers can cause issues when routing traffic through proxies/load-balancers.
 	doc.Servers = nil
 
 	//To correctly route traffic to base path, we must add to all paths since servers are ignored
-	paths := make(openapi3.Paths, len(doc.Paths))
-	for path, obj := range doc.Paths {
-		paths["/core"+path] = obj
+	paths := openapi3.NewPaths()
+	for path, obj := range doc.Paths.Map() {
+		paths.Set("/core"+path, obj)
 	}
 	doc.Paths = paths
 
@@ -592,7 +616,7 @@ func NewWebAdapter(env string, serviceRegManager *authservice.ServiceRegManager,
 	return Adapter{env: env, port: port, productionServerURL: prodServerURL, testServerURL: testServerURL, developmentServerURL: devServerURL, cachedYamlDoc: yamlDoc,
 		openAPIRouter: openAPIRouter, host: host, auth: auth, logger: logger, defaultApisHandler: defaultApisHandler, servicesApisHandler: servicesApisHandler, adminApisHandler: adminApisHandler,
 		encApisHandler: encApisHandler, bbsApisHandler: bbsApisHandler, tpsApisHandler: tpsApisHandler, systemApisHandler: systemApisHandler, coreAPIs: coreAPIs,
-		corsAllowedOrigins: corsAllowedOrigins, corsAllowedHeaders: corsAllowedHeaders}
+		corsAllowedOrigins: corsAllowedOrigins, corsAllowedHeaders: corsAllowedHeaders, exposeDocs: exposeDocs}
 }
 
 // AppListener implements core.ApplicationListener interface

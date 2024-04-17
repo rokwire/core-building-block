@@ -23,7 +23,7 @@ import (
 // PartialApp
 func partialAppToDef(item model.Application) Def.PartialApp {
 
-	return Def.PartialApp{Id: &item.ID, Name: item.Name, Code: item.Code}
+	return Def.PartialApp{Id: &item.ID, Name: item.Name}
 }
 
 func partialAppsToDef(item []model.Application) []Def.PartialApp {
@@ -38,7 +38,7 @@ func partialAppsToDef(item []model.Application) []Def.PartialApp {
 func applicationToDef(item model.Application) Def.Application {
 	types := applicationTypeListToDef(item.Types)
 
-	return Def.Application{Id: &item.ID, Name: item.Name, MultiTenant: item.MultiTenant, Code: item.Code,
+	return Def.Application{Id: &item.ID, Name: item.Name, MultiTenant: item.MultiTenant,
 		Admin: item.Admin, Types: &types}
 }
 
@@ -205,6 +205,25 @@ func loginSessionSettingsFromDef(item *Def.LoginSessionSettings) *model.LoginsSe
 	if item.MaxConcurrentSessions != nil {
 		maxConcurrentSessions = *item.MaxConcurrentSessions
 	}
+	accessTokenExpPolicy := model.AccessTokenExpirationPolicy{}
+	if item.AccessTokenExpirationPolicy != nil {
+		defaultExpVal := 0
+		defaultExp := item.AccessTokenExpirationPolicy.DefaultExp
+		if defaultExp != nil {
+			defaultExpVal = *defaultExp
+		}
+		maxExpVal := 0
+		maxExp := item.AccessTokenExpirationPolicy.MaxExp
+		if maxExp != nil {
+			maxExpVal = *maxExp
+		}
+		minExpVal := 0
+		minExp := item.AccessTokenExpirationPolicy.MinExp
+		if minExp != nil {
+			minExpVal = *minExp
+		}
+		accessTokenExpPolicy = model.AccessTokenExpirationPolicy{DefaultExp: defaultExpVal, MinExp: minExpVal, MaxExp: maxExpVal}
+	}
 	inactivityExpirePolicy := model.InactivityExpirePolicy{}
 	if item.InactivityExpirePolicy != nil {
 		inactivityExpirePolicy = model.InactivityExpirePolicy{Active: item.InactivityExpirePolicy.Active, InactivityPeriod: item.InactivityExpirePolicy.InactivityPeriod}
@@ -219,19 +238,30 @@ func loginSessionSettingsFromDef(item *Def.LoginSessionSettings) *model.LoginsSe
 			Hour: item.YearlyExpirePolicy.Hour, Min: item.YearlyExpirePolicy.Min}
 	}
 
-	return &model.LoginsSessionsSetting{MaxConcurrentSessions: maxConcurrentSessions, InactivityExpirePolicy: inactivityExpirePolicy,
-		TSLExpirePolicy: tslExpirePolicy, YearlyExpirePolicy: yearlyExpirePolicy}
+	return &model.LoginsSessionsSetting{
+		MaxConcurrentSessions:       maxConcurrentSessions,
+		AccessTokenExpirationPolicy: accessTokenExpPolicy,
+		InactivityExpirePolicy:      inactivityExpirePolicy,
+		TSLExpirePolicy:             tslExpirePolicy,
+		YearlyExpirePolicy:          yearlyExpirePolicy,
+	}
 }
 
 func loginSessionSettingsToDef(item model.LoginsSessionsSetting) Def.LoginSessionSettings {
 	inactivityExpirePolicy := Def.InactiveExpirePolicy{Active: item.InactivityExpirePolicy.Active, InactivityPeriod: item.InactivityExpirePolicy.InactivityPeriod}
+	accessTokenExpPolicy := Def.AccessTokenExpirationPolicy{DefaultExp: &item.AccessTokenExpirationPolicy.DefaultExp, MinExp: &item.AccessTokenExpirationPolicy.MinExp, MaxExp: &item.AccessTokenExpirationPolicy.MaxExp}
 	tslExpirePolicy := Def.TSLExpirePolicy{Active: item.TSLExpirePolicy.Active, TimeSinceLoginPeriod: item.TSLExpirePolicy.TimeSinceLoginPeriod}
 	yearlyExpirePolicy := Def.YearlyExpirePolicy{Active: item.YearlyExpirePolicy.Active, Day: item.YearlyExpirePolicy.Day, Month: item.YearlyExpirePolicy.Month,
 		Hour: item.YearlyExpirePolicy.Hour, Min: item.YearlyExpirePolicy.Min}
 
 	maxConcurrentSessions := item.MaxConcurrentSessions
-	return Def.LoginSessionSettings{MaxConcurrentSessions: &maxConcurrentSessions, InactivityExpirePolicy: &inactivityExpirePolicy,
-		TimeSinceLoginExpirePolicy: &tslExpirePolicy, YearlyExpirePolicy: &yearlyExpirePolicy}
+	return Def.LoginSessionSettings{
+		MaxConcurrentSessions:       &maxConcurrentSessions,
+		AccessTokenExpirationPolicy: &accessTokenExpPolicy,
+		InactivityExpirePolicy:      &inactivityExpirePolicy,
+		TimeSinceLoginExpirePolicy:  &tslExpirePolicy,
+		YearlyExpirePolicy:          &yearlyExpirePolicy,
+	}
 }
 
 func supportedAuthTypesFromDef(items *[]Def.SupportedAuthTypes) []model.AuthTypesSupport {
@@ -259,8 +289,12 @@ func supportedAuthTypeFromDef(item *Def.SupportedAuthTypes) *model.AuthTypesSupp
 	supportedAuthTypes := []model.SupportedAuthType{}
 	if item.SupportedAuthTypes != nil {
 		for _, authType := range *item.SupportedAuthTypes {
-			if authType.AuthTypeId != nil && authType.Params != nil {
-				supportedAuthTypes = append(supportedAuthTypes, model.SupportedAuthType{AuthTypeID: *authType.AuthTypeId, Params: *authType.Params})
+			var params map[string]interface{}
+			if authType.Params != nil {
+				params = *authType.Params
+			}
+			if authType.AuthTypeId != nil {
+				supportedAuthTypes = append(supportedAuthTypes, model.SupportedAuthType{AuthTypeID: *authType.AuthTypeId, Params: params})
 			}
 		}
 	}
@@ -353,6 +387,14 @@ func identityProviderSettingFromDef(item *Def.IdentityProviderSettings) *model.I
 	if item.ExternalIdFields != nil {
 		externalIDFields = *item.ExternalIdFields
 	}
+	var sensitiveExternalIDs []string
+	if item.SensitiveExternalIds != nil {
+		sensitiveExternalIDs = *item.SensitiveExternalIds
+	}
+	var isEmailVerified bool
+	if item.IsEmailVerified != nil {
+		isEmailVerified = *item.IsEmailVerified
+	}
 	var roles map[string]string
 	if item.Roles != nil {
 		roles = *item.Roles
@@ -371,9 +413,10 @@ func identityProviderSettingFromDef(item *Def.IdentityProviderSettings) *model.I
 	}
 
 	return &model.IdentityProviderSetting{IdentityProviderID: item.IdentityProviderId, UserIdentifierField: item.UserIdentifierField,
-		ExternalIDFields: externalIDFields, FirstNameField: firstNameField, MiddleNameField: middleNameField,
-		LastNameField: lastNameField, EmailField: emailField, RolesField: rolesField, GroupsField: groupsField,
-		UserSpecificFields: userSpecificFields, Roles: roles, Groups: groups, AlwaysSyncProfile: alwaysSyncProfile, IdentityBBBaseURL: identityBBBaseURL}
+		ExternalIDFields: externalIDFields, SensitiveExternalIDs: sensitiveExternalIDs, IsEmailVerified: isEmailVerified,
+		FirstNameField: firstNameField, MiddleNameField: middleNameField, LastNameField: lastNameField, EmailField: emailField, RolesField: rolesField,
+		GroupsField: groupsField, UserSpecificFields: userSpecificFields, Roles: roles, Groups: groups, AlwaysSyncProfile: alwaysSyncProfile,
+		IdentityBBBaseURL: identityBBBaseURL}
 }
 
 func identityProviderSettingsToDef(items []model.IdentityProviderSetting) []Def.IdentityProviderSettings {
@@ -396,6 +439,8 @@ func identityProviderSettingToDef(item *model.IdentityProviderSetting) *Def.Iden
 	}
 
 	externalIDs := item.ExternalIDFields
+	sensitiveExternalIDs := item.SensitiveExternalIDs
+	isEmailVerified := item.IsEmailVerified
 	roles := item.Roles
 	groups := item.Groups
 
@@ -409,9 +454,10 @@ func identityProviderSettingToDef(item *model.IdentityProviderSetting) *Def.Iden
 	alwaysSyncProfile := item.AlwaysSyncProfile
 	identityBBBaseURL := item.IdentityBBBaseURL
 	return &Def.IdentityProviderSettings{IdentityProviderId: item.IdentityProviderID, UserIdentifierField: item.UserIdentifierField,
-		ExternalIdFields: &externalIDs, FirstNameField: &firstNameField, MiddleNameField: &middleNameField,
-		LastNameField: &lastNameField, EmailField: &emailField, RolesField: &rolesField, GroupsField: &groupsField,
-		UserSpecificFields: &userSpecificFields, Roles: &roles, Groups: &groups, AlwaysSyncProfile: &alwaysSyncProfile, IdentityBbBaseUrl: &identityBBBaseURL}
+		ExternalIdFields: &externalIDs, SensitiveExternalIds: &sensitiveExternalIDs, IsEmailVerified: &isEmailVerified,
+		FirstNameField: &firstNameField, MiddleNameField: &middleNameField, LastNameField: &lastNameField, EmailField: &emailField, RolesField: &rolesField,
+		GroupsField: &groupsField, UserSpecificFields: &userSpecificFields, Roles: &roles, Groups: &groups, AlwaysSyncProfile: &alwaysSyncProfile,
+		IdentityBbBaseUrl: &identityBBBaseURL}
 }
 
 // AppOrgRole

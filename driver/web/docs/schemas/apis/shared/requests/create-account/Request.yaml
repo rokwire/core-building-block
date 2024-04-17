@@ -6,10 +6,10 @@ properties:
   auth_type:
     type: string
     enum:
-      - email
+      - password
       - illinois_oidc
   identifier:
-    type: string
+    $ref: "../Identifiers.yaml"
   permissions:
     type: array
     items:
@@ -30,6 +30,3 @@ properties:
     $ref:  "../../../../user/ProfileNullable.yaml"
   privacy:
     $ref:  "../../../../user/PrivacyNullable.yaml"
-  username:
-    type: string
-    nullable: true

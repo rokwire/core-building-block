@@ -20,10 +20,10 @@ import (
 	"core-building-block/core/model"
 	"core-building-block/driven/emailer"
 	"core-building-block/driven/identitybb"
+	"core-building-block/driven/phoneverifier"
 	"core-building-block/driven/profilebb"
 	"core-building-block/driven/storage"
 	"core-building-block/driver/web"
-	"core-building-block/utils"
 	"os"
 	"strconv"
 	"strings"
@@ -64,11 +64,6 @@ func main() {
 
 	logger.Infof("Version: %s", Version)
 
-	err := utils.SetRandomSeed()
-	if err != nil {
-		logger.Error(err.Error())
-	}
-
 	env := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_ENVIRONMENT", true, false) //local, dev, staging, prod
 	port := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_PORT", false, false)
 	//Default port of 80
@@ -88,7 +83,7 @@ func main() {
 	mongoDBName := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_MONGO_DATABASE", true, false)
 	mongoTimeout := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_MONGO_TIMEOUT", false, false)
 	storageAdapter := storage.NewStorageAdapter(host, mongoDBAuth, mongoDBName, mongoTimeout, logger)
-	err = storageAdapter.Start()
+	err := storageAdapter.Start()
 	if err != nil {
 		logger.Fatalf("Cannot start the mongoDB adapter: %v", err)
 	}
@@ -97,6 +92,11 @@ func main() {
 	twilioAccountSID := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_TWILIO_ACCOUNT_SID", false, true)
 	twilioToken := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_TWILIO_TOKEN", false, true)
 	twilioServiceSID := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_TWILIO_SERVICE_SID", false, true)
+
+	twilioPhoneVerifier, err := phoneverifier.NewTwilioAdapter(twilioAccountSID, twilioToken, twilioServiceSID)
+	if err != nil {
+		logger.Warnf("Cannot start the twilio phone verifier: %v", err)
+	}
 
 	smtpHost := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SMTP_HOST", false, false)
 	smtpPort := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_SMTP_PORT", false, false)
@@ -111,6 +111,18 @@ func main() {
 		logger.Infof("Error parsing ROKWIRE_CORE_VERIFY_EMAIL, applying defaults: %v", err)
 		verifyEmail = true
 	}
+	verifyWaitTimeRaw := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_VERIFY_WAIT_TIME", false, false)
+	verifyWaitTime, err := strconv.Atoi(verifyWaitTimeRaw)
+	if err != nil {
+		logger.Infof("Error parsing ROKWIRE_CORE_VERIFY_WAIT_TIME, applying defaults: %v", err)
+		verifyWaitTime = 30 // minutes
+	}
+	verifyExpiryRaw := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_VERIFY_EXPIRY", false, false)
+	verifyExpiry, err := strconv.Atoi(verifyExpiryRaw)
+	if err != nil {
+		logger.Infof("Error parsing ROKWIRE_CORE_VERIFY_EXPIRY, applying defaults: %v", err)
+		verifyExpiry = 24 // hours
+	}
 
 	emailer := emailer.NewEmailerAdapter(smtpHost, smtpPortNum, smtpUser, smtpPassword, smtpFrom)
 
@@ -120,34 +132,31 @@ func main() {
 		logger.Infof("Error parsing legacy signature support, applying defaults: %v", err)
 		supportLegacySigs = true
 	}
-
-	var authPrivKeyPem string
-	authPrivKeyPemString := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_PRIV_KEY", false, true)
-	if authPrivKeyPemString != "" {
-		//make it to be a single line - AWS environemnt variable issue
-		authPrivKeyPem = strings.ReplaceAll(authPrivKeyPemString, `\n`, "\n")
-	} else {
-		authPrivateKeyPath := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_AUTH_PRIV_KEY_PATH", true, false)
-		authPrivKeyPemBytes, err := os.ReadFile(authPrivateKeyPath)
-		if err != nil {
-			logger.Fatalf("Could not find auth priv key file: %v", err)
-		}
-
-		authPrivKeyPem = string(authPrivKeyPemBytes)
+	currentAuthPrivKey := parsePrivKeyFromEnvVar("ROKWIRE_CORE_AUTH_PRIV_KEY", envLoader, supportLegacySigs, logger)
+	if currentAuthPrivKey == nil {
+		logger.Fatalf("Cannot parse the current private key: %v", err)
 	}
 
-	alg := keys.PS256
-	if supportLegacySigs {
-		alg = keys.RS256
-	}
-	authPrivKey, err := keys.NewPrivKey(alg, authPrivKeyPem)
+	oldSupportLegacySigsStr := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_OLD_SUPPORT_LEGACY_SIGNATURES", false, false)
+	oldSupportLegacySigs, err := strconv.ParseBool(oldSupportLegacySigsStr)
 	if err != nil {
-		logger.Fatalf("Failed to parse auth priv key: %v", err)
+		logger.Infof("Error parsing old legacy signature support, applying defaults: %v", err)
+		oldSupportLegacySigs = true
+	}
+	oldAuthPrivKey := parsePrivKeyFromEnvVar("ROKWIRE_CORE_OLD_AUTH_PRIV_KEY", envLoader, oldSupportLegacySigs, logger)
+
+	defaultTokenExpStr := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_DEFAULT_TOKEN_EXP", false, false)
+	var defaultTokenExp *int
+	defaultTokenExpVal, err := strconv.Atoi(defaultTokenExpStr)
+	if err == nil {
+		defaultTokenExp = &defaultTokenExpVal
+	} else {
+		logger.Infof("Error parsing default token exp, applying defaults: %v", err)
 	}
 
 	minTokenExpStr := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_MIN_TOKEN_EXP", false, false)
-	var minTokenExp *int64
-	minTokenExpVal, err := strconv.ParseInt(minTokenExpStr, 10, 64)
+	var minTokenExp *int
+	minTokenExpVal, err := strconv.Atoi(minTokenExpStr)
 	if err == nil {
 		minTokenExp = &minTokenExpVal
 	} else {
@@ -155,8 +164,8 @@ func main() {
 	}
 
 	maxTokenExpStr := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_MAX_TOKEN_EXP", false, false)
-	var maxTokenExp *int64
-	maxTokenExpVal, err := strconv.ParseInt(maxTokenExpStr, 10, 64)
+	var maxTokenExp *int
+	maxTokenExpVal, err := strconv.Atoi(maxTokenExpStr)
 	if err == nil {
 		maxTokenExp = &maxTokenExpVal
 	} else {
@@ -180,8 +189,8 @@ func main() {
 		FirstParty:  true,
 	}
 
-	authImpl, err := auth.NewAuth(serviceID, host, authPrivKey, authService, storageAdapter, emailer, minTokenExp, maxTokenExp, supportLegacySigs,
-		twilioAccountSID, twilioToken, twilioServiceSID, profileBBAdapter, smtpHost, smtpPortNum, smtpUser, smtpPassword, smtpFrom, logger, Version)
+	authImpl, err := auth.NewAuth(serviceID, host, currentAuthPrivKey, oldAuthPrivKey, authService, storageAdapter, emailer, twilioPhoneVerifier, profileBBAdapter,
+		defaultTokenExp, minTokenExp, maxTokenExp, supportLegacySigs, Version, logger)
 	if err != nil {
 		logger.Fatalf("Error initializing auth: %v", err)
 	}
@@ -204,7 +213,7 @@ func main() {
 	}
 
 	//core
-	coreAPIs := core.NewCoreAPIs(env, Version, Build, serviceID, storageAdapter, authImpl, systemInitSettings, verifyEmail, logger)
+	coreAPIs := core.NewCoreAPIs(env, Version, Build, serviceID, storageAdapter, authImpl, systemInitSettings, verifyEmail, verifyWaitTime, verifyExpiry, logger)
 	coreAPIs.Start()
 
 	// read CORS parameters from stored env config
@@ -225,8 +234,44 @@ func main() {
 		corsAllowedOrigins = envData.CORSAllowedOrigins
 	}
 
+	exposeDocs := false
+	exposeDocsVar := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_EXPOSE_DOCS", false, false)
+	if strings.ToLower(exposeDocsVar) == "true" {
+		exposeDocs = true
+	}
+
 	//web adapter
-	webAdapter := web.NewWebAdapter(env, authImpl.ServiceRegManager, port, coreAPIs, host, corsAllowedOrigins,
-		corsAllowedHeaders, baseServerURL, prodServerURL, testServerURL, devServerURL, logger)
+	webAdapter := web.NewWebAdapter(env, authImpl.ServiceRegManager, port, coreAPIs, host, exposeDocs,
+		corsAllowedOrigins, corsAllowedHeaders, baseServerURL, prodServerURL, testServerURL, devServerURL, logger)
 	webAdapter.Start()
+}
+
+func parsePrivKeyFromEnvVar(envVarName string, envLoader envloader.EnvLoader, supportLegacySigs bool, logger *logs.Logger) *keys.PrivKey {
+	var authPrivKeyPem string
+	authPrivKeyPemString := envLoader.GetAndLogEnvVar(envVarName, false, true)
+	if authPrivKeyPemString != "" {
+		//make it to be a single line - AWS environemnt variable issue
+		authPrivKeyPem = strings.ReplaceAll(authPrivKeyPemString, `\n`, "\n")
+	} else {
+		authPrivateKeyPath := envLoader.GetAndLogEnvVar(envVarName+"_PATH", false, false)
+		if authPrivateKeyPath == "" {
+			return nil
+		}
+
+		authPrivKeyPemBytes, err := os.ReadFile(authPrivateKeyPath)
+		if err != nil {
+			logger.Fatalf("Could not find auth priv key file: %v", err)
+		}
+		authPrivKeyPem = string(authPrivKeyPemBytes)
+	}
+
+	alg := keys.PS256
+	if supportLegacySigs {
+		alg = keys.RS256
+	}
+	authPrivKey, err := keys.NewPrivKey(alg, authPrivKeyPem)
+	if err != nil {
+		logger.Fatalf("Failed to parse auth priv key: %v", err)
+	}
+	return authPrivKey
 }
