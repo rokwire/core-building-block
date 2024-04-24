@@ -18,8 +18,7 @@ import (
 	"core-building-block/core/model"
 	"core-building-block/utils"
 	"encoding/json"
-	"strconv"
-	"strings"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -61,7 +60,7 @@ func (a *codeAuthImpl) signUp(identifierImpl identifierType, accountID *string, 
 	}
 
 	// we are not linking a code credential, so use the accountID generated for the identifier
-	message, accountIdentifier, err := identifierImpl.buildIdentifier(nil, appOrg.Application.Name)
+	message, accountIdentifier, err := identifierImpl.buildIdentifier(nil, appOrg, a.requireIdentifierVerificationForSignIn())
 	if err != nil {
 		return "", nil, nil, errors.WrapErrorAction("building", "identifier", logutils.StringArgs(identifierImpl.getCode()), err)
 	}
@@ -82,6 +81,10 @@ func (a *codeAuthImpl) resetCredential(credential *model.Credential, resetCode *
 }
 
 func (a *codeAuthImpl) checkCredentials(identifierImpl identifierType, accountID *string, aats []model.AccountAuthType, creds string, params string, appOrg model.ApplicationOrganization) (string, string, error) {
+	if len(aats) == 0 {
+		return "", "", errors.ErrorData(logutils.StatusMissing, model.TypeAccountAuthType, &logutils.FieldArgs{"auth_type": a.authType})
+	}
+
 	identifierChannel, _ := identifierImpl.(authCommunicationChannel)
 	if identifierChannel == nil {
 		return "", "", errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, logutils.StringArgs(identifierImpl.getCode()))
@@ -99,11 +102,7 @@ func (a *codeAuthImpl) checkCredentials(identifierImpl identifierType, accountID
 	if identifierChannel.requiresCodeGeneration() {
 		if incomingCode == "" {
 			// generate a new code
-			incomingCode = strconv.Itoa(utils.GenerateRandomInt(1000000))
-			padLen := 6 - len(incomingCode)
-			if padLen > 0 {
-				incomingCode = strings.Repeat("0", padLen) + incomingCode
-			}
+			incomingCode = fmt.Sprintf("%06d", utils.GenerateRandomInt(generatedCodeMax))
 
 			// store generated codes in login state collection
 			state := map[string]interface{}{stateKeyCode: incomingCode}

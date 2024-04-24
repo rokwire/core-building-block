@@ -131,7 +131,7 @@ func (a *webAuthnAuthImpl) signUp(identifierImpl identifierType, accountID *stri
 		// we are linking a webauthn credential, so use the existing accountID
 		user.ID = *accountID
 	} else {
-		_, accountIdentifier, err = identifierImpl.buildIdentifier(nil, appOrg.Application.Name)
+		_, accountIdentifier, err = identifierImpl.buildIdentifier(nil, appOrg, a.requireIdentifierVerificationForSignIn())
 		if err != nil {
 			return "", nil, nil, errors.WrapErrorAction("building", "identifier", logutils.StringArgs(identifierImpl.getCode()), err)
 		}

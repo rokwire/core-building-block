@@ -89,7 +89,7 @@ func (m *emailMfaImpl) enroll(identifier string) (*model.MFAType, error) {
 }
 
 func (m *emailMfaImpl) sendCode(identifier string) (string, *time.Time, error) {
-	code := fmt.Sprintf("%06d", utils.GenerateRandomInt(mfaCodeMax))
+	code := fmt.Sprintf("%06d", utils.GenerateRandomInt(generatedCodeMax))
 	expires := time.Now().Add(time.Duration(mfaCodeExpiration) * time.Minute)
 
 	//TODO: send code to identifier, store both in DB

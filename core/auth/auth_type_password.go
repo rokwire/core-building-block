@@ -96,7 +96,7 @@ func (a *passwordAuthImpl) signUp(identifierImpl identifierType, accountID *stri
 	var accountIdentifier *model.AccountIdentifier
 	if accountID == nil {
 		// we are not linking a password credential, so use the accountID generated for the identifier
-		message, accountIdentifier, err = identifierImpl.buildIdentifier(nil, appOrg.Application.Name)
+		message, accountIdentifier, err = identifierImpl.buildIdentifier(nil, appOrg, a.requireIdentifierVerificationForSignIn())
 		if err != nil {
 			return "", nil, nil, errors.WrapErrorAction("building", "identifier", logutils.StringArgs(identifierImpl.getCode()), err)
 		}
@@ -124,7 +124,7 @@ func (a *passwordAuthImpl) signUpAdmin(identifierImpl identifierType, appOrg mod
 		credentials.Password = utils.GenerateRandomPassword(12)
 	}
 
-	_, accountIdentifier, err := identifierImpl.buildIdentifier(nil, appOrg.Application.Name)
+	_, accountIdentifier, err := identifierImpl.buildIdentifier(nil, appOrg, a.requireIdentifierVerificationForSignIn())
 	if err != nil {
 		return nil, nil, nil, errors.WrapErrorAction("building", "identifier", logutils.StringArgs(identifierImpl.getCode()), err)
 	}

@@ -86,7 +86,7 @@ const (
 
 	maxMfaAttempts    int = 5
 	mfaCodeExpiration int = 5 // minutes
-	mfaCodeMax        int = 1000000
+	generatedCodeMax  int = 1000000
 )
 
 // Auth represents the auth functionality unit
@@ -738,7 +738,7 @@ func (a *Auth) applySignIn(identifierImpl identifierType, authImpl authType, sup
 			return nil, nil, errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, &logutils.FieldArgs{"code": accountIdentifier.Code, "identifier": accountIdentifier.Identifier})
 		}
 	}
-	if identifierImpl.requireVerificationForSignIn() || authImpl.requireIdentifierVerificationForSignIn() {
+	if authImpl.requireIdentifierVerificationForSignIn() {
 		err := identifierImpl.checkVerified(accountIdentifier, appOrg.Application.Name)
 		if err != nil {
 			return nil, nil, errors.WrapErrorData(logutils.StatusInvalid, model.TypeAccountIdentifier, &logutils.FieldArgs{"verified": false}, err)
@@ -1782,7 +1782,7 @@ func (a *Auth) linkAccountAuthType(account *model.Account, supportedAuthType mod
 
 func (a *Auth) verifyAuthTypeActive(identifierImpl identifierType, accountIdentifier *model.AccountIdentifier, authImpl authType, accountAuthTypes []model.AccountAuthType, accountID string,
 	creds string, params string, appOrg model.ApplicationOrganization) (*string, *model.AccountAuthType, error) {
-	if accountIdentifier != nil && identifierImpl.requireVerificationForSignIn() {
+	if accountIdentifier != nil && authImpl.requireIdentifierVerificationForSignIn() {
 		err := identifierImpl.checkVerified(accountIdentifier, appOrg.Application.Name)
 		if err != nil {
 			return nil, nil, errors.WrapErrorData(logutils.StatusInvalid, model.TypeAccountIdentifier, &logutils.FieldArgs{"verified": false}, err)
@@ -1952,7 +1952,7 @@ func (a *Auth) linkAccountIdentifier(context storage.TransactionContext, account
 		}
 	}
 
-	message, accountIdentifier, err := identifierImpl.buildIdentifier(&account.ID, account.AppOrg.Application.Name)
+	message, accountIdentifier, err := identifierImpl.buildIdentifier(&account.ID, account.AppOrg, true)
 	if err != nil {
 		return nil, errors.WrapErrorAction("building", model.TypeAccountIdentifier, &logutils.FieldArgs{"account_id": account.ID, "identifier": identifier}, err)
 	}

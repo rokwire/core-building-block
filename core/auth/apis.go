@@ -1042,7 +1042,7 @@ func (a *Auth) SendVerifyIdentifier(appTypeIdentifier string, orgID string, apiK
 	}
 
 	if identifierChannel, ok := identifierImpl.(authCommunicationChannel); ok {
-		_, err = identifierChannel.sendVerifyIdentifier(accountIdentifier, appOrg.Application.Name)
+		_, err = identifierChannel.sendVerifyIdentifier(accountIdentifier, *appOrg, true)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionSend, "verification code", nil, err)
 		}

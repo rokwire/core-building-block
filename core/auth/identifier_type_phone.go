@@ -74,7 +74,7 @@ func (a *phoneIdentifierImpl) withIdentifier(creds string) (identifierType, erro
 	return &phoneIdentifierImpl{auth: a.auth, code: a.code, identifier: requestCreds.Phone}, nil
 }
 
-func (a *phoneIdentifierImpl) buildIdentifier(accountID *string, appName string) (string, *model.AccountIdentifier, error) {
+func (a *phoneIdentifierImpl) buildIdentifier(accountID *string, appOrg model.ApplicationOrganization, explicitVerify bool) (string, *model.AccountIdentifier, error) {
 	if a.identifier == "" {
 		return "", nil, errors.ErrorData(logutils.StatusMissing, "phone identifier", nil)
 	}
@@ -89,7 +89,7 @@ func (a *phoneIdentifierImpl) buildIdentifier(accountID *string, appName string)
 	message := ""
 	accountIdentifier := model.AccountIdentifier{ID: uuid.NewString(), Code: a.code, Identifier: a.identifier, Verified: false,
 		Sensitive: true, Account: model.Account{ID: accountIDStr}, DateCreated: time.Now().UTC()}
-	sent, err := a.sendVerifyIdentifier(&accountIdentifier, appName)
+	sent, err := a.sendVerifyIdentifier(&accountIdentifier, appOrg, explicitVerify)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionSend, "phone verification", nil, err)
 	}
@@ -102,10 +102,6 @@ func (a *phoneIdentifierImpl) buildIdentifier(accountID *string, appName string)
 
 func (a *phoneIdentifierImpl) maskIdentifier() (string, error) {
 	return utils.GetLogValue(a.identifier, 4), nil // mask all but the last 4 phone digits
-}
-
-func (a *phoneIdentifierImpl) requireVerificationForSignIn() bool {
-	return false
 }
 
 func (a *phoneIdentifierImpl) checkVerified(accountIdentifier *model.AccountIdentifier, appName string) error {
@@ -149,13 +145,13 @@ func (a *phoneIdentifierImpl) verifyIdentifier(accountIdentifier *model.AccountI
 	return nil
 }
 
-func (a *phoneIdentifierImpl) sendVerifyIdentifier(accountIdentifier *model.AccountIdentifier, appName string) (bool, error) {
+func (a *phoneIdentifierImpl) sendVerifyIdentifier(accountIdentifier *model.AccountIdentifier, appOrg model.ApplicationOrganization, explicitVerify bool) (bool, error) {
 	if accountIdentifier == nil {
 		return false, errors.ErrorData(logutils.StatusMissing, model.TypeAccountIdentifier, nil)
 	}
 
 	//send verification code
-	if _, err := a.sendCode(appName, "", typeVerificationCode, accountIdentifier.ID); err != nil {
+	if _, err := a.sendCode(appOrg.Application.Name, "", typeVerificationCode, accountIdentifier.ID); err != nil {
 		return false, errors.WrapErrorAction(logutils.ActionSend, "verification phone", nil, err)
 	}
 

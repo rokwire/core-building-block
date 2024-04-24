@@ -65,16 +65,12 @@ func (a *externalIdentifierImpl) withIdentifier(creds string) (identifierType, e
 	return nil, errors.ErrorData(logutils.StatusMissing, "external identifier", nil)
 }
 
-func (a *externalIdentifierImpl) buildIdentifier(accountID *string, appName string) (string, *model.AccountIdentifier, error) {
+func (a *externalIdentifierImpl) buildIdentifier(accountID *string, appOrg model.ApplicationOrganization, explicitVerify bool) (string, *model.AccountIdentifier, error) {
 	return "", nil, errors.ErrorData(logutils.StatusInvalid, typeIdentifierType, nil)
 }
 
 func (a *externalIdentifierImpl) maskIdentifier() (string, error) {
 	return a.identifier, nil
-}
-
-func (a *externalIdentifierImpl) requireVerificationForSignIn() bool {
-	return true
 }
 
 func (a *externalIdentifierImpl) checkVerified(accountIdentifier *model.AccountIdentifier, appName string) error {

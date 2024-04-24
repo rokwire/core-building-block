@@ -78,7 +78,7 @@ func (a *emailIdentifierImpl) withIdentifier(creds string) (identifierType, erro
 	return &emailIdentifierImpl{auth: a.auth, code: a.code, identifier: email}, nil
 }
 
-func (a *emailIdentifierImpl) buildIdentifier(accountID *string, appName string) (string, *model.AccountIdentifier, error) {
+func (a *emailIdentifierImpl) buildIdentifier(accountID *string, appOrg model.ApplicationOrganization, explicitVerify bool) (string, *model.AccountIdentifier, error) {
 	if a.identifier == "" {
 		return "", nil, errors.ErrorData(logutils.StatusMissing, "email identifier", nil)
 	}
@@ -90,10 +90,11 @@ func (a *emailIdentifierImpl) buildIdentifier(accountID *string, appName string)
 		accountIDStr = uuid.NewString()
 	}
 
-	message := ""
 	accountIdentifier := model.AccountIdentifier{ID: uuid.NewString(), Code: a.code, Identifier: a.identifier, Verified: false,
 		Sensitive: true, Account: model.Account{ID: accountIDStr}, DateCreated: time.Now().UTC()}
-	sent, err := a.sendVerifyIdentifier(&accountIdentifier, appName)
+
+	message := ""
+	sent, err := a.sendVerifyIdentifier(&accountIdentifier, appOrg, explicitVerify)
 	if err != nil {
 		return "", nil, errors.WrapErrorAction(logutils.ActionSend, "identifier verification", nil, err)
 	}
@@ -112,10 +113,6 @@ func (a *emailIdentifierImpl) maskIdentifier() (string, error) {
 
 	emailParts[0] = utils.GetLogValue(emailParts[0], 3) // mask all but the last 3 characters of the email prefix
 	return strings.Join(emailParts, "@"), nil
-}
-
-func (a *emailIdentifierImpl) requireVerificationForSignIn() bool {
-	return true
 }
 
 func (a *emailIdentifierImpl) checkVerified(accountIdentifier *model.AccountIdentifier, appName string) error {
@@ -177,43 +174,64 @@ func (a *emailIdentifierImpl) verifyIdentifier(accountIdentifier *model.AccountI
 	return nil
 }
 
-func (a *emailIdentifierImpl) sendVerifyIdentifier(accountIdentifier *model.AccountIdentifier, appName string) (bool, error) {
+func (a *emailIdentifierImpl) sendVerifyIdentifier(accountIdentifier *model.AccountIdentifier, appOrg model.ApplicationOrganization, explicitVerify bool) (bool, error) {
 	if accountIdentifier == nil {
 		return false, errors.ErrorData(logutils.StatusMissing, model.TypeAccountIdentifier, nil)
 	}
 
-	//verification settings
-	verifyWaitTime, verifyExpiryTime, err := a.getVerificationSettings()
-	if err != nil {
-		return false, errors.WrapErrorAction(logutils.ActionGet, "email verification settings", nil, err)
-	}
-	if verifyWaitTime == nil || verifyExpiryTime == nil {
-		return false, nil
-	}
-
-	//Check if previous verification email was sent within the wait time if one was already sent
-	if accountIdentifier.VerificationExpiry != nil {
-		prevTime := accountIdentifier.VerificationExpiry.Add(time.Duration(-*verifyExpiryTime) * time.Hour)
-		if time.Now().UTC().Sub(prevTime) < time.Duration(*verifyWaitTime)*time.Second {
-			return false, errors.ErrorAction(logutils.ActionSend, "verification email", logutils.StringArgs("resend requested too soon"))
+	if explicitVerify {
+		//verification settings
+		verifyWaitTime, verifyExpiryTime, err := a.getVerificationSettings()
+		if err != nil {
+			return false, errors.WrapErrorAction(logutils.ActionGet, "email verification settings", nil, err)
 		}
+		if verifyWaitTime == nil || verifyExpiryTime == nil {
+			return false, nil
+		}
+
+		//Check if previous verification email was sent within the wait time if one was already sent
+		if accountIdentifier.VerificationExpiry != nil {
+			prevTime := accountIdentifier.VerificationExpiry.Add(time.Duration(-*verifyExpiryTime) * time.Hour)
+			if time.Now().UTC().Sub(prevTime) < time.Duration(*verifyWaitTime)*time.Second {
+				return false, errors.ErrorAction(logutils.ActionSend, "verification email", logutils.StringArgs("resend requested too soon"))
+			}
+		}
+
+		//verification code
+		//TODO: turn length of reset code into a setting
+		code := utils.GenerateRandomString(64)
+
+		//send verification email
+		if _, err = a.sendCode(appOrg.Application.Name, code, typeVerificationCode, accountIdentifier.ID); err != nil {
+			return false, errors.WrapErrorAction(logutils.ActionSend, "verification email", nil, err)
+		}
+
+		//Update verification data in credential value
+		now := time.Now().UTC()
+		newExpiry := now.Add(time.Hour * time.Duration(*verifyExpiryTime))
+		accountIdentifier.VerificationCode = &code
+		accountIdentifier.VerificationExpiry = &newExpiry
+		accountIdentifier.DateUpdated = &now
+		return true, nil
 	}
 
-	//verification code
-	//TODO: turn length of reset code into a setting
-	code := utils.GenerateRandomString(64)
+	// implicit verification - perform code authentication
+	// generate a new code
+	code := fmt.Sprintf("%06d", utils.GenerateRandomInt(generatedCodeMax))
 
-	//send verification email
-	if _, err = a.sendCode(appName, code, typeVerificationCode, accountIdentifier.ID); err != nil {
-		return false, errors.WrapErrorAction(logutils.ActionSend, "verification email", nil, err)
+	// store generated codes in login state collection
+	state := map[string]interface{}{stateKeyCode: code}
+	loginState := model.LoginState{ID: uuid.NewString(), AppID: appOrg.Application.ID, OrgID: appOrg.Organization.ID, AccountID: &accountIdentifier.Account.ID, State: state, DateCreated: time.Now().UTC()}
+	err := a.auth.storage.InsertLoginState(loginState)
+	if err != nil {
+		return false, errors.WrapErrorAction(logutils.ActionCreate, model.TypeLoginState, nil, err)
 	}
 
-	//Update verification data in credential value
-	now := time.Now().UTC()
-	newExpiry := now.Add(time.Hour * time.Duration(*verifyExpiryTime))
-	accountIdentifier.VerificationCode = &code
-	accountIdentifier.VerificationExpiry = &newExpiry
-	accountIdentifier.DateUpdated = &now
+	// send authentication email
+	if _, err = a.sendCode(appOrg.Application.Name, code, typeAuthenticationCode, accountIdentifier.ID); err != nil {
+		return false, errors.WrapErrorAction(logutils.ActionSend, "authentication code", nil, err)
+	}
+
 	return true, nil
 }
 
