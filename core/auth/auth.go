@@ -392,18 +392,33 @@ func (a *Auth) applySignInExternal(account *model.Account, authType model.AuthTy
 func (a *Auth) applyAppSignUpExternal(context storage.TransactionContext, account model.Account, authType model.AuthType, appOrg model.ApplicationOrganization, externalUser model.ExternalSystemUser,
 	externalCreds string, regProfile model.Profile, privacy model.Privacy, regPreferences map[string]interface{}, username string, clientVersion *string, l *logs.Log) (*model.AccountAuthType, error) {
 
-	var accountAuthType *model.AccountAuthType
-	var err error
+	//create the app org membership
+	orgAppMembership := model.OrgAppMembership{ID: uuid.NewString(), AppOrg: appOrg,
+		//Permissions: permissions,
+		//Roles: model.AccountRolesFromAppOrgRoles(roles, true, adminSet),
+		//Groups: model.AccountGroupsFromAppOrgGroups(groups, true, adminSet),
+		//Preferences: preferences,
+		MostRecentClientVersion: clientVersion}
 
-	//find account auth type
-	accountAuthType, err = a.findAccountAuthType(&account, &authType, externalUser.Identifier)
+	//set it to the account
+	newMemberships := account.OrgAppsMemberships
+	newMemberships = append(newMemberships, orgAppMembership)
+	account.OrgAppsMemberships = newMemberships
+
+	//save the account
+	err := a.storage.SaveAccount(nil, &account)
 	if err != nil {
 		return nil, err
 	}
 
-	//TODO
+	//now find the account auth type
+	accountAuthType, err := a.findAccountAuthType(&account, &authType, externalUser.Identifier)
+	if err != nil {
+		return nil, err
+	}
 
 	return accountAuthType, nil
+
 }
 
 func (a *Auth) applyOrgSignUpExternal(context storage.TransactionContext, authType model.AuthType, appOrg model.ApplicationOrganization, externalUser model.ExternalSystemUser,
