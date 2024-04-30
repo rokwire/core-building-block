@@ -216,6 +216,18 @@ func (a *Auth) SetIdentityBB(identityBB IdentityBuildingBlock) {
 	a.identityBB = identityBB
 }
 
+/* for quick external login development
+func (a *Auth) mockExternalLogin() (*model.ExternalSystemUser, map[string]interface{}, string) {
+	externalUser := model.ExternalSystemUser{Identifier: "1234", FirstName: "Ivcho", LastName: "Ivev",
+		Email: "ivev@illinois.edu", Roles: []string{"role 1", "role 2"}}
+
+	extParams := map[string]interface{}{}
+
+	externalCreds := ""
+
+	return &externalUser, extParams, externalCreds
+}*/
+
 func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, clientVersion *string,
 	regProfile model.Profile, privacy model.Privacy, regPreferences map[string]interface{}, username string, admin bool, l *logs.Log) (*model.AccountAuthType, map[string]interface{}, []model.MFAType, map[string]string, error) {
 	var accountAuthType *model.AccountAuthType
