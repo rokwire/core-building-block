@@ -216,7 +216,7 @@ func (a *Auth) SetIdentityBB(identityBB IdentityBuildingBlock) {
 	a.identityBB = identityBB
 }
 
-// for quick external login development
+/*// for quick external login development
 func (a *Auth) mockExternalLogin() (*model.ExternalSystemUser, map[string]interface{}, string) {
 	externalUser := model.ExternalSystemUser{Identifier: "1234", FirstName: "Ivcho", LastName: "Ivev",
 		Email: "ivev@illinois.edu", Roles: []string{"role 1", "role 2"}}
@@ -226,7 +226,7 @@ func (a *Auth) mockExternalLogin() (*model.ExternalSystemUser, map[string]interf
 	externalCreds := ""
 
 	return &externalUser, extParams, externalCreds
-}
+}*/
 
 func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, clientVersion *string,
 	regProfile model.Profile, privacy model.Privacy, regPreferences map[string]interface{}, username string, admin bool, l *logs.Log) (*model.AccountAuthType, map[string]interface{}, []model.MFAType, map[string]string, error) {
@@ -235,19 +235,19 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 	var externalIDs map[string]string
 
 	//external auth type
-	/*	authImpl, err := a.getExternalAuthTypeImpl(authType)
-		if err != nil {
-			return nil, nil, nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeExternalAuthType, nil, err)
-		}
+	authImpl, err := a.getExternalAuthTypeImpl(authType)
+	if err != nil {
+		return nil, nil, nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, typeExternalAuthType, nil, err)
+	}
 
-		//1. get the user from the external system
-		//var externalUser *model.ExternalSystemUser
-		externalUser, extParams, externalCreds, err := authImpl.externalLogin(authType, appType, appOrg, creds, params, l)
-		if err != nil {
-			return nil, nil, nil, nil, errors.WrapErrorAction("logging in", "external user", nil, err)
-		}
-		//TMP */
-	externalUser, extParams, externalCreds := a.mockExternalLogin()
+	//1. get the user from the external system
+	//var externalUser *model.ExternalSystemUser
+	externalUser, extParams, externalCreds, err := authImpl.externalLogin(authType, appType, appOrg, creds, params, l)
+	if err != nil {
+		return nil, nil, nil, nil, errors.WrapErrorAction("logging in", "external user", nil, err)
+	}
+	//TMP
+	//externalUser, extParams, externalCreds := a.mockExternalLogin()
 
 	//2. find the account for the org and the user identity
 	account, err := a.storage.FindAccountByOrgAndIdentifier(nil, appOrg.Organization.ID, authType.ID, externalUser.Identifier, appOrg.ID)
