@@ -296,7 +296,7 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 		}
 
 		//user exists in the org but does not have membership to the application
-		accountAuthType, err = a.applyAppSignUpExternal(nil, *account, authType, appOrg, *externalUser, externalCreds, regProfile, privacy, regPreferences, username, clientVersion, l)
+		accountAuthType, err = a.applyAppSignUpExternal(nil, *account, authType, appOrg, *externalUser, regPreferences, clientVersion, l)
 		if err != nil {
 			return nil, nil, nil, nil, errors.WrapErrorAction(logutils.ActionApply, "external app sign up", nil, err)
 		}
@@ -389,36 +389,62 @@ func (a *Auth) applySignInExternal(account *model.Account, authType model.AuthTy
 	return accountAuthType, nil
 }
 
-func (a *Auth) applyAppSignUpExternal(context storage.TransactionContext, account model.Account, authType model.AuthType, appOrg model.ApplicationOrganization, externalUser model.ExternalSystemUser,
-	externalCreds string, regProfile model.Profile, privacy model.Privacy, regPreferences map[string]interface{}, username string, clientVersion *string, l *logs.Log) (*model.AccountAuthType, error) {
+func (a *Auth) applyAppSignUpExternal(context storage.TransactionContext, account model.Account,
+	authType model.AuthType, appOrg model.ApplicationOrganization, externalUser model.ExternalSystemUser,
+	regPreferences map[string]interface{}, clientVersion *string, l *logs.Log) (*model.AccountAuthType, error) {
 
-	//create the app org membership
+	////create the app org membership
+	var permissions []model.Permission
+
+	//roles and groups mapping
+	identityProviderID, ok := authType.Params["identity_provider"].(string)
+	if !ok {
+		return nil, errors.ErrorData(logutils.StatusMissing, "identity provider id", nil)
+	}
+	identityProviderSetting := appOrg.FindIdentityProviderSetting(identityProviderID)
+	if identityProviderSetting == nil {
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeIdentityProviderSetting, nil)
+	}
+
+	rolesIDs, groupsIDs, err := a.getExternalUserAuthorization(externalUser, identityProviderSetting)
+	if err != nil {
+		l.WarnError(logutils.MessageActionError(logutils.ActionGet, "external authorization", nil), err)
+	}
+
+	roles, err := a.storage.FindAppOrgRolesByIDs(context, rolesIDs, appOrg.ID)
+	if err != nil {
+		l.WarnError(logutils.MessageAction(logutils.StatusError, logutils.ActionFind, model.TypeAppOrgRole, nil), err)
+	}
+
+	groups, err := a.storage.FindAppOrgGroupsByIDs(context, groupsIDs, appOrg.ID)
+	if err != nil {
+		l.WarnError(logutils.MessageAction(logutils.StatusError, logutils.ActionFind, model.TypeAppOrgGroup, nil), err)
+	}
 	orgAppMembership := model.OrgAppMembership{ID: uuid.NewString(), AppOrg: appOrg,
-		//Permissions: permissions,
-		//Roles: model.AccountRolesFromAppOrgRoles(roles, true, adminSet),
-		//Groups: model.AccountGroupsFromAppOrgGroups(groups, true, adminSet),
-		//Preferences: preferences,
+		Permissions:             permissions,
+		Roles:                   model.AccountRolesFromAppOrgRoles(roles, true, false),
+		Groups:                  model.AccountGroupsFromAppOrgGroups(groups, true, false),
+		Preferences:             regPreferences,
 		MostRecentClientVersion: clientVersion}
 
-	//set it to the account
+	////set it to the account
 	newMemberships := account.OrgAppsMemberships
 	newMemberships = append(newMemberships, orgAppMembership)
 	account.OrgAppsMemberships = newMemberships
 
-	//save the account
-	err := a.storage.SaveAccount(nil, &account)
+	////save the account
+	err = a.storage.SaveAccount(nil, &account)
 	if err != nil {
 		return nil, err
 	}
 
-	//now find the account auth type
+	////now find the account auth type
 	accountAuthType, err := a.findAccountAuthType(&account, &authType, externalUser.Identifier)
 	if err != nil {
 		return nil, err
 	}
 
 	return accountAuthType, nil
-
 }
 
 func (a *Auth) applyOrgSignUpExternal(context storage.TransactionContext, authType model.AuthType, appOrg model.ApplicationOrganization, externalUser model.ExternalSystemUser,
