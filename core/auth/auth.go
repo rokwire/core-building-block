@@ -303,9 +303,6 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 			}
 
 			//has access to sign up, so register it
-
-			//TODO
-
 		}
 
 		//user does not exist, we need to register it
