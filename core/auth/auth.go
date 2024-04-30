@@ -20,7 +20,6 @@ import (
 	"core-building-block/utils"
 	"encoding/json"
 	"fmt"
-	"log"
 	"strings"
 	"sync"
 	"time"
@@ -328,9 +327,22 @@ func (a *Auth) hasAdminAppAccess(authType model.AuthType, appOrg model.Applicati
 	identityProviderSetting := appOrg.FindIdentityProviderSetting(identityProviderID)
 	approvedRoles := identityProviderSetting.AdminAppAccessRoles
 
-	log.Println(approvedRoles)
+	externalUserRoles := externalUser.Roles
 
-	return nil, errors.New("not implemented")
+	hasAccess := false
+	for _, userRole := range externalUserRoles {
+		for _, approvedRole := range approvedRoles {
+			if userRole == approvedRole {
+				hasAccess = true
+				break
+			}
+		}
+		if hasAccess {
+			break
+		}
+	}
+
+	return &hasAccess, nil
 }
 
 func (a *Auth) applySignInExternal(account *model.Account, authType model.AuthType, appOrg model.ApplicationOrganization,
