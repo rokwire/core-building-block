@@ -388,6 +388,8 @@ type IdentityProviderSetting struct {
 
 	Roles  map[string]string `bson:"roles"`  //map[identity_provider_role]app_role_id
 	Groups map[string]string `bson:"groups"` //map[identity_provider_group]app_group_id
+
+	AdminAppAccessRoles []string `bson:"admin_app_access_roles"` //list with the identity provider roles which are approved for admin app account creation
 }
 
 // LoginsSessionsSetting represents logins sessions setting for an organization in an application
