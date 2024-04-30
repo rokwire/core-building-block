@@ -20,6 +20,7 @@ import (
 	"core-building-block/utils"
 	"encoding/json"
 	"fmt"
+	"log"
 	"strings"
 	"sync"
 	"time"
@@ -291,7 +292,7 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 		return nil, nil, nil, nil, errors.New("app-sign-up operation is not supported")
 	case "org-sign-up":
 		if admin {
-			hasAdminAppAccess, err := a.hasAdminAppAccess(*externalUser, appOrg)
+			hasAdminAppAccess, err := a.hasAdminAppAccess(authType, appOrg, *externalUser)
 			if err != nil {
 				return nil, nil, nil, nil, errors.WrapErrorAction(logutils.ActionApply, "external org sign up", nil, err)
 			}
@@ -322,7 +323,13 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 	return nil, nil, nil, nil, errors.Newf("not supported operation - internal auth type")
 }
 
-func (a *Auth) hasAdminAppAccess(externalUser model.ExternalSystemUser, appOrg model.ApplicationOrganization) (*bool, error) {
+func (a *Auth) hasAdminAppAccess(authType model.AuthType, appOrg model.ApplicationOrganization, externalUser model.ExternalSystemUser) (*bool, error) {
+	identityProviderID, _ := authType.Params["identity_provider"].(string)
+	identityProviderSetting := appOrg.FindIdentityProviderSetting(identityProviderID)
+	approvedRoles := identityProviderSetting.AdminAppAccessRoles
+
+	log.Println(approvedRoles)
+
 	return nil, errors.New("not implemented")
 }
 
