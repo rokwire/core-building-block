@@ -176,7 +176,8 @@ func appOrgToDef(item *model.ApplicationOrganization) *Def.ApplicationOrganizati
 	id := item.ID
 	serviceIDs := item.ServicesIDs
 	return &Def.ApplicationOrganization{Id: &id, AppId: item.Application.ID, OrgId: item.Organization.ID, ServicesIds: &serviceIDs,
-		IdentityProviderSettings: &identityProviderSettings, SupportedAuthTypes: &supportedAuthTypes, LoginSessionSettings: &loginsSessionsSetting}
+		IdentityProviderSettings: &identityProviderSettings,
+		SupportedAuthTypes:       &supportedAuthTypes, LoginSessionSettings: &loginsSessionsSetting}
 }
 
 func appOrgsToDef(items []model.ApplicationOrganization) []Def.ApplicationOrganization {
@@ -379,7 +380,7 @@ func identityProviderSettingFromDef(item *Def.IdentityProviderSettings) *model.I
 		ExternalIDFields: externalIDFields, FirstNameField: firstNameField, MiddleNameField: middleNameField,
 		LastNameField: lastNameField, EmailField: emailField, RolesField: rolesField, GroupsField: groupsField,
 		UserSpecificFields: userSpecificFields, Roles: roles, Groups: groups,
-		AlwaysSyncProfile: alwaysSyncProfile, IdentityBBBaseURL: identityBBBaseURL, AdminAppAccessRoles: adminAppAccessRoles}
+		AlwaysSyncProfile: alwaysSyncProfile, IdentityBBBaseURL: identityBBBaseURL, AdminAppAccessRoles: &adminAppAccessRoles}
 }
 
 func identityProviderSettingsToDef(items []model.IdentityProviderSetting) []Def.IdentityProviderSettings {
@@ -414,10 +415,13 @@ func identityProviderSettingToDef(item *model.IdentityProviderSetting) *Def.Iden
 	userSpecificFields := item.UserSpecificFields
 	alwaysSyncProfile := item.AlwaysSyncProfile
 	identityBBBaseURL := item.IdentityBBBaseURL
+
 	return &Def.IdentityProviderSettings{IdentityProviderId: item.IdentityProviderID, UserIdentifierField: item.UserIdentifierField,
 		ExternalIdFields: &externalIDs, FirstNameField: &firstNameField, MiddleNameField: &middleNameField,
 		LastNameField: &lastNameField, EmailField: &emailField, RolesField: &rolesField, GroupsField: &groupsField,
-		UserSpecificFields: &userSpecificFields, Roles: &roles, Groups: &groups, AlwaysSyncProfile: &alwaysSyncProfile, IdentityBbBaseUrl: &identityBBBaseURL}
+		UserSpecificFields: &userSpecificFields,
+		Roles:              &roles, Groups: &groups,
+		AlwaysSyncProfile: &alwaysSyncProfile, IdentityBbBaseUrl: &identityBBBaseURL, AdminAppAccessRoles: item.AdminAppAccessRoles}
 }
 
 // AppOrgRole

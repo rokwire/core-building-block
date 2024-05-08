@@ -343,7 +343,7 @@ func (a *Auth) hasAdminAppAccess(authType model.AuthType, appOrg model.Applicati
 
 	hasAccess := false
 	for _, userRole := range externalUserRoles {
-		for _, approvedRole := range approvedRoles {
+		for _, approvedRole := range *approvedRoles {
 			if userRole == approvedRole {
 				hasAccess = true
 				break
