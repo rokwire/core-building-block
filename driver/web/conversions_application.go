@@ -370,10 +370,16 @@ func identityProviderSettingFromDef(item *Def.IdentityProviderSettings) *model.I
 		identityBBBaseURL = *item.IdentityBbBaseUrl
 	}
 
+	var adminAppAccessRoles []string
+	if item.AdminAppAccessRoles != nil {
+		adminAppAccessRoles = *item.AdminAppAccessRoles
+	}
+
 	return &model.IdentityProviderSetting{IdentityProviderID: item.IdentityProviderId, UserIdentifierField: item.UserIdentifierField,
 		ExternalIDFields: externalIDFields, FirstNameField: firstNameField, MiddleNameField: middleNameField,
 		LastNameField: lastNameField, EmailField: emailField, RolesField: rolesField, GroupsField: groupsField,
-		UserSpecificFields: userSpecificFields, Roles: roles, Groups: groups, AlwaysSyncProfile: alwaysSyncProfile, IdentityBBBaseURL: identityBBBaseURL}
+		UserSpecificFields: userSpecificFields, Roles: roles, Groups: groups,
+		AlwaysSyncProfile: alwaysSyncProfile, IdentityBBBaseURL: identityBBBaseURL, AdminAppAccessRoles: adminAppAccessRoles}
 }
 
 func identityProviderSettingsToDef(items []model.IdentityProviderSetting) []Def.IdentityProviderSettings {
