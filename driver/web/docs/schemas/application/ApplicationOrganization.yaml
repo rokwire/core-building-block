@@ -27,5 +27,5 @@ properties:
     nullable: true
     items:
       $ref: "./SupportedAuthTypes.yaml"
-  login_session_settings:
+  logins_session_settings:
     $ref: "./LoginSessionSettings.yaml"
