@@ -89,7 +89,7 @@ type applicationOrganization struct {
 
 	SupportedAuthTypes []model.AuthTypesSupport `bson:"supported_auth_types"`
 
-	LoginsSessionsSetting model.LoginsSessionsSetting `bson:"logins_sessions_settings"`
+	LoginsSessionsSetting model.LoginsSessionsSetting `bson:"login_sessions_settings"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
