@@ -43,3 +43,7 @@ properties:
     type: boolean 
   identity_bb_base_url:
     type: string
+  admin_app_access_roles:
+    type: array
+    items:
+      type: string

@@ -357,6 +357,7 @@ type Follow struct {
 
 // IdentityProviderSettings defines model for IdentityProviderSettings.
 type IdentityProviderSettings struct {
+	AdminAppAccessRoles *[]string          `json:"admin_app_access_roles,omitempty"`
 	AlwaysSyncProfile   *bool              `json:"always_sync_profile,omitempty"`
 	EmailField          *string            `json:"email_field,omitempty"`
 	ExternalIdFields    *map[string]string `json:"external_id_fields"`
