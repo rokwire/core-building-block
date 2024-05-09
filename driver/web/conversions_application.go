@@ -380,7 +380,7 @@ func identityProviderSettingFromDef(item *Def.IdentityProviderSettings) *model.I
 		ExternalIDFields: externalIDFields, FirstNameField: firstNameField, MiddleNameField: middleNameField,
 		LastNameField: lastNameField, EmailField: emailField, RolesField: rolesField, GroupsField: groupsField,
 		UserSpecificFields: userSpecificFields, Roles: roles, Groups: groups,
-		AlwaysSyncProfile: alwaysSyncProfile, IdentityBBBaseURL: identityBBBaseURL, AdminAppAccessRoles: &adminAppAccessRoles}
+		AlwaysSyncProfile: alwaysSyncProfile, IdentityBBBaseURL: identityBBBaseURL, AdminAppAccessRoles: adminAppAccessRoles}
 }
 
 func identityProviderSettingsToDef(items []model.IdentityProviderSetting) []Def.IdentityProviderSettings {
@@ -415,13 +415,19 @@ func identityProviderSettingToDef(item *model.IdentityProviderSetting) *Def.Iden
 	userSpecificFields := item.UserSpecificFields
 	alwaysSyncProfile := item.AlwaysSyncProfile
 	identityBBBaseURL := item.IdentityBBBaseURL
+	var adminAppAccessRoles []string
+	if item.AdminAppAccessRoles != nil {
+		adminAppAccessRoles = item.AdminAppAccessRoles
+	} else {
+		adminAppAccessRoles = []string{}
+	}
 
 	return &Def.IdentityProviderSettings{IdentityProviderId: item.IdentityProviderID, UserIdentifierField: item.UserIdentifierField,
 		ExternalIdFields: &externalIDs, FirstNameField: &firstNameField, MiddleNameField: &middleNameField,
 		LastNameField: &lastNameField, EmailField: &emailField, RolesField: &rolesField, GroupsField: &groupsField,
 		UserSpecificFields: &userSpecificFields,
 		Roles:              &roles, Groups: &groups,
-		AlwaysSyncProfile: &alwaysSyncProfile, IdentityBbBaseUrl: &identityBBBaseURL, AdminAppAccessRoles: item.AdminAppAccessRoles}
+		AlwaysSyncProfile: &alwaysSyncProfile, IdentityBbBaseUrl: &identityBBBaseURL, AdminAppAccessRoles: &adminAppAccessRoles}
 }
 
 // AppOrgRole
