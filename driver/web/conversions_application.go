@@ -160,7 +160,7 @@ func appOrgFromDef(item *Def.ApplicationOrganization) *model.ApplicationOrganiza
 
 	identityProviderSettings := identityProviderSettingsFromDef(item.IdentityProviderSettings)
 	supportedAuthTypes := supportedAuthTypesFromDef(item.SupportedAuthTypes)
-	loginsSessionsSetting := loginSessionSettingsFromDef(item.LoginSessionSettings)
+	loginsSessionsSetting := loginSessionSettingsFromDef(item.LoginsSessionSettings)
 
 	return &model.ApplicationOrganization{ID: id, ServicesIDs: serviceIds, IdentityProvidersSettings: identityProviderSettings, SupportedAuthTypes: supportedAuthTypes, LoginsSessionsSetting: *loginsSessionsSetting}
 }
@@ -177,7 +177,7 @@ func appOrgToDef(item *model.ApplicationOrganization) *Def.ApplicationOrganizati
 	serviceIDs := item.ServicesIDs
 	return &Def.ApplicationOrganization{Id: &id, AppId: item.Application.ID, OrgId: item.Organization.ID, ServicesIds: &serviceIDs,
 		IdentityProviderSettings: &identityProviderSettings,
-		SupportedAuthTypes:       &supportedAuthTypes, LoginSessionSettings: &loginsSessionsSetting}
+		SupportedAuthTypes:       &supportedAuthTypes, LoginsSessionSettings: &loginsSessionsSetting}
 }
 
 func appOrgsToDef(items []model.ApplicationOrganization) []Def.ApplicationOrganization {
