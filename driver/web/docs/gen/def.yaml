@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Rokwire Core Building Block API
   description: Core Building Block API Documentation
-  version: 1.39.0
+  version: 1.40.0
 servers:
   - url: 'https://api.rokwire.illinois.edu/core'
     description: Production server
@@ -6029,7 +6029,7 @@ components:
           nullable: true
           items:
             $ref: '#/components/schemas/SupportedAuthTypes'
-        login_session_settings:
+        logins_session_settings:
           $ref: '#/components/schemas/LoginSessionSettings'
     Permission:
       required:

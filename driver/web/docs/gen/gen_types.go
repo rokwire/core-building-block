@@ -271,7 +271,7 @@ type ApplicationOrganization struct {
 	AppId                    string                      `json:"app_id"`
 	Id                       *string                     `json:"id,omitempty"`
 	IdentityProviderSettings *[]IdentityProviderSettings `json:"identity_provider_settings"`
-	LoginSessionSettings     *LoginSessionSettings       `json:"login_session_settings,omitempty"`
+	LoginsSessionSettings    *LoginSessionSettings       `json:"logins_session_settings,omitempty"`
 	OrgId                    string                      `json:"org_id"`
 	ServicesIds              *[]string                   `json:"services_ids"`
 	SupportedAuthTypes       *[]SupportedAuthTypes       `json:"supported_auth_types"`
