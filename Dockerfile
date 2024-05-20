@@ -1,8 +1,8 @@
-FROM golang:1.21-bullseye as builder
+FROM golang:1.22-alpine as builder
 
 ENV CGO_ENABLED=0
 
-#RUN apk add --no-cache --update make git
+RUN apk add --no-cache --update make git
 
 RUN mkdir /app
 WORKDIR /app

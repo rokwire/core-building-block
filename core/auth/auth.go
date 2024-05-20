@@ -228,6 +228,18 @@ func (a *Auth) SetIdentityBB(identityBB IdentityBuildingBlock) {
 	a.identityBB = identityBB
 }
 
+/*// for quick external login development
+func (a *Auth) mockExternalLogin() (*model.ExternalSystemUser, map[string]interface{}, string) {
+	externalUser := model.ExternalSystemUser{Identifier: "1234", FirstName: "Ivcho", LastName: "Ivev",
+		Email: "ivev@illinois.edu", Roles: []string{"role 1", "role 2"}}
+
+	extParams := map[string]interface{}{}
+
+	externalCreds := ""
+
+	return &externalUser, extParams, externalCreds
+}*/
+
 func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, clientVersion *string,
 	regProfile model.Profile, privacy model.Privacy, regPreferences map[string]interface{}, username string, admin bool, l *logs.Log) (*model.AccountAuthType, map[string]interface{}, []model.MFAType, map[string]string, error) {
 	var accountAuthType *model.AccountAuthType
@@ -246,6 +258,8 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 	if err != nil {
 		return nil, nil, nil, nil, errors.WrapErrorAction("logging in", "external user", nil, err)
 	}
+	//TMP
+	//externalUser, extParams, externalCreds := a.mockExternalLogin()
 
 	//2. find the account for the org and the user identity
 	account, err := a.storage.FindAccountByOrgAndIdentifier(nil, appOrg.Organization.ID, authType.ID, externalUser.Identifier, appOrg.ID)
@@ -279,18 +293,43 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 		return accountAuthType, extParams, mfaTypes, externalIDs, nil
 	case "app-sign-up":
 		if admin {
-			return nil, nil, nil, nil, errors.ErrorData(logutils.StatusInvalid, "sign up", &logutils.FieldArgs{"identifier": externalUser.Identifier,
-				"auth_type": authType.Code, "app_org_id": appOrg.ID, "admin": true}).SetStatus(utils.ErrorStatusNotAllowed)
+			hasAdminAppAccess, err := a.hasAdminAppAccess(authType, appOrg, *externalUser)
+			if err != nil {
+				return nil, nil, nil, nil, errors.WrapErrorAction(logutils.ActionApply, "external org sign up", nil, err)
+			}
+
+			if !(*hasAdminAppAccess) {
+				//does not have an access to sign up in the admin app
+				return nil, nil, nil, nil, errors.ErrorData(logutils.StatusInvalid, "sign up", &logutils.FieldArgs{"identifier": externalUser.Identifier,
+					"auth_type": authType.Code, "app_org_id": appOrg.ID, "admin": true}).SetStatus(utils.ErrorStatusNotAllowed)
+			}
+
+			//has access to app sign up, so register it
 		}
 
-		//We have prepared this operation as it is based on the tenants accounts but for now we disable it
-		//as we do not use it(yet) and better not to introduce additional complexity.
-		//Also this would trigger client updates as well for supporting this
-		return nil, nil, nil, nil, errors.New("app-sign-up operation is not supported")
+		//user exists in the org but does not have membership to the application
+		accountAuthType, err = a.applyAppSignUpExternal(nil, *account, authType, appOrg, *externalUser, regPreferences, clientVersion, l)
+		if err != nil {
+			return nil, nil, nil, nil, errors.WrapErrorAction(logutils.ActionApply, "external app sign up", nil, err)
+		}
+		externalIDs = externalUser.ExternalIDs
+
+		//TODO: make sure we do not return any refresh tokens in extParams
+		return accountAuthType, extParams, mfaTypes, externalIDs, nil
 	case "org-sign-up":
 		if admin {
-			return nil, nil, nil, nil, errors.ErrorData(logutils.StatusInvalid, "sign up", &logutils.FieldArgs{"identifier": externalUser.Identifier,
-				"auth_type": authType.Code, "app_org_id": appOrg.ID, "admin": true}).SetStatus(utils.ErrorStatusNotAllowed)
+			hasAdminAppAccess, err := a.hasAdminAppAccess(authType, appOrg, *externalUser)
+			if err != nil {
+				return nil, nil, nil, nil, errors.WrapErrorAction(logutils.ActionApply, "external org sign up", nil, err)
+			}
+
+			if !(*hasAdminAppAccess) {
+				//does not have an access to sign up in the admin app
+				return nil, nil, nil, nil, errors.ErrorData(logutils.StatusInvalid, "sign up", &logutils.FieldArgs{"identifier": externalUser.Identifier,
+					"auth_type": authType.Code, "app_org_id": appOrg.ID, "admin": true}).SetStatus(utils.ErrorStatusNotAllowed)
+			}
+
+			//has access to sign up, so register it
 		}
 
 		//user does not exist, we need to register it
@@ -305,6 +344,29 @@ func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.Appl
 	}
 
 	return nil, nil, nil, nil, errors.Newf("not supported operation - internal auth type")
+}
+
+func (a *Auth) hasAdminAppAccess(authType model.AuthType, appOrg model.ApplicationOrganization, externalUser model.ExternalSystemUser) (*bool, error) {
+	identityProviderID, _ := authType.Params["identity_provider"].(string)
+	identityProviderSetting := appOrg.FindIdentityProviderSetting(identityProviderID)
+	approvedRoles := identityProviderSetting.AdminAppAccessRoles
+
+	externalUserRoles := externalUser.Roles
+
+	hasAccess := false
+	for _, userRole := range externalUserRoles {
+		for _, approvedRole := range approvedRoles {
+			if userRole == approvedRole {
+				hasAccess = true
+				break
+			}
+		}
+		if hasAccess {
+			break
+		}
+	}
+
+	return &hasAccess, nil
 }
 
 func (a *Auth) applySignInExternal(account *model.Account, authType model.AuthType, appOrg model.ApplicationOrganization,
@@ -334,6 +396,64 @@ func (a *Auth) applySignInExternal(account *model.Account, authType model.AuthTy
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountAuthType, nil, err)
 		}
+	}
+
+	return accountAuthType, nil
+}
+
+func (a *Auth) applyAppSignUpExternal(context storage.TransactionContext, account model.Account,
+	authType model.AuthType, appOrg model.ApplicationOrganization, externalUser model.ExternalSystemUser,
+	regPreferences map[string]interface{}, clientVersion *string, l *logs.Log) (*model.AccountAuthType, error) {
+
+	////create the app org membership
+	var permissions []model.Permission
+
+	//roles and groups mapping
+	identityProviderID, ok := authType.Params["identity_provider"].(string)
+	if !ok {
+		return nil, errors.ErrorData(logutils.StatusMissing, "identity provider id", nil)
+	}
+	identityProviderSetting := appOrg.FindIdentityProviderSetting(identityProviderID)
+	if identityProviderSetting == nil {
+		return nil, errors.ErrorData(logutils.StatusMissing, model.TypeIdentityProviderSetting, nil)
+	}
+
+	rolesIDs, groupsIDs, err := a.getExternalUserAuthorization(externalUser, identityProviderSetting)
+	if err != nil {
+		l.WarnError(logutils.MessageActionError(logutils.ActionGet, "external authorization", nil), err)
+	}
+
+	roles, err := a.storage.FindAppOrgRolesByIDs(context, rolesIDs, appOrg.ID)
+	if err != nil {
+		l.WarnError(logutils.MessageAction(logutils.StatusError, logutils.ActionFind, model.TypeAppOrgRole, nil), err)
+	}
+
+	groups, err := a.storage.FindAppOrgGroupsByIDs(context, groupsIDs, appOrg.ID)
+	if err != nil {
+		l.WarnError(logutils.MessageAction(logutils.StatusError, logutils.ActionFind, model.TypeAppOrgGroup, nil), err)
+	}
+	orgAppMembership := model.OrgAppMembership{ID: uuid.NewString(), AppOrg: appOrg,
+		Permissions:             permissions,
+		Roles:                   model.AccountRolesFromAppOrgRoles(roles, true, false),
+		Groups:                  model.AccountGroupsFromAppOrgGroups(groups, true, false),
+		Preferences:             regPreferences,
+		MostRecentClientVersion: clientVersion}
+
+	////set it to the account
+	newMemberships := account.OrgAppsMemberships
+	newMemberships = append(newMemberships, orgAppMembership)
+	account.OrgAppsMemberships = newMemberships
+
+	////save the account
+	err = a.storage.SaveAccount(nil, &account)
+	if err != nil {
+		return nil, err
+	}
+
+	////now find the account auth type
+	accountAuthType, err := a.findAccountAuthType(&account, &authType, externalUser.Identifier)
+	if err != nil {
+		return nil, err
 	}
 
 	return accountAuthType, nil
