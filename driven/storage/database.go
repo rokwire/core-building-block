@@ -246,6 +246,7 @@ func (m *database) start() error {
 	m.applicationsOrganizationsRoles = applicationsOrganizationsRoles
 	m.permissions = permissions
 	m.follows = follows
+	m.deletedMemberships = deletedMemberships
 
 	go m.apiKeys.Watch(nil, m.logger)
 	go m.authTypes.Watch(nil, m.logger)

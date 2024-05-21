@@ -1743,7 +1743,11 @@ func (sa *Adapter) FindDeletedOrgAppMemberships(appID string, orgID string) ([]m
 		return nil, errors.WrapErrorAction(logutils.ActionGet, "application organization ids", nil, err)
 	}
 
-	filter := bson.D{primitive.E{Key: "app_org_id", Value: bson.M{"$in": appOrgIDs}}}
+	filter := bson.D{}
+	if len(appOrgIDs) > 0 {
+		filter = bson.D{primitive.E{Key: "app_org_id", Value: bson.M{"$in": appOrgIDs}}}
+	}
+
 	var memberships []deletedOrgAppMembership
 	err = sa.db.deletedMemberships.Find(filter, &memberships, nil)
 	if err != nil {

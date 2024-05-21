@@ -2106,7 +2106,7 @@ func (a *Auth) deleteAccount(context storage.TransactionContext, account model.A
 	//check that every passed app with context is also in the list of passed apps
 	for _, app := range appsWithContext {
 		if !utils.Contains(apps, app.AppOrg.Application.ID) {
-			return errors.ErrorData(logutils.StatusMissing, "application id", &logutils.FieldArgs{"context.app_id": app.AppOrg.Application.ID})
+			return errors.ErrorData(logutils.StatusMissing, "context application id", &logutils.FieldArgs{"app_id": app.AppOrg.Application.ID})
 		}
 	}
 
