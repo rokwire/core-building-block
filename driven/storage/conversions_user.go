@@ -25,7 +25,7 @@ func orgAppMembershipFromStorage(item orgAppMembership, appOrg model.Application
 
 	return model.OrgAppMembership{ID: item.ID, AppOrg: appOrg, Permissions: item.Permissions,
 		Roles: roles, Groups: groups, Preferences: item.Preferences,
-		MostRecentClientVersion: item.MostRecentClientVersion, DateDeleted: item.DateDeleted}
+		MostRecentClientVersion: item.MostRecentClientVersion}
 }
 
 func orgAppsMembershipsFromStorage(items []orgAppMembership, appsOrgs []model.ApplicationOrganization) []model.OrgAppMembership {
@@ -60,10 +60,9 @@ func orgAppMembershipToStorage(item model.OrgAppMembership) orgAppMembership {
 	groups := accountGroupsToStorage(item.Groups)
 	preferences := item.Preferences
 	mostRecentClientVersion := item.MostRecentClientVersion
-	dateDeleted := item.DateDeleted
 
 	return orgAppMembership{ID: id, AppOrgID: appOrgID, Permissions: permissions, Roles: roles, Groups: groups,
-		Preferences: preferences, MostRecentClientVersion: mostRecentClientVersion, DateDeleted: dateDeleted}
+		Preferences: preferences, MostRecentClientVersion: mostRecentClientVersion}
 }
 
 func orgAppsMembershipsToStorage(items []model.OrgAppMembership) []orgAppMembership {
@@ -74,37 +73,31 @@ func orgAppsMembershipsToStorage(items []model.OrgAppMembership) []orgAppMembers
 	return res
 }
 
-// DeletedMembershipContext
-func deletedMembershipsContextFromStorage(items []deletedMembershipContext, appsOrgs []model.ApplicationOrganization) []model.DeletedMembershipContext {
+// DeletedOrgAppMembership
+func deletedMembershipsFromStorage(items []deletedOrgAppMembership, appsOrgs []model.ApplicationOrganization) []model.DeletedOrgAppMembership {
 	if len(items) == 0 {
-		return make([]model.DeletedMembershipContext, 0)
+		return make([]model.DeletedOrgAppMembership, 0)
 	}
 
-	res := make([]model.DeletedMembershipContext, len(items))
+	res := make([]model.DeletedOrgAppMembership, len(items))
 	for i, item := range items {
 		//find the application organization
-		var appOrg *model.ApplicationOrganization
-		for _, cAppOrg := range appsOrgs {
+		appOrg := model.ApplicationOrganization{ID: item.AppOrgID}
+		for i := range appsOrgs {
+			cAppOrg := appsOrgs[i]
 			if cAppOrg.ID == item.AppOrgID {
-				current := cAppOrg
-				appOrg = &current
+				appOrg = cAppOrg
 				break
 			}
 		}
 
-		if appOrg != nil {
-			res[i] = model.DeletedMembershipContext{AppOrg: *appOrg, Context: item.Context}
-		}
+		res[i] = model.DeletedOrgAppMembership{ID: item.ID, AccountID: item.AccountID, AppOrg: appOrg, Context: item.Context, DateCreated: item.DateCreated}
 	}
 	return res
 }
 
-func deletedMembershipsContextToStorage(items []model.DeletedMembershipContext) []deletedMembershipContext {
-	res := make([]deletedMembershipContext, len(items))
-	for i, c := range items {
-		res[i] = deletedMembershipContext{AppOrgID: c.AppOrg.ID, Context: c.Context}
-	}
-	return res
+func deletedMembershipToStorage(item model.DeletedOrgAppMembership) deletedOrgAppMembership {
+	return deletedOrgAppMembership{ID: item.ID, AccountID: item.AccountID, AppOrgID: item.AppOrg.ID, Context: item.Context, DateCreated: item.DateCreated}
 }
 
 // Account
@@ -152,8 +145,6 @@ func accountFromStorage(item tenantAccount, currentAppOrg *string, membershipsAp
 
 	dateCreated := item.DateCreated
 	dateUpdated := item.DateUpdated
-	dateDeleted := item.DateDeleted
-	deletedMembershipsContext := deletedMembershipsContextFromStorage(item.DeletedMembershipsContext, membershipsAppsOrgs)
 	lastLoginDate := item.LastLoginDate
 	lastAccessTokenDate := item.LastAccessTokenDate
 	return model.Account{ID: id, OrgID: orgID, OrgAppsMemberships: orgAppsMemberships,
@@ -168,8 +159,7 @@ func accountFromStorage(item tenantAccount, currentAppOrg *string, membershipsAp
 		Scopes: scopes, AuthTypes: authTypes, MFATypes: mfaTypes, Username: username,
 		ExternalIDs: externalIDs, SystemConfigs: systemConfigs, Profile: profile,
 		Privacy: privacy, Devices: devices, Anonymous: anonymous, Verified: verified,
-		DateCreated: dateCreated, DateUpdated: dateUpdated, DateDeleted: dateDeleted,
-		DeletedMembershipsContext: deletedMembershipsContext, LastLoginDate: lastLoginDate,
+		DateCreated: dateCreated, DateUpdated: dateUpdated, LastLoginDate: lastLoginDate,
 		LastAccessTokenDate: lastAccessTokenDate}
 }
 
@@ -207,8 +197,6 @@ func accountToStorage(item *model.Account) *tenantAccount {
 
 	dateCreated := item.DateCreated
 	dateUpdated := item.DateUpdated
-	dateDeleted := item.DateDeleted
-	deletedMembershipsContext := deletedMembershipsContextToStorage(item.DeletedMembershipsContext)
 	lastLoginDate := item.LastLoginDate
 	lastAccessTokenDate := item.LastAccessTokenDate
 
@@ -216,8 +204,7 @@ func accountToStorage(item *model.Account) *tenantAccount {
 		Scopes: scopes, AuthTypes: authTypes, MFATypes: mfaTypes, Username: username,
 		ExternalIDs: externalIDs, SystemConfigs: systemConfigs, Profile: profile, Devices: devices,
 		Anonymous: anonymous, Privacy: privacy, Verified: verified, DateCreated: dateCreated,
-		DateUpdated: dateUpdated, DateDeleted: dateDeleted, DeletedMembershipsContext: deletedMembershipsContext,
-		LastLoginDate: lastLoginDate, LastAccessTokenDate: lastAccessTokenDate}
+		DateUpdated: dateUpdated, LastLoginDate: lastLoginDate, LastAccessTokenDate: lastAccessTokenDate}
 }
 
 func accountToStorageDeprecated(item *model.Account) *account {

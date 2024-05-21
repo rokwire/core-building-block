@@ -116,7 +116,7 @@ type Encryption interface {
 
 // BBs exposes users related APIs used by the platform building blocks
 type BBs interface {
-	BBsGetDeletedOrgAppMemberships(appID string, orgID string, serviceID string) (map[model.AppOrgPair][]model.DeletedMembershipContext, error)
+	BBsGetDeletedOrgAppMemberships(appID string, orgID string, serviceID string) (map[model.AppOrgPair][]model.DeletedOrgAppMembership, error)
 
 	BBsGetTest() string
 
@@ -176,7 +176,7 @@ type Storage interface {
 	CountAccountsByParams(searchParams map[string]interface{}, appID string, orgID string) (int64, error)
 	FindAccountsByAccountID(context storage.TransactionContext, appID string, orgID string, accountIDs []string) ([]model.Account, error)
 	FindAccountsByUsername(context storage.TransactionContext, appOrg *model.ApplicationOrganization, username string) ([]model.Account, error)
-	FindDeletedOrgAppMemberships(appID string, orgID string) ([]model.Account, error)
+	FindDeletedOrgAppMemberships(appID string, orgID string) ([]model.DeletedOrgAppMembership, error)
 	SaveAccount(context storage.TransactionContext, account *model.Account) error
 
 	UpdateAccountPreferences(context storage.TransactionContext, cOrgID string, cAppID string, accountID string, preferences map[string]interface{}) error

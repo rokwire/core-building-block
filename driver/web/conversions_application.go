@@ -37,36 +37,36 @@ func partialAppsToDef(item []model.Application) []Def.PartialApp {
 	return result
 }
 
-// AccountOrgAppMemberships
-func accountOrgAppMembershipsToDef(memberships map[model.AppOrgPair][]model.DeletedMembershipContext) []Def.AccountOrgAppMemberships {
-	result := make([]Def.AccountOrgAppMemberships, 0)
-	for appOrgPair, contextList := range memberships {
-		result = append(result, Def.AccountOrgAppMemberships{AppId: appOrgPair.AppID, OrgId: appOrgPair.OrgID, Memberships: deletedMembershipsContextToDef(contextList)})
+// DeletedMemberships
+func deletedMembershipsMapToDef(memberships map[model.AppOrgPair][]model.DeletedOrgAppMembership) []Def.DeletedMembership {
+	result := make([]Def.DeletedMembership, 0)
+	for appOrgPair, orgAppMemberships := range memberships {
+		result = append(result, Def.DeletedMembership{AppId: appOrgPair.AppID, OrgId: appOrgPair.OrgID, Memberships: deletedMembershipsToDef(orgAppMemberships)})
 	}
 	return result
 }
 
 // DeletedMembershipContext
-func deletedMembershipsContextFromDef(items []Def.DeletedMembershipContext) ([]model.DeletedMembershipContext, error) {
-	result := make([]model.DeletedMembershipContext, len(items))
+func deletedMembershipsFromDef(items []Def.DeletedMembershipContext) ([]model.DeletedOrgAppMembership, error) {
+	result := make([]model.DeletedOrgAppMembership, len(items))
 	for i, item := range items {
 		if item.AppId == nil {
 			return nil, errors.ErrorData(logutils.StatusMissing, "app_id", nil)
 		}
-		result[i] = deletedMembershipContextFromDef(item)
+		result[i] = deletedMembershipFromDef(item)
 	}
 	return result, nil
 }
 
-func deletedMembershipContextFromDef(item Def.DeletedMembershipContext) model.DeletedMembershipContext {
+func deletedMembershipFromDef(item Def.DeletedMembershipContext) model.DeletedOrgAppMembership {
 	var context map[string]interface{}
 	if item.Context != nil {
 		context = *item.Context
 	}
-	return model.DeletedMembershipContext{AppOrg: model.ApplicationOrganization{Application: model.Application{ID: *item.AppId}}, Context: context}
+	return model.DeletedOrgAppMembership{AppOrg: model.ApplicationOrganization{Application: model.Application{ID: *item.AppId}}, Context: context}
 }
 
-func deletedMembershipsContextToDef(items []model.DeletedMembershipContext) []Def.DeletedMembershipContext {
+func deletedMembershipsToDef(items []model.DeletedOrgAppMembership) []Def.DeletedMembershipContext {
 	result := make([]Def.DeletedMembershipContext, len(items))
 	for i, item := range items {
 		var context *map[string]interface{}

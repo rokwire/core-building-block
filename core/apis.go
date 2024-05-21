@@ -555,7 +555,7 @@ type bbsImpl struct {
 	app *application
 }
 
-func (s *bbsImpl) BBsGetDeletedOrgAppMemberships(appID string, orgID string, serviceID string) (map[model.AppOrgPair][]model.DeletedMembershipContext, error) {
+func (s *bbsImpl) BBsGetDeletedOrgAppMemberships(appID string, orgID string, serviceID string) (map[model.AppOrgPair][]model.DeletedOrgAppMembership, error) {
 	return s.app.bbsGetDeletedOrgAppMemberships(appID, orgID, serviceID)
 }
 

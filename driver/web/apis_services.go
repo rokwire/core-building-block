@@ -448,14 +448,14 @@ func (h ServicesApisHandler) deleteAccount(l *logs.Log, r *http.Request, claims 
 	var deleteContextBody []Def.DeletedMembershipContext
 	err := json.NewDecoder(r.Body).Decode(&deleteContextBody)
 	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, "delete account app memberships context", nil, err, http.StatusBadRequest, true)
+		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, "app membership delete context", nil, err, http.StatusBadRequest, true)
 	}
-	deleteContext, err := deletedMembershipsContextFromDef(deleteContextBody)
+	appsWithContext, err := deletedMembershipsFromDef(deleteContextBody)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionParse, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, true)
 	}
 
-	err = h.coreAPIs.Auth.DeleteAccount(claims.Subject, apps, deleteContext)
+	err = h.coreAPIs.Auth.DeleteAccount(claims.Subject, apps, appsWithContext)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}

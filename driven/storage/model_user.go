@@ -86,9 +86,6 @@ type tenantAccount struct {
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`
 
-	DeletedMembershipsContext []deletedMembershipContext `bson:"deleted_memberships_context,omitempty"`
-	DateDeleted               *time.Time                 `bson:"date_deleted"`
-
 	IsFollowing bool `bson:"is_following"`
 
 	LastLoginDate       *time.Time `bson:"last_login_date"`
@@ -105,13 +102,17 @@ type orgAppMembership struct {
 
 	Preferences map[string]interface{} `bson:"preferences"`
 
-	MostRecentClientVersion *string    `bson:"most_recent_client_version"`
-	DateDeleted             *time.Time `bson:"date_deleted,omitempty"`
+	MostRecentClientVersion *string `bson:"most_recent_client_version"`
 }
 
-type deletedMembershipContext struct {
-	AppOrgID string                 `bson:"app_org_id"`
-	Context  map[string]interface{} `bson:"context"`
+type deletedOrgAppMembership struct {
+	ID        string `bson:"_id"`
+	AccountID string `bson:"account_id"`
+	AppOrgID  string `bson:"app_org_id"`
+
+	Context map[string]interface{} `bson:"context"`
+
+	DateCreated time.Time `bson:"date_created"`
 }
 
 type accountRole struct {

@@ -208,13 +208,6 @@ type AccountAuthType struct {
 	Unverified *bool                   `json:"unverified,omitempty"`
 }
 
-// AccountOrgAppMemberships defines model for AccountOrgAppMemberships.
-type AccountOrgAppMemberships struct {
-	AppId       string                     `json:"app_id"`
-	Memberships []DeletedMembershipContext `json:"memberships"`
-	OrgId       string                     `json:"org_id"`
-}
-
 // AdminToken defines model for AdminToken.
 type AdminToken struct {
 	Token string `json:"token"`
@@ -336,6 +329,13 @@ type Config struct {
 // Config_Data defines model for Config.Data.
 type Config_Data struct {
 	union json.RawMessage
+}
+
+// DeletedMembership defines model for DeletedMembership.
+type DeletedMembership struct {
+	AppId       string                     `json:"app_id"`
+	Memberships []DeletedMembershipContext `json:"memberships"`
+	OrgId       string                     `json:"org_id"`
 }
 
 // DeletedMembershipContext defines model for DeletedMembershipContext.

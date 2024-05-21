@@ -69,7 +69,7 @@ const (
 	sessionDeletePeriod int = 24 // hours
 	maxSessionsDelete   int = 250
 
-	deleteAccountsPeriodDefault int64 = 2 // hours
+	deleteMembershipsPeriodDefault int64 = 2 // hours
 
 	sessionIDRateLimit  int = 5
 	sessionIDRatePeriod int = 5 // minutes
@@ -118,17 +118,17 @@ type Auth struct {
 	deleteSessionsTimer     *time.Timer
 	deleteSessionsTimerDone chan bool
 
-	//delete accounts timer
-	deleteAccountsPeriod    int64
-	deleteAccountsTimer     *time.Timer
-	deleteAccountsTimerDone chan bool
+	//delete memberships timer
+	deleteMembershipsPeriod    int64
+	deleteMembershipsTimer     *time.Timer
+	deleteMembershipsTimerDone chan bool
 
 	version string
 }
 
 // NewAuth creates a new auth instance
 func NewAuth(serviceID string, host string, authPrivKey *keys.PrivKey, authService *authservice.AuthService, storage Storage, emailer Emailer, minTokenExp *int64,
-	maxTokenExp *int64, deleteAccountsPeriod *int64, supportLegacySigs bool, twilioAccountSID string, twilioToken string, twilioServiceSID string, profileBB ProfileBuildingBlock,
+	maxTokenExp *int64, deleteMembershipsPeriod *int64, supportLegacySigs bool, twilioAccountSID string, twilioToken string, twilioServiceSID string, profileBB ProfileBuildingBlock,
 	smtpHost string, smtpPortNum int, smtpUser string, smtpPassword string, smtpFrom string, logger *logs.Logger, version string) (*Auth, error) {
 	if minTokenExp == nil {
 		var minTokenExpVal int64 = 5
@@ -153,16 +153,16 @@ func NewAuth(serviceID string, host string, authPrivKey *keys.PrivKey, authServi
 	apiKeysLock := &sync.RWMutex{}
 
 	deleteSessionsTimerDone := make(chan bool)
-	deleteAccountsTimerDone := make(chan bool)
-	deletePeriod := deleteAccountsPeriodDefault
-	if deleteAccountsPeriod != nil {
-		deletePeriod = *deleteAccountsPeriod
+	deleteMembershipsTimerDone := make(chan bool)
+	deletePeriod := deleteMembershipsPeriodDefault
+	if deleteMembershipsPeriod != nil {
+		deletePeriod = *deleteMembershipsPeriod
 	}
 
 	auth := &Auth{storage: storage, emailer: emailer, logger: logger, authTypes: authTypes, externalAuthTypes: externalAuthTypes, anonymousAuthTypes: anonymousAuthTypes,
 		serviceAuthTypes: serviceAuthTypes, mfaTypes: mfaTypes, authPrivKey: authPrivKey, ServiceRegManager: nil, serviceID: serviceID, host: host, minTokenExp: *minTokenExp,
 		maxTokenExp: *maxTokenExp, profileBB: profileBB, cachedIdentityProviders: cachedIdentityProviders, identityProvidersLock: identityProvidersLock, apiKeys: apiKeys,
-		apiKeysLock: apiKeysLock, deleteSessionsTimerDone: deleteSessionsTimerDone, deleteAccountsTimerDone: deleteAccountsTimerDone, deleteAccountsPeriod: deletePeriod, version: version}
+		apiKeysLock: apiKeysLock, deleteSessionsTimerDone: deleteSessionsTimerDone, deleteMembershipsTimerDone: deleteMembershipsTimerDone, deleteMembershipsPeriod: deletePeriod, version: version}
 
 	err := auth.storeCoreRegs()
 	if err != nil {
@@ -2013,10 +2013,9 @@ func (a *Auth) handleAccountAuthTypeConflict(account model.Account, authTypeID s
 			return errors.ErrorData("existing", model.TypeAccount, nil).SetStatus(utils.ErrorStatusAlreadyExists)
 		}
 		//if linked to a different unverified account, remove whole account
-		accountApps := account.GetActiveApps()
-		accountAppsIDs := make([]string, len(accountApps))
-		for i, c := range accountApps {
-			accountAppsIDs[i] = c.ID
+		accountAppsIDs := make([]string, len(account.OrgAppsMemberships))
+		for i, c := range account.OrgAppsMemberships {
+			accountAppsIDs[i] = c.AppOrg.Application.ID
 		}
 		err := a.deleteAccount(nil, account, accountAppsIDs, nil, true) //from all apps
 		if err != nil {
@@ -2092,83 +2091,108 @@ func (a *Auth) removeAccountAuthTypeCredential(context storage.TransactionContex
 	return nil
 }
 
-func (a *Auth) deleteAccount(context storage.TransactionContext, account model.Account, fromAppsIDs []string, deleteContext []model.DeletedMembershipContext, immediate bool) error {
-	if len(fromAppsIDs) == 0 {
+func (a *Auth) deleteAccount(context storage.TransactionContext, account model.Account, apps []string, appsWithContext []model.DeletedOrgAppMembership, immediate bool) error {
+	if len(apps) == 0 {
 		return errors.ErrorData(logutils.StatusMissing, "application id", nil)
 	}
 
 	//check that every passed app is available for the account
-	for _, c := range fromAppsIDs {
+	for _, c := range apps {
 		hasApp := account.HasApp(c)
 		if !hasApp {
 			return errors.ErrorData(logutils.StatusInvalid, "application id", &logutils.FieldArgs{"account_id": account.ID, "app_id": c})
 		}
 	}
+	//check that every passed app with context is also in the list of passed apps
+	for _, app := range appsWithContext {
+		if !utils.Contains(apps, app.AppOrg.Application.ID) {
+			return errors.ErrorData(logutils.StatusMissing, "application id", &logutils.FieldArgs{"context.app_id": app.AppOrg.Application.ID})
+		}
+	}
 
 	//we are sure that all passed apps are available for the account
 	//now we have to decide if we have to remove the while account or just to unattach it from specific apps
-	allAccountApps := account.GetActiveApps()
-	if len(allAccountApps) == len(fromAppsIDs) {
+	if len(account.OrgAppsMemberships) == len(apps) {
 		//means remove all apps => remove the whole account
-		return a.deleteFullAccount(context, account, deleteContext, immediate)
+		return a.deleteFullAccount(context, account, appsWithContext, immediate)
 	}
 	//means remove specific apps only, so unattach only them
-	return a.deleteAppsFromAccount(context, account, fromAppsIDs, deleteContext)
+	return a.deleteAppsFromAccount(context, account, apps, appsWithContext)
 }
 
-func (a *Auth) deleteAppsFromAccount(context storage.TransactionContext, account model.Account, fromAppsIDs []string, deleteContext []model.DeletedMembershipContext) error {
-	// compare the applicationIDs and find the matching IDs for the org_app_memberships
-	var membershipsIDs []string
+func (a *Auth) deleteAppsFromAccount(context storage.TransactionContext, account model.Account, apps []string, appsWithContext []model.DeletedOrgAppMembership) error {
+	// set account ID and date created timestamps on deleted memberships
+	now := time.Now().UTC()
+	for i := range appsWithContext {
+		appsWithContext[i].AccountID = account.ID
+		appsWithContext[i].DateCreated = now
+	}
+
+	membershipIDs := make([]string, len(apps))
 	for _, a := range account.OrgAppsMemberships {
-		for _, b := range fromAppsIDs {
-			if a.AppOrg.Application.ID == b {
-				membershipsIDs = append(membershipsIDs, a.ID)
+		// set deleted membership AppOrg and set ID to be the same as membership ID from account
+		appHasContext := false
+		for j, context := range appsWithContext {
+			if context.AppOrg.Application.ID == a.AppOrg.Application.ID {
+				membershipIDs = append(membershipIDs, a.ID)
+				appsWithContext[j].ID = a.ID
+				appsWithContext[j].AppOrg = a.AppOrg
+				appHasContext = true
+				break
 			}
 		}
-		// need to set AppOrg in context so that the AppOrg ID is saved
-		for j, context := range deleteContext {
-			if context.AppOrg.Application.ID == a.AppOrg.Application.ID {
-				deleteContext[j].AppOrg = a.AppOrg
+
+		// add any apps without context to the list of deleted memberships to be inserted
+		if !appHasContext {
+			for _, b := range apps {
+				if a.AppOrg.Application.ID == b {
+					membershipIDs = append(membershipIDs, a.ID)
+					appsWithContext = append(appsWithContext, model.DeletedOrgAppMembership{ID: a.ID, AccountID: account.ID, AppOrg: a.AppOrg, Context: nil, DateCreated: now})
+					break
+				}
 			}
 		}
 	}
 
-	err := a.storage.UpdateOrgAppsMembershipsForDeletion(context, account.ID, membershipsIDs, deleteContext)
+	err := a.storage.InsertDeletedOrgAppMemberships(context, appsWithContext)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
+		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeDeletedOrgAppMembership, nil, err)
+	}
+
+	err = a.storage.DeleteOrgAppsMemberships(context, account.ID, membershipIDs)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeOrgAppMembership, nil, err)
 	}
 
 	return nil
 }
 
-func (a *Auth) deleteFullAccount(context storage.TransactionContext, account model.Account, deleteContext []model.DeletedMembershipContext, immediate bool) error {
-	//1. delete the account record immediately or mark account deleted and remove data in storage
+func (a *Auth) deleteFullAccount(context storage.TransactionContext, account model.Account, appsWithContext []model.DeletedOrgAppMembership, immediate bool) error {
+	//1. delete the account record and if this is user-initiated deletion (not immediate), insert deleted memberships
 	var err error
-	if immediate {
-		err = a.storage.DeleteAccount(context, account.ID)
-		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
-		}
-	} else {
+	if !immediate {
 		now := time.Now().UTC()
-		orgAppMemberships := make([]model.OrgAppMembership, len(account.OrgAppsMemberships))
-		// copy membership identifying info and set to be deleted
+		deletedOrgAppMemberships := make([]model.DeletedOrgAppMembership, len(account.OrgAppsMemberships))
 		for i, membership := range account.OrgAppsMemberships {
-			orgAppMemberships[i] = model.OrgAppMembership{ID: membership.ID, AppOrg: membership.AppOrg, DateDeleted: &now}
-			// need to set AppOrg in context so that the AppOrg ID is saved
-			for j, context := range deleteContext {
-				if context.AppOrg.Application.ID == membership.AppOrg.Application.ID {
-					deleteContext[j].AppOrg = membership.AppOrg
+			deletedOrgAppMemberships[i] = model.DeletedOrgAppMembership{ID: membership.ID, AccountID: account.ID, AppOrg: membership.AppOrg, DateCreated: now}
+			// set context if provided by user
+			for _, app := range appsWithContext {
+				if app.AppOrg.Application.ID == membership.AppOrg.Application.ID {
+					deletedOrgAppMemberships[i].Context = app.Context
+					break
 				}
 			}
 		}
-		deletedAccount := model.Account{ID: account.ID, OrgID: account.OrgID, OrgAppsMemberships: orgAppMemberships,
-			DateCreated: account.DateCreated, DateUpdated: &now, DateDeleted: &now, DeletedMembershipsContext: deleteContext}
 
-		err = a.storage.SaveAccount(context, &deletedAccount)
+		err := a.storage.InsertDeletedOrgAppMemberships(context, deletedOrgAppMemberships)
 		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
+			return errors.WrapErrorAction(logutils.ActionInsert, model.TypeDeletedOrgAppMembership, nil, err)
 		}
+	}
+
+	err = a.storage.DeleteAccount(context, account.ID)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
 	}
 
 	//2. remove account auth types from or delete credentials
@@ -2895,15 +2919,11 @@ func (a *Auth) deleteExpiredSessions() {
 	}
 }
 
-func (a *Auth) deleteAccounts() {
-	duration := time.Hour * time.Duration(a.deleteAccountsPeriod)
+func (a *Auth) deleteDeletedMemberships() {
+	duration := time.Hour * time.Duration(a.deleteMembershipsPeriod)
 
 	now := time.Now().UTC()
-	err := a.storage.DeleteOrgAppsMemberships(now.Add(-duration))
-	if err != nil {
-		a.logger.Error(err.Error())
-	}
-	err = a.storage.DeleteAccounts(now.Add(-duration))
+	err := a.storage.DeleteDeletedOrgAppsMemberships(now.Add(-duration))
 	if err != nil {
 		a.logger.Error(err.Error())
 	}

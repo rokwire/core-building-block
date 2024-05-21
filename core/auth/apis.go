@@ -40,7 +40,7 @@ func (a *Auth) Start() {
 	a.storage.RegisterStorageListener(&storageListener)
 
 	go utils.StartTimer(a.deleteSessionsTimer, a.deleteSessionsTimerDone, time.Hour*time.Duration(sessionDeletePeriod), a.deleteSessions, "delete sessions", a.logger)
-	go utils.StartTimer(a.deleteAccountsTimer, a.deleteAccountsTimerDone, time.Hour*time.Duration(a.deleteAccountsPeriod), a.deleteAccounts, "delete accounts", a.logger)
+	go utils.StartTimer(a.deleteMembershipsTimer, a.deleteMembershipsTimerDone, time.Hour*time.Duration(a.deleteMembershipsPeriod), a.deleteDeletedMemberships, "delete deleted memberships", a.logger)
 }
 
 // GetHost returns the host/issuer of the auth service
@@ -1868,8 +1868,8 @@ func (a *Auth) UnlinkAccountAuthType(accountID string, authenticationType string
 	return a.unlinkAccountAuthType(accountID, authenticationType, appTypeIdentifier, identifier, l)
 }
 
-// DeleteAccount deletes an account for the given id
-func (a *Auth) DeleteAccount(id string, apps []string, deleteContext []model.DeletedMembershipContext) error {
+// DeleteAccount deletes the given app memberships for the given account id
+func (a *Auth) DeleteAccount(id string, apps []string, appsWithContext []model.DeletedOrgAppMembership) error {
 	transaction := func(context storage.TransactionContext) error {
 		//1. first find the account record
 		account, err := a.storage.FindAccountByID(context, id)
@@ -1880,7 +1880,7 @@ func (a *Auth) DeleteAccount(id string, apps []string, deleteContext []model.Del
 			return errors.ErrorData(logutils.StatusMissing, model.TypeAccount, nil)
 		}
 
-		err = a.deleteAccount(context, *account, apps, deleteContext, false)
+		err = a.deleteAccount(context, *account, apps, appsWithContext, false)
 		if err != nil {
 			return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
 		}

@@ -21,26 +21,20 @@ import (
 	"github.com/rokwire/logging-library-go/v2/logutils"
 )
 
-func (app *application) bbsGetDeletedOrgAppMemberships(appID string, orgID string, serviceID string) (map[model.AppOrgPair][]model.DeletedMembershipContext, error) {
-	accounts, err := app.storage.FindDeletedOrgAppMemberships(appID, orgID)
+func (app *application) bbsGetDeletedOrgAppMemberships(appID string, orgID string, serviceID string) (map[model.AppOrgPair][]model.DeletedOrgAppMembership, error) {
+	memberships, err := app.storage.FindDeletedOrgAppMemberships(appID, orgID)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
-	}
-	if len(accounts) == 0 {
-		return nil, nil
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeDeletedOrgAppMembership, nil, err)
 	}
 
-	deletedMemberships := make(map[model.AppOrgPair][]model.DeletedMembershipContext)
-	for _, account := range accounts {
-		for _, membership := range account.OrgAppsMemberships {
-			if membership.IsDeleted() {
-				appOrgPair := model.AppOrgPair{AppID: membership.AppOrg.Application.ID, OrgID: account.OrgID}
-				if _, exists := deletedMemberships[appOrgPair]; !exists {
-					deletedMemberships[appOrgPair] = make([]model.DeletedMembershipContext, 0)
-				}
-				deletedMemberships[appOrgPair] = append(deletedMemberships[appOrgPair], model.DeletedMembershipContext{AccountID: account.ID, Context: account.GetDeletedMembershipContext(membership.AppOrg.ID, serviceID)})
-			}
+	// group the deleted memberships by AppOrgPairs
+	deletedMemberships := make(map[model.AppOrgPair][]model.DeletedOrgAppMembership)
+	for _, membership := range memberships {
+		appOrgPair := model.AppOrgPair{AppID: membership.AppOrg.Application.ID, OrgID: membership.AppOrg.Organization.ID}
+		if _, exists := deletedMemberships[appOrgPair]; !exists {
+			deletedMemberships[appOrgPair] = make([]model.DeletedOrgAppMembership, 0)
 		}
+		deletedMemberships[appOrgPair] = append(deletedMemberships[appOrgPair], membership)
 	}
 
 	return deletedMemberships, nil

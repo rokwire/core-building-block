@@ -1736,29 +1736,20 @@ func (sa *Adapter) FindAccountByIDV2(context TransactionContext, cOrgID string, 
 	return sa.findAccount(context, "_id", id, &currentAppOrg.ID)
 }
 
-// FindDeletedOrgAppMemberships finds accounts with orgAppMemberships flagged for deletion
-func (sa *Adapter) FindDeletedOrgAppMemberships(appID string, orgID string) ([]model.Account, error) {
+// FindDeletedOrgAppMemberships finds deleted memberships by appID, orgID pair
+func (sa *Adapter) FindDeletedOrgAppMemberships(appID string, orgID string) ([]model.DeletedOrgAppMembership, error) {
 	appOrgIDs, err := sa.getAppOrgIDsByAppOrgPair(appID, orgID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGet, "application organization ids", nil, err)
 	}
 
-	membershipFilter := bson.M{
-		"date_deleted": bson.M{"$exists": true},
-	}
-	if len(appOrgIDs) > 0 {
-		membershipFilter["app_org_id"] = bson.M{"$in": appOrgIDs}
-	}
-	filter := bson.D{primitive.E{Key: "org_apps_memberships", Value: bson.M{
-		"$elemMatch": membershipFilter,
-	}}}
-
-	var accounts []tenantAccount
-	err = sa.db.tenantsAccounts.Find(filter, &accounts, nil)
+	filter := bson.D{primitive.E{Key: "app_org_id", Value: bson.M{"$in": appOrgIDs}}}
+	var memberships []deletedOrgAppMembership
+	err = sa.db.deletedMemberships.Find(filter, &memberships, nil)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"deleted": true}, err)
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeDeletedOrgAppMembership, &logutils.FieldArgs{"app_org_id": appOrgIDs}, err)
 	}
-	if len(accounts) == 0 {
+	if len(memberships) == 0 {
 		return nil, nil
 	}
 
@@ -1768,8 +1759,34 @@ func (sa *Adapter) FindDeletedOrgAppMemberships(appID string, orgID string) ([]m
 		return nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeApplicationOrganization, nil, err)
 	}
 
-	deletedAccounts := accountsFromStorage(accounts, nil, allAppsOrgs)
-	return deletedAccounts, nil
+	deletedMemberships := deletedMembershipsFromStorage(memberships, allAppsOrgs)
+	return deletedMemberships, nil
+}
+
+// InsertDeletedOrgAppMemberships inserts new deleted memberships
+func (sa *Adapter) InsertDeletedOrgAppMemberships(context TransactionContext, memberships []model.DeletedOrgAppMembership) error {
+	stgMemberships := make([]interface{}, len(memberships))
+	for i, membership := range memberships {
+		stgMemberships[i] = deletedMembershipToStorage(membership)
+	}
+
+	_, err := sa.db.deletedMemberships.InsertManyWithContext(context, stgMemberships, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionInsert, model.TypeDeletedOrgAppMembership, nil, err)
+	}
+
+	return nil
+}
+
+// DeleteDeletedOrgAppsMemberships deletes user-deleted memberships
+func (sa *Adapter) DeleteDeletedOrgAppsMemberships(cutoff time.Time) error {
+	filter := bson.M{"date_created": bson.M{"$lt": cutoff}}
+	_, err := sa.db.deletedMemberships.DeleteMany(filter, nil)
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeDeletedOrgAppMembership, nil, err)
+	}
+
+	return nil
 }
 
 // FindAccountByAuthTypeID finds an account by auth type id
@@ -2438,70 +2455,18 @@ func (sa *Adapter) DeleteAccountRoles(context TransactionContext, accountID stri
 	return nil
 }
 
-// UpdateOrgAppsMembershipsForDeletion marks org apps memberships for deletion by DeleteOrgAppsMemberships
-func (sa *Adapter) UpdateOrgAppsMembershipsForDeletion(context TransactionContext, accountID string, membershipsIDs []string, deleteContext []model.DeletedMembershipContext) error {
-	//filter
-	filter := bson.D{
-		primitive.E{Key: "_id", Value: accountID},
-	}
-
-	// update (set date_deleted timestamp and remove all data unnecessary for identifying the membership)
-	now := time.Now().UTC()
-	update := bson.D{
-		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "org_apps_memberships.$[membership].date_deleted", Value: now},
-			primitive.E{Key: "date_updated", Value: now},
-		}},
-		primitive.E{Key: "$unset", Value: bson.D{
-			primitive.E{Key: "org_apps_memberships.$[membership].permissions", Value: 1},
-			primitive.E{Key: "org_apps_memberships.$[membership].roles", Value: 1},
-			primitive.E{Key: "org_apps_memberships.$[membership].groups", Value: 1},
-			primitive.E{Key: "org_apps_memberships.$[membership].preferences", Value: 1},
-			primitive.E{Key: "org_apps_memberships.$[membership].most_recent_client_version", Value: 1},
-		}},
-		primitive.E{Key: "$push", Value: bson.D{
-			primitive.E{Key: "deleted_memberships_context", Value: bson.M{"$each": deletedMembershipsContextToStorage(deleteContext)}},
-		}},
-	}
-	membershipFilter := options.ArrayFilters{
-		Filters: []interface{}{
-			bson.M{"membership.id": bson.M{"$in": membershipsIDs}},
-		},
-	}
-	opts := options.Update().SetArrayFilters(membershipFilter)
-	res, err := sa.db.tenantsAccounts.UpdateOneWithContext(context, filter, update, opts)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"_id": accountID}, err)
-	}
-	if res.ModifiedCount != 1 {
-		return errors.ErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"_id": accountID, "modified": res.ModifiedCount, "expected": 1})
-	}
-	return nil
-}
-
-// DeleteOrgAppsMemberships deletes orgAppMemberships marked for deletion by UpdateOrgAppsMembershipsForDeletion
-func (sa *Adapter) DeleteOrgAppsMemberships(cutoff time.Time) error {
-	filter := bson.D{}
+// DeleteOrgAppsMemberships deletes orgAppMemberships from the account for the given accountID
+func (sa *Adapter) DeleteOrgAppsMemberships(context TransactionContext, accountID string, membershipIDs []string) error {
+	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
 	update := bson.D{
 		primitive.E{Key: "$pull", Value: bson.D{
-			primitive.E{Key: "org_apps_memberships", Value: bson.M{"date_deleted": bson.M{"$lt": cutoff}}},
+			primitive.E{Key: "org_apps_memberships", Value: bson.M{"id": bson.M{"$in": membershipIDs}}},
 		}},
 	}
 
-	_, err := sa.db.tenantsAccounts.UpdateMany(filter, update, nil)
+	_, err := sa.db.tenantsAccounts.UpdateOneWithContext(context, filter, update, nil)
 	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, &logutils.FieldArgs{"date_updated": cutoff.Format("2006-01-02T15:04:05.000Z")}, err)
-	}
-
-	return nil
-}
-
-// DeleteAccounts deletes accounts marked for deletion of all orgAppMemberships
-func (sa *Adapter) DeleteAccounts(cutoff time.Time) error {
-	filter := bson.M{"date_deleted": bson.M{"$lt": cutoff}}
-	_, err := sa.db.tenantsAccounts.DeleteMany(filter, nil)
-	if err != nil {
-		return errors.WrapErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err)
+		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"id": accountID, "membership_ids": membershipIDs}, err)
 	}
 
 	return nil

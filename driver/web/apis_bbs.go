@@ -172,7 +172,7 @@ func (h BBsApisHandler) getDeletedMemberships(l *logs.Log, r *http.Request, clai
 		return l.HTTPResponseErrorAction(logutils.ActionGet, "deleted account ids", nil, err, http.StatusInternalServerError, true)
 	}
 
-	deletedMembershipsResp := accountOrgAppMembershipsToDef(deletedMemberships)
+	deletedMembershipsResp := deletedMembershipsMapToDef(deletedMemberships)
 	data, err := json.Marshal(deletedMembershipsResp)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionMarshal, "deleted account ids", nil, err, http.StatusInternalServerError, false)
