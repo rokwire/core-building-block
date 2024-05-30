@@ -1369,6 +1369,9 @@ type PostBbsAccountsCountParams struct {
 type GetBbsDeletedMembershipsParams struct {
 	// ServiceId The ID of the service making the request
 	ServiceId string `form:"service_id" json:"service_id"`
+
+	// StartTime The start time for filtering results, specified as a Unix timestamp in seconds
+	StartTime *int64 `form:"start_time,omitempty" json:"start_time,omitempty"`
 }
 
 // GetBbsServiceRegsParams defines parameters for GetBbsServiceRegs.

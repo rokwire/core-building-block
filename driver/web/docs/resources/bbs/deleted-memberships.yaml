@@ -17,6 +17,15 @@ get:
       explode: false
       schema:
         type: string
+    - name: start_time
+      in: query
+      description: The start time for filtering results, specified as a Unix timestamp in seconds
+      required: false
+      style: form
+      explode: false
+      schema:
+        type: integer
+        format: int64
   responses:
     200:
       description: Success
