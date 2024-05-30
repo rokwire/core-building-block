@@ -168,10 +168,19 @@ func (h BBsApisHandler) getDeletedMemberships(l *logs.Log, r *http.Request, clai
 		return l.HTTPResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("service_id"), nil, http.StatusBadRequest, false)
 	}
 
-	//TODO
-	now := time.Now()
-	startTime := &now
-
+	//start time - optional
+	startTimeStr := r.URL.Query().Get("start_time")
+	var startTime *time.Time
+	if startTimeStr != "" {
+		//convert the string to an int64 (assume seconds)
+		startTimeUnix, err := strconv.ParseInt(startTimeStr, 10, 64)
+		if err != nil {
+			return l.HTTPResponseErrorData(logutils.StatusInvalid, logutils.TypeQueryParam, logutils.StringArgs("start_time"), nil, http.StatusBadRequest, false)
+		}
+		//convert the int64 to a time.Time
+		startTimeValue := time.Unix(startTimeUnix, 0)
+		startTime = &startTimeValue
+	}
 	deletedMemberships, err := h.coreAPIs.BBs.BBsGetDeletedOrgAppMemberships(claims.AppID, claims.OrgID, serviceID, startTime)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionGet, "deleted account ids", nil, err, http.StatusInternalServerError, true)
