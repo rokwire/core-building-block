@@ -21,7 +21,7 @@ import (
 	"github.com/rokwire/logging-library-go/v2/logutils"
 )
 
-func (app *application) bbsGetDeletedOrgAppMemberships(appID string, orgID string, serviceID string) (map[model.AppOrgPair][]model.DeletedOrgAppMembership, error) {
+func (app *application) bbsGetDeletedOrgAppMemberships(appID string, orgID string, _ string) (map[model.AppOrgPair][]model.DeletedOrgAppMembership, error) {
 	memberships, err := app.storage.FindDeletedOrgAppMemberships(appID, orgID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeDeletedOrgAppMembership, nil, err)
