@@ -445,17 +445,22 @@ func (h ServicesApisHandler) deleteAccount(l *logs.Log, r *http.Request, claims 
 		apps = append(apps, claims.AppID)
 	}
 
-	var deleteContextBody []Def.DeletedMembershipContext
-	err := json.NewDecoder(r.Body).Decode(&deleteContextBody)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, "app membership delete context", nil, err, http.StatusBadRequest, true)
-	}
-	appsWithContext, err := deletedMembershipsFromDef(deleteContextBody)
-	if err != nil {
-		return l.HTTPResponseErrorAction(logutils.ActionParse, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, true)
+	var appsWithContext []model.DeletedOrgAppMembership
+	//check if the body is empty
+	if r.Body != nil && r.Body != http.NoBody {
+		var deleteContextBody []Def.DeletedMembershipContext
+		err := json.NewDecoder(r.Body).Decode(&deleteContextBody)
+		if err != nil {
+			return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, "app membership delete context", nil, err, http.StatusBadRequest, true)
+		}
+
+		appsWithContext, err = deletedMembershipsFromDef(deleteContextBody)
+		if err != nil {
+			return l.HTTPResponseErrorAction(logutils.ActionParse, logutils.TypeRequestBody, nil, err, http.StatusBadRequest, true)
+		}
 	}
 
-	err = h.coreAPIs.Auth.DeleteAccount(claims.Subject, apps, appsWithContext)
+	err := h.coreAPIs.Auth.DeleteAccount(claims.Subject, apps, appsWithContext)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionDelete, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}
