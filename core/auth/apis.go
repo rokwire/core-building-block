@@ -40,7 +40,9 @@ func (a *Auth) Start() {
 	a.storage.RegisterStorageListener(&storageListener)
 
 	go utils.StartTimer(a.deleteSessionsTimer, a.deleteSessionsTimerDone, time.Hour*time.Duration(sessionDeletePeriod), a.deleteSessions, "delete sessions", a.logger)
-	go utils.StartTimer(a.deleteMembershipsTimer, a.deleteMembershipsTimerDone, time.Hour*time.Duration(a.deleteMembershipsPeriod), a.deleteDeletedMemberships, "delete deleted memberships", a.logger)
+
+	//do not delete the removed memberships for now - we allow filtering by date
+	//go utils.StartTimer(a.deleteMembershipsTimer, a.deleteMembershipsTimerDone, time.Hour*time.Duration(a.deleteMembershipsPeriod), a.deleteDeletedMemberships, "delete deleted memberships", a.logger)
 }
 
 // GetHost returns the host/issuer of the auth service
