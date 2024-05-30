@@ -53,6 +53,10 @@ const (
 	TypeDevice logutils.MessageDataType = "device"
 	//TypeFollow follow
 	TypeFollow logutils.MessageDataType = "follow"
+	//TypeOrgAppMembership org app membership
+	TypeOrgAppMembership logutils.MessageDataType = "org app membership"
+	//TypeDeletedOrgAppMembership deleted org app membership
+	TypeDeletedOrgAppMembership logutils.MessageDataType = "deleted org app membership"
 )
 
 // Privacy represents the privacy options for each account
@@ -72,6 +76,17 @@ type OrgAppMembership struct {
 	Preferences map[string]interface{}
 
 	MostRecentClientVersion *string
+}
+
+// DeletedOrgAppMembership represents a user-deleted OrgAppMembership
+type DeletedOrgAppMembership struct {
+	ID        string
+	AccountID string
+	AppOrg    ApplicationOrganization
+
+	Context map[string]interface{} // some data for other building blocks to consider when deleting some user data for an account app membership
+
+	DateCreated time.Time
 }
 
 // Account represents account entity
@@ -143,19 +158,6 @@ func (a Account) HasApp(appID string) bool {
 		}
 	}
 	return false
-}
-
-// GetApps gives the account applications
-func (a Account) GetApps() []Application {
-	if len(a.OrgAppsMemberships) == 0 {
-		return []Application{}
-	}
-
-	res := make([]Application, len(a.OrgAppsMemberships))
-	for i, oam := range a.OrgAppsMemberships {
-		res[i] = oam.AppOrg.Application
-	}
-	return res
 }
 
 // SetCurrentMembership sets current membership

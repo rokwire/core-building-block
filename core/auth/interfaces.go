@@ -415,8 +415,8 @@ type APIs interface {
 	//CheckGroups loads appOrg groups by IDs from storage and checks that they are assignable or revocable
 	CheckGroups(context storage.TransactionContext, appOrg *model.ApplicationOrganization, groupIDs []string, assignerPermissions []string, revoke bool) ([]model.AppOrgGroup, error)
 
-	//DeleteAccount deletes an account for the given id
-	DeleteAccount(id string, apps []string) error
+	//DeleteAccount deletes the given app memberships for the given account id
+	DeleteAccount(id string, apps []string, appsWithContext []model.DeletedOrgAppMembership) error
 
 	//GetAdminToken returns an admin token for the specified application and organization
 	GetAdminToken(claims tokenauth.Claims, appID string, orgID string, l *logs.Log) (string, error)
@@ -490,7 +490,11 @@ type Storage interface {
 	SaveAccount(context storage.TransactionContext, account *model.Account) error
 	DeleteAccount(context storage.TransactionContext, id string) error
 	UpdateAccountUsageInfo(context storage.TransactionContext, accountID string, updateLoginTime bool, updateAccessTokenTime bool, clientVersion *string) error
-	DeleteOrgAppsMemberships(context storage.TransactionContext, accountID string, membershipsIDs []string) error
+	DeleteOrgAppsMemberships(context storage.TransactionContext, accountID string, membershipIDs []string) error
+
+	//DeletedOrgAppMemberships
+	InsertDeletedOrgAppMemberships(context storage.TransactionContext, memberships []model.DeletedOrgAppMembership) error
+	DeleteDeletedOrgAppsMemberships(cutoff time.Time) error
 
 	//Profiles
 	UpdateAccountProfile(context storage.TransactionContext, profile model.Profile) error

@@ -163,6 +163,16 @@ func main() {
 		logger.Infof("Error parsing max token exp, applying defaults: %v", err)
 	}
 
+	//deleted accounts
+	deleteAccountsPeriodStr := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_DELETE_ACCOUNTS_PERIOD", false, false)
+	var deleteAccountsPeriod *int64
+	deleteAccountsPeriodVal, err := strconv.ParseInt(deleteAccountsPeriodStr, 10, 64)
+	if err == nil {
+		deleteAccountsPeriod = &deleteAccountsPeriodVal
+	} else {
+		logger.Infof("Error parsing delete account period, applying defaults: %v", err)
+	}
+
 	//profile bb adapter
 	migrateProfiles := envLoader.GetAndLogEnvVar("ROKWIRE_CORE_MIGRATE_PROFILES", false, false)
 	migrate, err := strconv.ParseBool(migrateProfiles)
@@ -180,7 +190,7 @@ func main() {
 		FirstParty:  true,
 	}
 
-	authImpl, err := auth.NewAuth(serviceID, host, authPrivKey, authService, storageAdapter, emailer, minTokenExp, maxTokenExp, supportLegacySigs,
+	authImpl, err := auth.NewAuth(serviceID, host, authPrivKey, authService, storageAdapter, emailer, minTokenExp, maxTokenExp, deleteAccountsPeriod, supportLegacySigs,
 		twilioAccountSID, twilioToken, twilioServiceSID, profileBBAdapter, smtpHost, smtpPortNum, smtpUser, smtpPassword, smtpFrom, logger, Version)
 	if err != nil {
 		logger.Fatalf("Error initializing auth: %v", err)

@@ -56,6 +56,7 @@ type database struct {
 	applicationConfigs              *collectionWrapper
 	permissions                     *collectionWrapper
 	follows                         *collectionWrapper
+	deletedMemberships              *collectionWrapper
 
 	listeners []Listener
 }
@@ -208,6 +209,12 @@ func (m *database) start() error {
 		return err
 	}
 
+	deletedMemberships := &collectionWrapper{database: m, coll: db.Collection("deleted_memberships")}
+	err = m.applyDeletedMembershipsChecks(deletedMemberships)
+	if err != nil {
+		return err
+	}
+
 	applicationConfigs := &collectionWrapper{database: m, coll: db.Collection("application_configs")}
 	err = m.applyApplicationConfigsChecks(applicationConfigs)
 	if err != nil {
@@ -239,6 +246,7 @@ func (m *database) start() error {
 	m.applicationsOrganizationsRoles = applicationsOrganizationsRoles
 	m.permissions = permissions
 	m.follows = follows
+	m.deletedMemberships = deletedMemberships
 
 	go m.apiKeys.Watch(nil, m.logger)
 	go m.authTypes.Watch(nil, m.logger)
@@ -639,6 +647,19 @@ func (m *database) applyFollowsChecks(follows *collectionWrapper) error {
 	}
 
 	m.logger.Info("applications follows checks passed")
+	return nil
+}
+
+func (m *database) applyDeletedMembershipsChecks(deletedMemberships *collectionWrapper) error {
+	m.logger.Info("apply deleted memberships checks.....")
+
+	//add app_org_id index
+	err := deletedMemberships.AddIndex(bson.D{primitive.E{Key: "app_org_id", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	m.logger.Info("deleted memberships checks passed")
 	return nil
 }
 

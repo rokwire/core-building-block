@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Rokwire Core Building Block API
   description: Core Building Block API Documentation
-  version: 1.40.0
+  version: 1.41.0
 servers:
   - url: 'https://api.rokwire.illinois.edu/core'
     description: Production server
@@ -1168,6 +1168,52 @@ paths:
           explode: false
           schema:
             type: string
+      requestBody:
+        description: optional context data per service that should be considered when deleting user data
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/DeletedMembershipContext'
+            examples:
+              single_app_surveys:
+                summary: Retain some survey responses
+                value:
+                  - app_id: app_id
+                    context:
+                      surveys:
+                        retain_responses:
+                          survey_ids:
+                            - survey_id1
+                            - survey_id2
+              single_app_groups:
+                summary: Retain some groups data
+                value:
+                  - app_id: app_id
+                    context:
+                      groups:
+                        retain_posts:
+                          group_ids:
+                            - group_id1
+                            - group_id2
+              multiple_app_surveys:
+                summary: Retain some survey responses for multiple apps
+                value:
+                  - app_id: app_id1
+                    context:
+                      surveys:
+                        retain_responses:
+                          survey_ids:
+                            - survey_id1
+                            - survey_id2
+                  - app_id: app_id2
+                    context:
+                      surveys:
+                        retain_responses:
+                          survey_ids:
+                            - survey_id3
+                            - survey_id4
       responses:
         '200':
           description: Success
@@ -3984,6 +4030,50 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+  /bbs/deleted-memberships:
+    get:
+      tags:
+        - BBs
+      summary: Get deleted accounts
+      description: |
+        Returns a list of deleted account IDs
+
+        **Auth:** Requires auth token with permission to get deleted accounts
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: service_id
+          in: query
+          description: The ID of the service making the request
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+        - name: start_time
+          in: query
+          description: 'The start time for filtering results, specified as a Unix timestamp in seconds'
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DeletedMembership'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   /bbs/accounts:
     post:
       tags:
@@ -6784,6 +6874,31 @@ components:
         external_ids:
           type: object
           nullable: true
+    DeletedMembership:
+      allOf:
+        - $ref: '#/components/schemas/AppOrgPair'
+        - required:
+            - memberships
+          type: object
+          properties:
+            memberships:
+              type: array
+              items:
+                $ref: '#/components/schemas/DeletedMembershipContext'
+    DeletedMembershipContext:
+      required:
+        - app_id
+        - account_id
+      type: object
+      properties:
+        app_id:
+          writeOnly: true
+          type: string
+        account_id:
+          readOnly: true
+          type: string
+        context:
+          type: object
     Profile:
       required:
         - id
