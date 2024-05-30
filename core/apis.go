@@ -267,9 +267,12 @@ func (c *APIs) storeSystemData() error {
 }
 
 // NewCoreAPIs creates new CoreAPIs
-func NewCoreAPIs(env string, version string, build string, serviceID string, storage Storage, auth auth.APIs, systemInitSettings map[string]string, verifyEmail bool, logger *logs.Logger) *APIs {
+func NewCoreAPIs(env string, version string, build string, serviceID string, storage Storage, auth auth.APIs, systemInitSettings map[string]string,
+	verifyEmail bool, logger *logs.Logger) *APIs {
+
 	//add application instance
 	listeners := []ApplicationListener{}
+
 	application := application{env: env, version: version, build: build, serviceID: serviceID, storage: storage, listeners: listeners, auth: auth}
 
 	//add coreAPIs instance
@@ -294,10 +297,6 @@ func NewCoreAPIs(env string, version string, build string, serviceID string, sto
 // servicesImpl
 type servicesImpl struct {
 	app *application
-}
-
-func (s *servicesImpl) SerDeleteAccount(id string, apps []string) error {
-	return s.app.serDeleteAccount(id, apps)
 }
 
 func (s *servicesImpl) SerGetAccount(cOrgID string, cAppID string, accountID string) (*model.Account, error) {
@@ -554,6 +553,10 @@ func (s *encryptionImpl) EncGetTest() string {
 
 type bbsImpl struct {
 	app *application
+}
+
+func (s *bbsImpl) BBsGetDeletedOrgAppMemberships(appID string, orgID string, serviceID string, startTime *time.Time) (map[model.AppOrgPair][]model.DeletedOrgAppMembership, error) {
+	return s.app.bbsGetDeletedOrgAppMemberships(appID, orgID, serviceID, startTime)
 }
 
 func (s *bbsImpl) BBsGetTest() string {

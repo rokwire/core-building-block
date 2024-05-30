@@ -14,6 +14,33 @@
 
 package core
 
+import (
+	"core-building-block/core/model"
+	"time"
+
+	"github.com/rokwire/logging-library-go/v2/errors"
+	"github.com/rokwire/logging-library-go/v2/logutils"
+)
+
+func (app *application) bbsGetDeletedOrgAppMemberships(appID string, orgID string, _ string, startTime *time.Time) (map[model.AppOrgPair][]model.DeletedOrgAppMembership, error) {
+	memberships, err := app.storage.FindDeletedOrgAppMemberships(appID, orgID, startTime)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeDeletedOrgAppMembership, nil, err)
+	}
+
+	// group the deleted memberships by AppOrgPairs
+	deletedMemberships := make(map[model.AppOrgPair][]model.DeletedOrgAppMembership)
+	for _, membership := range memberships {
+		appOrgPair := model.AppOrgPair{AppID: membership.AppOrg.Application.ID, OrgID: membership.AppOrg.Organization.ID}
+		if _, exists := deletedMemberships[appOrgPair]; !exists {
+			deletedMemberships[appOrgPair] = make([]model.DeletedOrgAppMembership, 0)
+		}
+		deletedMemberships[appOrgPair] = append(deletedMemberships[appOrgPair], membership)
+	}
+
+	return deletedMemberships, nil
+}
+
 func (app *application) bbsGetTest() string {
 	return "BBs - test"
 }

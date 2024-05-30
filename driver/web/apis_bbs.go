@@ -23,6 +23,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/rokwire/core-auth-library-go/v3/authorization"
@@ -161,6 +162,40 @@ func (h BBsApisHandler) getServiceAccessTokens(l *logs.Log, r *http.Request, cla
 	return l.HTTPResponseSuccessJSON(respData)
 }
 
+func (h BBsApisHandler) getDeletedMemberships(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
+	serviceID := r.URL.Query().Get("service_id")
+	if serviceID == "" {
+		return l.HTTPResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("service_id"), nil, http.StatusBadRequest, false)
+	}
+
+	//start time - optional
+	startTimeStr := r.URL.Query().Get("start_time")
+	var startTime *time.Time
+	if startTimeStr != "" {
+		//convert the string to an int64 (assume seconds)
+		startTimeUnix, err := strconv.ParseInt(startTimeStr, 10, 64)
+		if err != nil {
+			return l.HTTPResponseErrorData(logutils.StatusInvalid, logutils.TypeQueryParam, logutils.StringArgs("start_time"), nil, http.StatusBadRequest, false)
+		}
+		//convert the int64 to a time.Time
+		startTimeValue := time.Unix(startTimeUnix, 0)
+		startTime = &startTimeValue
+	}
+	deletedMemberships, err := h.coreAPIs.BBs.BBsGetDeletedOrgAppMemberships(claims.AppID, claims.OrgID, serviceID, startTime)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionGet, "deleted account ids", nil, err, http.StatusInternalServerError, true)
+	}
+
+	deletedMembershipsResp := deletedMembershipsMapToDef(deletedMemberships)
+	data, err := json.Marshal(deletedMembershipsResp)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionMarshal, "deleted account ids", nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HTTPResponseSuccessJSON(data)
+}
+
+// NewBBsApisHandler creates new bbs Handler instance
 func (h BBsApisHandler) getAccounts(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
 	// get scopes relevant to accounts
 	if claims.Scope == "" {

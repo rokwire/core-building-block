@@ -105,6 +105,16 @@ type orgAppMembership struct {
 	MostRecentClientVersion *string `bson:"most_recent_client_version"`
 }
 
+type deletedOrgAppMembership struct {
+	ID        string `bson:"_id"`
+	AccountID string `bson:"account_id"`
+	AppOrgID  string `bson:"app_org_id"`
+
+	Context map[string]interface{} `bson:"context"`
+
+	DateCreated time.Time `bson:"date_created"`
+}
+
 type accountRole struct {
 	Role     appOrgRole `bson:"role"`
 	Active   bool       `bson:"active"`

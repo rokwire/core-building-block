@@ -17,6 +17,7 @@ package core
 import (
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
+	"time"
 
 	"github.com/rokwire/core-auth-library-go/v3/tokenauth"
 	"github.com/rokwire/logging-library-go/v2/logs"
@@ -24,7 +25,6 @@ import (
 
 // Services exposes APIs for the driver adapters
 type Services interface {
-	SerDeleteAccount(id string, apps []string) error
 	SerGetAccount(cOrgID string, cAppID string, accountID string) (*model.Account, error)
 	SerGetProfile(cOrgID string, cAppID string, accountID string) (*model.Profile, error)
 	SerGetPreferences(cOrgID string, cAppID string, accountID string) (map[string]interface{}, error)
@@ -117,6 +117,8 @@ type Encryption interface {
 
 // BBs exposes users related APIs used by the platform building blocks
 type BBs interface {
+	BBsGetDeletedOrgAppMemberships(appID string, orgID string, serviceID string, startTime *time.Time) (map[model.AppOrgPair][]model.DeletedOrgAppMembership, error)
+
 	BBsGetTest() string
 
 	BBsGetAccounts(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]map[string]interface{}, error)
@@ -175,6 +177,8 @@ type Storage interface {
 	CountAccountsByParams(searchParams map[string]interface{}, appID string, orgID string) (int64, error)
 	FindAccountsByAccountID(context storage.TransactionContext, appID string, orgID string, accountIDs []string) ([]model.Account, error)
 	FindAccountsByUsername(context storage.TransactionContext, appOrg *model.ApplicationOrganization, username string) ([]model.Account, error)
+	FindDeletedOrgAppMemberships(appID string, orgID string, startTime *time.Time) ([]model.DeletedOrgAppMembership, error)
+	SaveAccount(context storage.TransactionContext, account *model.Account) error
 
 	UpdateAccountPreferences(context storage.TransactionContext, cOrgID string, cAppID string, accountID string, preferences map[string]interface{}) error
 	UpdateAccountSystemConfigs(context storage.TransactionContext, accountID string, configs map[string]interface{}) error
@@ -191,6 +195,10 @@ type Storage interface {
 
 	UpdateAccountProfile(context storage.TransactionContext, profile model.Profile) error
 	UpdateAccountPrivacy(context storage.TransactionContext, accountID string, privacy model.Privacy) error
+
+	FindCredential(context storage.TransactionContext, ID string) (*model.Credential, error)
+	UpdateCredential(context storage.TransactionContext, creds *model.Credential) error
+	DeleteCredential(context storage.TransactionContext, ID string) error
 
 	FindLoginSessionsByParams(appID string, orgID string, sessionID *string, identifier *string, accountAuthTypeIdentifier *string,
 		appTypeID *string, appTypeIdentifier *string, anonymous *bool, deviceID *string, ipAddress *string) ([]model.LoginSession, error)

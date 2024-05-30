@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+### Added
+- Remove account from the system - all BBs [#335](https://github.com/rokwire/core-building-block/issues/335)
+
 ## [1.40.0] - 2024-05-09
 ### Changed
 - Add "admin_app_access_roles" to the system POST and PUT app_orgs [#712](https://github.com/rokwire/core-building-block/issues/712) 

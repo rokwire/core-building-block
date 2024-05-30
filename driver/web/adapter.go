@@ -234,6 +234,7 @@ func (we Adapter) Start() {
 	bbsSubrouter.HandleFunc("/service-account/{id}", we.wrapFunc(we.bbsApisHandler.getServiceAccountParams, nil)).Methods("POST") //Public
 	bbsSubrouter.HandleFunc("/access-token", we.wrapFunc(we.bbsApisHandler.getServiceAccessToken, nil)).Methods("POST")           //Public
 	bbsSubrouter.HandleFunc("/access-tokens", we.wrapFunc(we.bbsApisHandler.getServiceAccessTokens, nil)).Methods("POST")         //Public
+	bbsSubrouter.HandleFunc("/deleted-memberships", we.wrapFunc(we.bbsApisHandler.getDeletedMemberships, we.auth.bbs.Permissions)).Methods("GET")
 
 	bbsSubrouter.HandleFunc("/accounts", we.wrapFunc(we.bbsApisHandler.getAccounts, we.auth.bbs.Permissions)).Methods("POST")
 	bbsSubrouter.HandleFunc("/accounts/count", we.wrapFunc(we.bbsApisHandler.getAccountsCount, we.auth.bbs.Permissions)).Methods("POST")
@@ -566,9 +567,9 @@ func NewWebAdapter(env string, serviceRegManager *authservice.ServiceRegManager,
 	doc.Servers = nil
 
 	//To correctly route traffic to base path, we must add to all paths since servers are ignored
-	paths := make(openapi3.Paths, len(doc.Paths))
-	for path, obj := range doc.Paths {
-		paths["/core"+path] = obj
+	paths := openapi3.NewPaths()
+	for path, obj := range doc.Paths.Map() {
+		paths.Set("/core"+path, obj)
 	}
 	doc.Paths = paths
 
