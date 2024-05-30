@@ -1737,7 +1737,7 @@ func (sa *Adapter) FindAccountByIDV2(context TransactionContext, cOrgID string, 
 }
 
 // FindDeletedOrgAppMemberships finds deleted memberships by appID, orgID pair
-func (sa *Adapter) FindDeletedOrgAppMemberships(appID string, orgID string) ([]model.DeletedOrgAppMembership, error) {
+func (sa *Adapter) FindDeletedOrgAppMemberships(appID string, orgID string, startTime *time.Time) ([]model.DeletedOrgAppMembership, error) {
 	appOrgIDs, err := sa.getAppOrgIDsByAppOrgPair(appID, orgID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGet, "application organization ids", nil, err)
@@ -1746,6 +1746,11 @@ func (sa *Adapter) FindDeletedOrgAppMemberships(appID string, orgID string) ([]m
 	filter := bson.D{}
 	if len(appOrgIDs) > 0 {
 		filter = bson.D{primitive.E{Key: "app_org_id", Value: bson.M{"$in": appOrgIDs}}}
+	}
+
+	//start time
+	if startTime != nil {
+		filter = append(filter, bson.E{Key: "date_created", Value: bson.M{"$gte": *startTime}})
 	}
 
 	var memberships []deletedOrgAppMembership

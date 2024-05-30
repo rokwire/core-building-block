@@ -23,6 +23,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/rokwire/core-auth-library-go/v3/authorization"
@@ -167,7 +168,11 @@ func (h BBsApisHandler) getDeletedMemberships(l *logs.Log, r *http.Request, clai
 		return l.HTTPResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("service_id"), nil, http.StatusBadRequest, false)
 	}
 
-	deletedMemberships, err := h.coreAPIs.BBs.BBsGetDeletedOrgAppMemberships(claims.AppID, claims.OrgID, serviceID)
+	//TODO
+	now := time.Now()
+	startTime := &now
+
+	deletedMemberships, err := h.coreAPIs.BBs.BBsGetDeletedOrgAppMemberships(claims.AppID, claims.OrgID, serviceID, startTime)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionGet, "deleted account ids", nil, err, http.StatusInternalServerError, true)
 	}

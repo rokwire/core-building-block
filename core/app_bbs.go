@@ -16,13 +16,14 @@ package core
 
 import (
 	"core-building-block/core/model"
+	"time"
 
 	"github.com/rokwire/logging-library-go/v2/errors"
 	"github.com/rokwire/logging-library-go/v2/logutils"
 )
 
-func (app *application) bbsGetDeletedOrgAppMemberships(appID string, orgID string, _ string) (map[model.AppOrgPair][]model.DeletedOrgAppMembership, error) {
-	memberships, err := app.storage.FindDeletedOrgAppMemberships(appID, orgID)
+func (app *application) bbsGetDeletedOrgAppMemberships(appID string, orgID string, _ string, startTime *time.Time) (map[model.AppOrgPair][]model.DeletedOrgAppMembership, error) {
+	memberships, err := app.storage.FindDeletedOrgAppMemberships(appID, orgID, startTime)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeDeletedOrgAppMembership, nil, err)
 	}
