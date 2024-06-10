@@ -331,8 +331,8 @@ type Config_Data struct {
 	union json.RawMessage
 }
 
-// DeletedMembership defines model for DeletedMembership.
-type DeletedMembership struct {
+// DeletedAppOrgMembership defines model for DeletedAppOrgMembership.
+type DeletedAppOrgMembership struct {
 	AppId       string                     `json:"app_id"`
 	Memberships []DeletedMembershipContext `json:"memberships"`
 	OrgId       string                     `json:"org_id"`

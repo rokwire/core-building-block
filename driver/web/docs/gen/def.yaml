@@ -4067,7 +4067,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/DeletedMembership'
+                  $ref: '#/components/schemas/DeletedAppOrgMembership'
         '400':
           description: Bad request
         '401':
@@ -6874,7 +6874,7 @@ components:
         external_ids:
           type: object
           nullable: true
-    DeletedMembership:
+    DeletedAppOrgMembership:
       allOf:
         - $ref: '#/components/schemas/AppOrgPair'
         - required:

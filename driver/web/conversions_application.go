@@ -38,10 +38,10 @@ func partialAppsToDef(item []model.Application) []Def.PartialApp {
 }
 
 // DeletedMemberships
-func deletedMembershipsMapToDef(memberships map[model.AppOrgPair][]model.DeletedOrgAppMembership) []Def.DeletedMembership {
-	result := make([]Def.DeletedMembership, 0)
+func deletedMembershipsMapToDef(memberships map[model.AppOrgPair][]model.DeletedOrgAppMembership) []Def.DeletedAppOrgMembership {
+	result := make([]Def.DeletedAppOrgMembership, 0)
 	for appOrgPair, orgAppMemberships := range memberships {
-		result = append(result, Def.DeletedMembership{AppId: appOrgPair.AppID, OrgId: appOrgPair.OrgID, Memberships: deletedMembershipsToDef(orgAppMemberships)})
+		result = append(result, Def.DeletedAppOrgMembership{AppId: appOrgPair.AppID, OrgId: appOrgPair.OrgID, Memberships: deletedMembershipsToDef(orgAppMemberships)})
 	}
 	return result
 }
