@@ -80,9 +80,12 @@ type OrgAppMembership struct {
 
 // DeletedOrgAppMembership represents a user-deleted OrgAppMembership
 type DeletedOrgAppMembership struct {
-	ID        string
-	AccountID string
-	AppOrg    ApplicationOrganization
+	ID string
+
+	AccountID   string
+	ExternalIDs map[string]string
+
+	AppOrg ApplicationOrganization
 
 	Context map[string]interface{} // some data for other building blocks to consider when deleting some user data for an account app membership
 
