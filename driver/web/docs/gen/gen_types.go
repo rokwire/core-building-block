@@ -333,13 +333,13 @@ type Config_Data struct {
 
 // DeletedAppOrgMembership defines model for DeletedAppOrgMembership.
 type DeletedAppOrgMembership struct {
-	AppId       string                     `json:"app_id"`
-	Memberships []DeletedMembershipContext `json:"memberships"`
-	OrgId       string                     `json:"org_id"`
+	AppId       string              `json:"app_id"`
+	Memberships []DeletedMembership `json:"memberships"`
+	OrgId       string              `json:"org_id"`
 }
 
-// DeletedMembershipContext defines model for DeletedMembershipContext.
-type DeletedMembershipContext struct {
+// DeletedMembership defines model for DeletedMembership.
+type DeletedMembership struct {
 	AccountId *string                 `json:"account_id,omitempty"`
 	AppId     *string                 `json:"app_id,omitempty"`
 	Context   *map[string]interface{} `json:"context,omitempty"`
@@ -1381,7 +1381,7 @@ type GetBbsServiceRegsParams struct {
 }
 
 // DeleteServicesAccountJSONBody defines parameters for DeleteServicesAccount.
-type DeleteServicesAccountJSONBody = []DeletedMembershipContext
+type DeleteServicesAccountJSONBody = []DeletedMembership
 
 // DeleteServicesAccountParams defines parameters for DeleteServicesAccount.
 type DeleteServicesAccountParams struct {

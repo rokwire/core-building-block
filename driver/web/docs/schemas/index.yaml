@@ -86,8 +86,8 @@ PartialAccount:
   $ref: "./user/PartialAccount.yaml"
 DeletedAppOrgMembership:
   $ref: "./user/DeletedAppOrgMembership.yaml"
-DeletedMembershipContext:
-  $ref: "./user/DeletedMembershipContext.yaml"
+DeletedMembership:
+  $ref: "./user/DeletedMembership.yaml"
 Profile:
   $ref: "./user/Profile.yaml"
 ProfileNullable:

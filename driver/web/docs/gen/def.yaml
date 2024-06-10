@@ -1175,7 +1175,7 @@ paths:
             schema:
               type: array
               items:
-                $ref: '#/components/schemas/DeletedMembershipContext'
+                $ref: '#/components/schemas/DeletedMembership'
             examples:
               single_app_surveys:
                 summary: Retain some survey responses
@@ -6884,8 +6884,8 @@ components:
             memberships:
               type: array
               items:
-                $ref: '#/components/schemas/DeletedMembershipContext'
-    DeletedMembershipContext:
+                $ref: '#/components/schemas/DeletedMembership'
+    DeletedMembership:
       required:
         - app_id
         - account_id

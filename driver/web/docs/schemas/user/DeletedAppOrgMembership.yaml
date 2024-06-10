@@ -7,4 +7,4 @@ allOf:
       memberships:
         type: array
         items:
-          $ref: "./DeletedMembershipContext.yaml"
+          $ref: "./DeletedMembership.yaml"
