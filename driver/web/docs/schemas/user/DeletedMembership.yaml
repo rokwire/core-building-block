@@ -3,6 +3,9 @@ required:
   - account_id
 type: object
 properties:
+  app_id:
+    writeOnly: true
+    type: string
   account_id:
     readOnly: true
     type: string
