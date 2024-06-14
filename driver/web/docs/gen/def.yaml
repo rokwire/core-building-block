@@ -6893,6 +6893,10 @@ components:
         account_id:
           readOnly: true
           type: string
+        external_ids:
+          type: object
+          additionalProperties:
+            type: string
         context:
           type: object
     Profile:

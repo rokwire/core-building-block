@@ -340,8 +340,9 @@ type DeletedAppOrgMembership struct {
 
 // DeletedMembership defines model for DeletedMembership.
 type DeletedMembership struct {
-	AccountId *string                 `json:"account_id,omitempty"`
-	Context   *map[string]interface{} `json:"context,omitempty"`
+	AccountId   *string                 `json:"account_id,omitempty"`
+	Context     *map[string]interface{} `json:"context,omitempty"`
+	ExternalIds *map[string]string      `json:"external_ids,omitempty"`
 }
 
 // Device defines model for Device.
