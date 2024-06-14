@@ -1175,7 +1175,7 @@ paths:
             schema:
               type: array
               items:
-                $ref: '#/components/schemas/DeletedMembership'
+                $ref: '#/components/schemas/_shared_req_DeleteAccount'
             examples:
               single_app_surveys:
                 summary: Retain some survey responses

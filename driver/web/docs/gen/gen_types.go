@@ -985,6 +985,12 @@ type SharedReqCredsUsername struct {
 	Username string `json:"username"`
 }
 
+// SharedReqDeleteAccount defines model for _shared_req_DeleteAccount.
+type SharedReqDeleteAccount struct {
+	AppId   *string                 `json:"app_id,omitempty"`
+	Context *map[string]interface{} `json:"context,omitempty"`
+}
+
 // SharedReqLogin defines model for _shared_req_Login.
 type SharedReqLogin struct {
 	ApiKey            string                  `json:"api_key"`
@@ -1381,7 +1387,7 @@ type GetBbsServiceRegsParams struct {
 }
 
 // DeleteServicesAccountJSONBody defines parameters for DeleteServicesAccount.
-type DeleteServicesAccountJSONBody = []DeletedMembership
+type DeleteServicesAccountJSONBody = []SharedReqDeleteAccount
 
 // DeleteServicesAccountParams defines parameters for DeleteServicesAccount.
 type DeleteServicesAccountParams struct {
