@@ -98,7 +98,8 @@ func deletedMembershipsFromStorage(items []deletedOrgAppMembership, appsOrgs []m
 }
 
 func deletedMembershipToStorage(item model.DeletedOrgAppMembership) deletedOrgAppMembership {
-	return deletedOrgAppMembership{ID: item.ID, AccountID: item.AccountID, AppOrgID: item.AppOrg.ID, Context: item.Context, DateCreated: item.DateCreated}
+	return deletedOrgAppMembership{ID: item.ID, AccountID: item.AccountID, ExternalIDs: item.ExternalIDs,
+		AppOrgID: item.AppOrg.ID, Context: item.Context, DateCreated: item.DateCreated}
 }
 
 // Account
