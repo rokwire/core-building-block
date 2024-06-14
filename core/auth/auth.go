@@ -2125,6 +2125,7 @@ func (a *Auth) deleteAppsFromAccount(context storage.TransactionContext, account
 	now := time.Now().UTC()
 	for i := range appsWithContext {
 		appsWithContext[i].AccountID = account.ID
+		appsWithContext[i].ExternalIDs = account.ExternalIDs
 		appsWithContext[i].DateCreated = now
 	}
 
@@ -2174,7 +2175,10 @@ func (a *Auth) deleteFullAccount(context storage.TransactionContext, account mod
 		now := time.Now().UTC()
 		deletedOrgAppMemberships := make([]model.DeletedOrgAppMembership, len(account.OrgAppsMemberships))
 		for i, membership := range account.OrgAppsMemberships {
-			deletedOrgAppMemberships[i] = model.DeletedOrgAppMembership{ID: membership.ID, AccountID: account.ID, AppOrg: membership.AppOrg, DateCreated: now}
+			deletedOrgAppMemberships[i] = model.DeletedOrgAppMembership{ID: membership.ID,
+				AccountID: account.ID, ExternalIDs: account.ExternalIDs,
+				AppOrg: membership.AppOrg, DateCreated: now}
+
 			// set context if provided by user
 			for _, app := range appsWithContext {
 				if app.AppOrg.Application.ID == membership.AppOrg.Application.ID {

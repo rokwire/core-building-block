@@ -24,7 +24,7 @@ delete:
         schema:
           type: array
           items:
-            $ref: "../../schemas/user/DeletedMembershipContext.yaml"
+            $ref: "../../schemas/apis/shared/requests/delete-account/Request.yaml"
         examples:
           single_app_surveys:
             summary: Retain some survey responses

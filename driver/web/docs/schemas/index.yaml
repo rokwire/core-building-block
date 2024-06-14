@@ -84,10 +84,10 @@ PublicAccount:
   $ref: "./user/PublicAccount.yaml"
 PartialAccount:
   $ref: "./user/PartialAccount.yaml"
+DeletedAppOrgMembership:
+  $ref: "./user/DeletedAppOrgMembership.yaml"
 DeletedMembership:
   $ref: "./user/DeletedMembership.yaml"
-DeletedMembershipContext:
-  $ref: "./user/DeletedMembershipContext.yaml"
 Profile:
   $ref: "./user/Profile.yaml"
 ProfileNullable:
@@ -124,6 +124,8 @@ _shared_req_CreateAccount:
   $ref: "./apis/shared/requests/create-account/Request.yaml"
 _shared_req_UpdateAccount:
   $ref: "./apis/shared/requests/update-account/Request.yaml"
+_shared_req_DeleteAccount:
+  $ref: "./apis/shared/requests/delete-account/Request.yaml"
 _shared_req_AccountCheck:
   $ref: "./apis/shared/requests/AccountCheck.yaml"
 _shared_req_CredsEmail:

@@ -34,7 +34,7 @@ get:
           schema:
             type: array
             items: 
-              $ref: "../../schemas/user/DeletedMembership.yaml"
+              $ref: "../../schemas/user/DeletedAppOrgMembership.yaml"
     400:
       description: Bad request
     401:

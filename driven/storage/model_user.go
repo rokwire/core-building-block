@@ -106,9 +106,10 @@ type orgAppMembership struct {
 }
 
 type deletedOrgAppMembership struct {
-	ID        string `bson:"_id"`
-	AccountID string `bson:"account_id"`
-	AppOrgID  string `bson:"app_org_id"`
+	ID          string            `bson:"_id"`
+	AccountID   string            `bson:"account_id"`
+	ExternalIDs map[string]string `bson:"external_ids"`
+	AppOrgID    string            `bson:"app_org_id"`
 
 	Context map[string]interface{} `bson:"context"`
 

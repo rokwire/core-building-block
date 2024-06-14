@@ -1,10 +1,14 @@
-allOf:
-  - $ref: "../auth/AppOrgPair.yaml"
-  - required:
-      - memberships
+required:
+  - account_id
+type: object
+properties:
+  account_id:
+    readOnly: true
+    type: string
+  external_ids:
     type: object
-    properties:
-      memberships:
-        type: array
-        items:
-          $ref: "./DeletedMembershipContext.yaml"
+    nullable: true
+    additionalProperties:
+      type: string
+  context:
+    type: object

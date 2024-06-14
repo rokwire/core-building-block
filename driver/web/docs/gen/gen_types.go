@@ -331,18 +331,18 @@ type Config_Data struct {
 	union json.RawMessage
 }
 
-// DeletedMembership defines model for DeletedMembership.
-type DeletedMembership struct {
-	AppId       string                     `json:"app_id"`
-	Memberships []DeletedMembershipContext `json:"memberships"`
-	OrgId       string                     `json:"org_id"`
+// DeletedAppOrgMembership defines model for DeletedAppOrgMembership.
+type DeletedAppOrgMembership struct {
+	AppId       string              `json:"app_id"`
+	Memberships []DeletedMembership `json:"memberships"`
+	OrgId       string              `json:"org_id"`
 }
 
-// DeletedMembershipContext defines model for DeletedMembershipContext.
-type DeletedMembershipContext struct {
-	AccountId *string                 `json:"account_id,omitempty"`
-	AppId     *string                 `json:"app_id,omitempty"`
-	Context   *map[string]interface{} `json:"context,omitempty"`
+// DeletedMembership defines model for DeletedMembership.
+type DeletedMembership struct {
+	AccountId   *string                 `json:"account_id,omitempty"`
+	Context     *map[string]interface{} `json:"context,omitempty"`
+	ExternalIds *map[string]string      `json:"external_ids"`
 }
 
 // Device defines model for Device.
@@ -985,6 +985,12 @@ type SharedReqCredsUsername struct {
 	Username string `json:"username"`
 }
 
+// SharedReqDeleteAccount defines model for _shared_req_DeleteAccount.
+type SharedReqDeleteAccount struct {
+	AppId   *string                 `json:"app_id,omitempty"`
+	Context *map[string]interface{} `json:"context,omitempty"`
+}
+
 // SharedReqLogin defines model for _shared_req_Login.
 type SharedReqLogin struct {
 	ApiKey            string                  `json:"api_key"`
@@ -1381,7 +1387,7 @@ type GetBbsServiceRegsParams struct {
 }
 
 // DeleteServicesAccountJSONBody defines parameters for DeleteServicesAccount.
-type DeleteServicesAccountJSONBody = []DeletedMembershipContext
+type DeleteServicesAccountJSONBody = []SharedReqDeleteAccount
 
 // DeleteServicesAccountParams defines parameters for DeleteServicesAccount.
 type DeleteServicesAccountParams struct {

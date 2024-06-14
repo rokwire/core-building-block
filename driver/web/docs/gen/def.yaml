@@ -1175,7 +1175,7 @@ paths:
             schema:
               type: array
               items:
-                $ref: '#/components/schemas/DeletedMembershipContext'
+                $ref: '#/components/schemas/_shared_req_DeleteAccount'
             examples:
               single_app_surveys:
                 summary: Retain some survey responses
@@ -4067,7 +4067,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/DeletedMembership'
+                  $ref: '#/components/schemas/DeletedAppOrgMembership'
         '400':
           description: Bad request
         '401':
@@ -6874,7 +6874,7 @@ components:
         external_ids:
           type: object
           nullable: true
-    DeletedMembership:
+    DeletedAppOrgMembership:
       allOf:
         - $ref: '#/components/schemas/AppOrgPair'
         - required:
@@ -6884,19 +6884,20 @@ components:
             memberships:
               type: array
               items:
-                $ref: '#/components/schemas/DeletedMembershipContext'
-    DeletedMembershipContext:
+                $ref: '#/components/schemas/DeletedMembership'
+    DeletedMembership:
       required:
-        - app_id
         - account_id
       type: object
       properties:
-        app_id:
-          writeOnly: true
-          type: string
         account_id:
           readOnly: true
           type: string
+        external_ids:
+          type: object
+          nullable: true
+          additionalProperties:
+            type: string
         context:
           type: object
     Profile:
@@ -7241,6 +7242,16 @@ components:
           type: array
           items:
             type: string
+    _shared_req_DeleteAccount:
+      required:
+        - app_id
+      type: object
+      properties:
+        app_id:
+          writeOnly: true
+          type: string
+        context:
+          type: object
     _shared_req_AccountCheck:
       required:
         - auth_type
