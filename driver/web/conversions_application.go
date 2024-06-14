@@ -46,19 +46,19 @@ func deletedMembershipsMapToDef(memberships map[model.AppOrgPair][]model.Deleted
 	return result
 }
 
-// DeletedMembershipContext
-func deletedMembershipsFromDef(items []Def.DeletedMembership) ([]model.DeletedOrgAppMembership, error) {
+// DeletedOrgAppMembership
+func deletedOrgAppMembershipsFromDef(items []Def.SharedReqDeleteAccount) ([]model.DeletedOrgAppMembership, error) {
 	result := make([]model.DeletedOrgAppMembership, len(items))
 	for i, item := range items {
 		if item.AppId == nil {
 			return nil, errors.ErrorData(logutils.StatusMissing, "app_id", nil)
 		}
-		result[i] = deletedMembershipFromDef(item)
+		result[i] = deletedOrgAppMMembershipFromDef(item)
 	}
 	return result, nil
 }
 
-func deletedMembershipFromDef(item Def.DeletedMembership) model.DeletedOrgAppMembership {
+func deletedOrgAppMMembershipFromDef(item Def.SharedReqDeleteAccount) model.DeletedOrgAppMembership {
 	var context map[string]interface{}
 	if item.Context != nil {
 		context = *item.Context
