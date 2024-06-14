@@ -1,5 +1,4 @@
 required:
-  - app_id
   - account_id
 type: object
 properties:
