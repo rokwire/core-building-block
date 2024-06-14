@@ -91,7 +91,8 @@ func deletedMembershipsFromStorage(items []deletedOrgAppMembership, appsOrgs []m
 			}
 		}
 
-		res[i] = model.DeletedOrgAppMembership{ID: item.ID, AccountID: item.AccountID, AppOrg: appOrg, Context: item.Context, DateCreated: item.DateCreated}
+		res[i] = model.DeletedOrgAppMembership{ID: item.ID, AccountID: item.AccountID,
+			ExternalIDs: item.ExternalIDs, AppOrg: appOrg, Context: item.Context, DateCreated: item.DateCreated}
 	}
 	return res
 }
