@@ -7241,6 +7241,16 @@ components:
           type: array
           items:
             type: string
+    _shared_req_DeleteAccount:
+      required:
+        - app_id
+      type: object
+      properties:
+        app_id:
+          writeOnly: true
+          type: string
+        context:
+          type: object
     _shared_req_AccountCheck:
       required:
         - auth_type
