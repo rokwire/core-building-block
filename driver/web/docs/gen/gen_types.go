@@ -341,7 +341,6 @@ type DeletedAppOrgMembership struct {
 // DeletedMembership defines model for DeletedMembership.
 type DeletedMembership struct {
 	AccountId *string                 `json:"account_id,omitempty"`
-	AppId     *string                 `json:"app_id,omitempty"`
 	Context   *map[string]interface{} `json:"context,omitempty"`
 }
 
