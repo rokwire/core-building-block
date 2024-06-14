@@ -73,7 +73,7 @@ func deletedMembershipsToDef(items []model.DeletedOrgAppMembership) []Def.Delete
 		if item.Context != nil {
 			context = &item.Context
 		}
-		result[i] = Def.DeletedMembership{AccountId: &item.AccountID, Context: context}
+		result[i] = Def.DeletedMembership{AccountId: &item.AccountID, ExternalIds: &item.ExternalIDs, Context: context}
 	}
 	return result
 }

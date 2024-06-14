@@ -6895,6 +6895,7 @@ components:
           type: string
         external_ids:
           type: object
+          nullable: true
           additionalProperties:
             type: string
         context:
