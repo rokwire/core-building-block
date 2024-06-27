@@ -45,6 +45,8 @@ func accountToDef(item model.Account) *Def.Account {
 	//account usage information
 	lastLoginDate := utils.FormatTime(item.LastLoginDate)
 	lastAccessTokenDate := utils.FormatTime(item.LastAccessTokenDate)
+	dateCreated := utils.FormatTime(&item.DateCreated)
+	dateUpdated := utils.FormatTime(item.DateUpdated)
 
 	scopes := item.Scopes
 	if scopes == nil {
@@ -65,7 +67,8 @@ func accountToDef(item model.Account) *Def.Account {
 
 	return &Def.Account{Id: &item.ID, Anonymous: &item.Anonymous, System: &item.AppOrg.Organization.System, Permissions: &permissions, Roles: &roles, Groups: &groups,
 		Privacy: privacy, Verified: &item.Verified, Scopes: &scopes, Identifiers: &identifiers, AuthTypes: &authTypes, Profile: profile, Preferences: preferences, Secrets: secrets,
-		SystemConfigs: systemConfigs, LastLoginDate: &lastLoginDate, LastAccessTokenDate: &lastAccessTokenDate, MostRecentClientVersion: item.MostRecentClientVersion, Username: username}
+		SystemConfigs: systemConfigs, LastLoginDate: &lastLoginDate, LastAccessTokenDate: &lastAccessTokenDate, MostRecentClientVersion: item.MostRecentClientVersion, Username: username,
+		DateCreated: &dateCreated, DateUpdated: &dateUpdated}
 }
 
 func accountsToDef(items []model.Account) []Def.Account {

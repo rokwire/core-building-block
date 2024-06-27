@@ -205,6 +205,8 @@ type Account struct {
 	Anonymous               *bool                    `json:"anonymous,omitempty"`
 	AppOrg                  *ApplicationOrganization `json:"app_org"`
 	AuthTypes               *[]AccountAuthType       `json:"auth_types,omitempty"`
+	DateCreated             *string                  `json:"date_created,omitempty"`
+	DateUpdated             *string                  `json:"date_updated,omitempty"`
 	Devices                 *[]Device                `json:"devices,omitempty"`
 	Groups                  *[]AppOrgGroup           `json:"groups,omitempty"`
 	Id                      *string                  `json:"id,omitempty"`

@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Device ID not nullable [#672](https://github.com/rokwire/core-building-block/issues/672)
 - Account secrets [#677](https://github.com/rokwire/core-building-block/issues/677)
 - Set up token duration policies for app/orgs [#472](https://github.com/rokwire/core-building-block/issues/472)
+- Expose account date created and updated through API
 ### Changed
 - Decouple authentication and verification mechanisms [#665](https://github.com/rokwire/core-building-block/issues/665)
 - Refactor account auth types [#674](https://github.com/rokwire/core-building-block/issues/674)

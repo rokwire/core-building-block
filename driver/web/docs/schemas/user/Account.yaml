@@ -64,3 +64,7 @@ properties:
     type: string
     nullable: true
     deprecated: true
+  date_created:
+    type: string
+  date_updated:
+    type: string
