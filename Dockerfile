@@ -1,4 +1,4 @@
-FROM golang:1.22-alpine as builder
+FROM docker.io/golang:1.22-alpine as builder
 
 ENV CGO_ENABLED=0
 
