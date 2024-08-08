@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Upgrade dependencies
 ### Fixed
 - Fix email and code sign up
+- Allow update username API to create username
 
 ## [1.34.0] - 2023-07-06
 ### Added

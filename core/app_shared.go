@@ -132,10 +132,22 @@ func (app *application) sharedUpdateAccountUsername(accountID string, appID stri
 			return errors.ErrorData(logutils.StatusInvalid, model.TypeAccountUsername, logutils.StringArgs(username+" taken")).SetStatus(utils.ErrorStatusUsernameTaken)
 		}
 
-		//2. update the username
-		err = app.storage.UpdateAccountUsername(context, accountID, username)
+		account, err := app.getAccount(context, accountID)
 		if err != nil {
-			return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountUsername, nil, err)
+			return errors.WrapErrorAction(logutils.ActionGet, model.TypeAccount, &logutils.FieldArgs{"id": accountID}, err)
+		}
+
+		//2. save the username as a new account identifier or update an existing one
+		added, err := app.auth.AddAccountUsername(context, account, username)
+		if err != nil {
+			return errors.WrapErrorAction(logutils.ActionSave, model.TypeAccountUsername, nil, err)
+		}
+		if !added {
+			// the username could not be added as a new identifier, so try updating an existing username identifier
+			err = app.storage.UpdateAccountUsername(context, accountID, username)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountUsername, nil, err)
+			}
 		}
 
 		return nil

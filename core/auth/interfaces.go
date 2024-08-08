@@ -454,6 +454,11 @@ type APIs interface {
 
 	UnlinkAccountIdentifier(accountID string, accountIdentifierID string, admin bool, l *logs.Log) (*model.Account, error)
 
+	//AddAccountUsername attempts to add the given username to the given account as a new account identifier
+	//	Returns:
+	//		added (bool): whether the username identifier was added to the account
+	AddAccountUsername(context storage.TransactionContext, account *model.Account, username string) (bool, error)
+
 	//InitializeSystemAccount initializes the first system account
 	InitializeSystemAccount(context storage.TransactionContext, authType model.AuthType, appOrg model.ApplicationOrganization, allSystemPermission string, email string, password string, clientVersion string, l *logs.Log) (string, error)
 
