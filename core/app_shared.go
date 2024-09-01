@@ -67,6 +67,10 @@ func (app *application) sharedGetAppConfig(appTypeIdentifier string, orgID *stri
 	return appConfigs, nil
 }
 
+func (app *application) sharedGetAppAssetFile(orgID string, appID string, name string) (*model.AppAsset, error) {
+	return app.storage.FindAppAsset(orgID, appID, name)
+}
+
 func (app *application) sharedGetAccount(accountID string) (*model.Account, error) {
 	account, err := app.getAccount(nil, accountID)
 	if err != nil {

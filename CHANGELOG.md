@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Added
+- Handle client asset files [#436](https://github.com/rokwire/core-building-block/issues/436)
 - WebAuthn authentication [#659](https://github.com/rokwire/core-building-block/issues/659)
 - Searching follows looks for substring matches [#670](https://github.com/rokwire/core-building-block/issues/670)
 - Support following accounts [#667](https://github.com/rokwire/core-building-block/issues/667)

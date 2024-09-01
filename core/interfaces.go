@@ -48,6 +48,8 @@ type Services interface {
 	SerGetCommonTest(l *logs.Log) string
 
 	SerGetAppConfig(appTypeIdentifier string, orgID *string, versionNumbers model.VersionNumbers, apiKey *string) (*model.ApplicationConfig, error)
+
+	SerGetAppAssetFile(orgID string, appID string, name string) (*model.AppAsset, error)
 }
 
 // Administration exposes administration APIs for the driver adapters
@@ -254,6 +256,8 @@ type Storage interface {
 	InsertAppConfig(item model.ApplicationConfig) (*model.ApplicationConfig, error)
 	UpdateAppConfig(ID string, appType model.ApplicationType, appOrg *model.ApplicationOrganization, version model.Version, data map[string]interface{}) error
 	DeleteAppConfig(ID string) error
+
+	FindAppAsset(orgID string, appID string, name string) (*model.AppAsset, error)
 
 	FindApplicationsOrganizationsByOrgID(orgID string) ([]model.ApplicationOrganization, error)
 	FindApplicationOrganizations(appID *string, orgID *string) ([]model.ApplicationOrganization, error)

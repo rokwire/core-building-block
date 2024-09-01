@@ -789,6 +789,99 @@ func (sa *Adapter) getCachedApplicationConfigByID(id string) (*model.Application
 	return nil, errors.ErrorData(logutils.StatusMissing, model.TypeApplicationConfig, errArgs)
 }
 
+// ASSETS
+
+// loadAppAsssets gets the app assets
+func (sa *Adapter) loadAppAssets() ([]model.AppAsset, error) {
+	//no transactions for get operations..
+
+	//1. find the assets
+	filter := bson.D{}
+	var results []model.AppAsset
+	err := sa.db.applicationAssets.Find(filter, &results, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionLoad, model.TypeAppAsset, nil, err)
+	}
+	return results, nil
+}
+
+// cacheApplicationAssets caches the app assets from the DB
+func (sa *Adapter) cacheApplicationAssets() error {
+	sa.logger.Info("cacheApplicationAssets...")
+
+	assets, err := sa.loadAppAssets()
+	if err != nil {
+		return errors.WrapErrorAction(logutils.ActionFind, model.TypeAppAsset, nil, err)
+	}
+
+	sa.setCachedApplicationAssets(&assets)
+
+	return nil
+}
+
+func (sa *Adapter) setCachedApplicationAssets(assets *[]model.AppAsset) {
+	sa.applicationAssetsLock.Lock()
+	defer sa.applicationAssetsLock.Unlock()
+
+	sa.cachedApplicationAssets = &syncmap.Map{}
+	validate := validator.New()
+
+	for _, asset := range *assets {
+		key := fmt.Sprintf("%s_%s_%s", asset.OrgID, asset.AppID, asset.Name)
+		err := validate.Struct(asset)
+		if err == nil {
+			sa.cachedApplicationAssets.Store(key, asset)
+		} else {
+			sa.logger.Errorf("failed to validate and cache application asset %s: %s", key, err.Error())
+		}
+	}
+}
+
+func (sa *Adapter) getCachedApplicationAsset(orgID string, appID string, name string) (*model.AppAsset, error) {
+	sa.applicationAssetsLock.RLock()
+	defer sa.applicationAssetsLock.RUnlock()
+
+	errArgs := &logutils.FieldArgs{"org_id": orgID, "app_id": appID, "name": name}
+
+	key := fmt.Sprintf("%s_%s_%s", orgID, appID, name)
+	item, _ := sa.cachedApplicationAssets.Load(key)
+	if item != nil {
+		asset, ok := item.(model.AppAsset)
+		if !ok {
+			return nil, errors.ErrorAction(logutils.ActionCast, model.TypeAppAsset, errArgs)
+		}
+		return &asset, nil
+	}
+	return nil, nil
+}
+
+func (sa *Adapter) getCachedApplicationAssets(orgID string, appID string) ([]model.AppAsset, error) {
+	sa.applicationAssetsLock.RLock()
+	defer sa.applicationAssetsLock.RUnlock()
+
+	var err error
+	assets := make([]model.AppAsset, 0)
+	sa.cachedApplicationAssets.Range(func(key, item interface{}) bool {
+		errArgs := &logutils.FieldArgs{"org_id": orgID, "app_id": appID}
+		if item == nil {
+			err = errors.ErrorData(logutils.StatusInvalid, model.TypeAppAsset, errArgs)
+			return false
+		}
+
+		asset, ok := item.(model.AppAsset)
+		if !ok {
+			err = errors.ErrorAction(logutils.ActionCast, model.TypeAppAsset, errArgs)
+			return false
+		}
+		if asset.AppID == appID && asset.OrgID == orgID {
+			assets = append(assets, asset)
+		}
+		return true
+	})
+
+	return assets, err
+}
+
 // CONFIGS
 
 // loadConfigs loads configs

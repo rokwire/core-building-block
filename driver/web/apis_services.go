@@ -1130,6 +1130,38 @@ func (h ServicesApisHandler) getApplicationConfigs(l *logs.Log, r *http.Request,
 	return l.HTTPResponseSuccessJSON(response)
 }
 
+func (h ServicesApisHandler) getAppAssetFile(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
+	params := mux.Vars(r)
+	orgID := params["org_id"]
+	if len(orgID) <= 0 {
+		return l.HTTPResponseErrorData(logutils.StatusMissing, logutils.TypePathParam, logutils.StringArgs("org_id"), nil, http.StatusBadRequest, false)
+	}
+	appID := params["app_id"]
+	if len(appID) <= 0 {
+		return l.HTTPResponseErrorData(logutils.StatusMissing, logutils.TypePathParam, logutils.StringArgs("app_id"), nil, http.StatusBadRequest, false)
+	}
+	name := params["name"]
+	if len(name) <= 0 {
+		return l.HTTPResponseErrorData(logutils.StatusMissing, logutils.TypePathParam, logutils.StringArgs("name"), nil, http.StatusBadRequest, false)
+	}
+
+	asset, err := h.coreAPIs.Services.SerGetAppAssetFile(orgID, appID, name)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionGet, model.TypeAppAsset, nil, err, http.StatusInternalServerError, true)
+	}
+
+	if asset == nil {
+		return l.HTTPResponseErrorAction(logutils.ActionGet, model.TypeAppAsset, nil, err, http.StatusNotFound, true)
+	}
+
+	response, err := json.Marshal(asset.Data)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeAppAsset, nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HTTPResponseSuccessJSON(response)
+}
+
 func (h ServicesApisHandler) getApplicationOrgConfigs(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
 	var requestData Def.SharedReqAppConfigsOrg
 	err := json.NewDecoder(r.Body).Decode(&requestData)

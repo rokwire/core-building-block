@@ -194,3 +194,7 @@ func (app *application) serGetCommonTest(l *logs.Log) string {
 func (app *application) serGetAppConfig(appTypeIdentifier string, orgID *string, versionNumbers model.VersionNumbers, apiKey *string) (*model.ApplicationConfig, error) {
 	return app.sharedGetAppConfig(appTypeIdentifier, orgID, versionNumbers, apiKey, false)
 }
+
+func (app *application) serGetAppAssetFile(orgID string, appID string, name string) (*model.AppAsset, error) {
+	return app.sharedGetAppAssetFile(orgID, appID, name)
+}

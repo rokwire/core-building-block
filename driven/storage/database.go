@@ -55,6 +55,7 @@ type database struct {
 	applicationsOrganizationsGroups *collectionWrapper
 	applicationsOrganizationsRoles  *collectionWrapper
 	applicationConfigs              *collectionWrapper
+	applicationAssets               *collectionWrapper
 	permissions                     *collectionWrapper
 	follows                         *collectionWrapper
 
@@ -216,6 +217,12 @@ func (m *database) start() error {
 		return err
 	}
 
+	applicationAssets := &collectionWrapper{database: m, coll: db.Collection("application_assets")}
+	err = m.applyApplicationAssetsChecks(applicationAssets)
+	if err != nil {
+		return err
+	}
+
 	//asign the db, db client and the collections
 	m.db = db
 	m.dbClient = client
@@ -238,6 +245,7 @@ func (m *database) start() error {
 	m.applications = applications
 	m.applicationsOrganizations = applicationsOrganizations
 	m.applicationConfigs = applicationConfigs
+	m.applicationAssets = applicationAssets
 	m.applicationsOrganizationsGroups = applicationsOrganizationsGroups
 	m.applicationsOrganizationsRoles = applicationsOrganizationsRoles
 	m.permissions = permissions
@@ -252,6 +260,7 @@ func (m *database) start() error {
 	go m.applications.Watch(nil, m.logger)
 	go m.applicationsOrganizations.Watch(nil, m.logger)
 	go m.applicationConfigs.Watch(nil, m.logger)
+	go m.applicationAssets.Watch(nil, m.logger)
 	go m.configs.Watch(nil, m.logger)
 
 	m.listeners = []Listener{}
@@ -651,6 +660,19 @@ func (m *database) applyApplicationConfigsChecks(applicationConfigs *collectionW
 	return nil
 }
 
+func (m *database) applyApplicationAssetsChecks(applicationAssets *collectionWrapper) error {
+	m.logger.Info("apply applications assets checks.....")
+
+	//add app assets index
+	err := applicationAssets.AddIndex(bson.D{primitive.E{Key: "app_id", Value: 1}, primitive.E{Key: "org_id", Value: 1}, primitive.E{Key: "name", Value: 1}}, true)
+	if err != nil {
+		return err
+	}
+
+	m.logger.Info("applications assets checks passed")
+	return nil
+}
+
 func (m *database) onDataChanged(changeDoc map[string]interface{}) {
 	if changeDoc == nil {
 		return
@@ -717,6 +739,12 @@ func (m *database) onDataChanged(changeDoc map[string]interface{}) {
 
 		for _, listener := range m.listeners {
 			go listener.OnApplicationConfigsUpdated()
+		}
+	case "application_assets":
+		m.logger.Info("application assets collection changed")
+
+		for _, listener := range m.listeners {
+			go listener.OnApplicationAssetsUpdated()
 		}
 	case "configs":
 		m.logger.Info("configs collection changed")

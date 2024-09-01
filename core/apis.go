@@ -391,6 +391,10 @@ func (s *servicesImpl) SerGetAppConfig(appTypeIdentifier string, orgID *string, 
 	return s.app.serGetAppConfig(appTypeIdentifier, orgID, versionNumbers, apiKey)
 }
 
+func (s *servicesImpl) SerGetAppAssetFile(orgID string, appID string, name string) (*model.AppAsset, error) {
+	return s.app.serGetAppAssetFile(orgID, appID, name)
+}
+
 ///
 
 //administrationImpl

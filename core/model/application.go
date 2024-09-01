@@ -52,6 +52,8 @@ const (
 	TypeApplicationConfigsVersion logutils.MessageDataType = "app config version number"
 	//TypeVersionNumbers ...
 	TypeVersionNumbers logutils.MessageDataType = "version numbers"
+	//TypeAppAsset app asset
+	TypeAppAsset logutils.MessageDataType = "app asset"
 
 	//PermissionAllSystemCore ...
 	PermissionAllSystemCore string = "all_system_core"
@@ -362,6 +364,21 @@ func (ao ApplicationOrganization) FindSupportedAuthType(appType ApplicationType,
 		}
 	}
 	return nil
+}
+
+// AppAsset represents application asset entity
+type AppAsset struct {
+	ID string `bson:"_id"`
+
+	AppID string `bson:"app_id"`
+	OrgID string `bson:"org_id"`
+
+	Name string `bson:"name"`
+
+	Data map[string]interface{} `bson:"data"`
+
+	DateCreated time.Time  `bson:"date_created"`
+	DateUpdated *time.Time `bson:"date_updated"`
 }
 
 // IdentityProviderSetting represents identity provider setting for an organization in an application

@@ -97,6 +97,8 @@ paths:
     $ref: "./resources/services/app-configs/configs.yaml"
   /services/app-configs/organization:
     $ref: "./resources/services/app-configs/organization/configs.yaml"
+  /services/app-assets/{org_id}/{app_id}/{name}:
+    $ref: "./resources/services/application/assets.yaml"
 
   # DEPRECATED
   /services/auth/credential/send-verify:
