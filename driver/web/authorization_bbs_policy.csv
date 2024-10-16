@@ -1,4 +1,5 @@
 p, get_deleted-memberships, /core/bbs/deleted-memberships, (GET), Get deleted account app memberships
 p, all_accounts, /core/bbs/accounts, (POST), All account actions
 p, get_accounts, /core/bbs/accounts, (POST), Get accounts
+p, get_accounts, /core/bbs/accounts/ferpa, (GET), Get accounts with ferpa field true
 p, get_accounts_count, /core/bbs/accounts/count, (POST), Get accounts count

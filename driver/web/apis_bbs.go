@@ -315,6 +315,10 @@ func (h BBsApisHandler) getAccountsCount(l *logs.Log, r *http.Request, claims *t
 	return l.HTTPResponseSuccessJSON(respData)
 }
 
+func (h BBsApisHandler) getFerpaAccounts(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
+	return l.HTTPResponseSuccess()
+}
+
 // NewBBsApisHandler creates new bbs Handler instance
 func NewBBsApisHandler(coreAPIs *core.APIs) BBsApisHandler {
 	return BBsApisHandler{coreAPIs: coreAPIs}
