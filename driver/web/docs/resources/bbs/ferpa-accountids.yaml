@@ -6,6 +6,15 @@ get:
     Get the account ids with FERPA filed true
   security:
     - bearerAuth: []
+  parameters:
+   - name: ids
+     in: query
+     description: A comma-separated list of ids
+     required: false
+     style: form
+     explode: false
+     schema:
+        type: string        
   responses:
     200:
       description: Success
