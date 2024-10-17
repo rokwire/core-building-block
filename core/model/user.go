@@ -740,3 +740,7 @@ type AccountData struct {
 	AppID       string    `json:"app_id"`
 	OrgID       string    `json:"org_id"`
 }
+
+type FarpaAccountIDResponse struct {
+	ID string `json:"_id" bson:"_id"`
+}

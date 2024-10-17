@@ -316,7 +316,26 @@ func (h BBsApisHandler) getAccountsCount(l *logs.Log, r *http.Request, claims *t
 }
 
 func (h BBsApisHandler) getFerpaAccounts(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	return l.HTTPResponseSuccess()
+	//ids
+	var ids []string
+	idsArg := r.URL.Query().Get("ids")
+	if idsArg != "" {
+		ids = strings.Split(idsArg, ",")
+	} else {
+		return l.HTTPResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("ids"), nil, http.StatusBadRequest, false)
+	}
+
+	farpaAccountIDs, err := h.coreAPIs.BBs.BBsGetFarpaAccounts(ids)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionGet, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
+	}
+
+	respData, err := json.Marshal(farpaAccountIDs)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionMarshal, logutils.MessageDataType("accountIDs with FIELD being false"), nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HTTPResponseSuccessJSON(respData)
 }
 
 // NewBBsApisHandler creates new bbs Handler instance

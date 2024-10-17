@@ -316,8 +316,7 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 	//farpa
 	farpa, ok := userClaims[identityProviderSetting.Farpa].(bool)
 	if !ok {
-		// Handle the case where the type assertion fails
-		farpa = false // Or any default value you want to set
+		farpa = false
 	}
 	//roles
 	rolesList, _ := userClaims[identityProviderSetting.RolesField].([]interface{})
