@@ -314,7 +314,11 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 	//email
 	email, _ := userClaims[identityProviderSetting.EmailField].(string)
 	//farpa
-	farpa, _ := userClaims[identityProviderSetting.Farpa].(string)
+	farpa, ok := userClaims[identityProviderSetting.Farpa].(bool)
+	if !ok {
+		// Handle the case where the type assertion fails
+		farpa = false // Or any default value you want to set
+	}
 	//roles
 	rolesList, _ := userClaims[identityProviderSetting.RolesField].([]interface{})
 	roles := make([]string, len(rolesList))
