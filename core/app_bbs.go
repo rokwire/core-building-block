@@ -47,11 +47,6 @@ func (app *application) bbsGetTest() string {
 
 func (app *application) bbsGetFarpaAccounts(ids []string) ([]model.FarpaAccountIDResponse, error) {
 
-	/*var response []model.FarpaAccountIDResponse
-	for _, id := range ids {
-		response = append(response, model.FarpaAccountIDResponse{ID: id})
-	}*/
-
 	farpaAccountID, err := app.storage.FindFarpaAccountIDs(ids)
 	if err != nil {
 		return nil, nil

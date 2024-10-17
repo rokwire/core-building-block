@@ -4404,6 +4404,22 @@ func (sa *Adapter) CreateAuthTypesCollection(collectionName string) error {
 	return nil
 }
 
+// FindFarpaAccountIDs finds accounts with farpa is true
+func (sa *Adapter) FindFarpaAccountIDs(ids []string) ([]model.FarpaAccountIDResponse, error) {
+	filter := bson.M{
+		"_id":                          bson.M{"$in": ids}, // _id must be in the list of ids
+		"auth_types.params.user.farpa": true,               // farpa must be true
+	}
+
+	var farpaAccountIDs []model.FarpaAccountIDResponse
+	err := sa.db.tenantsAccounts.Find(filter, &farpaAccountIDs, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, "", &logutils.FieldArgs{}, err)
+	}
+
+	return farpaAccountIDs, nil
+}
+
 func (sa *Adapter) getFilterForParams(params map[string]interface{}) bson.M {
 	filter := bson.M{}
 	for k, v := range params {

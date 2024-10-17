@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Added
-- Get the account ids with FERPA filed true [#724](https://github.com/rokwire/core-building-block/issues/724)
+- Get the account ids with FERPA filed false [#724](https://github.com/rokwire/core-building-block/issues/724)
 
 ## [1.42.0] - 2024-06-14
 ### Changed
