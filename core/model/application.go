@@ -380,6 +380,7 @@ type IdentityProviderSetting struct {
 	EmailField      string `bson:"email_field"`
 	RolesField      string `bson:"roles_field"`
 	GroupsField     string `bson:"groups_field"`
+	Farpa           string `bson:"farpa"`
 
 	UserSpecificFields []string `bson:"user_specific_fields"`
 

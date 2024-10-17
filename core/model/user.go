@@ -654,6 +654,7 @@ type ExternalSystemUser struct {
 	Email      string   `json:"email" bson:"email"`
 	Roles      []string `json:"roles" bson:"roles"`
 	Groups     []string `json:"groups" bson:"groups"`
+	Farpa      string   `json:"farpa" bson:"farpa"`
 
 	//here are the system specific data for the user - uiucedu_uin etc
 	SystemSpecific map[string]interface{} `json:"system_specific" bson:"system_specific"`
