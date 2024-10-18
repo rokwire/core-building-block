@@ -299,6 +299,7 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 
 	identityProviderID, _ := authType.Params["identity_provider"].(string)
 	identityProviderSetting := appOrg.FindIdentityProviderSetting(identityProviderID)
+
 	if identityProviderSetting == nil {
 		return nil, nil, "", errors.ErrorData(logutils.StatusMissing, model.TypeIdentityProviderConfig, &logutils.FieldArgs{"app_org": appOrg.ID, "identity_provider_id": identityProviderID})
 	}
@@ -313,11 +314,24 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 	lastName, _ := userClaims[identityProviderSetting.LastNameField].(string)
 	//email
 	email, _ := userClaims[identityProviderSetting.EmailField].(string)
-	//farpa
-	farpa, ok := userClaims[identityProviderSetting.Farpa].(bool)
-	if !ok {
-		farpa = false
+	//ferpa
+	var ferpa bool
+	// Check the value of identityProviderSetting.Ferpa
+	if identityProviderSetting.FerpaField == "" {
+		ferpa = false // If Ferpa is an empty string
+	} else if identityProviderSetting.FerpaField == "true" {
+		ferpa = true // If Ferpa is the string "true"
+	} else if identityProviderSetting.FerpaField == "false" {
+		ferpa = false // If Ferpa is the string "false"
+	} else {
+		// Attempt to convert to boolean if it's not a string
+		if boolValue, ok := userClaims[identityProviderSetting.FerpaField].(bool); ok {
+			ferpa = boolValue // If it's already a boolean, take its value
+		} else {
+			ferpa = false // Default case if all else fails (including nil)
+		}
 	}
+
 	//roles
 	rolesList, _ := userClaims[identityProviderSetting.RolesField].([]interface{})
 	roles := make([]string, len(rolesList))
@@ -353,7 +367,7 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 	}
 
 	externalUser := model.ExternalSystemUser{Identifier: identifier, ExternalIDs: externalIDs, FirstName: firstName,
-		MiddleName: middleName, LastName: lastName, Email: email, Roles: roles, Groups: groups, SystemSpecific: systemSpecific, Farpa: farpa}
+		MiddleName: middleName, LastName: lastName, Email: email, Roles: roles, Groups: groups, SystemSpecific: systemSpecific, Ferpa: ferpa}
 
 	oidcParams := map[string]interface{}{}
 	oidcParams["id_token"] = token.IDToken

@@ -4404,14 +4404,19 @@ func (sa *Adapter) CreateAuthTypesCollection(collectionName string) error {
 	return nil
 }
 
+// ferpaAccountIDResponse shows ids with the fеrpa field true
+type ferpaAccountIDResponse struct {
+	ID string `json:"_id" bson:"_id"`
+}
+
 // FindFerpaAccountIDs finds accounts with ferpa is true
 func (sa *Adapter) FindFerpaAccountIDs(ids []string) ([]string, error) {
 	filter := bson.M{
 		"_id":                          bson.M{"$in": ids}, // _id must be in the list of ids
-		"auth_types.params.user.ferpa": true,               // farpa must be true
+		"auth_types.params.user.ferpa": true,               // fеrpa must be true
 	}
 
-	var ferpaAccountIDs []model.FerpaAccountIDResponse
+	var ferpaAccountIDs []ferpaAccountIDResponse
 	err := sa.db.tenantsAccounts.Find(filter, &ferpaAccountIDs, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, "", &logutils.FieldArgs{}, err)

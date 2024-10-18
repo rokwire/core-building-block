@@ -196,6 +196,7 @@ type Storage interface {
 
 	UpdateAccountProfile(context storage.TransactionContext, profile model.Profile) error
 	UpdateAccountPrivacy(context storage.TransactionContext, accountID string, privacy model.Privacy) error
+	FindFerpaAccountIDs(ids []string) ([]string, error)
 
 	FindCredential(context storage.TransactionContext, ID string) (*model.Credential, error)
 	UpdateCredential(context storage.TransactionContext, creds *model.Credential) error
@@ -274,7 +275,6 @@ type Storage interface {
 
 	CheckAuthTypesExists(collectionName string) (bool, error)
 	CreateAuthTypesCollection(collectionName string) error
-	FindFerpaAccountIDs(ids []string) ([]string, error)
 }
 
 // StorageListener listenes for change data storage events

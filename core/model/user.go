@@ -654,7 +654,7 @@ type ExternalSystemUser struct {
 	Email      string   `json:"email" bson:"email"`
 	Roles      []string `json:"roles" bson:"roles"`
 	Groups     []string `json:"groups" bson:"groups"`
-	Farpa      bool     `json:"farpa" bson:"farpa"`
+	Ferpa      bool     `json:"ferpa" bson:"ferpa"`
 
 	//here are the system specific data for the user - uiucedu_uin etc
 	SystemSpecific map[string]interface{} `json:"system_specific" bson:"system_specific"`
@@ -739,9 +739,4 @@ type AccountData struct {
 	Username    *string   `json:"username"`
 	AppID       string    `json:"app_id"`
 	OrgID       string    `json:"org_id"`
-}
-
-// FerpaAccountIDResponse shows ids with the farpa field true
-type FerpaAccountIDResponse struct {
-	ID string `json:"_id" bson:"_id"`
 }
