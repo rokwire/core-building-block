@@ -1267,24 +1267,24 @@ func (_m *Storage) FindDeletedOrgAppMemberships(appID string, orgID string, star
 	return r0, r1
 }
 
-// FindFarpaAccountIDs provides a mock function with given fields: ids
-func (_m *Storage) FindFarpaAccountIDs(ids []string) ([]model.FarpaAccountIDResponse, error) {
+// FindFerpaAccountIDs provides a mock function with given fields: ids
+func (_m *Storage) FindFerpaAccountIDs(ids []string) ([]string, error) {
 	ret := _m.Called(ids)
 
 	if len(ret) == 0 {
-		panic("no return value specified for FindFarpaAccountIDs")
+		panic("no return value specified for FindFerpaAccountIDs")
 	}
 
-	var r0 []model.FarpaAccountIDResponse
+	var r0 []string
 	var r1 error
-	if rf, ok := ret.Get(0).(func([]string) ([]model.FarpaAccountIDResponse, error)); ok {
+	if rf, ok := ret.Get(0).(func([]string) ([]string, error)); ok {
 		return rf(ids)
 	}
-	if rf, ok := ret.Get(0).(func([]string) []model.FarpaAccountIDResponse); ok {
+	if rf, ok := ret.Get(0).(func([]string) []string); ok {
 		r0 = rf(ids)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]model.FarpaAccountIDResponse)
+			r0 = ret.Get(0).([]string)
 		}
 	}
 
