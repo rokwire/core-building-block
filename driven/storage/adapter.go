@@ -4404,20 +4404,27 @@ func (sa *Adapter) CreateAuthTypesCollection(collectionName string) error {
 	return nil
 }
 
-// FindFarpaAccountIDs finds accounts with farpa is true
-func (sa *Adapter) FindFarpaAccountIDs(ids []string) ([]model.FarpaAccountIDResponse, error) {
+// FindFerpaAccountIDs finds accounts with ferpa is true
+func (sa *Adapter) FindFerpaAccountIDs(ids []string) ([]string, error) {
 	filter := bson.M{
 		"_id":                          bson.M{"$in": ids}, // _id must be in the list of ids
-		"auth_types.params.user.farpa": true,               // farpa must be true
+		"auth_types.params.user.ferpa": true,               // farpa must be true
 	}
 
-	var farpaAccountIDs []model.FarpaAccountIDResponse
-	err := sa.db.tenantsAccounts.Find(filter, &farpaAccountIDs, nil)
+	var ferpaAccountIDs []model.FerpaAccountIDResponse
+	err := sa.db.tenantsAccounts.Find(filter, &ferpaAccountIDs, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, "", &logutils.FieldArgs{}, err)
 	}
 
-	return farpaAccountIDs, nil
+	var idsFerpa []string
+	for _, j := range ferpaAccountIDs {
+		if j.ID != "" {
+			idsFerpa = append(idsFerpa, j.ID)
+		}
+	}
+
+	return idsFerpa, nil
 }
 
 func (sa *Adapter) getFilterForParams(params map[string]interface{}) bson.M {

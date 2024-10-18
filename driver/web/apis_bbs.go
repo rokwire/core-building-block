@@ -325,7 +325,7 @@ func (h BBsApisHandler) getFerpaAccounts(l *logs.Log, r *http.Request, claims *t
 		return l.HTTPResponseErrorData(logutils.StatusMissing, logutils.TypeQueryParam, logutils.StringArgs("ids"), nil, http.StatusBadRequest, false)
 	}
 
-	farpaAccountIDs, err := h.coreAPIs.BBs.BBsGetFarpaAccounts(ids)
+	farpaAccountIDs, err := h.coreAPIs.BBs.BBsGetFerpaAccounts(ids)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionGet, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}

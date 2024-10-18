@@ -123,7 +123,7 @@ type BBs interface {
 
 	BBsGetAccounts(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]map[string]interface{}, error)
 	BBsGetAccountsCount(searchParams map[string]interface{}, appID string, orgID string) (int64, error)
-	BBsGetFarpaAccounts(ids []string) ([]model.FarpaAccountIDResponse, error)
+	BBsGetFerpaAccounts(ids []string) ([]string, error)
 }
 
 // TPS exposes user related APIs used by third-party services
@@ -274,7 +274,7 @@ type Storage interface {
 
 	CheckAuthTypesExists(collectionName string) (bool, error)
 	CreateAuthTypesCollection(collectionName string) error
-	FindFarpaAccountIDs(ids []string) ([]model.FarpaAccountIDResponse, error)
+	FindFerpaAccountIDs(ids []string) ([]string, error)
 }
 
 // StorageListener listenes for change data storage events

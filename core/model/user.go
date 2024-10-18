@@ -741,7 +741,7 @@ type AccountData struct {
 	OrgID       string    `json:"org_id"`
 }
 
-// FarpaAccountIDResponse shows ids with the farpa field true
-type FarpaAccountIDResponse struct {
+// FerpaAccountIDResponse shows ids with the farpa field true
+type FerpaAccountIDResponse struct {
 	ID string `json:"_id" bson:"_id"`
 }

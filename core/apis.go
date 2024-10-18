@@ -563,8 +563,8 @@ func (s *bbsImpl) BBsGetTest() string {
 	return s.app.bbsGetTest()
 }
 
-func (s *bbsImpl) BBsGetFarpaAccounts(ids []string) ([]model.FarpaAccountIDResponse, error) {
-	return s.app.bbsGetFarpaAccounts(ids)
+func (s *bbsImpl) BBsGetFerpaAccounts(ids []string) ([]string, error) {
+	return s.app.bbsGetFerpaAccounts(ids)
 }
 
 func (s *bbsImpl) BBsGetAccounts(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]map[string]interface{}, error) {

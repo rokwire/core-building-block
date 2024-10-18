@@ -4252,10 +4252,7 @@ paths:
               schema:
                 type: array
                 items:
-                  type: object
-                  properties:
-                    id:
-                      type: string
+                  type: string
         '400':
           description: Bad request
         '401':

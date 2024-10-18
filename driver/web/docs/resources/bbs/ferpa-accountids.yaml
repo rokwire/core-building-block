@@ -23,7 +23,7 @@ get:
           schema:
             type: array
             items: 
-              $ref: "../../schemas/user/FerpaAccountIDs.yaml"
+              type: string
     400:
       description: Bad request
     401:
