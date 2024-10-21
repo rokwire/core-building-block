@@ -46,10 +46,9 @@ func (app *application) bbsGetTest() string {
 }
 
 func (app *application) bbsGetFerpaAccounts(ids []string) ([]string, error) {
-
-	farpaAccountID, err := app.storage.FindFerpaAccountIDs(ids)
+	farpaAccountsIDs, err := app.storage.FindFerpaAccountIDs(ids)
 	if err != nil {
 		return nil, nil
 	}
-	return farpaAccountID, nil
+	return farpaAccountsIDs, nil
 }
