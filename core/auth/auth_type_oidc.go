@@ -315,22 +315,19 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 	//email
 	email, _ := userClaims[identityProviderSetting.EmailField].(string)
 	//ferpa
-	var ferpa bool
-	/*// Check the value of identityProviderSetting.Ferpa
-	if identityProviderSetting.FerpaField == "" {
-		ferpa = false // If Ferpa is an empty string
-	} else if identityProviderSetting.FerpaField == "true" {
-		ferpa = true // If Ferpa is the string "true"
-	} else if identityProviderSetting.FerpaField == "false" {
-		ferpa = false // If Ferpa is the string "false"
-	} else {
-		// Attempt to convert to boolean if it's not a string
-		if boolValue, ok := userClaims[identityProviderSetting.FerpaField].(bool); ok {
-			ferpa = boolValue // If it's already a boolean, take its value
-		} else {
-			ferpa = false // Default case if all else fails (including nil)
+	ferpa := false //dy default
+	ferpaFieldVal, exists := userClaims[identityProviderSetting.FerpaField]
+	if exists { //we are not sure if it is bool or string, so handle both
+		if ferpaVal, ok := ferpaFieldVal.(bool); ok {
+			ferpa = ferpaVal
+		} else if ferpaStr, ok := ferpaFieldVal.(string); ok {
+			if ferpaStr == "true" {
+				ferpa = true
+			} else if ferpaStr == "false" {
+				ferpa = false
+			}
 		}
-	} */
+	}
 
 	//roles
 	rolesList, _ := userClaims[identityProviderSetting.RolesField].([]interface{})
