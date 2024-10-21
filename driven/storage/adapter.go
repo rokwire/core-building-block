@@ -4421,11 +4421,9 @@ func (sa *Adapter) FindFerpaAccountIDs(ids []string) ([]string, error) {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, "", &logutils.FieldArgs{}, err)
 	}
 
-	var idsFerpa []string
+	idsFerpa := []string{}
 	for _, j := range ferpaAccountIDs {
-		if j.ID != "" {
-			idsFerpa = append(idsFerpa, j.ID)
-		}
+		idsFerpa = append(idsFerpa, j.ID)
 	}
 
 	return idsFerpa, nil
