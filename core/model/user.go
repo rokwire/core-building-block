@@ -680,6 +680,9 @@ func (esu ExternalSystemUser) Equals(other ExternalSystemUser) bool {
 	if esu.Email != other.Email {
 		return false
 	}
+	if esu.Ferpa != other.Ferpa {
+		return false
+	}
 	if !utils.DeepEqual(esu.Roles, other.Roles) {
 		return false
 	}
