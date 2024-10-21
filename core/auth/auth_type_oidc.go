@@ -316,7 +316,7 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 	email, _ := userClaims[identityProviderSetting.EmailField].(string)
 	//ferpa
 	var ferpa bool
-	// Check the value of identityProviderSetting.Ferpa
+	/*// Check the value of identityProviderSetting.Ferpa
 	if identityProviderSetting.FerpaField == "" {
 		ferpa = false // If Ferpa is an empty string
 	} else if identityProviderSetting.FerpaField == "true" {
@@ -330,7 +330,7 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 		} else {
 			ferpa = false // Default case if all else fails (including nil)
 		}
-	}
+	} */
 
 	//roles
 	rolesList, _ := userClaims[identityProviderSetting.RolesField].([]interface{})
