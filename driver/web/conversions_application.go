@@ -382,6 +382,10 @@ func identityProviderSettingFromDef(item *Def.IdentityProviderSettings) *model.I
 	if item.EmailField != nil {
 		emailField = *item.EmailField
 	}
+	var ferpaField string
+	if item.FerpaField != nil {
+		ferpaField = *item.FerpaField
+	}
 	var rolesField string
 	if item.RolesField != nil {
 		rolesField = *item.RolesField
@@ -422,7 +426,7 @@ func identityProviderSettingFromDef(item *Def.IdentityProviderSettings) *model.I
 
 	return &model.IdentityProviderSetting{IdentityProviderID: item.IdentityProviderId, UserIdentifierField: item.UserIdentifierField,
 		ExternalIDFields: externalIDFields, FirstNameField: firstNameField, MiddleNameField: middleNameField,
-		LastNameField: lastNameField, EmailField: emailField, RolesField: rolesField, GroupsField: groupsField,
+		LastNameField: lastNameField, EmailField: emailField, FerpaField: ferpaField, RolesField: rolesField, GroupsField: groupsField,
 		UserSpecificFields: userSpecificFields, Roles: roles, Groups: groups,
 		AlwaysSyncProfile: alwaysSyncProfile, IdentityBBBaseURL: identityBBBaseURL, AdminAppAccessRoles: adminAppAccessRoles}
 }
