@@ -57,7 +57,8 @@ type database struct {
 	permissions                     *collectionWrapper
 	follows                         *collectionWrapper
 	deletedMemberships              *collectionWrapper
-	listeners                       []Listener
+
+	listeners []Listener
 }
 
 func (m *database) start() error {
