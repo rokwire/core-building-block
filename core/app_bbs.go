@@ -44,3 +44,11 @@ func (app *application) bbsGetDeletedOrgAppMemberships(appID string, orgID strin
 func (app *application) bbsGetTest() string {
 	return "BBs - test"
 }
+
+func (app *application) bbsGetFerpaAccounts(ids []string) ([]string, error) {
+	farpaAccountsIDs, err := app.storage.FindFerpaAccountIDs(ids)
+	if err != nil {
+		return nil, nil
+	}
+	return farpaAccountsIDs, nil
+}

@@ -299,6 +299,7 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 
 	identityProviderID, _ := authType.Params["identity_provider"].(string)
 	identityProviderSetting := appOrg.FindIdentityProviderSetting(identityProviderID)
+
 	if identityProviderSetting == nil {
 		return nil, nil, "", errors.ErrorData(logutils.StatusMissing, model.TypeIdentityProviderConfig, &logutils.FieldArgs{"app_org": appOrg.ID, "identity_provider_id": identityProviderID})
 	}
@@ -313,6 +314,21 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 	lastName, _ := userClaims[identityProviderSetting.LastNameField].(string)
 	//email
 	email, _ := userClaims[identityProviderSetting.EmailField].(string)
+	//ferpa
+	ferpa := false //dy default
+	ferpaFieldVal, exists := userClaims[identityProviderSetting.FerpaField]
+	if exists { //we are not sure if it is bool or string, so handle both
+		if ferpaVal, ok := ferpaFieldVal.(bool); ok {
+			ferpa = ferpaVal
+		} else if ferpaStr, ok := ferpaFieldVal.(string); ok {
+			if ferpaStr == "true" {
+				ferpa = true
+			} else if ferpaStr == "false" {
+				ferpa = false
+			}
+		}
+	}
+
 	//roles
 	rolesList, _ := userClaims[identityProviderSetting.RolesField].([]interface{})
 	roles := make([]string, len(rolesList))
@@ -348,7 +364,7 @@ func (a *oidcAuthImpl) loadOidcTokensAndInfo(bodyData map[string]string, oidcCon
 	}
 
 	externalUser := model.ExternalSystemUser{Identifier: identifier, ExternalIDs: externalIDs, FirstName: firstName,
-		MiddleName: middleName, LastName: lastName, Email: email, Roles: roles, Groups: groups, SystemSpecific: systemSpecific}
+		MiddleName: middleName, LastName: lastName, Email: email, Roles: roles, Groups: groups, SystemSpecific: systemSpecific, Ferpa: ferpa}
 
 	oidcParams := map[string]interface{}{}
 	oidcParams["id_token"] = token.IDToken

@@ -654,6 +654,7 @@ type ExternalSystemUser struct {
 	Email      string   `json:"email" bson:"email"`
 	Roles      []string `json:"roles" bson:"roles"`
 	Groups     []string `json:"groups" bson:"groups"`
+	Ferpa      bool     `json:"ferpa" bson:"ferpa"`
 
 	//here are the system specific data for the user - uiucedu_uin etc
 	SystemSpecific map[string]interface{} `json:"system_specific" bson:"system_specific"`
@@ -677,6 +678,9 @@ func (esu ExternalSystemUser) Equals(other ExternalSystemUser) bool {
 		return false
 	}
 	if esu.Email != other.Email {
+		return false
+	}
+	if esu.Ferpa != other.Ferpa {
 		return false
 	}
 	if !utils.DeepEqual(esu.Roles, other.Roles) {

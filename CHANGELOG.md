@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+## [1.43.0] - 2024-10-21
+### Added
+- Get the account ids with FERPA filed false [#724](https://github.com/rokwire/core-building-block/issues/724)
 
 ## [1.42.0] - 2024-06-14
 ### Changed

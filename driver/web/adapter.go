@@ -238,6 +238,8 @@ func (we Adapter) Start() {
 
 	bbsSubrouter.HandleFunc("/accounts", we.wrapFunc(we.bbsApisHandler.getAccounts, we.auth.bbs.Permissions)).Methods("POST")
 	bbsSubrouter.HandleFunc("/accounts/count", we.wrapFunc(we.bbsApisHandler.getAccountsCount, we.auth.bbs.Permissions)).Methods("POST")
+	bbsSubrouter.HandleFunc("/accounts/ferpa", we.wrapFunc(we.bbsApisHandler.getFerpaAccounts, we.auth.bbs.Permissions)).Methods("GET")
+
 	///
 
 	///third-party services ///
