@@ -187,6 +187,8 @@ paths:
     $ref: "./resources/bbs/accounts.yaml"
   /bbs/accounts/count:
    $ref: "./resources/bbs/accounts-count.yaml"
+  /bbs/accounts/ferpa:
+   $ref: "./resources/bbs/ferpa-accountids.yaml"  
 
   #third-party services
   /tps/service-regs:

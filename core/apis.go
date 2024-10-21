@@ -563,6 +563,10 @@ func (s *bbsImpl) BBsGetTest() string {
 	return s.app.bbsGetTest()
 }
 
+func (s *bbsImpl) BBsGetFerpaAccounts(ids []string) ([]string, error) {
+	return s.app.bbsGetFerpaAccounts(ids)
+}
+
 func (s *bbsImpl) BBsGetAccounts(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]map[string]interface{}, error) {
 	return s.app.sharedGetAccountsByParams(searchParams, appID, orgID, limit, offset, allAccess, approvedKeys)
 }

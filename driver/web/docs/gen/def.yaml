@@ -4226,6 +4226,39 @@ paths:
           description: Forbidden
         '500':
           description: Internal error
+  /bbs/accounts/ferpa:
+    get:
+      tags:
+        - BBs
+      summary: Get the account ids with FERPA filed true
+      description: |
+        Get the account ids with FERPA filed true
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: ids
+          in: query
+          description: A comma-separated list of ids
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   /tps/service-regs:
     get:
       tags:
@@ -6281,6 +6314,8 @@ components:
         last_name_field:
           type: string
         email_field:
+          type: string
+        ferpa_field:
           type: string
         roles_field:
           type: string

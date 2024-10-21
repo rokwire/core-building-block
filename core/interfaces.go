@@ -123,6 +123,7 @@ type BBs interface {
 
 	BBsGetAccounts(searchParams map[string]interface{}, appID string, orgID string, limit int, offset int, allAccess bool, approvedKeys []string) ([]map[string]interface{}, error)
 	BBsGetAccountsCount(searchParams map[string]interface{}, appID string, orgID string) (int64, error)
+	BBsGetFerpaAccounts(ids []string) ([]string, error)
 }
 
 // TPS exposes user related APIs used by third-party services
@@ -195,6 +196,7 @@ type Storage interface {
 
 	UpdateAccountProfile(context storage.TransactionContext, profile model.Profile) error
 	UpdateAccountPrivacy(context storage.TransactionContext, accountID string, privacy model.Privacy) error
+	FindFerpaAccountIDs(ids []string) ([]string, error)
 
 	FindCredential(context storage.TransactionContext, ID string) (*model.Credential, error)
 	UpdateCredential(context storage.TransactionContext, creds *model.Credential) error

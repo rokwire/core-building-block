@@ -366,6 +366,12 @@ func (m *database) applyTenantsAccountsIdentitiesChecks(tenantAccounts *collecti
 		return err
 	}
 
+	//add ferpa index
+	err = tenantAccounts.AddIndex(bson.D{primitive.E{Key: "auth_types.params.user.ferpa", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
 	m.logger.Info("tenants accounts check passed")
 	return nil
 }

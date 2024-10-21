@@ -4404,6 +4404,31 @@ func (sa *Adapter) CreateAuthTypesCollection(collectionName string) error {
 	return nil
 }
 
+// FindFerpaAccountIDs finds accounts with ferpa is true
+func (sa *Adapter) FindFerpaAccountIDs(ids []string) ([]string, error) {
+	filter := bson.M{
+		"_id":                          bson.M{"$in": ids}, // _id must be in the list of ids
+		"auth_types.params.user.ferpa": true,               // fеrpa must be true
+	}
+
+	type ferpaAccountIDResponse struct {
+		ID string `bson:"_id"`
+	}
+
+	var ferpaAccountIDs []ferpaAccountIDResponse
+	err := sa.db.tenantsAccounts.Find(filter, &ferpaAccountIDs, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, "", &logutils.FieldArgs{}, err)
+	}
+
+	idsFerpa := []string{}
+	for _, j := range ferpaAccountIDs {
+		idsFerpa = append(idsFerpa, j.ID)
+	}
+
+	return idsFerpa, nil
+}
+
 func (sa *Adapter) getFilterForParams(params map[string]interface{}) bson.M {
 	filter := bson.M{}
 	for k, v := range params {

@@ -375,6 +375,7 @@ type IdentityProviderSettings struct {
 	AlwaysSyncProfile   *bool              `json:"always_sync_profile,omitempty"`
 	EmailField          *string            `json:"email_field,omitempty"`
 	ExternalIdFields    *map[string]string `json:"external_id_fields"`
+	FerpaField          *string            `json:"ferpa_field,omitempty"`
 	FirstNameField      *string            `json:"first_name_field,omitempty"`
 	Groups              *map[string]string `json:"groups"`
 	GroupsField         *string            `json:"groups_field,omitempty"`
@@ -1369,6 +1370,12 @@ type PostBbsAccountsCountParams struct {
 
 	// OrgId The organization ID to use to filter accounts
 	OrgId *string `form:"org_id,omitempty" json:"org_id,omitempty"`
+}
+
+// GetBbsAccountsFerpaParams defines parameters for GetBbsAccountsFerpa.
+type GetBbsAccountsFerpaParams struct {
+	// Ids A comma-separated list of ids
+	Ids *string `form:"ids,omitempty" json:"ids,omitempty"`
 }
 
 // GetBbsDeletedMembershipsParams defines parameters for GetBbsDeletedMemberships.
