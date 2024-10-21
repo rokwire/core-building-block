@@ -6315,6 +6315,8 @@ components:
           type: string
         email_field:
           type: string
+        ferpa_field:
+          type: string
         roles_field:
           type: string
         groups_field:
