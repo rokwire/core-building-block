@@ -1448,23 +1448,23 @@ func (_m *Storage) FindPermissionsByServiceIDs(serviceIDs []string) ([]model.Per
 }
 
 // FindPublicAccounts provides a mock function with given fields: context, appID, orgID, limit, offset, search, firstName, lastName, username, followingID, followerID, userID
-func (_m *Storage) FindPublicAccounts(context storage.TransactionContext, appID string, orgID string, limit *int, offset *int, search *string, firstName *string, lastName *string, username *string, followingID *string, followerID *string, userID string) ([]model.PublicAccount, error) {
+func (_m *Storage) FindPublicAccounts(context storage.TransactionContext, appID string, orgID string, limit *int, offset *int, search *string, firstName *string, lastName *string, username *string, followingID *string, followerID *string, userID string) ([]model.Account, error) {
 	ret := _m.Called(context, appID, orgID, limit, offset, search, firstName, lastName, username, followingID, followerID, userID)
 
 	if len(ret) == 0 {
 		panic("no return value specified for FindPublicAccounts")
 	}
 
-	var r0 []model.PublicAccount
+	var r0 []model.Account
 	var r1 error
-	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, string, *int, *int, *string, *string, *string, *string, *string, *string, string) ([]model.PublicAccount, error)); ok {
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, string, *int, *int, *string, *string, *string, *string, *string, *string, string) ([]model.Account, error)); ok {
 		return rf(context, appID, orgID, limit, offset, search, firstName, lastName, username, followingID, followerID, userID)
 	}
-	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, string, *int, *int, *string, *string, *string, *string, *string, *string, string) []model.PublicAccount); ok {
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, string, *int, *int, *string, *string, *string, *string, *string, *string, string) []model.Account); ok {
 		r0 = rf(context, appID, orgID, limit, offset, search, firstName, lastName, username, followingID, followerID, userID)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]model.PublicAccount)
+			r0 = ret.Get(0).([]model.Account)
 		}
 	}
 

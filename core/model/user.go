@@ -17,8 +17,10 @@ package model
 import (
 	"core-building-block/utils"
 	"sort"
+	"strings"
 	"time"
 
+	"github.com/rokwire/logging-library-go/v2/errors"
 	"github.com/rokwire/logging-library-go/v2/logutils"
 )
 
@@ -57,11 +59,54 @@ const (
 	TypeOrgAppMembership logutils.MessageDataType = "org app membership"
 	//TypeDeletedOrgAppMembership deleted org app membership
 	TypeDeletedOrgAppMembership logutils.MessageDataType = "deleted org app membership"
+
+	//AccountFieldProfile is the reflect name of the profile field in Account
+	AccountFieldProfile string = "Profile"
+	//AccountFieldAuthTypes is the reflect name of the auth types field in Account
+	AccountFieldAuthTypes string = "AuthTypes"
+
+	//VisibilityPublic indicates a field is visible to all other app org members
+	VisibilityPublic string = "public"
+	//VisibilityConnections indicates a field is visible to user-connected app org members
+	VisibilityConnections string = "connections"
+	//VisibilityPrivate indicates a field is visible to the user only
+	VisibilityPrivate string = "private"
 )
 
 // Privacy represents the privacy options for each account
 type Privacy struct {
-	Public bool `json:"public" bson:"public"`
+	Public          bool                   `json:"public" bson:"public"`
+	FieldVisibility map[string]interface{} `json:"field_visibility" bson:"field_visibility"`
+}
+
+func (p *Privacy) GetFieldVisibility(path string, visibilityMap map[string]interface{}) (string, error) {
+	if visibilityMap == nil {
+		visibilityMap = p.FieldVisibility
+	}
+
+	splitPath := strings.Split(path, ".")
+	var err error
+	visibility, ok := visibilityMap[splitPath[0]].(string)
+	if !ok {
+		insideMap, ok := visibilityMap[splitPath[0]].(map[string]interface{})
+		if !ok {
+			return "", errors.ErrorData(logutils.StatusInvalid, "privacy field visibility", nil)
+		}
+		visibility, err = p.GetFieldVisibility(strings.Join(splitPath[1:], "."), insideMap)
+		if err != nil {
+			return "", errors.WrapErrorAction(logutils.ActionGet, "account field visibility", &logutils.FieldArgs{"path": path}, err)
+		}
+	}
+	return visibility, nil
+}
+
+func (p *Privacy) IsFieldVisible(path string, isConnection bool) (bool, error) {
+	visibility, err := p.GetFieldVisibility(path, nil)
+	if err != nil {
+		return false, errors.WrapErrorAction(logutils.ActionGet, "account field visibility", &logutils.FieldArgs{"path": path}, err)
+	}
+
+	return visibility == VisibilityPublic || (visibility == VisibilityConnections && isConnection), nil
 }
 
 // OrgAppMembership represents application organization membership entity
@@ -628,6 +673,21 @@ func ProfileFromMap(profileMap map[string]interface{}) Profile {
 	return profile
 }
 
+// PublicProfile defines model for PublicProfile.
+type PublicProfile struct {
+	Address                *string                 `json:"address"`
+	BirthYear              *int                    `json:"birth_year"`
+	Country                *string                 `json:"country"`
+	Email                  *string                 `json:"email"`
+	FirstName              *string                 `json:"first_name"`
+	LastName               *string                 `json:"last_name"`
+	Phone                  *string                 `json:"phone"`
+	PhotoURL               *string                 `json:"photo_url"`
+	State                  *string                 `json:"state"`
+	UnstructuredProperties *map[string]interface{} `json:"unstructured_properties"`
+	ZipCode                *string                 `json:"zip_code"`
+}
+
 // Device represents user devices entity.
 type Device struct {
 	ID string
@@ -711,12 +771,19 @@ type AccountRelations struct {
 
 // PublicAccount shows public account information
 type PublicAccount struct {
-	ID          string `json:"id"`
-	Username    string `json:"username"`
-	FirstName   string `json:"first_name"`
-	LastName    string `json:"last_name"`
-	Verified    bool   `json:"verified"`
-	IsFollowing bool   `json:"is_following"`
+	ID           string `json:"id"`
+	Verified     bool   `json:"verified"`
+	IsFollowing  bool   `json:"is_following"`  // remove?
+	IsConnection bool   `json:"is_connection"` // whether a user requesting this public account info is connected to the account's user
+
+	Profile     PublicProfile             `json:"profile"`
+	Identifiers []PublicAccountIdentifier `json:"identifiers"`
+}
+
+// PublicAccountIdentifier represents an account identifier made publicly-known by a user
+type PublicAccountIdentifier struct {
+	Code       string `json:"code"`
+	Identifier string `json:"identifier"`
 }
 
 // Follow shows the relationship between user and follower

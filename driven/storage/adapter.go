@@ -1470,7 +1470,7 @@ func (sa *Adapter) FindAccounts(context TransactionContext, limit *int, offset *
 
 // FindPublicAccounts finds accounts and returns name and username
 func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, orgID string, limit *int, offset *int,
-	search *string, firstName *string, lastName *string, username *string, followingID *string, followerID *string, userID string) ([]model.PublicAccount, error) {
+	search *string, firstName *string, lastName *string, username *string, followingID *string, followerID *string, userID string) ([]model.Account, error) {
 	appOrg, err := sa.FindApplicationOrganization(appID, orgID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
@@ -1561,31 +1561,40 @@ func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, 
 		pipeline = append(pipeline, bson.M{"$limit": *limit})
 	}
 
-	var accounts []tenantAccount
-	err = sa.db.tenantsAccounts.Aggregate(pipeline, &accounts, nil)
+	var results []tenantAccount
+	err = sa.db.tenantsAccounts.Aggregate(pipeline, &results, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"app_id": appID, "org_id": orgID, "search": searchStr, "first_name": firstNameStr, "last_name": lastNameStr, "username": usernameStr, "following_id": followingIDStr, "follower_id": followerIDStr}, err)
 	}
 
-	var publicAccounts []model.PublicAccount
-	for _, account := range accounts {
-
-		//not used?
-		verified := false
-		if account.Verified != nil && *account.Verified {
-			verified = true
-		}
-
-		publicAccounts = append(publicAccounts, model.PublicAccount{
-			ID:          account.ID,
-			Username:    account.Username,
-			FirstName:   account.Profile.FirstName,
-			LastName:    account.Profile.LastName,
-			Verified:    verified,
-			IsFollowing: account.IsFollowing,
-		})
+	//all memberships applications organizations - from cache
+	allAppsOrgs, err := sa.getCachedApplicationOrganizations()
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeApplicationOrganization, nil, err)
 	}
-	return publicAccounts, nil
+
+	accounts := accountsFromStorage(results, &appOrg.ID, allAppsOrgs)
+	return accounts, nil
+
+	// var publicAccounts []model.PublicAccount
+	// for _, account := range result {
+
+	// 	not used?
+	// 	verified := false
+	// 	if account.Verified != nil && *account.Verified {
+	// 		verified = true
+	// 	}
+
+	// 	publicAccounts = append(publicAccounts, model.PublicAccount{
+	// 		ID:          account.ID,
+	// 		Username:    account.Username,
+	// 		FirstName:   account.Profile.FirstName,
+	// 		LastName:    account.Profile.LastName,
+	// 		Verified:    verified,
+	// 		IsFollowing: account.IsFollowing,
+	// 	})
+	// }
+	// return publicAccounts, nil
 }
 
 // FindAccountsByParams finds accounts by an arbitrary set of search params
