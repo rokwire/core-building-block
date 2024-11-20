@@ -7044,13 +7044,16 @@ components:
         field_visibility:
           type: object
           additionalProperties: true
-          nullable: true
     PrivacyNullable:
       type: object
       nullable: true
       properties:
         public:
           type: boolean
+          nullable: true
+        field_visibility:
+          type: object
+          additionalProperties: true
           nullable: true
     Username:
       required:
