@@ -79,6 +79,7 @@ type Privacy struct {
 	FieldVisibility map[string]interface{} `json:"field_visibility" bson:"field_visibility"`
 }
 
+// GetFieldVisibility determines the privacy setting for the account data at path
 func (p *Privacy) GetFieldVisibility(path string, visibilityMap map[string]interface{}) (string, error) {
 	if visibilityMap == nil {
 		visibilityMap = p.FieldVisibility
@@ -100,6 +101,7 @@ func (p *Privacy) GetFieldVisibility(path string, visibilityMap map[string]inter
 	return visibility, nil
 }
 
+// IsFieldVisible determines whether the account data at path should be visible to the requesting user
 func (p *Privacy) IsFieldVisible(path string, isConnection bool) (bool, error) {
 	visibility, err := p.GetFieldVisibility(path, nil)
 	if err != nil {

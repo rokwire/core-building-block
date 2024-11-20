@@ -1473,6 +1473,18 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/Privacy'
+            example:
+              public: true
+              field_visibility:
+                profile:
+                  first_name: public
+                  last_name: connections
+                  email: private
+                auth_types:
+                  id1: public
+                  id3: connections
+                  id2: private
+                username: public
         required: true
       responses:
         '200':
@@ -6819,21 +6831,35 @@ components:
           type: string
     PublicAccount:
       required:
-        - id
+        - is_connection
+        - profile
+        - identifiers
       type: object
       properties:
         id:
-          type: string
-        username:
-          type: string
-        first_name:
-          type: string
-        last_name:
           type: string
         verified:
           type: boolean
         is_following:
           type: boolean
+        is_connection:
+          type: boolean
+        profile:
+          $ref: '#/components/schemas/ProfileNullable'
+        identifiers:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublicAccountIdentifier'
+    PublicAccountIdentifier:
+      required:
+        - code
+        - identifier
+      type: object
+      properties:
+        code:
+          type: string
+        identifier:
+          type: string
     PartialAccount:
       required:
         - id
@@ -7015,6 +7041,10 @@ components:
       properties:
         public:
           type: boolean
+        field_visibility:
+          type: object
+          additionalProperties: true
+          nullable: true
     PrivacyNullable:
       type: object
       nullable: true

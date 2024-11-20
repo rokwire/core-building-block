@@ -1,16 +1,20 @@
 required:
-  - id
+  - is_connection
+  - profile
+  - identifiers
 type: object
 properties:
   id:
-    type: string
-  username:
-    type: string
-  first_name:
-    type: string
-  last_name:
     type: string
   verified:
     type: boolean
   is_following:
     type: boolean
+  is_connection:
+    type: boolean
+  profile:
+    $ref: "./ProfileNullable.yaml"
+  identifiers:
+    type: array
+    items:
+      $ref: "./PublicAccountIdentifier.yaml"

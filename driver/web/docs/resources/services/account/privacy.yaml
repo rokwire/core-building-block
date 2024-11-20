@@ -14,6 +14,18 @@ put:
       application/json:
         schema:
           $ref: "../../../schemas/user/Privacy.yaml"
+        example:
+          public: true
+          field_visibility:
+            profile:
+              first_name: public
+              last_name: connections
+              email: private
+            auth_types:
+              id1: public
+              id3: connections
+              id2: private
+            username: public
     required: true
   responses:
     200:

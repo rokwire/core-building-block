@@ -570,7 +570,8 @@ type Permission struct {
 
 // Privacy defines model for Privacy.
 type Privacy struct {
-	Public *bool `json:"public,omitempty"`
+	FieldVisibility *map[string]interface{} `json:"field_visibility"`
+	Public          *bool                   `json:"public,omitempty"`
 }
 
 // PrivacyNullable defines model for PrivacyNullable.
@@ -617,12 +618,18 @@ type PubKey struct {
 
 // PublicAccount defines model for PublicAccount.
 type PublicAccount struct {
-	FirstName   *string `json:"first_name,omitempty"`
-	Id          string  `json:"id"`
-	IsFollowing *bool   `json:"is_following,omitempty"`
-	LastName    *string `json:"last_name,omitempty"`
-	Username    *string `json:"username,omitempty"`
-	Verified    *bool   `json:"verified,omitempty"`
+	Id           *string                   `json:"id,omitempty"`
+	Identifiers  []PublicAccountIdentifier `json:"identifiers"`
+	IsConnection bool                      `json:"is_connection"`
+	IsFollowing  *bool                     `json:"is_following,omitempty"`
+	Profile      *ProfileNullable          `json:"profile"`
+	Verified     *bool                     `json:"verified,omitempty"`
+}
+
+// PublicAccountIdentifier defines model for PublicAccountIdentifier.
+type PublicAccountIdentifier struct {
+	Code       string `json:"code"`
+	Identifier string `json:"identifier"`
 }
 
 // ServiceAccount defines model for ServiceAccount.
