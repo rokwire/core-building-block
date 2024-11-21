@@ -1482,8 +1482,10 @@ paths:
                   email: private
                 auth_types:
                   id1: public
-                  id3: connections
                   id2: private
+                external_ids:
+                  net_id: connections
+                  uin: public
                 username: public
         required: true
       responses:

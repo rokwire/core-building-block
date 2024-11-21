@@ -17,8 +17,6 @@ package core
 import (
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
-	"fmt"
-	"reflect"
 	"time"
 
 	"github.com/google/uuid"
@@ -152,36 +150,14 @@ func (app *application) serGetPublicAccounts(appID string, orgID string, limit i
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
 
-	publicAccounts := make([]model.PublicAccount, len(accounts))
+	publicAccounts := make([]model.PublicAccount, 0)
 	for _, account := range accounts {
-		//TODO: use reflect package and account.Privacy.FieldVisbility to remove account fields as specified
-		// v := reflect.ValueOf(account)
-		t := reflect.TypeOf(account)
-		publicAccount := model.PublicAccount{}
-
-		for i := 0; i < t.NumField(); i++ {
-			field := t.Field(i)
-			tag := field.Tag.Get("json")
-			if field.Name == "Profile" {
-				profileType := reflect.TypeOf(field)
-				profileValue := reflect.ValueOf(field)
-				for j := 0; j < profileType.NumField(); j++ {
-					profileField := profileType.Field(j)
-					profileFieldValue := profileValue.Field(j)
-					profileFieldTag := profileField.Tag.Get("json")
-					visible, err := account.Privacy.IsFieldVisible(fmt.Sprintf("%s.%s", tag, profileFieldTag), false) //TODO: use actual connection status
-					if err != nil {
-						//TODO: return error
-					}
-					if visible && profileFieldValue.CanAddr() {
-						publicAccountValue := reflect.ValueOf(publicAccount)
-						publicAccountValue.FieldByName(profileField.Name).Set(profileFieldValue.Addr())
-					}
-				}
-			} else if field.Name == "AuthTypes" {
-
-			}
+		publicAccount, err := account.GetPublicAccount(false) //TODO: get actual connection status
+		if err != nil {
+			app.logger.Errorf("error getting public account: %v", err)
+			continue
 		}
+		publicAccounts = append(publicAccounts, *publicAccount)
 	}
 
 	return publicAccounts, nil

@@ -1575,26 +1575,6 @@ func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, 
 
 	accounts := accountsFromStorage(results, &appOrg.ID, allAppsOrgs)
 	return accounts, nil
-
-	// var publicAccounts []model.PublicAccount
-	// for _, account := range result {
-
-	// 	not used?
-	// 	verified := false
-	// 	if account.Verified != nil && *account.Verified {
-	// 		verified = true
-	// 	}
-
-	// 	publicAccounts = append(publicAccounts, model.PublicAccount{
-	// 		ID:          account.ID,
-	// 		Username:    account.Username,
-	// 		FirstName:   account.Profile.FirstName,
-	// 		LastName:    account.Profile.LastName,
-	// 		Verified:    verified,
-	// 		IsFollowing: account.IsFollowing,
-	// 	})
-	// }
-	// return publicAccounts, nil
 }
 
 // FindAccountsByParams finds accounts by an arbitrary set of search params

@@ -16,6 +16,8 @@ package model
 
 import (
 	"core-building-block/utils"
+	"fmt"
+	"reflect"
 	"sort"
 	"strings"
 	"time"
@@ -64,6 +66,10 @@ const (
 	AccountFieldProfile string = "Profile"
 	//AccountFieldAuthTypes is the reflect name of the auth types field in Account
 	AccountFieldAuthTypes string = "AuthTypes"
+	//AccountFieldUsername is the reflect name of the username field in Account
+	AccountFieldUsername string = "Username"
+	//AccountFieldExternalIDs is the reflect name of the external IDs field in Account
+	AccountFieldExternalIDs string = "ExternalIDs"
 
 	//VisibilityPublic indicates a field is visible to all other app org members
 	VisibilityPublic string = "public"
@@ -87,9 +93,13 @@ func (p *Privacy) GetFieldVisibility(path string, visibilityMap map[string]inter
 
 	splitPath := strings.Split(path, ".")
 	var err error
-	visibility, ok := visibilityMap[splitPath[0]].(string)
+	visibilityEntry, ok := visibilityMap[splitPath[0]]
 	if !ok {
-		insideMap, ok := visibilityMap[splitPath[0]].(map[string]interface{})
+		return VisibilityPrivate, nil
+	}
+	visibility, ok := visibilityEntry.(string)
+	if !ok {
+		insideMap, ok := visibilityEntry.(map[string]interface{})
 		if !ok {
 			return "", errors.ErrorData(logutils.StatusInvalid, "privacy field visibility", nil)
 		}
@@ -418,6 +428,218 @@ func (a Account) GetAppOrg() ApplicationOrganization {
 	return a.AppOrg
 }
 
+// GetPublicAccount gets a limited version of the account according to the visibility settings in Privacy
+func (a *Account) GetPublicAccount(isConnection bool) (*PublicAccount, error) {
+	publicProfile, err := a.GetPublicProfile(isConnection)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionGet, "public profile", nil, err)
+	}
+	publicIdentifiers, err := a.GetPublicIdentifiers(isConnection)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionGet, "public identifiers", nil, err)
+	}
+	return &PublicAccount{Profile: *publicProfile, Identifiers: publicIdentifiers}, nil
+}
+
+// GetPublicProfile gets a limited version of the account profile according to the visibility settings in Privacy
+func (a *Account) GetPublicProfile(isConnection bool) (*PublicProfile, error) {
+	if a == nil {
+		return nil, errors.ErrorData(logutils.StatusMissing, TypeAccount, nil)
+	}
+
+	accountType := reflect.TypeOf(a).Elem()
+	profileField, _ := accountType.FieldByName(AccountFieldProfile)
+	profileTag := profileField.Tag.Get("json")
+	profileType := reflect.TypeOf(a.Profile)
+
+	var photoURL *string
+	if a.Profile.PhotoURL != "" {
+		photoURLField, _ := profileType.FieldByName("PhotoURL")
+		photoURLTag := photoURLField.Tag.Get("json")
+		visible, err := a.Privacy.IsFieldVisible(fmt.Sprintf("%s.%s", profileTag, photoURLTag), isConnection)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionGet, "visibility", logutils.StringArgs(photoURLTag), err)
+		}
+		if visible {
+			photoURL = &a.Profile.PhotoURL
+		}
+	}
+	var firstName *string
+	if a.Profile.FirstName != "" {
+		firstNameField, _ := profileType.FieldByName("FirstName")
+		firstNameTag := firstNameField.Tag.Get("json")
+		visible, err := a.Privacy.IsFieldVisible(fmt.Sprintf("%s.%s", profileTag, firstNameTag), isConnection)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionGet, "visibility", logutils.StringArgs(firstNameTag), err)
+		}
+		if visible {
+			firstName = &a.Profile.FirstName
+		}
+	}
+	var lastName *string
+	if a.Profile.LastName != "" {
+		lastNameField, _ := profileType.FieldByName("LastName")
+		lastNameTag := lastNameField.Tag.Get("json")
+		visible, err := a.Privacy.IsFieldVisible(fmt.Sprintf("%s.%s", profileTag, lastNameTag), isConnection)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionGet, "visibility", logutils.StringArgs(lastNameTag), err)
+		}
+		if visible {
+			lastName = &a.Profile.LastName
+		}
+	}
+	var email *string
+	if a.Profile.Email != "" {
+		emailField, _ := profileType.FieldByName("Email")
+		emailTag := emailField.Tag.Get("json")
+		visible, err := a.Privacy.IsFieldVisible(fmt.Sprintf("%s.%s", profileTag, emailTag), isConnection)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionGet, "visibility", logutils.StringArgs(emailTag), err)
+		}
+		if visible {
+			email = &a.Profile.Email
+		}
+	}
+	var phone *string
+	if a.Profile.Phone != "" {
+		phoneField, _ := profileType.FieldByName("Phone")
+		phoneTag := phoneField.Tag.Get("json")
+		visible, err := a.Privacy.IsFieldVisible(fmt.Sprintf("%s.%s", profileTag, phoneTag), isConnection)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionGet, "visibility", logutils.StringArgs(phoneTag), err)
+		}
+		if visible {
+			phone = &a.Profile.Phone
+		}
+	}
+	var birthYear *int16
+	if a.Profile.BirthYear != 0 {
+		birthYearField, _ := profileType.FieldByName("BirthYear")
+		birthYearTag := birthYearField.Tag.Get("json")
+		visible, err := a.Privacy.IsFieldVisible(fmt.Sprintf("%s.%s", profileTag, birthYearTag), isConnection)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionGet, "visibility", logutils.StringArgs(birthYearTag), err)
+		}
+		if visible {
+			birthYear = &a.Profile.BirthYear
+		}
+	}
+	var address *string
+	if a.Profile.Address != "" {
+		addressField, _ := profileType.FieldByName("Address")
+		addressTag := addressField.Tag.Get("json")
+		visible, err := a.Privacy.IsFieldVisible(fmt.Sprintf("%s.%s", profileTag, addressTag), isConnection)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionGet, "visibility", logutils.StringArgs(addressTag), err)
+		}
+		if visible {
+			address = &a.Profile.Address
+		}
+	}
+	var zipCode *string
+	if a.Profile.ZipCode != "" {
+		zipCodeField, _ := profileType.FieldByName("ZipCode")
+		zipCodeTag := zipCodeField.Tag.Get("json")
+		visible, err := a.Privacy.IsFieldVisible(fmt.Sprintf("%s.%s", profileTag, zipCodeTag), isConnection)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionGet, "visibility", logutils.StringArgs(zipCodeTag), err)
+		}
+		if visible {
+			zipCode = &a.Profile.ZipCode
+		}
+	}
+	var state *string
+	if a.Profile.State != "" {
+		stateField, _ := profileType.FieldByName("State")
+		stateTag := stateField.Tag.Get("json")
+		visible, err := a.Privacy.IsFieldVisible(fmt.Sprintf("%s.%s", profileTag, stateTag), isConnection)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionGet, "visibility", logutils.StringArgs(stateTag), err)
+		}
+		if visible {
+			state = &a.Profile.State
+		}
+	}
+	var country *string
+	if a.Profile.Country != "" {
+		countryField, _ := profileType.FieldByName("Country")
+		countryTag := countryField.Tag.Get("json")
+		visible, err := a.Privacy.IsFieldVisible(fmt.Sprintf("%s.%s", profileTag, countryTag), isConnection)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionGet, "visibility", logutils.StringArgs(countryTag), err)
+		}
+		if visible {
+			country = &a.Profile.Country
+		}
+	}
+	var unstructuredProperties map[string]interface{}
+	if len(a.Profile.UnstructuredProperties) > 0 {
+		unstructuredPropertiesField, _ := profileType.FieldByName("UnstructuredProperties")
+		unstructuredPropertiesTag := unstructuredPropertiesField.Tag.Get("json")
+		visible, err := a.Privacy.IsFieldVisible(fmt.Sprintf("%s.%s", profileTag, unstructuredPropertiesTag), isConnection)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionGet, "visibility", logutils.StringArgs(unstructuredPropertiesTag), err)
+		}
+		if visible {
+			unstructuredProperties = a.Profile.UnstructuredProperties
+		}
+	}
+
+	return &PublicProfile{PhotoURL: photoURL, FirstName: firstName, LastName: lastName,
+		Email: email, Phone: phone, BirthYear: birthYear, Address: address, ZipCode: zipCode,
+		State: state, Country: country, UnstructuredProperties: unstructuredProperties}, nil
+}
+
+// GetPublicIdentifiers gets a limited version of the account identifiers according to the visibility settings in Privacy
+func (a *Account) GetPublicIdentifiers(isConnection bool) ([]PublicAccountIdentifier, error) {
+	if a == nil {
+		return nil, errors.ErrorData(logutils.StatusMissing, TypeAccount, nil)
+	}
+
+	accountType := reflect.TypeOf(a).Elem()
+	authTypesField, _ := accountType.FieldByName(AccountFieldAuthTypes)
+	authTypesTag := authTypesField.Tag.Get("json")
+	publicIdentifiers := make([]PublicAccountIdentifier, 0)
+	for _, authType := range a.AuthTypes {
+		if authType.Params != nil {
+			continue // get visibility status on external identifiers by iterating through a.ExternalIDs
+		}
+		path := fmt.Sprintf("%s.%s", authTypesTag, authType.ID)
+		visible, err := a.Privacy.IsFieldVisible(path, isConnection)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionGet, "visibility", logutils.StringArgs(path), err)
+		}
+		if visible {
+			publicIdentifiers = append(publicIdentifiers, PublicAccountIdentifier{Code: authType.AuthType.Code, Identifier: authType.Identifier})
+		}
+	}
+
+	externalIDsField, _ := accountType.FieldByName(AccountFieldExternalIDs)
+	externalIDsTag := externalIDsField.Tag.Get("json")
+	for key, externalID := range a.ExternalIDs {
+		path := fmt.Sprintf("%s.%s", externalIDsTag, key)
+		visible, err := a.Privacy.IsFieldVisible(path, isConnection)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionGet, "visibility", logutils.StringArgs(path), err)
+		}
+		if visible {
+			publicIdentifiers = append(publicIdentifiers, PublicAccountIdentifier{Code: key, Identifier: externalID})
+		}
+	}
+
+	usernameField, _ := accountType.FieldByName(AccountFieldUsername)
+	usernameTag := usernameField.Tag.Get("json")
+	visible, err := a.Privacy.IsFieldVisible(usernameTag, isConnection)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionGet, "visibility", logutils.StringArgs(usernameTag), err)
+	}
+	if visible {
+		publicIdentifiers = append(publicIdentifiers, PublicAccountIdentifier{Code: usernameTag, Identifier: a.Username})
+	}
+
+	return publicIdentifiers, nil
+}
+
 // AccountRole represents a role assigned to an account
 type AccountRole struct {
 	Role     AppOrgRole
@@ -550,23 +772,23 @@ type MFAType struct {
 //	 What the person shares with the system/other users/
 //		The person should be able to use the system even all profile fields are empty/it is just an information for the user/
 type Profile struct {
-	ID string
+	ID string `json:"id"`
 
-	PhotoURL  string
-	FirstName string
-	LastName  string
-	Email     string
-	Phone     string
-	BirthYear int16
-	Address   string
-	ZipCode   string
-	State     string
-	Country   string
+	PhotoURL  string `json:"photo_url"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+	Email     string `json:"email"`
+	Phone     string `json:"phone"`
+	BirthYear int16  `json:"birth_year"`
+	Address   string `json:"address"`
+	ZipCode   string `json:"zip_code"`
+	State     string `json:"state"`
+	Country   string `json:"country"`
+
+	UnstructuredProperties map[string]interface{} `json:"unstructured_properties"`
 
 	DateCreated time.Time
 	DateUpdated *time.Time
-
-	UnstructuredProperties map[string]interface{}
 }
 
 // GetFullName returns the user's full name
@@ -677,17 +899,17 @@ func ProfileFromMap(profileMap map[string]interface{}) Profile {
 
 // PublicProfile defines model for PublicProfile.
 type PublicProfile struct {
-	Address                *string                 `json:"address"`
-	BirthYear              *int                    `json:"birth_year"`
-	Country                *string                 `json:"country"`
-	Email                  *string                 `json:"email"`
-	FirstName              *string                 `json:"first_name"`
-	LastName               *string                 `json:"last_name"`
-	Phone                  *string                 `json:"phone"`
-	PhotoURL               *string                 `json:"photo_url"`
-	State                  *string                 `json:"state"`
-	UnstructuredProperties *map[string]interface{} `json:"unstructured_properties"`
-	ZipCode                *string                 `json:"zip_code"`
+	Address                *string                `json:"address"`
+	BirthYear              *int16                 `json:"birth_year"`
+	Country                *string                `json:"country"`
+	Email                  *string                `json:"email"`
+	FirstName              *string                `json:"first_name"`
+	LastName               *string                `json:"last_name"`
+	Phone                  *string                `json:"phone"`
+	PhotoURL               *string                `json:"photo_url"`
+	State                  *string                `json:"state"`
+	UnstructuredProperties map[string]interface{} `json:"unstructured_properties"`
+	ZipCode                *string                `json:"zip_code"`
 }
 
 // Device represents user devices entity.
