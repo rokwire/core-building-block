@@ -698,6 +698,10 @@ func (h ServicesApisHandler) updatePrivacy(l *logs.Log, r *http.Request, claims 
 	}
 
 	privacy := privacyFromDef(&requestData)
+	err = privacy.ValidateFieldVisibility(nil)
+	if err != nil {
+		return l.HTTPResponseErrorData(logutils.StatusInvalid, logutils.TypeRequestBody, logutils.StringArgs("field_visibility"), err, http.StatusBadRequest, true)
+	}
 
 	err = h.coreAPIs.Services.SerUpdateAccountPrivacy(claims.Subject, privacy)
 	if err != nil {

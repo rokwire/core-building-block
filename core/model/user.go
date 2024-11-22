@@ -87,7 +87,10 @@ type Privacy struct {
 
 // GetFieldVisibility determines the privacy setting for the account data at path
 func (p *Privacy) GetFieldVisibility(path string, visibilityMap map[string]interface{}) (string, error) {
-	if visibilityMap == nil {
+	if len(visibilityMap) == 0 {
+		if len(p.FieldVisibility) == 0 {
+			return VisibilityPrivate, nil
+		}
 		visibilityMap = p.FieldVisibility
 	}
 
@@ -119,6 +122,34 @@ func (p *Privacy) IsFieldVisible(path string, isConnection bool) (bool, error) {
 	}
 
 	return visibility == VisibilityPublic || (visibility == VisibilityConnections && isConnection), nil
+}
+
+// ValidateFieldVisibility ensures each entry in visibilityMap is either another map or one of the three allowed visbility strings (public, connections, private)
+func (p *Privacy) ValidateFieldVisibility(visibilityMap map[string]interface{}) error {
+	if len(visibilityMap) == 0 {
+		if len(p.FieldVisibility) == 0 {
+			return nil
+		}
+		visibilityMap = p.FieldVisibility
+	}
+
+	for k, v := range visibilityMap {
+		visibility, ok := v.(string)
+		if !ok {
+			insideMap, ok := v.(map[string]interface{})
+			if !ok {
+				return errors.ErrorData(logutils.StatusInvalid, "privacy field visibility", &logutils.FieldArgs{k: v})
+			}
+			err := p.ValidateFieldVisibility(insideMap)
+			if err != nil {
+				return errors.WrapErrorAction(logutils.ActionValidate, "privacy field visibility", &logutils.FieldArgs{"key": k}, err)
+			}
+		} else if visibility != VisibilityPublic && visibility != VisibilityConnections && visibility != VisibilityPrivate {
+			return errors.ErrorData(logutils.StatusInvalid, "privacy field visibility setting", &logutils.FieldArgs{k: visibility})
+		}
+	}
+
+	return nil
 }
 
 // OrgAppMembership represents application organization membership entity

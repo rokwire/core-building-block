@@ -347,7 +347,8 @@ func privacyToDef(item *model.Privacy) *Def.Privacy {
 	}
 
 	return &Def.Privacy{
-		Public: &item.Public,
+		Public:          &item.Public,
+		FieldVisibility: &item.FieldVisibility,
 	}
 }
 
@@ -360,8 +361,12 @@ func privacyFromDef(item *Def.Privacy) model.Privacy {
 	if item.Public != nil {
 		public = *item.Public
 	}
+	var fieldVisibility map[string]interface{}
+	if item.FieldVisibility != nil && len(*item.FieldVisibility) > 0 {
+		fieldVisibility = *item.FieldVisibility
+	}
 
-	return model.Privacy{Public: public}
+	return model.Privacy{Public: public, FieldVisibility: fieldVisibility}
 }
 
 func privacyFromDefNullable(item *Def.PrivacyNullable) model.Privacy {
@@ -373,8 +378,12 @@ func privacyFromDefNullable(item *Def.PrivacyNullable) model.Privacy {
 	if item.Public != nil {
 		public = *item.Public
 	}
+	var fieldVisibility map[string]interface{}
+	if item.FieldVisibility != nil && len(*item.FieldVisibility) > 0 {
+		fieldVisibility = *item.FieldVisibility
+	}
 
-	return model.Privacy{Public: public}
+	return model.Privacy{Public: public, FieldVisibility: fieldVisibility}
 }
 
 // MFA
