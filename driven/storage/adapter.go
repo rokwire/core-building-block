@@ -1470,7 +1470,7 @@ func (sa *Adapter) FindAccounts(context TransactionContext, limit *int, offset *
 
 // FindPublicAccounts finds accounts and returns name and username
 func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, orgID string, limit *int, offset *int,
-	search *string, firstName *string, lastName *string, username *string, followingID *string, followerID *string, userID string) ([]model.Account, error) {
+	search *string, firstName *string, lastName *string, username *string, followingID *string, followerID *string, userID string) ([]model.PublicAccount, error) {
 	appOrg, err := sa.FindApplicationOrganization(appID, orgID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
@@ -1573,8 +1573,19 @@ func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, 
 		return nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeApplicationOrganization, nil, err)
 	}
 
-	accounts := accountsFromStorage(results, &appOrg.ID, allAppsOrgs)
-	return accounts, nil
+	publicAccounts := make([]model.PublicAccount, 0)
+	for _, item := range results {
+		account := accountFromStorage(item, &appOrg.ID, allAppsOrgs)
+		publicAccount, err := account.GetPublicAccount(false) //TODO: get actual connection status
+		if err != nil {
+			sa.logger.Errorf("error getting public account: %v", err)
+			continue
+		}
+		publicAccount.IsFollowing = item.IsFollowing
+		publicAccounts = append(publicAccounts, *publicAccount)
+	}
+
+	return publicAccounts, nil
 }
 
 // FindAccountsByParams finds accounts by an arbitrary set of search params

@@ -150,17 +150,7 @@ func (app *application) serGetPublicAccounts(appID string, orgID string, limit i
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
 
-	publicAccounts := make([]model.PublicAccount, 0)
-	for _, account := range accounts {
-		publicAccount, err := account.GetPublicAccount(false) //TODO: get actual connection status
-		if err != nil {
-			app.logger.Errorf("error getting public account: %v", err)
-			continue
-		}
-		publicAccounts = append(publicAccounts, *publicAccount)
-	}
-
-	return publicAccounts, nil
+	return accounts, nil
 }
 
 func (app *application) serAddFollow(follow model.Follow) error {

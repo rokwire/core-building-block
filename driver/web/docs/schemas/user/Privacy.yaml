@@ -5,3 +5,4 @@ properties:
   field_visibility:
     type: object
     additionalProperties: true
+    nullable: true

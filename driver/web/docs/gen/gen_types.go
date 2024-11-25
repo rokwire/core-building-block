@@ -570,7 +570,7 @@ type Permission struct {
 
 // Privacy defines model for Privacy.
 type Privacy struct {
-	FieldVisibility *map[string]interface{} `json:"field_visibility,omitempty"`
+	FieldVisibility *map[string]interface{} `json:"field_visibility"`
 	Public          *bool                   `json:"public,omitempty"`
 }
 

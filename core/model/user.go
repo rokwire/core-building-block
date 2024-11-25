@@ -203,14 +203,14 @@ type Account struct {
 
 	Scopes []string
 
-	AuthTypes []AccountAuthType
+	AuthTypes []AccountAuthType `json:"identifiers"`
 
 	MFATypes []MFAType
 
-	Username      string
-	ExternalIDs   map[string]string
+	Username      string            `json:"username"`
+	ExternalIDs   map[string]string `json:"external_ids"`
 	SystemConfigs map[string]interface{}
-	Profile       Profile //one account has one profile
+	Profile       Profile `json:"profile"` //one account has one profile
 	Privacy       Privacy
 
 	Devices []Device
@@ -469,7 +469,7 @@ func (a *Account) GetPublicAccount(isConnection bool) (*PublicAccount, error) {
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionGet, "public identifiers", nil, err)
 	}
-	return &PublicAccount{Profile: *publicProfile, Identifiers: publicIdentifiers}, nil
+	return &PublicAccount{ID: a.ID, Verified: a.Verified, IsConnection: isConnection, Profile: *publicProfile, Identifiers: publicIdentifiers}, nil
 }
 
 // GetPublicProfile gets a limited version of the account profile according to the visibility settings in Privacy
