@@ -6973,6 +6973,10 @@ components:
           type: string
         photo_url:
           type: string
+        pronunciation_url:
+          type: string
+        pronouns:
+          type: string
         first_name:
           type: string
         last_name:
@@ -6998,6 +7002,8 @@ components:
         country:
           type: string
           nullable: true
+        website:
+          type: string
         unstructured_properties:
           type: object
           nullable: true
@@ -7008,6 +7014,12 @@ components:
         photo_url:
           type: string
           nullable: true
+        pronunciation_url:
+          type: string
+          nullable: true
+        pronouns:
+          type: string
+          nullable: true
         first_name:
           type: string
           nullable: true
@@ -7033,6 +7045,9 @@ components:
           type: string
           nullable: true
         country:
+          type: string
+          nullable: true
+        website:
           type: string
           nullable: true
         unstructured_properties:

@@ -591,8 +591,11 @@ type Profile struct {
 	LastName               *string                 `json:"last_name,omitempty"`
 	Phone                  *string                 `json:"phone"`
 	PhotoUrl               *string                 `json:"photo_url,omitempty"`
+	Pronouns               *string                 `json:"pronouns,omitempty"`
+	PronunciationUrl       *string                 `json:"pronunciation_url,omitempty"`
 	State                  *string                 `json:"state"`
 	UnstructuredProperties *map[string]interface{} `json:"unstructured_properties"`
+	Website                *string                 `json:"website,omitempty"`
 	ZipCode                *string                 `json:"zip_code"`
 }
 
@@ -606,8 +609,11 @@ type ProfileNullable struct {
 	LastName               *string                 `json:"last_name"`
 	Phone                  *string                 `json:"phone"`
 	PhotoUrl               *string                 `json:"photo_url"`
+	Pronouns               *string                 `json:"pronouns"`
+	PronunciationUrl       *string                 `json:"pronunciation_url"`
 	State                  *string                 `json:"state"`
 	UnstructuredProperties *map[string]interface{} `json:"unstructured_properties"`
+	Website                *string                 `json:"website"`
 	ZipCode                *string                 `json:"zip_code"`
 }
 

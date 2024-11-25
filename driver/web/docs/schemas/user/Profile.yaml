@@ -7,6 +7,10 @@ properties:
     type: string
   photo_url:
     type: string
+  pronunciation_url:
+    type: string
+  pronouns:
+    type: string
   first_name:
     type: string
   last_name:
@@ -32,6 +36,8 @@ properties:
   country:
     type: string
     nullable: true
+  website:
+    type: string
   unstructured_properties:
     type: object
     nullable: true 
