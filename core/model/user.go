@@ -71,6 +71,9 @@ const (
 	//AccountFieldExternalIDs is the reflect name of the external IDs field in Account
 	AccountFieldExternalIDs string = "ExternalIDs"
 
+	//ProfileFieldUnstructuredProperties is the reflect name of the unstructured properties field in Profile
+	ProfileFieldUnstructuredProperties string = "UnstructuredProperties"
+
 	//VisibilityPublic indicates a field is visible to all other app org members
 	VisibilityPublic string = "public"
 	//VisibilityConnections indicates a field is visible to user-connected app org members
@@ -478,147 +481,44 @@ func (a *Account) GetPublicProfile(isConnection bool) (*PublicProfile, error) {
 		return nil, errors.ErrorData(logutils.StatusMissing, TypeAccount, nil)
 	}
 
+	publicProfile := PublicProfile{}
 	accountType := reflect.TypeOf(a).Elem()
 	profileField, _ := accountType.FieldByName(AccountFieldProfile)
-	profileTag := profileField.Tag.Get("json")
-	profileType := reflect.TypeOf(a.Profile)
-
-	var photoURL *string
-	if a.Profile.PhotoURL != "" {
-		photoURLField, _ := profileType.FieldByName("PhotoURL")
-		photoURLTag := photoURLField.Tag.Get("json")
-		visible, err := a.Privacy.IsFieldVisible(fmt.Sprintf("%s.%s", profileTag, photoURLTag), isConnection)
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionGet, "visibility", logutils.StringArgs(photoURLTag), err)
-		}
-		if visible {
-			photoURL = &a.Profile.PhotoURL
-		}
-	}
-	var firstName *string
-	if a.Profile.FirstName != "" {
-		firstNameField, _ := profileType.FieldByName("FirstName")
-		firstNameTag := firstNameField.Tag.Get("json")
-		visible, err := a.Privacy.IsFieldVisible(fmt.Sprintf("%s.%s", profileTag, firstNameTag), isConnection)
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionGet, "visibility", logutils.StringArgs(firstNameTag), err)
-		}
-		if visible {
-			firstName = &a.Profile.FirstName
-		}
-	}
-	var lastName *string
-	if a.Profile.LastName != "" {
-		lastNameField, _ := profileType.FieldByName("LastName")
-		lastNameTag := lastNameField.Tag.Get("json")
-		visible, err := a.Privacy.IsFieldVisible(fmt.Sprintf("%s.%s", profileTag, lastNameTag), isConnection)
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionGet, "visibility", logutils.StringArgs(lastNameTag), err)
-		}
-		if visible {
-			lastName = &a.Profile.LastName
-		}
-	}
-	var email *string
-	if a.Profile.Email != "" {
-		emailField, _ := profileType.FieldByName("Email")
-		emailTag := emailField.Tag.Get("json")
-		visible, err := a.Privacy.IsFieldVisible(fmt.Sprintf("%s.%s", profileTag, emailTag), isConnection)
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionGet, "visibility", logutils.StringArgs(emailTag), err)
-		}
-		if visible {
-			email = &a.Profile.Email
-		}
-	}
-	var phone *string
-	if a.Profile.Phone != "" {
-		phoneField, _ := profileType.FieldByName("Phone")
-		phoneTag := phoneField.Tag.Get("json")
-		visible, err := a.Privacy.IsFieldVisible(fmt.Sprintf("%s.%s", profileTag, phoneTag), isConnection)
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionGet, "visibility", logutils.StringArgs(phoneTag), err)
-		}
-		if visible {
-			phone = &a.Profile.Phone
-		}
-	}
-	var birthYear *int16
-	if a.Profile.BirthYear != 0 {
-		birthYearField, _ := profileType.FieldByName("BirthYear")
-		birthYearTag := birthYearField.Tag.Get("json")
-		visible, err := a.Privacy.IsFieldVisible(fmt.Sprintf("%s.%s", profileTag, birthYearTag), isConnection)
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionGet, "visibility", logutils.StringArgs(birthYearTag), err)
-		}
-		if visible {
-			birthYear = &a.Profile.BirthYear
-		}
-	}
-	var address *string
-	if a.Profile.Address != "" {
-		addressField, _ := profileType.FieldByName("Address")
-		addressTag := addressField.Tag.Get("json")
-		visible, err := a.Privacy.IsFieldVisible(fmt.Sprintf("%s.%s", profileTag, addressTag), isConnection)
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionGet, "visibility", logutils.StringArgs(addressTag), err)
-		}
-		if visible {
-			address = &a.Profile.Address
-		}
-	}
-	var zipCode *string
-	if a.Profile.ZipCode != "" {
-		zipCodeField, _ := profileType.FieldByName("ZipCode")
-		zipCodeTag := zipCodeField.Tag.Get("json")
-		visible, err := a.Privacy.IsFieldVisible(fmt.Sprintf("%s.%s", profileTag, zipCodeTag), isConnection)
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionGet, "visibility", logutils.StringArgs(zipCodeTag), err)
-		}
-		if visible {
-			zipCode = &a.Profile.ZipCode
-		}
-	}
-	var state *string
-	if a.Profile.State != "" {
-		stateField, _ := profileType.FieldByName("State")
-		stateTag := stateField.Tag.Get("json")
-		visible, err := a.Privacy.IsFieldVisible(fmt.Sprintf("%s.%s", profileTag, stateTag), isConnection)
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionGet, "visibility", logutils.StringArgs(stateTag), err)
-		}
-		if visible {
-			state = &a.Profile.State
-		}
-	}
-	var country *string
-	if a.Profile.Country != "" {
-		countryField, _ := profileType.FieldByName("Country")
-		countryTag := countryField.Tag.Get("json")
-		visible, err := a.Privacy.IsFieldVisible(fmt.Sprintf("%s.%s", profileTag, countryTag), isConnection)
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionGet, "visibility", logutils.StringArgs(countryTag), err)
-		}
-		if visible {
-			country = &a.Profile.Country
-		}
-	}
-	var unstructuredProperties map[string]interface{}
-	if len(a.Profile.UnstructuredProperties) > 0 {
-		unstructuredPropertiesField, _ := profileType.FieldByName("UnstructuredProperties")
-		unstructuredPropertiesTag := unstructuredPropertiesField.Tag.Get("json")
-		visible, err := a.Privacy.IsFieldVisible(fmt.Sprintf("%s.%s", profileTag, unstructuredPropertiesTag), isConnection)
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionGet, "visibility", logutils.StringArgs(unstructuredPropertiesTag), err)
-		}
-		if visible {
-			unstructuredProperties = a.Profile.UnstructuredProperties
+	profileValue := reflect.ValueOf(&a.Profile).Elem()
+	for i := 0; i < profileField.Type.NumField(); i++ {
+		field := profileField.Type.Field(i)
+		fieldValue := profileValue.Field(i)
+		fieldTag := field.Tag.Get("json")
+		visibilityPath := fmt.Sprintf("%s.%s", profileField.Tag.Get("json"), fieldTag)
+		if field.Name == ProfileFieldUnstructuredProperties {
+			for k, v := range a.Profile.UnstructuredProperties {
+				visible, err := a.Privacy.IsFieldVisible(fmt.Sprintf("%s.%s", visibilityPath, k), isConnection)
+				if err != nil {
+					return nil, errors.WrapErrorAction(logutils.ActionGet, "visibility", logutils.StringArgs(fmt.Sprintf("%s.%s", fieldTag, k)), err)
+				}
+				if visible {
+					if publicProfile.UnstructuredProperties == nil {
+						publicProfile.UnstructuredProperties = make(map[string]interface{})
+					}
+					publicProfile.UnstructuredProperties[k] = v
+				}
+			}
+		} else {
+			publicProfileField := reflect.ValueOf(&publicProfile).Elem().FieldByName(field.Name) // get matching public profile field
+			if !publicProfileField.IsValid() {
+				continue // if there is no matching public profile field, go to next
+			}
+			visible, err := a.Privacy.IsFieldVisible(visibilityPath, isConnection)
+			if err != nil {
+				return nil, errors.WrapErrorAction(logutils.ActionGet, "visibility", logutils.StringArgs(fieldTag), err)
+			}
+			if visible && fieldValue.CanAddr() && publicProfileField.CanSet() {
+				publicProfileField.Set(fieldValue.Addr())
+			}
 		}
 	}
 
-	return &PublicProfile{PhotoURL: photoURL, FirstName: firstName, LastName: lastName,
-		Email: email, Phone: phone, BirthYear: birthYear, Address: address, ZipCode: zipCode,
-		State: state, Country: country, UnstructuredProperties: unstructuredProperties}, nil
+	return &publicProfile, nil
 }
 
 // GetPublicIdentifiers gets a limited version of the account identifiers according to the visibility settings in Privacy
@@ -933,17 +833,20 @@ func ProfileFromMap(profileMap map[string]interface{}) Profile {
 
 // PublicProfile defines model for PublicProfile.
 type PublicProfile struct {
-	Address                *string                `json:"address"`
-	BirthYear              *int16                 `json:"birth_year"`
-	Country                *string                `json:"country"`
-	Email                  *string                `json:"email"`
-	FirstName              *string                `json:"first_name"`
-	LastName               *string                `json:"last_name"`
-	Phone                  *string                `json:"phone"`
-	PhotoURL               *string                `json:"photo_url"`
-	State                  *string                `json:"state"`
-	UnstructuredProperties map[string]interface{} `json:"unstructured_properties"`
-	ZipCode                *string                `json:"zip_code"`
+	Address                *string                `json:"address,omitempty"`
+	BirthYear              *int16                 `json:"birth_year,omitempty"`
+	Country                *string                `json:"country,omitempty"`
+	Email                  *string                `json:"email,omitempty"`
+	FirstName              *string                `json:"first_name,omitempty"`
+	LastName               *string                `json:"last_name,omitempty"`
+	Phone                  *string                `json:"phone,omitempty"`
+	PhotoURL               *string                `json:"photo_url,omitempty"`
+	PronunciationURL       *string                `json:"pronunciation_url,omitempty"`
+	Pronouns               *string                `json:"pronouns,omitempty"`
+	State                  *string                `json:"state,omitempty"`
+	UnstructuredProperties map[string]interface{} `json:"unstructured_properties,omitempty"`
+	Website                *string                `json:"website,omitempty"`
+	ZipCode                *string                `json:"zip_code,omitempty"`
 }
 
 // Device represents user devices entity.

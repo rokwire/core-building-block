@@ -625,7 +625,7 @@ type PubKey struct {
 
 // PublicAccount defines model for PublicAccount.
 type PublicAccount struct {
-	Id           *string                   `json:"id,omitempty"`
+	Id           string                    `json:"id"`
 	Identifiers  []PublicAccountIdentifier `json:"identifiers"`
 	IsConnection bool                      `json:"is_connection"`
 	IsFollowing  *bool                     `json:"is_following,omitempty"`

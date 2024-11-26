@@ -3504,6 +3504,8 @@ func (sa *Adapter) UpdateAccountProfile(context TransactionContext, profile mode
 	profileUpdate := bson.D{
 		primitive.E{Key: "$set", Value: bson.D{
 			primitive.E{Key: "profile.photo_url", Value: profile.PhotoURL},
+			primitive.E{Key: "profile.pronunciation_url", Value: profile.PronunciationURL},
+			primitive.E{Key: "profile.pronouns", Value: profile.Pronouns},
 			primitive.E{Key: "profile.first_name", Value: profile.FirstName},
 			primitive.E{Key: "profile.last_name", Value: profile.LastName},
 			primitive.E{Key: "profile.email", Value: profile.Email},
@@ -3513,6 +3515,7 @@ func (sa *Adapter) UpdateAccountProfile(context TransactionContext, profile mode
 			primitive.E{Key: "profile.zip_code", Value: profile.ZipCode},
 			primitive.E{Key: "profile.state", Value: profile.State},
 			primitive.E{Key: "profile.country", Value: profile.Country},
+			primitive.E{Key: "profile.website", Value: profile.Website},
 			primitive.E{Key: "profile.date_updated", Value: &now},
 			primitive.E{Key: "profile.unstructured_properties", Value: profile.UnstructuredProperties},
 		}},
