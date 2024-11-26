@@ -307,6 +307,10 @@ func (s *servicesImpl) SerGetProfile(cOrgID string, cAppID string, accountID str
 	return s.app.serGetProfile(cOrgID, cAppID, accountID)
 }
 
+func (s *servicesImpl) SerGetAccountPrivacy(cOrgID string, cAppID string, accountID string) (*model.Privacy, error) {
+	return s.app.serGetPrivacy(cOrgID, cAppID, accountID)
+}
+
 func (s *servicesImpl) SerGetPreferences(cOrgID string, cAppID string, accountID string) (map[string]interface{}, error) {
 	return s.app.serGetPreferences(cOrgID, cAppID, accountID)
 }
