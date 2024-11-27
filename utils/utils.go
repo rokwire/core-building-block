@@ -227,6 +227,28 @@ func GetPrintableString(v *string, defaultVal string) string {
 	return defaultVal
 }
 
+// GetMapEntryFromPath returns the data entry corresponding to path, a period-separated string
+func GetMapEntryFromPath(data map[string]interface{}, path string) interface{} {
+	if len(data) == 0 {
+		return nil
+	}
+
+	splitPath := strings.Split(path, ".")
+	entry, ok := data[splitPath[0]]
+	if !ok {
+		return nil
+	}
+	if len(splitPath) == 1 {
+		return entry
+	}
+
+	entryData, ok := entry.(map[string]interface{})
+	if !ok {
+		return nil
+	}
+	return GetMapEntryFromPath(entryData, strings.Join(splitPath[1:], "."))
+}
+
 // StartTimer starts a timer with the given name, period, and function to call when the timer goes off
 func StartTimer(timer *time.Timer, timerDone chan bool, period time.Duration, periodicFunc func(), name string, logger *logs.Logger) {
 	if logger != nil {

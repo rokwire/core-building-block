@@ -371,22 +371,23 @@ type Follow struct {
 
 // IdentityProviderSettings defines model for IdentityProviderSettings.
 type IdentityProviderSettings struct {
-	AdminAppAccessRoles *[]string          `json:"admin_app_access_roles,omitempty"`
-	AlwaysSyncProfile   *bool              `json:"always_sync_profile,omitempty"`
-	EmailField          *string            `json:"email_field,omitempty"`
-	ExternalIdFields    *map[string]string `json:"external_id_fields"`
-	FerpaField          *string            `json:"ferpa_field,omitempty"`
-	FirstNameField      *string            `json:"first_name_field,omitempty"`
-	Groups              *map[string]string `json:"groups"`
-	GroupsField         *string            `json:"groups_field,omitempty"`
-	IdentityBbBaseUrl   *string            `json:"identity_bb_base_url,omitempty"`
-	IdentityProviderId  string             `json:"identity_provider_id"`
-	LastNameField       *string            `json:"last_name_field,omitempty"`
-	MiddleNameField     *string            `json:"middle_name_field,omitempty"`
-	Roles               *map[string]string `json:"roles"`
-	RolesField          *string            `json:"roles_field,omitempty"`
-	UserIdentifierField string             `json:"user_identifier_field"`
-	UserSpecificFields  *[]string          `json:"user_specific_fields"`
+	AdminAppAccessRoles     *[]string          `json:"admin_app_access_roles,omitempty"`
+	AlwaysSyncProfile       *bool              `json:"always_sync_profile,omitempty"`
+	EmailField              *string            `json:"email_field,omitempty"`
+	ExternalIdFields        *map[string]string `json:"external_id_fields"`
+	FerpaField              *string            `json:"ferpa_field,omitempty"`
+	FirstNameField          *string            `json:"first_name_field,omitempty"`
+	Groups                  *map[string]string `json:"groups"`
+	GroupsField             *string            `json:"groups_field,omitempty"`
+	IdentityBbBaseUrl       *string            `json:"identity_bb_base_url,omitempty"`
+	IdentityBbProfileFields *map[string]string `json:"identity_bb_profile_fields"`
+	IdentityProviderId      string             `json:"identity_provider_id"`
+	LastNameField           *string            `json:"last_name_field,omitempty"`
+	MiddleNameField         *string            `json:"middle_name_field,omitempty"`
+	Roles                   *map[string]string `json:"roles"`
+	RolesField              *string            `json:"roles_field,omitempty"`
+	UserIdentifierField     string             `json:"user_identifier_field"`
+	UserSpecificFields      *[]string          `json:"user_specific_fields"`
 }
 
 // InactiveExpirePolicy defines model for InactiveExpirePolicy.

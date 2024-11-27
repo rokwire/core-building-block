@@ -6377,6 +6377,11 @@ components:
           type: boolean
         identity_bb_base_url:
           type: string
+        identity_bb_profile_fields:
+          type: object
+          additionalProperties:
+            type: string
+          nullable: true
         admin_app_access_roles:
           type: array
           items:

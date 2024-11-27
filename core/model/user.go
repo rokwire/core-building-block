@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"reflect"
 	"sort"
-	"strings"
 	"time"
 
 	"github.com/rokwire/logging-library-go/v2/errors"
@@ -89,37 +88,22 @@ type Privacy struct {
 }
 
 // GetFieldVisibility determines the privacy setting for the account data at path
-func (p *Privacy) GetFieldVisibility(path string, visibilityMap map[string]interface{}) (string, error) {
-	if len(visibilityMap) == 0 {
-		if len(p.FieldVisibility) == 0 {
-			return VisibilityPrivate, nil
-		}
-		visibilityMap = p.FieldVisibility
-	}
-
-	splitPath := strings.Split(path, ".")
-	var err error
-	visibilityEntry, ok := visibilityMap[splitPath[0]]
-	if !ok {
+func (p *Privacy) GetFieldVisibility(path string) (string, error) {
+	visibilityEntry := utils.GetMapEntryFromPath(p.FieldVisibility, path)
+	if visibilityEntry == nil {
 		return VisibilityPrivate, nil
 	}
+
 	visibility, ok := visibilityEntry.(string)
 	if !ok {
-		insideMap, ok := visibilityEntry.(map[string]interface{})
-		if !ok {
-			return "", errors.ErrorData(logutils.StatusInvalid, "privacy field visibility", nil)
-		}
-		visibility, err = p.GetFieldVisibility(strings.Join(splitPath[1:], "."), insideMap)
-		if err != nil {
-			return "", errors.WrapErrorAction(logutils.ActionGet, "account field visibility", &logutils.FieldArgs{"path": path}, err)
-		}
+		return "", errors.ErrorData(logutils.StatusInvalid, "privacy field visibility", &logutils.FieldArgs{"path": path})
 	}
 	return visibility, nil
 }
 
 // IsFieldVisible determines whether the account data at path should be visible to the requesting user
 func (p *Privacy) IsFieldVisible(path string, isConnection bool) (bool, error) {
-	visibility, err := p.GetFieldVisibility(path, nil)
+	visibility, err := p.GetFieldVisibility(path)
 	if err != nil {
 		return false, errors.WrapErrorAction(logutils.ActionGet, "account field visibility", &logutils.FieldArgs{"path": path}, err)
 	}
@@ -781,7 +765,7 @@ func (p Profile) Merge(src Profile) Profile {
 }
 
 // ProfileFromMap parses a map and converts it into a Profile struct
-func ProfileFromMap(profileMap map[string]interface{}) Profile {
+func ProfileFromMap(profileMap map[string]interface{}, profileFields map[string]string) Profile {
 	profile := Profile{UnstructuredProperties: make(map[string]interface{})}
 	for key, val := range profileMap {
 		if key == "first_name" {
@@ -826,6 +810,12 @@ func ProfileFromMap(profileMap map[string]interface{}) Profile {
 			}
 		} else {
 			profile.UnstructuredProperties[key] = val
+		}
+	}
+
+	for path, profileKey := range profileFields {
+		if value := utils.GetMapEntryFromPath(profileMap, path); value != nil {
+			profile.UnstructuredProperties[profileKey] = value
 		}
 	}
 	return profile
