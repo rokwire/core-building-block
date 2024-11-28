@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+
+## [1.44.0] - 2024-11-28
 ### Added
 - Set up privacy settings for account directory data visibility [#727](https://github.com/rokwire/core-building-block/issues/727)
 
@@ -465,7 +467,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Users authentication polish [#155](https://github.com/rokwire/core-building-block/issues/155)
 - Optimise the Mongo DB collections indexes usage [#146](https://github.com/rokwire/core-building-block/issues/146)
 
-[Unreleased]: https://github.com/rokwire/core-building-block/compare/v1.42.0...HEAD
+[Unreleased]: https://github.com/rokwire/core-building-block/compare/v1.44.0...HEAD
+[1.44.0]: https://github.com/rokwire/core-building-block/compare/v1.43.0...v1.44.0
+[1.43.0]: https://github.com/rokwire/core-building-block/compare/v1.42.0...v1.43.0
 [1.42.0]: https://github.com/rokwire/core-building-block/compare/v1.41.0...v1.42.0
 [1.41.0]: https://github.com/rokwire/core-building-block/compare/v1.40.0...v1.41.0
 [1.40.0]: https://github.com/rokwire/core-building-block/compare/v1.39.0...v1.40.0
