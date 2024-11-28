@@ -146,16 +146,19 @@ type accountAuthType struct {
 type profile struct {
 	ID string `bson:"id"`
 
-	PhotoURL  string `bson:"photo_url"`
-	FirstName string `bson:"first_name"`
-	LastName  string `bson:"last_name"`
-	Email     string `bson:"email"`
-	Phone     string `bson:"phone"`
-	BirthYear int16  `bson:"birth_year"`
-	Address   string `bson:"address"`
-	ZipCode   string `bson:"zip_code"`
-	State     string `bson:"state"`
-	Country   string `bson:"country"`
+	PhotoURL         string `bson:"photo_url"`
+	PronunciationURL string `bson:"pronunciation_url"`
+	Pronouns         string `bson:"pronouns"`
+	FirstName        string `bson:"first_name"`
+	LastName         string `bson:"last_name"`
+	Email            string `bson:"email"`
+	Phone            string `bson:"phone"`
+	BirthYear        int16  `bson:"birth_year"`
+	Address          string `bson:"address"`
+	ZipCode          string `bson:"zip_code"`
+	State            string `bson:"state"`
+	Country          string `bson:"country"`
+	Website          string `bson:"website"`
 
 	DateCreated time.Time  `bson:"date_created"`
 	DateUpdated *time.Time `bson:"date_updated"`

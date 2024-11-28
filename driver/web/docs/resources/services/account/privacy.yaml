@@ -1,3 +1,26 @@
+get:
+  tags:
+  - Services
+  summary: Get user privacy settings
+  description: |
+    Returns a user's privacy settings
+
+    **Auth:** Requires user auth token
+  security:
+    - bearerAuth: []
+  responses:
+    200:
+      description: Success
+      content:
+        application/json:
+          schema:
+            $ref: "../../../schemas/user/Privacy.yaml"
+    400:
+      description: Bad request
+    401:
+      description: Unauthorized
+    500:
+      description: Internal error
 put:
   tags:
   - Services
@@ -14,6 +37,20 @@ put:
       application/json:
         schema:
           $ref: "../../../schemas/user/Privacy.yaml"
+        example:
+          public: true
+          field_visibility:
+            profile:
+              first_name: public
+              last_name: connections
+              email: private
+            auth_types:
+              id1: public
+              id2: private
+            external_ids:
+              net_id: connections
+              uin: public
+            username: public
     required: true
   responses:
     200:

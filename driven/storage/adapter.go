@@ -1561,30 +1561,30 @@ func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, 
 		pipeline = append(pipeline, bson.M{"$limit": *limit})
 	}
 
-	var accounts []tenantAccount
-	err = sa.db.tenantsAccounts.Aggregate(pipeline, &accounts, nil)
+	var results []tenantAccount
+	err = sa.db.tenantsAccounts.Aggregate(pipeline, &results, nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"app_id": appID, "org_id": orgID, "search": searchStr, "first_name": firstNameStr, "last_name": lastNameStr, "username": usernameStr, "following_id": followingIDStr, "follower_id": followerIDStr}, err)
 	}
 
-	var publicAccounts []model.PublicAccount
-	for _, account := range accounts {
-
-		//not used?
-		verified := false
-		if account.Verified != nil && *account.Verified {
-			verified = true
-		}
-
-		publicAccounts = append(publicAccounts, model.PublicAccount{
-			ID:          account.ID,
-			Username:    account.Username,
-			FirstName:   account.Profile.FirstName,
-			LastName:    account.Profile.LastName,
-			Verified:    verified,
-			IsFollowing: account.IsFollowing,
-		})
+	//all memberships applications organizations - from cache
+	allAppsOrgs, err := sa.getCachedApplicationOrganizations()
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeApplicationOrganization, nil, err)
 	}
+
+	publicAccounts := make([]model.PublicAccount, 0)
+	for _, item := range results {
+		account := accountFromStorage(item, &appOrg.ID, allAppsOrgs)
+		publicAccount, err := account.GetPublicAccount(false) //TODO: get actual connection status
+		if err != nil {
+			sa.logger.Errorf("error getting public account: %v", err)
+			continue
+		}
+		publicAccount.IsFollowing = item.IsFollowing
+		publicAccounts = append(publicAccounts, *publicAccount)
+	}
+
 	return publicAccounts, nil
 }
 
@@ -3504,6 +3504,8 @@ func (sa *Adapter) UpdateAccountProfile(context TransactionContext, profile mode
 	profileUpdate := bson.D{
 		primitive.E{Key: "$set", Value: bson.D{
 			primitive.E{Key: "profile.photo_url", Value: profile.PhotoURL},
+			primitive.E{Key: "profile.pronunciation_url", Value: profile.PronunciationURL},
+			primitive.E{Key: "profile.pronouns", Value: profile.Pronouns},
 			primitive.E{Key: "profile.first_name", Value: profile.FirstName},
 			primitive.E{Key: "profile.last_name", Value: profile.LastName},
 			primitive.E{Key: "profile.email", Value: profile.Email},
@@ -3513,6 +3515,7 @@ func (sa *Adapter) UpdateAccountProfile(context TransactionContext, profile mode
 			primitive.E{Key: "profile.zip_code", Value: profile.ZipCode},
 			primitive.E{Key: "profile.state", Value: profile.State},
 			primitive.E{Key: "profile.country", Value: profile.Country},
+			primitive.E{Key: "profile.website", Value: profile.Website},
 			primitive.E{Key: "profile.date_updated", Value: &now},
 			primitive.E{Key: "profile.unstructured_properties", Value: profile.UnstructuredProperties},
 		}},

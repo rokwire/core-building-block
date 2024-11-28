@@ -1457,6 +1457,29 @@ paths:
         '500':
           description: Internal error
   /services/account/privacy:
+    get:
+      tags:
+        - Services
+      summary: Get user privacy settings
+      description: |
+        Returns a user's privacy settings
+
+        **Auth:** Requires user auth token
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Privacy'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
     put:
       tags:
         - Services
@@ -1473,6 +1496,20 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/Privacy'
+            example:
+              public: true
+              field_visibility:
+                profile:
+                  first_name: public
+                  last_name: connections
+                  email: private
+                auth_types:
+                  id1: public
+                  id2: private
+                external_ids:
+                  net_id: connections
+                  uin: public
+                username: public
         required: true
       responses:
         '200':
@@ -6340,6 +6377,11 @@ components:
           type: boolean
         identity_bb_base_url:
           type: string
+        identity_bb_profile_fields:
+          type: object
+          additionalProperties:
+            type: string
+          nullable: true
         admin_app_access_roles:
           type: array
           items:
@@ -6820,20 +6862,35 @@ components:
     PublicAccount:
       required:
         - id
+        - is_connection
+        - profile
+        - identifiers
       type: object
       properties:
         id:
-          type: string
-        username:
-          type: string
-        first_name:
-          type: string
-        last_name:
           type: string
         verified:
           type: boolean
         is_following:
           type: boolean
+        is_connection:
+          type: boolean
+        profile:
+          $ref: '#/components/schemas/ProfileNullable'
+        identifiers:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublicAccountIdentifier'
+    PublicAccountIdentifier:
+      required:
+        - code
+        - identifier
+      type: object
+      properties:
+        code:
+          type: string
+        identifier:
+          type: string
     PartialAccount:
       required:
         - id
@@ -6945,6 +7002,10 @@ components:
           type: string
         photo_url:
           type: string
+        pronunciation_url:
+          type: string
+        pronouns:
+          type: string
         first_name:
           type: string
         last_name:
@@ -6970,6 +7031,8 @@ components:
         country:
           type: string
           nullable: true
+        website:
+          type: string
         unstructured_properties:
           type: object
           nullable: true
@@ -6980,6 +7043,12 @@ components:
         photo_url:
           type: string
           nullable: true
+        pronunciation_url:
+          type: string
+          nullable: true
+        pronouns:
+          type: string
+          nullable: true
         first_name:
           type: string
           nullable: true
@@ -7007,6 +7076,9 @@ components:
         country:
           type: string
           nullable: true
+        website:
+          type: string
+          nullable: true
         unstructured_properties:
           type: object
           nullable: true
@@ -7015,12 +7087,20 @@ components:
       properties:
         public:
           type: boolean
+        field_visibility:
+          type: object
+          additionalProperties: true
+          nullable: true
     PrivacyNullable:
       type: object
       nullable: true
       properties:
         public:
           type: boolean
+          nullable: true
+        field_visibility:
+          type: object
+          additionalProperties: true
           nullable: true
     Username:
       required:

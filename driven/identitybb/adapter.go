@@ -17,7 +17,7 @@ package identitybb
 import (
 	"core-building-block/core/model"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 
@@ -35,7 +35,7 @@ type Adapter struct {
 }
 
 // GetUserProfile gets user profile info for the provided user credentials
-func (a *Adapter) GetUserProfile(baseURL string, externalUser model.ExternalSystemUser, externalAccessToken string, l *logs.Log) (*model.Profile, error) {
+func (a *Adapter) GetUserProfile(baseURL string, externalUser model.ExternalSystemUser, externalAccessToken string, profileFields map[string]string, l *logs.Log) (*model.Profile, error) {
 	if baseURL == "" || externalAccessToken == "" {
 		return nil, errors.ErrorData(logutils.StatusMissing, "base url", nil)
 	}
@@ -63,7 +63,7 @@ func (a *Adapter) GetUserProfile(baseURL string, externalUser model.ExternalSyst
 	}
 
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionRead, logutils.TypeResponse, nil, err)
 	}
@@ -80,7 +80,7 @@ func (a *Adapter) GetUserProfile(baseURL string, externalUser model.ExternalSyst
 		return nil, errors.WrapErrorAction(logutils.ActionUnmarshal, logutils.TypeResponseBody, nil, err)
 	}
 
-	profile := model.ProfileFromMap(profileData)
+	profile := model.ProfileFromMap(profileData, profileFields)
 
 	return &profile, nil
 }

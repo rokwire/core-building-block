@@ -1,0 +1,9 @@
+required:
+  - code
+  - identifier
+type: object
+properties:
+  code:
+    type: string
+  identifier:
+    type: string

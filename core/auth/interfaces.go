@@ -607,7 +607,7 @@ type ProfileBuildingBlock interface {
 
 // IdentityBuildingBlock is used by auth to communicate with the identity building block.
 type IdentityBuildingBlock interface {
-	GetUserProfile(baseURL string, externalUser model.ExternalSystemUser, externalAccessToken string, l *logs.Log) (*model.Profile, error)
+	GetUserProfile(baseURL string, externalUser model.ExternalSystemUser, externalAccessToken string, profileFields map[string]string, l *logs.Log) (*model.Profile, error)
 }
 
 // Emailer is used by core to send emails

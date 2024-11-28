@@ -371,22 +371,23 @@ type Follow struct {
 
 // IdentityProviderSettings defines model for IdentityProviderSettings.
 type IdentityProviderSettings struct {
-	AdminAppAccessRoles *[]string          `json:"admin_app_access_roles,omitempty"`
-	AlwaysSyncProfile   *bool              `json:"always_sync_profile,omitempty"`
-	EmailField          *string            `json:"email_field,omitempty"`
-	ExternalIdFields    *map[string]string `json:"external_id_fields"`
-	FerpaField          *string            `json:"ferpa_field,omitempty"`
-	FirstNameField      *string            `json:"first_name_field,omitempty"`
-	Groups              *map[string]string `json:"groups"`
-	GroupsField         *string            `json:"groups_field,omitempty"`
-	IdentityBbBaseUrl   *string            `json:"identity_bb_base_url,omitempty"`
-	IdentityProviderId  string             `json:"identity_provider_id"`
-	LastNameField       *string            `json:"last_name_field,omitempty"`
-	MiddleNameField     *string            `json:"middle_name_field,omitempty"`
-	Roles               *map[string]string `json:"roles"`
-	RolesField          *string            `json:"roles_field,omitempty"`
-	UserIdentifierField string             `json:"user_identifier_field"`
-	UserSpecificFields  *[]string          `json:"user_specific_fields"`
+	AdminAppAccessRoles     *[]string          `json:"admin_app_access_roles,omitempty"`
+	AlwaysSyncProfile       *bool              `json:"always_sync_profile,omitempty"`
+	EmailField              *string            `json:"email_field,omitempty"`
+	ExternalIdFields        *map[string]string `json:"external_id_fields"`
+	FerpaField              *string            `json:"ferpa_field,omitempty"`
+	FirstNameField          *string            `json:"first_name_field,omitempty"`
+	Groups                  *map[string]string `json:"groups"`
+	GroupsField             *string            `json:"groups_field,omitempty"`
+	IdentityBbBaseUrl       *string            `json:"identity_bb_base_url,omitempty"`
+	IdentityBbProfileFields *map[string]string `json:"identity_bb_profile_fields"`
+	IdentityProviderId      string             `json:"identity_provider_id"`
+	LastNameField           *string            `json:"last_name_field,omitempty"`
+	MiddleNameField         *string            `json:"middle_name_field,omitempty"`
+	Roles                   *map[string]string `json:"roles"`
+	RolesField              *string            `json:"roles_field,omitempty"`
+	UserIdentifierField     string             `json:"user_identifier_field"`
+	UserSpecificFields      *[]string          `json:"user_specific_fields"`
 }
 
 // InactiveExpirePolicy defines model for InactiveExpirePolicy.
@@ -570,12 +571,14 @@ type Permission struct {
 
 // Privacy defines model for Privacy.
 type Privacy struct {
-	Public *bool `json:"public,omitempty"`
+	FieldVisibility *map[string]interface{} `json:"field_visibility"`
+	Public          *bool                   `json:"public,omitempty"`
 }
 
 // PrivacyNullable defines model for PrivacyNullable.
 type PrivacyNullable struct {
-	Public *bool `json:"public"`
+	FieldVisibility *map[string]interface{} `json:"field_visibility"`
+	Public          *bool                   `json:"public"`
 }
 
 // Profile defines model for Profile.
@@ -589,8 +592,11 @@ type Profile struct {
 	LastName               *string                 `json:"last_name,omitempty"`
 	Phone                  *string                 `json:"phone"`
 	PhotoUrl               *string                 `json:"photo_url,omitempty"`
+	Pronouns               *string                 `json:"pronouns,omitempty"`
+	PronunciationUrl       *string                 `json:"pronunciation_url,omitempty"`
 	State                  *string                 `json:"state"`
 	UnstructuredProperties *map[string]interface{} `json:"unstructured_properties"`
+	Website                *string                 `json:"website,omitempty"`
 	ZipCode                *string                 `json:"zip_code"`
 }
 
@@ -604,8 +610,11 @@ type ProfileNullable struct {
 	LastName               *string                 `json:"last_name"`
 	Phone                  *string                 `json:"phone"`
 	PhotoUrl               *string                 `json:"photo_url"`
+	Pronouns               *string                 `json:"pronouns"`
+	PronunciationUrl       *string                 `json:"pronunciation_url"`
 	State                  *string                 `json:"state"`
 	UnstructuredProperties *map[string]interface{} `json:"unstructured_properties"`
+	Website                *string                 `json:"website"`
 	ZipCode                *string                 `json:"zip_code"`
 }
 
@@ -617,12 +626,18 @@ type PubKey struct {
 
 // PublicAccount defines model for PublicAccount.
 type PublicAccount struct {
-	FirstName   *string `json:"first_name,omitempty"`
-	Id          string  `json:"id"`
-	IsFollowing *bool   `json:"is_following,omitempty"`
-	LastName    *string `json:"last_name,omitempty"`
-	Username    *string `json:"username,omitempty"`
-	Verified    *bool   `json:"verified,omitempty"`
+	Id           string                    `json:"id"`
+	Identifiers  []PublicAccountIdentifier `json:"identifiers"`
+	IsConnection bool                      `json:"is_connection"`
+	IsFollowing  *bool                     `json:"is_following,omitempty"`
+	Profile      *ProfileNullable          `json:"profile"`
+	Verified     *bool                     `json:"verified,omitempty"`
+}
+
+// PublicAccountIdentifier defines model for PublicAccountIdentifier.
+type PublicAccountIdentifier struct {
+	Code       string `json:"code"`
+	Identifier string `json:"identifier"`
 }
 
 // ServiceAccount defines model for ServiceAccount.

@@ -37,6 +37,18 @@ func (app *application) serGetProfile(cOrgID string, cAppID string, accountID st
 	return &profile, nil
 }
 
+func (app *application) serGetPrivacy(cOrgID string, cAppID string, accountID string) (*model.Privacy, error) {
+	//find the account
+	account, err := app.storage.FindAccountByIDV2(nil, cOrgID, cAppID, accountID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+
+	//get the privacy for the account
+	privacy := account.Privacy
+	return &privacy, nil
+}
+
 func (app *application) serGetAccount(cOrgID string, cAppID string, accountID string) (*model.Account, error) {
 	return app.getAccountV2(nil, cOrgID, cAppID, accountID)
 }
@@ -149,6 +161,7 @@ func (app *application) serGetPublicAccounts(appID string, orgID string, limit i
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
+
 	return accounts, nil
 }
 
