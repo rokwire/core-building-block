@@ -121,6 +121,9 @@ func (p *Privacy) ValidateFieldVisibility(visibilityMap map[string]interface{}) 
 	}
 
 	for k, v := range visibilityMap {
+		if v == nil {
+			continue
+		}
 		visibility, ok := v.(string)
 		if !ok {
 			insideMap, ok := v.(map[string]interface{})
