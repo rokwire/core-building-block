@@ -1481,6 +1481,9 @@ type GetServicesAccountsPublicParams struct {
 
 	// FollowerId The ID of the account following
 	FollowerId *string `form:"follower-id,omitempty" json:"follower-id,omitempty"`
+
+	// UnstructuredProperties Map containing filters by unstructured properties in profile
+	UnstructuredProperties *map[string]interface{} `form:"unstructured_properties,omitempty" json:"unstructured_properties,omitempty"`
 }
 
 // GetServicesAuthCredentialVerifyParams defines parameters for GetServicesAuthCredentialVerify.

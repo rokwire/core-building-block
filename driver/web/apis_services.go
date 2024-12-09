@@ -910,10 +910,11 @@ func (h ServicesApisHandler) getAccounts(l *logs.Log, r *http.Request, claims *t
 
 func (h ServicesApisHandler) getPublicAccounts(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
 	var err error
+	query := r.URL.Query()
 
 	//limit and offset
 	limit := 20
-	limitArg := r.URL.Query().Get("limit")
+	limitArg := query.Get("limit")
 	if limitArg != "" {
 		limit, err = strconv.Atoi(limitArg)
 		if err != nil {
@@ -921,7 +922,7 @@ func (h ServicesApisHandler) getPublicAccounts(l *logs.Log, r *http.Request, cla
 		}
 	}
 	offset := 0
-	offsetArg := r.URL.Query().Get("offset")
+	offsetArg := query.Get("offset")
 	if offsetArg != "" {
 		offset, err = strconv.Atoi(offsetArg)
 		if err != nil {
@@ -931,47 +932,55 @@ func (h ServicesApisHandler) getPublicAccounts(l *logs.Log, r *http.Request, cla
 
 	//search
 	var search *string
-	searchParam := r.URL.Query().Get("search")
+	searchParam := query.Get("search")
 	if len(searchParam) > 0 {
 		search = &searchParam
 	}
 
 	//username
 	var username *string
-	usernameParam := r.URL.Query().Get("username")
+	usernameParam := query.Get("username")
 	if len(usernameParam) > 0 {
 		username = &usernameParam
 	}
 
 	//first name
 	var firstName *string
-	firstNameParam := r.URL.Query().Get("firstname")
+	firstNameParam := query.Get("firstname")
 	if len(firstNameParam) > 0 {
 		firstName = &firstNameParam
 	}
 	//last name
 	var lastName *string
-	lastNameParam := r.URL.Query().Get("lastname")
+	lastNameParam := query.Get("lastname")
 	if len(lastNameParam) > 0 {
 		lastName = &lastNameParam
 	}
 
 	//following id
 	var followingID *string
-	followingIDParam := r.URL.Query().Get("following-id")
+	followingIDParam := query.Get("following-id")
 	if len(followingIDParam) > 0 {
 		followingID = &followingIDParam
 	}
 
 	//following id
 	var followerID *string
-	followerIDParam := r.URL.Query().Get("follower-id")
+	followerIDParam := query.Get("follower-id")
 	if len(followerIDParam) > 0 {
 		followerID = &followerIDParam
 	}
 
+	unstructuredProperties := make(map[string]string)
+	explicitQueryParams := []string{"limit", "offset", "search", "username", "firstname", "lastname", "following-id", "follower-id"}
+	for k := range query {
+		if !utils.Contains(explicitQueryParams, k) {
+			unstructuredProperties[k] = query.Get(k)
+		}
+	}
+
 	accounts, err := h.coreAPIs.Services.SerGetPublicAccounts(claims.AppID, claims.OrgID, limit, offset, search,
-		firstName, lastName, username, followingID, followerID, claims.Subject)
+		firstName, lastName, username, followingID, followerID, unstructuredProperties, claims.Subject)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionGet, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}

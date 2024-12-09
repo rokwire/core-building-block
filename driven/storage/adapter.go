@@ -1469,8 +1469,8 @@ func (sa *Adapter) FindAccounts(context TransactionContext, limit *int, offset *
 }
 
 // FindPublicAccounts finds accounts and returns name and username
-func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, orgID string, limit *int, offset *int,
-	search *string, firstName *string, lastName *string, username *string, followingID *string, followerID *string, userID string) ([]model.PublicAccount, error) {
+func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, orgID string, limit *int, offset *int, search *string, firstName *string, lastName *string,
+	username *string, followingID *string, followerID *string, unstructuredProperties map[string]string, userID string) ([]model.PublicAccount, error) {
 	appOrg, err := sa.FindApplicationOrganization(appID, orgID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
@@ -1548,6 +1548,10 @@ func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, 
 	if followerID != nil {
 		followerIDStr = *followerID
 		pipeline = append(pipeline, bson.M{"$match": bson.M{"followings.follower_id": *followerID}})
+	}
+
+	for k, v := range unstructuredProperties {
+		pipeline = append(pipeline, bson.M{"$match": bson.M{"profile.unstructured_properties." + k: v}})
 	}
 
 	// adds boolean value whether API calling user is following account

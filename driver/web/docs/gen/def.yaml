@@ -1133,6 +1133,14 @@ paths:
           explode: false
           schema:
             type: string
+        - name: unstructured_properties
+          in: query
+          description: Map containing filters by unstructured properties in profile
+          required: false
+          style: form
+          explode: true
+          schema:
+            type: object
       responses:
         '200':
           description: Success
