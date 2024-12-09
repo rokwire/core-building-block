@@ -17,6 +17,7 @@ package core
 import (
 	"core-building-block/core/model"
 	"core-building-block/driven/storage"
+	"slices"
 	"time"
 
 	"github.com/google/uuid"
@@ -161,6 +162,10 @@ func (app *application) serGetPublicAccounts(appID string, orgID string, limit i
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
+
+	slices.SortFunc(accounts, func(i, j model.PublicAccount) int {
+		return i.OrderForSort(&j)
+	})
 
 	return accounts, nil
 }

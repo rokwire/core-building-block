@@ -18,7 +18,7 @@ import (
 	"core-building-block/utils"
 	"fmt"
 	"reflect"
-	"sort"
+	"slices"
 	"time"
 
 	"github.com/rokwire/logging-library-go/v2/errors"
@@ -275,8 +275,11 @@ func (a Account) GetAccountAuthType(authTypeID string, identifier string) *Accou
 
 // SortAccountAuthTypes sorts account auth types by matching the given uid
 func (a Account) SortAccountAuthTypes(uid string) {
-	sort.Slice(a.AuthTypes, func(i, _ int) bool {
-		return a.AuthTypes[i].Identifier == uid
+	slices.SortFunc(a.AuthTypes, func(i, _ AccountAuthType) int {
+		if i.Identifier == uid {
+			return -1
+		}
+		return 0
 	})
 }
 
@@ -932,6 +935,51 @@ type PublicAccount struct {
 
 	Profile     PublicProfile             `json:"profile"`
 	Identifiers []PublicAccountIdentifier `json:"identifiers"`
+}
+
+// OrderForSort provides an ordering for sorting PublicAccounts using slices.SortFunc
+// It returns -1 when a < other, 1 when a > other, and 0 when a == other or a and other are both nil
+func (a *PublicAccount) OrderForSort(other *PublicAccount) int {
+	if a == nil {
+		if other == nil {
+			return 0
+		}
+		return 1
+	}
+	if other == nil {
+		return -1
+	}
+
+	lastName := ""
+	if a.Profile.LastName != nil {
+		lastName = *a.Profile.LastName
+	}
+	lastName2 := ""
+	if other.Profile.LastName != nil {
+		lastName2 = *other.Profile.LastName
+	}
+
+	if lastName < lastName2 {
+		return -1
+	} else if lastName > lastName2 {
+		return 1
+	}
+
+	firstName := ""
+	if a.Profile.FirstName != nil {
+		firstName = *a.Profile.FirstName
+	}
+	firstName2 := ""
+	if other.Profile.FirstName != nil {
+		firstName2 = *other.Profile.FirstName
+	}
+
+	if firstName < firstName2 {
+		return -1
+	} else if firstName > firstName2 {
+		return 1
+	}
+	return 0
 }
 
 // PublicAccountIdentifier represents an account identifier made publicly-known by a user
