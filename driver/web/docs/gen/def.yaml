@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Rokwire Core Building Block API
   description: Core Building Block API Documentation
-  version: 1.44.1
+  version: 1.45.0
 servers:
   - url: 'https://api.rokwire.illinois.edu/core'
     description: Production server
@@ -1133,6 +1133,14 @@ paths:
           explode: false
           schema:
             type: string
+        - name: unstructured_properties
+          in: query
+          description: Map containing filters by unstructured properties in profile
+          required: false
+          style: form
+          explode: true
+          schema:
+            type: object
       responses:
         '200':
           description: Success
