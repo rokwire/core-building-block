@@ -1513,20 +1513,6 @@ func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, 
 		pipeline = append(pipeline, bson.M{"$match": regexFilter})
 	}
 
-	pipeline = append(pipeline, bson.M{"$match": bson.M{"org_apps_memberships.app_org_id": appOrg.ID, "privacy.public": true}})
-	pipeline = append(pipeline, bson.M{"$lookup": bson.M{
-		"from":         "follows",
-		"localField":   "_id",
-		"foreignField": "following_id",
-		"as":           "followings",
-	}})
-	pipeline = append(pipeline, bson.M{"$lookup": bson.M{
-		"from":         "follows",
-		"localField":   "_id",
-		"foreignField": "follower_id",
-		"as":           "followers",
-	}})
-
 	if firstName != nil {
 		firstNameStr = *firstName
 		pipeline = append(pipeline, bson.M{"$match": bson.M{"profile.first_name": *firstName}})
@@ -1554,16 +1540,32 @@ func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, 
 		pipeline = append(pipeline, bson.M{"$match": bson.M{"profile.unstructured_properties." + k: v}})
 	}
 
-	// adds boolean value whether API calling user is following account
-	pipeline = append(pipeline, bson.M{"$addFields": bson.M{"is_following": bson.M{"$in": bson.A{userID, "$followings.follower_id"}}}})
+	pipeline = append(pipeline, bson.M{"$match": bson.M{"org_apps_memberships.app_org_id": appOrg.ID, "privacy.public": true}})
+	pipeline = append(pipeline, bson.M{"$sort": bson.D{{Key: "profile.last_name", Value: 1}, {Key: "profile.first_name", Value: 1}}})
 
-	if offset != nil {
+	if offset != nil && *offset > 0 {
 		pipeline = append(pipeline, bson.M{"$skip": *offset})
 	}
 
 	if limit != nil {
 		pipeline = append(pipeline, bson.M{"$limit": *limit})
 	}
+
+	pipeline = append(pipeline, bson.M{"$lookup": bson.M{
+		"from":         "follows",
+		"localField":   "_id",
+		"foreignField": "following_id",
+		"as":           "followings",
+	}})
+	pipeline = append(pipeline, bson.M{"$lookup": bson.M{
+		"from":         "follows",
+		"localField":   "_id",
+		"foreignField": "follower_id",
+		"as":           "followers",
+	}})
+
+	// adds boolean value whether API calling user is following account
+	pipeline = append(pipeline, bson.M{"$addFields": bson.M{"is_following": bson.M{"$in": bson.A{userID, "$followings.follower_id"}}}})
 
 	var results []tenantAccount
 	err = sa.db.tenantsAccounts.Aggregate(pipeline, &results, nil)
