@@ -1513,8 +1513,6 @@ func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, 
 		pipeline = append(pipeline, bson.M{"$match": regexFilter})
 	}
 
-	pipeline = append(pipeline, bson.M{"$match": bson.M{"org_apps_memberships.app_org_id": appOrg.ID, "privacy.public": true}})
-
 	if firstName != nil {
 		firstNameStr = *firstName
 		pipeline = append(pipeline, bson.M{"$match": bson.M{"profile.first_name": *firstName}})
@@ -1542,6 +1540,7 @@ func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, 
 		pipeline = append(pipeline, bson.M{"$match": bson.M{"profile.unstructured_properties." + k: v}})
 	}
 
+	pipeline = append(pipeline, bson.M{"$match": bson.M{"org_apps_memberships.app_org_id": appOrg.ID, "privacy.public": true}})
 	pipeline = append(pipeline, bson.M{"$sort": bson.D{{Key: "profile.last_name", Value: 1}, {Key: "profile.first_name", Value: 1}}})
 
 	if offset != nil && *offset > 0 {

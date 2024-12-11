@@ -330,12 +330,6 @@ func (m *database) applyTenantsAccountsIdentitiesChecks(tenantAccounts *collecti
 		return err
 	}
 
-	//add profile index for sorting public accounts
-	err = tenantAccounts.AddIndex(bson.D{primitive.E{Key: "profile.last_name", Value: 1}, primitive.E{Key: "profile.first_name", Value: 1}}, false)
-	if err != nil {
-		return err
-	}
-
 	//add auth types index
 	err = tenantAccounts.AddIndex(bson.D{primitive.E{Key: "auth_types.id", Value: 1}}, false)
 	if err != nil {
