@@ -937,51 +937,6 @@ type PublicAccount struct {
 	Identifiers []PublicAccountIdentifier `json:"identifiers"`
 }
 
-// OrderForSort provides an ordering for sorting PublicAccounts using slices.SortFunc
-// It returns -1 when a < other, 1 when a > other, and 0 when a == other or a and other are both nil
-func (a *PublicAccount) OrderForSort(other *PublicAccount) int {
-	if a == nil {
-		if other == nil {
-			return 0
-		}
-		return 1
-	}
-	if other == nil {
-		return -1
-	}
-
-	lastName := ""
-	if a.Profile.LastName != nil {
-		lastName = *a.Profile.LastName
-	}
-	lastName2 := ""
-	if other.Profile.LastName != nil {
-		lastName2 = *other.Profile.LastName
-	}
-
-	if lastName < lastName2 {
-		return -1
-	} else if lastName > lastName2 {
-		return 1
-	}
-
-	firstName := ""
-	if a.Profile.FirstName != nil {
-		firstName = *a.Profile.FirstName
-	}
-	firstName2 := ""
-	if other.Profile.FirstName != nil {
-		firstName2 = *other.Profile.FirstName
-	}
-
-	if firstName < firstName2 {
-		return -1
-	} else if firstName > firstName2 {
-		return 1
-	}
-	return 0
-}
-
 // PublicAccountIdentifier represents an account identifier made publicly-known by a user
 type PublicAccountIdentifier struct {
 	Code       string `json:"code"`
