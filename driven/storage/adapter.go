@@ -20,7 +20,6 @@ import (
 	"core-building-block/utils"
 	"fmt"
 	"reflect"
-	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -1516,32 +1515,17 @@ func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, 
 
 	if firstName != nil {
 		firstNameStr = *firstName
-		pipeline = append(pipeline, bson.M{
-			"$match": bson.M{"profile.first_name": primitive.Regex{
-				Pattern: fmt.Sprintf("^%s$", regexp.QuoteMeta(firstNameStr)),
-				Options: "i", // Case-insensitive matching
-			}},
-		})
+		pipeline = append(pipeline, bson.M{"$match": bson.M{"profile.first_name": *firstName}})
 	}
 
 	if lastName != nil {
 		lastNameStr = *lastName
-		pipeline = append(pipeline, bson.M{
-			"$match": bson.M{"profile.last_name": primitive.Regex{
-				Pattern: fmt.Sprintf("^%s$", regexp.QuoteMeta(lastNameStr)),
-				Options: "i", // Case-insensitive matching
-			}},
-		})
+		pipeline = append(pipeline, bson.M{"$match": bson.M{"profile.last_name": *lastName}})
 	}
 
 	if username != nil {
 		usernameStr = *username
-		pipeline = append(pipeline, bson.M{
-			"$match": bson.M{"username": primitive.Regex{
-				Pattern: fmt.Sprintf("^%s$", regexp.QuoteMeta(usernameStr)),
-				Options: "i", // Case-insensitive matching
-			}},
-		})
+		pipeline = append(pipeline, bson.M{"$match": bson.M{"username": *username}})
 	}
 
 	if followingID != nil {
