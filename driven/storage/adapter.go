@@ -1541,7 +1541,14 @@ func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, 
 	}
 
 	pipeline = append(pipeline, bson.M{"$match": bson.M{"org_apps_memberships.app_org_id": appOrg.ID, "privacy.public": true}})
-	pipeline = append(pipeline, bson.M{"$sort": bson.D{{Key: "profile.last_name", Value: 1}, {Key: "profile.first_name", Value: 1}}})
+	pipeline = append(pipeline, bson.M{"$addFields": bson.M{
+		"normalized_last_name":  bson.M{"$toLower": "$profile.last_name"},
+		"normalized_first_name": bson.M{"$toLower": "$profile.first_name"},
+	}})
+	pipeline = append(pipeline, bson.M{"$sort": bson.D{
+		{Key: "normalized_last_name", Value: 1},
+		{Key: "normalized_first_name", Value: 1},
+	}})
 
 	if offset != nil && *offset > 0 {
 		pipeline = append(pipeline, bson.M{"$skip": *offset})
