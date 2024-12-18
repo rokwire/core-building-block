@@ -1517,12 +1517,10 @@ func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, 
 		firstNameStr = *firstName
 		pipeline = append(pipeline, bson.M{"$match": bson.M{"profile.first_name": *firstName}})
 	}
-
 	if lastName != nil {
 		lastNameStr = *lastName
 		pipeline = append(pipeline, bson.M{"$match": bson.M{"profile.last_name": *lastName}})
 	}
-
 	if username != nil {
 		usernameStr = *username
 		pipeline = append(pipeline, bson.M{"$match": bson.M{"username": *username}})
