@@ -80,6 +80,14 @@ get:
       explode: true
       schema:
         type: object
+    - name: ids
+      in: query
+      description: A comma-separated list of IDs
+      required: false
+      style: form
+      explode: false
+      schema:
+        type: string    
   responses:
     200:
       description: Success
