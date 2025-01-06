@@ -1536,7 +1536,7 @@ func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, 
 		pipeline = append(pipeline, bson.M{"$match": bson.M{"followings.follower_id": *followerID}})
 	}
 
-	if ids != nil {
+	if ids != nil && len(*ids) > 0 {
 		pipeline = append(pipeline, bson.M{"$match": bson.M{"_id": bson.M{"$in": *ids}}})
 	}
 
