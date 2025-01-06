@@ -1470,7 +1470,7 @@ func (sa *Adapter) FindAccounts(context TransactionContext, limit *int, offset *
 
 // FindPublicAccounts finds accounts and returns name and username
 func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, orgID string, limit *int, offset *int, search *string, firstName *string, lastName *string,
-	username *string, followingID *string, followerID *string, unstructuredProperties map[string]string, userID string) ([]model.PublicAccount, error) {
+	username *string, followingID *string, followerID *string, unstructuredProperties map[string]string, userID string, ids *[]string) ([]model.PublicAccount, error) {
 	appOrg, err := sa.FindApplicationOrganization(appID, orgID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
@@ -1534,6 +1534,10 @@ func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, 
 	if followerID != nil {
 		followerIDStr = *followerID
 		pipeline = append(pipeline, bson.M{"$match": bson.M{"followings.follower_id": *followerID}})
+	}
+
+	if ids != nil && len(*ids) > 0 {
+		pipeline = append(pipeline, bson.M{"$match": bson.M{"_id": bson.M{"$in": *ids}}})
 	}
 
 	for k, v := range unstructuredProperties {
