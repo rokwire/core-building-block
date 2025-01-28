@@ -1302,7 +1302,17 @@ func (h ServicesApisHandler) logout(l *logs.Log, r *http.Request, claims *tokena
 }
 
 func (h ServicesApisHandler) getUserData(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
-	return l.HTTPResponseSuccess()
+	userData, err := h.coreAPIs.Services.GetUserData(claims.AppID, claims.OrgID, claims.Subject)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionGet, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
+	}
+
+	data, err := json.Marshal(userData)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeAccount, nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HTTPResponseSuccessJSON(data)
 }
 
 // NewServicesApisHandler creates new rest services Handler instance

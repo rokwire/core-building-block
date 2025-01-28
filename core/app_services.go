@@ -195,6 +195,17 @@ func (app *application) serGetAppConfig(appTypeIdentifier string, orgID *string,
 	return app.sharedGetAppConfig(appTypeIdentifier, orgID, versionNumbers, apiKey, false)
 }
 
-func (app *application) getUserData(appID string, orgID string, accountID string) ([]model.UserData, error) {
-	return nil, nil
+func (app *application) getUserData(appID string, orgID string, accountID string) (*model.UserData, error) {
+	account, err := app.storage.FindAccountByID(nil, accountID)
+	if err != nil {
+		return nil, err
+	}
+
+	logginSession, err := app.storage.FindLoginSessionsByParams(appID, orgID, nil, &accountID, nil, nil, nil, nil, nil, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	userData := model.UserData{Account: account, LoginSession: logginSession}
+	return &userData, nil
 }
