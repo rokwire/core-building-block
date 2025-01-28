@@ -1301,6 +1301,10 @@ func (h ServicesApisHandler) logout(l *logs.Log, r *http.Request, claims *tokena
 	return l.HTTPResponseSuccess()
 }
 
+func (h ServicesApisHandler) getUserData(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
+	return l.HTTPResponseSuccess()
+}
+
 // NewServicesApisHandler creates new rest services Handler instance
 func NewServicesApisHandler(coreAPIs *core.APIs) ServicesApisHandler {
 	return ServicesApisHandler{coreAPIs: coreAPIs}

@@ -365,6 +365,10 @@ func (s *servicesImpl) SerGetAppConfig(appTypeIdentifier string, orgID *string, 
 	return s.app.serGetAppConfig(appTypeIdentifier, orgID, versionNumbers, apiKey)
 }
 
+func (s *servicesImpl) GetUserData(appID string, orgID string, accountID string) ([]model.UserData, error) {
+	return s.app.getUserData(appID, orgID, accountID)
+}
+
 ///
 
 //administrationImpl

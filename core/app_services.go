@@ -194,3 +194,7 @@ func (app *application) serGetCommonTest(l *logs.Log) string {
 func (app *application) serGetAppConfig(appTypeIdentifier string, orgID *string, versionNumbers model.VersionNumbers, apiKey *string) (*model.ApplicationConfig, error) {
 	return app.sharedGetAppConfig(appTypeIdentifier, orgID, versionNumbers, apiKey, false)
 }
+
+func (app *application) getUserData(appID string, orgID string, accountID string) ([]model.UserData, error) {
+	return nil, nil
+}
