@@ -106,6 +106,8 @@ Device:
   $ref: "./user/Device.yaml"
 Follow:
   $ref: "./user/Follow.yaml"
+UserData:
+  $ref: "./user/UserData.yaml"  
 
 ##### APIs requests and responses - they are at bottom
 

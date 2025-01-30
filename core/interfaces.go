@@ -48,6 +48,7 @@ type Services interface {
 	SerGetCommonTest(l *logs.Log) string
 
 	SerGetAppConfig(appTypeIdentifier string, orgID *string, versionNumbers model.VersionNumbers, apiKey *string) (*model.ApplicationConfig, error)
+	GetUserData(appID string, orgID string, accountID string) (*model.UserData, error)
 }
 
 // Administration exposes administration APIs for the driver adapters

@@ -1807,6 +1807,30 @@ paths:
           description: AppConfig not found
         '500':
           description: Internal error
+  /services/user-data:
+    get:
+      tags:
+        - Services
+      summary: Get user data
+      description: |
+        Gets user data
+
+        **Auth:** Requires auth token
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserData'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal errors
   /admin/auth/login:
     post:
       tags:
@@ -7182,6 +7206,15 @@ components:
         follower_id:
           readOnly: true
           type: string
+    UserData:
+      type: object
+      properties:
+        account:
+          $ref: '#/components/schemas/Account'
+        login_sessions:
+          type: array
+          items:
+            $ref: '#/components/schemas/LoginSession'
     _shared_req_Login:
       required:
         - auth_type
