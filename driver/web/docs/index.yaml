@@ -95,7 +95,7 @@ paths:
     $ref: "./resources/services/application/configs.yaml"
   /services/application/organization/configs:
     $ref: "./resources/services/application/organization/configs.yaml"
-  /services/user-datas:
+  /services/user-data:
     $ref: "./resources/services/user-data.yaml"  
 
   #admin

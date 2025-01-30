@@ -1807,7 +1807,7 @@ paths:
           description: AppConfig not found
         '500':
           description: Internal error
-  /services/user-datas:
+  /services/user-data:
     get:
       tags:
         - Services
