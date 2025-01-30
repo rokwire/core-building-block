@@ -215,6 +215,12 @@ type Account struct {
 	LastAccessTokenDate *time.Time
 }
 
+// UserData represents the current user data
+type UserData struct {
+	Account      *Account       `json:"account"`
+	LoginSession []LoginSession `json:"login_sessions"`
+}
+
 // HasAppMembership checks if there is app membership
 func (a Account) HasAppMembership(appOrgID string) bool {
 	if len(a.OrgAppsMemberships) == 0 {

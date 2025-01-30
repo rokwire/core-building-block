@@ -1,0 +1,8 @@
+type: object
+properties:
+  account:
+    $ref: "./Account.yaml"
+  login_sessions:
+    type: array
+    items:
+      $ref: "../auth/LoginSession.yaml"    

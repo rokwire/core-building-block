@@ -1301,6 +1301,20 @@ func (h ServicesApisHandler) logout(l *logs.Log, r *http.Request, claims *tokena
 	return l.HTTPResponseSuccess()
 }
 
+func (h ServicesApisHandler) getUserData(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
+	userData, err := h.coreAPIs.Services.GetUserData(claims.AppID, claims.OrgID, claims.Subject)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionGet, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
+	}
+
+	data, err := json.Marshal(userData)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeAccount, nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HTTPResponseSuccessJSON(data)
+}
+
 // NewServicesApisHandler creates new rest services Handler instance
 func NewServicesApisHandler(coreAPIs *core.APIs) ServicesApisHandler {
 	return ServicesApisHandler{coreAPIs: coreAPIs}

@@ -142,6 +142,7 @@ func (we Adapter) Start() {
 	servicesSubRouter.HandleFunc("/test", we.wrapFunc(we.servicesApisHandler.getTest, nil)).Methods("GET")                       //Public
 	servicesSubRouter.HandleFunc("/app-configs", we.wrapFunc(we.servicesApisHandler.getApplicationConfigs, nil)).Methods("POST") //Requires API key in request
 	servicesSubRouter.HandleFunc("/app-configs/organization", we.wrapFunc(we.servicesApisHandler.getApplicationOrgConfigs, we.auth.services.Standard)).Methods("POST")
+	servicesSubRouter.HandleFunc("/user-data", we.wrapFunc(we.servicesApisHandler.getUserData, we.auth.services.Standard)).Methods("GET")
 
 	// DEPRECATED
 	servicesSubRouter.HandleFunc("/application/configs", we.wrapFunc(we.servicesApisHandler.getApplicationConfigs, nil)).Methods("POST") //Requires API key in request
