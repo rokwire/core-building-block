@@ -396,16 +396,7 @@ func privacyFromDef(item *Def.Privacy) model.Privacy {
 
 func privacyFromDefNullable(item *Def.PrivacyNullable) model.Privacy {
 	if item == nil { //default privacy
-		public := true
-		fieldVisibility := map[string]interface{}{
-			"profile": map[string]interface{}{
-				"first_name":  "public",
-				"last_name":   "public",
-				"middle_name": "public",
-				"email":       "public",
-			},
-		}
-		return model.Privacy{Public: public, FieldVisibility: fieldVisibility}
+		return defaultPrivacy()
 	}
 
 	var public bool
@@ -418,6 +409,20 @@ func privacyFromDefNullable(item *Def.PrivacyNullable) model.Privacy {
 	}
 
 	return model.Privacy{Public: public, FieldVisibility: fieldVisibility}
+}
+
+func defaultPrivacy() model.Privacy {
+	return model.Privacy{
+		Public: true,
+		FieldVisibility: map[string]interface{}{
+			"profile": map[string]interface{}{
+				"first_name":  "public",
+				"last_name":   "public",
+				"middle_name": "public",
+				"email":       "public",
+			},
+		},
+	}
 }
 
 // MFA
