@@ -379,7 +379,7 @@ func privacyToDef(item *model.Privacy) *Def.Privacy {
 
 func privacyFromDef(item *Def.Privacy) model.Privacy {
 	if item == nil {
-		return model.Privacy{}
+		return defaultPrivacy()
 	}
 
 	var public bool
