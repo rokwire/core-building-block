@@ -372,8 +372,8 @@ func privacyToDef(item *model.Privacy) *Def.Privacy {
 	}
 
 	return &Def.Privacy{
-		Public:          &item.Public,
-		FieldVisibility: &item.FieldVisibility,
+		Public:          item.Public,
+		FieldVisibility: item.FieldVisibility,
 	}
 }
 
@@ -391,7 +391,7 @@ func privacyFromDef(item *Def.Privacy) model.Privacy {
 		fieldVisibility = *item.FieldVisibility
 	}
 
-	return model.Privacy{Public: public, FieldVisibility: fieldVisibility}
+	return model.Privacy{Public: &public, FieldVisibility: &fieldVisibility}
 }
 
 func privacyFromDefNullable(item *Def.PrivacyNullable) model.Privacy {
@@ -408,20 +408,13 @@ func privacyFromDefNullable(item *Def.PrivacyNullable) model.Privacy {
 		fieldVisibility = *item.FieldVisibility
 	}
 
-	return model.Privacy{Public: public, FieldVisibility: fieldVisibility}
+	return model.Privacy{Public: &public, FieldVisibility: &fieldVisibility}
 }
 
 func defaultPrivacy() model.Privacy {
 	return model.Privacy{
-		Public: true,
-		FieldVisibility: map[string]interface{}{
-			"profile": map[string]interface{}{
-				"first_name":  "public",
-				"last_name":   "public",
-				"middle_name": "public",
-				"email":       "public",
-			},
-		},
+		Public:          nil,
+		FieldVisibility: nil,
 	}
 }
 

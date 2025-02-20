@@ -83,13 +83,18 @@ const (
 
 // Privacy represents the privacy options for each account
 type Privacy struct {
-	Public          bool                   `json:"public" bson:"public"`
-	FieldVisibility map[string]interface{} `json:"field_visibility" bson:"field_visibility"`
+	Public          *bool                   `json:"public" bson:"public"`
+	FieldVisibility *map[string]interface{} `json:"field_visibility" bson:"field_visibility"`
 }
 
 // GetFieldVisibility determines the privacy setting for the account data at path
 func (p *Privacy) GetFieldVisibility(path string) (string, error) {
-	visibilityEntry := utils.GetMapEntryFromPath(p.FieldVisibility, path)
+	fieldVisibility := p.FieldVisibility
+	if fieldVisibility == nil {
+		return VisibilityPrivate, nil
+	}
+
+	visibilityEntry := utils.GetMapEntryFromPath(*fieldVisibility, path)
 	if visibilityEntry == nil {
 		return VisibilityPrivate, nil
 	}
@@ -114,10 +119,10 @@ func (p *Privacy) IsFieldVisible(path string, isConnection bool) (bool, error) {
 // ValidateFieldVisibility ensures each entry in visibilityMap is either another map or one of the three allowed visbility strings (public, connections, private)
 func (p *Privacy) ValidateFieldVisibility(visibilityMap map[string]interface{}) error {
 	if len(visibilityMap) == 0 {
-		if len(p.FieldVisibility) == 0 {
+		if p.FieldVisibility == nil || len(*p.FieldVisibility) == 0 {
 			return nil
 		}
-		visibilityMap = p.FieldVisibility
+		visibilityMap = *p.FieldVisibility
 	}
 
 	for k, v := range visibilityMap {
