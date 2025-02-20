@@ -1024,12 +1024,13 @@ func (h ServicesApisHandler) addFollow(l *logs.Log, r *http.Request, claims *tok
 
 	// Check to make sure follower account is public
 	followerAccount, err := h.coreAPIs.Services.SerGetAccount(claims.OrgID, claims.AppID, claims.Subject)
-	if err != nil || followerAccount == nil || !followerAccount.Privacy.Public {
+	if err != nil || followerAccount == nil || followerAccount.Privacy.Public == nil || !*followerAccount.Privacy.Public {
 		return l.HTTPResponseErrorAction(logutils.ActionInsert, model.TypeFollow, nil, err, http.StatusBadRequest, true)
 	}
 
 	// Check to make sure account is public
-	if !account.Privacy.Public {
+	accountPrivacy := account.Privacy
+	if accountPrivacy.Public == nil || !*accountPrivacy.Public {
 		return l.HTTPResponseErrorAction(logutils.ActionInsert, model.TypeFollow, nil, err, http.StatusForbidden, true)
 	}
 
