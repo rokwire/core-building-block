@@ -572,7 +572,7 @@ type Permission struct {
 // Privacy defines model for Privacy.
 type Privacy struct {
 	FieldVisibility *map[string]interface{} `json:"field_visibility"`
-	Public          *bool                   `json:"public,omitempty"`
+	Public          *bool                   `json:"public"`
 }
 
 // PrivacyNullable defines model for PrivacyNullable.
@@ -702,6 +702,12 @@ type SupportedAuthTypes struct {
 type TSLExpirePolicy struct {
 	Active               bool `json:"active"`
 	TimeSinceLoginPeriod int  `json:"time_since_login_period"`
+}
+
+// UserData defines model for UserData.
+type UserData struct {
+	Account       *Account        `json:"account,omitempty"`
+	LoginSessions *[]LoginSession `json:"login_sessions,omitempty"`
 }
 
 // Username defines model for Username.
@@ -1484,6 +1490,9 @@ type GetServicesAccountsPublicParams struct {
 
 	// UnstructuredProperties Map containing filters by unstructured properties in profile
 	UnstructuredProperties *map[string]interface{} `form:"unstructured_properties,omitempty" json:"unstructured_properties,omitempty"`
+
+	// Ids A comma-separated list of IDs
+	Ids *string `form:"ids,omitempty" json:"ids,omitempty"`
 }
 
 // GetServicesAuthCredentialVerifyParams defines parameters for GetServicesAuthCredentialVerify.

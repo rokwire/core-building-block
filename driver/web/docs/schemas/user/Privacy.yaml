@@ -2,6 +2,7 @@ type: object
 properties:
   public:
     type: boolean
+    nullable: true
   field_visibility:
     type: object
     additionalProperties: true
