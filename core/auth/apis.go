@@ -1904,7 +1904,7 @@ func (a *Auth) InitializeSystemAccount(context storage.TransactionContext, authT
 
 	now := time.Now()
 	profile := model.Profile{ID: uuid.NewString(), Email: email, DateCreated: now}
-	privacy := model.Privacy{Public: false}
+	privacy := model.Privacy{Public: nil}
 	permissions := []string{allSystemPermission}
 
 	_, accountAuthType, err := a.applySignUpAdmin(context, authImpl, authType, appOrg, email, password, profile, privacy, "", permissions, nil, nil, nil, permissions, &clientVersion, l)

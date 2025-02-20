@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+### Fixed
+- Disable default privacy setting [#759](https://github.com/rokwire/core-building-block/issues/759)
+
 ## [1.48.1] - 2025-19-02
 ### Fixed
 - Fix privacy format [#755](https://github.com/rokwire/core-building-block/issues/755)
