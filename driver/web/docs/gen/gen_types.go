@@ -166,6 +166,12 @@ const (
 	SharedResRokwireTokenTokenTypeBearer SharedResRokwireTokenTokenType = "Bearer"
 )
 
+// Defines values for GetServicesV2AccountsPublicParamsOrder.
+const (
+	Asc  GetServicesV2AccountsPublicParamsOrder = "asc"
+	Desc GetServicesV2AccountsPublicParamsOrder = "desc"
+)
+
 // APIKey API key record
 type APIKey struct {
 	AppId string  `json:"app_id"`
@@ -925,6 +931,12 @@ type ServicesResAccountAuthTypeLink struct {
 	Message   *string           `json:"message"`
 }
 
+// ServicesResAccountsPublic defines model for _services_res_accounts-public.
+type ServicesResAccountsPublic struct {
+	Accounts   []PublicAccount `json:"accounts"`
+	TotalCount int             `json:"total_count"`
+}
+
 // ServicesResAuthorizeService defines model for _services_res_authorize-service.
 type ServicesResAuthorizeService struct {
 	AccessToken    *string   `json:"access_token,omitempty"`
@@ -1520,6 +1532,45 @@ type GetServicesAuthServiceRegsParams struct {
 	// Ids A comma-separated list of service IDs to return registrations for
 	Ids string `form:"ids" json:"ids"`
 }
+
+// GetServicesV2AccountsPublicParams defines parameters for GetServicesV2AccountsPublic.
+type GetServicesV2AccountsPublicParams struct {
+	// Limit The maximum number of accounts to return
+	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+
+	// NameOffset The last name of the first account to return
+	NameOffset *string `form:"name-offset,omitempty" json:"name-offset,omitempty"`
+
+	// Order The sort order to return accounts
+	Order *GetServicesV2AccountsPublicParamsOrder `form:"order,omitempty" json:"order,omitempty"`
+
+	// Search The search for username, firstname, or lastname
+	Search *string `form:"search,omitempty" json:"search,omitempty"`
+
+	// Username The username
+	Username *string `form:"username,omitempty" json:"username,omitempty"`
+
+	// Firstname The account profile first name
+	Firstname *string `form:"firstname,omitempty" json:"firstname,omitempty"`
+
+	// Lastname The account profile last name
+	Lastname *string `form:"lastname,omitempty" json:"lastname,omitempty"`
+
+	// FollowingId The ID of the account being followed
+	FollowingId *string `form:"following-id,omitempty" json:"following-id,omitempty"`
+
+	// FollowerId The ID of the account following
+	FollowerId *string `form:"follower-id,omitempty" json:"follower-id,omitempty"`
+
+	// UnstructuredProperties Map containing filters by unstructured properties in profile
+	UnstructuredProperties *map[string]interface{} `form:"unstructured_properties,omitempty" json:"unstructured_properties,omitempty"`
+
+	// Ids A comma-separated list of IDs
+	Ids *string `form:"ids,omitempty" json:"ids,omitempty"`
+}
+
+// GetServicesV2AccountsPublicParamsOrder defines parameters for GetServicesV2AccountsPublic.
+type GetServicesV2AccountsPublicParamsOrder string
 
 // DeleteSystemApiKeysParams defines parameters for DeleteSystemApiKeys.
 type DeleteSystemApiKeysParams struct {

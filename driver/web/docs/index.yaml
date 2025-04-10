@@ -67,6 +67,8 @@ paths:
     $ref: "./resources/services/accounts.yaml"
   /services/accounts/public:
     $ref: "./resources/services/accounts-public.yaml"
+  /services/v2/accounts/public:
+    $ref: "./resources/services/v2/accounts-public.yaml"
   /services/account:
     $ref: "./resources/services/account.yaml"
   /services/account/mfa:

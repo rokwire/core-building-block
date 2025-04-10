@@ -149,6 +149,20 @@ func partialAccountsToDef(items []model.Account) []Def.PartialAccount {
 	return result
 }
 
+func publicAccountToDef(item model.PublicAccount) *Def.PublicAccount {
+	identifiers := publicAccountIdentifiersToDef(item.Identifiers)
+	profile := publicProfileToDef(&item.Profile)
+	return &Def.PublicAccount{Id: item.ID, IsConnection: item.IsConnection, IsFollowing: &item.IsFollowing, Verified: &item.Verified, Profile: profile, Identifiers: identifiers}
+}
+
+func publicAccountsToDef(items []model.PublicAccount) []Def.PublicAccount {
+	result := make([]Def.PublicAccount, len(items))
+	for i, item := range items {
+		result[i] = *publicAccountToDef(item)
+	}
+	return result
+}
+
 // AccountAuthType
 func accountAuthTypeToDef(item model.AccountAuthType) Def.AccountAuthType {
 	params := item.Params
@@ -364,6 +378,33 @@ func profileFromDefNullable(item *Def.ProfileNullable) model.Profile {
 	return model.Profile{PhotoURL: photoURL, PronunciationURL: pronunciationURL, Pronouns: pronouns, FirstName: firstName,
 		LastName: lastName, Email: email, Phone: phone, BirthYear: int16(birthYear), Address: address, ZipCode: zipCode,
 		State: state, Country: country, Website: website, UnstructuredProperties: unstructuredProperties}
+}
+
+func publicProfileToDef(item *model.PublicProfile) *Def.ProfileNullable {
+	if item == nil {
+		return nil
+	}
+
+	var birthYear int
+	if item.BirthYear != nil {
+		birthYear = int(*item.BirthYear)
+	}
+	return &Def.ProfileNullable{PhotoUrl: item.PhotoURL, PronunciationUrl: item.PronunciationURL, Pronouns: item.Pronouns,
+		FirstName: item.FirstName, LastName: item.LastName, Email: item.Email, Phone: item.Phone, BirthYear: &birthYear,
+		Address: item.Address, ZipCode: item.ZipCode, State: item.State, Country: item.Country, Website: item.Website,
+		UnstructuredProperties: &item.UnstructuredProperties}
+}
+
+func publicAccountIdentifierToDef(item model.PublicAccountIdentifier) Def.PublicAccountIdentifier {
+	return Def.PublicAccountIdentifier{Identifier: item.Identifier, Code: item.Code}
+}
+
+func publicAccountIdentifiersToDef(items []model.PublicAccountIdentifier) []Def.PublicAccountIdentifier {
+	result := make([]Def.PublicAccountIdentifier, len(items))
+	for i, item := range items {
+		result[i] = publicAccountIdentifierToDef(item)
+	}
+	return result
 }
 
 func privacyToDef(item *model.Privacy) *Def.Privacy {

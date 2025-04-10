@@ -1,0 +1,11 @@
+required:
+  - total_count
+  - accounts
+type: object
+properties:
+  total_count:
+    type: integer
+  accounts:
+    type: array
+    items:
+      $ref: "../../../../../user/PublicAccount.yaml"
