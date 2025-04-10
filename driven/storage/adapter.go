@@ -1476,6 +1476,8 @@ func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, 
 		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
 	}
 
+	pipeline := []bson.M{}
+
 	var searchStr, nameOffsetStr, firstNameStr, lastNameStr, usernameStr, followingIDStr, followerIDStr string
 	nameOffsetOp := "$gte"
 	sortVal := 1
@@ -1483,9 +1485,6 @@ func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, 
 		nameOffsetOp = "$lte"
 		sortVal = -1
 	}
-
-	pipeline := []bson.M{{"$match": bson.M{"org_apps_memberships.app_org_id": appOrg.ID, "privacy.public": true}}}
-	//TODO: public accounts total count stage here
 
 	// search for matching using text search. No substring matches
 	// if search != nil {
@@ -1550,6 +1549,8 @@ func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, 
 	for k, v := range unstructuredProperties {
 		pipeline = append(pipeline, bson.M{"$match": bson.M{"profile.unstructured_properties." + k: v}})
 	}
+
+	pipeline = append(pipeline, bson.M{"$match": bson.M{"org_apps_memberships.app_org_id": appOrg.ID, "privacy.public": true}})
 
 	// secondary pipeline for pagination, sorting, adding fields
 	facetPipeline := []bson.M{}
