@@ -989,7 +989,7 @@ func (h ServicesApisHandler) getPublicAccounts(l *logs.Log, r *http.Request, cla
 		}
 	}
 
-	accounts, _, err := h.coreAPIs.Services.SerGetPublicAccounts(claims.AppID, claims.OrgID, limit, offset, nil, string(Def.Asc), search,
+	accounts, _, _, err := h.coreAPIs.Services.SerGetPublicAccounts(claims.AppID, claims.OrgID, limit, offset, nil, string(Def.Asc), search,
 		firstName, lastName, username, followingID, followerID, unstructuredProperties, claims.Subject, ids)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionGet, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
@@ -1087,21 +1087,22 @@ func (h ServicesApisHandler) getPublicAccountsV2(l *logs.Log, r *http.Request, c
 		}
 	}
 
-	accounts, count, err := h.coreAPIs.Services.SerGetPublicAccounts(claims.AppID, claims.OrgID, limit, nil, nameOffset, order, search,
+	accounts, indexCounts, total, err := h.coreAPIs.Services.SerGetPublicAccounts(claims.AppID, claims.OrgID, limit, nil, nameOffset, order, search,
 		firstName, lastName, username, followingID, followerID, unstructuredProperties, claims.Subject, ids)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionGet, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}
 
 	totalCount := 0
-	if count != nil {
-		countVal := int(*count)
-		totalCount = countVal
+	if total != nil {
+		totalVal := int(*total)
+		totalCount = totalVal
 	}
 
 	result := Def.ServicesResAccountsPublic{
-		TotalCount: totalCount,
-		Accounts:   publicAccountsToDef(accounts),
+		Total:    totalCount,
+		Counts:   indexCounts,
+		Accounts: publicAccountsToDef(accounts),
 	}
 
 	data, err := json.Marshal(result)

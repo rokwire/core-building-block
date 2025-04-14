@@ -1470,10 +1470,10 @@ func (sa *Adapter) FindAccounts(context TransactionContext, limit *int, offset *
 
 // FindPublicAccounts finds accounts and returns name and username
 func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, orgID string, limit *int, offset *int, nameOffset *string, order string, search *string, firstName *string, lastName *string,
-	username *string, followingID *string, followerID *string, unstructuredProperties map[string]string, userID string, ids *[]string) ([]model.PublicAccount, *int64, error) {
+	username *string, followingID *string, followerID *string, unstructuredProperties map[string]string, userID string, ids *[]string) ([]model.PublicAccount, map[string]int, *int64, error) {
 	appOrg, err := sa.FindApplicationOrganization(appID, orgID)
 	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
+		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
 	}
 
 	pipeline := []bson.M{}
@@ -1594,32 +1594,42 @@ func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, 
 
 	// facet stage to get document count after account filtering
 	pipeline = append(pipeline, bson.M{"$facet": bson.M{
-		"count":    []bson.M{{"$count": "value"}},
+		"total": []bson.M{{"$count": "value"}},
+		"counts": []bson.M{
+			{"$group": bson.M{
+				"_id":   bson.M{"$toLower": bson.M{"$substrBytes": bson.A{"$profile.last_name", 0, 1}}},
+				"count": bson.M{"$sum": 1}},
+			}},
 		"accounts": facetPipeline,
 	}})
 	pipeline = append(pipeline, bson.M{"$unwind": "$accounts"})
-	pipeline = append(pipeline, bson.M{"$unwind": "$count"})
+	pipeline = append(pipeline, bson.M{"$unwind": "$counts"})
+	pipeline = append(pipeline, bson.M{"$unwind": "$total"})
 	pipeline = append(pipeline, bson.M{"$replaceRoot": bson.M{
 		"newRoot": bson.M{
-			"$mergeObjects": bson.A{"$accounts", bson.M{"count": "$count.value"}},
+			"$mergeObjects": bson.A{"$accounts", "$counts", bson.M{"total": "$total.value"}},
 		},
 	}})
 
 	type publicAccountsResult struct {
-		Count    int64           `bson:"count"`
+		Total  int64 `bson:"total"`
+		Counts []struct {
+			Letter string `bson:"_id"`
+			Count  int64  `bson:"count"`
+		}
 		Accounts []tenantAccount `bson:"accounts"`
 	}
 
 	var result publicAccountsResult
 	err = sa.db.tenantsAccounts.Aggregate(pipeline, &result, nil)
 	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"app_id": appID, "org_id": orgID, "search": searchStr, "name_offset": nameOffsetStr, "first_name": firstNameStr, "last_name": lastNameStr, "username": usernameStr, "following_id": followingIDStr, "follower_id": followerIDStr}, err)
+		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"app_id": appID, "org_id": orgID, "search": searchStr, "name_offset": nameOffsetStr, "first_name": firstNameStr, "last_name": lastNameStr, "username": usernameStr, "following_id": followingIDStr, "follower_id": followerIDStr}, err)
 	}
 
 	//all memberships applications organizations - from cache
 	allAppsOrgs, err := sa.getCachedApplicationOrganizations()
 	if err != nil {
-		return nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeApplicationOrganization, nil, err)
+		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeApplicationOrganization, nil, err)
 	}
 
 	publicAccounts := make([]model.PublicAccount, 0)
@@ -1634,7 +1644,12 @@ func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, 
 		publicAccounts = append(publicAccounts, *publicAccount)
 	}
 
-	return publicAccounts, &result.Count, nil
+	letterCounts := make(map[string]int)
+	for _, c := range result.Counts {
+		letterCounts[c.Letter] = int(c.Count)
+	}
+
+	return publicAccounts, letterCounts, &result.Total, nil
 }
 
 // FindAccountsByParams finds accounts by an arbitrary set of search params

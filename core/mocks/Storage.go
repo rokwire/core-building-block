@@ -1448,7 +1448,7 @@ func (_m *Storage) FindPermissionsByServiceIDs(serviceIDs []string) ([]model.Per
 }
 
 // FindPublicAccounts provides a mock function with given fields: context, appID, orgID, limit, offset, nameOffset, order, search, firstName, lastName, username, followingID, followerID, unstructuredProperties, userID, ids
-func (_m *Storage) FindPublicAccounts(context storage.TransactionContext, appID string, orgID string, limit *int, offset *int, nameOffset *string, order string, search *string, firstName *string, lastName *string, username *string, followingID *string, followerID *string, unstructuredProperties map[string]string, userID string, ids *[]string) ([]model.PublicAccount, *int64, error) {
+func (_m *Storage) FindPublicAccounts(context storage.TransactionContext, appID string, orgID string, limit *int, offset *int, nameOffset *string, order string, search *string, firstName *string, lastName *string, username *string, followingID *string, followerID *string, unstructuredProperties map[string]string, userID string, ids *[]string) ([]model.PublicAccount, map[string]int, *int64, error) {
 	ret := _m.Called(context, appID, orgID, limit, offset, nameOffset, order, search, firstName, lastName, username, followingID, followerID, unstructuredProperties, userID, ids)
 
 	if len(ret) == 0 {
@@ -1456,9 +1456,10 @@ func (_m *Storage) FindPublicAccounts(context storage.TransactionContext, appID 
 	}
 
 	var r0 []model.PublicAccount
-	var r1 *int64
-	var r2 error
-	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, string, *int, *int, *string, string, *string, *string, *string, *string, *string, *string, map[string]string, string, *[]string) ([]model.PublicAccount, *int64, error)); ok {
+	var r1 map[string]int
+	var r2 *int64
+	var r3 error
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, string, *int, *int, *string, string, *string, *string, *string, *string, *string, *string, map[string]string, string, *[]string) ([]model.PublicAccount, map[string]int, *int64, error)); ok {
 		return rf(context, appID, orgID, limit, offset, nameOffset, order, search, firstName, lastName, username, followingID, followerID, unstructuredProperties, userID, ids)
 	}
 	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, string, *int, *int, *string, string, *string, *string, *string, *string, *string, *string, map[string]string, string, *[]string) []model.PublicAccount); ok {
@@ -1469,21 +1470,29 @@ func (_m *Storage) FindPublicAccounts(context storage.TransactionContext, appID 
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(storage.TransactionContext, string, string, *int, *int, *string, string, *string, *string, *string, *string, *string, *string, map[string]string, string, *[]string) *int64); ok {
+	if rf, ok := ret.Get(1).(func(storage.TransactionContext, string, string, *int, *int, *string, string, *string, *string, *string, *string, *string, *string, map[string]string, string, *[]string) map[string]int); ok {
 		r1 = rf(context, appID, orgID, limit, offset, nameOffset, order, search, firstName, lastName, username, followingID, followerID, unstructuredProperties, userID, ids)
 	} else {
 		if ret.Get(1) != nil {
-			r1 = ret.Get(1).(*int64)
+			r1 = ret.Get(1).(map[string]int)
 		}
 	}
 
-	if rf, ok := ret.Get(2).(func(storage.TransactionContext, string, string, *int, *int, *string, string, *string, *string, *string, *string, *string, *string, map[string]string, string, *[]string) error); ok {
+	if rf, ok := ret.Get(2).(func(storage.TransactionContext, string, string, *int, *int, *string, string, *string, *string, *string, *string, *string, *string, map[string]string, string, *[]string) *int64); ok {
 		r2 = rf(context, appID, orgID, limit, offset, nameOffset, order, search, firstName, lastName, username, followingID, followerID, unstructuredProperties, userID, ids)
 	} else {
-		r2 = ret.Error(2)
+		if ret.Get(2) != nil {
+			r2 = ret.Get(2).(*int64)
+		}
 	}
 
-	return r0, r1, r2
+	if rf, ok := ret.Get(3).(func(storage.TransactionContext, string, string, *int, *int, *string, string, *string, *string, *string, *string, *string, *string, map[string]string, string, *[]string) error); ok {
+		r3 = rf(context, appID, orgID, limit, offset, nameOffset, order, search, firstName, lastName, username, followingID, followerID, unstructuredProperties, userID, ids)
+	} else {
+		r3 = ret.Error(3)
+	}
+
+	return r0, r1, r2, r3
 }
 
 // FindSystemOrganization provides a mock function with no fields

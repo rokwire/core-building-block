@@ -933,8 +933,9 @@ type ServicesResAccountAuthTypeLink struct {
 
 // ServicesResAccountsPublic defines model for _services_res_accounts-public.
 type ServicesResAccountsPublic struct {
-	Accounts   []PublicAccount `json:"accounts"`
-	TotalCount int             `json:"total_count"`
+	Accounts []PublicAccount `json:"accounts"`
+	Counts   map[string]int  `json:"counts"`
+	Total    int             `json:"total"`
 }
 
 // ServicesResAuthorizeService defines model for _services_res_authorize-service.

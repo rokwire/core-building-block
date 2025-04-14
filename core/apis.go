@@ -341,7 +341,8 @@ func (s *servicesImpl) SerGetAccounts(limit int, offset int, appID string, orgID
 }
 
 func (s *servicesImpl) SerGetPublicAccounts(appID string, orgID string, limit int, offset *int, nameOffset *string, order string, search *string,
-	firstName *string, lastName *string, username *string, followingID *string, followerID *string, unstructuredProperties map[string]string, userID string, ids *[]string) ([]model.PublicAccount, *int64, error) {
+	firstName *string, lastName *string, username *string, followingID *string, followerID *string, unstructuredProperties map[string]string,
+	userID string, ids *[]string) ([]model.PublicAccount, map[string]int, *int64, error) {
 	return s.app.serGetPublicAccounts(appID, orgID, limit, offset, nameOffset, order, search, firstName, lastName, username, followingID, followerID, unstructuredProperties, userID, ids)
 }
 

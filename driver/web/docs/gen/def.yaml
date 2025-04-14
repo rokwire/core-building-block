@@ -7935,12 +7935,17 @@ components:
           $ref: '#/components/schemas/ServiceReg'
     _services_res_accounts-public:
       required:
-        - total_count
+        - total
+        - counts
         - accounts
       type: object
       properties:
-        total_count:
+        total:
           type: integer
+        counts:
+          type: object
+          additionalProperties:
+            type: integer
         accounts:
           type: array
           items:
