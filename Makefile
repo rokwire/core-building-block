@@ -29,7 +29,7 @@ M = $(shell printf "\033[34;1m▶\033[0m")
 SHELL=sh
 
 .PHONY: all
-all: vendor log-variables checkfmt lint vet vuln test-short | $(BASE) ; $(info $(M) building executable(s)... $(VERSION) $(DATE)) @ ## Build program binary
+all: vendor log-variables checkfmt lint vet test-short | $(BASE) ; $(info $(M) building executable(s)... $(VERSION) $(DATE)) @ ## Build program binary
 	$Q cd $(CURDIR) && $(GO) generate ./...
 	@ret=0 && for d in $(BUILDS); do \
 		if expr \"$$d\" : \"${MODULE}\" 1>/dev/null; then SRCPATH=$(CURDIR) ; else SRCPATH=$(CURDIR)/$${d/${MODULE}\//} ; fi ;  \

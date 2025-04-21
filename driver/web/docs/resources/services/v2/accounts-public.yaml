@@ -16,9 +16,9 @@ get:
       explode: false
       schema:
         type: integer
-    - name: name-offset
+    - name: offset
       in: query
-      description: The comma-separated name of the first account to return (lastname,firstname)
+      description: The comma-separated name and ID of the first account to return (lastname,firstname,id)
       required: false
       style: form
       explode: false
