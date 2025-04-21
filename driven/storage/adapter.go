@@ -1479,10 +1479,10 @@ func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, 
 	pipeline := []bson.M{}
 
 	var searchStr, nameOffsetStr, firstNameStr, lastNameStr, usernameStr, followingIDStr, followerIDStr string
-	nameOffsetOp := "$gte"
+	nameOffsetOp := "$gt"
 	sortVal := 1
 	if order == "desc" {
-		nameOffsetOp = "$lte"
+		nameOffsetOp = "$lt"
 		sortVal = -1
 	}
 
