@@ -340,10 +340,10 @@ func (s *servicesImpl) SerGetAccounts(limit int, offset int, appID string, orgID
 	return s.app.serGetAccounts(limit, offset, appID, orgID, accountID, firstName, lastName, authType, authTypeIdentifier, anonymous, hasPermissions, permissions, roleIDs, groupIDs)
 }
 
-func (s *servicesImpl) SerGetPublicAccounts(appID string, orgID string, limit int, offset *int, nameOffset *string, order string, search *string,
+func (s *servicesImpl) SerGetPublicAccounts(appID string, orgID string, limit int, offset *int, firstNameOffset *string, lastNameOffset *string, order string, search *string,
 	firstName *string, lastName *string, username *string, followingID *string, followerID *string, unstructuredProperties map[string]string,
 	userID string, ids *[]string) ([]model.PublicAccount, map[string]int, *int64, error) {
-	return s.app.serGetPublicAccounts(appID, orgID, limit, offset, nameOffset, order, search, firstName, lastName, username, followingID, followerID, unstructuredProperties, userID, ids)
+	return s.app.serGetPublicAccounts(appID, orgID, limit, offset, firstNameOffset, lastNameOffset, order, search, firstName, lastName, username, followingID, followerID, unstructuredProperties, userID, ids)
 }
 
 func (s *servicesImpl) SerAddFollow(follow model.Follow) error {

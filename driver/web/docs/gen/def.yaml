@@ -1184,7 +1184,7 @@ paths:
             type: integer
         - name: name-offset
           in: query
-          description: The last name of the first account to return
+          description: 'The comma-separated name of the first account to return (lastname,firstname)'
           required: false
           style: form
           explode: false

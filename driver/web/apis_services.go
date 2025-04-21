@@ -989,7 +989,7 @@ func (h ServicesApisHandler) getPublicAccounts(l *logs.Log, r *http.Request, cla
 		}
 	}
 
-	accounts, _, _, err := h.coreAPIs.Services.SerGetPublicAccounts(claims.AppID, claims.OrgID, limit, offset, nil, string(Def.Asc), search,
+	accounts, _, _, err := h.coreAPIs.Services.SerGetPublicAccounts(claims.AppID, claims.OrgID, limit, offset, nil, nil, string(Def.Asc), search,
 		firstName, lastName, username, followingID, followerID, unstructuredProperties, claims.Subject, ids)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionGet, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
@@ -1016,10 +1016,20 @@ func (h ServicesApisHandler) getPublicAccountsV2(l *logs.Log, r *http.Request, c
 			return l.HTTPResponseErrorAction(logutils.ActionParse, logutils.TypeArg, logutils.StringArgs("limit"), err, http.StatusBadRequest, false)
 		}
 	}
-	var nameOffset *string
+	var firstNameOffset *string
+	var lastNameOffset *string
 	nameOffsetArg := query.Get("name-offset")
 	if nameOffsetArg != "" {
-		nameOffset = &nameOffsetArg
+		parsedNames := strings.Split(nameOffsetArg, ",")
+		if len(parsedNames) > 2 {
+			return l.HTTPResponseErrorAction(logutils.ActionParse, logutils.TypeArg, logutils.StringArgs("name-offset"), err, http.StatusBadRequest, false)
+		}
+		if len(parsedNames) > 0 {
+			lastNameOffset = &parsedNames[0]
+		}
+		if len(parsedNames) > 1 {
+			firstNameOffset = &parsedNames[1]
+		}
 	}
 
 	//order
@@ -1087,7 +1097,7 @@ func (h ServicesApisHandler) getPublicAccountsV2(l *logs.Log, r *http.Request, c
 		}
 	}
 
-	accounts, indexCounts, total, err := h.coreAPIs.Services.SerGetPublicAccounts(claims.AppID, claims.OrgID, limit, nil, nameOffset, order, search,
+	accounts, indexCounts, total, err := h.coreAPIs.Services.SerGetPublicAccounts(claims.AppID, claims.OrgID, limit, nil, firstNameOffset, lastNameOffset, order, search,
 		firstName, lastName, username, followingID, followerID, unstructuredProperties, claims.Subject, ids)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionGet, model.TypeAccount, nil, err, http.StatusInternalServerError, true)

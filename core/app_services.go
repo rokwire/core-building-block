@@ -154,10 +154,10 @@ func (app *application) serGetAccounts(limit int, offset int, appID string, orgI
 	return accounts, nil
 }
 
-func (app *application) serGetPublicAccounts(appID string, orgID string, limit int, offset *int, nameOffset *string, order string, search *string, firstName *string,
+func (app *application) serGetPublicAccounts(appID string, orgID string, limit int, offset *int, firstNameOffset *string, lastNameOffset *string, order string, search *string, firstName *string,
 	lastName *string, username *string, followingID *string, followerID *string, unstructuredProperties map[string]string, userID string, ids *[]string) ([]model.PublicAccount, map[string]int, *int64, error) {
 	//find the accounts
-	accounts, indexCounts, totalCount, err := app.storage.FindPublicAccounts(nil, appID, orgID, &limit, offset, nameOffset, order, search, firstName, lastName, username, followingID, followerID, unstructuredProperties, userID, ids)
+	accounts, indexCounts, totalCount, err := app.storage.FindPublicAccounts(nil, appID, orgID, &limit, offset, firstNameOffset, lastNameOffset, order, search, firstName, lastName, username, followingID, followerID, unstructuredProperties, userID, ids)
 	if err != nil {
 		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
