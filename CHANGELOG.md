@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Support public accounts reverse pagination and total count [#766](https://github.com/rokwire/core-building-block/issues/766)
 
+## [1.49.0] - 2025-16-04
+### Changed
+- Support Google Trust Services as CA [#767](https://github.com/rokwire/core-building-block/issues/767)
+
 ## [1.48.2] - 2025-20-02
 ### Fixed
 - Disable default privacy setting [#759](https://github.com/rokwire/core-building-block/issues/759)
