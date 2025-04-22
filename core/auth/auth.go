@@ -1530,6 +1530,9 @@ func (a *Auth) mergeProfiles(dst model.Profile, src *model.Profile, shared bool)
 	dst.ZipCode = utils.SetStringIfEmpty(dst.ZipCode, src.ZipCode)
 	dst.State = utils.SetStringIfEmpty(dst.State, src.State)
 	dst.Country = utils.SetStringIfEmpty(dst.Country, src.Country)
+	dst.Address2 = utils.SetStringIfEmpty(dst.Address2, src.Address2)
+	dst.POBox = utils.SetStringIfEmpty(dst.POBox, src.POBox)
+	dst.City = utils.SetStringIfEmpty(dst.City, src.City)
 
 	if dst.BirthYear == 0 {
 		dst.BirthYear = src.BirthYear

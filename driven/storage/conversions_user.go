@@ -388,15 +388,15 @@ func accountGroupsToStorage(items []model.AccountGroup) []accountGroup {
 func profileFromStorage(item profile) model.Profile {
 	return model.Profile{ID: item.ID, PhotoURL: item.PhotoURL, PronunciationURL: item.PronunciationURL, Pronouns: item.Pronouns,
 		FirstName: item.FirstName, LastName: item.LastName, Email: item.Email, Phone: item.Phone, BirthYear: item.BirthYear,
-		Address: item.Address, ZipCode: item.ZipCode, State: item.State, Country: item.Country, Website: item.Website,
-		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated, UnstructuredProperties: item.UnstructuredProperties}
+		Address: item.Address, Address2: item.Address2, POBox: item.POBox, City: item.City, ZipCode: item.ZipCode, State: item.State,
+		Country: item.Country, Website: item.Website, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated, UnstructuredProperties: item.UnstructuredProperties}
 }
 
 func profileToStorage(item model.Profile) profile {
 	return profile{ID: item.ID, PhotoURL: item.PhotoURL, PronunciationURL: item.PronunciationURL, Pronouns: item.Pronouns,
 		FirstName: item.FirstName, LastName: item.LastName, Email: item.Email, Phone: item.Phone, BirthYear: item.BirthYear,
-		Address: item.Address, ZipCode: item.ZipCode, State: item.State, Country: item.Country, Website: item.Website,
-		DateCreated: item.DateCreated, DateUpdated: item.DateUpdated, UnstructuredProperties: item.UnstructuredProperties}
+		Address: item.Address, Address2: item.Address2, POBox: item.POBox, City: item.City, ZipCode: item.ZipCode, State: item.State,
+		Country: item.Country, Website: item.Website, DateCreated: item.DateCreated, DateUpdated: item.DateUpdated, UnstructuredProperties: item.UnstructuredProperties}
 }
 
 // Device

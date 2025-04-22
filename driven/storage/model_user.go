@@ -155,6 +155,9 @@ type profile struct {
 	Phone            string `bson:"phone"`
 	BirthYear        int16  `bson:"birth_year"`
 	Address          string `bson:"address"`
+	Address2         string `bson:"address2"`
+	POBox            string `bson:"po_box"`
+	City             string `bson:"city"`
 	ZipCode          string `bson:"zip_code"`
 	State            string `bson:"state"`
 	Country          string `bson:"country"`

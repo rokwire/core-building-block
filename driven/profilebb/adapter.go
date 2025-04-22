@@ -40,16 +40,18 @@ type profileBBData struct {
 }
 
 type profileBBPII struct {
-	LastName  string `json:"lastname"`
-	FirstName string `json:"firstname"`
-	Phone     string `json:"phone"`
-	Email     string `json:"email"`
-	BirthYear int16  `json:"birthYear"`
-	Address   string `json:"address"`
-	ZipCode   string `json:"zipCode"`
-	State     string `json:"state"`
-	Country   string `json:"country"`
-
+	LastName    string `json:"lastname"`
+	FirstName   string `json:"firstname"`
+	Phone       string `json:"phone"`
+	Email       string `json:"email"`
+	BirthYear   int16  `json:"birthYear"`
+	Address     string `json:"address"`
+	Address2    string `json:"address2"`
+	POBox       string `json:"poBox"`
+	City        string `json:"city"`
+	ZipCode     string `json:"zipCode"`
+	State       string `json:"state"`
+	Country     string `json:"country"`
 	DateCreated string `json:"creationDate"`
 }
 
@@ -175,8 +177,9 @@ func (a *Adapter) GetProfileBBData(queryParams map[string]string, l *logs.Log) (
 	}
 	existingProfile := model.Profile{FirstName: profileData.PII.FirstName, LastName: profileData.PII.LastName,
 		Email: profileData.PII.Email, Phone: profileData.PII.Phone, BirthYear: profileData.PII.BirthYear,
-		Address: profileData.PII.Address, ZipCode: profileData.PII.ZipCode, State: profileData.PII.State,
-		Country: profileData.PII.Country, DateCreated: *dateCreated, DateUpdated: &now}
+		Address: profileData.PII.Address, Address2: profileData.PII.Address2, POBox: profileData.PII.POBox, City: profileData.PII.City,
+		ZipCode: profileData.PII.ZipCode, State: profileData.PII.State, Country: profileData.PII.Country,
+		DateCreated: *dateCreated, DateUpdated: &now}
 
 	preferences := a.reformatPreferences(profileData.NonPII, l)
 
