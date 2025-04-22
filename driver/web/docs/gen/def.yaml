@@ -7062,6 +7062,15 @@ components:
         address:
           type: string
           nullable: true
+        address2:
+          type: string
+          nullable: true
+        po_box:
+          type: string
+          nullable: true
+        city:
+          type: string
+          nullable: true
         zip_code:
           type: string
           nullable: true
@@ -7105,6 +7114,15 @@ components:
           type: integer
           nullable: true
         address:
+          type: string
+          nullable: true
+        address2:
+          type: string
+          nullable: true
+        po_box:
+          type: string
+          nullable: true
+        city:
           type: string
           nullable: true
         zip_code:
