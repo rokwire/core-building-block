@@ -1539,8 +1539,8 @@ type GetServicesV2AccountsPublicParams struct {
 	// Limit The maximum number of accounts to return
 	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
 
-	// NameOffset The last name of the first account to return
-	NameOffset *string `form:"name-offset,omitempty" json:"name-offset,omitempty"`
+	// Offset The comma-separated name and ID of the first account to return (lastname,firstname,id)
+	Offset *string `form:"offset,omitempty" json:"offset,omitempty"`
 
 	// Order The sort order to return accounts
 	Order *GetServicesV2AccountsPublicParamsOrder `form:"order,omitempty" json:"order,omitempty"`

@@ -1271,9 +1271,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/_services_res_accounts-public'
+                $ref: '#/components/schemas/_services_res_accounts-public'
         '400':
           description: Bad request
         '401':

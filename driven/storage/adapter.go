@@ -1630,11 +1630,15 @@ func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, 
 		Accounts []tenantAccount `bson:"accounts"`
 	}
 
-	var result publicAccountsResult
-	err = sa.db.tenantsAccounts.Aggregate(pipeline, &result, nil)
+	var results []publicAccountsResult
+	err = sa.db.tenantsAccounts.Aggregate(pipeline, &results, nil)
 	if err != nil {
 		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"app_id": appID, "org_id": orgID, "search": searchStr, "name_offset": nameOffsetStr, "first_name": firstNameStr, "last_name": lastNameStr, "username": usernameStr, "following_id": followingIDStr, "follower_id": followerIDStr}, err)
 	}
+	if len(results) == 0 {
+		return nil, nil, nil, errors.ErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"app_id": appID, "org_id": orgID, "search": searchStr, "name_offset": nameOffsetStr, "first_name": firstNameStr, "last_name": lastNameStr, "username": usernameStr, "following_id": followingIDStr, "follower_id": followerIDStr})
+	}
+	result := results[0]
 
 	//all memberships applications organizations - from cache
 	allAppsOrgs, err := sa.getCachedApplicationOrganizations()

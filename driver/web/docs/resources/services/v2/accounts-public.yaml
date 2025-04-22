@@ -105,9 +105,7 @@ get:
       content:
         application/json:
           schema:
-            type: array
-            items:
-              $ref: "../../../schemas/apis/services/v2/accounts-public/response/Response.yaml"
+            $ref: "../../../schemas/apis/services/v2/accounts-public/response/Response.yaml"
     400:
       description: Bad request
     401:
