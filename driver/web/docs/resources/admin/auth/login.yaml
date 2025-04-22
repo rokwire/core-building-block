@@ -44,6 +44,9 @@ post:
                 key2: value2
               profile:
                 address: address
+                address2: address2
+                po_box: po box
+                city: city  
                 birth_year: 1990
                 country: county
                 email: email
