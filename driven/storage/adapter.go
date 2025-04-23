@@ -1612,21 +1612,16 @@ func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, 
 			}},
 		"accounts": facetPipeline,
 	}})
-	pipeline = append(pipeline, bson.M{"$unwind": "$accounts"})
-	pipeline = append(pipeline, bson.M{"$unwind": "$counts"})
 	pipeline = append(pipeline, bson.M{"$unwind": "$total"})
-	pipeline = append(pipeline, bson.M{"$replaceRoot": bson.M{
-		"newRoot": bson.M{
-			"$mergeObjects": bson.A{"$accounts", "$counts", bson.M{"total": "$total.value"}},
-		},
-	}})
 
 	type publicAccountsResult struct {
-		Total  int64 `bson:"total"`
+		Total struct {
+			Value int64 `bson:"value"`
+		} `bson:"total"`
 		Counts []struct {
 			Letter string `bson:"_id"`
 			Count  int64  `bson:"count"`
-		}
+		} `bson:"counts"`
 		Accounts []tenantAccount `bson:"accounts"`
 	}
 
@@ -1663,7 +1658,7 @@ func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, 
 		letterCounts[c.Letter] = int(c.Count)
 	}
 
-	return publicAccounts, letterCounts, &result.Total, nil
+	return publicAccounts, letterCounts, &result.Total.Value, nil
 }
 
 // FindAccountsByParams finds accounts by an arbitrary set of search params
