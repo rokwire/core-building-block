@@ -258,6 +258,18 @@ func profileFromDef(item *Def.Profile) model.Profile {
 	if item.Address != nil {
 		address = *item.Address
 	}
+	var address2 string
+	if item.Address2 != nil {
+		address2 = *item.Address2
+	}
+	var poBox string
+	if item.PoBox != nil {
+		poBox = *item.PoBox
+	}
+	var city string
+	if item.City != nil {
+		city = *item.City
+	}
 	var zipCode string
 	if item.ZipCode != nil {
 		zipCode = *item.ZipCode
@@ -281,8 +293,9 @@ func profileFromDef(item *Def.Profile) model.Profile {
 	}
 
 	return model.Profile{PhotoURL: photoURL, PronunciationURL: pronunciationURL, Pronouns: pronouns, FirstName: firstName,
-		LastName: lastName, Email: email, Phone: phone, BirthYear: int16(birthYear), Address: address, ZipCode: zipCode,
-		State: state, Country: country, Website: website, UnstructuredProperties: unstructuredProperties}
+		LastName: lastName, Email: email, Phone: phone, BirthYear: int16(birthYear), Address: address, Address2: address2,
+		POBox: poBox, City: city, ZipCode: zipCode, State: state, Country: country, Website: website,
+		UnstructuredProperties: unstructuredProperties}
 }
 
 func profileToDef(item *model.Profile) *Def.Profile {
@@ -294,7 +307,8 @@ func profileToDef(item *model.Profile) *Def.Profile {
 	birthYear := int(itemVal.BirthYear)
 	return &Def.Profile{Id: &itemVal.ID, PhotoUrl: &itemVal.PhotoURL, PronunciationUrl: &itemVal.PronunciationURL, Pronouns: &itemVal.Pronouns,
 		FirstName: &itemVal.FirstName, LastName: &itemVal.LastName, Email: &itemVal.Email, Phone: &itemVal.Phone, BirthYear: &birthYear,
-		Address: &itemVal.Address, ZipCode: &itemVal.ZipCode, State: &itemVal.State, Country: &itemVal.Country, Website: &itemVal.Website,
+		Address: &itemVal.Address, Address2: &itemVal.Address2, PoBox: &itemVal.POBox, City: &itemVal.City, ZipCode: &itemVal.ZipCode,
+		State: &itemVal.State, Country: &itemVal.Country, Website: &itemVal.Website,
 		UnstructuredProperties: &itemVal.UnstructuredProperties}
 }
 
@@ -339,6 +353,18 @@ func profileFromDefNullable(item *Def.ProfileNullable) model.Profile {
 	if item.Address != nil {
 		address = *item.Address
 	}
+	var address2 string
+	if item.Address2 != nil {
+		address2 = *item.Address2
+	}
+	var poBox string
+	if item.PoBox != nil {
+		poBox = *item.PoBox
+	}
+	var city string
+	if item.City != nil {
+		city = *item.City
+	}
 	var zipCode string
 	if item.ZipCode != nil {
 		zipCode = *item.ZipCode
@@ -362,8 +388,9 @@ func profileFromDefNullable(item *Def.ProfileNullable) model.Profile {
 	}
 
 	return model.Profile{PhotoURL: photoURL, PronunciationURL: pronunciationURL, Pronouns: pronouns, FirstName: firstName,
-		LastName: lastName, Email: email, Phone: phone, BirthYear: int16(birthYear), Address: address, ZipCode: zipCode,
-		State: state, Country: country, Website: website, UnstructuredProperties: unstructuredProperties}
+		LastName: lastName, Email: email, Phone: phone, BirthYear: int16(birthYear), Address: address, Address2: address2,
+		POBox: poBox, City: city, ZipCode: zipCode, State: state, Country: country, Website: website,
+		UnstructuredProperties: unstructuredProperties}
 }
 
 func privacyToDef(item *model.Privacy) *Def.Privacy {
