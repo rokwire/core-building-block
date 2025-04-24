@@ -1603,6 +1603,9 @@ func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, 
 	facetPipeline = append(facetPipeline, bson.M{"$addFields": bson.M{"is_following": bson.M{"$in": bson.A{userID, "$followings.follower_id"}}}})
 
 	// facet stage to get document count after account filtering
+	//TODO: add stage to get newly created accounts to facet stage
+	//	add load timestamp to result
+	//	use timestamp to find created public accounts since then between two offsets (add query params)
 	pipeline = append(pipeline, bson.M{"$facet": bson.M{
 		"total": []bson.M{{"$count": "value"}},
 		"counts": []bson.M{
@@ -1611,6 +1614,10 @@ func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, 
 				"count": bson.M{"$sum": 1}},
 			}},
 		"accounts": facetPipeline,
+		// "created": []bson.M{
+		// 	{"$match": bson.M{"date_created": bson.M{"$gt": timestamp}}},
+		// 	{"$match": bson.M{"profile.last_name": bson.M{"$gte": nameStart, "$lte": nameEnd}}},
+		// },
 	}})
 	pipeline = append(pipeline, bson.M{"$unwind": "$total"})
 
