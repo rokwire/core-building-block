@@ -718,6 +718,9 @@ type Profile struct {
 	Phone            string `visibility:"phone"`
 	BirthYear        int16  `visibility:"birth_year"`
 	Address          string `visibility:"address"`
+	Address2         string `visibility:"address2"`
+	POBox            string `visibility:"po_box"`
+	City             string `visibility:"city"`
 	ZipCode          string `visibility:"zip_code"`
 	State            string `visibility:"state"`
 	Country          string `visibility:"country"`
@@ -755,6 +758,15 @@ func (p Profile) Merge(src Profile) Profile {
 	}
 	if src.Address != "" {
 		p.Address = src.Address
+	}
+	if src.Address2 != "" {
+		p.Address2 = src.Address2
+	}
+	if src.POBox != "" {
+		p.POBox = src.POBox
+	}
+	if src.City != "" {
+		p.City = src.City
 	}
 	if src.ZipCode != "" {
 		p.ZipCode = src.ZipCode
@@ -812,6 +824,18 @@ func ProfileFromMap(profileMap map[string]interface{}, profileFields map[string]
 			if typeVal, ok := val.(string); ok {
 				profile.Address = typeVal
 			}
+		} else if key == "address2" {
+			if typeVal, ok := val.(string); ok {
+				profile.Address2 = typeVal
+			}
+		} else if key == "po_box" {
+			if typeVal, ok := val.(string); ok {
+				profile.POBox = typeVal
+			}
+		} else if key == "city" {
+			if typeVal, ok := val.(string); ok {
+				profile.City = typeVal
+			}
 		} else if key == "zip_code" {
 			if typeVal, ok := val.(string); ok {
 				profile.ZipCode = typeVal
@@ -826,7 +850,7 @@ func ProfileFromMap(profileMap map[string]interface{}, profileFields map[string]
 			}
 		} else if key == "photo_url" {
 			if typeVal, ok := val.(string); ok {
-				profile.Phone = typeVal
+				profile.PhotoURL = typeVal
 			}
 		}
 	}
@@ -842,6 +866,9 @@ func ProfileFromMap(profileMap map[string]interface{}, profileFields map[string]
 // PublicProfile defines model for PublicProfile.
 type PublicProfile struct {
 	Address                *string                `json:"address,omitempty"`
+	Address2               *string                `json:"address2,omitempty"`
+	POBox                  *string                `json:"po_box,omitempty"`
+	City                   *string                `json:"city,omitempty"`
 	BirthYear              *int16                 `json:"birth_year,omitempty"`
 	Country                *string                `json:"country,omitempty"`
 	Email                  *string                `json:"email,omitempty"`
