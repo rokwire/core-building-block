@@ -10,10 +10,10 @@ WORKDIR /app
 COPY . .
 RUN make
 
-FROM alpine:3.17.3
+FROM alpine:3.21.3
 
-#we need timezone database
-RUN apk add --no-cache --update tzdata
+#we need timezone database + certificates
+RUN apk add --no-cache tzdata ca-certificates
 
 COPY --from=builder /app/bin/core-building-block /
 
