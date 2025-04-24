@@ -7,7 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Added
-- Additional profile fields needed [#762](https://github.com/rokwire/core-building-block/issues/762)
+- Additional profile fields needed (added profile address fields) [#762](https://github.com/rokwire/core-building-block/issues/762)
+
 ## [1.49.0] - 2025-16-04
 ### Changed
 - Support Google Trust Services as CA [#767](https://github.com/rokwire/core-building-block/issues/767)
