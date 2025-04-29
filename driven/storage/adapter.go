@@ -1576,6 +1576,7 @@ func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, 
 	facetPipeline = append(facetPipeline, bson.M{"$sort": bson.D{
 		{Key: "normalized_last_name", Value: sortVal},
 		{Key: "normalized_first_name", Value: sortVal},
+		{Key: "_id", Value: sortVal},
 	}})
 
 	if offset != nil && *offset > 0 {
