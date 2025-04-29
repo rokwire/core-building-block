@@ -1639,7 +1639,8 @@ func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, 
 		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"app_id": appID, "org_id": orgID, "search": searchStr, "name_offset": nameOffsetStr, "first_name": firstNameStr, "last_name": lastNameStr, "username": usernameStr, "following_id": followingIDStr, "follower_id": followerIDStr}, err)
 	}
 	if len(results) == 0 {
-		return nil, nil, nil, errors.ErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"app_id": appID, "org_id": orgID, "search": searchStr, "name_offset": nameOffsetStr, "first_name": firstNameStr, "last_name": lastNameStr, "username": usernameStr, "following_id": followingIDStr, "follower_id": followerIDStr})
+		// no results found
+		return nil, nil, nil, nil
 	}
 	result := results[0]
 

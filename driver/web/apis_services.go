@@ -1112,6 +1112,9 @@ func (h ServicesApisHandler) getPublicAccountsV2(l *logs.Log, r *http.Request, c
 		totalVal := int(*total)
 		totalCount = totalVal
 	}
+	if indexCounts == nil {
+		indexCounts = make(map[string]int)
+	}
 
 	result := Def.ServicesResAccountsPublic{
 		Total:    totalCount,
