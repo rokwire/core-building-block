@@ -1,0 +1,16 @@
+required:
+  - total
+  - counts
+  - accounts
+type: object
+properties:
+  total:
+    type: integer
+  counts:
+    type: object
+    additionalProperties:
+      type: integer
+  accounts:
+    type: array
+    items:
+      $ref: "../../../../../user/PublicAccount.yaml"

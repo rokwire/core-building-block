@@ -865,23 +865,23 @@ func ProfileFromMap(profileMap map[string]interface{}, profileFields map[string]
 
 // PublicProfile defines model for PublicProfile.
 type PublicProfile struct {
-	Address                *string                `json:"address,omitempty"`
-	Address2               *string                `json:"address2,omitempty"`
-	POBox                  *string                `json:"po_box,omitempty"`
-	City                   *string                `json:"city,omitempty"`
-	BirthYear              *int16                 `json:"birth_year,omitempty"`
-	Country                *string                `json:"country,omitempty"`
-	Email                  *string                `json:"email,omitempty"`
-	FirstName              *string                `json:"first_name,omitempty"`
-	LastName               *string                `json:"last_name,omitempty"`
-	Phone                  *string                `json:"phone,omitempty"`
-	PhotoURL               *string                `json:"photo_url,omitempty"`
-	PronunciationURL       *string                `json:"pronunciation_url,omitempty"`
-	Pronouns               *string                `json:"pronouns,omitempty"`
-	State                  *string                `json:"state,omitempty"`
-	UnstructuredProperties map[string]interface{} `json:"unstructured_properties,omitempty"`
-	Website                *string                `json:"website,omitempty"`
-	ZipCode                *string                `json:"zip_code,omitempty"`
+	Address                *string
+	Address2               *string
+	POBox                  *string
+	City                   *string
+	BirthYear              *int16
+	Country                *string
+	Email                  *string
+	FirstName              *string
+	LastName               *string
+	Phone                  *string
+	PhotoURL               *string
+	PronunciationURL       *string
+	Pronouns               *string
+	State                  *string
+	UnstructuredProperties map[string]interface{}
+	Website                *string
+	ZipCode                *string
 }
 
 // Device represents user devices entity.
@@ -967,19 +967,19 @@ type AccountRelations struct {
 
 // PublicAccount shows public account information
 type PublicAccount struct {
-	ID           string `json:"id"`
-	Verified     bool   `json:"verified"`
-	IsFollowing  bool   `json:"is_following"`  // remove?
-	IsConnection bool   `json:"is_connection"` // whether a user requesting this public account info is connected to the account's user
+	ID           string
+	Verified     bool
+	IsFollowing  bool // remove?
+	IsConnection bool // whether a user requesting this public account info is connected to the account's user
 
-	Profile     PublicProfile             `json:"profile"`
-	Identifiers []PublicAccountIdentifier `json:"identifiers"`
+	Profile     PublicProfile
+	Identifiers []PublicAccountIdentifier
 }
 
 // PublicAccountIdentifier represents an account identifier made publicly-known by a user
 type PublicAccountIdentifier struct {
-	Code       string `json:"code"`
-	Identifier string `json:"identifier"`
+	Code       string
+	Identifier string
 }
 
 // Follow shows the relationship between user and follower

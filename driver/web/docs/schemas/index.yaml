@@ -212,6 +212,10 @@ _services_req_authorize-service:
 _services_res_authorize-service:
   $ref: "./apis/services/authorize-service/response/Response.yaml"
 
+### accounts-public API
+_services_res_accounts-public:
+  $ref: "./apis/services/v2/accounts-public/response/Response.yaml"
+
 ### service-accounts API
 _services_req_service-accounts_params:
   $ref: "./apis/shared/requests/service-accounts/params/Request.yaml"

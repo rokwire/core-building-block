@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Rokwire Core Building Block API
   description: Core Building Block API Documentation
-  version: 1.50.0
+  version: 1.51.0
 servers:
   - url: https://api.rokwire.illinois.edu/core
     description: Production server
@@ -67,6 +67,8 @@ paths:
     $ref: "./resources/services/accounts.yaml"
   /services/accounts/public:
     $ref: "./resources/services/accounts-public.yaml"
+  /services/v2/accounts/public:
+    $ref: "./resources/services/v2/accounts-public.yaml"
   /services/account:
     $ref: "./resources/services/account.yaml"
   /services/account/mfa:
