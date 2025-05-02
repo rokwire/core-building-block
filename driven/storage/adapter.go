@@ -1469,16 +1469,22 @@ func (sa *Adapter) FindAccounts(context TransactionContext, limit *int, offset *
 }
 
 // FindPublicAccounts finds accounts and returns name and username
-func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, orgID string, limit *int, offset *int, search *string, firstName *string, lastName *string,
-	username *string, followingID *string, followerID *string, unstructuredProperties map[string]string, userID string, ids *[]string) ([]model.PublicAccount, error) {
+func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, orgID string, limit *int, offset *int, firstNameOffset *string, lastNameOffset *string, idOffset *string, order string, search *string, firstName *string,
+	lastName *string, username *string, followingID *string, followerID *string, unstructuredProperties map[string]string, userID string, ids *[]string) ([]model.PublicAccount, map[string]int, *int64, error) {
 	appOrg, err := sa.FindApplicationOrganization(appID, orgID)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
+		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
 	}
 
 	pipeline := []bson.M{}
 
-	var searchStr, firstNameStr, lastNameStr, usernameStr, followingIDStr, followerIDStr string
+	var searchStr, nameOffsetStr, firstNameStr, lastNameStr, usernameStr, followingIDStr, followerIDStr string
+	nameOffsetOp := "$gt"
+	sortVal := 1
+	if order == "desc" {
+		nameOffsetOp = "$lt"
+		sortVal = -1
+	}
 
 	// search for matching using text search. No substring matches
 	// if search != nil {
@@ -1545,30 +1551,49 @@ func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, 
 	}
 
 	pipeline = append(pipeline, bson.M{"$match": bson.M{"org_apps_memberships.app_org_id": appOrg.ID, "privacy.public": true}})
-	pipeline = append(pipeline, bson.M{"$addFields": bson.M{
+
+	// secondary pipeline for pagination, sorting, adding fields
+	facetPipeline := []bson.M{}
+	if lastNameOffset != nil && *lastNameOffset != "" {
+		nameOffsetStr = *lastNameOffset
+		if firstNameOffset != nil && *firstNameOffset != "" {
+			nameOffsetStr += "," + *firstNameOffset
+			if idOffset != nil && *idOffset != "" {
+				nameOffsetStr += "," + *idOffset
+			}
+		}
+		nameOffsetStr = strings.ToLower(nameOffsetStr)
+		facetPipeline = append(facetPipeline, bson.M{"$addFields": bson.M{
+			"normalized_concat_name": bson.M{"$concat": bson.A{bson.M{"$toLower": "$profile.last_name"}, ",", bson.M{"$toLower": "$profile.first_name"}, ",", "$_id"}},
+		}})
+		facetPipeline = append(facetPipeline, bson.M{"$match": bson.M{"normalized_concat_name": bson.M{nameOffsetOp: nameOffsetStr}}})
+	}
+
+	facetPipeline = append(facetPipeline, bson.M{"$addFields": bson.M{
 		"normalized_last_name":  bson.M{"$toLower": "$profile.last_name"},
 		"normalized_first_name": bson.M{"$toLower": "$profile.first_name"},
 	}})
-	pipeline = append(pipeline, bson.M{"$sort": bson.D{
-		{Key: "normalized_last_name", Value: 1},
-		{Key: "normalized_first_name", Value: 1},
+	facetPipeline = append(facetPipeline, bson.M{"$sort": bson.D{
+		{Key: "normalized_last_name", Value: sortVal},
+		{Key: "normalized_first_name", Value: sortVal},
+		{Key: "_id", Value: sortVal},
 	}})
 
 	if offset != nil && *offset > 0 {
-		pipeline = append(pipeline, bson.M{"$skip": *offset})
+		facetPipeline = append(facetPipeline, bson.M{"$skip": *offset})
 	}
 
 	if limit != nil {
-		pipeline = append(pipeline, bson.M{"$limit": *limit})
+		facetPipeline = append(facetPipeline, bson.M{"$limit": *limit})
 	}
 
-	pipeline = append(pipeline, bson.M{"$lookup": bson.M{
+	facetPipeline = append(facetPipeline, bson.M{"$lookup": bson.M{
 		"from":         "follows",
 		"localField":   "_id",
 		"foreignField": "following_id",
 		"as":           "followings",
 	}})
-	pipeline = append(pipeline, bson.M{"$lookup": bson.M{
+	facetPipeline = append(facetPipeline, bson.M{"$lookup": bson.M{
 		"from":         "follows",
 		"localField":   "_id",
 		"foreignField": "follower_id",
@@ -1576,22 +1601,57 @@ func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, 
 	}})
 
 	// adds boolean value whether API calling user is following account
-	pipeline = append(pipeline, bson.M{"$addFields": bson.M{"is_following": bson.M{"$in": bson.A{userID, "$followings.follower_id"}}}})
+	facetPipeline = append(facetPipeline, bson.M{"$addFields": bson.M{"is_following": bson.M{"$in": bson.A{userID, "$followings.follower_id"}}}})
 
-	var results []tenantAccount
+	// facet stage to get document count after account filtering
+	//TODO: add stage to get newly created accounts to facet stage
+	//	add load timestamp to result
+	//	use timestamp to find created public accounts since then between two offsets (add query params)
+	pipeline = append(pipeline, bson.M{"$facet": bson.M{
+		"total": []bson.M{{"$count": "value"}},
+		"counts": []bson.M{
+			{"$group": bson.M{
+				"_id":   bson.M{"$toLower": bson.M{"$substrBytes": bson.A{"$profile.last_name", 0, 1}}},
+				"count": bson.M{"$sum": 1}},
+			}},
+		"accounts": facetPipeline,
+		// "created": []bson.M{
+		// 	{"$match": bson.M{"date_created": bson.M{"$gt": timestamp}}},
+		// 	{"$match": bson.M{"profile.last_name": bson.M{"$gte": nameStart, "$lte": nameEnd}}},
+		// },
+	}})
+	pipeline = append(pipeline, bson.M{"$unwind": "$total"})
+
+	type publicAccountsResult struct {
+		Total struct {
+			Value int64 `bson:"value"`
+		} `bson:"total"`
+		Counts []struct {
+			Letter string `bson:"_id"`
+			Count  int64  `bson:"count"`
+		} `bson:"counts"`
+		Accounts []tenantAccount `bson:"accounts"`
+	}
+
+	var results []publicAccountsResult
 	err = sa.db.tenantsAccounts.Aggregate(pipeline, &results, nil)
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"app_id": appID, "org_id": orgID, "search": searchStr, "first_name": firstNameStr, "last_name": lastNameStr, "username": usernameStr, "following_id": followingIDStr, "follower_id": followerIDStr}, err)
+		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"app_id": appID, "org_id": orgID, "search": searchStr, "name_offset": nameOffsetStr, "first_name": firstNameStr, "last_name": lastNameStr, "username": usernameStr, "following_id": followingIDStr, "follower_id": followerIDStr}, err)
 	}
+	if len(results) == 0 {
+		// no results found
+		return nil, nil, nil, nil
+	}
+	result := results[0]
 
 	//all memberships applications organizations - from cache
 	allAppsOrgs, err := sa.getCachedApplicationOrganizations()
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeApplicationOrganization, nil, err)
+		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeApplicationOrganization, nil, err)
 	}
 
 	publicAccounts := make([]model.PublicAccount, 0)
-	for _, item := range results {
+	for _, item := range result.Accounts {
 		account := accountFromStorage(item, &appOrg.ID, allAppsOrgs)
 		publicAccount, err := account.GetPublicAccount(false) //TODO: get actual connection status
 		if err != nil {
@@ -1602,7 +1662,12 @@ func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, 
 		publicAccounts = append(publicAccounts, *publicAccount)
 	}
 
-	return publicAccounts, nil
+	letterCounts := make(map[string]int)
+	for _, c := range result.Counts {
+		letterCounts[c.Letter] = int(c.Count)
+	}
+
+	return publicAccounts, letterCounts, &result.Total.Value, nil
 }
 
 // FindAccountsByParams finds accounts by an arbitrary set of search params
