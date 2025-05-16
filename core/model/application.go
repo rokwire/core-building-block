@@ -20,9 +20,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/rokwire/core-auth-library-go/v3/authutils"
-	"github.com/rokwire/logging-library-go/v2/errors"
-	"github.com/rokwire/logging-library-go/v2/logutils"
+	"github.com/rokwire/rokwire-building-block-sdk-go/utils/errors"
+	"github.com/rokwire/rokwire-building-block-sdk-go/utils/logging/logutils"
+	"github.com/rokwire/rokwire-building-block-sdk-go/utils/rokwireutils"
 )
 
 const (
@@ -86,7 +86,7 @@ type PermissionContainer interface {
 
 // CheckAssigners checks if the passed permissions satisfy the needed assigners for the permission
 func (p Permission) CheckAssigners(assignerPermissions []string) error {
-	if authutils.ContainsString(assignerPermissions, PermissionGrantAllPermissions) {
+	if rokwireutils.ContainsString(assignerPermissions, PermissionGrantAllPermissions) {
 		return nil
 	}
 	if len(p.Assigners) == 0 {
@@ -95,7 +95,7 @@ func (p Permission) CheckAssigners(assignerPermissions []string) error {
 
 	authorizedAssigners := p.Assigners
 	for _, authorizedAssigner := range authorizedAssigners {
-		if authutils.ContainsString(assignerPermissions, authorizedAssigner) {
+		if rokwireutils.ContainsString(assignerPermissions, authorizedAssigner) {
 			return nil
 		}
 	}
@@ -136,7 +136,7 @@ type RoleContainer interface {
 
 // CheckAssigners checks if the passed permissions satisfy the needed assigners for all role permissions
 func (c AppOrgRole) CheckAssigners(assignerPermissions []string) error {
-	if authutils.ContainsString(assignerPermissions, PermissionGrantAllPermissions) {
+	if rokwireutils.ContainsString(assignerPermissions, PermissionGrantAllPermissions) {
 		return nil
 	}
 	if len(c.Permissions) == 0 {
@@ -200,7 +200,7 @@ type AppOrgGroup struct {
 
 // CheckAssigners checks if the passed permissions satisfy the needed assigners for the group
 func (cg AppOrgGroup) CheckAssigners(assignerPermissions []string) error {
-	if authutils.ContainsString(assignerPermissions, PermissionGrantAllPermissions) {
+	if rokwireutils.ContainsString(assignerPermissions, PermissionGrantAllPermissions) {
 		return nil
 	}
 

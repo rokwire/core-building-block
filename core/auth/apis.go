@@ -23,15 +23,15 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/lestrrat-go/jwx/jwk"
-	"github.com/rokwire/core-auth-library-go/v3/authorization"
-	"github.com/rokwire/core-auth-library-go/v3/authutils"
-	"github.com/rokwire/core-auth-library-go/v3/sigauth"
-	"github.com/rokwire/core-auth-library-go/v3/tokenauth"
-	"github.com/rokwire/logging-library-go/v2/errors"
-	"github.com/rokwire/logging-library-go/v2/logutils"
+	"github.com/lestrrat-go/jwx/v3/jwk"
+	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth/authorization"
+	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth/sigauth"
+	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth/tokenauth"
+	"github.com/rokwire/rokwire-building-block-sdk-go/utils/errors"
+	"github.com/rokwire/rokwire-building-block-sdk-go/utils/logging/logutils"
+	"github.com/rokwire/rokwire-building-block-sdk-go/utils/rokwireutils"
 
-	"github.com/rokwire/logging-library-go/v2/logs"
+	"github.com/rokwire/rokwire-building-block-sdk-go/utils/logging/logs"
 )
 
 // Start starts the auth service
@@ -1433,11 +1433,11 @@ func (a *Auth) GetServiceAccountParams(accountID string, firstParty bool, r *sig
 
 	appOrgPairs := make([]model.AppOrgPair, len(accounts))
 	for i, account := range accounts {
-		appID := authutils.AllApps
+		appID := rokwireutils.AllApps
 		if account.Application != nil {
 			appID = account.Application.ID
 		}
-		orgID := authutils.AllOrgs
+		orgID := rokwireutils.AllOrgs
 		if account.Organization != nil {
 			orgID = account.Organization.ID
 		}
@@ -1607,11 +1607,11 @@ func (a *Auth) UpdateServiceAccountInstance(id string, appID string, orgID strin
 
 		//2. find app orgs
 		var appIDParam *string
-		if appID != authutils.AllApps {
+		if appID != rokwireutils.AllApps {
 			appIDParam = &appID
 		}
 		var orgIDParam *string
-		if orgID != authutils.AllOrgs {
+		if orgID != rokwireutils.AllOrgs {
 			orgIDParam = &orgID
 		}
 		appOrgs, err := a.storage.FindApplicationOrganizations(appIDParam, orgIDParam)
@@ -1796,8 +1796,18 @@ func (a *Auth) GetAdminToken(claims tokenauth.Claims, appID string, orgID string
 		return "", errors.ErrorData(logutils.StatusMissing, model.TypeApplicationOrganization, &logutils.FieldArgs{"org_id": orgID, "app_id": appID})
 	}
 
-	adminClaims := a.getStandardClaims(claims.Subject, claims.UID, claims.Name, claims.Email, claims.Phone, claims.Audience, orgID, appID, claims.AuthType,
-		claims.ExternalIDs, &claims.ExpiresAt, false, false, true, claims.System, claims.Service, claims.FirstParty, claims.SessionID)
+	var expiresAt *time.Time
+	if claims.ExpiresAt != nil {
+		expiresAt = &claims.ExpiresAt.Time
+	}
+
+	aud := ""
+	if len(claims.Audience) > 0 {
+		aud = claims.Audience[0]
+	}
+
+	adminClaims := a.getStandardClaims(claims.Subject, claims.UID, claims.Name, claims.Email, claims.Phone, aud, orgID, appID, claims.AuthType,
+		claims.ExternalIDs, expiresAt, false, false, true, claims.System, claims.Service, claims.FirstParty, claims.SessionID)
 	return a.buildAccessToken(adminClaims, claims.Permissions, claims.Scope)
 }
 
@@ -2198,7 +2208,7 @@ func (a *Auth) GetAuthKeySet() (jwk.Set, error) {
 		return nil, errors.ErrorData(logutils.StatusMissing, model.TypePubKey, nil)
 	}
 
-	webKey, err := jwk.New(authReg.PubKey.Key)
+	webKey, err := jwk.Import(authReg.PubKey.Key)
 	if err != nil || webKey == nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, model.TypeJSONWebKey, nil, err)
 	}
@@ -2216,7 +2226,7 @@ func (a *Auth) GetAuthKeySet() (jwk.Set, error) {
 	}
 
 	keySet := jwk.NewSet()
-	keySet.Add(webKey)
+	keySet.AddKey(webKey)
 	return keySet, nil
 }
 

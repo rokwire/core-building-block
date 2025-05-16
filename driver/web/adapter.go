@@ -28,16 +28,16 @@ import (
 	"github.com/getkin/kin-openapi/openapi3filter"
 	"github.com/getkin/kin-openapi/routers"
 	"github.com/getkin/kin-openapi/routers/gorillamux"
-	"github.com/rokwire/logging-library-go/v2/errors"
-	"github.com/rokwire/logging-library-go/v2/logs"
-	"github.com/rokwire/logging-library-go/v2/logutils"
+	"github.com/rokwire/rokwire-building-block-sdk-go/utils/errors"
+	"github.com/rokwire/rokwire-building-block-sdk-go/utils/logging/logs"
+	"github.com/rokwire/rokwire-building-block-sdk-go/utils/logging/logutils"
 	"gopkg.in/yaml.v2"
 
 	"github.com/gorilla/mux"
 
-	"github.com/rokwire/core-auth-library-go/v3/authservice"
-	"github.com/rokwire/core-auth-library-go/v3/tokenauth"
-	"github.com/rokwire/core-auth-library-go/v3/webauth"
+	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth"
+	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth/tokenauth"
+	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth/webauth"
 
 	httpSwagger "github.com/swaggo/http-swagger"
 )
@@ -546,7 +546,7 @@ func (we Adapter) completeResponse(w http.ResponseWriter, response logs.HTTPResp
 }
 
 // NewWebAdapter creates new WebAdapter instance
-func NewWebAdapter(env string, serviceRegManager *authservice.ServiceRegManager, port string, coreAPIs *core.APIs, host string, corsAllowedOrigins []string,
+func NewWebAdapter(env string, serviceRegManager *auth.ServiceRegManager, port string, coreAPIs *core.APIs, host string, corsAllowedOrigins []string,
 	corsAllowedHeaders []string, baseServerURL string, prodServerURL string, testServerURL string, devServerURL string, logger *logs.Logger) Adapter {
 	//openAPI doc
 	loader := &openapi3.Loader{Context: context.Background(), IsExternalRefsAllowed: true}

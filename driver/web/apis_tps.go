@@ -25,12 +25,12 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
-	"github.com/rokwire/core-auth-library-go/v3/authorization"
-	"github.com/rokwire/core-auth-library-go/v3/sigauth"
-	"github.com/rokwire/core-auth-library-go/v3/tokenauth"
-	"github.com/rokwire/logging-library-go/v2/errors"
-	"github.com/rokwire/logging-library-go/v2/logs"
-	"github.com/rokwire/logging-library-go/v2/logutils"
+	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth/authorization"
+	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth/sigauth"
+	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth/tokenauth"
+	"github.com/rokwire/rokwire-building-block-sdk-go/utils/errors"
+	"github.com/rokwire/rokwire-building-block-sdk-go/utils/logging/logs"
+	"github.com/rokwire/rokwire-building-block-sdk-go/utils/logging/logutils"
 )
 
 // TPSApisHandler handles the APIs implementation used by third-party services
@@ -62,9 +62,9 @@ func (h TPSApisHandler) getAuthKeys(l *logs.Log, r *http.Request, claims *tokena
 		return l.HTTPResponseErrorAction(logutils.ActionGet, model.TypeJSONWebKeySet, logutils.StringArgs("auth"), err, http.StatusInternalServerError, true)
 	}
 
-	keysResp := jsonWebKeySetDef(keySet)
+	// keysResp := jsonWebKeySetDef(keySet)
 
-	data, err := json.Marshal(keysResp)
+	data, err := json.Marshal(keySet)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeJSONWebKeySet, nil, err, http.StatusInternalServerError, false)
 	}

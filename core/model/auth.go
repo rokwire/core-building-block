@@ -19,9 +19,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/rokwire/core-auth-library-go/v3/authorization"
-	"github.com/rokwire/core-auth-library-go/v3/authservice"
-	"github.com/rokwire/logging-library-go/v2/logutils"
+	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth"
+	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth/authorization"
+	"github.com/rokwire/rokwire-building-block-sdk-go/utils/logging/logutils"
 )
 
 const (
@@ -307,15 +307,15 @@ type AuthRefresh struct {
 
 // ServiceRegistration represents a service registration entity
 type ServiceRegistration struct {
-	Registration authservice.ServiceReg `json:"registration" bson:"registration"`
-	CoreHost     string                 `json:"core_host" bson:"core_host"`
-	Name         string                 `json:"name" bson:"name"`
-	Description  string                 `json:"description" bson:"description"`
-	InfoURL      string                 `json:"info_url" bson:"info_url"`
-	LogoURL      string                 `json:"logo_url" bson:"logo_url"`
-	Scopes       []ServiceScope         `json:"scopes" bson:"scopes"`
-	AuthEndpoint string                 `json:"auth_endpoint" bson:"auth_endpoint"`
-	FirstParty   bool                   `json:"first_party" bson:"first_party"`
+	Registration auth.ServiceReg `json:"registration" bson:"registration"`
+	CoreHost     string          `json:"core_host" bson:"core_host"`
+	Name         string          `json:"name" bson:"name"`
+	Description  string          `json:"description" bson:"description"`
+	InfoURL      string          `json:"info_url" bson:"info_url"`
+	LogoURL      string          `json:"logo_url" bson:"logo_url"`
+	Scopes       []ServiceScope  `json:"scopes" bson:"scopes"`
+	AuthEndpoint string          `json:"auth_endpoint" bson:"auth_endpoint"`
+	FirstParty   bool            `json:"first_party" bson:"first_party"`
 }
 
 // ServiceScope represents a scope entity
