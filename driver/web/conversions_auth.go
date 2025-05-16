@@ -22,12 +22,12 @@ import (
 	"encoding/base64"
 
 	"github.com/lestrrat-go/jwx/jwk"
-	"github.com/rokwire/core-auth-library-go/v3/authorization"
-	"github.com/rokwire/core-auth-library-go/v3/authservice"
-	"github.com/rokwire/core-auth-library-go/v3/authutils"
-	"github.com/rokwire/core-auth-library-go/v3/keys"
-	"github.com/rokwire/logging-library-go/v2/errors"
-	"github.com/rokwire/logging-library-go/v2/logutils"
+	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth"
+	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth/authorization"
+	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth/keys"
+	"github.com/rokwire/rokwire-building-block-sdk-go/utils/errors"
+	"github.com/rokwire/rokwire-building-block-sdk-go/utils/logging/logutils"
+	"github.com/rokwire/rokwire-building-block-sdk-go/utils/rokwireutils"
 )
 
 // LoginSession
@@ -130,11 +130,11 @@ func serviceAccountToDef(item *model.ServiceAccount) *Def.ServiceAccount {
 
 	accountID := item.AccountID
 	name := item.Name
-	appID := authutils.AllApps
+	appID := rokwireutils.AllApps
 	if item.Application != nil {
 		appID = item.Application.ID
 	}
-	orgID := authutils.AllOrgs
+	orgID := rokwireutils.AllOrgs
 	if item.Organization != nil {
 		orgID = item.Organization.ID
 	}
@@ -230,7 +230,7 @@ func serviceRegFromDef(item *Def.ServiceReg) (*model.ServiceRegistration, error)
 	if err != nil {
 		return nil, err
 	}
-	return &model.ServiceRegistration{Registration: authservice.ServiceReg{ServiceID: item.ServiceId, ServiceAccountID: serviceAccountID, Host: item.Host, PubKey: pubKey},
+	return &model.ServiceRegistration{Registration: auth.ServiceReg{ServiceID: item.ServiceId, ServiceAccountID: serviceAccountID, Host: item.Host, PubKey: pubKey},
 		Name: item.Name, Description: item.Description, InfoURL: defString(item.InfoUrl), LogoURL: defString(item.LogoUrl), Scopes: scopes, FirstParty: item.FirstParty}, nil
 }
 
@@ -264,7 +264,7 @@ func serviceRegListToDef(items []model.ServiceRegistration) []Def.ServiceReg {
 	return out
 }
 
-func authServiceRegToDef(item *authservice.ServiceReg) *Def.AuthServiceReg {
+func authServiceRegToDef(item *auth.ServiceReg) *Def.AuthServiceReg {
 	if item == nil {
 		return nil
 	}

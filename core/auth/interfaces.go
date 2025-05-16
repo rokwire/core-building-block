@@ -20,10 +20,10 @@ import (
 	"time"
 
 	"github.com/lestrrat-go/jwx/jwk"
-	"github.com/rokwire/core-auth-library-go/v3/authorization"
-	"github.com/rokwire/core-auth-library-go/v3/sigauth"
-	"github.com/rokwire/core-auth-library-go/v3/tokenauth"
-	"github.com/rokwire/logging-library-go/v2/logs"
+	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth/authorization"
+	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth/sigauth"
+	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth/tokenauth"
+	"github.com/rokwire/rokwire-building-block-sdk-go/utils/logging/logs"
 )
 
 // authType is the interface for authentication for auth types which are not external for the system(the users do not come from external system)

@@ -20,8 +20,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/rokwire/logging-library-go/v2/logs"
-	"github.com/rokwire/logging-library-go/v2/logutils"
+	"github.com/rokwire/rokwire-building-block-sdk-go/utils/logging/logs"
+	"github.com/rokwire/rokwire-building-block-sdk-go/utils/logging/logutils"
 )
 
 // Helper for authLogin and authLoginMFA

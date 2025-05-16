@@ -21,14 +21,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/rokwire/core-auth-library-go/v3/authorization"
-	"github.com/rokwire/core-auth-library-go/v3/authutils"
-	"github.com/rokwire/core-auth-library-go/v3/tokenauth"
+	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth/authorization"
+	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth/tokenauth"
+	"github.com/rokwire/rokwire-building-block-sdk-go/utils/rokwireutils"
 
 	"github.com/google/uuid"
-	"github.com/rokwire/logging-library-go/v2/errors"
-	"github.com/rokwire/logging-library-go/v2/logs"
-	"github.com/rokwire/logging-library-go/v2/logutils"
+	"github.com/rokwire/rokwire-building-block-sdk-go/utils/errors"
+	"github.com/rokwire/rokwire-building-block-sdk-go/utils/logging/logs"
+	"github.com/rokwire/rokwire-building-block-sdk-go/utils/logging/logutils"
 )
 
 func (app *application) admGetTest() string {
@@ -220,8 +220,8 @@ func (app *application) admGetConfigs(configType *string, claims *tokenauth.Clai
 
 func (app *application) admCreateConfig(config model.Config, claims *tokenauth.Claims) (*model.Config, error) {
 	// must be a system config if applying to all orgs
-	if config.OrgID == authutils.AllOrgs && !config.System {
-		return nil, errors.ErrorData(logutils.StatusInvalid, "config system status", &logutils.FieldArgs{"config.org_id": authutils.AllOrgs})
+	if config.OrgID == rokwireutils.AllOrgs && !config.System {
+		return nil, errors.ErrorData(logutils.StatusInvalid, "config system status", &logutils.FieldArgs{"config.org_id": rokwireutils.AllOrgs})
 	}
 
 	err := claims.CanAccess(config.AppID, config.OrgID, config.System)
@@ -240,8 +240,8 @@ func (app *application) admCreateConfig(config model.Config, claims *tokenauth.C
 
 func (app *application) admUpdateConfig(config model.Config, claims *tokenauth.Claims) error {
 	// must be a system config if applying to all orgs
-	if config.OrgID == authutils.AllOrgs && !config.System {
-		return errors.ErrorData(logutils.StatusInvalid, "config system status", &logutils.FieldArgs{"config.org_id": authutils.AllOrgs})
+	if config.OrgID == rokwireutils.AllOrgs && !config.System {
+		return errors.ErrorData(logutils.StatusInvalid, "config system status", &logutils.FieldArgs{"config.org_id": rokwireutils.AllOrgs})
 	}
 
 	oldConfig, err := app.storage.FindConfig(config.Type, config.AppID, config.OrgID)
