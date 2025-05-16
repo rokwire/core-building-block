@@ -15,13 +15,10 @@
 package web
 
 import (
-	"context"
 	"core-building-block/core/model"
 	Def "core-building-block/driver/web/docs/gen"
 	"core-building-block/utils"
-	"encoding/base64"
 
-	"github.com/lestrrat-go/jwx/jwk"
 	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth"
 	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth/authorization"
 	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth/keys"
@@ -343,63 +340,63 @@ func serviceScopeListToDef(items []model.ServiceScope) []Def.ServiceScope {
 	return out
 }
 
-func jsonWebKeyToDef(item jwk.Key) *Def.JWK {
-	if item == nil {
-		return nil
-	}
+// func jsonWebKeyToDef(item jwk.Key) *Def.JWK {
+// 	if item == nil {
+// 		return nil
+// 	}
 
-	key := &Def.JWK{Alg: Def.JWKAlg(item.Algorithm()), Kid: item.KeyID(), Kty: Def.JWKKty(item.KeyType()), Use: Def.JWKUse(item.KeyUsage())}
+// 	key := &Def.JWK{Alg: Def.JWKAlg(item.Algorithm()), Kid: item.KeyID(), Kty: Def.JWKKty(item.KeyType()), Use: Def.JWKUse(item.KeyUsage())}
 
-	switch t := item.(type) {
-	case jwk.RSAPublicKey:
-		nStr := base64.URLEncoding.EncodeToString(t.N())
-		key.N = &nStr
+// 	switch t := item.(type) {
+// 	case jwk.RSAPublicKey:
+// 		nStr := base64.URLEncoding.EncodeToString(t.N())
+// 		key.N = &nStr
 
-		eStr := base64.URLEncoding.EncodeToString(t.E())
-		key.E = &eStr
-	case jwk.ECDSAPublicKey:
-		crv := t.Crv().String()
-		key.Crv = &crv
+// 		eStr := base64.URLEncoding.EncodeToString(t.E())
+// 		key.E = &eStr
+// 	case jwk.ECDSAPublicKey:
+// 		crv := t.Crv().String()
+// 		key.Crv = &crv
 
-		xStr := base64.URLEncoding.EncodeToString(t.X())
-		key.X = &xStr
+// 		xStr := base64.URLEncoding.EncodeToString(t.X())
+// 		key.X = &xStr
 
-		yStr := base64.URLEncoding.EncodeToString(t.Y())
-		key.Y = &yStr
-	case jwk.OKPPublicKey:
-		crv := t.Crv().String()
-		key.Crv = &crv
+// 		yStr := base64.URLEncoding.EncodeToString(t.Y())
+// 		key.Y = &yStr
+// 	case jwk.OKPPublicKey:
+// 		crv := t.Crv().String()
+// 		key.Crv = &crv
 
-		xStr := base64.URLEncoding.EncodeToString(t.X())
-		key.X = &xStr
-	default:
-		return nil
-	}
+// 		xStr := base64.URLEncoding.EncodeToString(t.X())
+// 		key.X = &xStr
+// 	default:
+// 		return nil
+// 	}
 
-	return key
-}
+// 	return key
+// }
 
-func jsonWebKeySetDef(set jwk.Set) *Def.JWKS {
-	if set == nil {
-		return nil
-	}
-	out := make([]Def.JWK, set.Len())
+// func jsonWebKeySetDef(set jwk.Set) *Def.JWKS {
+// 	if set == nil {
+// 		return nil
+// 	}
+// 	out := make([]Def.JWK, set.Len())
 
-	ctx := context.Background()
-	for setIter := set.Iterate(ctx); setIter.Next(ctx); {
-		item := setIter.Pair()
-		if key, ok := item.Value.(jwk.Key); ok {
-			defItem := jsonWebKeyToDef(key)
-			if defItem != nil {
-				out[item.Index] = *defItem
-				continue
-			}
-		}
+// 	ctx := context.Background()
+// 	for setIter := set.Iterate(ctx); setIter.Next(ctx); {
+// 		item := setIter.Pair()
+// 		if key, ok := item.Value.(jwk.Key); ok {
+// 			defItem := jsonWebKeyToDef(key)
+// 			if defItem != nil {
+// 				out[item.Index] = *defItem
+// 				continue
+// 			}
+// 		}
 
-		out[item.Index] = Def.JWK{}
-	}
-	return &Def.JWKS{Keys: out}
-}
+// 		out[item.Index] = Def.JWK{}
+// 	}
+// 	return &Def.JWKS{Keys: out}
+// }
 
 // AuthType
 func authTypeToDef(item *model.AuthType) *Def.AuthType {

@@ -19,7 +19,7 @@ import (
 	"core-building-block/driven/storage"
 	"time"
 
-	"github.com/lestrrat-go/jwx/jwk"
+	"github.com/lestrrat-go/jwx/v3/jwk"
 	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth/authorization"
 	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth/sigauth"
 	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth/tokenauth"

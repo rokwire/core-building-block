@@ -62,9 +62,9 @@ func (h TPSApisHandler) getAuthKeys(l *logs.Log, r *http.Request, claims *tokena
 		return l.HTTPResponseErrorAction(logutils.ActionGet, model.TypeJSONWebKeySet, logutils.StringArgs("auth"), err, http.StatusInternalServerError, true)
 	}
 
-	keysResp := jsonWebKeySetDef(keySet)
+	// keysResp := jsonWebKeySetDef(keySet)
 
-	data, err := json.Marshal(keysResp)
+	data, err := json.Marshal(keySet)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeJSONWebKeySet, nil, err, http.StatusInternalServerError, false)
 	}
