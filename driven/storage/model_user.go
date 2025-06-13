@@ -163,8 +163,23 @@ type profile struct {
 	Country          string `bson:"country"`
 	Website          string `bson:"website"`
 
-	DateCreated time.Time  `bson:"date_created"`
-	DateUpdated *time.Time `bson:"date_updated"`
+	DateCreated      time.Time  `bson:"date_created"`
+	DateUpdated      *time.Time `bson:"date_updated"`
+	College          string     `bson:"college"`
+	Department       string     `bson:"department"`
+	SecondDepartment string     `bson:"second_department"`
+	Major            string     `bson:"major"`
+	SecondMajor      string     `bson:"second_major"`
+	WorkTitle        string     `bson:"work_title"`
+	WorkPhone        string     `bson:"work_phone"`
+	WorkEmail        string     `bson:"work_email"`
+	WorkAddress      string     `bson:"work_address"`
+	WorkAddress2     string     `bson:"work_address2"`
+	WorkPOBox        string     `bson:"work_po_box"`
+	WorkCity         string     `bson:"work_city"`
+	WorkZipCode      string     `bson:"work_zip_code"`
+	WorkState        string     `bson:"work_state"`
+	WorkCountry      string     `bson:"work_country"`
 
 	UnstructuredProperties map[string]interface{} `bson:"unstructured_properties"`
 }
