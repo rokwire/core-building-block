@@ -898,6 +898,21 @@ type PublicProfile struct {
 	UnstructuredProperties map[string]interface{}
 	Website                *string
 	ZipCode                *string
+	College                *string
+	Department             *string
+	Major                  *string
+	SecondMajor            *string
+	SecondDepartment       *string
+	WorkTitle              *string
+	WorkPhone              *string
+	WorkEmail              *string
+	WorkAddress            *string
+	WorkAddress2           *string
+	WorkPOBox              *string
+	WorkCity               *string
+	WorkZipCode            *string
+	WorkState              *string
+	WorkCountry            *string
 }
 
 // Device represents user devices entity.

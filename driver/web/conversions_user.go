@@ -552,7 +552,11 @@ func publicProfileToDef(item *model.PublicProfile) *Def.ProfileNullable {
 	return &Def.ProfileNullable{PhotoUrl: item.PhotoURL, PronunciationUrl: item.PronunciationURL, Pronouns: item.Pronouns,
 		FirstName: item.FirstName, LastName: item.LastName, Email: item.Email, Phone: item.Phone, BirthYear: &birthYear,
 		Address: item.Address, ZipCode: item.ZipCode, State: item.State, Country: item.Country, Website: item.Website,
-		UnstructuredProperties: &item.UnstructuredProperties}
+		UnstructuredProperties: &item.UnstructuredProperties, College: item.College, Department: item.Department,
+		SecondDepartment: item.SecondDepartment, Major: item.Major, SecondMajor: item.SecondDepartment,
+		WorkTitle: item.WorkTitle, WorkPhone: item.WorkPhone, WorkEmail: item.WorkEmail, WorkAddress: item.WorkAddress,
+		WorkAddress2: item.WorkAddress2, WorkPoBox: item.WorkPOBox, WorkCity: item.WorkCity, WorkZipCode: item.WorkZipCode,
+		WorkState: item.WorkState, WorkCountry: item.WorkCountry}
 }
 
 func publicAccountIdentifierToDef(item model.PublicAccountIdentifier) Def.PublicAccountIdentifier {
