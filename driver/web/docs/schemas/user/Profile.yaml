@@ -50,3 +50,48 @@ properties:
   unstructured_properties:
     type: object
     nullable: true 
+  college:
+    type: string
+    nullable: true  
+  department:
+    type: string
+    nullable: true 
+  second_department:
+    type: string
+    nullable: true     
+  major:
+    type: string
+    nullable: true 
+  second_major:
+    type: string
+    nullable: true   
+  work_title:
+    type: string
+    nullable: true  
+  work_phone:
+    type: string
+    nullable: true  
+  work_email:
+    type: string
+    nullable: true 
+  work_address:
+    type: string
+    nullable: true   
+  work_address2:
+    type: string
+    nullable: true   
+  work_po_box:
+    type: string
+    nullable: true
+  work_city:
+    type: string
+    nullable: true 
+  work_zip_code:
+    type: string
+    nullable: true 
+  work_state:
+    type: string
+    nullable: true 
+  work_country:
+    type: string
+    nullable: true                   
