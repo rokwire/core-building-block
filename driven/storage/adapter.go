@@ -3581,7 +3581,6 @@ func (sa *Adapter) LoadIdentityProviders() ([]model.IdentityProvider, error) {
 // UpdateAccountProfile updates a profile
 func (sa *Adapter) UpdateAccountProfile(context TransactionContext, profile model.Profile) error {
 	filter := bson.D{primitive.E{Key: "profile.id", Value: profile.ID}}
-
 	now := time.Now().UTC()
 	profileUpdate := bson.D{
 		primitive.E{Key: "$set", Value: bson.D{
@@ -3601,6 +3600,11 @@ func (sa *Adapter) UpdateAccountProfile(context TransactionContext, profile mode
 			primitive.E{Key: "profile.state", Value: profile.State},
 			primitive.E{Key: "profile.country", Value: profile.Country},
 			primitive.E{Key: "profile.website", Value: profile.Website},
+			primitive.E{Key: "profile.college", Value: profile.College},
+			primitive.E{Key: "profile.department", Value: profile.Department},
+			primitive.E{Key: "profile.major", Value: profile.Major},
+			primitive.E{Key: "profile.second_major", Value: profile.SecondMajor},
+			primitive.E{Key: "profile.second_department", Value: profile.SecondDepartment},
 			primitive.E{Key: "profile.date_updated", Value: &now},
 			primitive.E{Key: "profile.unstructured_properties", Value: profile.UnstructuredProperties},
 		}},
