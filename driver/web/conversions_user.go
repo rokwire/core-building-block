@@ -387,7 +387,11 @@ func profileToDef(item *model.Profile) *Def.Profile {
 		FirstName: &itemVal.FirstName, LastName: &itemVal.LastName, Email: &itemVal.Email, Phone: &itemVal.Phone, BirthYear: &birthYear,
 		Address: &itemVal.Address, Address2: &itemVal.Address2, PoBox: &itemVal.POBox, City: &itemVal.City, ZipCode: &itemVal.ZipCode,
 		State: &itemVal.State, Country: &itemVal.Country, Website: &itemVal.Website,
-		UnstructuredProperties: &itemVal.UnstructuredProperties}
+		UnstructuredProperties: &itemVal.UnstructuredProperties, College: &item.College, Department: &item.Department,
+		SecondDepartment: &item.SecondDepartment, Major: &item.Major, SecondMajor: &item.SecondDepartment,
+		WorkTitle: &item.WorkTitle, WorkPhone: &item.WorkPhone, WorkEmail: &item.WorkEmail, WorkAddress: &item.WorkAddress,
+		WorkAddress2: &item.WorkAddress2, WorkPoBox: &item.WorkPOBox, WorkCity: &item.WorkCity, WorkZipCode: &item.WorkZipCode,
+		WorkState: &item.WorkState, WorkCountry: &item.WorkCountry}
 }
 
 func profileFromDefNullable(item *Def.ProfileNullable) model.Profile {
