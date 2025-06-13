@@ -401,10 +401,75 @@ func profileFromDefNullable(item *Def.ProfileNullable) model.Profile {
 		unstructuredProperties = *item.UnstructuredProperties
 	}
 
+	var college string
+	if item.College != nil {
+		college = *item.College
+	}
+	var department string
+	if item.Department != nil {
+		department = *item.Department
+	}
+	var secondDepartment string
+	if item.SecondDepartment != nil {
+		secondDepartment = *item.SecondDepartment
+	}
+	var major string
+	if item.Major != nil {
+		major = *item.Major
+	}
+	var secondMajor string
+	if item.SecondMajor != nil {
+		secondMajor = *item.SecondMajor
+	}
+
+	var workTitle string
+	if item.WorkTitle != nil {
+		workTitle = *item.WorkTitle
+	}
+	var workPhone string
+	if item.WorkPhone != nil {
+		workPhone = *item.WorkPhone
+	}
+	var workEmail string
+	if item.WorkEmail != nil {
+		workEmail = *item.WorkEmail
+	}
+	var workAddress string
+	if item.WorkAddress != nil {
+		workAddress = *item.WorkAddress
+	}
+	var workAddress2 string
+	if item.WorkAddress2 != nil {
+		workAddress2 = *item.WorkAddress2
+	}
+	var workPOBox string
+	if item.WorkPoBox != nil {
+		workPOBox = *item.WorkPoBox
+	}
+	var workCity string
+	if item.WorkCity != nil {
+		workCity = *item.WorkCity
+	}
+	var workZipCode string
+	if item.WorkZipCode != nil {
+		workZipCode = *item.WorkZipCode
+	}
+	var workState string
+	if item.WorkState != nil {
+		workState = *item.WorkState
+	}
+	var workCountry string
+	if item.WorkCountry != nil {
+		workCountry = *item.WorkCountry
+	}
+
 	return model.Profile{PhotoURL: photoURL, PronunciationURL: pronunciationURL, Pronouns: pronouns, FirstName: firstName,
 		LastName: lastName, Email: email, Phone: phone, BirthYear: int16(birthYear), Address: address, Address2: address2,
 		POBox: poBox, City: city, ZipCode: zipCode, State: state, Country: country, Website: website,
-		UnstructuredProperties: unstructuredProperties}
+		UnstructuredProperties: unstructuredProperties, College: college, Department: department, SecondDepartment: secondDepartment,
+		Major: major, SecondMajor: secondMajor, WorkTitle: workTitle, WorkPhone: workPhone, WorkEmail: workEmail, WorkAddress: workAddress,
+		WorkAddress2: workAddress2, WorkPOBox: workPOBox, WorkCity: workCity, WorkZipCode: workZipCode, WorkState: workState,
+		WorkCountry: workCountry}
 }
 
 func publicProfileToDef(item *model.PublicProfile) *Def.ProfileNullable {

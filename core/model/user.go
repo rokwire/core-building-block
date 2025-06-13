@@ -725,6 +725,22 @@ type Profile struct {
 	State            string `visibility:"state"`
 	Country          string `visibility:"country"`
 	Website          string `visibility:"website"`
+	College          string `visibility:"college"`
+	Department       string `visibility:"department"`
+	Major            string `visibility:"major"`
+	SecondMajor      string `visibility:"second_major"`
+	SecondDepartment string `visibility:"second_department"`
+
+	WorkTitle    string `visibility:"-"`
+	WorkPhone    string `visibility:"-"`
+	WorkEmail    string `visibility:"-"`
+	WorkAddress  string `visibility:"-"`
+	WorkAddress2 string `visibility:"-"`
+	WorkPOBox    string `visibility:"-"`
+	WorkCity     string `visibility:"-"`
+	WorkZipCode  string `visibility:"-"`
+	WorkState    string `visibility:"-"`
+	WorkCountry  string `visibility:"-"`
 
 	UnstructuredProperties map[string]interface{} `visibility:"unstructured_properties"`
 
