@@ -630,18 +630,33 @@ type ProfileNullable struct {
 	Address2               *string                 `json:"address2"`
 	BirthYear              *int                    `json:"birth_year"`
 	City                   *string                 `json:"city"`
+	College                *string                 `json:"college"`
 	Country                *string                 `json:"country"`
+	Department             *string                 `json:"department"`
 	Email                  *string                 `json:"email"`
 	FirstName              *string                 `json:"first_name"`
 	LastName               *string                 `json:"last_name"`
+	Major                  *string                 `json:"major"`
 	Phone                  *string                 `json:"phone"`
 	PhotoUrl               *string                 `json:"photo_url"`
 	PoBox                  *string                 `json:"po_box"`
 	Pronouns               *string                 `json:"pronouns"`
 	PronunciationUrl       *string                 `json:"pronunciation_url"`
+	SecondDepartment       *string                 `json:"second_department"`
+	SecondMajor            *string                 `json:"second_major"`
 	State                  *string                 `json:"state"`
 	UnstructuredProperties *map[string]interface{} `json:"unstructured_properties"`
 	Website                *string                 `json:"website"`
+	WorkAddress            *string                 `json:"work_address"`
+	WorkAddress2           *string                 `json:"work_address2"`
+	WorkCity               *string                 `json:"work_city"`
+	WorkCountry            *string                 `json:"work_country"`
+	WorkEmail              *string                 `json:"work_email"`
+	WorkPhone              *string                 `json:"work_phone"`
+	WorkPoBox              *string                 `json:"work_po_box"`
+	WorkState              *string                 `json:"work_state"`
+	WorkTitle              *string                 `json:"work_title"`
+	WorkZipCode            *string                 `json:"work_zip_code"`
 	ZipCode                *string                 `json:"zip_code"`
 }
 
