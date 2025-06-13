@@ -868,6 +868,22 @@ func ProfileFromMap(profileMap map[string]interface{}, profileFields map[string]
 			if typeVal, ok := val.(string); ok {
 				profile.PhotoURL = typeVal
 			}
+		} else if key == "major" {
+			if typeVal, ok := val.(string); ok {
+				profile.Major = typeVal
+			}
+		} else if key == "second_major" {
+			if typeVal, ok := val.(string); ok {
+				profile.SecondMajor = typeVal
+			}
+		} else if key == "department" {
+			if typeVal, ok := val.(string); ok {
+				profile.Department = typeVal
+			}
+		} else if key == "second_department" {
+			if typeVal, ok := val.(string); ok {
+				profile.SecondDepartment = typeVal
+			}
 		}
 	}
 
