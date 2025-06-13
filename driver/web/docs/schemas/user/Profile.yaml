@@ -94,4 +94,4 @@ properties:
     nullable: true 
   work_country:
     type: string
-    nullable: true                   
+    nullable: true
