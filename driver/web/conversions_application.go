@@ -457,6 +457,7 @@ func identityProviderSettingToDef(item *model.IdentityProviderSetting) *Def.Iden
 	externalIDs := item.ExternalIDFields
 	roles := item.Roles
 	groups := item.Groups
+	ferpaField := item.FerpaField
 
 	firstNameField := item.FirstNameField
 	middleNameField := item.MiddleNameField
@@ -467,6 +468,12 @@ func identityProviderSettingToDef(item *model.IdentityProviderSetting) *Def.Iden
 	userSpecificFields := item.UserSpecificFields
 	alwaysSyncProfile := item.AlwaysSyncProfile
 	identityBBBaseURL := item.IdentityBBBaseURL
+
+	identityBBProfileFields := item.IdentityBBProfileFields
+	if identityBBProfileFields == nil {
+		identityBBProfileFields = map[string]string{}
+	}
+
 	var adminAppAccessRoles []string
 	if item.AdminAppAccessRoles != nil {
 		adminAppAccessRoles = item.AdminAppAccessRoles
@@ -474,12 +481,25 @@ func identityProviderSettingToDef(item *model.IdentityProviderSetting) *Def.Iden
 		adminAppAccessRoles = []string{}
 	}
 
-	return &Def.IdentityProviderSettings{IdentityProviderId: item.IdentityProviderID, UserIdentifierField: item.UserIdentifierField,
-		ExternalIdFields: &externalIDs, FirstNameField: &firstNameField, MiddleNameField: &middleNameField,
-		LastNameField: &lastNameField, EmailField: &emailField, RolesField: &rolesField, GroupsField: &groupsField,
-		UserSpecificFields: &userSpecificFields,
-		Roles:              &roles, Groups: &groups,
-		AlwaysSyncProfile: &alwaysSyncProfile, IdentityBbBaseUrl: &identityBBBaseURL, AdminAppAccessRoles: &adminAppAccessRoles}
+	return &Def.IdentityProviderSettings{
+		IdentityProviderId:      item.IdentityProviderID,
+		UserIdentifierField:     item.UserIdentifierField,
+		ExternalIdFields:        &externalIDs,
+		FirstNameField:          &firstNameField,
+		MiddleNameField:         &middleNameField,
+		LastNameField:           &lastNameField,
+		EmailField:              &emailField,
+		RolesField:              &rolesField,
+		GroupsField:             &groupsField,
+		UserSpecificFields:      &userSpecificFields,
+		FerpaField:              &ferpaField,
+		Roles:                   &roles,
+		Groups:                  &groups,
+		AlwaysSyncProfile:       &alwaysSyncProfile,
+		IdentityBbBaseUrl:       &identityBBBaseURL,
+		IdentityBbProfileFields: &identityBBProfileFields,
+		AdminAppAccessRoles:     &adminAppAccessRoles,
+	}
 }
 
 // AppOrgRole
