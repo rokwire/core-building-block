@@ -6,7 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
-## [1.51.0] - 2025-02-005
+## [1.52.0] - 2025-06-20
+### Added
+- Ensure all properties are returned on get applcaition organization system API [#779](https://github.com/rokwire/core-building-block/issues/779)
+
+## [1.51.0] - 2025-02-05
 ### Added
 - Support public accounts reverse pagination and total count [#766](https://github.com/rokwire/core-building-block/issues/766)
 
