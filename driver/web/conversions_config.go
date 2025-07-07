@@ -20,10 +20,10 @@ import (
 	"core-building-block/utils"
 	"encoding/json"
 
-	"github.com/rokwire/core-auth-library-go/v3/authutils"
-	"github.com/rokwire/core-auth-library-go/v3/tokenauth"
-	"github.com/rokwire/logging-library-go/v2/errors"
-	"github.com/rokwire/logging-library-go/v2/logutils"
+	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth/tokenauth"
+	"github.com/rokwire/rokwire-building-block-sdk-go/utils/errors"
+	"github.com/rokwire/rokwire-building-block-sdk-go/utils/logging/logutils"
+	"github.com/rokwire/rokwire-building-block-sdk-go/utils/rokwireutils"
 )
 
 func configToDef(item model.Config) (*Def.Config, error) {
@@ -68,11 +68,11 @@ func configsToDef(items []model.Config) ([]Def.Config, error) {
 func configFromDef(item Def.AdminReqCreateUpdateConfig, claims *tokenauth.Claims) (*model.Config, error) {
 	appID := claims.AppID
 	if item.AllApps != nil && *item.AllApps {
-		appID = authutils.AllApps
+		appID = rokwireutils.AllApps
 	}
 	orgID := claims.OrgID
 	if item.AllOrgs != nil && *item.AllOrgs {
-		orgID = authutils.AllOrgs
+		orgID = rokwireutils.AllOrgs
 	}
 
 	var configData interface{}

@@ -17,9 +17,9 @@ package storage
 import (
 	"core-building-block/core/model"
 
-	"github.com/rokwire/core-auth-library-go/v3/authutils"
-	"github.com/rokwire/logging-library-go/v2/errors"
-	"github.com/rokwire/logging-library-go/v2/logutils"
+	"github.com/rokwire/rokwire-building-block-sdk-go/utils/errors"
+	"github.com/rokwire/rokwire-building-block-sdk-go/utils/logging/logutils"
+	"github.com/rokwire/rokwire-building-block-sdk-go/utils/rokwireutils"
 )
 
 // LoginSession
@@ -124,14 +124,14 @@ func loginSessionToStorage(item model.LoginSession) *loginSession {
 func serviceAccountFromStorage(item serviceAccount, sa *Adapter) (*model.ServiceAccount, error) {
 	var err error
 	var application *model.Application
-	if item.AppID != authutils.AllApps {
+	if item.AppID != rokwireutils.AllApps {
 		application, err = sa.getCachedApplication(item.AppID)
 		if err != nil || application == nil {
 			return nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeApplication, &logutils.FieldArgs{"app_id": item.AppID}, err)
 		}
 	}
 	var organization *model.Organization
-	if item.OrgID != authutils.AllOrgs {
+	if item.OrgID != rokwireutils.AllOrgs {
 		organization, err = sa.getCachedOrganization(item.OrgID)
 		if err != nil || organization == nil {
 			return nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeOrganization, &logutils.FieldArgs{"org_id": item.OrgID}, err)
@@ -156,11 +156,11 @@ func serviceAccountListFromStorage(items []serviceAccount, sa *Adapter) []model.
 }
 
 func serviceAccountToStorage(item model.ServiceAccount) *serviceAccount {
-	appID := authutils.AllApps
+	appID := rokwireutils.AllApps
 	if item.Application != nil {
 		appID = item.Application.ID
 	}
-	orgID := authutils.AllOrgs
+	orgID := rokwireutils.AllOrgs
 	if item.Organization != nil {
 		orgID = item.Organization.ID
 	}
