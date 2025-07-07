@@ -11,7 +11,7 @@ require (
 	github.com/lestrrat-go/jwx/v3 v3.0.1
 	github.com/oapi-codegen/runtime v1.1.1
 	github.com/pquerna/otp v1.4.0
-	github.com/rokwire/rokwire-building-block-sdk-go v1.7.0
+	github.com/rokwire/rokwire-building-block-sdk-go v1.8.3
 	github.com/stretchr/testify v1.10.0
 	github.com/swaggo/http-swagger v1.3.4
 	go.mongodb.org/mongo-driver v1.17.3
