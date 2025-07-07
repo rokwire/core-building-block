@@ -18,8 +18,8 @@ import (
 	"core-building-block/core/model"
 	"time"
 
-	"github.com/rokwire/logging-library-go/v2/errors"
-	"github.com/rokwire/logging-library-go/v2/logutils"
+	"github.com/rokwire/rokwire-building-block-sdk-go/utils/errors"
+	"github.com/rokwire/rokwire-building-block-sdk-go/utils/logging/logutils"
 )
 
 func (app *application) bbsGetDeletedOrgAppMemberships(appID string, orgID string, _ string, startTime *time.Time) (map[model.AppOrgPair][]model.DeletedOrgAppMembership, error) {

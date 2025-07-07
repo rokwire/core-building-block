@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+### Changed
+- Replace auth library and logging library with Building Block SDK [#765](https://github.com/rokwire/core-building-block/issues/765)
+
 ## [1.52.0] - 2025-06-20
 ### Added
 - Ensure all properties are returned on get applcaition organization system API [#779](https://github.com/rokwire/core-building-block/issues/779)
