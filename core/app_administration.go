@@ -1079,6 +1079,15 @@ func (app *application) admGetAccounts(limit int, offset int, appID string, orgI
 	return accounts, nil
 }
 
+func (app *application) admGetProspctiveAccounts() ([]model.Account, error) {
+	//find the prospective accounts
+	prospectiveAccounts, err := app.storage.FindProspectiveAccounts()
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+	return prospectiveAccounts, nil
+}
+
 func (app *application) admGetAccount(cOrgID string, cAppID string, accountID string) (*model.Account, error) {
 	return app.getAccountV2(nil, cOrgID, cAppID, accountID)
 }

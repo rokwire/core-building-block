@@ -1774,7 +1774,9 @@ func (h AdminApisHandler) getProspectiveAccount(l *logs.Log, r *http.Request, cl
 		return l.HTTPResponseErrorAction(logutils.ActionGet, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}
 
-	data, err := json.Marshal(prospectiveAccount)
+	sada := accountsToDef(prospectiveAccount)
+
+	data, err := json.Marshal(sada)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeAccount, nil, err, http.StatusInternalServerError, false)
 	}
