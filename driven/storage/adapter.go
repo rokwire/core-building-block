@@ -1468,7 +1468,7 @@ func (sa *Adapter) FindAccounts(context TransactionContext, limit *int, offset *
 	return accounts, nil
 }
 
-// FindAccounts finds prospective accounts
+// FindProspectiveAccounts finds prospective accounts
 func (sa *Adapter) FindProspectiveAccounts() ([]model.Account, error) {
 	//find the prospective accounts
 	filter := bson.M{
