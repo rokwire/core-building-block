@@ -1497,7 +1497,50 @@ func (a *Auth) prepareRegistrationData(authType model.AuthType, identifier strin
 	}
 	///
 
+	if authType.Code == "illinois_oidc" {
+		readyPreferences = a.updateProspectiveToStudent(readyPreferences)
+	}
+
 	return &readyProfile, readyPreferences, nil
+}
+
+// updateProspectiveToStudent updates the "roles" field in preferences from "prospective" to "student"
+func (a *Auth) updateProspectiveToStudent(preferences map[string]interface{}) map[string]interface{} {
+	if preferences == nil {
+		return preferences
+	}
+
+	rolesRaw, ok := preferences["roles"]
+	if !ok {
+		return preferences
+	}
+
+	roles, ok := rolesRaw.([]interface{})
+	if !ok {
+		return preferences
+	}
+
+	updated := false
+	newRoles := make([]interface{}, 0, len(roles))
+	for _, r := range roles {
+		roleStr, ok := r.(string)
+		if !ok {
+			continue
+		}
+
+		if roleStr == "prospective" {
+			newRoles = append(newRoles, "student")
+			updated = true
+		} else {
+			newRoles = append(newRoles, roleStr)
+		}
+	}
+
+	if updated {
+		preferences["roles"] = newRoles
+	}
+
+	return preferences
 }
 
 func (a *Auth) prepareAccountAuthType(authType model.AuthType, identifier string, accountAuthTypeParams map[string]interface{},
