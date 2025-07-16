@@ -1768,6 +1768,20 @@ func getAdminScopes(claims *tokenauth.Claims) []authorization.Scope {
 	return adminScopes
 }
 
+func (h AdminApisHandler) getProspectiveAccount(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
+	prospectiveAccount, err := h.coreAPIs.Administration.AdmGetProspectiveAccounts()
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionGet, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
+	}
+
+	data, err := json.Marshal(prospectiveAccount)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeAccount, nil, err, http.StatusInternalServerError, false)
+	}
+
+	return l.HTTPResponseSuccessJSON(data)
+}
+
 // NewAdminApisHandler creates new admin rest Handler instance
 func NewAdminApisHandler(coreAPIs *core.APIs) AdminApisHandler {
 	return AdminApisHandler{coreAPIs: coreAPIs}

@@ -487,6 +487,10 @@ func (s *administrationImpl) AdmGetAccounts(limit int, offset int, appID string,
 	return s.app.admGetAccounts(limit, offset, appID, orgID, accountID, firstName, lastName, authType, authTypeIdentifier, anonymous, hasPermissions, permissions, roleIDs, groupIDs)
 }
 
+func (s *administrationImpl) AdmGetProspectiveAccounts() ([]model.Account, error) {
+	return s.app.admGetProspctiveAccounts()
+}
+
 func (s *administrationImpl) AdmGetAccount(cOrgID string, cAppID string, accountID string) (*model.Account, error) {
 	return s.app.admGetAccount(cOrgID, cAppID, accountID)
 }
