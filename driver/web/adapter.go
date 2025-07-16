@@ -223,7 +223,6 @@ func (we Adapter) Start() {
 	adminSubrouter.HandleFunc("/application/accounts/{id}/system-configs", we.wrapFunc(we.adminApisHandler.getAccountSystemConfigs, we.auth.admin.Permissions)).Methods("GET")
 	adminSubrouter.HandleFunc("/application/accounts/{id}/system-configs", we.wrapFunc(we.adminApisHandler.updateAccountSystemConfigs, we.auth.admin.Permissions)).Methods("PUT")
 	adminSubrouter.HandleFunc("/application/accounts/{id}/verified", we.wrapFunc(we.adminApisHandler.updateAccountVerified, we.auth.admin.Permissions)).Methods("PUT")
-
 	///
 
 	///enc ///
