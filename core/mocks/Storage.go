@@ -457,9 +457,9 @@ func (_m *Storage) FindAccountByIDV2(context storage.TransactionContext, cOrgID 
 	return r0, r1
 }
 
-// FindAccounts provides a mock function with given fields: context, limit, offset, appID, orgID, accountID, firstName, lastName, authType, authTypeIdentifier, anonymous, hasPermissions, permissions, roleIDs, groupIDs
-func (_m *Storage) FindAccounts(context storage.TransactionContext, limit *int, offset *int, appID string, orgID string, accountID *string, firstName *string, lastName *string, authType *string, authTypeIdentifier *string, anonymous *bool, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error) {
-	ret := _m.Called(context, limit, offset, appID, orgID, accountID, firstName, lastName, authType, authTypeIdentifier, anonymous, hasPermissions, permissions, roleIDs, groupIDs)
+// FindAccounts provides a mock function with given fields: context, limit, offset, appID, orgID, accountID, firstName, lastName, authType, authTypeIdentifier, anonymous, hasPermissions, permissions, roleIDs, groupIDs, userRole
+func (_m *Storage) FindAccounts(context storage.TransactionContext, limit *int, offset *int, appID string, orgID string, accountID *string, firstName *string, lastName *string, authType *string, authTypeIdentifier *string, anonymous *bool, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string, userRole *string) ([]model.Account, error) {
+	ret := _m.Called(context, limit, offset, appID, orgID, accountID, firstName, lastName, authType, authTypeIdentifier, anonymous, hasPermissions, permissions, roleIDs, groupIDs, userRole)
 
 	if len(ret) == 0 {
 		panic("no return value specified for FindAccounts")
@@ -467,19 +467,19 @@ func (_m *Storage) FindAccounts(context storage.TransactionContext, limit *int, 
 
 	var r0 []model.Account
 	var r1 error
-	if rf, ok := ret.Get(0).(func(storage.TransactionContext, *int, *int, string, string, *string, *string, *string, *string, *string, *bool, *bool, []string, []string, []string) ([]model.Account, error)); ok {
-		return rf(context, limit, offset, appID, orgID, accountID, firstName, lastName, authType, authTypeIdentifier, anonymous, hasPermissions, permissions, roleIDs, groupIDs)
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, *int, *int, string, string, *string, *string, *string, *string, *string, *bool, *bool, []string, []string, []string, *string) ([]model.Account, error)); ok {
+		return rf(context, limit, offset, appID, orgID, accountID, firstName, lastName, authType, authTypeIdentifier, anonymous, hasPermissions, permissions, roleIDs, groupIDs, userRole)
 	}
-	if rf, ok := ret.Get(0).(func(storage.TransactionContext, *int, *int, string, string, *string, *string, *string, *string, *string, *bool, *bool, []string, []string, []string) []model.Account); ok {
-		r0 = rf(context, limit, offset, appID, orgID, accountID, firstName, lastName, authType, authTypeIdentifier, anonymous, hasPermissions, permissions, roleIDs, groupIDs)
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, *int, *int, string, string, *string, *string, *string, *string, *string, *bool, *bool, []string, []string, []string, *string) []model.Account); ok {
+		r0 = rf(context, limit, offset, appID, orgID, accountID, firstName, lastName, authType, authTypeIdentifier, anonymous, hasPermissions, permissions, roleIDs, groupIDs, userRole)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]model.Account)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(storage.TransactionContext, *int, *int, string, string, *string, *string, *string, *string, *string, *bool, *bool, []string, []string, []string) error); ok {
-		r1 = rf(context, limit, offset, appID, orgID, accountID, firstName, lastName, authType, authTypeIdentifier, anonymous, hasPermissions, permissions, roleIDs, groupIDs)
+	if rf, ok := ret.Get(1).(func(storage.TransactionContext, *int, *int, string, string, *string, *string, *string, *string, *string, *bool, *bool, []string, []string, []string, *string) error); ok {
+		r1 = rf(context, limit, offset, appID, orgID, accountID, firstName, lastName, authType, authTypeIdentifier, anonymous, hasPermissions, permissions, roleIDs, groupIDs, userRole)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -1440,36 +1440,6 @@ func (_m *Storage) FindPermissionsByServiceIDs(serviceIDs []string) ([]model.Per
 
 	if rf, ok := ret.Get(1).(func([]string) error); ok {
 		r1 = rf(serviceIDs)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// FindProspectiveAccounts provides a mock function with no fields
-func (_m *Storage) FindProspectiveAccounts() ([]model.Account, error) {
-	ret := _m.Called()
-
-	if len(ret) == 0 {
-		panic("no return value specified for FindProspectiveAccounts")
-	}
-
-	var r0 []model.Account
-	var r1 error
-	if rf, ok := ret.Get(0).(func() ([]model.Account, error)); ok {
-		return rf()
-	}
-	if rf, ok := ret.Get(0).(func() []model.Account); ok {
-		r0 = rf()
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]model.Account)
-		}
-	}
-
-	if rf, ok := ret.Get(1).(func() error); ok {
-		r1 = rf()
 	} else {
 		r1 = ret.Error(1)
 	}
