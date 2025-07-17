@@ -1468,25 +1468,6 @@ func (sa *Adapter) FindAccounts(context TransactionContext, limit *int, offset *
 	return accounts, nil
 }
 
-// FindProspectiveAccounts finds prospective accounts
-func (sa *Adapter) FindProspectiveAccounts() ([]model.Account, error) {
-	//find the prospective accounts
-	filter := bson.M{
-		"org_apps_memberships.preferences.roles": "prospective",
-	}
-
-	var list []tenantAccount
-	var findOptions *options.FindOptions
-
-	err := sa.db.tenantsAccounts.FindWithContext(nil, filter, &list, findOptions)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
-	}
-
-	accounts := accountsFromStorage(list, nil, nil)
-	return accounts, nil
-}
-
 // FindPublicAccounts finds accounts and returns name and username
 func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, orgID string, limit *int, offset *int, firstNameOffset *string, lastNameOffset *string, idOffset *string, order string, search *string, firstName *string,
 	lastName *string, username *string, followingID *string, followerID *string, unstructuredProperties map[string]string, userID string, ids *[]string) ([]model.PublicAccount, map[string]int, *int64, error) {

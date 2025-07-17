@@ -175,7 +175,6 @@ func (we Adapter) Start() {
 	adminSubrouter.HandleFunc("/account/mfa", we.wrapFunc(we.adminApisHandler.addMFAType, we.auth.admin.Authenticated)).Methods("POST")
 	adminSubrouter.HandleFunc("/account/mfa", we.wrapFunc(we.adminApisHandler.removeMFAType, we.auth.admin.Authenticated)).Methods("DELETE")
 	adminSubrouter.HandleFunc("/account/username", we.wrapFunc(we.adminApisHandler.updateAccountUsername, we.auth.admin.User)).Methods("PUT")
-	adminSubrouter.HandleFunc("/account/prospective", we.wrapFunc(we.adminApisHandler.getProspectiveAccount, we.auth.admin.Permissions)).Methods("GET")
 
 	adminSubrouter.HandleFunc("/app-configs", we.wrapFunc(we.adminApisHandler.getAppConfigs, nil)).Methods("POST") //Requires API key in request
 	adminSubrouter.HandleFunc("/app-configs/organization", we.wrapFunc(we.adminApisHandler.getAppConfigsForOrganization, we.auth.admin.User)).Methods("POST")
