@@ -1371,7 +1371,7 @@ func (sa *Adapter) FindAccount(context TransactionContext, appOrgID string, auth
 
 // FindAccounts finds accounts
 func (sa *Adapter) FindAccounts(context TransactionContext, limit *int, offset *int, appID string, orgID string, accountID *string, firstName *string, lastName *string, authType *string,
-	authTypeIdentifier *string, anonymous *bool, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string) ([]model.Account, error) {
+	authTypeIdentifier *string, anonymous *bool, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string, userRole *string) ([]model.Account, error) {
 	//find app org id
 	appOrg, err := sa.getCachedApplicationOrganization(appID, orgID)
 	if err != nil {
@@ -1438,6 +1438,13 @@ func (sa *Adapter) FindAccounts(context TransactionContext, limit *int, offset *
 			filter = append(filter, primitive.E{Key: "org_apps_memberships.roles.0", Value: bson.M{"$exists": false}})
 			filter = append(filter, primitive.E{Key: "org_apps_memberships.groups.0", Value: bson.M{"$exists": false}})
 		}
+	}
+
+	if userRole != nil {
+		filter = append(filter, primitive.E{
+			Key:   "org_apps_memberships.preferences.roles",
+			Value: *userRole,
+		})
 	}
 
 	var list []tenantAccount
