@@ -88,5 +88,3 @@ p, update_app-configs, /core/admin/application/configs, (GET)|(POST), Update and
 p, update_app-configs, /core/admin/application/configs/*, (GET)|(PUT),
 p, delete_app-config, /core/admin/application/configs/*, (GET)|(DELETE), Delete app configs
 p, delete_app-config, /core/admin/application/configs, (GET),
-
-p, get_prospective, /core/admin/account/prospective, (GET),
