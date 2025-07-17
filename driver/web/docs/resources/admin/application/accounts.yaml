@@ -89,7 +89,7 @@ get:
       explode: false
       schema:
         type: string
-    - name: user_role
+    - name: user-role
       in: query
       description: The user role
       required: false
