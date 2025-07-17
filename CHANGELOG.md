@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 -  Provide requested support for Prospective Students [#783](https://github.com/rokwire/core-building-block/issues/783)
 
+## [1.54.0] - 2025-07-16
+### Changed 
+- Automatically switch from prospective to student [#784](https://github.com/rokwire/core-building-block/issues/784)
+
 ## [1.53.0] - 2025-07-07
 ### Changed 
 - Replace auth library and logging library with Building Block SDK [#765](https://github.com/rokwire/core-building-block/issues/765)
