@@ -2503,6 +2503,14 @@ paths:
           explode: false
           schema:
             type: string
+        - name: user_role
+          in: query
+          description: The user role
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
         - name: group-ids
           in: query
           description: A comma-separated list of group IDs
