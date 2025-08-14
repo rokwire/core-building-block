@@ -163,31 +163,31 @@ func (a *twilioPhoneAuthImpl) handlePhoneVerify(phone string, verificationCreds 
 	data := url.Values{}
 	data.Add("To", phone)
 	if len(verificationCreds.Code) > 0 {
-		a.auth.logger.Infof("checking verification for phone %s and code %s", utils.MaskString(phone, 2), utils.MaskString(verificationCreds.Code, 2))
+		a.auth.logger.Infof("twilioPhoneAuthImpl - checking verification for phone %s and code %s", utils.MaskString(phone, 2), utils.MaskString(verificationCreds.Code, 2))
 
 		// check verification
 		data.Add("Code", verificationCreds.Code)
 		err := a.checkVerification(phone, data, l)
 		if err != nil {
-			a.auth.logger.Errorf("error checking verification for phone %s and code %s - %s", utils.MaskString(phone, 2), utils.MaskString(verificationCreds.Code, 2), err)
+			a.auth.logger.Errorf("twilioPhoneAuthImpl -error checking verification for phone %s and code %s - %s", utils.MaskString(phone, 2), utils.MaskString(verificationCreds.Code, 2), err)
 			return "", err
 		}
 
-		a.auth.logger.Infof("verification successful for phone %s and code %s", utils.MaskString(phone, 2), utils.MaskString(verificationCreds.Code, 2))
+		a.auth.logger.Infof("twilioPhoneAuthImpl - verification successful for phone %s and code %s", utils.MaskString(phone, 2), utils.MaskString(verificationCreds.Code, 2))
 		return "verification successful", nil
 	}
 
 	// start verification
 	data.Add("Channel", "sms")
 
-	a.auth.logger.Infof("starting verification for phone %s", utils.MaskString(phone, 2))
+	a.auth.logger.Infof("twilioPhoneAuthImpl - starting verification for phone %s", utils.MaskString(phone, 2))
 	err := a.startVerification(phone, data, l)
 	if err != nil {
-		a.auth.logger.Errorf("error starting verification for phone %s - %s", utils.MaskString(phone, 2), err)
+		a.auth.logger.Errorf("twilioPhoneAuthImpl - error starting verification for phone %s - %s", utils.MaskString(phone, 2), err)
 		return "", err
 	}
 
-	a.auth.logger.Infof("verification code sent successfully for phone %s", utils.MaskString(phone, 2))
+	a.auth.logger.Infof("twilioPhoneAuthImpl - verification code sent successfully for phone %s", utils.MaskString(phone, 2))
 	return "verification code sent successfully", nil
 }
 
