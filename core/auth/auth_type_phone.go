@@ -165,7 +165,11 @@ func (a *twilioPhoneAuthImpl) handlePhoneVerify(phone string, verificationCreds 
 	if verificationCreds.Code != "" {
 		// check verification
 		data.Add("Code", verificationCreds.Code)
-		return "", a.checkVerification(phone, data, l)
+		err := a.checkVerification(phone, data, l)
+		if err != nil {
+			return "", err
+		}
+		return "verification successful", nil
 	}
 
 	// start verification
