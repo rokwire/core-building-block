@@ -162,7 +162,9 @@ func (a *twilioPhoneAuthImpl) handlePhoneVerify(phone string, verificationCreds 
 
 	data := url.Values{}
 	data.Add("To", phone)
-	if verificationCreds.Code != "" {
+	if len(verificationCreds.Code) > 0 {
+		//a.auth.logger.Infof("checking verification for phone %s code %s", phone, verificationCreds.Code)
+
 		// check verification
 		data.Add("Code", verificationCreds.Code)
 		err := a.checkVerification(phone, data, l)
@@ -175,12 +177,11 @@ func (a *twilioPhoneAuthImpl) handlePhoneVerify(phone string, verificationCreds 
 	// start verification
 	data.Add("Channel", "sms")
 
-	message := ""
 	err := a.startVerification(phone, data, l)
-	if err == nil {
-		message = "verification code sent successfully"
+	if err != nil {
+		return "", err
 	}
-	return message, err
+	return "verification code sent successfully", nil
 }
 
 func (a *twilioPhoneAuthImpl) startVerification(phone string, data url.Values, l *logs.Log) error {
