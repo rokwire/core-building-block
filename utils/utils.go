@@ -227,6 +227,27 @@ func GetPrintableString(v *string, defaultVal string) string {
 	return defaultVal
 }
 
+// MaskString masks a string with asterisks, keeping the last n characters visible
+// If n is 0, all characters are masked
+// If n > 0, the last n characters remain visible and the rest are masked with asterisks
+func MaskString(value string, n int) string {
+	if len(value) == 0 {
+		return value
+	}
+
+	if n == 0 {
+		return strings.Repeat("*", len(value))
+	}
+
+	if n >= len(value) {
+		return value
+	}
+
+	maskedPart := strings.Repeat("*", len(value)-n)
+	visiblePart := value[len(value)-n:]
+	return maskedPart + visiblePart
+}
+
 // GetMapEntryFromPath returns the data entry corresponding to path, a period-separated string
 func GetMapEntryFromPath(data map[string]interface{}, path string) interface{} {
 	if len(data) == 0 {
