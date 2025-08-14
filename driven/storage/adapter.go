@@ -4541,6 +4541,7 @@ func (sa *Adapter) getFilterForParams(params map[string]interface{}) bson.M {
 					if op == "any" {
 						if val != nil && reflect.TypeOf(val).Kind() == reflect.Slice {
 							list, listCheck := val.([]interface{})
+							complexMatch := []bson.M{}
 							if listCheck && len(list) > 0 {
 								if _, ok := list[0].(map[string]interface{}); ok {
 									for index := range list {
@@ -4548,10 +4549,11 @@ func (sa *Adapter) getFilterForParams(params map[string]interface{}) bson.M {
 										start, ok1 := checkRange["start"]
 										end, ok2 := checkRange["end"]
 										if ok1 && ok2 {
-											filter[k] = bson.M{"$elemMatch": bson.M{"$gte": start, "$lte": end}}
-											break
+											complexMatch = append(complexMatch, bson.M{k: bson.M{"$elemMatch": bson.M{"$gte": start, "$lte": end}}})
 										}
+
 									}
+									filter["$or"] = complexMatch
 								}
 							} else if intVals, ok := val.([]int64); ok {
 								filter[k] = bson.M{"$elemMatch": bson.M{"$in": intVals}}
