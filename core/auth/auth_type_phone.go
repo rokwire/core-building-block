@@ -260,10 +260,6 @@ func (a *twilioPhoneAuthImpl) checkVerification(phone string, data url.Values, l
 }
 
 func makeRequest(ctx context.Context, method string, pathPart string, data url.Values, user string, token string, logger *logs.Logger) ([]byte, error) {
-	if logger != nil {
-		logger.Infof("makeRequest: method=%s, pathPart=%s", method, pathPart)
-	}
-
 	client := &http.Client{}
 	rb := new(strings.Reader)
 	logAction := logutils.ActionSend
