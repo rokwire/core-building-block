@@ -4540,32 +4540,31 @@ func (sa *Adapter) getFilterForParams(params map[string]interface{}) bson.M {
 				if okOp && okVal {
 					if op == "any" {
 						if val != nil && reflect.TypeOf(val).Kind() == reflect.Slice {
-							list := reflect.ValueOf(val)
+							list, listCheck := val.([]interface{})
 							complexMatch := []bson.M{}
-							otherVals := []interface{}{}
-
-							for i := 0; i < list.Len(); i++ {
-								elem := list.Index(i).Interface()
-								switch v := elem.(type) {
-								case map[string]interface{}:
-									start, ok1 := v["start"]
-									end, ok2 := v["end"]
-									if ok1 && ok2 {
-										complexMatch = append(complexMatch, bson.M{k: bson.M{"$elemMatch": bson.M{"$gte": start, "$lte": end}}})
+							if listCheck && len(list) > 0 {
+								for index := range list {
+									switch v := list[index].(type) {
+									case map[string]interface{}:
+										checkRange := v
+										start, ok1 := checkRange["start"]
+										end, ok2 := checkRange["end"]
+										if ok1 && ok2 {
+											complexMatch = append(complexMatch, bson.M{k: bson.M{"$elemMatch": bson.M{"$gte": start, "$lte": end}}})
+										}
+									case string, int, int64, float64:
+										complexMatch = append(complexMatch, bson.M{k: bson.M{"$elemMatch": bson.M{"$eq": v}}})
 									}
-								case string, int, int64, float64:
-									otherVals = append(otherVals, v)
-								default:
-									otherVals = append(otherVals, v)
 								}
-							}
-
-							if len(complexMatch) > 0 {
 								filter["$or"] = complexMatch
+
+							} else if intVals, ok := val.([]int64); ok {
+								filter[k] = bson.M{"$elemMatch": bson.M{"$in": intVals}}
+							} else {
+								filter[k] = val
 							}
-							if len(otherVals) > 0 {
-								filter[k] = bson.M{"$elemMatch": bson.M{"$in": otherVals}}
-							}
+						} else if intVals, ok := val.([]int64); ok {
+							filter[k] = bson.M{"$elemMatch": bson.M{"$in": intVals}}
 						} else {
 							filter[k] = val
 						}
