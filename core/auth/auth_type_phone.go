@@ -20,7 +20,6 @@ import (
 	"core-building-block/utils"
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -201,7 +200,7 @@ func (a *twilioPhoneAuthImpl) startVerification(phone string, data url.Values, l
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	body, err := makeRequest(ctx, "POST", servicesPathPart+"/"+a.twilioServiceSID+"/"+verificationsPathPart, data, a.twilioAccountSID, a.twilioToken)
+	body, err := makeRequest(ctx, "POST", servicesPathPart+"/"+a.twilioServiceSID+"/"+verificationsPathPart, data, a.twilioAccountSID, a.twilioToken, a.auth.logger)
 	if err != nil {
 		a.auth.logger.Errorf("twilioPhoneAuthImpl - startVerification makeRequest error: %s", err)
 		return errors.WrapErrorAction(logutils.ActionSend, logutils.TypeRequest, &logutils.FieldArgs{"verification params": data}, err)
@@ -239,7 +238,7 @@ func (a *twilioPhoneAuthImpl) checkVerification(phone string, data url.Values, l
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	body, err := makeRequest(ctx, "POST", servicesPathPart+"/"+a.twilioServiceSID+"/"+verificationCheckPart, data, a.twilioAccountSID, a.twilioToken)
+	body, err := makeRequest(ctx, "POST", servicesPathPart+"/"+a.twilioServiceSID+"/"+verificationCheckPart, data, a.twilioAccountSID, a.twilioToken, a.auth.logger)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionSend, logutils.TypeRequest, nil, err)
 	}
@@ -260,8 +259,10 @@ func (a *twilioPhoneAuthImpl) checkVerification(phone string, data url.Values, l
 	return nil
 }
 
-func makeRequest(ctx context.Context, method string, pathPart string, data url.Values, user string, token string) ([]byte, error) {
-	fmt.Printf("makeRequest: method=%s, pathPart=%s, data=%v\n", method, pathPart, data)
+func makeRequest(ctx context.Context, method string, pathPart string, data url.Values, user string, token string, logger *logs.Logger) ([]byte, error) {
+	if logger != nil {
+		logger.Infof("makeRequest: method=%s, pathPart=%s", method, pathPart)
+	}
 
 	client := &http.Client{}
 	rb := new(strings.Reader)
@@ -269,17 +270,23 @@ func makeRequest(ctx context.Context, method string, pathPart string, data url.V
 
 	if data != nil && (method == "POST" || method == "PUT") {
 		rb = strings.NewReader(data.Encode())
-		fmt.Printf("makeRequest: POST/PUT body=%s\n", data.Encode())
+		if logger != nil {
+			logger.Infof("makeRequest: POST/PUT body length=%d", len(data.Encode()))
+		}
 	}
 	if method == "GET" && data != nil {
 		pathPart = pathPart + "?" + data.Encode()
 		logAction = logutils.ActionRead
-		fmt.Printf("makeRequest: GET with query params, final path=%s\n", pathPart)
+		if logger != nil {
+			logger.Infof("makeRequest: GET with query params, final path length=%d", len(pathPart))
+		}
 	}
 
 	req, err := http.NewRequest(method, pathPart, rb)
 	if err != nil {
-		fmt.Printf("makeRequest: NewRequest error=%v\n", err)
+		if logger != nil {
+			logger.Errorf("makeRequest: NewRequest error=%v", err)
+		}
 		return nil, errors.WrapErrorAction(logAction, logutils.TypeRequest, &logutils.FieldArgs{"path": pathPart}, err)
 	}
 
@@ -289,23 +296,33 @@ func makeRequest(ctx context.Context, method string, pathPart string, data url.V
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
-	fmt.Printf("makeRequest: sending request to %s\n", pathPart)
+	if logger != nil {
+		logger.Infof("makeRequest: sending request to URL length=%d", len(pathPart))
+	}
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Printf("makeRequest: client.Do error=%v\n", err)
+		if logger != nil {
+			logger.Errorf("makeRequest: client.Do error=%v", err)
+		}
 		return nil, errors.WrapErrorAction(logAction, logutils.TypeRequest, nil, err)
 	}
 
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		fmt.Printf("makeRequest: ReadAll error=%v\n", err)
+		if logger != nil {
+			logger.Errorf("makeRequest: ReadAll error=%v", err)
+		}
 		return nil, errors.WrapErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err)
 	}
 
-	fmt.Printf("makeRequest: response status=%d, body length=%d\n", resp.StatusCode, len(body))
+	if logger != nil {
+		logger.Infof("makeRequest: response status=%d, body length=%d", resp.StatusCode, len(body))
+	}
 	if resp.StatusCode != 200 && resp.StatusCode != 201 {
-		fmt.Printf("makeRequest: error response body=%s\n", string(body))
+		if logger != nil {
+			logger.Errorf("makeRequest: error response status=%d, body length=%d", resp.StatusCode, len(body))
+		}
 		return nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeResponse, &logutils.FieldArgs{"status_code": resp.StatusCode, "error": string(body)})
 	}
 	return body, nil
