@@ -20,7 +20,8 @@ import (
 	"core-building-block/utils"
 	"encoding/base64"
 	"encoding/json"
-	"io/ioutil"
+	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -152,11 +153,15 @@ func (a *twilioPhoneAuthImpl) checkCredentials(accountAuthType model.AccountAuth
 }
 
 func (a *twilioPhoneAuthImpl) handlePhoneVerify(phone string, verificationCreds twilioPhoneCreds, l *logs.Log) (string, error) {
+	a.auth.logger.Infof("twilioPhoneAuthImpl - handlePhoneVerify called for phone %s, code length: %d", utils.MaskString(phone, 2), len(verificationCreds.Code))
+
 	if a.twilioAccountSID == "" {
+		a.auth.logger.Errorf("twilioPhoneAuthImpl - missing twilioAccountSID")
 		return "", errors.ErrorData(logutils.StatusMissing, typeVerifyServiceID, nil)
 	}
 
 	if a.twilioToken == "" {
+		a.auth.logger.Errorf("twilioPhoneAuthImpl - missing twilioToken")
 		return "", errors.ErrorData(logutils.StatusMissing, typeVerifyServiceToken, nil)
 	}
 
@@ -192,29 +197,41 @@ func (a *twilioPhoneAuthImpl) handlePhoneVerify(phone string, verificationCreds 
 }
 
 func (a *twilioPhoneAuthImpl) startVerification(phone string, data url.Values, l *logs.Log) error {
+	a.auth.logger.Infof("twilioPhoneAuthImpl - startVerification called for phone %s", utils.MaskString(phone, 2))
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	body, err := makeRequest(ctx, "POST", servicesPathPart+"/"+a.twilioServiceSID+"/"+verificationsPathPart, data, a.twilioAccountSID, a.twilioToken)
 	if err != nil {
+		a.auth.logger.Errorf("twilioPhoneAuthImpl - startVerification makeRequest error: %s", err)
 		return errors.WrapErrorAction(logutils.ActionSend, logutils.TypeRequest, &logutils.FieldArgs{"verification params": data}, err)
 	}
+
+	a.auth.logger.Infof("twilioPhoneAuthImpl - startVerification got response body length: %d", len(body))
 
 	var verifyResult verifyPhoneResponse
 	err = json.Unmarshal(body, &verifyResult)
 	if err != nil {
+		a.auth.logger.Errorf("twilioPhoneAuthImpl - startVerification unmarshal error: %s", err)
 		return errors.WrapErrorAction(logutils.ActionUnmarshal, typeVerificationResponse, nil, err)
 	}
 
+	a.auth.logger.Infof("twilioPhoneAuthImpl - startVerification response: Status=%s, To=%s, Sid=%s", verifyResult.Status, utils.MaskString(verifyResult.To, 2), verifyResult.Sid)
+
 	if verifyResult.To != phone {
+		a.auth.logger.Errorf("twilioPhoneAuthImpl - startVerification phone mismatch: expected %s, got %s", utils.MaskString(phone, 2), utils.MaskString(verifyResult.To, 2))
 		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeString, &logutils.FieldArgs{"expected phone": phone, "actual phone": verifyResult.To})
 	}
 	if verifyResult.Status != "pending" {
+		a.auth.logger.Errorf("twilioPhoneAuthImpl - startVerification unexpected status: %s", verifyResult.Status)
 		return errors.ErrorData(logutils.StatusInvalid, typeVerificationStatus, &logutils.FieldArgs{"expected pending, actual:": verifyResult.Status})
 	}
 	if verifyResult.Sid == "" {
+		a.auth.logger.Errorf("twilioPhoneAuthImpl - startVerification missing SID")
 		return errors.ErrorData(logutils.StatusMissing, typeVerificationSID, nil)
 	}
 
+	a.auth.logger.Infof("twilioPhoneAuthImpl - startVerification completed successfully for phone %s", utils.MaskString(phone, 2))
 	return nil
 }
 
@@ -244,20 +261,25 @@ func (a *twilioPhoneAuthImpl) checkVerification(phone string, data url.Values, l
 }
 
 func makeRequest(ctx context.Context, method string, pathPart string, data url.Values, user string, token string) ([]byte, error) {
+	fmt.Printf("makeRequest: method=%s, pathPart=%s, data=%v\n", method, pathPart, data)
+
 	client := &http.Client{}
 	rb := new(strings.Reader)
 	logAction := logutils.ActionSend
 
 	if data != nil && (method == "POST" || method == "PUT") {
 		rb = strings.NewReader(data.Encode())
+		fmt.Printf("makeRequest: POST/PUT body=%s\n", data.Encode())
 	}
 	if method == "GET" && data != nil {
 		pathPart = pathPart + "?" + data.Encode()
 		logAction = logutils.ActionRead
+		fmt.Printf("makeRequest: GET with query params, final path=%s\n", pathPart)
 	}
 
 	req, err := http.NewRequest(method, pathPart, rb)
 	if err != nil {
+		fmt.Printf("makeRequest: NewRequest error=%v\n", err)
 		return nil, errors.WrapErrorAction(logAction, logutils.TypeRequest, &logutils.FieldArgs{"path": pathPart}, err)
 	}
 
@@ -267,17 +289,23 @@ func makeRequest(ctx context.Context, method string, pathPart string, data url.V
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
+	fmt.Printf("makeRequest: sending request to %s\n", pathPart)
 	resp, err := client.Do(req)
 	if err != nil {
+		fmt.Printf("makeRequest: client.Do error=%v\n", err)
 		return nil, errors.WrapErrorAction(logAction, logutils.TypeRequest, nil, err)
 	}
 
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
+		fmt.Printf("makeRequest: ReadAll error=%v\n", err)
 		return nil, errors.WrapErrorAction(logutils.ActionRead, logutils.TypeRequestBody, nil, err)
 	}
+
+	fmt.Printf("makeRequest: response status=%d, body length=%d\n", resp.StatusCode, len(body))
 	if resp.StatusCode != 200 && resp.StatusCode != 201 {
+		fmt.Printf("makeRequest: error response body=%s\n", string(body))
 		return nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeResponse, &logutils.FieldArgs{"status_code": resp.StatusCode, "error": string(body)})
 	}
 	return body, nil
