@@ -3682,6 +3682,59 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+  /admin/application/sessions:
+    get:
+      tags:
+        - Admin
+      summary: Get user account
+      description: |
+        Get the user account
+
+        **Auth:** Requires admin access token
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: user-role
+          in: query
+          description: user role
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
+        - name: start
+          in: query
+          description: 'The start time for filtering results, specified as a Unix timestamp in seconds'
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: integer
+            format: int64
+        - name: end
+          in: query
+          description: 'The end time for filtering results, specified as a Unix timestamp in seconds'
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Sessions'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   '/admin/application/roles/{id}':
     put:
       tags:
@@ -7371,6 +7424,25 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/LoginSession'
+    Sessions:
+      required:
+        - id
+      type: object
+      properties:
+        user_role:
+          type: string
+          nullable: true
+        first_name:
+          type: string
+          nullable: true
+        last_name:
+          type: string
+          nullable: true
+        external_ids:
+          type: object
+          nullable: true
+        last_login_date:
+          type: string
     _shared_req_Login:
       required:
         - auth_type

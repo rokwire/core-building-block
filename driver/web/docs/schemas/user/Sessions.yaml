@@ -1,0 +1,19 @@
+required:
+  - id
+type: object
+properties:
+  user_role:
+    type: string
+    nullable: true
+  first_name:
+    type: string
+    nullable: true  
+  last_name:
+    type: string
+    nullable: true  
+  external_ids:
+    type: object
+    nullable: true
+  last_login_date:
+    type: string
+ 
