@@ -145,9 +145,11 @@ func (a *twilioPhoneAuthImpl) checkCredentials(accountAuthType model.AccountAuth
 	// existing user
 	message, err := a.handlePhoneVerify(requestCreds.Phone, *requestCreds, l)
 	if err != nil {
+		a.auth.logger.Errorf("twilioPhoneAuthImpl - error handling phone verification for phone %s: %v", utils.MaskString(requestCreds.Phone, 2), err)
 		return "", err
 	}
 
+	a.auth.logger.Infof("twilioPhoneAuthImpl - phone verification handled successfully for phone %s and message %s", utils.MaskString(requestCreds.Phone, 2), message)
 	return message, nil
 }
 
@@ -178,7 +180,7 @@ func (a *twilioPhoneAuthImpl) handlePhoneVerify(phone string, verificationCreds 
 		}
 
 		a.auth.logger.Infof("twilioPhoneAuthImpl - verification successful for phone %s and code %s", utils.MaskString(phone, 2), utils.MaskString(verificationCreds.Code, 2))
-		return "verification successful", nil
+		return "", nil //message must be empty as this is what is expected!! arh..
 	}
 
 	// start verification
