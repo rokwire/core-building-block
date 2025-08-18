@@ -768,6 +768,7 @@ func (a *Auth) applyAnonymousAuthType(authType model.AuthType, creds string) (st
 func (a *Auth) applyAuthType(authType model.AuthType, appOrg model.ApplicationOrganization, creds string, params string, clientVersion *string, regProfile model.Profile,
 	privacy model.Privacy, regPreferences map[string]interface{}, username string, admin bool, l *logs.Log) (string, *model.AccountAuthType, []model.MFAType, map[string]string, error) {
 	a.logger.Infof("applyAuthType for %s", authType.Code)
+	a.logger.Infof("applyAuthType: start code=%s appOrgID=%s", authType.Code, appOrg.ID)
 
 	//auth type
 	authImpl, err := a.getAuthTypeImpl(authType)
@@ -780,6 +781,7 @@ func (a *Auth) applyAuthType(authType model.AuthType, appOrg model.ApplicationOr
 	if err != nil {
 		return "", nil, nil, nil, errors.WrapErrorAction(logutils.ActionGet, "user identifier", nil, err)
 	}
+	a.logger.Infof("applyAuthType: derived userIdentifier='%s' (creds_len=%d)", userIdentifier, len(creds))
 
 	if userIdentifier != "" {
 		if authType.Code == AuthTypeTwilioPhone && regProfile.Phone == "" {
@@ -797,17 +799,24 @@ func (a *Auth) applyAuthType(authType model.AuthType, appOrg model.ApplicationOr
 		return "", nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err) //TODO add args..
 	}
 	a.setLogContext(account, l)
+	if account == nil {
+		a.logger.Infof("applyAuthType: account not found for authTypeID=%s identifier='%s' appOrgID=%s", authType.ID, userIdentifier, appOrg.ID)
+	} else {
+		a.logger.Infof("applyAuthType: account found id=%s hasAppMembership=%t", account.ID, account.HasAppMembership(appOrg.ID))
+	}
 
 	//check if it is "sign-in" or "org-sign-up" or "app-sign-up"
 	operation, err := a.determineOperationInternal(account, appOrg.ID, params, l)
 	if err != nil {
 		return "", nil, nil, nil, errors.WrapErrorAction(logutils.ActionVerify, "determine operation internal", nil, err)
 	}
+	a.logger.Infof("applyAuthType: determined operation=%s", operation)
 	switch operation {
 	case "sign-in":
 		a.logger.Info("applyAuthType - sign-in operation")
-
+		// will compute canSignInV2 below and log it
 		canSignIn := a.canSignInV2(account, authType.ID, userIdentifier, appOrg.ID)
+		a.logger.Infof("applyAuthType: sign-in canSignInV2=%t (authTypeID=%s identifier='%s' appOrgID=%s)", canSignIn, authType.ID, userIdentifier, appOrg.ID)
 		if !canSignIn {
 			return "", nil, nil, nil, errors.Newf("cannot sign in %s %s", authType.ID, userIdentifier)
 		}
@@ -858,18 +867,24 @@ func (a *Auth) applySignIn(authImpl authType, authType model.AuthType, account *
 		return "", nil, nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, nil).SetStatus(utils.ErrorStatusNotFound)
 	}
 
+	a.logger.Infof("applySignIn: start authType=%s identifier='%s' (creds_len=%d)", authType.Code, userIdentifier, len(creds))
+
 	//find account auth type
 	accountAuthType, err := a.findAccountAuthType(account, &authType, userIdentifier)
 	if accountAuthType == nil {
 		return "", nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountAuthType, nil, err)
 	}
 
+	a.logger.Infof("applySignIn: found accountAuthType id=%s unverified=%t linked=%t", accountAuthType.ID, accountAuthType.Unverified, accountAuthType.Linked)
+
 	if accountAuthType.Unverified && accountAuthType.Linked {
 		return "", nil, nil, nil, errors.ErrorData(logutils.StatusInvalid, model.TypeAccountAuthType, &logutils.FieldArgs{"verified": false, "linked": true})
 	}
 
+	a.logger.Infof("applySignIn: calling checkCredentials use_credentials=%t has_credential=%t", authType.UseCredentials, accountAuthType.Credential != nil)
 	var message string
 	message, err = a.checkCredentials(authImpl, authType, accountAuthType, creds, l)
+	a.logger.Infof("applySignIn: checkCredentials returned message_len=%d err_nil=%t", len(message), err == nil)
 	if err != nil {
 		return "", nil, nil, nil, errors.WrapErrorAction(logutils.ActionVerify, model.TypeCredential, nil, err)
 	}
@@ -905,24 +920,31 @@ func (a *Auth) checkCredentialVerified(authImpl authType, accountAuthType *model
 }
 
 func (a *Auth) checkCredentials(authImpl authType, authType model.AuthType, accountAuthType *model.AccountAuthType, creds string, l *logs.Log) (string, error) {
-	a.logger.Infof("checkCredentials for %s", authType.Code)
+	a.logger.Infof("checkCredentials: authType=%s use_credentials=%t has_credential=%t creds_len=%d", authType.Code, authType.UseCredentials, accountAuthType.Credential != nil, len(creds))
 
 	//check is verified
 	if authType.UseCredentials {
+		a.logger.Infof("checkCredentials: verifying credential gate (only if use_credentials)")
 		err := a.checkCredentialVerified(authImpl, accountAuthType, l)
 		if err != nil {
+			a.logger.Warnf("checkCredentials: verification gate failed accountAuthType=%s err=%v", accountAuthType.ID, err)
 			return "", err
+		} else {
+			a.logger.Infof("checkCredentials: verification gate passed accountAuthType=%s", accountAuthType.ID)
 		}
 	}
 
+	a.logger.Infof("checkCredentials: invoking adapter checkCredentials accountAuthType=%s", accountAuthType.ID)
 	//check the credentials
 	message, err := authImpl.checkCredentials(*accountAuthType, creds, l)
+	a.logger.Infof("checkCredentials: adapter result accountAuthType=%s message_len=%d err_nil=%t", accountAuthType.ID, len(message), err == nil)
 	if err != nil {
 		return message, errors.WrapErrorAction(logutils.ActionValidate, model.TypeCredential, nil, err)
 	}
 
 	//if sign in was completed successfully, set auth type to verified
 	if message == "" && accountAuthType.Unverified {
+		a.logger.Infof("checkCredentials: marking verified accountAuthType=%s (was unverified)", accountAuthType.ID)
 		accountAuthType.SetUnverified(false)
 		err := a.storage.UpdateAccountAuthType(*accountAuthType)
 		if err != nil {
