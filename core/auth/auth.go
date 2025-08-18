@@ -245,6 +245,8 @@ func (a *Auth) mockExternalLogin() (*model.ExternalSystemUser, map[string]interf
 
 func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, clientVersion *string,
 	regProfile model.Profile, privacy model.Privacy, regPreferences map[string]interface{}, username string, admin bool, l *logs.Log) (*model.AccountAuthType, map[string]interface{}, []model.MFAType, map[string]string, error) {
+	a.logger.Infof("applyExternalAuthType for %s", authType.Code)
+
 	var accountAuthType *model.AccountAuthType
 	var mfaTypes []model.MFAType
 	var externalIDs map[string]string
@@ -765,6 +767,7 @@ func (a *Auth) applyAnonymousAuthType(authType model.AuthType, creds string) (st
 
 func (a *Auth) applyAuthType(authType model.AuthType, appOrg model.ApplicationOrganization, creds string, params string, clientVersion *string, regProfile model.Profile,
 	privacy model.Privacy, regPreferences map[string]interface{}, username string, admin bool, l *logs.Log) (string, *model.AccountAuthType, []model.MFAType, map[string]string, error) {
+	a.logger.Infof("applyAuthType for %s", authType.Code)
 
 	//auth type
 	authImpl, err := a.getAuthTypeImpl(authType)
@@ -802,6 +805,8 @@ func (a *Auth) applyAuthType(authType model.AuthType, appOrg model.ApplicationOr
 	}
 	switch operation {
 	case "sign-in":
+		a.logger.Info("applyAuthType - sign-in operation")
+
 		canSignIn := a.canSignInV2(account, authType.ID, userIdentifier, appOrg.ID)
 		if !canSignIn {
 			return "", nil, nil, nil, errors.Newf("cannot sign in %s %s", authType.ID, userIdentifier)
@@ -810,10 +815,15 @@ func (a *Auth) applyAuthType(authType model.AuthType, appOrg model.ApplicationOr
 		///apply sign in
 		message, accountAuthType, mfaTypes, externalIDs, err := a.applySignIn(authImpl, authType, account, userIdentifier, creds, l)
 		if err != nil {
+			a.logger.Errorf("applyAuthType - error applying sign-in operation: %v", err)
 			return "", nil, nil, nil, err
 		}
+
+		a.logger.Info("applyAuthType - successfully applied sign-in operation")
 		return message, accountAuthType, mfaTypes, externalIDs, nil
 	case "app-sign-up":
+		a.logger.Info("applyAuthType - app-sign-up operation")
+
 		if admin {
 			return "", nil, nil, nil, errors.ErrorData(logutils.StatusInvalid, "sign up", &logutils.FieldArgs{"identifier": userIdentifier,
 				"auth_type": authType.Code, "app_org_id": appOrg.ID, "admin": true}).SetStatus(utils.ErrorStatusNotAllowed)
@@ -824,6 +834,8 @@ func (a *Auth) applyAuthType(authType model.AuthType, appOrg model.ApplicationOr
 		//Also this would trigger client updates as well for supporting this
 		return "", nil, nil, nil, errors.New("app-sign-up operation is not supported")
 	case "org-sign-up":
+		a.logger.Info("applyAuthType - org-sign-up operation")
+
 		if admin {
 			return "", nil, nil, nil, errors.ErrorData(logutils.StatusInvalid, "sign up", &logutils.FieldArgs{"identifier": userIdentifier,
 				"auth_type": authType.Code, "app_org_id": appOrg.ID, "admin": true}).SetStatus(utils.ErrorStatusNotAllowed)
@@ -893,6 +905,8 @@ func (a *Auth) checkCredentialVerified(authImpl authType, accountAuthType *model
 }
 
 func (a *Auth) checkCredentials(authImpl authType, authType model.AuthType, accountAuthType *model.AccountAuthType, creds string, l *logs.Log) (string, error) {
+	a.logger.Infof("checkCredentials for %s", authType.Code)
+
 	//check is verified
 	if authType.UseCredentials {
 		err := a.checkCredentialVerified(authImpl, accountAuthType, l)
