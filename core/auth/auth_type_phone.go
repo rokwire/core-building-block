@@ -145,6 +145,7 @@ func (a *twilioPhoneAuthImpl) checkCredentials(accountAuthType model.AccountAuth
 	// existing user
 	message, err := a.handlePhoneVerify(requestCreds.Phone, *requestCreds, l)
 	if err != nil {
+		a.auth.logger.Errorf("twilioPhoneAuthImpl - error handling phone verification for phone %s: %v", utils.MaskString(requestCreds.Phone, 2), err)
 		return "", err
 	}
 
