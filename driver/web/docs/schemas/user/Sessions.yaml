@@ -11,6 +11,9 @@ properties:
   last_name:
     type: string
     nullable: true  
+  email:
+    type: string
+    nullable: true    
   external_ids:
     type: object
     nullable: true

@@ -700,6 +700,7 @@ type ServiceScope struct {
 
 // Sessions defines model for Sessions.
 type Sessions struct {
+	Email         *string                 `json:"email"`
 	ExternalIds   *map[string]interface{} `json:"external_ids"`
 	FirstName     *string                 `json:"first_name"`
 	LastLoginDate *string                 `json:"last_login_date,omitempty"`
