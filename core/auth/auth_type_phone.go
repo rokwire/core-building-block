@@ -149,6 +149,7 @@ func (a *twilioPhoneAuthImpl) checkCredentials(accountAuthType model.AccountAuth
 		return "", err
 	}
 
+	a.auth.logger.Infof("twilioPhoneAuthImpl - phone verification handled successfully for phone %s and message %s", utils.MaskString(requestCreds.Phone, 2), message)
 	return message, nil
 }
 
