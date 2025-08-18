@@ -929,9 +929,9 @@ func (a *Auth) checkCredentials(authImpl authType, authType model.AuthType, acco
 		if err != nil {
 			a.logger.Warnf("checkCredentials: verification gate failed accountAuthType=%s err=%v", accountAuthType.ID, err)
 			return "", err
-		} else {
-			a.logger.Infof("checkCredentials: verification gate passed accountAuthType=%s", accountAuthType.ID)
 		}
+		a.logger.Infof("checkCredentials: verification gate passed accountAuthType=%s", accountAuthType.ID)
+
 	}
 
 	a.logger.Infof("checkCredentials: invoking adapter checkCredentials accountAuthType=%s", accountAuthType.ID)
