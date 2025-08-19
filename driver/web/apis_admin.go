@@ -758,6 +758,39 @@ func (h AdminApisHandler) getApplicationLoginSessions(l *logs.Log, r *http.Reque
 	return l.HTTPResponseSuccessJSON(data)
 }
 
+func (h AdminApisHandler) getSessions(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
+	userRoleFromQuery := r.URL.Query().Get("user-role")
+	var userRole *string
+	if len(userRoleFromQuery) > 0 {
+		userRole = &userRoleFromQuery
+	}
+
+	startTimeFromQuery := r.URL.Query().Get("start")
+	var startTime *string
+	if len(startTimeFromQuery) > 0 {
+		startTime = &startTimeFromQuery
+	}
+
+	endTimeFromQuery := r.URL.Query().Get("start")
+	var endTime *string
+	if len(endTimeFromQuery) > 0 {
+		endTime = &endTimeFromQuery
+	}
+
+	getSessions, err := h.coreAPIs.Administration.AdmGetSessions(userRole, startTime, endTime)
+	if err != nil {
+		return l.HTTPResponseErrorAction("error finding login sessions", model.TypeLoginSession, nil, err, http.StatusInternalServerError, true)
+	}
+
+	//loginSessions := loginSessionsToDef(getLoginSessions)
+
+	data, err := json.Marshal(getSessions)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeLoginSession, nil, err, http.StatusInternalServerError, false)
+	}
+	return l.HTTPResponseSuccessJSON(data)
+}
+
 func (h AdminApisHandler) getApplicationConfigs(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
 	appTypeIdentifier := r.URL.Query().Get("app_type_id")
 	if appTypeIdentifier == "" {

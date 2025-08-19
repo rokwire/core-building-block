@@ -111,6 +111,16 @@ type LoginSession struct {
 	DateCreated time.Time
 }
 
+// Sessions represents login session
+type Sessions struct {
+	UserRole      *string
+	FirstName     *string
+	LastName      *string
+	Email         *string
+	LastLoginDate string
+	ExternalIDs   *map[string]string
+}
+
 // IsExpired says if the sessions is expired
 func (ls LoginSession) IsExpired() bool {
 	loginsSessionsSetting := ls.AppOrg.LoginsSessionsSetting
