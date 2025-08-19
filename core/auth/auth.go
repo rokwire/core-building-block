@@ -781,7 +781,6 @@ func (a *Auth) applyAuthType(authType model.AuthType, appOrg model.ApplicationOr
 	if err != nil {
 		return "", nil, nil, nil, errors.WrapErrorAction(logutils.ActionGet, "user identifier", nil, err)
 	}
-	a.logger.Infof("applyAuthType: derived userIdentifier='%s' (creds_len=%d)", userIdentifier, len(creds))
 
 	if userIdentifier != "" {
 		if authType.Code == AuthTypeTwilioPhone && regProfile.Phone == "" {
@@ -816,7 +815,6 @@ func (a *Auth) applyAuthType(authType model.AuthType, appOrg model.ApplicationOr
 		a.logger.Info("applyAuthType - sign-in operation")
 		// will compute canSignInV2 below and log it
 		canSignIn := a.canSignInV2(account, authType.ID, userIdentifier, appOrg.ID)
-		a.logger.Infof("applyAuthType: sign-in canSignInV2=%t (authTypeID=%s identifier='%s' appOrgID=%s)", canSignIn, authType.ID, userIdentifier, appOrg.ID)
 		if !canSignIn {
 			return "", nil, nil, nil, errors.Newf("cannot sign in %s %s", authType.ID, userIdentifier)
 		}
@@ -867,8 +865,6 @@ func (a *Auth) applySignIn(authImpl authType, authType model.AuthType, account *
 		return "", nil, nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, nil).SetStatus(utils.ErrorStatusNotFound)
 	}
 
-	a.logger.Infof("applySignIn: start authType=%s identifier='%s' (creds_len=%d)", authType.Code, userIdentifier, len(creds))
-
 	//find account auth type
 	accountAuthType, err := a.findAccountAuthType(account, &authType, userIdentifier)
 	if accountAuthType == nil {
@@ -883,15 +879,11 @@ func (a *Auth) applySignIn(authImpl authType, authType model.AuthType, account *
 
 	a.logger.Infof("applySignIn: calling checkCredentials use_credentials=%t has_credential=%t", authType.UseCredentials, accountAuthType.Credential != nil)
 	var message string
-<<<<<<< Updated upstream
 	message, err = a.checkCredentials(authImpl, authType, accountAuthType, creds, l)
-	a.logger.Infof("applySignIn: checkCredentials returned message_len=%d err_nil=%t", len(message), err == nil)
-=======
-	/*message, err = a.checkCredentials(authImpl, authType, accountAuthType, creds, l)
->>>>>>> Stashed changes
 	if err != nil {
 		return "", nil, nil, nil, errors.WrapErrorAction(logutils.ActionVerify, model.TypeCredential, nil, err)
-	}*/
+	}
+	a.logger.Infof("applySignIn: checkCredentials returned message_len=%d err_nil=%t", len(message), err == nil)
 
 	return message, accountAuthType, account.GetVerifiedMFATypes(), account.ExternalIDs, nil
 }
