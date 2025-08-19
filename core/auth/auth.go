@@ -884,6 +884,9 @@ func (a *Auth) applySignIn(authImpl authType, authType model.AuthType, account *
 	a.logger.Infof("applySignIn: calling checkCredentials use_credentials=%t has_credential=%t", authType.UseCredentials, accountAuthType.Credential != nil)
 	var message string
 	message, err = a.checkCredentials(authImpl, authType, accountAuthType, creds, l)
+	if err != nil {
+		return "", nil, nil, nil, errors.WrapErrorAction(logutils.ActionVerify, model.TypeCredential, nil, err)
+	}
 	a.logger.Infof("applySignIn: checkCredentials returned message_len=%d err_nil=%t", len(message), err == nil)
 
 	return message, accountAuthType, account.GetVerifiedMFATypes(), account.ExternalIDs, nil
