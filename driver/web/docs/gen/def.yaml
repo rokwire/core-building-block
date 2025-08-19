@@ -3720,6 +3720,14 @@ paths:
           schema:
             type: integer
             format: int64
+        - name: anonymous
+          in: query
+          description: anonymous
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: boolean
       responses:
         '200':
           description: Success

@@ -700,6 +700,7 @@ type ServiceScope struct {
 
 // Sessions defines model for Sessions.
 type Sessions struct {
+	Anonymous     *bool                   `json:"anonymous"`
 	Email         *string                 `json:"email"`
 	ExternalIds   *map[string]interface{} `json:"external_ids"`
 	FirstName     *string                 `json:"first_name"`
@@ -1384,6 +1385,9 @@ type GetAdminApplicationSessionsParams struct {
 
 	// End The end time for filtering results, specified as a Unix timestamp in seconds
 	End *int64 `form:"end,omitempty" json:"end,omitempty"`
+
+	// Anonymous anonymous
+	Anonymous *bool `form:"anonymous,omitempty" json:"anonymous,omitempty"`
 }
 
 // GetAdminAuthAppTokenParams defines parameters for GetAdminAuthAppToken.
