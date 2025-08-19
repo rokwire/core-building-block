@@ -1170,7 +1170,8 @@ func (app *application) admGetApplicationLoginSessions(appID string, orgID strin
 	return loginSessions, nil
 }
 
-func (app *application) admGetSessions(userRole *string, startTime *string, endTime *string) ([]model.Sessions, error) {
+func (app *application) admGetSessions(userRole *string, startTime *string, endTime *string, anonymous *bool) ([]model.Sessions, error) {
+
 	return nil, nil
 }
 

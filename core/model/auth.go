@@ -119,6 +119,7 @@ type Sessions struct {
 	Email         *string
 	LastLoginDate string
 	ExternalIDs   *map[string]string
+	Anonymous     *bool
 }
 
 // IsExpired says if the sessions is expired

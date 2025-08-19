@@ -777,7 +777,14 @@ func (h AdminApisHandler) getSessions(l *logs.Log, r *http.Request, claims *toke
 		endTime = &endTimeFromQuery
 	}
 
-	getSessions, err := h.coreAPIs.Administration.AdmGetSessions(userRole, startTime, endTime)
+	anonymousFromQuery := r.URL.Query().Get("anonymous")
+	var anonymous *bool
+	if len(anonymousFromQuery) > 0 {
+		result, _ := strconv.ParseBool(anonymousFromQuery)
+		anonymous = &result
+	}
+
+	getSessions, err := h.coreAPIs.Administration.AdmGetSessions(userRole, startTime, endTime, anonymous)
 	if err != nil {
 		return l.HTTPResponseErrorAction("error finding login sessions", model.TypeLoginSession, nil, err, http.StatusInternalServerError, true)
 	}

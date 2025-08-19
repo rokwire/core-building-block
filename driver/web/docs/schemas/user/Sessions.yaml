@@ -13,6 +13,9 @@ properties:
     nullable: true  
   email:
     type: string
+    nullable: true   
+  anonymous:
+    type: boolean
     nullable: true    
   external_ids:
     type: object
