@@ -1078,6 +1078,97 @@ func (sa *Adapter) FindLoginSessionsByParams(appID string, orgID string, session
 	return loginSessions, nil
 }
 
+func (sa *Adapter) FindSessions(accountIDs []string, startTime *string, endTime *string, anonymous *bool) ([]model.LoginSession, error) {
+	filter := bson.D{}
+
+	if len(accountIDs) > 0 {
+		filter = append(filter, bson.E{Key: "account_id", Value: bson.M{"$in": accountIDs}})
+	}
+
+	timeRange := bson.M{}
+	parseRFC3339 := func(s string) (*time.Time, error) {
+		t, err := time.Parse(time.RFC3339, s)
+		if err != nil {
+			return nil, err
+		}
+		return &t, nil
+	}
+	if startTime != nil && *startTime != "" {
+		t, err := parseRFC3339(*startTime)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, nil, err)
+		}
+		timeRange["$gte"] = *t
+	}
+	if endTime != nil && *endTime != "" {
+		t, err := parseRFC3339(*endTime)
+		if err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, nil, err)
+		}
+		timeRange["$lte"] = *t
+	}
+	if len(timeRange) > 0 {
+		filter = append(filter, bson.E{Key: "created_at", Value: timeRange})
+	}
+
+	// anonymous
+	if anonymous != nil {
+		filter = append(filter, bson.E{Key: "anonymous", Value: *anonymous})
+	}
+
+	var sessions []loginSession
+	findOpts := options.Find()
+	findOpts.SetSort(bson.D{{Key: "created_at", Value: -1}})
+	err := sa.db.loginsSessions.Find(filter, &sessions, findOpts)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, nil, err)
+	}
+
+	if len(sessions) == 0 {
+		//no data
+		return make([]model.LoginSession, 0), nil
+	}
+
+	loginSessions := make([]model.LoginSession, len(sessions))
+	for i, ls := range sessions {
+		loginSession, err := sa.buildLoginSession(nil, &ls)
+		if err != nil {
+			return nil, errors.WrapErrorAction("building", model.TypeLoginSession, nil, err)
+		}
+		loginSessions[i] = *loginSession
+	}
+	return loginSessions, nil
+}
+
+func (sa *Adapter) FindAccountByRoleAndTime(accountIDs []string, userRole *string) ([]model.Account, error) {
+	filter := bson.D{}
+
+	if userRole != nil {
+		filter = append(filter, bson.E{Key: "user_role", Value: *userRole})
+	}
+	if len(accountIDs) > 0 {
+		filter = append(filter, bson.E{Key: "_id", Value: bson.M{"$in": accountIDs}})
+	}
+
+	var accountResult []tenantAccount
+	err := sa.db.tenantsAccounts.Find(filter, &accountResult, nil)
+	if err != nil {
+		return nil, nil
+	}
+	if len(accountResult) > 1 {
+		sa.logger.WarnWithFields("duplicate username", logutils.Fields{"number": len(accountResult)})
+	}
+
+	//all memberships applications organizations - from cache
+	allAppsOrgs, err := sa.getCachedApplicationOrganizations()
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeApplicationOrganization, nil, err)
+	}
+
+	accounts := accountsFromStorage(accountResult, nil, allAppsOrgs)
+	return accounts, nil
+}
+
 // FindLoginSession finds a login session
 func (sa *Adapter) FindLoginSession(refreshToken string) (*model.LoginSession, error) {
 	//find loggin session
