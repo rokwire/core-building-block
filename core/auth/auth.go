@@ -781,7 +781,6 @@ func (a *Auth) applyAuthType(authType model.AuthType, appOrg model.ApplicationOr
 	if err != nil {
 		return "", nil, nil, nil, errors.WrapErrorAction(logutils.ActionGet, "user identifier", nil, err)
 	}
-	a.logger.Infof("applyAuthType: derived userIdentifier='%s' (creds_len=%d)", userIdentifier, len(creds))
 
 	if userIdentifier != "" {
 		if authType.Code == AuthTypeTwilioPhone && regProfile.Phone == "" {
@@ -816,7 +815,6 @@ func (a *Auth) applyAuthType(authType model.AuthType, appOrg model.ApplicationOr
 		a.logger.Info("applyAuthType - sign-in operation")
 		// will compute canSignInV2 below and log it
 		canSignIn := a.canSignInV2(account, authType.ID, userIdentifier, appOrg.ID)
-		a.logger.Infof("applyAuthType: sign-in canSignInV2=%t (authTypeID=%s identifier='%s' appOrgID=%s)", canSignIn, authType.ID, userIdentifier, appOrg.ID)
 		if !canSignIn {
 			return "", nil, nil, nil, errors.Newf("cannot sign in %s %s", authType.ID, userIdentifier)
 		}
@@ -866,8 +864,6 @@ func (a *Auth) applySignIn(authImpl authType, authType model.AuthType, account *
 	if account == nil {
 		return "", nil, nil, nil, errors.ErrorData(logutils.StatusMissing, model.TypeAccount, nil).SetStatus(utils.ErrorStatusNotFound)
 	}
-
-	a.logger.Infof("applySignIn: start authType=%s identifier='%s' (creds_len=%d)", authType.Code, userIdentifier, len(creds))
 
 	//find account auth type
 	accountAuthType, err := a.findAccountAuthType(account, &authType, userIdentifier)
