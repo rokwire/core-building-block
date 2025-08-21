@@ -183,7 +183,7 @@ type Storage interface {
 	FindAccountsByUsername(context storage.TransactionContext, appOrg *model.ApplicationOrganization, username string) ([]model.Account, error)
 	FindDeletedOrgAppMemberships(appID string, orgID string, startTime *time.Time) ([]model.DeletedOrgAppMembership, error)
 	SaveAccount(context storage.TransactionContext, account *model.Account) error
-
+	FindJoinedSessions(userRole *string, startTime *string, endTime *string, anonymous *bool) ([]model.Sessions, error)
 	UpdateAccountPreferences(context storage.TransactionContext, cOrgID string, cAppID string, accountID string, preferences map[string]interface{}) error
 	UpdateAccountSystemConfigs(context storage.TransactionContext, accountID string, configs map[string]interface{}) error
 	InsertAccountPermissions(context storage.TransactionContext, accountID string, appOrgID string, permissions []model.Permission) error

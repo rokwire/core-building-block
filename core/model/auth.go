@@ -117,7 +117,7 @@ type Sessions struct {
 	FirstName     *string
 	LastName      *string
 	Email         *string
-	LastLoginDate string
+	LastLoginDate time.Time
 	ExternalIDs   *map[string]string
 	Anonymous     *bool
 }

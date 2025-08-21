@@ -1078,14 +1078,10 @@ func (sa *Adapter) FindLoginSessionsByParams(appID string, orgID string, session
 	return loginSessions, nil
 }
 
-func (sa *Adapter) FindSessions(accountIDs []string, startTime *string, endTime *string, anonymous *bool) ([]model.LoginSession, error) {
-	filter := bson.D{}
+// FindJoinedSessions returns joined account-session rows
+func (sa *Adapter) FindJoinedSessions(userRole *string, startTime *string, endTime *string, anonymous *bool) ([]model.Sessions, error) {
 
-	if len(accountIDs) > 0 {
-		filter = append(filter, bson.E{Key: "account_id", Value: bson.M{"$in": accountIDs}})
-	}
-
-	timeRange := bson.M{}
+	// --- parse optional time range ---
 	parseRFC3339 := func(s string) (*time.Time, error) {
 		t, err := time.Parse(time.RFC3339, s)
 		if err != nil {
@@ -1093,80 +1089,168 @@ func (sa *Adapter) FindSessions(accountIDs []string, startTime *string, endTime 
 		}
 		return &t, nil
 	}
+	dateRange := bson.M{}
 	if startTime != nil && *startTime != "" {
 		t, err := parseRFC3339(*startTime)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, nil, err)
 		}
-		timeRange["$gte"] = *t
+		dateRange["$gte"] = *t
 	}
 	if endTime != nil && *endTime != "" {
 		t, err := parseRFC3339(*endTime)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, nil, err)
 		}
-		timeRange["$lte"] = *t
-	}
-	if len(timeRange) > 0 {
-		filter = append(filter, bson.E{Key: "created_at", Value: timeRange})
+		dateRange["$lte"] = *t
 	}
 
-	// anonymous
-	if anonymous != nil {
-		filter = append(filter, bson.E{Key: "anonymous", Value: *anonymous})
+	pipeline := []bson.D{}
+
+	// If userRole provided, filter accounts that have that role in ANY membership's preferences
+	if userRole != nil && *userRole != "" {
+		pipeline = append(pipeline, bson.D{{"$match", bson.D{
+			{"org_apps_memberships.preferences.roles", *userRole},
+		}}})
 	}
 
-	var sessions []loginSession
-	findOpts := options.Find()
-	findOpts.SetSort(bson.D{{Key: "created_at", Value: -1}})
-	err := sa.db.loginsSessions.Find(filter, &sessions, findOpts)
-	if err != nil {
+	// Project minimal account fields + compute membership_ids = all membership IDs
+	pipeline = append(pipeline,
+		bson.D{{"$project", bson.D{
+			{"org_id", 1},
+			{"last_login_date", 1},
+			{"external_ids", 1},
+			{"profile.first_name", 1},
+			{"profile.last_name", 1},
+			{"profile.email", 1},
+			{"org_apps_memberships", bson.D{{"$ifNull", bson.A{"$org_apps_memberships", bson.A{}}}}},
+			{"membership_ids", bson.D{{"$map", bson.D{
+				{"input", bson.D{{"$ifNull", bson.A{"$org_apps_memberships", bson.A{}}}}},
+				{"as", "m"},
+				{"in", "$$m.id"},
+			}}}},
+		}}},
+
+		// $lookup into the actual collection name: logins_sessions
+		bson.D{{"$lookup", bson.D{
+			{"from", "logins_sessions"},
+			{"let", bson.D{
+				{"orgId", "$org_id"},
+				{"membershipIds", "$membership_ids"},
+			}},
+			{"pipeline", func() []bson.D {
+				lp := []bson.D{
+					{{"$match", bson.D{
+						{"$expr", bson.D{{"$and", bson.A{
+							bson.D{{"$eq", bson.A{"$org_id", "$$orgId"}}},
+							bson.D{{"$in", bson.A{"$identifier", "$$membershipIds"}}},
+						}}}},
+					}}},
+				}
+				if len(dateRange) > 0 {
+					lp = append(lp, bson.D{{"$match", bson.D{{"date_created", dateRange}}}})
+				}
+				if anonymous != nil {
+					lp = append(lp, bson.D{{"$match", bson.D{{"anonymous", *anonymous}}}})
+				}
+				lp = append(lp, bson.D{{"$project", bson.D{
+					{"_id", 0},
+					{"identifier", 1},
+					{"anonymous", 1},
+					{"date_created", 1},
+				}}})
+				return lp
+			}()},
+			{"as", "sessions"},
+		}}},
+
+		// keep only accounts that have at least one matched session
+		bson.D{{"$match", bson.D{{"sessions.0", bson.D{{"$exists", true}}}}}},
+		// flatten to one row per session
+		bson.D{{"$unwind", "$sessions"}},
+
+		// compute role from the membership that owns THIS session.identifier (preferences.roles[0])
+		bson.D{{"$addFields", bson.D{
+			{"role_from_mem", bson.D{{"$let", bson.D{
+				{"vars", bson.D{
+					{"matchedMem", bson.D{{"$arrayElemAt", bson.A{
+						bson.D{{"$filter", bson.D{
+							{"input", "$org_apps_memberships"},
+							{"as", "m"},
+							{"cond", bson.D{{"$eq", bson.A{"$$m.id", "$sessions.identifier"}}}},
+						}}},
+						0,
+					}}}},
+				}},
+				{"in", bson.D{{"$arrayElemAt", bson.A{"$$matchedMem.preferences.roles", 0}}}},
+			}}}},
+		}}},
+
+		// final shape
+		bson.D{{"$project", bson.D{
+			{"role_from_mem", 1},
+			{"first_name", "$profile.first_name"},
+			{"last_name", "$profile.last_name"},
+			{"email", "$profile.email"},
+			{"last_login_date", "$last_login_date"},
+			{"external_ids", "$external_ids"},
+			{"anonymous", "$sessions.anonymous"},
+			{"session_created_at", "$sessions.date_created"},
+		}}},
+	)
+
+	// run aggregation
+	type row struct {
+		RoleFromMem    *string           `bson:"role_from_mem"`
+		FirstName      *string           `bson:"first_name"`
+		LastName       *string           `bson:"last_name"`
+		Email          *string           `bson:"email"`
+		LastLoginDate  *time.Time        `bson:"last_login_date"`
+		ExternalIDs    map[string]string `bson:"external_ids"`
+		Anonymous      *bool             `bson:"anonymous"`
+		SessionCreated *time.Time        `bson:"session_created_at"`
+	}
+	var rows []row
+
+	if err := sa.db.tenantsAccounts.Aggregate(pipeline, &rows, nil); err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, nil, err)
 	}
-
-	if len(sessions) == 0 {
-		//no data
-		return make([]model.LoginSession, 0), nil
+	if len(rows) == 0 {
+		return []model.Sessions{}, nil
 	}
 
-	loginSessions := make([]model.LoginSession, len(sessions))
-	for i, ls := range sessions {
-		loginSession, err := sa.buildLoginSession(nil, &ls)
-		if err != nil {
-			return nil, errors.WrapErrorAction("building", model.TypeLoginSession, nil, err)
+	// map to output; if role_from_mem is nil but userRole was provided, fall back to userRole
+	out := make([]model.Sessions, 0, len(rows))
+	for _, r := range rows {
+		var lastLogin time.Time
+		if r.LastLoginDate != nil && !r.LastLoginDate.IsZero() {
+			lastLogin = *r.LastLoginDate
+		} else if r.SessionCreated != nil {
+			lastLogin = *r.SessionCreated
 		}
-		loginSessions[i] = *loginSession
-	}
-	return loginSessions, nil
-}
 
-func (sa *Adapter) FindAccountByRoleAndTime(accountIDs []string, userRole *string) ([]model.Account, error) {
-	filter := bson.D{}
+		var extPtr *map[string]string
+		if r.ExternalIDs != nil {
+			tmp := r.ExternalIDs
+			extPtr = &tmp
+		}
 
-	if userRole != nil {
-		filter = append(filter, bson.E{Key: "user_role", Value: *userRole})
-	}
-	if len(accountIDs) > 0 {
-		filter = append(filter, bson.E{Key: "_id", Value: bson.M{"$in": accountIDs}})
-	}
+		role := r.RoleFromMem
+		if role == nil && userRole != nil && *userRole != "" {
+			role = userRole
+		}
 
-	var accountResult []tenantAccount
-	err := sa.db.tenantsAccounts.Find(filter, &accountResult, nil)
-	if err != nil {
-		return nil, nil
+		out = append(out, model.Sessions{
+			UserRole:      role,
+			FirstName:     r.FirstName,
+			LastName:      r.LastName,
+			Email:         r.Email,
+			LastLoginDate: lastLogin,
+			ExternalIDs:   extPtr,
+			Anonymous:     r.Anonymous,
+		})
 	}
-	if len(accountResult) > 1 {
-		sa.logger.WarnWithFields("duplicate username", logutils.Fields{"number": len(accountResult)})
-	}
-
-	//all memberships applications organizations - from cache
-	allAppsOrgs, err := sa.getCachedApplicationOrganizations()
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionLoadCache, model.TypeApplicationOrganization, nil, err)
-	}
-
-	accounts := accountsFromStorage(accountResult, nil, allAppsOrgs)
-	return accounts, nil
+	return out, nil
 }
 
 // FindLoginSession finds a login session

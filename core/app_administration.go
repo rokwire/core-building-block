@@ -1171,8 +1171,12 @@ func (app *application) admGetApplicationLoginSessions(appID string, orgID strin
 }
 
 func (app *application) admGetSessions(userRole *string, startTime *string, endTime *string, anonymous *bool) ([]model.Sessions, error) {
+	sessions, err := app.storage.FindJoinedSessions(userRole, startTime, endTime, anonymous)
+	if err != nil {
+		return nil, nil
+	}
 
-	return nil, nil
+	return sessions, nil
 }
 
 func (app *application) admDeleteApplicationLoginSession(appID string, orgID string, currentAccountID string, identifier string, sessionID string, l *logs.Log) error {
