@@ -796,11 +796,6 @@ func (a *Auth) applyAuthType(authType model.AuthType, appOrg model.ApplicationOr
 		return "", nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err) //TODO add args..
 	}
 	a.setLogContext(account, l)
-	if account == nil {
-		a.logger.Infof("applyAuthType: account not found for authTypeID=%s identifier='%s' appOrgID=%s", authType.ID, userIdentifier, appOrg.ID)
-	} else {
-		a.logger.Infof("applyAuthType: account found id=%s hasAppMembership=%t", account.ID, account.HasAppMembership(appOrg.ID))
-	}
 
 	//check if it is "sign-in" or "org-sign-up" or "app-sign-up"
 	operation, err := a.determineOperationInternal(account, appOrg.ID, params, l)
@@ -808,9 +803,9 @@ func (a *Auth) applyAuthType(authType model.AuthType, appOrg model.ApplicationOr
 		return "", nil, nil, nil, errors.WrapErrorAction(logutils.ActionVerify, "determine operation internal", nil, err)
 	}
 	a.logger.Infof("applyAuthType: determined operation=%s", operation)
+
 	switch operation {
 	case "sign-in":
-		a.logger.Info("applyAuthType - sign-in operation")
 		// will compute canSignInV2 below and log it
 		canSignIn := a.canSignInV2(account, authType.ID, userIdentifier, appOrg.ID)
 		if !canSignIn {
@@ -824,11 +819,8 @@ func (a *Auth) applyAuthType(authType model.AuthType, appOrg model.ApplicationOr
 			return "", nil, nil, nil, err
 		}
 
-		a.logger.Info("applyAuthType - successfully applied sign-in operation")
 		return message, accountAuthType, mfaTypes, externalIDs, nil
 	case "app-sign-up":
-		a.logger.Info("applyAuthType - app-sign-up operation")
-
 		if admin {
 			return "", nil, nil, nil, errors.ErrorData(logutils.StatusInvalid, "sign up", &logutils.FieldArgs{"identifier": userIdentifier,
 				"auth_type": authType.Code, "app_org_id": appOrg.ID, "admin": true}).SetStatus(utils.ErrorStatusNotAllowed)
@@ -839,8 +831,6 @@ func (a *Auth) applyAuthType(authType model.AuthType, appOrg model.ApplicationOr
 		//Also this would trigger client updates as well for supporting this
 		return "", nil, nil, nil, errors.New("app-sign-up operation is not supported")
 	case "org-sign-up":
-		a.logger.Info("applyAuthType - org-sign-up operation")
-
 		if admin {
 			return "", nil, nil, nil, errors.ErrorData(logutils.StatusInvalid, "sign up", &logutils.FieldArgs{"identifier": userIdentifier,
 				"auth_type": authType.Code, "app_org_id": appOrg.ID, "admin": true}).SetStatus(utils.ErrorStatusNotAllowed)
