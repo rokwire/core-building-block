@@ -536,7 +536,7 @@ func (s *administrationImpl) AdmGetApplicationLoginSessions(appID string, orgID 
 	return s.app.admGetApplicationLoginSessions(appID, orgID, identifier, accountAuthTypeIdentifier, appTypeID, appTypeIdentifier, anonymous, deviceID, ipAddress)
 }
 
-func (s *administrationImpl) AdmGetSessions(userRole *string, startTime *string, endTime *string, anonymous *bool) ([]model.Sessions, error) {
+func (s *administrationImpl) AdmGetSessions(userRole *string, startTime *time.Time, endTime *time.Time, anonymous *bool) ([]model.Sessions, error) {
 	return s.app.admGetSessions(userRole, startTime, endTime, anonymous)
 }
 

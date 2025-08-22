@@ -1,9 +1,9 @@
 get:
   tags:
   - Admin
-  summary: Get user account
+  summary: Get sessions
   description: |
-    Get the user account
+    Get sessions
 
     **Auth:** Requires admin access token
   security:
@@ -45,7 +45,7 @@ get:
         type: boolean
   responses:
     200:
-      description: Success
+      description: Successful operation
       content:
         application/json:
           schema:

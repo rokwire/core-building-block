@@ -100,7 +100,7 @@ type Administration interface {
 
 	AdmGetApplicationLoginSessions(appID string, orgID string, identifier *string, accountAuthTypeIdentifier *string,
 		appTypeID *string, appTypeIdentifier *string, anonymous *bool, deviceID *string, ipAddress *string) ([]model.LoginSession, error)
-	AdmGetSessions(userRole *string, starTime *string, endTime *string, anonymous *bool) ([]model.Sessions, error)
+	AdmGetSessions(userRole *string, starTime *time.Time, endTime *time.Time, anonymous *bool) ([]model.Sessions, error)
 	AdmDeleteApplicationLoginSession(appID string, orgID string, currentAccountID string, identifier string, sessionID string, l *logs.Log) error
 
 	AdmGetApplicationAccountDevices(appID string, orgID string, accountID string, l *logs.Log) ([]model.Device, error)
@@ -183,7 +183,7 @@ type Storage interface {
 	FindAccountsByUsername(context storage.TransactionContext, appOrg *model.ApplicationOrganization, username string) ([]model.Account, error)
 	FindDeletedOrgAppMemberships(appID string, orgID string, startTime *time.Time) ([]model.DeletedOrgAppMembership, error)
 	SaveAccount(context storage.TransactionContext, account *model.Account) error
-	FindJoinedSessions(userRole *string, startTime *string, endTime *string, anonymous *bool) ([]model.Sessions, error)
+	FindJoinedSessions(userRole *string, startTime *time.Time, endTime *time.Time, anonymous *bool) ([]model.Sessions, error)
 	UpdateAccountPreferences(context storage.TransactionContext, cOrgID string, cAppID string, accountID string, preferences map[string]interface{}) error
 	UpdateAccountSystemConfigs(context storage.TransactionContext, accountID string, configs map[string]interface{}) error
 	InsertAccountPermissions(context storage.TransactionContext, accountID string, appOrgID string, permissions []model.Permission) error

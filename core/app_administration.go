@@ -1170,7 +1170,7 @@ func (app *application) admGetApplicationLoginSessions(appID string, orgID strin
 	return loginSessions, nil
 }
 
-func (app *application) admGetSessions(userRole *string, startTime *string, endTime *string, anonymous *bool) ([]model.Sessions, error) {
+func (app *application) admGetSessions(userRole *string, startTime *time.Time, endTime *time.Time, anonymous *bool) ([]model.Sessions, error) {
 	sessions, err := app.storage.FindJoinedSessions(userRole, startTime, endTime, anonymous)
 	if err != nil {
 		return nil, nil

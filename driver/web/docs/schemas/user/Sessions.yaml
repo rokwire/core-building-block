@@ -1,5 +1,3 @@
-required:
-  - id
 type: object
 properties:
   user_role:

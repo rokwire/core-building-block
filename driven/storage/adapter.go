@@ -1078,130 +1078,228 @@ func (sa *Adapter) FindLoginSessionsByParams(appID string, orgID string, session
 	return loginSessions, nil
 }
 
-// FindJoinedSessions returns joined account-session rows
-func (sa *Adapter) FindJoinedSessions(userRole *string, startTime *string, endTime *string, anonymous *bool) ([]model.Sessions, error) {
-
-	// --- parse optional time range ---
-	parseRFC3339 := func(s string) (*time.Time, error) {
-		t, err := time.Parse(time.RFC3339, s)
-		if err != nil {
-			return nil, err
-		}
-		return &t, nil
+// FindJoinedSessions returns joined account-session rows (FULL OUTER JOIN).
+func (sa *Adapter) FindJoinedSessions(userRole *string, startTime *time.Time, endTime *time.Time, anonymous *bool) ([]model.Sessions, error) {
+	// ----- sessions-side filters -----
+	dateRange := bson.D{}
+	if startTime != nil {
+		dateRange = append(dateRange, bson.E{Key: "$gte", Value: startTime.UTC()})
 	}
-	dateRange := bson.M{}
-	if startTime != nil && *startTime != "" {
-		t, err := parseRFC3339(*startTime)
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, nil, err)
-		}
-		dateRange["$gte"] = *t
-	}
-	if endTime != nil && *endTime != "" {
-		t, err := parseRFC3339(*endTime)
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, nil, err)
-		}
-		dateRange["$lte"] = *t
+	if endTime != nil {
+		dateRange = append(dateRange, bson.E{Key: "$lte", Value: endTime.UTC()})
 	}
 
-	pipeline := []bson.D{}
+	var pipeline mongo.Pipeline
+	if len(dateRange) > 0 {
+		pipeline = append(pipeline, bson.D{
+			{Key: "$match", Value: bson.D{{Key: "date_created", Value: dateRange}}},
+		})
+	}
+	if anonymous != nil {
+		pipeline = append(pipeline, bson.D{
+			{Key: "$match", Value: bson.D{{Key: "anonymous", Value: *anonymous}}},
+		})
+	}
 
-	// If userRole provided, filter accounts that have that role in ANY membership's preferences
+	// ----- LEFT BRANCH: logins_sessions ⟕ orgs_accounts -----
+	lookupA := mongo.Pipeline{
+		// match account on same org and account._id == session.identifier
+		bson.D{{Key: "$match", Value: bson.D{
+			{Key: "$expr", Value: bson.D{{Key: "$and", Value: bson.A{
+				bson.D{{Key: "$eq", Value: bson.A{"$org_id", "$$orgId"}}},
+				bson.D{{Key: "$eq", Value: bson.A{"$_id", "$$identifier"}}},
+			}}}},
+		}}},
+		// keep only what we need
+		bson.D{{Key: "$project", Value: bson.D{
+			{Key: "org_id", Value: 1},
+			{Key: "last_login_date", Value: 1},
+			{Key: "external_ids", Value: 1},
+			{Key: "profile.first_name", Value: 1},
+			{Key: "profile.last_name", Value: 1},
+			{Key: "profile.email", Value: 1},
+			{Key: "auth_types", Value: 1},
+			{Key: "org_apps_memberships.preferences.roles", Value: 1},
+		}}},
+	}
 	if userRole != nil && *userRole != "" {
-		pipeline = append(pipeline, bson.D{{"$match", bson.D{
-			{"org_apps_memberships.preferences.roles", *userRole},
+		lookupA = append(lookupA, bson.D{{Key: "$match", Value: bson.D{
+			{Key: "org_apps_memberships.preferences.roles", Value: *userRole},
 		}}})
 	}
 
-	// Project minimal account fields + compute membership_ids = all membership IDs
-	pipeline = append(pipeline,
-		bson.D{{"$project", bson.D{
-			{"org_id", 1},
-			{"last_login_date", 1},
-			{"external_ids", 1},
-			{"profile.first_name", 1},
-			{"profile.last_name", 1},
-			{"profile.email", 1},
-			{"org_apps_memberships", bson.D{{"$ifNull", bson.A{"$org_apps_memberships", bson.A{}}}}},
-			{"membership_ids", bson.D{{"$map", bson.D{
-				{"input", bson.D{{"$ifNull", bson.A{"$org_apps_memberships", bson.A{}}}}},
-				{"as", "m"},
-				{"in", "$$m.id"},
-			}}}},
-		}}},
-
-		// $lookup into the actual collection name: logins_sessions
-		bson.D{{"$lookup", bson.D{
-			{"from", "logins_sessions"},
-			{"let", bson.D{
-				{"orgId", "$org_id"},
-				{"membershipIds", "$membership_ids"},
-			}},
-			{"pipeline", func() []bson.D {
-				lp := []bson.D{
-					{{"$match", bson.D{
-						{"$expr", bson.D{{"$and", bson.A{
-							bson.D{{"$eq", bson.A{"$org_id", "$$orgId"}}},
-							bson.D{{"$in", bson.A{"$identifier", "$$membershipIds"}}},
+	// Email coalesce (LEFT rows): account.profile → session.account_auth_type_identifier → account.auth_types[email]
+	emailCoalesceLeft := bson.D{{Key: "$let", Value: bson.D{
+		{Key: "vars", Value: bson.D{
+			{Key: "accEmail", Value: bson.D{{Key: "$ifNull", Value: bson.A{"$account.profile.email", ""}}}},
+			{Key: "sessEmail", Value: bson.D{{Key: "$ifNull", Value: bson.A{"$account_auth_type_identifier", ""}}}},
+			{Key: "authEmail", Value: bson.D{{Key: "$let", Value: bson.D{
+				{Key: "vars", Value: bson.D{
+					{Key: "emails", Value: bson.D{{Key: "$map", Value: bson.D{
+						{Key: "input", Value: bson.D{{Key: "$filter", Value: bson.D{
+							{Key: "input", Value: bson.D{{Key: "$ifNull", Value: bson.A{"$account.auth_types", bson.A{}}}}},
+							{Key: "as", Value: "a"},
+							{Key: "cond", Value: bson.D{{Key: "$eq", Value: bson.A{"$$a.auth_type_code", "email"}}}},
 						}}}},
-					}}},
-				}
-				if len(dateRange) > 0 {
-					lp = append(lp, bson.D{{"$match", bson.D{{"date_created", dateRange}}}})
-				}
-				if anonymous != nil {
-					lp = append(lp, bson.D{{"$match", bson.D{{"anonymous", *anonymous}}}})
-				}
-				lp = append(lp, bson.D{{"$project", bson.D{
-					{"_id", 0},
-					{"identifier", 1},
-					{"anonymous", 1},
-					{"date_created", 1},
-				}}})
-				return lp
-			}()},
-			{"as", "sessions"},
-		}}},
-
-		// keep only accounts that have at least one matched session
-		bson.D{{"$match", bson.D{{"sessions.0", bson.D{{"$exists", true}}}}}},
-		// flatten to one row per session
-		bson.D{{"$unwind", "$sessions"}},
-
-		// compute role from the membership that owns THIS session.identifier (preferences.roles[0])
-		bson.D{{"$addFields", bson.D{
-			{"role_from_mem", bson.D{{"$let", bson.D{
-				{"vars", bson.D{
-					{"matchedMem", bson.D{{"$arrayElemAt", bson.A{
-						bson.D{{"$filter", bson.D{
-							{"input", "$org_apps_memberships"},
-							{"as", "m"},
-							{"cond", bson.D{{"$eq", bson.A{"$$m.id", "$sessions.identifier"}}}},
-						}}},
-						0,
+						{Key: "as", Value: "e"},
+						{Key: "in", Value: "$$e.identifier"},
 					}}}},
 				}},
-				{"in", bson.D{{"$arrayElemAt", bson.A{"$$matchedMem.preferences.roles", 0}}}},
+				{Key: "in", Value: bson.D{{Key: "$ifNull", Value: bson.A{
+					bson.D{{Key: "$arrayElemAt", Value: bson.A{"$$emails", 0}}},
+					"",
+				}}}},
 			}}}},
-		}}},
+		}},
+		{Key: "in", Value: bson.D{{Key: "$cond", Value: bson.A{
+			bson.D{{Key: "$gt", Value: bson.A{bson.D{{Key: "$strLenCP", Value: "$$accEmail"}}, 0}}},
+			"$$accEmail",
+			bson.D{{Key: "$cond", Value: bson.A{
+				bson.D{{Key: "$gt", Value: bson.A{bson.D{{Key: "$strLenCP", Value: "$$sessEmail"}}, 0}}},
+				"$$sessEmail",
+				"$$authEmail",
+			}}},
+		}}}},
+	}}}
 
-		// final shape
-		bson.D{{"$project", bson.D{
-			{"role_from_mem", 1},
-			{"first_name", "$profile.first_name"},
-			{"last_name", "$profile.last_name"},
-			{"email", "$profile.email"},
-			{"last_login_date", "$last_login_date"},
-			{"external_ids", "$external_ids"},
-			{"anonymous", "$sessions.anonymous"},
-			{"session_created_at", "$sessions.date_created"},
+	pipeline = append(
+		pipeline,
+		bson.D{{Key: "$lookup", Value: bson.D{
+			{Key: "from", Value: "orgs_accounts"},
+			{Key: "let", Value: bson.D{
+				{Key: "orgId", Value: "$org_id"},
+				{Key: "identifier", Value: "$identifier"},
+			}},
+			{Key: "pipeline", Value: lookupA},
+			{Key: "as", Value: "account"},
+		}}},
+		bson.D{{Key: "$unwind", Value: bson.D{
+			{Key: "path", Value: "$account"},
+			{Key: "preserveNullAndEmptyArrays", Value: true},
 		}}},
 	)
 
-	// run aggregation
+	if userRole != nil && *userRole != "" {
+		pipeline = append(pipeline, bson.D{{Key: "$match", Value: bson.D{
+			{Key: "account", Value: bson.D{{Key: "$ne", Value: nil}}},
+		}}})
+	}
+
+	pipeline = append(pipeline, bson.D{{Key: "$project", Value: bson.D{
+		{Key: "roles_arrays", Value: "$account.org_apps_memberships.preferences.roles"},
+		{Key: "first_name", Value: "$account.profile.first_name"},
+		{Key: "last_name", Value: "$account.profile.last_name"},
+		{Key: "email", Value: emailCoalesceLeft},
+		{Key: "last_login_date", Value: "$account.last_login_date"},
+		{Key: "external_ids", Value: "$account.external_ids"},
+		{Key: "anonymous", Value: bson.D{{Key: "$ifNull", Value: bson.A{"$anonymous", false}}}},
+		{Key: "session_created_at", Value: "$date_created"},
+	}}})
+
+	// ----- RIGHT BRANCH: orgs_accounts ⟕ logins_sessions (right-only rows) -----
+	var rightBranch mongo.Pipeline
+	if userRole != nil && *userRole != "" {
+		rightBranch = append(rightBranch, bson.D{{Key: "$match", Value: bson.D{
+			{Key: "org_apps_memberships.preferences.roles", Value: *userRole},
+		}}})
+	}
+
+	lookupB := mongo.Pipeline{
+		// sessions where session.identifier == account._id and same org
+		bson.D{{Key: "$match", Value: bson.D{
+			{Key: "$expr", Value: bson.D{{Key: "$and", Value: bson.A{
+				bson.D{{Key: "$eq", Value: bson.A{"$org_id", "$$orgId"}}},
+				bson.D{{Key: "$eq", Value: bson.A{"$identifier", "$$accountId"}}},
+			}}}},
+		}}},
+	}
+	if len(dateRange) > 0 {
+		lookupB = append(lookupB, bson.D{{Key: "$match", Value: bson.D{
+			{Key: "date_created", Value: dateRange},
+		}}})
+	}
+	if anonymous != nil {
+		lookupB = append(lookupB, bson.D{{Key: "$match", Value: bson.D{
+			{Key: "anonymous", Value: *anonymous},
+		}}})
+	}
+
+	// Email coalesce (RIGHT rows): account.profile → account.auth_types[email]
+	emailCoalesceRight := bson.D{{Key: "$let", Value: bson.D{
+		{Key: "vars", Value: bson.D{
+			{Key: "accEmail", Value: bson.D{{Key: "$ifNull", Value: bson.A{"$profile.email", ""}}}},
+			{Key: "authEmail", Value: bson.D{{Key: "$let", Value: bson.D{
+				{Key: "vars", Value: bson.D{
+					{Key: "emails", Value: bson.D{{Key: "$map", Value: bson.D{
+						{Key: "input", Value: bson.D{{Key: "$filter", Value: bson.D{
+							{Key: "input", Value: bson.D{{Key: "$ifNull", Value: bson.A{"$auth_types", bson.A{}}}}},
+							{Key: "as", Value: "a"},
+							{Key: "cond", Value: bson.D{{Key: "$eq", Value: bson.A{"$$a.auth_type_code", "email"}}}},
+						}}}},
+						{Key: "as", Value: "e"},
+						{Key: "in", Value: "$$e.identifier"},
+					}}}},
+				}},
+				{Key: "in", Value: bson.D{{Key: "$ifNull", Value: bson.A{
+					bson.D{{Key: "$arrayElemAt", Value: bson.A{"$$emails", 0}}},
+					"",
+				}}}},
+			}}}},
+		}},
+		{Key: "in", Value: bson.D{{Key: "$cond", Value: bson.A{
+			bson.D{{Key: "$gt", Value: bson.A{bson.D{{Key: "$strLenCP", Value: "$$accEmail"}}, 0}}},
+			"$$accEmail",
+			"$$authEmail",
+		}}}},
+	}}}
+
+	rightBranch = append(
+		rightBranch,
+		bson.D{{Key: "$lookup", Value: bson.D{
+			{Key: "from", Value: "logins_sessions"},
+			{Key: "let", Value: bson.D{
+				{Key: "orgId", Value: "$org_id"},
+				{Key: "accountId", Value: "$_id"},
+			}},
+			{Key: "pipeline", Value: lookupB},
+			{Key: "as", Value: "sessions"},
+		}}},
+		bson.D{{Key: "$match", Value: bson.D{
+			{Key: "$expr", Value: bson.D{{Key: "$eq", Value: bson.A{
+				bson.D{{Key: "$size", Value: "$sessions"}},
+				0,
+			}}}},
+		}}},
+		bson.D{{Key: "$project", Value: bson.D{
+			{Key: "roles_arrays", Value: "$org_apps_memberships.preferences.roles"},
+			{Key: "first_name", Value: "$profile.first_name"},
+			{Key: "last_name", Value: "$profile.last_name"},
+			{Key: "email", Value: emailCoalesceRight},
+			{Key: "last_login_date", Value: "$last_login_date"},
+			{Key: "external_ids", Value: "$external_ids"},
+			{Key: "anonymous", Value: bson.D{{Key: "$literal", Value: false}}},        // boolean, not null
+			{Key: "session_created_at", Value: bson.D{{Key: "$literal", Value: nil}}}, // explicit null
+		}}},
+	)
+
+	// FULL OUTER JOIN: add right-only rows
+	pipeline = append(pipeline, bson.D{{Key: "$unionWith", Value: bson.D{
+		{Key: "coll", Value: "orgs_accounts"},
+		{Key: "pipeline", Value: rightBranch},
+	}}})
+
+	// Ensure anonymous is boolean on all rows (belt-and-suspenders)
+	pipeline = append(pipeline, bson.D{{Key: "$addFields", Value: bson.D{
+		{Key: "anonymous", Value: bson.D{{Key: "$cond", Value: bson.A{
+			bson.D{{Key: "$eq", Value: bson.A{bson.D{{Key: "$type", Value: "$anonymous"}}, "bool"}}},
+			"$anonymous",
+			false,
+		}}}},
+	}}})
+
+	// ----- RUN -----
 	type row struct {
-		RoleFromMem    *string           `bson:"role_from_mem"`
+		RolesArrays    [][]string        `bson:"roles_arrays"`
 		FirstName      *string           `bson:"first_name"`
 		LastName       *string           `bson:"last_name"`
 		Email          *string           `bson:"email"`
@@ -1210,23 +1308,40 @@ func (sa *Adapter) FindJoinedSessions(userRole *string, startTime *string, endTi
 		Anonymous      *bool             `bson:"anonymous"`
 		SessionCreated *time.Time        `bson:"session_created_at"`
 	}
-	var rows []row
 
-	if err := sa.db.tenantsAccounts.Aggregate(pipeline, &rows, nil); err != nil {
+	var rows []row
+	if err := sa.db.loginsSessions.Aggregate(pipeline, &rows, nil); err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, nil, err)
 	}
-	if len(rows) == 0 {
-		return []model.Sessions{}, nil
-	}
 
-	// map to output; if role_from_mem is nil but userRole was provided, fall back to userRole
+	// ----- MAP -----
 	out := make([]model.Sessions, 0, len(rows))
 	for _, r := range rows {
+		// pick first role across memberships
+		var pickedRole *string
+		for _, arr := range r.RolesArrays {
+			if len(arr) > 0 {
+				v := arr[0]
+				pickedRole = &v
+				break
+			}
+		}
+		if pickedRole == nil && userRole != nil && *userRole != "" {
+			pickedRole = userRole
+		}
+
+		// prefer account.last_login_date; else session.date_created
 		var lastLogin time.Time
 		if r.LastLoginDate != nil && !r.LastLoginDate.IsZero() {
-			lastLogin = *r.LastLoginDate
+			lastLogin = r.LastLoginDate.UTC()
 		} else if r.SessionCreated != nil {
-			lastLogin = *r.SessionCreated
+			lastLogin = r.SessionCreated.UTC()
+		}
+
+		// guarantee non-nil anonymous
+		if r.Anonymous == nil {
+			f := false
+			r.Anonymous = &f
 		}
 
 		var extPtr *map[string]string
@@ -1235,21 +1350,17 @@ func (sa *Adapter) FindJoinedSessions(userRole *string, startTime *string, endTi
 			extPtr = &tmp
 		}
 
-		role := r.RoleFromMem
-		if role == nil && userRole != nil && *userRole != "" {
-			role = userRole
-		}
-
 		out = append(out, model.Sessions{
-			UserRole:      role,
+			UserRole:      pickedRole,
 			FirstName:     r.FirstName,
 			LastName:      r.LastName,
 			Email:         r.Email,
 			LastLoginDate: lastLogin,
 			ExternalIDs:   extPtr,
-			Anonymous:     r.Anonymous,
+			Anonymous:     r.Anonymous, // always non-nil bool now
 		})
 	}
+
 	return out, nil
 }
 

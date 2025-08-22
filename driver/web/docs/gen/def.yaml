@@ -3686,9 +3686,9 @@ paths:
     get:
       tags:
         - Admin
-      summary: Get user account
+      summary: Get sessions
       description: |
-        Get the user account
+        Get sessions
 
         **Auth:** Requires admin access token
       security:
@@ -3730,7 +3730,7 @@ paths:
             type: boolean
       responses:
         '200':
-          description: Success
+          description: Successful operation
           content:
             application/json:
               schema:
@@ -7433,8 +7433,6 @@ components:
           items:
             $ref: '#/components/schemas/LoginSession'
     Sessions:
-      required:
-        - id
       type: object
       properties:
         user_role:
