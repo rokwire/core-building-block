@@ -767,8 +767,6 @@ func (a *Auth) applyAnonymousAuthType(authType model.AuthType, creds string) (st
 
 func (a *Auth) applyAuthType(authType model.AuthType, appOrg model.ApplicationOrganization, creds string, params string, clientVersion *string, regProfile model.Profile,
 	privacy model.Privacy, regPreferences map[string]interface{}, username string, admin bool, l *logs.Log) (string, *model.AccountAuthType, []model.MFAType, map[string]string, error) {
-	a.logger.Infof("applyAuthType for %s", authType.Code)
-	a.logger.Infof("applyAuthType: start code=%s appOrgID=%s", authType.Code, appOrg.ID)
 
 	//auth type
 	authImpl, err := a.getAuthTypeImpl(authType)
