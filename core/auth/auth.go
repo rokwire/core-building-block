@@ -815,7 +815,6 @@ func (a *Auth) applyAuthType(authType model.AuthType, appOrg model.ApplicationOr
 		///apply sign in
 		message, accountAuthType, mfaTypes, externalIDs, err := a.applySignIn(authImpl, authType, account, userIdentifier, creds, l)
 		if err != nil {
-			a.logger.Errorf("applyAuthType - error applying sign-in operation: %v", err)
 			return "", nil, nil, nil, err
 		}
 
@@ -859,13 +858,10 @@ func (a *Auth) applySignIn(authImpl authType, authType model.AuthType, account *
 		return "", nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountAuthType, nil, err)
 	}
 
-	a.logger.Infof("applySignIn: found accountAuthType id=%s unverified=%t linked=%t", accountAuthType.ID, accountAuthType.Unverified, accountAuthType.Linked)
-
 	if accountAuthType.Unverified && accountAuthType.Linked {
 		return "", nil, nil, nil, errors.ErrorData(logutils.StatusInvalid, model.TypeAccountAuthType, &logutils.FieldArgs{"verified": false, "linked": true})
 	}
 
-	a.logger.Infof("applySignIn: calling checkCredentials use_credentials=%t has_credential=%t", authType.UseCredentials, accountAuthType.Credential != nil)
 	var message string
 	message, err = a.checkCredentials(authImpl, authType, accountAuthType, creds, l)
 	if err != nil {
