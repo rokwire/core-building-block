@@ -900,7 +900,6 @@ func (a *Auth) checkCredentialVerified(authImpl authType, accountAuthType *model
 }
 
 func (a *Auth) checkCredentials(authImpl authType, authType model.AuthType, accountAuthType *model.AccountAuthType, creds string, l *logs.Log) (string, error) {
-	a.logger.Infof("checkCredentials: authType=%s use_credentials=%t has_credential=%t creds_len=%d", authType.Code, authType.UseCredentials, accountAuthType.Credential != nil, len(creds))
 
 	//check is verified
 	if authType.UseCredentials {
@@ -910,14 +909,10 @@ func (a *Auth) checkCredentials(authImpl authType, authType model.AuthType, acco
 			a.logger.Warnf("checkCredentials: verification gate failed accountAuthType=%s err=%v", accountAuthType.ID, err)
 			return "", err
 		}
-		a.logger.Infof("checkCredentials: verification gate passed accountAuthType=%s", accountAuthType.ID)
-
 	}
 
-	a.logger.Infof("checkCredentials: invoking adapter checkCredentials accountAuthType=%s", accountAuthType.ID)
 	//check the credentials
 	message, err := authImpl.checkCredentials(*accountAuthType, creds, l)
-	a.logger.Infof("checkCredentials: adapter result accountAuthType=%s message_len=%d err_nil=%t", accountAuthType.ID, len(message), err == nil)
 	if err != nil {
 		return message, errors.WrapErrorAction(logutils.ActionValidate, model.TypeCredential, nil, err)
 	}
