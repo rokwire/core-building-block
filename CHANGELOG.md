@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Admin API for filtering signed-in accounts [#789](https://github.com/rokwire/core-building-block/issues/789)
 
+## [1.57.3] - 2025-08-22
+### Changed
+- Improve logs [#800](https://github.com/rokwire/core-building-block/issues/800)
+
 ## [1.57.2] - 2025-08-19
 ### Changed
 - Twilio phone login does not perform verification - more logs added + fix [#790](https://github.com/rokwire/core-building-block/issues/790)
