@@ -1080,16 +1080,25 @@ func (sa *Adapter) FindLoginSessionsByParams(appID string, orgID string, session
 
 // FindJoinedSessions returns joined account-session rows (FULL OUTER JOIN).
 func (sa *Adapter) FindJoinedSessions(userRole *string, startTime *time.Time, endTime *time.Time, anonymous *bool) ([]model.Sessions, error) {
-	// ----- sessions-side filters -----
+	// ----- sessions-side time filter (coarse) -----
 	dateRange := bson.D{}
 	if startTime != nil {
 		dateRange = append(dateRange, bson.E{Key: "$gte", Value: startTime.UTC()})
-	}
-	if endTime != nil {
+		if endTime != nil {
+			dateRange = append(dateRange, bson.E{Key: "$lte", Value: endTime.UTC()})
+		}
+	} else if endTime != nil {
 		dateRange = append(dateRange, bson.E{Key: "$lte", Value: endTime.UTC()})
 	}
 
+	// We include right-only accounts ONLY when there are no session-side filters (time/anonymous).
+	includeRightOnly := (len(dateRange) == 0 && anonymous == nil)
+
+	epoch := time.Unix(0, 0).UTC() // used to treat "year 1" dates as invalid and fall back to session date
+
+	// -------- LEFT BRANCH: logins_sessions ⟕ orgs_accounts --------
 	var pipeline mongo.Pipeline
+
 	if len(dateRange) > 0 {
 		pipeline = append(pipeline, bson.D{
 			{Key: "$match", Value: bson.D{{Key: "date_created", Value: dateRange}}},
@@ -1101,16 +1110,14 @@ func (sa *Adapter) FindJoinedSessions(userRole *string, startTime *time.Time, en
 		})
 	}
 
-	// ----- LEFT BRANCH: logins_sessions ⟕ orgs_accounts -----
+	// Join to accounts by org and account._id == session.identifier
 	lookupA := mongo.Pipeline{
-		// match account on same org and account._id == session.identifier
 		bson.D{{Key: "$match", Value: bson.D{
 			{Key: "$expr", Value: bson.D{{Key: "$and", Value: bson.A{
 				bson.D{{Key: "$eq", Value: bson.A{"$org_id", "$$orgId"}}},
 				bson.D{{Key: "$eq", Value: bson.A{"$_id", "$$identifier"}}},
 			}}}},
 		}}},
-		// keep only what we need
 		bson.D{{Key: "$project", Value: bson.D{
 			{Key: "org_id", Value: 1},
 			{Key: "last_login_date", Value: 1},
@@ -1196,105 +1203,135 @@ func (sa *Adapter) FindJoinedSessions(userRole *string, startTime *time.Time, en
 		{Key: "session_created_at", Value: "$date_created"},
 	}}})
 
-	// ----- RIGHT BRANCH: orgs_accounts ⟕ logins_sessions (right-only rows) -----
-	var rightBranch mongo.Pipeline
-	if userRole != nil && *userRole != "" {
-		rightBranch = append(rightBranch, bson.D{{Key: "$match", Value: bson.D{
-			{Key: "org_apps_memberships.preferences.roles", Value: *userRole},
-		}}})
-	}
-
-	lookupB := mongo.Pipeline{
-		// sessions where session.identifier == account._id and same org
-		bson.D{{Key: "$match", Value: bson.D{
-			{Key: "$expr", Value: bson.D{{Key: "$and", Value: bson.A{
-				bson.D{{Key: "$eq", Value: bson.A{"$org_id", "$$orgId"}}},
-				bson.D{{Key: "$eq", Value: bson.A{"$identifier", "$$accountId"}}},
-			}}}},
-		}}},
-	}
-	if len(dateRange) > 0 {
-		lookupB = append(lookupB, bson.D{{Key: "$match", Value: bson.D{
-			{Key: "date_created", Value: dateRange},
-		}}})
-	}
-	if anonymous != nil {
-		lookupB = append(lookupB, bson.D{{Key: "$match", Value: bson.D{
-			{Key: "anonymous", Value: *anonymous},
-		}}})
-	}
-
-	// Email coalesce (RIGHT rows): account.profile → account.auth_types[email]
-	emailCoalesceRight := bson.D{{Key: "$let", Value: bson.D{
-		{Key: "vars", Value: bson.D{
-			{Key: "accEmail", Value: bson.D{{Key: "$ifNull", Value: bson.A{"$profile.email", ""}}}},
-			{Key: "authEmail", Value: bson.D{{Key: "$let", Value: bson.D{
-				{Key: "vars", Value: bson.D{
-					{Key: "emails", Value: bson.D{{Key: "$map", Value: bson.D{
-						{Key: "input", Value: bson.D{{Key: "$filter", Value: bson.D{
-							{Key: "input", Value: bson.D{{Key: "$ifNull", Value: bson.A{"$auth_types", bson.A{}}}}},
-							{Key: "as", Value: "a"},
-							{Key: "cond", Value: bson.D{{Key: "$eq", Value: bson.A{"$$a.auth_type_code", "email"}}}},
-						}}}},
-						{Key: "as", Value: "e"},
-						{Key: "in", Value: "$$e.identifier"},
-					}}}},
-				}},
-				{Key: "in", Value: bson.D{{Key: "$ifNull", Value: bson.A{
-					bson.D{{Key: "$arrayElemAt", Value: bson.A{"$$emails", 0}}},
-					"",
-				}}}},
-			}}}},
-		}},
-		{Key: "in", Value: bson.D{{Key: "$cond", Value: bson.A{
-			bson.D{{Key: "$gt", Value: bson.A{bson.D{{Key: "$strLenCP", Value: "$$accEmail"}}, 0}}},
-			"$$accEmail",
-			"$$authEmail",
-		}}}},
+	// Add unified sort/filter date for LEFT rows: prefer projected last_login_date if > epoch, else session_created_at
+	leftSortField := bson.D{{Key: "$cond", Value: bson.A{
+		bson.D{{Key: "$gt", Value: bson.A{"$last_login_date", epoch}}},
+		"$last_login_date",
+		"$session_created_at",
 	}}}
-
-	rightBranch = append(
-		rightBranch,
-		bson.D{{Key: "$lookup", Value: bson.D{
-			{Key: "from", Value: "logins_sessions"},
-			{Key: "let", Value: bson.D{
-				{Key: "orgId", Value: "$org_id"},
-				{Key: "accountId", Value: "$_id"},
-			}},
-			{Key: "pipeline", Value: lookupB},
-			{Key: "as", Value: "sessions"},
-		}}},
-		bson.D{{Key: "$match", Value: bson.D{
-			{Key: "$expr", Value: bson.D{{Key: "$eq", Value: bson.A{
-				bson.D{{Key: "$size", Value: "$sessions"}},
-				0,
-			}}}},
-		}}},
-		bson.D{{Key: "$project", Value: bson.D{
-			{Key: "roles_arrays", Value: "$org_apps_memberships.preferences.roles"},
-			{Key: "first_name", Value: "$profile.first_name"},
-			{Key: "last_name", Value: "$profile.last_name"},
-			{Key: "email", Value: emailCoalesceRight},
-			{Key: "last_login_date", Value: "$last_login_date"},
-			{Key: "external_ids", Value: "$external_ids"},
-			{Key: "anonymous", Value: bson.D{{Key: "$literal", Value: false}}},        // boolean, not null
-			{Key: "session_created_at", Value: bson.D{{Key: "$literal", Value: nil}}}, // explicit null
-		}}},
-	)
-
-	// FULL OUTER JOIN: add right-only rows
-	pipeline = append(pipeline, bson.D{{Key: "$unionWith", Value: bson.D{
-		{Key: "coll", Value: "orgs_accounts"},
-		{Key: "pipeline", Value: rightBranch},
+	pipeline = append(pipeline, bson.D{{Key: "$addFields", Value: bson.D{
+		{Key: "sort_date", Value: leftSortField},
 	}}})
 
-	// Ensure anonymous is boolean on all rows (belt-and-suspenders)
+	// -------- RIGHT-ONLY BRANCH: orgs_accounts with zero matching sessions --------
+	if includeRightOnly {
+		var rightBranch mongo.Pipeline
+		if userRole != nil && *userRole != "" {
+			rightBranch = append(rightBranch, bson.D{{Key: "$match", Value: bson.D{
+				{Key: "org_apps_memberships.preferences.roles", Value: *userRole},
+			}}})
+		}
+
+		lookupB := mongo.Pipeline{
+			bson.D{{Key: "$match", Value: bson.D{
+				{Key: "$expr", Value: bson.D{{Key: "$and", Value: bson.A{
+					bson.D{{Key: "$eq", Value: bson.A{"$org_id", "$$orgId"}}},
+					bson.D{{Key: "$eq", Value: bson.A{"$identifier", "$$accountId"}}},
+				}}}},
+			}}},
+		}
+
+		rightBranch = append(
+			rightBranch,
+			bson.D{{Key: "$lookup", Value: bson.D{
+				{Key: "from", Value: "logins_sessions"},
+				{Key: "let", Value: bson.D{
+					{Key: "orgId", Value: "$org_id"},
+					{Key: "accountId", Value: "$_id"},
+				}},
+				{Key: "pipeline", Value: lookupB},
+				{Key: "as", Value: "sessions"},
+			}}},
+			// keep ONLY accounts that have zero matching sessions
+			bson.D{{Key: "$match", Value: bson.D{
+				{Key: "$expr", Value: bson.D{{Key: "$eq", Value: bson.A{
+					bson.D{{Key: "$size", Value: "$sessions"}},
+					0,
+				}}}},
+			}}},
+		)
+
+		// Email coalesce (RIGHT rows): account.profile → account.auth_types[email]
+		emailCoalesceRight := bson.D{{Key: "$let", Value: bson.D{
+			{Key: "vars", Value: bson.D{
+				{Key: "accEmail", Value: bson.D{{Key: "$ifNull", Value: bson.A{"$profile.email", ""}}}},
+				{Key: "authEmail", Value: bson.D{{Key: "$let", Value: bson.D{
+					{Key: "vars", Value: bson.D{
+						{Key: "emails", Value: bson.D{{Key: "$map", Value: bson.D{
+							{Key: "input", Value: bson.D{{Key: "$filter", Value: bson.D{
+								{Key: "input", Value: bson.D{{Key: "$ifNull", Value: bson.A{"$auth_types", bson.A{}}}}},
+								{Key: "as", Value: "a"},
+								{Key: "cond", Value: bson.D{{Key: "$eq", Value: bson.A{"$$a.auth_type_code", "email"}}}},
+							}}}},
+							{Key: "as", Value: "e"},
+							{Key: "in", Value: "$$e.identifier"},
+						}}}},
+					}},
+					{Key: "in", Value: bson.D{{Key: "$ifNull", Value: bson.A{
+						bson.D{{Key: "$arrayElemAt", Value: bson.A{"$$emails", 0}}},
+						"",
+					}}}},
+				}}}},
+			}},
+			{Key: "in", Value: bson.D{{Key: "$cond", Value: bson.A{
+				bson.D{{Key: "$gt", Value: bson.A{bson.D{{Key: "$strLenCP", Value: "$$accEmail"}}, 0}}},
+				"$$accEmail",
+				"$$authEmail",
+			}}}},
+		}}}
+
+		rightBranch = append(rightBranch,
+			bson.D{{Key: "$project", Value: bson.D{
+				{Key: "roles_arrays", Value: "$org_apps_memberships.preferences.roles"},
+				{Key: "first_name", Value: "$profile.first_name"},
+				{Key: "last_name", Value: "$profile.last_name"},
+				{Key: "email", Value: emailCoalesceRight},
+				{Key: "last_login_date", Value: "$last_login_date"},
+				{Key: "external_ids", Value: "$external_ids"},
+				{Key: "anonymous", Value: bson.D{{Key: "$literal", Value: false}}},
+				{Key: "sort_date", Value: "$last_login_date"}, // right rows sort by account last_login_date
+			}}})
+
+		// FULL OUTER JOIN: add right-only rows
+		pipeline = append(pipeline, bson.D{{Key: "$unionWith", Value: bson.D{
+			{Key: "coll", Value: "orgs_accounts"},
+			{Key: "pipeline", Value: rightBranch},
+		}}})
+	}
+
+	// Ensure anonymous is boolean on all rows (extra safety)
 	pipeline = append(pipeline, bson.D{{Key: "$addFields", Value: bson.D{
 		{Key: "anonymous", Value: bson.D{{Key: "$cond", Value: bson.A{
 			bson.D{{Key: "$eq", Value: bson.A{bson.D{{Key: "$type", Value: "$anonymous"}}, "bool"}}},
 			"$anonymous",
 			false,
 		}}}},
+	}}})
+
+	// ----- FINAL authoritative date filter on the unified sort_date -----
+	finalRange := bson.D{}
+	if startTime != nil {
+		finalRange = append(finalRange, bson.E{Key: "$gte", Value: startTime.UTC()})
+		if endTime != nil {
+			finalRange = append(finalRange, bson.E{Key: "$lte", Value: endTime.UTC()})
+		}
+	} else if endTime != nil {
+		finalRange = append(finalRange, bson.E{Key: "$lte", Value: endTime.UTC()})
+	}
+	if len(finalRange) > 0 {
+		pipeline = append(pipeline, bson.D{
+			{Key: "$match", Value: bson.D{{Key: "sort_date", Value: finalRange}}},
+		})
+	}
+
+	// ----- Sort order -----
+	sortDir := 1 // ASC by default when startTime is provided
+	if startTime == nil {
+		// Only endTime provided (or neither) → latest first
+		sortDir = -1
+	}
+	pipeline = append(pipeline, bson.D{{Key: "$sort", Value: bson.D{
+		{Key: "sort_date", Value: sortDir},
 	}}})
 
 	// ----- RUN -----
@@ -1317,7 +1354,7 @@ func (sa *Adapter) FindJoinedSessions(userRole *string, startTime *time.Time, en
 	// ----- MAP -----
 	out := make([]model.Sessions, 0, len(rows))
 	for _, r := range rows {
-		// pick first role across memberships
+		// pick the first role across memberships
 		var pickedRole *string
 		for _, arr := range r.RolesArrays {
 			if len(arr) > 0 {
@@ -1330,15 +1367,14 @@ func (sa *Adapter) FindJoinedSessions(userRole *string, startTime *time.Time, en
 			pickedRole = userRole
 		}
 
-		// prefer account.last_login_date; else session.date_created
+		// prefer account.last_login_date; else session.date_created (when present)
 		var lastLogin time.Time
-		if r.LastLoginDate != nil && !r.LastLoginDate.IsZero() {
+		if r.LastLoginDate != nil && !r.LastLoginDate.IsZero() && r.LastLoginDate.After(epoch) {
 			lastLogin = r.LastLoginDate.UTC()
 		} else if r.SessionCreated != nil {
 			lastLogin = r.SessionCreated.UTC()
 		}
 
-		// guarantee non-nil anonymous
 		if r.Anonymous == nil {
 			f := false
 			r.Anonymous = &f
@@ -1357,7 +1393,7 @@ func (sa *Adapter) FindJoinedSessions(userRole *string, startTime *time.Time, en
 			Email:         r.Email,
 			LastLoginDate: lastLogin,
 			ExternalIDs:   extPtr,
-			Anonymous:     r.Anonymous, // always non-nil bool now
+			Anonymous:     r.Anonymous,
 		})
 	}
 
