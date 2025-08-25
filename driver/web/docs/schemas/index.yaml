@@ -108,6 +108,8 @@ Follow:
   $ref: "./user/Follow.yaml"
 UserData:
   $ref: "./user/UserData.yaml"  
+Sessions:
+  $ref: "./user/Sessions.yaml"    
 
 ##### APIs requests and responses - they are at bottom
 
