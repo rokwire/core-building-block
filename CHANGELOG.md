@@ -6,8 +6,37 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+
 ### Added
 - Improve profile filtering for participant age [#791](https://github.com/rokwire/core-building-block/issues/791)
+
+## [1.58.0] - 2025-09-11
+### Changed
+- Improve database performance [#806](https://github.com/rokwire/core-building-block/issues/806)
+
+## [1.57.4] - 2025-09-03
+### Fixed
+- Service token aud validation failing [#803](https://github.com/rokwire/core-building-block/issues/803)
+
+## [1.57.3] - 2025-08-22
+### Changed
+- Improve logs [#800](https://github.com/rokwire/core-building-block/issues/800)
+
+## [1.57.2] - 2025-08-19
+### Changed
+- Twilio phone login does not perform verification - more logs added + fix [#790](https://github.com/rokwire/core-building-block/issues/790)
+
+## [1.57.1] - 2025-08-18
+### Changed
+- Twilio phone login does not perform verification - more logs added + fix [#790](https://github.com/rokwire/core-building-block/issues/790)
+
+## [1.57.0] - 2025-08-18
+### Changed
+- Twilio phone login does not perform verification - more logs added + fix [#790](https://github.com/rokwire/core-building-block/issues/790)
+
+## [1.56.1] - 2025-08-18
+### Changed
+- Twilio phone login does not perform verification - more logs added [#790](https://github.com/rokwire/core-building-block/issues/790)
 
 ## [1.56.0] - 2025-08-15
 ### Changed

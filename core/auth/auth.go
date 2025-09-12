@@ -245,6 +245,8 @@ func (a *Auth) mockExternalLogin() (*model.ExternalSystemUser, map[string]interf
 
 func (a *Auth) applyExternalAuthType(authType model.AuthType, appType model.ApplicationType, appOrg model.ApplicationOrganization, creds string, params string, clientVersion *string,
 	regProfile model.Profile, privacy model.Privacy, regPreferences map[string]interface{}, username string, admin bool, l *logs.Log) (*model.AccountAuthType, map[string]interface{}, []model.MFAType, map[string]string, error) {
+	a.logger.Infof("applyExternalAuthType for %s", authType.Code)
+
 	var accountAuthType *model.AccountAuthType
 	var mfaTypes []model.MFAType
 	var externalIDs map[string]string
@@ -800,8 +802,11 @@ func (a *Auth) applyAuthType(authType model.AuthType, appOrg model.ApplicationOr
 	if err != nil {
 		return "", nil, nil, nil, errors.WrapErrorAction(logutils.ActionVerify, "determine operation internal", nil, err)
 	}
+	a.logger.Infof("applyAuthType: determined operation=%s", operation)
+
 	switch operation {
 	case "sign-in":
+		// will compute canSignInV2 below and log it
 		canSignIn := a.canSignInV2(account, authType.ID, userIdentifier, appOrg.ID)
 		if !canSignIn {
 			return "", nil, nil, nil, errors.Newf("cannot sign in %s %s", authType.ID, userIdentifier)
@@ -812,6 +817,7 @@ func (a *Auth) applyAuthType(authType model.AuthType, appOrg model.ApplicationOr
 		if err != nil {
 			return "", nil, nil, nil, err
 		}
+
 		return message, accountAuthType, mfaTypes, externalIDs, nil
 	case "app-sign-up":
 		if admin {
@@ -861,6 +867,7 @@ func (a *Auth) applySignIn(authImpl authType, authType model.AuthType, account *
 	if err != nil {
 		return "", nil, nil, nil, errors.WrapErrorAction(logutils.ActionVerify, model.TypeCredential, nil, err)
 	}
+	a.logger.Infof("applySignIn: checkCredentials returned message_len=%d err_nil=%t", len(message), err == nil)
 
 	return message, accountAuthType, account.GetVerifiedMFATypes(), account.ExternalIDs, nil
 }
@@ -893,10 +900,13 @@ func (a *Auth) checkCredentialVerified(authImpl authType, accountAuthType *model
 }
 
 func (a *Auth) checkCredentials(authImpl authType, authType model.AuthType, accountAuthType *model.AccountAuthType, creds string, l *logs.Log) (string, error) {
+
 	//check is verified
 	if authType.UseCredentials {
+		a.logger.Infof("checkCredentials: verifying credential gate (only if use_credentials)")
 		err := a.checkCredentialVerified(authImpl, accountAuthType, l)
 		if err != nil {
+			a.logger.Warnf("checkCredentials: verification gate failed accountAuthType=%s err=%v", accountAuthType.ID, err)
 			return "", err
 		}
 	}
@@ -909,6 +919,7 @@ func (a *Auth) checkCredentials(authImpl authType, authType model.AuthType, acco
 
 	//if sign in was completed successfully, set auth type to verified
 	if message == "" && accountAuthType.Unverified {
+		a.logger.Infof("checkCredentials: marking verified accountAuthType=%s (was unverified)", accountAuthType.ID)
 		accountAuthType.SetUnverified(false)
 		err := a.storage.UpdateAccountAuthType(*accountAuthType)
 		if err != nil {
