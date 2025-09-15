@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [1.59.0] - 2025-09-15
 ### Added
 - Improve profile filtering for participant age [#791](https://github.com/rokwire/core-building-block/issues/791)
 
