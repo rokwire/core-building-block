@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Admin API for filtering signed-in accounts [#789](https://github.com/rokwire/core-building-block/issues/789)
 
+## [1.59.0] - 2025-09-15
+### Added
+- Improve profile filtering for participant age [#791](https://github.com/rokwire/core-building-block/issues/791)
+
+## [1.58.0] - 2025-09-11
+### Changed
+- Improve database performance [#806](https://github.com/rokwire/core-building-block/issues/806)
+
+## [1.57.4] - 2025-09-03
+### Fixed
+- Service token aud validation failing [#803](https://github.com/rokwire/core-building-block/issues/803)
+
 ## [1.57.3] - 2025-08-22
 ### Changed
 - Improve logs [#800](https://github.com/rokwire/core-building-block/issues/800)

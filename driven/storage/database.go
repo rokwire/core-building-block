@@ -372,6 +372,34 @@ func (m *database) applyTenantsAccountsIdentitiesChecks(tenantAccounts *collecti
 		return err
 	}
 
+	// Atlas recommended compound index
+	err = tenantAccounts.AddIndex(bson.D{
+		{Key: "external_ids.uin", Value: 1},
+		{Key: "org_apps_memberships.app_org_id", Value: 1},
+	}, false)
+	if err != nil {
+		return err
+	}
+
+	// Atlas recommended compound index
+	err = tenantAccounts.AddIndex(bson.D{
+		{Key: "external_ids.net_id", Value: 1},
+		{Key: "org_apps_memberships.app_org_id", Value: 1},
+	}, false)
+	if err != nil {
+		return err
+	}
+
+	// Atlas recommended compound index
+	err = tenantAccounts.AddIndex(bson.D{
+		{Key: "org_apps_memberships.app_org_id", Value: 1},
+		{Key: "profile.first_name", Value: 1},
+		{Key: "profile.last_name", Value: 1},
+	}, false)
+	if err != nil {
+		return err
+	}
+
 	m.logger.Info("tenants accounts check passed")
 	return nil
 }
@@ -402,15 +430,24 @@ func (m *database) applyCredentialChecks(credentials *collectionWrapper) error {
 	return nil
 }
 
-func (m *database) applyLoginsSessionsChecks(refreshTokens *collectionWrapper) error {
+func (m *database) applyLoginsSessionsChecks(loginsSessions *collectionWrapper) error {
 	m.logger.Info("apply logins sessions checks.....")
 
-	err := refreshTokens.AddIndex(bson.D{primitive.E{Key: "refresh_token", Value: 1}}, false)
+	err := loginsSessions.AddIndex(bson.D{primitive.E{Key: "refresh_token", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
 
-	err = refreshTokens.AddIndex(bson.D{primitive.E{Key: "expires", Value: 1}}, false)
+	err = loginsSessions.AddIndex(bson.D{primitive.E{Key: "expires", Value: 1}}, false)
+	if err != nil {
+		return err
+	}
+
+	// Atlas recommended compound index
+	err = loginsSessions.AddIndex(bson.D{
+		{Key: "app_id", Value: 1},
+		{Key: "org_id", Value: 1},
+	}, false)
 	if err != nil {
 		return err
 	}
