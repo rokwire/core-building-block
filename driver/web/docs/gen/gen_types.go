@@ -698,6 +698,17 @@ type ServiceScope struct {
 	Scope       string  `json:"scope"`
 }
 
+// Sessions defines model for Sessions.
+type Sessions struct {
+	Anonymous     *bool                   `json:"anonymous"`
+	Email         *string                 `json:"email"`
+	ExternalIds   *map[string]interface{} `json:"external_ids"`
+	FirstName     *string                 `json:"first_name"`
+	LastLoginDate *string                 `json:"last_login_date"`
+	LastName      *string                 `json:"last_name"`
+	UserRole      *string                 `json:"user-role"`
+}
+
 // SupportedAuthType defines model for SupportedAuthType.
 type SupportedAuthType struct {
 	AuthTypeId *string                 `json:"auth_type_id,omitempty"`
@@ -1362,6 +1373,21 @@ type GetAdminApplicationLoginSessionsParams struct {
 
 	// IpAddress ip address
 	IpAddress *string `form:"ip-address,omitempty" json:"ip-address,omitempty"`
+}
+
+// GetAdminApplicationSessionsParams defines parameters for GetAdminApplicationSessions.
+type GetAdminApplicationSessionsParams struct {
+	// UserRole user-role
+	UserRole *string `form:"user-role,omitempty" json:"user-role,omitempty"`
+
+	// Anonymous anonymous
+	Anonymous *bool `form:"anonymous,omitempty" json:"anonymous,omitempty"`
+
+	// Start The start time for filtering results, specified as a Unix timestamp in seconds
+	Start *int64 `form:"start,omitempty" json:"start,omitempty"`
+
+	// End The end time for filtering results, specified as a Unix timestamp in seconds
+	End *int64 `form:"end,omitempty" json:"end,omitempty"`
 }
 
 // GetAdminAuthAppTokenParams defines parameters for GetAdminAuthAppToken.

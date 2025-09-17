@@ -1,0 +1,24 @@
+type: object
+properties:
+  user-role:
+    type: string
+    nullable: true
+  first_name:
+    type: string
+    nullable: true
+  last_name:
+    type: string
+    nullable: true  
+  email:
+    type: string
+    nullable: true 
+  last_login_date:
+    type: string
+    nullable: true  
+  anonymous:
+    type: boolean
+    nullable: true 
+  external_ids:
+    type: object
+    nullable: true    
+
