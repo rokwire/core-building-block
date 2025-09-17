@@ -7379,29 +7379,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/LoginSession'
-    Sessions:
-      type: object
-      properties:
-        user_role:
-          type: string
-          nullable: true
-        first_name:
-          type: string
-          nullable: true
-        last_name:
-          type: string
-          nullable: true
-        email:
-          type: string
-          nullable: true
-        anonymous:
-          type: boolean
-          nullable: true
-        external_ids:
-          type: object
-          nullable: true
-        last_login_date:
-          type: string
     _shared_req_Login:
       required:
         - auth_type
