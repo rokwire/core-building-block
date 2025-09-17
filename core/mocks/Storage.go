@@ -1297,36 +1297,6 @@ func (_m *Storage) FindFerpaAccountIDs(ids []string) ([]string, error) {
 	return r0, r1
 }
 
-// FindJoinedSessions provides a mock function with given fields: userRole, startTime, endTime, anonymous
-func (_m *Storage) FindJoinedSessions(userRole *string, startTime *time.Time, endTime *time.Time, anonymous *bool) ([]model.Sessions, error) {
-	ret := _m.Called(userRole, startTime, endTime, anonymous)
-
-	if len(ret) == 0 {
-		panic("no return value specified for FindJoinedSessions")
-	}
-
-	var r0 []model.Sessions
-	var r1 error
-	if rf, ok := ret.Get(0).(func(*string, *time.Time, *time.Time, *bool) ([]model.Sessions, error)); ok {
-		return rf(userRole, startTime, endTime, anonymous)
-	}
-	if rf, ok := ret.Get(0).(func(*string, *time.Time, *time.Time, *bool) []model.Sessions); ok {
-		r0 = rf(userRole, startTime, endTime, anonymous)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]model.Sessions)
-		}
-	}
-
-	if rf, ok := ret.Get(1).(func(*string, *time.Time, *time.Time, *bool) error); ok {
-		r1 = rf(userRole, startTime, endTime, anonymous)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // FindLoginSessionsByParams provides a mock function with given fields: appID, orgID, sessionID, identifier, accountAuthTypeIdentifier, appTypeID, appTypeIdentifier, anonymous, deviceID, ipAddress
 func (_m *Storage) FindLoginSessionsByParams(appID string, orgID string, sessionID *string, identifier *string, accountAuthTypeIdentifier *string, appTypeID *string, appTypeIdentifier *string, anonymous *bool, deviceID *string, ipAddress *string) ([]model.LoginSession, error) {
 	ret := _m.Called(appID, orgID, sessionID, identifier, accountAuthTypeIdentifier, appTypeID, appTypeIdentifier, anonymous, deviceID, ipAddress)
