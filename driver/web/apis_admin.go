@@ -24,6 +24,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth/authorization"
@@ -752,6 +753,62 @@ func (h AdminApisHandler) getApplicationLoginSessions(l *logs.Log, r *http.Reque
 	loginSessions := loginSessionsToDef(getLoginSessions)
 
 	data, err := json.Marshal(loginSessions)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeLoginSession, nil, err, http.StatusInternalServerError, false)
+	}
+	return l.HTTPResponseSuccessJSON(data)
+}
+
+func (h AdminApisHandler) getSessions(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
+	anonymousFromQuery := r.URL.Query().Get("anonymous")
+	var anonymous *bool
+	if len(anonymousFromQuery) > 0 {
+		result, _ := strconv.ParseBool(anonymousFromQuery)
+		anonymous = &result
+	}
+
+	userRoleFromQuery := r.URL.Query().Get("user-role")
+	var userRole *string
+	if len(userRoleFromQuery) > 0 {
+		userRole = &userRoleFromQuery
+	}
+
+	//start time - optional
+	startTimeStr := r.URL.Query().Get("start")
+	var startTime *time.Time
+	if startTimeStr != "" {
+		//convert the string to an int64 (assume seconds)
+		startTimeUnix, err := strconv.ParseInt(startTimeStr, 10, 64)
+		if err != nil {
+			return l.HTTPResponseErrorData(logutils.StatusInvalid, logutils.TypeQueryParam, logutils.StringArgs("start_time"), nil, http.StatusBadRequest, false)
+		}
+		//convert the int64 to a time.Time
+		startTimeValue := time.Unix(startTimeUnix, 0)
+		startTime = &startTimeValue
+	}
+
+	//end time - optional
+	endTimeStr := r.URL.Query().Get("end")
+	var endTime *time.Time
+	if endTimeStr != "" {
+		//convert the string to an int64 (assume seconds)
+		endTimeUnix, err := strconv.ParseInt(endTimeStr, 10, 64)
+		if err != nil {
+			return l.HTTPResponseErrorData(logutils.StatusInvalid, logutils.TypeQueryParam, logutils.StringArgs("start_time"), nil, http.StatusBadRequest, false)
+		}
+		//convert the int64 to a time.Time
+		endTimeValue := time.Unix(endTimeUnix, 0)
+		endTime = &endTimeValue
+	}
+
+	getSessions, err := h.coreAPIs.Administration.AdmGetSessions(anonymous, userRole, startTime, endTime)
+	if err != nil {
+		return l.HTTPResponseErrorAction("error finding login sessions", model.TypeLoginSession, nil, err, http.StatusInternalServerError, true)
+	}
+
+	sessions := sessionsToDef(getSessions)
+
+	data, err := json.Marshal(sessions)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeLoginSession, nil, err, http.StatusInternalServerError, false)
 	}
