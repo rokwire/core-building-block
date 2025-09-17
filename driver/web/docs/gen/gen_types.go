@@ -1362,9 +1362,6 @@ type GetAdminApplicationLoginSessionsParams struct {
 
 	// IpAddress ip address
 	IpAddress *string `form:"ip-address,omitempty" json:"ip-address,omitempty"`
-
-	// UserRole The user role
-	UserRole *string `form:"user-role,omitempty" json:"user-role,omitempty"`
 }
 
 // GetAdminAuthAppTokenParams defines parameters for GetAdminAuthAppToken.
