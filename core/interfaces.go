@@ -181,6 +181,7 @@ type Storage interface {
 	FindAccountsByAccountID(context storage.TransactionContext, appID string, orgID string, accountIDs []string) ([]model.Account, error)
 	FindAccountsByUsername(context storage.TransactionContext, appOrg *model.ApplicationOrganization, username string) ([]model.Account, error)
 	FindDeletedOrgAppMemberships(appID string, orgID string, startTime *time.Time) ([]model.DeletedOrgAppMembership, error)
+
 	SaveAccount(context storage.TransactionContext, account *model.Account) error
 	UpdateAccountPreferences(context storage.TransactionContext, cOrgID string, cAppID string, accountID string, preferences map[string]interface{}) error
 	UpdateAccountSystemConfigs(context storage.TransactionContext, accountID string, configs map[string]interface{}) error
