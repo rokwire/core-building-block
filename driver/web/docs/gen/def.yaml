@@ -3363,6 +3363,14 @@ paths:
           explode: false
           schema:
             type: string
+        - name: user-role
+          in: query
+          description: The user role
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
       responses:
         '200':
           description: Success
