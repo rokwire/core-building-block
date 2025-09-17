@@ -1,0 +1,668 @@
+{
+  "version": "1.5.0",
+  "plugins_used": [
+    {
+      "name": "ArtifactoryDetector"
+    },
+    {
+      "name": "AWSKeyDetector"
+    },
+    {
+      "name": "AzureStorageKeyDetector"
+    },
+    {
+      "name": "Base64HighEntropyString",
+      "limit": 4.5
+    },
+    {
+      "name": "BasicAuthDetector"
+    },
+    {
+      "name": "CloudantDetector"
+    },
+    {
+      "name": "DiscordBotTokenDetector"
+    },
+    {
+      "name": "GitHubTokenDetector"
+    },
+    {
+      "name": "GitLabTokenDetector"
+    },
+    {
+      "name": "HexHighEntropyString",
+      "limit": 3.0
+    },
+    {
+      "name": "IbmCloudIamDetector"
+    },
+    {
+      "name": "IbmCosHmacDetector"
+    },
+    {
+      "name": "IPPublicDetector"
+    },
+    {
+      "name": "JwtTokenDetector"
+    },
+    {
+      "name": "KeywordDetector",
+      "keyword_exclude": ""
+    },
+    {
+      "name": "MailchimpDetector"
+    },
+    {
+      "name": "NpmDetector"
+    },
+    {
+      "name": "OpenAIDetector"
+    },
+    {
+      "name": "PrivateKeyDetector"
+    },
+    {
+      "name": "PypiTokenDetector"
+    },
+    {
+      "name": "SendGridDetector"
+    },
+    {
+      "name": "SlackDetector"
+    },
+    {
+      "name": "SoftlayerDetector"
+    },
+    {
+      "name": "SquareOAuthDetector"
+    },
+    {
+      "name": "StripeDetector"
+    },
+    {
+      "name": "TelegramBotTokenDetector"
+    },
+    {
+      "name": "TwilioKeyDetector"
+    }
+  ],
+  "filters_used": [
+    {
+      "path": "detect_secrets.filters.allowlist.is_line_allowlisted"
+    },
+    {
+      "path": "detect_secrets.filters.common.is_baseline_file",
+      "filename": "new.baseline"
+    },
+    {
+      "path": "detect_secrets.filters.common.is_ignored_due_to_verification_policies",
+      "min_level": 2
+    },
+    {
+      "path": "detect_secrets.filters.heuristic.is_indirect_reference"
+    },
+    {
+      "path": "detect_secrets.filters.heuristic.is_likely_id_string"
+    },
+    {
+      "path": "detect_secrets.filters.heuristic.is_lock_file"
+    },
+    {
+      "path": "detect_secrets.filters.heuristic.is_not_alphanumeric_string"
+    },
+    {
+      "path": "detect_secrets.filters.heuristic.is_potential_uuid"
+    },
+    {
+      "path": "detect_secrets.filters.heuristic.is_prefixed_with_dollar_sign"
+    },
+    {
+      "path": "detect_secrets.filters.heuristic.is_sequential_string"
+    },
+    {
+      "path": "detect_secrets.filters.heuristic.is_swagger_file"
+    },
+    {
+      "path": "detect_secrets.filters.heuristic.is_templated_secret"
+    }
+  ],
+  "results": {
+    ".secrets.baseline": [
+      {
+        "type": "Hex High Entropy String",
+        "filename": ".secrets.baseline",
+        "hashed_secret": "d5ff0791790268979c87dd4c2272da543077708e",
+        "is_verified": false,
+        "line_number": 130,
+        "is_secret": false
+      },
+      {
+        "type": "Secret Keyword",
+        "filename": ".secrets.baseline",
+        "hashed_secret": "d5ff0791790268979c87dd4c2272da543077708e",
+        "is_verified": false,
+        "line_number": 130,
+        "is_secret": false
+      },
+      {
+        "type": "Hex High Entropy String",
+        "filename": ".secrets.baseline",
+        "hashed_secret": "ab96546b597931357b75cba986d783a9b3498aa0",
+        "is_verified": false,
+        "line_number": 139,
+        "is_secret": false
+      },
+      {
+        "type": "Secret Keyword",
+        "filename": ".secrets.baseline",
+        "hashed_secret": "ab96546b597931357b75cba986d783a9b3498aa0",
+        "is_verified": false,
+        "line_number": 139,
+        "is_secret": false
+      },
+      {
+        "type": "Hex High Entropy String",
+        "filename": ".secrets.baseline",
+        "hashed_secret": "242eb9d27d921bb450f79b4120f88b9aa08622da",
+        "is_verified": false,
+        "line_number": 148,
+        "is_secret": false
+      },
+      {
+        "type": "Secret Keyword",
+        "filename": ".secrets.baseline",
+        "hashed_secret": "242eb9d27d921bb450f79b4120f88b9aa08622da",
+        "is_verified": false,
+        "line_number": 148,
+        "is_secret": false
+      },
+      {
+        "type": "Hex High Entropy String",
+        "filename": ".secrets.baseline",
+        "hashed_secret": "fcb010029ae612d5beda78652c2bfc3a8c2e6e81",
+        "is_verified": false,
+        "line_number": 157,
+        "is_secret": false
+      },
+      {
+        "type": "Secret Keyword",
+        "filename": ".secrets.baseline",
+        "hashed_secret": "fcb010029ae612d5beda78652c2bfc3a8c2e6e81",
+        "is_verified": false,
+        "line_number": 157,
+        "is_secret": false
+      },
+      {
+        "type": "Hex High Entropy String",
+        "filename": ".secrets.baseline",
+        "hashed_secret": "966a24d684b61228c77b3018de38b20c91566109",
+        "is_verified": false,
+        "line_number": 164,
+        "is_secret": false
+      },
+      {
+        "type": "Secret Keyword",
+        "filename": ".secrets.baseline",
+        "hashed_secret": "966a24d684b61228c77b3018de38b20c91566109",
+        "is_verified": false,
+        "line_number": 164,
+        "is_secret": false
+      },
+      {
+        "type": "Hex High Entropy String",
+        "filename": ".secrets.baseline",
+        "hashed_secret": "e01fde7ed9b4f504af9c3fba7c1f951dce5b9aca",
+        "is_verified": false,
+        "line_number": 173,
+        "is_secret": false
+      },
+      {
+        "type": "Secret Keyword",
+        "filename": ".secrets.baseline",
+        "hashed_secret": "e01fde7ed9b4f504af9c3fba7c1f951dce5b9aca",
+        "is_verified": false,
+        "line_number": 173,
+        "is_secret": false
+      },
+      {
+        "type": "Hex High Entropy String",
+        "filename": ".secrets.baseline",
+        "hashed_secret": "d58e929a720a79d914900a3a724658b8068fcf51",
+        "is_verified": false,
+        "line_number": 180,
+        "is_secret": false
+      },
+      {
+        "type": "Secret Keyword",
+        "filename": ".secrets.baseline",
+        "hashed_secret": "d58e929a720a79d914900a3a724658b8068fcf51",
+        "is_verified": false,
+        "line_number": 180,
+        "is_secret": false
+      },
+      {
+        "type": "Hex High Entropy String",
+        "filename": ".secrets.baseline",
+        "hashed_secret": "23d128f94d10c420b7bdccbb588d14beea98edf8",
+        "is_verified": false,
+        "line_number": 187,
+        "is_secret": false
+      },
+      {
+        "type": "Secret Keyword",
+        "filename": ".secrets.baseline",
+        "hashed_secret": "23d128f94d10c420b7bdccbb588d14beea98edf8",
+        "is_verified": false,
+        "line_number": 187,
+        "is_secret": false
+      },
+      {
+        "type": "Hex High Entropy String",
+        "filename": ".secrets.baseline",
+        "hashed_secret": "52ee94fb5e6d26edbd4695d1962717c823be6fda",
+        "is_verified": false,
+        "line_number": 194,
+        "is_secret": false
+      },
+      {
+        "type": "Secret Keyword",
+        "filename": ".secrets.baseline",
+        "hashed_secret": "52ee94fb5e6d26edbd4695d1962717c823be6fda",
+        "is_verified": false,
+        "line_number": 194,
+        "is_secret": false
+      },
+      {
+        "type": "Hex High Entropy String",
+        "filename": ".secrets.baseline",
+        "hashed_secret": "f69e14375599a0079b90cb997c4fba6c75cf82c5",
+        "is_verified": false,
+        "line_number": 201,
+        "is_secret": false
+      },
+      {
+        "type": "Secret Keyword",
+        "filename": ".secrets.baseline",
+        "hashed_secret": "f69e14375599a0079b90cb997c4fba6c75cf82c5",
+        "is_verified": false,
+        "line_number": 201,
+        "is_secret": false
+      },
+      {
+        "type": "Hex High Entropy String",
+        "filename": ".secrets.baseline",
+        "hashed_secret": "0525147a7deec758819d300cbac9b0b3439624a9",
+        "is_verified": false,
+        "line_number": 208,
+        "is_secret": false
+      },
+      {
+        "type": "Secret Keyword",
+        "filename": ".secrets.baseline",
+        "hashed_secret": "0525147a7deec758819d300cbac9b0b3439624a9",
+        "is_verified": false,
+        "line_number": 208,
+        "is_secret": false
+      },
+      {
+        "type": "Hex High Entropy String",
+        "filename": ".secrets.baseline",
+        "hashed_secret": "1b6aca80f635211ea45c24c7f924dc32a71df25d",
+        "is_verified": false,
+        "line_number": 215,
+        "is_secret": false
+      },
+      {
+        "type": "Secret Keyword",
+        "filename": ".secrets.baseline",
+        "hashed_secret": "1b6aca80f635211ea45c24c7f924dc32a71df25d",
+        "is_verified": false,
+        "line_number": 215,
+        "is_secret": false
+      },
+      {
+        "type": "Hex High Entropy String",
+        "filename": ".secrets.baseline",
+        "hashed_secret": "c295102738bd879c1a4b55d6df2236779d210037",
+        "is_verified": false,
+        "line_number": 224,
+        "is_secret": false
+      },
+      {
+        "type": "Secret Keyword",
+        "filename": ".secrets.baseline",
+        "hashed_secret": "c295102738bd879c1a4b55d6df2236779d210037",
+        "is_verified": false,
+        "line_number": 224,
+        "is_secret": false
+      },
+      {
+        "type": "Hex High Entropy String",
+        "filename": ".secrets.baseline",
+        "hashed_secret": "d694dddf835ac39d3a1fee22e1b77da931fc611d",
+        "is_verified": false,
+        "line_number": 233,
+        "is_secret": false
+      },
+      {
+        "type": "Secret Keyword",
+        "filename": ".secrets.baseline",
+        "hashed_secret": "d694dddf835ac39d3a1fee22e1b77da931fc611d",
+        "is_verified": false,
+        "line_number": 233,
+        "is_secret": false
+      },
+      {
+        "type": "Hex High Entropy String",
+        "filename": ".secrets.baseline",
+        "hashed_secret": "1bbb0d1b98c64f815f4d6980c05d5f45ad65336a",
+        "is_verified": false,
+        "line_number": 240,
+        "is_secret": false
+      },
+      {
+        "type": "Secret Keyword",
+        "filename": ".secrets.baseline",
+        "hashed_secret": "1bbb0d1b98c64f815f4d6980c05d5f45ad65336a",
+        "is_verified": false,
+        "line_number": 240,
+        "is_secret": false
+      },
+      {
+        "type": "Hex High Entropy String",
+        "filename": ".secrets.baseline",
+        "hashed_secret": "3a27d757e5a3a99cf08bc8ce3706400d8e597c16",
+        "is_verified": false,
+        "line_number": 286,
+        "is_secret": false
+      },
+      {
+        "type": "Secret Keyword",
+        "filename": ".secrets.baseline",
+        "hashed_secret": "3a27d757e5a3a99cf08bc8ce3706400d8e597c16",
+        "is_verified": false,
+        "line_number": 286,
+        "is_secret": false
+      },
+      {
+        "type": "Hex High Entropy String",
+        "filename": ".secrets.baseline",
+        "hashed_secret": "af2914b54122be6b9377bf407b69d5b611b6b26e",
+        "is_verified": false,
+        "line_number": 304,
+        "is_secret": false
+      },
+      {
+        "type": "Secret Keyword",
+        "filename": ".secrets.baseline",
+        "hashed_secret": "af2914b54122be6b9377bf407b69d5b611b6b26e",
+        "is_verified": false,
+        "line_number": 304,
+        "is_secret": false
+      },
+      {
+        "type": "Hex High Entropy String",
+        "filename": ".secrets.baseline",
+        "hashed_secret": "a80b972f0a8eccbe9c0d1ee31f26aae5f7fad346",
+        "is_verified": false,
+        "line_number": 313,
+        "is_secret": false
+      },
+      {
+        "type": "Secret Keyword",
+        "filename": ".secrets.baseline",
+        "hashed_secret": "a80b972f0a8eccbe9c0d1ee31f26aae5f7fad346",
+        "is_verified": false,
+        "line_number": 313,
+        "is_secret": false
+      }
+    ],
+    "README.md": [
+      {
+        "type": "Basic Auth Credentials",
+        "filename": "README.md",
+        "hashed_secret": "112bb791304791ddcf692e29fd5cf149b35fea37",
+        "is_verified": false,
+        "line_number": 37,
+        "is_secret": false
+      }
+    ],
+    "core/app_shared.go": [
+      {
+        "type": "Secret Keyword",
+        "filename": "core/app_shared.go",
+        "hashed_secret": "44e17306b837162269a410204daaa5ecee4ec22c",
+        "is_verified": false,
+        "line_number": 41,
+        "is_secret": false
+      }
+    ],
+    "core/auth/apis.go": [
+      {
+        "type": "Secret Keyword",
+        "filename": "core/auth/apis.go",
+        "hashed_secret": "394e3412459f79523e12e1fa95a4cf141ccff122",
+        "is_verified": false,
+        "line_number": 2241,
+        "is_secret": false
+      }
+    ],
+    "core/auth/auth.go": [
+      {
+        "type": "Secret Keyword",
+        "filename": "core/auth/auth.go",
+        "hashed_secret": "58f3388441fbce0e48aef2bf74413a6f43f6dc70",
+        "is_verified": false,
+        "line_number": 1070,
+        "is_secret": false
+      },
+      {
+        "type": "Secret Keyword",
+        "filename": "core/auth/auth.go",
+        "hashed_secret": "94a7f0195bbbd2260c4e4d02b6348fbcd90b2b30",
+        "is_verified": false,
+        "line_number": 2846,
+        "is_secret": false
+      }
+    ],
+    "core/auth/auth_type_email.go": [
+      {
+        "type": "Secret Keyword",
+        "filename": "core/auth/auth_type_email.go",
+        "hashed_secret": "f3f2fb17a3bf9f307cb6e79b61b9d4baf07dd681",
+        "is_verified": false,
+        "line_number": 75,
+        "is_secret": false
+      },
+      {
+        "type": "Secret Keyword",
+        "filename": "core/auth/auth_type_email.go",
+        "hashed_secret": "fe70d8c51780596c0b3399573122bba943a461da",
+        "is_verified": false,
+        "line_number": 76,
+        "is_secret": false
+      },
+      {
+        "type": "Secret Keyword",
+        "filename": "core/auth/auth_type_email.go",
+        "hashed_secret": "06354d205ab5a3b6c7ad2333c58f1ddc810c97ba",
+        "is_verified": false,
+        "line_number": 87,
+        "is_secret": false
+      },
+      {
+        "type": "Secret Keyword",
+        "filename": "core/auth/auth_type_email.go",
+        "hashed_secret": "7cbe6dcf7274355d223e3174e4d8a7ffb55a9227",
+        "is_verified": false,
+        "line_number": 156,
+        "is_secret": false
+      },
+      {
+        "type": "Secret Keyword",
+        "filename": "core/auth/auth_type_email.go",
+        "hashed_secret": "69411040443be576ce64fc793269d7c26dd0866a",
+        "is_verified": false,
+        "line_number": 253,
+        "is_secret": false
+      },
+      {
+        "type": "Secret Keyword",
+        "filename": "core/auth/auth_type_email.go",
+        "hashed_secret": "cba104f0870345d3ec99d55c06441bdce9fcf584",
+        "is_verified": false,
+        "line_number": 390,
+        "is_secret": false
+      },
+      {
+        "type": "Secret Keyword",
+        "filename": "core/auth/auth_type_email.go",
+        "hashed_secret": "c74f3640d83fd19d941a4f44b28fbd9e57f59eef",
+        "is_verified": false,
+        "line_number": 391,
+        "is_secret": false
+      }
+    ],
+    "core/auth/auth_type_oidc.go": [
+      {
+        "type": "Secret Keyword",
+        "filename": "core/auth/auth_type_oidc.go",
+        "hashed_secret": "0ade4f3edccc8888bef404fe6b3c92c13cdfad6b",
+        "is_verified": false,
+        "line_number": 392,
+        "is_secret": false
+      }
+    ],
+    "core/auth/auth_type_username.go": [
+      {
+        "type": "Secret Keyword",
+        "filename": "core/auth/auth_type_username.go",
+        "hashed_secret": "86f4f81d8dcd41f5f695464a3bba658467957bb3",
+        "is_verified": false,
+        "line_number": 64,
+        "is_secret": false
+      },
+      {
+        "type": "Secret Keyword",
+        "filename": "core/auth/auth_type_username.go",
+        "hashed_secret": "d6f3638bf6ffed24773951f1a48460efa6766362",
+        "is_verified": false,
+        "line_number": 65,
+        "is_secret": false
+      },
+      {
+        "type": "Secret Keyword",
+        "filename": "core/auth/auth_type_username.go",
+        "hashed_secret": "06354d205ab5a3b6c7ad2333c58f1ddc810c97ba",
+        "is_verified": false,
+        "line_number": 77,
+        "is_secret": false
+      },
+      {
+        "type": "Secret Keyword",
+        "filename": "core/auth/auth_type_username.go",
+        "hashed_secret": "7cbe6dcf7274355d223e3174e4d8a7ffb55a9227",
+        "is_verified": false,
+        "line_number": 179,
+        "is_secret": false
+      },
+      {
+        "type": "Secret Keyword",
+        "filename": "core/auth/auth_type_username.go",
+        "hashed_secret": "cba104f0870345d3ec99d55c06441bdce9fcf584",
+        "is_verified": false,
+        "line_number": 215,
+        "is_secret": false
+      },
+      {
+        "type": "Secret Keyword",
+        "filename": "core/auth/auth_type_username.go",
+        "hashed_secret": "c74f3640d83fd19d941a4f44b28fbd9e57f59eef",
+        "is_verified": false,
+        "line_number": 216,
+        "is_secret": false
+      }
+    ],
+    "core/auth/service_static_token.go": [
+      {
+        "type": "Secret Keyword",
+        "filename": "core/auth/service_static_token.go",
+        "hashed_secret": "44e17306b837162269a410204daaa5ecee4ec22c",
+        "is_verified": false,
+        "line_number": 78,
+        "is_secret": false
+      }
+    ],
+    "driven/storage/database.go": [
+      {
+        "type": "Secret Keyword",
+        "filename": "driven/storage/database.go",
+        "hashed_secret": "6547f385c6d867e20f8217018a4d468a7d67d638",
+        "is_verified": false,
+        "line_number": 236,
+        "is_secret": false
+      }
+    ],
+    "driver/web/apis_system.go": [
+      {
+        "type": "Secret Keyword",
+        "filename": "driver/web/apis_system.go",
+        "hashed_secret": "44e17306b837162269a410204daaa5ecee4ec22c",
+        "is_verified": false,
+        "line_number": 637,
+        "is_secret": false
+      }
+    ],
+    "driver/web/docs/gen/def.yaml": [
+      {
+        "type": "Secret Keyword",
+        "filename": "driver/web/docs/gen/def.yaml",
+        "hashed_secret": "448ed7416fce2cb66c285d182b1ba3df1e90016d",
+        "is_verified": false,
+        "line_number": 55,
+        "is_secret": false
+      }
+    ],
+    "driver/web/docs/gen/gen_types.go": [
+      {
+        "type": "Secret Keyword",
+        "filename": "driver/web/docs/gen/gen_types.go",
+        "hashed_secret": "c9739eab2dfa093cc0e450bf0ea81a43ae67b581",
+        "is_verified": false,
+        "line_number": 1975,
+        "is_secret": false
+      }
+    ],
+    "driver/web/docs/resources/admin/auth/login.yaml": [
+      {
+        "type": "Secret Keyword",
+        "filename": "driver/web/docs/resources/admin/auth/login.yaml",
+        "hashed_secret": "448ed7416fce2cb66c285d182b1ba3df1e90016d",
+        "is_verified": false,
+        "line_number": 26,
+        "is_secret": false
+      }
+    ],
+    "driver/web/docs/resources/services/auth/account/auth-type/link.yaml": [
+      {
+        "type": "Secret Keyword",
+        "filename": "driver/web/docs/resources/services/auth/account/auth-type/link.yaml",
+        "hashed_secret": "448ed7416fce2cb66c285d182b1ba3df1e90016d",
+        "is_verified": false,
+        "line_number": 26,
+        "is_secret": false
+      }
+    ],
+    "driver/web/docs/resources/services/auth/login.yaml": [
+      {
+        "type": "Secret Keyword",
+        "filename": "driver/web/docs/resources/services/auth/login.yaml",
+        "hashed_secret": "448ed7416fce2cb66c285d182b1ba3df1e90016d",
+        "is_verified": false,
+        "line_number": 24,
+        "is_secret": false
+      }
+    ]
+  },
+  "generated_at": "2025-09-17T08:21:33Z"
+}
