@@ -1170,10 +1170,6 @@ func (app *application) admGetApplicationLoginSessions(appID string, orgID strin
 	return loginSessions, nil
 }
 
-func (app *application) admGetSessions(anonymous *bool, userRole *string, start *time.Time, end *time.Time) ([]model.Sessions, error) {
-	return nil, nil
-}
-
 func (app *application) admDeleteApplicationLoginSession(appID string, orgID string, currentAccountID string, identifier string, sessionID string, l *logs.Log) error {
 	//1. do not allow to logout the current account
 	if currentAccountID == identifier {

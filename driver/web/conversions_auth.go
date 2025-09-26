@@ -65,55 +65,6 @@ func loginSessionsToDef(items []model.LoginSession) []Def.LoginSession {
 	return result
 }
 
-// Session
-func sessionToDef(item model.Sessions) Def.Sessions {
-	//external ids
-	externalIds := map[string]interface{}{}
-	if item.ExternalIDs != nil {
-		for k, v := range *item.ExternalIDs {
-			externalIds[k] = v
-		}
-	}
-	//last login date
-	lastLoginDate := utils.FormatTime(&item.LastLoginDate)
-
-	//user role
-	var userRole *string
-	if item.UserRole != nil {
-		userRole = item.UserRole
-	}
-
-	//first name
-	var firstName *string
-	if item.FirstName != nil {
-		firstName = item.FirstName
-	}
-
-	//last name
-	var lastName *string
-	if item.LastName != nil {
-		lastName = item.LastName
-	}
-
-	//email
-	var email *string
-	if item.Email != nil {
-		email = item.Email
-	}
-
-	return Def.Sessions{UserRole: userRole, FirstName: firstName, LastName: lastName,
-		Email: email, ExternalIds: &externalIds, LastLoginDate: &lastLoginDate, Anonymous: item.Anonymous}
-
-}
-
-func sessionsToDef(items []model.Sessions) []Def.Sessions {
-	result := make([]Def.Sessions, len(items))
-	for i, item := range items {
-		result[i] = sessionToDef(item)
-	}
-	return result
-}
-
 func pubKeyFromDef(item *Def.PubKey) *keys.PubKey {
 	if item == nil {
 		return nil

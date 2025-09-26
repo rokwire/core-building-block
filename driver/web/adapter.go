@@ -182,8 +182,6 @@ func (we Adapter) Start() {
 	adminSubrouter.HandleFunc("/organization/applications", we.wrapFunc(we.adminApisHandler.getApplications, we.auth.admin.User)).Methods("GET")
 
 	adminSubrouter.HandleFunc("/application/login-sessions", we.wrapFunc(we.adminApisHandler.getApplicationLoginSessions, we.auth.admin.Permissions)).Methods("GET")
-	adminSubrouter.HandleFunc("/application/sessions", we.wrapFunc(we.adminApisHandler.getSessions, we.auth.admin.Permissions)).Methods("GET")
-
 	adminSubrouter.HandleFunc("/application/configs", we.wrapFunc(we.adminApisHandler.getApplicationConfigs, we.auth.admin.Permissions)).Methods("GET")
 	adminSubrouter.HandleFunc("/application/configs", we.wrapFunc(we.adminApisHandler.createApplicationConfig, we.auth.admin.Permissions)).Methods("POST")
 	adminSubrouter.HandleFunc("/application/configs/{id}", we.wrapFunc(we.adminApisHandler.getApplicationConfig, we.auth.admin.Permissions)).Methods("GET")
