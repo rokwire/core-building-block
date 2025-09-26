@@ -109,6 +109,17 @@ type LoginSession struct {
 
 	DateUpdated *time.Time
 	DateCreated time.Time
+
+	AccountSummary []AccountSummary
+}
+
+type AccountSummary struct {
+	NetID     string          `json:"net_id"`
+	UIN       string          `json:"uin"`
+	Email     string          `json:"email"`
+	FirstName string          `json:"first_name"`
+	LastName  string          `json:"last_name"`
+	Roles     map[string]bool `json:"roles,omitempty"`
 }
 
 // IsExpired says if the sessions is expired

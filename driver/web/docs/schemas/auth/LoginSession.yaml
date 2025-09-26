@@ -40,3 +40,8 @@ properties:
     nullable: true
   date_created:
     type: string
+  account_summary:
+    type: array
+    nullable: true
+    items:
+      $ref: "./AccountSummary.yaml"  

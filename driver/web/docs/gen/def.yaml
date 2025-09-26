@@ -3363,6 +3363,32 @@ paths:
           explode: false
           schema:
             type: string
+        - name: start-date-time
+          in: query
+          description: 'Filter sessions with `date_created` >= this UNIX epoch (seconds). Example: 1706659200'
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: integer
+            format: int64
+        - name: end-date-time
+          in: query
+          description: 'Filter sessions with `date_created` <= this UNIX epoch (seconds). Example: 1706745600'
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: integer
+            format: int64
+        - name: user-role
+          in: query
+          description: Filter non-anonymous sessions by user role (exact role key)
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
       responses:
         '200':
           description: Success
@@ -6688,6 +6714,11 @@ components:
           nullable: true
         date_created:
           type: string
+        account_summary:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/AccountSummary'
     AuthType:
       required:
         - id
@@ -6971,6 +7002,26 @@ components:
           type: string
         jwks_uri:
           type: string
+    AccountSummary:
+      type: object
+      nullable: true
+      description: Present for non-anonymous sessions; null for anonymous
+      properties:
+        net_id:
+          type: string
+        uin:
+          type: string
+        email:
+          type: string
+        first_name:
+          type: string
+        last_name:
+          type: string
+        roles:
+          type: object
+          additionalProperties:
+            type: boolean
+        description: Keyed by role; used for filtering by user-role
     Account:
       required:
         - id
