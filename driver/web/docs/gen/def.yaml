@@ -7021,7 +7021,6 @@ components:
           type: object
           additionalProperties:
             type: boolean
-        description: Keyed by role; used for filtering by user-role
     Account:
       required:
         - id
