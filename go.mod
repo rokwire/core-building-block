@@ -1,15 +1,15 @@
 module core-building-block
 
-go 1.24.2
+go 1.24.7
 
 require (
 	github.com/coreos/go-oidc v2.4.0+incompatible
+	github.com/deepmap/oapi-codegen v1.16.3
 	github.com/getkin/kin-openapi v0.133.0
 	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.1
 	github.com/lestrrat-go/jwx/v3 v3.0.10
-	github.com/oapi-codegen/runtime v1.1.2
 	github.com/pquerna/otp v1.5.0
 	github.com/rokwire/rokwire-building-block-sdk-go v1.8.4
 	github.com/stretchr/testify v1.11.1
@@ -66,7 +66,6 @@ require (
 	github.com/chenzhuoyu/base64x v0.0.0-20230717121745-296ad89f973d // indirect
 	github.com/chenzhuoyu/iasm v0.9.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/deepmap/oapi-codegen v1.16.3 // indirect
 	github.com/fatih/structs v1.1.0 // indirect
 	github.com/flosch/pongo2/v4 v4.0.2 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.10 // indirect
