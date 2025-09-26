@@ -113,6 +113,7 @@ type LoginSession struct {
 	AccountSummary []AccountSummary
 }
 
+// AccountSummary represents account summary
 type AccountSummary struct {
 	NetID     string          `json:"net_id"`
 	UIN       string          `json:"uin"`
