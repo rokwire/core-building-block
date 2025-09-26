@@ -76,8 +76,6 @@ JWKS:
   $ref: "./auth/JWKS.yaml"
 OIDCDiscovery:
   $ref: "./auth/OIDCDiscovery.yaml"
-Sessions:
-  $ref: "./auth/Sessions.yaml"  
 
 # user
 Account:

@@ -169,9 +169,7 @@ paths:
     $ref: "./resources/admin/configs.yaml"
   /admin/configs/{id}:
     $ref: "./resources/admin/configsId.yaml"
-  /admin/application/sessions:
-    $ref: "./resources/admin/application/sessions.yaml"  
-  
+
   
   #enc
   /enc/test:
