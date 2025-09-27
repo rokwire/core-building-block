@@ -962,7 +962,7 @@ func (a *Auth) CreateAnonymousAccount(context storage.TransactionContext, appID 
 	transaction := func(context storage.TransactionContext) error {
 		//1. check if the user exists
 		if context == nil || !skipExistsCheck {
-			account, err := a.storage.FindAccountByIDV2(context, orgID, appID, anonymousID)
+			account, err := a.storage.FindAccountByIDV2(context, orgID, appID, anonymousID, nil)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 			}
@@ -1830,7 +1830,7 @@ func (a *Auth) LinkAccountAuthType(orgID string, appID string, accountID string,
 	message := ""
 	var newAccountAuthType *model.AccountAuthType
 
-	account, err := a.storage.FindAccountByIDV2(nil, orgID, appID, accountID)
+	account, err := a.storage.FindAccountByIDV2(nil, orgID, appID, accountID, nil)
 	if err != nil {
 		return nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
