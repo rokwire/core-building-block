@@ -201,7 +201,7 @@ func (app *application) getUserData(appID string, orgID string, accountID string
 		return nil, err
 	}
 
-	logginSession, err := app.storage.FindLoginSessionsByParams(appID, orgID, nil, &accountID, nil, nil, nil, nil, nil, nil)
+	logginSession, err := app.storage.FindLoginSessionsByParams(appID, orgID, nil, &accountID, nil, nil, nil, nil, nil, nil, nil, nil)
 	if err != nil {
 		return nil, err
 	}

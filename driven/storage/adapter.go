@@ -1016,7 +1016,7 @@ func (sa *Adapter) FindLoginSessions(context TransactionContext, identifier stri
 
 // FindLoginSessionsByParams finds login sessions by params
 func (sa *Adapter) FindLoginSessionsByParams(appID string, orgID string, sessionID *string, identifier *string, accountAuthTypeIdentifier *string,
-	appTypeID *string, appTypeIdentifier *string, anonymous *bool, deviceID *string, ipAddress *string) ([]model.LoginSession, error) {
+	appTypeID *string, appTypeIdentifier *string, anonymous *bool, deviceID *string, ipAddress *string, startDateTime *time.Time, endDateTime *time.Time) ([]model.LoginSession, error) {
 	filter := bson.D{primitive.E{Key: "app_id", Value: appID},
 		primitive.E{Key: "org_id", Value: orgID}}
 
@@ -1050,6 +1050,18 @@ func (sa *Adapter) FindLoginSessionsByParams(appID string, orgID string, session
 
 	if ipAddress != nil {
 		filter = append(filter, primitive.E{Key: "ip_address", Value: ipAddress})
+	}
+
+	// date range on creation time
+	if startDateTime != nil || endDateTime != nil {
+		rangeFilter := bson.M{}
+		if startDateTime != nil {
+			rangeFilter["$gte"] = *startDateTime
+		}
+		if endDateTime != nil {
+			rangeFilter["$lte"] = *endDateTime
+		}
+		filter = append(filter, primitive.E{Key: "date_created", Value: rangeFilter})
 	}
 
 	var result []loginSession
