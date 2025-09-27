@@ -77,7 +77,7 @@ func (app *application) getAccount(context storage.TransactionContext, accountID
 
 func (app *application) getAccountV2(context storage.TransactionContext, cOrgID string, cAppID string, accountID string) (*model.Account, error) {
 	//find the account
-	account, err := app.storage.FindAccountByIDV2(context, cOrgID, cAppID, accountID, nil)
+	account, err := app.storage.FindAccountByIDV2(context, cOrgID, cAppID, accountID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
