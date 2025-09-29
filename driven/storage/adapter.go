@@ -1016,7 +1016,7 @@ func (sa *Adapter) FindLoginSessions(context TransactionContext, identifier stri
 
 // FindLoginSessionsByParams finds login sessions by params
 func (sa *Adapter) FindLoginSessionsByParams(appID string, orgID string, sessionID *string, identifier *string, accountAuthTypeIdentifier *string,
-	appTypeID *string, appTypeIdentifier *string, anonymous *bool, deviceID *string, ipAddress *string, startDateTime *time.Time, endDateTime *time.Time) ([]model.LoginSession, error) {
+	appTypeID *string, appTypeIdentifier *string, anonymous *bool, deviceID *string, ipAddress *string, startDateTime *time.Time, endDateTime *time.Time, userRole *string) ([]model.LoginSession, error) {
 	filter := bson.D{primitive.E{Key: "app_id", Value: appID},
 		primitive.E{Key: "org_id", Value: orgID}}
 
@@ -1050,6 +1050,10 @@ func (sa *Adapter) FindLoginSessionsByParams(appID string, orgID string, session
 
 	if ipAddress != nil {
 		filter = append(filter, primitive.E{Key: "ip_address", Value: ipAddress})
+	}
+
+	if anonymous != nil {
+		filter = append(filter, primitive.E{Key: "anonymous", Value: anonymous})
 	}
 
 	// date range on creation time
@@ -1137,7 +1141,7 @@ func (sa *Adapter) buildLoginSession(context TransactionContext, ls *loginSessio
 	var account *model.Account
 	var err error
 	if ls.AccountAuthTypeID != nil {
-		account, err = sa.FindAccountByIDV2(context, ls.OrgID, ls.AppID, ls.Identifier)
+		account, err = sa.FindAccountByIDV2(context, ls.OrgID, ls.AppID, ls.Identifier, nil)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"_id": ls.Identifier}, err)
 		}
@@ -1825,7 +1829,7 @@ func (sa *Adapter) FindAccountByID(context TransactionContext, id string) (*mode
 }
 
 // FindAccountByIDV2 finds an account by id
-func (sa *Adapter) FindAccountByIDV2(context TransactionContext, cOrgID string, cAppID string, id string) (*model.Account, error) {
+func (sa *Adapter) FindAccountByIDV2(context TransactionContext, cOrgID string, cAppID string, id string, userRole *string) (*model.Account, error) {
 	currentAppOrg, err := sa.getCachedApplicationOrganization(cAppID, cOrgID)
 	if err != nil {
 		return nil, err

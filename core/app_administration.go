@@ -1163,10 +1163,11 @@ func (app *application) admUpdateAccountVerified(accountID string, appID string,
 func (app *application) admGetApplicationLoginSessions(appID string, orgID string, identifier *string, accountAuthTypeIdentifier *string,
 	appTypeID *string, appTypeIdentifier *string, anonymous *bool, deviceID *string, ipAddress *string, startDateTime *time.Time, endDateTime *time.Time, userRole *string) ([]model.LoginSession, error) {
 	//find the login sessions
-	loginSessions, err := app.storage.FindLoginSessionsByParams(appID, orgID, nil, identifier, accountAuthTypeIdentifier, appTypeID, appTypeIdentifier, anonymous, deviceID, ipAddress, startDateTime, endDateTime)
+	loginSessions, err := app.storage.FindLoginSessionsByParams(appID, orgID, nil, identifier, accountAuthTypeIdentifier, appTypeID, appTypeIdentifier, anonymous, deviceID, ipAddress, startDateTime, endDateTime, userRole)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, nil, err)
 	}
+
 	return loginSessions, nil
 }
 
@@ -1178,7 +1179,7 @@ func (app *application) admDeleteApplicationLoginSession(appID string, orgID str
 	}
 
 	//2. validate if the session is for the current app/org and account
-	sessions, err := app.storage.FindLoginSessionsByParams(appID, orgID, &sessionID, &identifier, nil, nil, nil, nil, nil, nil, nil, nil)
+	sessions, err := app.storage.FindLoginSessionsByParams(appID, orgID, &sessionID, &identifier, nil, nil, nil, nil, nil, nil, nil, nil, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, &logutils.FieldArgs{"id": sessionID, "app_id": appID, "org_id": orgID, "identifier": identifier}, err)
 	}
