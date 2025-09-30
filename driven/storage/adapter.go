@@ -1052,10 +1052,6 @@ func (sa *Adapter) FindLoginSessionsByParams(appID string, orgID string, session
 		filter = append(filter, primitive.E{Key: "ip_address", Value: ipAddress})
 	}
 
-	if anonymous != nil {
-		filter = append(filter, primitive.E{Key: "anonymous", Value: anonymous})
-	}
-
 	// date range on creation time
 	if startDateTime != nil || endDateTime != nil {
 		rangeFilter := bson.M{}
@@ -1085,7 +1081,7 @@ func (sa *Adapter) FindLoginSessionsByParams(appID string, orgID string, session
 	loginSessions := make([]model.LoginSession, len(result))
 	for i, ls := range result {
 		//we could allow calling buildLoginSession function as we have limitted the items to max 20
-		loginSession, err := sa.buildLoginSession(nil, &ls)
+		loginSession, err := sa.buildLoginSession(nil, &ls, userRole)
 		if err != nil {
 			return nil, errors.WrapErrorAction("building", model.TypeLoginSession, nil, err)
 		}
@@ -1109,7 +1105,7 @@ func (sa *Adapter) FindLoginSession(refreshToken string) (*model.LoginSession, e
 	}
 	loginSession := loginsSessions[0]
 
-	return sa.buildLoginSession(nil, &loginSession)
+	return sa.buildLoginSession(nil, &loginSession, nil)
 }
 
 // FindAndUpdateLoginSession finds and updates a login session
@@ -1133,15 +1129,15 @@ func (sa *Adapter) FindAndUpdateLoginSession(context TransactionContext, id stri
 		return nil, errors.WrapErrorAction("finding and updating", model.TypeLoginSession, &logutils.FieldArgs{"_id": id}, err)
 	}
 
-	return sa.buildLoginSession(context, &loginSession)
+	return sa.buildLoginSession(context, &loginSession, nil)
 }
 
-func (sa *Adapter) buildLoginSession(context TransactionContext, ls *loginSession) (*model.LoginSession, error) {
+func (sa *Adapter) buildLoginSession(context TransactionContext, ls *loginSession, userRole *string) (*model.LoginSession, error) {
 	//account - from storage
 	var account *model.Account
 	var err error
 	if ls.AccountAuthTypeID != nil {
-		account, err = sa.FindAccountByIDV2(context, ls.OrgID, ls.AppID, ls.Identifier, nil)
+		account, err = sa.FindAccountByIDV2(context, ls.OrgID, ls.AppID, ls.Identifier, userRole)
 		if err != nil {
 			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"_id": ls.Identifier}, err)
 		}
@@ -1825,7 +1821,7 @@ func (sa *Adapter) FindAccountsByUsername(context TransactionContext, appOrg *mo
 
 // FindAccountByID finds an account by id
 func (sa *Adapter) FindAccountByID(context TransactionContext, id string) (*model.Account, error) {
-	return sa.findAccount(context, "_id", id, nil)
+	return sa.findAccount(context, "_id", id, nil, nil)
 }
 
 // FindAccountByIDV2 finds an account by id
@@ -1838,7 +1834,7 @@ func (sa *Adapter) FindAccountByIDV2(context TransactionContext, cOrgID string, 
 		return nil, errors.Newf("cannot find app org object for %s %s", cOrgID, cAppID)
 	}
 
-	return sa.findAccount(context, "_id", id, &currentAppOrg.ID)
+	return sa.findAccount(context, "_id", id, &currentAppOrg.ID, userRole)
 }
 
 // FindDeletedOrgAppMemberships finds deleted memberships by appID, orgID pair
@@ -1905,11 +1901,11 @@ func (sa *Adapter) DeleteDeletedOrgAppsMemberships(cutoff time.Time) error {
 
 // FindAccountByAuthTypeID finds an account by auth type id
 func (sa *Adapter) FindAccountByAuthTypeID(context TransactionContext, id string, currentAppOrgID *string) (*model.Account, error) {
-	return sa.findAccount(context, "auth_types.id", id, currentAppOrgID)
+	return sa.findAccount(context, "auth_types.id", id, currentAppOrgID, nil)
 }
 
-func (sa *Adapter) findAccount(context TransactionContext, key string, id string, currentAppOrgID *string) (*model.Account, error) {
-	account, err := sa.findStorageAccount(context, key, id)
+func (sa *Adapter) findAccount(context TransactionContext, key string, id string, currentAppOrgID *string, userRole *string) (*model.Account, error) {
+	account, err := sa.findStorageAccount(context, key, id, userRole)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
@@ -1936,8 +1932,12 @@ func (sa *Adapter) findAccount(context TransactionContext, key string, id string
 
 }
 
-func (sa *Adapter) findStorageAccount(context TransactionContext, key string, id string) (*tenantAccount, error) {
+func (sa *Adapter) findStorageAccount(context TransactionContext, key string, id string, userRole *string) (*tenantAccount, error) {
 	filter := bson.M{key: id}
+
+	if userRole != nil {
+		filter["org_apps_memberships.preferences.roles"] = *userRole
+	}
 	var accounts []tenantAccount
 	err := sa.db.tenantsAccounts.FindWithContext(context, filter, &accounts, nil)
 	if err != nil {
