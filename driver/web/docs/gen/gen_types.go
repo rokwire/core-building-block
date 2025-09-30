@@ -216,12 +216,12 @@ type AccountAuthType struct {
 
 // AccountSummary Present for non-anonymous sessions; null for anonymous
 type AccountSummary struct {
-	Email     *string          `json:"email,omitempty"`
-	FirstName *string          `json:"first_name,omitempty"`
-	LastName  *string          `json:"last_name,omitempty"`
-	NetId     *string          `json:"net_id,omitempty"`
-	Roles     *map[string]bool `json:"roles,omitempty"`
-	Uin       *string          `json:"uin,omitempty"`
+	Email     *string   `json:"email,omitempty"`
+	FirstName *string   `json:"first_name,omitempty"`
+	LastName  *string   `json:"last_name,omitempty"`
+	NetId     *string   `json:"net_id,omitempty"`
+	Roles     *[]string `json:"roles,omitempty"`
+	Uin       *string   `json:"uin,omitempty"`
 }
 
 // AdminToken defines model for AdminToken.

@@ -13,6 +13,6 @@ properties:
   last_name:
     type: string
   roles:
-    type: object
-    additionalProperties:
-      type: boolean
+    type: array
+    items:
+      type: string
