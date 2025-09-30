@@ -60,12 +60,61 @@ func loginSessionFromStorage(item loginSession, authType model.AuthType, account
 
 	dateUpdated := item.DateUpdated
 	dateCreated := item.DateCreated
+	// build Account summary
+	var accSummary *model.AccountSummary
+	var accountSummary []model.AccountSummary
+	if account != nil {
+		var rolesSlice []string
+		if account.Preferences != nil {
+			if raw := account.Preferences["roles"]; raw != nil {
+				switch vv := raw.(type) {
+				case []string:
+					rolesSlice = append(rolesSlice, vv...)
+				case []interface{}:
+					for _, r := range vv {
+						if s, ok := r.(string); ok && s != "" {
+							rolesSlice = append(rolesSlice, s)
+						}
+					}
+				}
+			}
+		}
+
+		// pull identity fields from account object
+		var netID, uin, email, firstName, lastName string
+
+		// external_ids.net_id / external_ids.uin
+		if account.ExternalIDs != nil {
+			if v, ok := account.ExternalIDs["net_id"]; ok {
+				netID = v
+			}
+			if v, ok := account.ExternalIDs["uin"]; ok {
+				uin = v
+			}
+		}
+
+		firstName = account.Profile.FirstName
+		lastName = account.Profile.LastName
+		email = account.Profile.Email
+
+		accSummary = &model.AccountSummary{
+			NetID:     netID,
+			UIN:       uin,
+			Email:     email,
+			FirstName: firstName,
+			LastName:  lastName,
+			Roles:     rolesSlice,
+		}
+
+		accountSummary = append(accountSummary, *accSummary)
+
+	}
 
 	return model.LoginSession{ID: id, AppOrg: appOrg, AuthType: authType, AppType: appType,
 		Anonymous: anonymous, Identifier: identifier, ExternalIDs: externalIDs, AccountAuthType: accountAuthType,
 		Device: device, IPAddress: idAddress, AccessToken: accessToken, RefreshTokens: refreshTokens, Params: params,
 		State: state, StateExpires: stateExpires, MfaAttempts: mfaAttempts,
-		DateRefreshed: dateRefreshed, DateUpdated: dateUpdated, DateCreated: dateCreated}
+		DateRefreshed: dateRefreshed, DateUpdated: dateUpdated, DateCreated: dateCreated, AccountSummary: accountSummary}
 }
 
 func loginSessionToStorage(item model.LoginSession) *loginSession {

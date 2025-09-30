@@ -16,6 +16,8 @@ package storage
 
 import (
 	"core-building-block/core/model"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // OrgAppMembership
@@ -125,6 +127,18 @@ func accountFromStorage(item tenantAccount, currentAppOrg *string, membershipsAp
 	cRoles := currentM.Roles
 	cGroups := currentM.Groups
 	cPreferences := currentM.Preferences
+	if currentM.Preferences != nil {
+		if arr, ok := currentM.Preferences["roles"].(primitive.A); ok {
+			ss := make([]string, 0, len(arr))
+			for _, v := range arr {
+				if s, ok := v.(string); ok {
+					ss = append(ss, s)
+				}
+			}
+			currentM.Preferences["roles"] = ss
+		}
+	}
+
 	cMostRecentClientVersion := currentM.MostRecentClientVersion
 	/// End Current App Org Membership
 
