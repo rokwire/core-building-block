@@ -427,9 +427,9 @@ func (_m *Storage) FindAccountByID(context storage.TransactionContext, id string
 	return r0, r1
 }
 
-// FindAccountByIDV2 provides a mock function with given fields: context, cOrgID, cAppID, id
-func (_m *Storage) FindAccountByIDV2(context storage.TransactionContext, cOrgID string, cAppID string, id string) (*model.Account, error) {
-	ret := _m.Called(context, cOrgID, cAppID, id)
+// FindAccountByIDV2 provides a mock function with given fields: context, cOrgID, cAppID, id, userRole
+func (_m *Storage) FindAccountByIDV2(context storage.TransactionContext, cOrgID string, cAppID string, id string, userRole *string) (*model.Account, error) {
+	ret := _m.Called(context, cOrgID, cAppID, id, userRole)
 
 	if len(ret) == 0 {
 		panic("no return value specified for FindAccountByIDV2")
@@ -437,19 +437,19 @@ func (_m *Storage) FindAccountByIDV2(context storage.TransactionContext, cOrgID 
 
 	var r0 *model.Account
 	var r1 error
-	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, string, string) (*model.Account, error)); ok {
-		return rf(context, cOrgID, cAppID, id)
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, string, string, *string) (*model.Account, error)); ok {
+		return rf(context, cOrgID, cAppID, id, userRole)
 	}
-	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, string, string) *model.Account); ok {
-		r0 = rf(context, cOrgID, cAppID, id)
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, string, string, *string) *model.Account); ok {
+		r0 = rf(context, cOrgID, cAppID, id, userRole)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*model.Account)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(storage.TransactionContext, string, string, string) error); ok {
-		r1 = rf(context, cOrgID, cAppID, id)
+	if rf, ok := ret.Get(1).(func(storage.TransactionContext, string, string, string, *string) error); ok {
+		r1 = rf(context, cOrgID, cAppID, id, userRole)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -1297,9 +1297,9 @@ func (_m *Storage) FindFerpaAccountIDs(ids []string) ([]string, error) {
 	return r0, r1
 }
 
-// FindLoginSessionsByParams provides a mock function with given fields: appID, orgID, sessionID, identifier, accountAuthTypeIdentifier, appTypeID, appTypeIdentifier, anonymous, deviceID, ipAddress
-func (_m *Storage) FindLoginSessionsByParams(appID string, orgID string, sessionID *string, identifier *string, accountAuthTypeIdentifier *string, appTypeID *string, appTypeIdentifier *string, anonymous *bool, deviceID *string, ipAddress *string) ([]model.LoginSession, error) {
-	ret := _m.Called(appID, orgID, sessionID, identifier, accountAuthTypeIdentifier, appTypeID, appTypeIdentifier, anonymous, deviceID, ipAddress)
+// FindLoginSessionsByParams provides a mock function with given fields: appID, orgID, sessionID, identifier, accountAuthTypeIdentifier, appTypeID, appTypeIdentifier, anonymous, deviceID, ipAddress, startDateTime, endDateTime, userRole
+func (_m *Storage) FindLoginSessionsByParams(appID string, orgID string, sessionID *string, identifier *string, accountAuthTypeIdentifier *string, appTypeID *string, appTypeIdentifier *string, anonymous *bool, deviceID *string, ipAddress *string, startDateTime *time.Time, endDateTime *time.Time, userRole *string) ([]model.LoginSession, error) {
+	ret := _m.Called(appID, orgID, sessionID, identifier, accountAuthTypeIdentifier, appTypeID, appTypeIdentifier, anonymous, deviceID, ipAddress, startDateTime, endDateTime, userRole)
 
 	if len(ret) == 0 {
 		panic("no return value specified for FindLoginSessionsByParams")
@@ -1307,19 +1307,19 @@ func (_m *Storage) FindLoginSessionsByParams(appID string, orgID string, session
 
 	var r0 []model.LoginSession
 	var r1 error
-	if rf, ok := ret.Get(0).(func(string, string, *string, *string, *string, *string, *string, *bool, *string, *string) ([]model.LoginSession, error)); ok {
-		return rf(appID, orgID, sessionID, identifier, accountAuthTypeIdentifier, appTypeID, appTypeIdentifier, anonymous, deviceID, ipAddress)
+	if rf, ok := ret.Get(0).(func(string, string, *string, *string, *string, *string, *string, *bool, *string, *string, *time.Time, *time.Time, *string) ([]model.LoginSession, error)); ok {
+		return rf(appID, orgID, sessionID, identifier, accountAuthTypeIdentifier, appTypeID, appTypeIdentifier, anonymous, deviceID, ipAddress, startDateTime, endDateTime, userRole)
 	}
-	if rf, ok := ret.Get(0).(func(string, string, *string, *string, *string, *string, *string, *bool, *string, *string) []model.LoginSession); ok {
-		r0 = rf(appID, orgID, sessionID, identifier, accountAuthTypeIdentifier, appTypeID, appTypeIdentifier, anonymous, deviceID, ipAddress)
+	if rf, ok := ret.Get(0).(func(string, string, *string, *string, *string, *string, *string, *bool, *string, *string, *time.Time, *time.Time, *string) []model.LoginSession); ok {
+		r0 = rf(appID, orgID, sessionID, identifier, accountAuthTypeIdentifier, appTypeID, appTypeIdentifier, anonymous, deviceID, ipAddress, startDateTime, endDateTime, userRole)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]model.LoginSession)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(string, string, *string, *string, *string, *string, *string, *bool, *string, *string) error); ok {
-		r1 = rf(appID, orgID, sessionID, identifier, accountAuthTypeIdentifier, appTypeID, appTypeIdentifier, anonymous, deviceID, ipAddress)
+	if rf, ok := ret.Get(1).(func(string, string, *string, *string, *string, *string, *string, *bool, *string, *string, *time.Time, *time.Time, *string) error); ok {
+		r1 = rf(appID, orgID, sessionID, identifier, accountAuthTypeIdentifier, appTypeID, appTypeIdentifier, anonymous, deviceID, ipAddress, startDateTime, endDateTime, userRole)
 	} else {
 		r1 = ret.Error(1)
 	}
