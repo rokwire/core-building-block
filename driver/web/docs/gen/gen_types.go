@@ -488,25 +488,27 @@ type JWKS struct {
 
 // LoginSession defines model for LoginSession.
 type LoginSession struct {
-	AccountAuthTypeId         *string           `json:"account_auth_type_id,omitempty"`
-	AccountAuthTypeIdentifier *string           `json:"account_auth_type_identifier,omitempty"`
-	AccountSummary            *[]AccountSummary `json:"account_summary"`
-	Anonymous                 *bool             `json:"anonymous,omitempty"`
-	AppOrgId                  *string           `json:"app_org_id,omitempty"`
-	AppTypeId                 *string           `json:"app_type_id,omitempty"`
-	AppTypeIdentifier         *string           `json:"app_type_identifier,omitempty"`
-	AuthTypeCode              *string           `json:"auth_type_code,omitempty"`
-	DateCreated               *string           `json:"date_created,omitempty"`
-	DateRefreshed             *string           `json:"date_refreshed"`
-	DateUpdated               *string           `json:"date_updated"`
-	DeviceId                  *string           `json:"device_id"`
-	Id                        *string           `json:"id,omitempty"`
-	Identifier                *string           `json:"identifier,omitempty"`
-	IpAddress                 *string           `json:"ip_address,omitempty"`
-	MfaAttempts               *int              `json:"mfa_attempts,omitempty"`
-	RefreshTokensCount        *int              `json:"refresh_tokens_count,omitempty"`
-	State                     *string           `json:"state,omitempty"`
-	StateExpires              *string           `json:"state_expires"`
+	AccountAuthTypeId         *string `json:"account_auth_type_id,omitempty"`
+	AccountAuthTypeIdentifier *string `json:"account_auth_type_identifier,omitempty"`
+
+	// AccountSummary Present for non-anonymous sessions; null for anonymous
+	AccountSummary     *AccountSummary `json:"account_summary"`
+	Anonymous          *bool           `json:"anonymous,omitempty"`
+	AppOrgId           *string         `json:"app_org_id,omitempty"`
+	AppTypeId          *string         `json:"app_type_id,omitempty"`
+	AppTypeIdentifier  *string         `json:"app_type_identifier,omitempty"`
+	AuthTypeCode       *string         `json:"auth_type_code,omitempty"`
+	DateCreated        *string         `json:"date_created,omitempty"`
+	DateRefreshed      *string         `json:"date_refreshed"`
+	DateUpdated        *string         `json:"date_updated"`
+	DeviceId           *string         `json:"device_id"`
+	Id                 *string         `json:"id,omitempty"`
+	Identifier         *string         `json:"identifier,omitempty"`
+	IpAddress          *string         `json:"ip_address,omitempty"`
+	MfaAttempts        *int            `json:"mfa_attempts,omitempty"`
+	RefreshTokensCount *int            `json:"refresh_tokens_count,omitempty"`
+	State              *string         `json:"state,omitempty"`
+	StateExpires       *string         `json:"state_expires"`
 }
 
 // LoginSessionSettings defines model for LoginSessionSettings.

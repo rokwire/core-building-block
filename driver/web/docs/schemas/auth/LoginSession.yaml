@@ -41,7 +41,5 @@ properties:
   date_created:
     type: string
   account_summary:
-    type: array
+    $ref: "./AccountSummary.yaml"
     nullable: true
-    items:
-      $ref: "./AccountSummary.yaml"  

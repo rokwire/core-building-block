@@ -110,7 +110,7 @@ type LoginSession struct {
 	DateUpdated *time.Time
 	DateCreated time.Time
 
-	AccountSummary []AccountSummary
+	AccountSummary *AccountSummary
 }
 
 // AccountSummary represents account summary

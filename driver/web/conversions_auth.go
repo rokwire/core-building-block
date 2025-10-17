@@ -49,12 +49,12 @@ func loginSessionToDef(item model.LoginSession) Def.LoginSession {
 	dateRefreshed := utils.FormatTime(item.DateRefreshed)
 	dateUpdated := utils.FormatTime(item.DateUpdated)
 	dateCreated := utils.FormatTime(&item.DateCreated)
-	accountsSummary := accountsSummaryToDef(item.AccountSummary)
+	accountSummary := accountSummaryToDef(item.AccountSummary)
 	return Def.LoginSession{Id: &item.ID, Anonymous: &item.Anonymous, AuthTypeCode: &authTypeCode, AppOrgId: &appOrgID,
 		AccountAuthTypeId: accountAuthTypeID, AccountAuthTypeIdentifier: accountAuthTypeIdentifier, AppTypeId: &appTypeID,
 		AppTypeIdentifier: &appTypeIdentifier, DeviceId: deviceID, Identifier: &item.Identifier, IpAddress: &item.IPAddress,
 		RefreshTokensCount: &refreshTokensCount, State: &item.State, MfaAttempts: &item.MfaAttempts, StateExpires: &stateExpires,
-		DateRefreshed: &dateRefreshed, DateUpdated: &dateUpdated, DateCreated: &dateCreated, AccountSummary: &accountsSummary,
+		DateRefreshed: &dateRefreshed, DateUpdated: &dateUpdated, DateCreated: &dateCreated, AccountSummary: accountSummary,
 	}
 }
 func loginSessionsToDef(items []model.LoginSession) []Def.LoginSession {
@@ -66,6 +66,10 @@ func loginSessionsToDef(items []model.LoginSession) []Def.LoginSession {
 }
 
 func accountSummaryToDef(summary *model.AccountSummary) *Def.AccountSummary {
+
+	if summary == nil {
+		return nil
+	}
 
 	var roles *[]string
 	if len(summary.Roles) > 0 {

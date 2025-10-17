@@ -62,7 +62,6 @@ func loginSessionFromStorage(item loginSession, authType model.AuthType, account
 	dateCreated := item.DateCreated
 	// build Account summary
 	var accSummary *model.AccountSummary
-	var accountSummary []model.AccountSummary
 	if account != nil {
 		var rolesSlice []string
 		if account.Preferences != nil {
@@ -105,16 +104,13 @@ func loginSessionFromStorage(item loginSession, authType model.AuthType, account
 			LastName:  lastName,
 			Roles:     rolesSlice,
 		}
-
-		accountSummary = append(accountSummary, *accSummary)
-
 	}
 
 	return model.LoginSession{ID: id, AppOrg: appOrg, AuthType: authType, AppType: appType,
 		Anonymous: anonymous, Identifier: identifier, ExternalIDs: externalIDs, AccountAuthType: accountAuthType,
 		Device: device, IPAddress: idAddress, AccessToken: accessToken, RefreshTokens: refreshTokens, Params: params,
 		State: state, StateExpires: stateExpires, MfaAttempts: mfaAttempts,
-		DateRefreshed: dateRefreshed, DateUpdated: dateUpdated, DateCreated: dateCreated, AccountSummary: accountSummary}
+		DateRefreshed: dateRefreshed, DateUpdated: dateUpdated, DateCreated: dateCreated, AccountSummary: accSummary}
 }
 
 func loginSessionToStorage(item model.LoginSession) *loginSession {

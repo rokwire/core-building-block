@@ -6715,10 +6715,8 @@ components:
         date_created:
           type: string
         account_summary:
-          type: array
+          $ref: '#/components/schemas/AccountSummary'
           nullable: true
-          items:
-            $ref: '#/components/schemas/AccountSummary'
     AuthType:
       required:
         - id
