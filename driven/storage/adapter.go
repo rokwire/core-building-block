@@ -1015,10 +1015,15 @@ func (sa *Adapter) FindLoginSessions(context TransactionContext, identifier stri
 }
 
 // FindLoginSessionsByParams finds login sessions by params
-func (sa *Adapter) FindLoginSessionsByParams(appID string, orgID string, sessionID *string, identifier *string, accountAuthTypeIdentifier *string,
-	appTypeID *string, appTypeIdentifier *string, anonymous *bool, deviceID *string, ipAddress *string, startDateTime *time.Time, endDateTime *time.Time, userRole *string) ([]model.LoginSession, error) {
-	filter := bson.D{primitive.E{Key: "app_id", Value: appID},
-		primitive.E{Key: "org_id", Value: orgID}}
+func (sa *Adapter) FindLoginSessionsByParams(appID string, orgID string, sessionID *string, identifier *string, accountAuthTypeIdentifier *string, appTypeID *string, appTypeIdentifier *string, anonymous *bool,
+	deviceID *string, ipAddress *string, startDateTime *time.Time, endDateTime *time.Time, userRole *string,
+) ([]model.LoginSession, error) {
+
+	// build the base filter
+	filter := bson.D{
+		primitive.E{Key: "app_id", Value: appID},
+		primitive.E{Key: "org_id", Value: orgID},
+	}
 
 	if sessionID != nil {
 		filter = append(filter, primitive.E{Key: "_id", Value: *sessionID})
@@ -1033,23 +1038,23 @@ func (sa *Adapter) FindLoginSessionsByParams(appID string, orgID string, session
 	}
 
 	if appTypeID != nil {
-		filter = append(filter, primitive.E{Key: "app_type_id", Value: appTypeID})
+		filter = append(filter, primitive.E{Key: "app_type_id", Value: *appTypeID})
 	}
 
 	if appTypeIdentifier != nil {
-		filter = append(filter, primitive.E{Key: "app_type_identifier", Value: appTypeIdentifier})
+		filter = append(filter, primitive.E{Key: "app_type_identifier", Value: *appTypeIdentifier})
 	}
 
 	if anonymous != nil {
-		filter = append(filter, primitive.E{Key: "anonymous", Value: anonymous})
+		filter = append(filter, primitive.E{Key: "anonymous", Value: *anonymous})
 	}
 
 	if deviceID != nil {
-		filter = append(filter, primitive.E{Key: "device_id", Value: deviceID})
+		filter = append(filter, primitive.E{Key: "device_id", Value: *deviceID})
 	}
 
 	if ipAddress != nil {
-		filter = append(filter, primitive.E{Key: "ip_address", Value: ipAddress})
+		filter = append(filter, primitive.E{Key: "ip_address", Value: *ipAddress})
 	}
 
 	// date range on creation time
@@ -1064,30 +1069,74 @@ func (sa *Adapter) FindLoginSessionsByParams(appID string, orgID string, session
 		filter = append(filter, primitive.E{Key: "date_created", Value: rangeFilter})
 	}
 
-	var result []loginSession
-	options := options.Find()
-	limitLoginSession := int64(20)
-	options.SetLimit(limitLoginSession)
-	err := sa.db.loginsSessions.Find(filter, &result, options)
-	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, nil, err)
+	//no userRole -> keep original Find
+	if userRole == nil || *userRole == "" {
+		var result []loginSession
+		findOpts := options.Find() // avoid shadowing the options pkg
+		limitLoginSession := int64(20)
+		findOpts.SetLimit(limitLoginSession)
+
+		if err := sa.db.loginsSessions.Find(filter, &result, findOpts); err != nil {
+			return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, nil, err)
+		}
+
+		if len(result) == 0 {
+			return make([]model.LoginSession, 0), nil
+		}
+
+		loginSessions := make([]model.LoginSession, len(result))
+		for i, ls := range result {
+			loginSession, err := sa.buildLoginSession(nil, &ls, nil)
+			if err != nil {
+				return nil, errors.WrapErrorAction("building", model.TypeLoginSession, nil, err)
+			}
+			loginSessions[i] = *loginSession
+		}
+		return loginSessions, nil
 	}
 
-	if len(result) == 0 {
-		//no data
-		return make([]model.LoginSession, 0), nil
+	//aggregation with $lookup role filter
+	role := *userRole
+	limit := int64(20)
+
+	pipeline := mongo.Pipeline{
+		{{"$match", filter}},
+		{{"$sort", bson.M{"date_created": -1}}},
+		{{"$lookup", bson.M{
+			"from": "orgs_accounts",
+			"let":  bson.M{"accId": "$identifier"},
+			"pipeline": mongo.Pipeline{
+				{{"$match", bson.M{"$expr": bson.M{"$eq": bson.A{"$_id", "$$accId"}}}}},
+				{{"$match", bson.M{"org_apps_memberships.preferences.roles": role}}},
+				{{"$project", bson.M{"_id": 1}}},
+			},
+			"as": "acc",
+		}}},
+		{{"$match", bson.M{"$expr": bson.M{"$gt": bson.A{bson.M{"$size": "$acc"}, 0}}}}},
+		{{"$project", bson.M{"acc": 0}}},
+		{{"$limit", limit}},
 	}
 
-	loginSessions := make([]model.LoginSession, len(result))
-	for i, ls := range result {
-		//we could allow calling buildLoginSession function as we have limitted the items to max 20
-		loginSession, err := sa.buildLoginSession(nil, &ls, userRole)
+	var joined []loginSession
+	aggOpts := options.Aggregate().SetAllowDiskUse(true)
+	if err := sa.db.loginsSessions.Aggregate(pipeline, &joined, aggOpts); err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, "login sessions join accounts (role)", nil, err)
+	}
+
+	if len(joined) == 0 {
+		return []model.LoginSession{}, nil
+	}
+
+	out := make([]model.LoginSession, 0, len(joined))
+	for i := range joined {
+		ls := &joined[i]
+		built, err := sa.buildLoginSession(nil, ls, &role)
 		if err != nil {
 			return nil, errors.WrapErrorAction("building", model.TypeLoginSession, nil, err)
 		}
-		loginSessions[i] = *loginSession
+		out = append(out, *built)
 	}
-	return loginSessions, nil
+	return out, nil
 }
 
 // FindLoginSession finds a login session
