@@ -1028,31 +1028,24 @@ func (sa *Adapter) FindLoginSessionsByParams(appID string, orgID string, session
 	if sessionID != nil {
 		filter = append(filter, primitive.E{Key: "_id", Value: *sessionID})
 	}
-
 	if identifier != nil {
 		filter = append(filter, primitive.E{Key: "identifier", Value: *identifier})
 	}
-
 	if accountAuthTypeIdentifier != nil {
 		filter = append(filter, primitive.E{Key: "account_auth_type_identifier", Value: *accountAuthTypeIdentifier})
 	}
-
 	if appTypeID != nil {
 		filter = append(filter, primitive.E{Key: "app_type_id", Value: *appTypeID})
 	}
-
 	if appTypeIdentifier != nil {
 		filter = append(filter, primitive.E{Key: "app_type_identifier", Value: *appTypeIdentifier})
 	}
-
 	if anonymous != nil {
 		filter = append(filter, primitive.E{Key: "anonymous", Value: *anonymous})
 	}
-
 	if deviceID != nil {
 		filter = append(filter, primitive.E{Key: "device_id", Value: *deviceID})
 	}
-
 	if ipAddress != nil {
 		filter = append(filter, primitive.E{Key: "ip_address", Value: *ipAddress})
 	}
@@ -1069,10 +1062,10 @@ func (sa *Adapter) FindLoginSessionsByParams(appID string, orgID string, session
 		filter = append(filter, primitive.E{Key: "date_created", Value: rangeFilter})
 	}
 
-	//no userRole -> keep original Find
+	// Path A: no userRole → regular Find
 	if userRole == nil || *userRole == "" {
 		var result []loginSession
-		findOpts := options.Find() // avoid shadowing the options pkg
+		findOpts := options.Find()
 		limitLoginSession := int64(20)
 		findOpts.SetLimit(limitLoginSession)
 
@@ -1095,26 +1088,26 @@ func (sa *Adapter) FindLoginSessionsByParams(appID string, orgID string, session
 		return loginSessions, nil
 	}
 
-	//aggregation with $lookup role filter
+	// Path B: userRole present → aggregation with $lookup role filter
 	role := *userRole
 	limit := int64(20)
 
 	pipeline := mongo.Pipeline{
-		{{"$match", filter}},
-		{{"$sort", bson.M{"date_created": -1}}},
-		{{"$lookup", bson.M{
+		bson.D{{Key: "$match", Value: filter}},
+		bson.D{{Key: "$sort", Value: bson.M{"date_created": -1}}},
+		bson.D{{Key: "$lookup", Value: bson.M{
 			"from": "orgs_accounts",
 			"let":  bson.M{"accId": "$identifier"},
 			"pipeline": mongo.Pipeline{
-				{{"$match", bson.M{"$expr": bson.M{"$eq": bson.A{"$_id", "$$accId"}}}}},
-				{{"$match", bson.M{"org_apps_memberships.preferences.roles": role}}},
-				{{"$project", bson.M{"_id": 1}}},
+				bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$eq": bson.A{"$_id", "$$accId"}}}}},
+				bson.D{{Key: "$match", Value: bson.M{"org_apps_memberships.preferences.roles": role}}},
+				bson.D{{Key: "$project", Value: bson.M{"_id": 1}}},
 			},
 			"as": "acc",
 		}}},
-		{{"$match", bson.M{"$expr": bson.M{"$gt": bson.A{bson.M{"$size": "$acc"}, 0}}}}},
-		{{"$project", bson.M{"acc": 0}}},
-		{{"$limit", limit}},
+		bson.D{{Key: "$match", Value: bson.M{"$expr": bson.M{"$gt": bson.A{bson.M{"$size": "$acc"}, 0}}}}},
+		bson.D{{Key: "$project", Value: bson.M{"acc": 0}}},
+		bson.D{{Key: "$limit", Value: limit}},
 	}
 
 	var joined []loginSession
