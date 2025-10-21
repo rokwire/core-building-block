@@ -202,6 +202,15 @@ func (ls LoginSession) CurrentRefreshToken() string {
 	return ls.RefreshTokens[numTokens-1]
 }
 
+// PreviousRefreshToken returns the previous refresh token (second to last element of RefreshTokens)
+func (ls LoginSession) PreviousRefreshToken() string {
+	numTokens := len(ls.RefreshTokens)
+	if numTokens <= 1 {
+		return ""
+	}
+	return ls.RefreshTokens[numTokens-2]
+}
+
 // IsInRefreshGracePeriod return whether the login session is in refresh grace period
 func (ls LoginSession) IsInRefreshGracePeriod(now *time.Time) bool {
 	loginsSessionsSetting := ls.AppOrg.LoginsSessionsSetting

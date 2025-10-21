@@ -307,16 +307,21 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 	if currentToken == "" {
 		return nil, errors.ErrorData(logutils.StatusMissing, "refresh tokens", nil)
 	}
-	if refreshToken != currentToken && !loginSession.IsInRefreshGracePeriod(nil) {
-		l.Infof("previous refresh token being used, so delete login session and return null - %s", refreshToken)
+	if refreshToken != currentToken {
+		//allow refresh if the previous token is being used and we are in the grace period
+		previousToken := loginSession.PreviousRefreshToken()
+		gracePeriodRefresh := (refreshToken == previousToken) && loginSession.IsInRefreshGracePeriod(nil)
+		if !gracePeriodRefresh {
+			l.Infof("previous refresh token being used, so delete login session and return null - %s", refreshToken)
 
-		//remove the session
-		err = a.deleteLoginSession(nil, *loginSession, l)
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, logutils.StringArgs("previous refresh token"), err)
+			//remove the session
+			err = a.deleteLoginSession(nil, *loginSession, l)
+			if err != nil {
+				return nil, errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, logutils.StringArgs("previous refresh token"), err)
+			}
+
+			return nil, nil
 		}
-
-		return nil, nil
 	}
 
 	//TODO: Ideally we would not make many database calls before validating the API key. Currently needed to get app ID
