@@ -398,9 +398,10 @@ type IdentityProviderSetting struct {
 type LoginsSessionsSetting struct {
 	MaxConcurrentSessions int `bson:"max_concurrent_sessions"`
 
-	InactivityExpirePolicy InactivityExpirePolicy `bson:"inactivity_expire_policy"`
-	TSLExpirePolicy        TSLExpirePolicy        `bson:"time_since_login_expire_policy"`
-	YearlyExpirePolicy     YearlyExpirePolicy     `bson:"yearly_expire_policy"`
+	InactivityExpirePolicy   InactivityExpirePolicy   `bson:"inactivity_expire_policy"`
+	TSLExpirePolicy          TSLExpirePolicy          `bson:"time_since_login_expire_policy"`
+	YearlyExpirePolicy       YearlyExpirePolicy       `bson:"yearly_expire_policy"`
+	RefreshGracePeriodPolicy RefreshGracePeriodPolicy `bson:"refresh_grace_period_policy"`
 }
 
 // InactivityExpirePolicy represents expires policy based on inactivity
@@ -422,6 +423,12 @@ type YearlyExpirePolicy struct {
 	Month  int  `bson:"month"`
 	Hour   int  `bson:"hour"`
 	Min    int  `bson:"min"`
+}
+
+// RefreshGracePeriodPolicy represents refresh token grace period policy
+type RefreshGracePeriodPolicy struct {
+	Active      bool `bson:"active"`
+	GracePeriod int  `bson:"grace_period"` //in minutes
 }
 
 // ApplicationType represents users application type entity - safer community android, safer community ios, safer community web, uuic android etc

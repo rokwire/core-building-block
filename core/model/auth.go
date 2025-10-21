@@ -202,6 +202,29 @@ func (ls LoginSession) CurrentRefreshToken() string {
 	return ls.RefreshTokens[numTokens-1]
 }
 
+// IsInRefreshGracePeriod return whether the login session is in refresh grace period
+func (ls LoginSession) IsInRefreshGracePeriod(now *time.Time) bool {
+	loginsSessionsSetting := ls.AppOrg.LoginsSessionsSetting
+
+	gracePeriodPolicy := loginsSessionsSetting.RefreshGracePeriodPolicy
+	if !gracePeriodPolicy.Active {
+		return false
+	}
+
+	lastRefreshTime := ls.DateCreated
+	if ls.DateRefreshed != nil {
+		lastRefreshTime = *ls.DateRefreshed //previsouly refreshed
+	}
+
+	if now == nil {
+		currentTime := time.Now()
+		now = &currentTime
+	}
+	gracePeriodDuration := time.Duration(gracePeriodPolicy.GracePeriod) * time.Minute
+	gracePeriodEndTime := lastRefreshTime.Add(gracePeriodDuration)
+	return now.Before(gracePeriodEndTime)
+}
+
 // LogInfo gives the information appropriate to be logged for the session
 func (ls LoginSession) LogInfo() string {
 	identifier := utils.GetLogValue(ls.Identifier, 3)

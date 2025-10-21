@@ -307,7 +307,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 	if currentToken == "" {
 		return nil, errors.ErrorData(logutils.StatusMissing, "refresh tokens", nil)
 	}
-	if refreshToken != currentToken {
+	if refreshToken != currentToken && !loginSession.IsInRefreshGracePeriod(nil) {
 		l.Infof("previous refresh token being used, so delete login session and return null - %s", refreshToken)
 
 		//remove the session

@@ -6592,6 +6592,8 @@ components:
           $ref: '#/components/schemas/TSLExpirePolicy'
         yearly_expire_policy:
           $ref: '#/components/schemas/YearlyExpirePolicy'
+        refresh_grace_period_policy:
+          $ref: '#/components/schemas/RefreshGracePeriodPolicy'
     YearlyExpirePolicy:
       type: object
       required:
@@ -6630,6 +6632,16 @@ components:
         active:
           type: boolean
         time_since_login_period:
+          type: integer
+    RefreshGracePeriodPolicy:
+      type: object
+      required:
+        - active
+        - grace_period
+      properties:
+        active:
+          type: boolean
+        grace_period:
           type: integer
     PartialApp:
       required:

@@ -263,9 +263,13 @@ func loginSessionSettingsFromDef(item *Def.LoginSessionSettings) *model.LoginsSe
 		yearlyExpirePolicy = model.YearlyExpirePolicy{Active: item.YearlyExpirePolicy.Active, Day: item.YearlyExpirePolicy.Day, Month: item.YearlyExpirePolicy.Month,
 			Hour: item.YearlyExpirePolicy.Hour, Min: item.YearlyExpirePolicy.Min}
 	}
+	refreshGracePeriodPolicy := model.RefreshGracePeriodPolicy{}
+	if item.RefreshGracePeriodPolicy != nil {
+		refreshGracePeriodPolicy = model.RefreshGracePeriodPolicy{Active: item.RefreshGracePeriodPolicy.Active, GracePeriod: item.RefreshGracePeriodPolicy.GracePeriod}
+	}
 
 	return &model.LoginsSessionsSetting{MaxConcurrentSessions: maxConcurrentSessions, InactivityExpirePolicy: inactivityExpirePolicy,
-		TSLExpirePolicy: tslExpirePolicy, YearlyExpirePolicy: yearlyExpirePolicy}
+		TSLExpirePolicy: tslExpirePolicy, YearlyExpirePolicy: yearlyExpirePolicy, RefreshGracePeriodPolicy: refreshGracePeriodPolicy}
 }
 
 func loginSessionSettingsToDef(item model.LoginsSessionsSetting) Def.LoginSessionSettings {
