@@ -428,7 +428,7 @@ type YearlyExpirePolicy struct {
 // RefreshGracePeriodPolicy represents refresh token grace period policy
 type RefreshGracePeriodPolicy struct {
 	Active      bool `bson:"active"`
-	GracePeriod int  `bson:"grace_period"` //in minutes
+	GracePeriod int  `bson:"grace_period"` //in seconds
 }
 
 // ApplicationType represents users application type entity - safer community android, safer community ios, safer community web, uuic android etc

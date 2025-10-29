@@ -28,7 +28,10 @@ import (
 func authBuildLoginResponse(l *logs.Log, loginSession *model.LoginSession) logs.HTTPResponse {
 	//token
 	accessToken := loginSession.AccessToken
-	refreshToken := loginSession.CurrentRefreshToken()
+	refreshToken, err := loginSession.CurrentRefreshToken()
+	if err != nil {
+		return l.HTTPResponseErrorData(logutils.StatusMissing, model.TypeRefreshToken, nil, err, http.StatusInternalServerError, false)
+	}
 
 	tokenType := Def.SharedResRokwireTokenTokenTypeBearer
 	rokwireToken := Def.SharedResRokwireToken{AccessToken: &accessToken, RefreshToken: &refreshToken, TokenType: &tokenType}

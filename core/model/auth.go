@@ -21,6 +21,7 @@ import (
 
 	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth"
 	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth/authorization"
+	"github.com/rokwire/rokwire-building-block-sdk-go/utils/errors"
 	"github.com/rokwire/rokwire-building-block-sdk-go/utils/logging/logutils"
 )
 
@@ -194,21 +195,33 @@ func (ls LoginSession) isYearlyExpired(policy YearlyExpirePolicy) bool {
 }
 
 // CurrentRefreshToken returns the current refresh token (last element of RefreshTokens)
-func (ls LoginSession) CurrentRefreshToken() string {
+func (ls LoginSession) CurrentRefreshToken() (string, error) {
 	numTokens := len(ls.RefreshTokens)
 	if numTokens <= 0 {
-		return ""
+		return "", errors.ErrorData(logutils.StatusMissing, TypeRefreshToken, &logutils.FieldArgs{"current": true})
 	}
-	return ls.RefreshTokens[numTokens-1]
+
+	currentToken := ls.RefreshTokens[numTokens-1]
+	if currentToken == "" {
+		return "", errors.ErrorData("Empty", TypeRefreshToken, &logutils.FieldArgs{"current": true})
+	}
+
+	return currentToken, nil
 }
 
 // PreviousRefreshToken returns the previous refresh token (second to last element of RefreshTokens)
-func (ls LoginSession) PreviousRefreshToken() string {
+func (ls LoginSession) PreviousRefreshToken() (string, error) {
 	numTokens := len(ls.RefreshTokens)
 	if numTokens <= 1 {
-		return ""
+		return "", errors.ErrorData(logutils.StatusMissing, TypeRefreshToken, &logutils.FieldArgs{"current": false})
 	}
-	return ls.RefreshTokens[numTokens-2]
+
+	previousToken := ls.RefreshTokens[numTokens-2]
+	if previousToken == "" {
+		return "", errors.ErrorData("Empty", TypeRefreshToken, &logutils.FieldArgs{"current": false})
+	}
+
+	return previousToken, nil
 }
 
 // IsInRefreshGracePeriod return whether the login session is in refresh grace period
@@ -229,7 +242,7 @@ func (ls LoginSession) IsInRefreshGracePeriod(now *time.Time) bool {
 		currentTime := time.Now()
 		now = &currentTime
 	}
-	gracePeriodDuration := time.Duration(gracePeriodPolicy.GracePeriod) * time.Minute
+	gracePeriodDuration := time.Duration(gracePeriodPolicy.GracePeriod) * time.Second
 	gracePeriodEndTime := lastRefreshTime.Add(gracePeriodDuration)
 	return now.Before(gracePeriodEndTime)
 }
