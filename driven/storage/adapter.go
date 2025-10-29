@@ -1062,7 +1062,7 @@ func (sa *Adapter) FindLoginSessionsByParams(appID string, orgID string, session
 		filter = append(filter, primitive.E{Key: "date_created", Value: rangeFilter})
 	}
 
-	// Path A: no userRole → regular Find
+	// no userRole → regular Find
 	if userRole == nil || *userRole == "" {
 		var result []loginSession
 		findOpts := options.Find()
@@ -1088,7 +1088,7 @@ func (sa *Adapter) FindLoginSessionsByParams(appID string, orgID string, session
 		return loginSessions, nil
 	}
 
-	// Path B: userRole present → aggregation with $lookup role filter
+	// userRole present → aggregation with $lookup role filter
 	role := *userRole
 	limit := int64(20)
 
