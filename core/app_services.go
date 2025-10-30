@@ -27,7 +27,7 @@ import (
 
 func (app *application) serGetProfile(cOrgID string, cAppID string, accountID string) (*model.Profile, error) {
 	//find the account
-	account, err := app.storage.FindAccountByIDV2(nil, cOrgID, cAppID, accountID, nil)
+	account, err := app.storage.FindAccountByIDV2(nil, cOrgID, cAppID, accountID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
@@ -39,7 +39,7 @@ func (app *application) serGetProfile(cOrgID string, cAppID string, accountID st
 
 func (app *application) serGetPrivacy(cOrgID string, cAppID string, accountID string) (*model.Privacy, error) {
 	//find the account
-	account, err := app.storage.FindAccountByIDV2(nil, cOrgID, cAppID, accountID, nil)
+	account, err := app.storage.FindAccountByIDV2(nil, cOrgID, cAppID, accountID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
@@ -55,7 +55,7 @@ func (app *application) serGetAccount(cOrgID string, cAppID string, accountID st
 
 func (app *application) serGetPreferences(cOrgID string, cAppID string, accountID string) (map[string]interface{}, error) {
 	//find the account
-	account, err := app.storage.FindAccountByIDV2(nil, cOrgID, cAppID, accountID, nil)
+	account, err := app.storage.FindAccountByIDV2(nil, cOrgID, cAppID, accountID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountPreferences, &logutils.FieldArgs{"account_id": accountID}, err)
 	}
@@ -69,7 +69,7 @@ func (app *application) serGetPreferences(cOrgID string, cAppID string, accountI
 
 func (app *application) serGetAccountSystemConfigs(cOrgID string, cAppID string, accountID string) (map[string]interface{}, error) {
 	//find the account
-	account, err := app.storage.FindAccountByIDV2(nil, cOrgID, cAppID, accountID, nil)
+	account, err := app.storage.FindAccountByIDV2(nil, cOrgID, cAppID, accountID)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountSystemConfigs, &logutils.FieldArgs{"account_id": accountID}, err)
 	}
@@ -111,7 +111,7 @@ func (app *application) serUpdateAccountPreferences(id string, appID string, org
 		created := false
 		transaction := func(context storage.TransactionContext) error {
 			//1. verify that the account is for the current app/org
-			account, err := app.storage.FindAccountByIDV2(context, orgID, appID, id, nil)
+			account, err := app.storage.FindAccountByIDV2(context, orgID, appID, id)
 			if err != nil {
 				return errors.WrapErrorAction(logutils.ActionFind, model.TypeAccountSystemConfigs, &logutils.FieldArgs{"account_id": id}, err)
 			}

@@ -171,7 +171,7 @@ type Storage interface {
 	DeleteFollow(context storage.TransactionContext, appID string, orgID string, followingID string, followerID string) error
 
 	FindAccountByID(context storage.TransactionContext, id string) (*model.Account, error)
-	FindAccountByIDV2(context storage.TransactionContext, cOrgID string, cAppID string, id string, userRole *string) (*model.Account, error)
+	FindAccountByIDV2(context storage.TransactionContext, cOrgID string, cAppID string, id string) (*model.Account, error)
 	FindAccounts(context storage.TransactionContext, limit *int, offset *int, appID string, orgID string, accountID *string, firstName *string, lastName *string, authType *string,
 		authTypeIdentifier *string, anonymous *bool, hasPermissions *bool, permissions []string, roleIDs []string, groupIDs []string, userRole *string) ([]model.Account, error)
 	FindPublicAccounts(context storage.TransactionContext, appID string, orgID string, limit *int, offset *int, firstNameOffset *string, lastNameOffset *string, idOffset *string, order string, search *string, firstName *string,
