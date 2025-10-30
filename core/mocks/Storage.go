@@ -427,9 +427,9 @@ func (_m *Storage) FindAccountByID(context storage.TransactionContext, id string
 	return r0, r1
 }
 
-// FindAccountByIDV2 provides a mock function with given fields: context, cOrgID, cAppID, id, userRole
-func (_m *Storage) FindAccountByIDV2(context storage.TransactionContext, cOrgID string, cAppID string, id string, userRole *string) (*model.Account, error) {
-	ret := _m.Called(context, cOrgID, cAppID, id, userRole)
+// FindAccountByIDV2 provides a mock function with given fields: context, cOrgID, cAppID, id
+func (_m *Storage) FindAccountByIDV2(context storage.TransactionContext, cOrgID string, cAppID string, id string) (*model.Account, error) {
+	ret := _m.Called(context, cOrgID, cAppID, id)
 
 	if len(ret) == 0 {
 		panic("no return value specified for FindAccountByIDV2")
@@ -437,19 +437,19 @@ func (_m *Storage) FindAccountByIDV2(context storage.TransactionContext, cOrgID 
 
 	var r0 *model.Account
 	var r1 error
-	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, string, string, *string) (*model.Account, error)); ok {
-		return rf(context, cOrgID, cAppID, id, userRole)
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, string, string) (*model.Account, error)); ok {
+		return rf(context, cOrgID, cAppID, id)
 	}
-	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, string, string, *string) *model.Account); ok {
-		r0 = rf(context, cOrgID, cAppID, id, userRole)
+	if rf, ok := ret.Get(0).(func(storage.TransactionContext, string, string, string) *model.Account); ok {
+		r0 = rf(context, cOrgID, cAppID, id)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*model.Account)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(storage.TransactionContext, string, string, string, *string) error); ok {
-		r1 = rf(context, cOrgID, cAppID, id, userRole)
+	if rf, ok := ret.Get(1).(func(storage.TransactionContext, string, string, string) error); ok {
+		r1 = rf(context, cOrgID, cAppID, id)
 	} else {
 		r1 = ret.Error(1)
 	}
