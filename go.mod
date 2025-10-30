@@ -1,6 +1,6 @@
 module core-building-block
 
-go 1.24.7
+go 1.24.9
 
 require (
 	github.com/coreos/go-oidc v2.4.0+incompatible
