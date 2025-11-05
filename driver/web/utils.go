@@ -29,7 +29,8 @@ func authBuildLoginResponse(l *logs.Log, loginSession *model.LoginSession) logs.
 	//token
 	accessToken := loginSession.AccessToken
 	refreshToken, err := loginSession.CurrentRefreshToken()
-	if err != nil {
+	if loginSession.State == "" && err != nil {
+		// return an error if not in MFA state and unable to get refresh token
 		return l.HTTPResponseErrorData(logutils.StatusMissing, model.TypeRefreshToken, nil, err, http.StatusInternalServerError, false)
 	}
 

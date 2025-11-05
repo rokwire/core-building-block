@@ -310,9 +310,12 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 	if refreshToken != currentToken {
 		//allow refresh if the previous token is being used and we are in the grace period
 		previousToken, err := loginSession.PreviousRefreshToken()
-		gracePeriodRefresh := (refreshToken == previousToken) && loginSession.IsInRefreshGracePeriod(nil)
+		gracePeriodRefresh := (err == nil) && (refreshToken == previousToken) && loginSession.IsInRefreshGracePeriod(nil)
 		if !gracePeriodRefresh {
 			l.Infof("previous refresh token being used, so delete login session and return null - %s", refreshToken)
+			if err != nil {
+				l.Errorf("error getting previous refresh token - %v", err)
+			}
 
 			//remove the session
 			err = a.deleteLoginSession(nil, *loginSession, l)
