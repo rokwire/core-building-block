@@ -263,9 +263,13 @@ func loginSessionSettingsFromDef(item *Def.LoginSessionSettings) *model.LoginsSe
 		yearlyExpirePolicy = model.YearlyExpirePolicy{Active: item.YearlyExpirePolicy.Active, Day: item.YearlyExpirePolicy.Day, Month: item.YearlyExpirePolicy.Month,
 			Hour: item.YearlyExpirePolicy.Hour, Min: item.YearlyExpirePolicy.Min}
 	}
+	refreshGracePeriodPolicy := model.RefreshGracePeriodPolicy{}
+	if item.RefreshGracePeriodPolicy != nil {
+		refreshGracePeriodPolicy = model.RefreshGracePeriodPolicy{Active: item.RefreshGracePeriodPolicy.Active, GracePeriod: item.RefreshGracePeriodPolicy.GracePeriod}
+	}
 
 	return &model.LoginsSessionsSetting{MaxConcurrentSessions: maxConcurrentSessions, InactivityExpirePolicy: inactivityExpirePolicy,
-		TSLExpirePolicy: tslExpirePolicy, YearlyExpirePolicy: yearlyExpirePolicy}
+		TSLExpirePolicy: tslExpirePolicy, YearlyExpirePolicy: yearlyExpirePolicy, RefreshGracePeriodPolicy: refreshGracePeriodPolicy}
 }
 
 func loginSessionSettingsToDef(item model.LoginsSessionsSetting) Def.LoginSessionSettings {
@@ -273,10 +277,11 @@ func loginSessionSettingsToDef(item model.LoginsSessionsSetting) Def.LoginSessio
 	tslExpirePolicy := Def.TSLExpirePolicy{Active: item.TSLExpirePolicy.Active, TimeSinceLoginPeriod: item.TSLExpirePolicy.TimeSinceLoginPeriod}
 	yearlyExpirePolicy := Def.YearlyExpirePolicy{Active: item.YearlyExpirePolicy.Active, Day: item.YearlyExpirePolicy.Day, Month: item.YearlyExpirePolicy.Month,
 		Hour: item.YearlyExpirePolicy.Hour, Min: item.YearlyExpirePolicy.Min}
+	refreshGracePeriodPolicy := Def.RefreshGracePeriodPolicy{Active: item.RefreshGracePeriodPolicy.Active, GracePeriod: item.RefreshGracePeriodPolicy.GracePeriod}
 
 	maxConcurrentSessions := item.MaxConcurrentSessions
 	return Def.LoginSessionSettings{MaxConcurrentSessions: &maxConcurrentSessions, InactivityExpirePolicy: &inactivityExpirePolicy,
-		TimeSinceLoginExpirePolicy: &tslExpirePolicy, YearlyExpirePolicy: &yearlyExpirePolicy}
+		TimeSinceLoginExpirePolicy: &tslExpirePolicy, YearlyExpirePolicy: &yearlyExpirePolicy, RefreshGracePeriodPolicy: &refreshGracePeriodPolicy}
 }
 
 func supportedAuthTypesFromDef(items *[]Def.SupportedAuthTypes) []model.AuthTypesSupport {

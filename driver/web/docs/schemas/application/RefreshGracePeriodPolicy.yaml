@@ -1,0 +1,9 @@
+type: object
+required:
+ - active
+ - grace_period
+properties:
+  active:
+    type: boolean
+  grace_period:
+    type: integer

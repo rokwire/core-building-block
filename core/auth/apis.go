@@ -303,20 +303,28 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 
 	//check if a previous refresh token is being used
 	//the session must contain the token since the session was returned by Mongo, so the token is old if not equal to the last token in the list
-	currentToken := loginSession.CurrentRefreshToken()
-	if currentToken == "" {
-		return nil, errors.ErrorData(logutils.StatusMissing, "refresh tokens", nil)
+	currentToken, err := loginSession.CurrentRefreshToken()
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeRefreshToken, nil, err)
 	}
 	if refreshToken != currentToken {
-		l.Infof("previous refresh token being used, so delete login session and return null - %s", refreshToken)
+		//allow refresh if the previous token is being used and we are in the grace period
+		previousToken, err := loginSession.PreviousRefreshToken()
+		gracePeriodRefresh := (err == nil) && (refreshToken == previousToken) && loginSession.IsInRefreshGracePeriod(nil)
+		if !gracePeriodRefresh {
+			l.Infof("previous refresh token being used, so delete login session and return null - %s", refreshToken)
+			if err != nil {
+				l.Errorf("error getting previous refresh token - %v", err)
+			}
 
-		//remove the session
-		err = a.deleteLoginSession(nil, *loginSession, l)
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, logutils.StringArgs("previous refresh token"), err)
+			//remove the session
+			err = a.deleteLoginSession(nil, *loginSession, l)
+			if err != nil {
+				return nil, errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, logutils.StringArgs("previous refresh token"), err)
+			}
+
+			return nil, nil
 		}
-
-		return nil, nil
 	}
 
 	//TODO: Ideally we would not make many database calls before validating the API key. Currently needed to get app ID

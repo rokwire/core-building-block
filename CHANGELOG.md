@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+## [1.60.0] - 2025-11-110
+### Changed
+- Implement refresh token reuse detection grace period [#811](https://github.com/rokwire/core-building-block/issues/811)
+
+## [1.59.0] - 2025-09-15
+### Added
+- Improve profile filtering for participant age [#791](https://github.com/rokwire/core-building-block/issues/791)
+
 ## [1.58.0] - 2025-09-11
 ### Changed
 - Improve database performance [#806](https://github.com/rokwire/core-building-block/issues/806)
