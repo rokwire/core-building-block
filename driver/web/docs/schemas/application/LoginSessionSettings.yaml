@@ -8,3 +8,5 @@ properties:
     $ref: "./TSLExpirePolicy.yaml"
   yearly_expire_policy:
     $ref: "./YearlyExpirePolicy.yaml"
+  refresh_grace_period_policy:
+    $ref: "./RefreshGracePeriodPolicy.yaml"

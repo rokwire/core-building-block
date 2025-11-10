@@ -178,7 +178,10 @@ func (h ServicesApisHandler) refresh(l *logs.Log, r *http.Request, claims *token
 	}
 
 	accessToken := loginSession.AccessToken
-	refreshToken := loginSession.CurrentRefreshToken()
+	refreshToken, err := loginSession.CurrentRefreshToken()
+	if err != nil {
+		return l.HTTPResponseErrorData(logutils.StatusMissing, model.TypeRefreshToken, nil, err, http.StatusInternalServerError, false)
+	}
 
 	paramsRes, err := convert[Def.SharedResRefresh_Params](loginSession.Params)
 	if err != nil {
