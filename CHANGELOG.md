@@ -6,7 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
-## [1.60.0] - 2025-11-110
+## [1.60.1] - 2025-11-12
+### Changed
+- Improve refresh token grace period logging [#814](https://github.com/rokwire/core-building-block/issues/814)
+
+## [1.60.0] - 2025-11-10
 ### Changed
 - Implement refresh token reuse detection grace period [#811](https://github.com/rokwire/core-building-block/issues/811)
 
