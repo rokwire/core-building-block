@@ -310,7 +310,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 	if refreshToken != currentToken {
 		//allow refresh if the previous token is being used and we are in the grace period
 
-		l.Infof("old refresh token being used - %s", refreshToken)
+		l.Infof("old refresh token being used - %s", utils.MaskString(refreshToken, 5))
 
 		//get the previous token as it is what we allow during grace period
 		previousToken, err := loginSession.PreviousRefreshToken()
@@ -328,7 +328,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 		//now check if the provided token is the previous token
 		if refreshToken != previousToken {
 			//not the previous token, so we cannot allow refresh
-			l.Infof("not the previous token, so we cannot allow refresh - %s", refreshToken)
+			l.Infof("not the previous token, so we cannot allow refresh - %s", utils.MaskString(refreshToken, 5))
 
 			//remove the session
 			err = a.deleteLoginSession(nil, *loginSession, l)
@@ -339,7 +339,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 		}
 		//now check if we are in the grace period
 		if !loginSession.IsInRefreshGracePeriod(nil) {
-			l.Infof("not in grace period, so we cannot allow refresh - %s", refreshToken)
+			l.Infof("not in grace period, so we cannot allow refresh - %s", utils.MaskString(refreshToken, 5))
 
 			//remove the session
 			err = a.deleteLoginSession(nil, *loginSession, l)
