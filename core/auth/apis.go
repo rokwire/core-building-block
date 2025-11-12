@@ -310,43 +310,37 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 	if refreshToken != currentToken {
 		//allow refresh if the previous token is being used and we are in the grace period
 
-		l.Infof("old refresh token being used - %s", utils.MaskString(refreshToken, 5))
+		masked := utils.MaskString(refreshToken, 5)
+		l.Infof("old refresh token being used - %s", masked)
+
+		//small helper to avoid repeating cleanup
+		cleanup := func() (*model.LoginSession, error) {
+			err = a.deleteLoginSession(nil, *loginSession, l)
+			if err != nil {
+				return nil, errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, logutils.StringArgs("previous refresh token"), err)
+			}
+			return nil, nil
+		}
 
 		//get the previous token as it is what we allow during grace period
 		previousToken, err := loginSession.PreviousRefreshToken()
 		if err != nil {
 			//we cannot get the previous token, so we cannot allow refresh
 			l.Infof("error getting previous refresh token - %v", err)
-
-			//remove the session
-			err = a.deleteLoginSession(nil, *loginSession, l)
-			if err != nil {
-				return nil, errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, logutils.StringArgs("previous refresh token"), err)
-			}
-			return nil, nil
+			return cleanup()
 		}
+
 		//now check if the provided token is the previous token
 		if refreshToken != previousToken {
 			//not the previous token, so we cannot allow refresh
-			l.Infof("not the previous token, so we cannot allow refresh - %s", utils.MaskString(refreshToken, 5))
-
-			//remove the session
-			err = a.deleteLoginSession(nil, *loginSession, l)
-			if err != nil {
-				return nil, errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, logutils.StringArgs("previous refresh token"), err)
-			}
-			return nil, nil
+			l.Infof("not the previous token, so we cannot allow refresh - %s", masked)
+			return cleanup()
 		}
+
 		//now check if we are in the grace period
 		if !loginSession.IsInRefreshGracePeriod(nil) {
-			l.Infof("not in grace period, so we cannot allow refresh - %s", utils.MaskString(refreshToken, 5))
-
-			//remove the session
-			err = a.deleteLoginSession(nil, *loginSession, l)
-			if err != nil {
-				return nil, errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, logutils.StringArgs("previous refresh token"), err)
-			}
-			return nil, nil
+			l.Infof("not in grace period, so we cannot allow refresh - %s", masked)
+			return cleanup()
 		}
 
 		//the provided token is the previous token and we are in grace period, so allow refresh
