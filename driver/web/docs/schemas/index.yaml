@@ -78,6 +78,8 @@ JWKS:
   $ref: "./auth/JWKS.yaml"
 OIDCDiscovery:
   $ref: "./auth/OIDCDiscovery.yaml"
+AccountSummary:
+  $ref: "./auth/AccountSummary.yaml"  
 
 # user
 Account:
@@ -109,7 +111,7 @@ Device:
 Follow:
   $ref: "./user/Follow.yaml"
 UserData:
-  $ref: "./user/UserData.yaml"  
+  $ref: "./user/UserData.yaml"
 
 ##### APIs requests and responses - they are at bottom
 

@@ -65,6 +65,32 @@ get:
       explode: false
       schema:
         type: string
+    - name: start-date-time
+      in: query
+      description: "Filter sessions with `date_created` >= this UNIX epoch (seconds). Example: 1706659200"
+      required: false
+      style: form
+      explode: false
+      schema:
+        type: integer
+        format: int64
+    - name: end-date-time
+      in: query
+      description: "Filter sessions with `date_created` <= this UNIX epoch (seconds). Example: 1706745600"
+      required: false
+      style: form
+      explode: false
+      schema:
+        type: integer
+        format: int64
+    - name: user-role
+      in: query
+      description: "Filter non-anonymous sessions by user role (exact role key)"
+      required: false
+      style: form
+      explode: false
+      schema:
+        type: string
   responses:
     200:
       description: Success

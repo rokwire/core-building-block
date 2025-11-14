@@ -6,7 +6,7 @@ package Def
 import (
 	"encoding/json"
 
-	"github.com/oapi-codegen/runtime"
+	"github.com/deepmap/oapi-codegen/pkg/runtime"
 )
 
 const (
@@ -212,6 +212,16 @@ type AccountAuthType struct {
 	Identifier string                  `json:"identifier"`
 	Params     *map[string]interface{} `json:"params"`
 	Unverified *bool                   `json:"unverified,omitempty"`
+}
+
+// AccountSummary Present for non-anonymous sessions; null for anonymous
+type AccountSummary struct {
+	Email     *string   `json:"email,omitempty"`
+	FirstName *string   `json:"first_name,omitempty"`
+	LastName  *string   `json:"last_name,omitempty"`
+	NetId     *string   `json:"net_id,omitempty"`
+	Roles     *[]string `json:"roles,omitempty"`
+	Uin       *string   `json:"uin,omitempty"`
 }
 
 // AdminToken defines model for AdminToken.
@@ -480,22 +490,25 @@ type JWKS struct {
 type LoginSession struct {
 	AccountAuthTypeId         *string `json:"account_auth_type_id,omitempty"`
 	AccountAuthTypeIdentifier *string `json:"account_auth_type_identifier,omitempty"`
-	Anonymous                 *bool   `json:"anonymous,omitempty"`
-	AppOrgId                  *string `json:"app_org_id,omitempty"`
-	AppTypeId                 *string `json:"app_type_id,omitempty"`
-	AppTypeIdentifier         *string `json:"app_type_identifier,omitempty"`
-	AuthTypeCode              *string `json:"auth_type_code,omitempty"`
-	DateCreated               *string `json:"date_created,omitempty"`
-	DateRefreshed             *string `json:"date_refreshed"`
-	DateUpdated               *string `json:"date_updated"`
-	DeviceId                  *string `json:"device_id"`
-	Id                        *string `json:"id,omitempty"`
-	Identifier                *string `json:"identifier,omitempty"`
-	IpAddress                 *string `json:"ip_address,omitempty"`
-	MfaAttempts               *int    `json:"mfa_attempts,omitempty"`
-	RefreshTokensCount        *int    `json:"refresh_tokens_count,omitempty"`
-	State                     *string `json:"state,omitempty"`
-	StateExpires              *string `json:"state_expires"`
+
+	// AccountSummary Present for non-anonymous sessions; null for anonymous
+	AccountSummary     *AccountSummary `json:"account_summary"`
+	Anonymous          *bool           `json:"anonymous,omitempty"`
+	AppOrgId           *string         `json:"app_org_id,omitempty"`
+	AppTypeId          *string         `json:"app_type_id,omitempty"`
+	AppTypeIdentifier  *string         `json:"app_type_identifier,omitempty"`
+	AuthTypeCode       *string         `json:"auth_type_code,omitempty"`
+	DateCreated        *string         `json:"date_created,omitempty"`
+	DateRefreshed      *string         `json:"date_refreshed"`
+	DateUpdated        *string         `json:"date_updated"`
+	DeviceId           *string         `json:"device_id"`
+	Id                 *string         `json:"id,omitempty"`
+	Identifier         *string         `json:"identifier,omitempty"`
+	IpAddress          *string         `json:"ip_address,omitempty"`
+	MfaAttempts        *int            `json:"mfa_attempts,omitempty"`
+	RefreshTokensCount *int            `json:"refresh_tokens_count,omitempty"`
+	State              *string         `json:"state,omitempty"`
+	StateExpires       *string         `json:"state_expires"`
 }
 
 // LoginSessionSettings defines model for LoginSessionSettings.
@@ -1369,6 +1382,15 @@ type GetAdminApplicationLoginSessionsParams struct {
 
 	// IpAddress ip address
 	IpAddress *string `form:"ip-address,omitempty" json:"ip-address,omitempty"`
+
+	// StartDateTime Filter sessions with `date_created` >= this UNIX epoch (seconds). Example: 1706659200
+	StartDateTime *int64 `form:"start-date-time,omitempty" json:"start-date-time,omitempty"`
+
+	// EndDateTime Filter sessions with `date_created` <= this UNIX epoch (seconds). Example: 1706745600
+	EndDateTime *int64 `form:"end-date-time,omitempty" json:"end-date-time,omitempty"`
+
+	// UserRole Filter non-anonymous sessions by user role (exact role key)
+	UserRole *string `form:"user-role,omitempty" json:"user-role,omitempty"`
 }
 
 // GetAdminAuthAppTokenParams defines parameters for GetAdminAuthAppToken.

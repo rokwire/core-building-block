@@ -1,0 +1,18 @@
+type: object
+nullable: true
+description: "Present for non-anonymous sessions; null for anonymous"
+properties:
+  net_id:
+    type: string
+  uin:
+    type: string
+  email:
+    type: string
+  first_name:
+    type: string
+  last_name:
+    type: string
+  roles:
+    type: array
+    items:
+      type: string
