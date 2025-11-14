@@ -303,20 +303,48 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 
 	//check if a previous refresh token is being used
 	//the session must contain the token since the session was returned by Mongo, so the token is old if not equal to the last token in the list
-	currentToken := loginSession.CurrentRefreshToken()
-	if currentToken == "" {
-		return nil, errors.ErrorData(logutils.StatusMissing, "refresh tokens", nil)
+	currentToken, err := loginSession.CurrentRefreshToken()
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeRefreshToken, nil, err)
 	}
 	if refreshToken != currentToken {
-		l.Infof("previous refresh token being used, so delete login session and return null - %s", refreshToken)
+		//allow refresh if the previous token is being used and we are in the grace period
 
-		//remove the session
-		err = a.deleteLoginSession(nil, *loginSession, l)
-		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, logutils.StringArgs("previous refresh token"), err)
+		masked := utils.MaskString(refreshToken, 5)
+		l.Infof("old refresh token being used - %s", masked)
+
+		//small helper to avoid repeating cleanup
+		cleanup := func() (*model.LoginSession, error) {
+			err = a.deleteLoginSession(nil, *loginSession, l)
+			if err != nil {
+				return nil, errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, logutils.StringArgs("previous refresh token"), err)
+			}
+			return nil, nil
 		}
 
-		return nil, nil
+		//get the previous token as it is what we allow during grace period
+		previousToken, err := loginSession.PreviousRefreshToken()
+		if err != nil {
+			//we cannot get the previous token, so we cannot allow refresh
+			l.Infof("error getting previous refresh token - %v", err)
+			return cleanup()
+		}
+
+		//now check if the provided token is the previous token
+		if refreshToken != previousToken {
+			//not the previous token, so we cannot allow refresh
+			l.Infof("not the previous token, so we cannot allow refresh - %s", masked)
+			return cleanup()
+		}
+
+		//now check if we are in the grace period
+		if !loginSession.IsInRefreshGracePeriod(nil) {
+			l.Infof("not in grace period, so we cannot allow refresh - %s", masked)
+			return cleanup()
+		}
+
+		//the provided token is the previous token and we are in grace period, so allow refresh
+		l.Info("the provided token is the previous token and we are in grace period, so allow refresh")
 	}
 
 	//TODO: Ideally we would not make many database calls before validating the API key. Currently needed to get app ID

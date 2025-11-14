@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Admin API for filtering signed-in accounts [#789](https://github.com/rokwire/core-building-block/issues/789)
 
+## [1.60.1] - 2025-11-12
+### Changed
+- Improve refresh token grace period logging [#814](https://github.com/rokwire/core-building-block/issues/814)
+
+## [1.60.0] - 2025-11-10
+### Changed
+- Implement refresh token reuse detection grace period [#811](https://github.com/rokwire/core-building-block/issues/811)
+
 ## [1.59.0] - 2025-09-15
 ### Added
 - Improve profile filtering for participant age [#791](https://github.com/rokwire/core-building-block/issues/791)
