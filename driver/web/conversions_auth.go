@@ -49,18 +49,43 @@ func loginSessionToDef(item model.LoginSession) Def.LoginSession {
 	dateRefreshed := utils.FormatTime(item.DateRefreshed)
 	dateUpdated := utils.FormatTime(item.DateUpdated)
 	dateCreated := utils.FormatTime(&item.DateCreated)
+	accountSummary := accountSummaryToDef(item.AccountSummary)
 	return Def.LoginSession{Id: &item.ID, Anonymous: &item.Anonymous, AuthTypeCode: &authTypeCode, AppOrgId: &appOrgID,
 		AccountAuthTypeId: accountAuthTypeID, AccountAuthTypeIdentifier: accountAuthTypeIdentifier, AppTypeId: &appTypeID,
 		AppTypeIdentifier: &appTypeIdentifier, DeviceId: deviceID, Identifier: &item.Identifier, IpAddress: &item.IPAddress,
 		RefreshTokensCount: &refreshTokensCount, State: &item.State, MfaAttempts: &item.MfaAttempts, StateExpires: &stateExpires,
-		DateRefreshed: &dateRefreshed, DateUpdated: &dateUpdated, DateCreated: &dateCreated,
+		DateRefreshed: &dateRefreshed, DateUpdated: &dateUpdated, DateCreated: &dateCreated, AccountSummary: accountSummary,
 	}
 }
-
 func loginSessionsToDef(items []model.LoginSession) []Def.LoginSession {
 	result := make([]Def.LoginSession, len(items))
 	for i, item := range items {
 		result[i] = loginSessionToDef(item)
+	}
+	return result
+}
+
+func accountSummaryToDef(summary *model.AccountSummary) *Def.AccountSummary {
+
+	if summary == nil {
+		return nil
+	}
+
+	var roles *[]string
+	if len(summary.Roles) > 0 {
+		cp := make([]string, len(summary.Roles))
+		copy(cp, summary.Roles)
+		roles = &cp
+	}
+
+	return &Def.AccountSummary{Email: &summary.Email, FirstName: &summary.FirstName, LastName: &summary.LastName,
+		NetId: &summary.NetID, Uin: &summary.UIN, Roles: roles}
+}
+
+func accountsSummaryToDef(summary []model.AccountSummary) []Def.AccountSummary {
+	result := make([]Def.AccountSummary, len(summary))
+	for i, item := range summary {
+		result[i] = *accountSummaryToDef(&item)
 	}
 	return result
 }

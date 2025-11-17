@@ -24,6 +24,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth/authorization"
@@ -746,8 +747,28 @@ func (h AdminApisHandler) getApplicationLoginSessions(l *logs.Log, r *http.Reque
 		ipAddress = &ipAddressFromQuery
 	}
 
+	var startDateTime *time.Time
+	if v := r.URL.Query().Get("start-date-time"); v != "" {
+		if sec, err := strconv.ParseInt(v, 10, 64); err == nil {
+			t := time.Unix(sec, 0).UTC()
+			startDateTime = &t
+		}
+	}
+	var endDateTime *time.Time
+	if v := r.URL.Query().Get("end-date-time"); v != "" {
+		if sec, err := strconv.ParseInt(v, 10, 64); err == nil {
+			t := time.Unix(sec, 0).UTC()
+			endDateTime = &t
+		}
+	}
+	userRoleFromQuery := r.URL.Query().Get("user-role")
+	var userRole *string
+	if userRoleFromQuery != "" {
+		userRole = &userRoleFromQuery
+	}
+
 	getLoginSessions, err := h.coreAPIs.Administration.AdmGetApplicationLoginSessions(claims.AppID, claims.OrgID, identifier, accountAuthTypeIdentifier, appTypeID,
-		appTypeIdentifier, anonymous, deviceID, ipAddress)
+		appTypeIdentifier, anonymous, deviceID, ipAddress, startDateTime, endDateTime, userRole)
 	if err != nil {
 		return l.HTTPResponseErrorAction("error finding login sessions", model.TypeLoginSession, nil, err, http.StatusInternalServerError, true)
 	}
