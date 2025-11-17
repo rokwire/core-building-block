@@ -1062,6 +1062,11 @@ func (sa *Adapter) FindLoginSessionsByParams(appID string, orgID string, session
 		filter = append(filter, primitive.E{Key: "date_created", Value: rangeFilter})
 	}
 
+	// Ensure required indexes exist before running this query
+	if err := sa.loginsSessionsChecks(); err != nil {
+		sa.logger.Warnf("loginsSessionsChecks failed: %v", err)
+	}
+
 	// no userRole → regular Find
 	if userRole == nil || *userRole == "" {
 		var result []loginSession
@@ -1110,6 +1115,16 @@ func (sa *Adapter) FindLoginSessionsByParams(appID string, orgID string, session
 		bson.D{{Key: "$limit", Value: limit}},
 	}
 
+	// Ensure required index exists for lookup on orgs_accounts (roles query)
+	orgsAccounts := sa.db.tenantsAccounts
+	if orgsAccounts != nil {
+		if err := orgsAccounts.AddIndex(bson.D{
+			{Key: "org_apps_memberships.preferences.roles", Value: 1},
+		}, false); err != nil {
+			sa.logger.Warnf("failed to ensure orgs_accounts index: %v", err)
+		}
+	}
+
 	var joined []loginSession
 	aggOpts := options.Aggregate().SetAllowDiskUse(true)
 	if err := sa.db.loginsSessions.Aggregate(pipeline, &joined, aggOpts); err != nil {
@@ -1130,6 +1145,81 @@ func (sa *Adapter) FindLoginSessionsByParams(appID string, orgID string, session
 		out = append(out, *built)
 	}
 	return out, nil
+}
+
+func (sa *Adapter) loginsSessionsChecks() error {
+	sa.logger.Info("apply logins sessions checks for API.....")
+
+	loginsSessions := sa.db.loginsSessions
+
+	// Basic index for app + org
+	err := loginsSessions.AddIndex(bson.D{
+		{Key: "app_id", Value: 1},
+		{Key: "org_id", Value: 1},
+	}, false)
+	if err != nil {
+		return err
+	}
+
+	// Main compound index used by FindLoginSessionsByParams
+	err = loginsSessions.AddIndex(bson.D{
+		{Key: "app_id", Value: 1},
+		{Key: "org_id", Value: 1},
+		{Key: "identifier", Value: 1},
+		{Key: "date_created", Value: -1},
+	}, false)
+	if err != nil {
+		return err
+	}
+
+	// Optional but used filters
+	err = loginsSessions.AddIndex(bson.D{
+		{Key: "app_id", Value: 1},
+		{Key: "org_id", Value: 1},
+		{Key: "device_id", Value: 1},
+	}, false)
+	if err != nil {
+		return err
+	}
+
+	err = loginsSessions.AddIndex(bson.D{
+		{Key: "app_id", Value: 1},
+		{Key: "org_id", Value: 1},
+		{Key: "ip_address", Value: 1},
+	}, false)
+	if err != nil {
+		return err
+	}
+
+	err = loginsSessions.AddIndex(bson.D{
+		{Key: "app_id", Value: 1},
+		{Key: "org_id", Value: 1},
+		{Key: "account_auth_type_identifier", Value: 1},
+	}, false)
+	if err != nil {
+		return err
+	}
+
+	err = loginsSessions.AddIndex(bson.D{
+		{Key: "app_id", Value: 1},
+		{Key: "org_id", Value: 1},
+		{Key: "app_type_id", Value: 1},
+	}, false)
+	if err != nil {
+		return err
+	}
+
+	err = loginsSessions.AddIndex(bson.D{
+		{Key: "app_id", Value: 1},
+		{Key: "org_id", Value: 1},
+		{Key: "app_type_identifier", Value: 1},
+	}, false)
+	if err != nil {
+		return err
+	}
+
+	sa.logger.Info("logins sessions checks for API passed")
+	return nil
 }
 
 // FindLoginSession finds a login session
