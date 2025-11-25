@@ -1,6 +1,5 @@
 version: 0.2
 
-# Environment variables used during the build
 env:
   variables:
     AWS_DEFAULT_REGION: us-east-2
@@ -10,35 +9,27 @@ env:
 phases:
   pre_build:
     commands:
-      # Login to Amazon ECR
-      - echo Logging in to Amazon ECR...
+      - echo "Logging in to Amazon ECR..."
       - aws --version
       - IMAGE_REPO="${ECR_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${ECR_REPOSITORY}"
-
-      # Use the short git commit hash as a tag
       - COMMIT_HASH=$(echo "$CODEBUILD_RESOLVED_SOURCE_VERSION" | cut -c1-7 || echo "dev")
       - IMAGE_TAG="$COMMIT_HASH"
       - echo "Image repo: $IMAGE_REPO"
       - echo "Image tag: $IMAGE_TAG"
-
-      # Authenticate Docker to ECR
       - aws ecr get-login-password --region "$AWS_DEFAULT_REGION" | docker login --username AWS --password-stdin "${ECR_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com"
 
   build:
     commands:
-      # Build Docker image from the Dockerfile
-      - echo Building Docker image...
+      - echo "Building Docker image..."
       - docker build -t "${IMAGE_REPO}:${IMAGE_TAG}" -t "${IMAGE_REPO}:dev-latest" .
 
   post_build:
     commands:
-      # Push both image tags to ECR
-      - echo Pushing Docker image to ECR...
+      - echo "Pushing Docker image to ECR..."
       - docker push "${IMAGE_REPO}:${IMAGE_TAG}"
       - docker push "${IMAGE_REPO}:dev-latest"
-      - echo Build completed on `date`
+      - echo "Build completed on $(date)"
 
-# Artifacts output (not used by ECS deploy, but required by CodePipeline)
 artifacts:
   files:
     - "**/*"
