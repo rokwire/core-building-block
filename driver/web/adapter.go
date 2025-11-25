@@ -309,7 +309,7 @@ func (we Adapter) Start() {
 	if len(we.corsAllowedOrigins) > 0 {
 		handler = webauth.SetupCORS(we.corsAllowedOrigins, we.corsAllowedHeaders, router)
 	}
-	err := http.ListenAndServe(":5050", handler)
+	err := http.ListenAndServe(":"+we.port, handler)
 	if err != nil {
 		we.logger.Fatalf("error on listen and server - %s", err.Error())
 	}
