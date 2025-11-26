@@ -12,11 +12,12 @@ phases:
       - echo Logging in to Amazon ECR
       - aws --version
       - IMAGE_REPO=${ECR_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${ECR_REPOSITORY}
-      - COMMIT_HASH=$(echo "$CODEBUILD_RESOLVED_SOURCE_VERSION" | cut -c1-7 || echo dev)
-      - IMAGE_TAG=$COMMIT_HASH
+      - VERSION=$(git describe --tags --abbrev=0 || echo dev)
+      - IMAGE_TAG=$(echo ${VERSION} | sed 's/^v//')
       - echo Image repo is ${IMAGE_REPO}
-      - echo Image tag is ${IMAGE_TAG}
-      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin ${ECR_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com
+      - echo Git version ${VERSION}
+      - echo Image tag ${IMAGE_TAG}
+      - aws ecr get-login-password --region ${AWS_DEFAULT_REGION} | docker login --username AWS --password-stdin ${ECR_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com
 
   build:
     commands:
