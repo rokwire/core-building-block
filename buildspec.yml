@@ -12,11 +12,15 @@ phases:
       - echo Logging in to Amazon ECR
       - aws --version
       - IMAGE_REPO=${ECR_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${ECR_REPOSITORY}
-      - VERSION=$(git describe --tags --abbrev=0 || echo dev)
-      - IMAGE_TAG=$(echo ${VERSION} | sed 's/^v//')
-      - echo Image repo is ${IMAGE_REPO}
-      - echo Git version ${VERSION}
-      - echo Image tag ${IMAGE_TAG}
+
+      # Derive VERSION from CODEBUILD_SOURCE_VERSION when pipeline is triggered by a tag
+      - echo CODEBUILD_SOURCE_VERSION is ${CODEBUILD_SOURCE_VERSION}
+      - VERSION=dev
+      - if echo "${CODEBUILD_SOURCE_VERSION}" | grep -q '^refs/tags/'; then VERSION=${CODEBUILD_SOURCE_VERSION#refs/tags/}; fi
+      - IMAGE_TAG=${VERSION#v}
+      - echo Using version ${VERSION}
+      - echo Using image tag ${IMAGE_TAG}
+
       - aws ecr get-login-password --region ${AWS_DEFAULT_REGION} | docker login --username AWS --password-stdin ${ECR_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com
 
   build:
