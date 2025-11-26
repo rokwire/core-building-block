@@ -9,26 +9,26 @@ env:
 phases:
   pre_build:
     commands:
-      - echo "Logging in to Amazon ECR..."
+      - echo Logging in to Amazon ECR
       - aws --version
-      - IMAGE_REPO="${ECR_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${ECR_REPOSITORY}"
-      - COMMIT_HASH=$(echo "$CODEBUILD_RESOLVED_SOURCE_VERSION" | cut -c1-7 || echo "dev")
-      - IMAGE_TAG="$COMMIT_HASH"
-      - echo "Image repo: $IMAGE_REPO"
-      - echo "Image tag: $IMAGE_TAG"
-      - aws ecr get-login-password --region "$AWS_DEFAULT_REGION" | docker login --username AWS --password-stdin "${ECR_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com"
+      - IMAGE_REPO=${ECR_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${ECR_REPOSITORY}
+      - COMMIT_HASH=$(echo "$CODEBUILD_RESOLVED_SOURCE_VERSION" | cut -c1-7 || echo dev)
+      - IMAGE_TAG=$COMMIT_HASH
+      - echo Image repo is ${IMAGE_REPO}
+      - echo Image tag is ${IMAGE_TAG}
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin ${ECR_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com
 
   build:
     commands:
-      - echo "Building Docker image..."
-      - docker build -t "${IMAGE_REPO}:${IMAGE_TAG}" -t "${IMAGE_REPO}:dev-latest" .
+      - echo Building Docker image
+      - docker build -t ${IMAGE_REPO}:${IMAGE_TAG} -t ${IMAGE_REPO}:dev-latest .
 
   post_build:
     commands:
-      - echo "Pushing Docker image to ECR..."
-      - docker push "${IMAGE_REPO}:${IMAGE_TAG}"
-      - docker push "${IMAGE_REPO}:dev-latest"
-      - echo "Build completed on $(date)"
+      - echo Pushing Docker image to ECR
+      - docker push ${IMAGE_REPO}:${IMAGE_TAG}
+      - docker push ${IMAGE_REPO}:dev-latest
+      - echo Build completed
 
 artifacts:
   files:
