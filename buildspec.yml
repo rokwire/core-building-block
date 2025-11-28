@@ -30,6 +30,12 @@ phases:
     commands:
       - echo Pushing Docker image to ECR
       - docker push ${IMAGE_REPO}:${IMAGE_TAG}
+      - IMAGE_URI=${IMAGE_REPO}:${IMAGE_TAG}
+      - echo "Writing imagedefinitions.json for ECS"
+      - printf '[{"name":"rokwire-core-service-container","imageUri":"%s"}]' "$IMAGE_URI" > imagedefinitions.json
+      - echo "imagedefinitions.json content:"
+      - cat imagedefinitions.json
+
       - echo Build completed
 
 artifacts:
