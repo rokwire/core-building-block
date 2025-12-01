@@ -1,4 +1,4 @@
-FROM golang:1.24-alpine AS builder
+FROM public.ecr.aws/docker/library/golang:1.24-alpine AS builder
 
 ENV CGO_ENABLED=0
 
@@ -10,7 +10,7 @@ WORKDIR /app
 COPY . .
 RUN make
 
-FROM alpine:3.21.3
+FROM public.ecr.aws/docker/library/alpine:3.21.3
 
 #we need timezone database + certificates
 RUN apk add --no-cache tzdata ca-certificates

@@ -4,14 +4,20 @@ BASE     = $(CURDIR)
 MODULE = $(shell cd $(BASE) && $(GO) list -m)
 PKGS     = $(or $(PKG),$(shell cd $(BASE) && $(GO) list ./...))
 BUILDS   = $(or $(BUILD),$(shell cd $(BASE) && $(GO) list -f "{{if eq .Name \"main\"}}{{.ImportPath}}{{end}}" ./...))
-GIT_VERSION=$(shell git describe --tags --match "v*" 2> /dev/null || cat $(CURDIR)/.version 2> /dev/null || echo v0.0-0-)
-BASE_VERSION=$(shell echo $(GIT_VERSION) | cut -f1 -d'-')
-MAJOR_VERSION=$(shell echo $(BASE_VERSION) | cut -f1 -d'.' | cut -f2 -d'v')
-MINOR_VERSION=$(shell echo $(BASE_VERSION) | cut -f2 -d'.')
-PATCH_VERSION=$(shell echo $(BASE_VERSION) | cut -f3 -d'.' || echo 0)
-COMMIT_OFFSET=$(shell echo $(GIT_VERSION) | cut -s -f2 -d'-')
-COMMIT_HASH=$(shell echo $(GIT_VERSION) | cut -s -f3 -d'-')
-VERSION=${MAJOR_VERSION}.${MINOR_VERSION}.${PATCH_VERSION}$(if $(COMMIT_OFFSET),+$(COMMIT_OFFSET),)
+
+# Read version from VERSION file (fallback to .version or 0.0.0)
+VERSION_FILE ?= $(CURDIR)/VERSION
+
+RAW_VERSION := $(shell cat $(VERSION_FILE) 2> /dev/null || cat $(CURDIR)/.version 2> /dev/null || echo 0.0.0)
+
+# Keep the same variable names as before, but based only on RAW_VERSION
+BASE_VERSION   := v$(RAW_VERSION)
+MAJOR_VERSION  := $(shell echo $(RAW_VERSION) | cut -f1 -d'.')
+MINOR_VERSION  := $(shell echo $(RAW_VERSION) | cut -f2 -d'.')
+PATCH_VERSION  := $(shell echo $(RAW_VERSION) | cut -f3 -d'.' || echo 0)
+COMMIT_OFFSET  :=
+COMMIT_HASH    :=
+VERSION        := $(RAW_VERSION)
 
 export -n GOBIN
 
@@ -124,7 +130,7 @@ log-variables: ; $(info $(M) logging variables...) @ ## Log the variables values
 	@echo "MODULE:"$(MODULE)
 	@echo "PKGS:"$(PKGS)
 	@echo "BUILDS:"$(BUILDS)
-	@echo "GIT_VERSION:"$(GIT_VERSION)
+	@echo "RAW_VERSION:"$(RAW_VERSION)
 	@echo "BASE_VERSION:"$(BASE_VERSION)
 	@echo "MAJOR_VERSION:"$(MAJOR_VERSION)
 	@echo "MINOR_VERSION:"$(MINOR_VERSION)
