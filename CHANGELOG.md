@@ -6,8 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+
+## [1.60.3] - 2025-12-01
 ### Changed
-- Prepare Core BB for automatic build [#817](https://github.com/rokwire/core-building-block/issues/817)
+- Prepare Core BB for automatic build - done [#817](https://github.com/rokwire/core-building-block/issues/817)
+
+## [1.60.2] - 2025-11-28
+### Changed
+- Prepare Core BB for automatic build - test [#817](https://github.com/rokwire/core-building-block/issues/817)
 
 ## [1.60.1] - 2025-11-12
 ### Changed
