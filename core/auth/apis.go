@@ -338,8 +338,9 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 		}
 
 		//now check if we are in the grace period
-		if !loginSession.IsInRefreshGracePeriod(nil) {
-			l.Infof("not in grace period, so we cannot allow refresh - %s", masked)
+		inRefreshGracePeriod, elapsed := loginSession.IsInRefreshGracePeriod(nil)
+		if !inRefreshGracePeriod {
+			l.Infof("not in grace period as elapsed is %v, so we cannot allow refresh - %s", elapsed, masked)
 			return cleanup()
 		}
 
