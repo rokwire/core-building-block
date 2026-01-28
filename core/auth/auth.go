@@ -2601,7 +2601,7 @@ func (a *Auth) getStandardClaims(sub string, uid string, name string, email stri
 
 func (a *Auth) getExp(exp *time.Time) time.Time {
 	if exp == nil {
-		defaultTime := time.Now().Add(30 * time.Minute) //TODO: Set up org configs for default token exp
+		defaultTime := time.Now().Add(2 * time.Minute) // Temporary for test //TODO: Set up org configs for default token exp
 		return defaultTime
 	}
 	expTime := exp
