@@ -273,6 +273,8 @@ func (a *Auth) CanLink(authenticationType string, userIdentifier string, apiKey 
 //			Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
 //			Params (interface{}): authType-specific set of parameters passed back to client
 func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string, l *logs.Log) (*model.LoginSession, error) {
+	a.logger.Infof("Auth.Refresh called rt=%s", utils.MaskString(refreshToken, 5))
+
 	var loginSession *model.LoginSession
 
 	//find the login session for the refresh token
