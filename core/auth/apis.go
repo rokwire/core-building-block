@@ -332,7 +332,7 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 	if err != nil {
 		return model.RefreshResult{
 			Status: model.RefreshInternalError,
-			Err:    errors.WrapErrorAction(logutils.ActionGet,џь модели.TypeRefreshToken, nil, err),
+			Err:    errors.WrapErrorAction(logutils.ActionGet, model.TypeRefreshToken, nil, err),
 		}
 	}
 	if refreshToken != currentToken {
