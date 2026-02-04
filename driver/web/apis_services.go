@@ -191,7 +191,7 @@ func (h ServicesApisHandler) refresh(l *logs.Log, r *http.Request, claims *token
 
 	loginSession := result.Session
 	if loginSession == nil {
-		// safety net (should not happen when Status == RefreshOK)
+		//safety net - should not happen when Status == RefreshOK
 		return l.HTTPResponseError(http.StatusText(http.StatusUnauthorized), nil, http.StatusUnauthorized, true)
 	}
 
