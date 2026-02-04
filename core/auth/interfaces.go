@@ -188,18 +188,29 @@ type APIs interface {
 	//		canLink (bool): valid when error is nil
 	CanLink(authenticationType string, userIdentifier string, apiKey string, appTypeIdentifier string, orgID string) (bool, error)
 
-	//Refresh refreshes an access token using a refresh token
-	//	Input:
-	//		refreshToken (string): Refresh token
-	//		apiKey (string): API key to validate the specified app
-	//      clientVersion(*string): Most recent client version
-	//		l (*logs.Log): Log object pointer for request
-	//	Returns:
-	//		Login session (*LoginSession): Signed ROKWIRE access token to be used to authorize future requests
-	//			Access token (string): Signed ROKWIRE access token to be used to authorize future requests
-	//			Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
-	//			Params (interface{}): authType-specific set of parameters passed back to client
-	Refresh(refreshToken string, apiKey string, clientVersion *string, l *logs.Log) (*model.LoginSession, error)
+	// Refresh refreshes an access token using a refresh token
+	//
+	// Input:
+	//   refreshToken (string): Refresh token provided by the client
+	//   apiKey (string): API key used to validate the calling application
+	//   clientVersion (*string): Most recent client version (if provided by the client)
+	//   l (*logs.Log): Log object pointer for request-scoped logging
+	//
+	// Returns:
+	//   RefreshResult (model.RefreshResult):
+	//     Status  (RefreshStatus): Domain-level result of the refresh operation.
+	//       - RefreshOK: Refresh succeeded and a new login session is returned.
+	//       - RefreshUnauthorized: Refresh token is missing, invalid, expired, or not allowed.
+	//       - RefreshInvalidAPIKey: API key validation failed.
+	//       - RefreshInternalError: An unexpected internal error occurred.
+	//     Session (*LoginSession): Updated login session containing:
+	//       - Access token (string): Signed ROKWIRE access token to authorize future requests.
+	//       - Refresh token (string): New refresh token to be used for the next refresh.
+	//       - Params (interface{}): authType-specific parameters passed back to the client.
+	//       This field is set only when Status == RefreshOK.
+	//     Err (error): Optional internal error details, mainly for logging and debugging.
+	//       Typically set only when Status == RefreshInternalError.
+	Refresh(refreshToken string, apiKey string, clientVersion *string, l *logs.Log) model.RefreshResult
 
 	//GetLoginURL returns a pre-formatted login url for SSO providers
 	//	Input:
