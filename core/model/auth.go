@@ -267,6 +267,32 @@ func (ls LoginSession) LogInfo() string {
 		ls.StateExpires, ls.MfaAttempts, ls.DateRefreshed, ls.DateUpdated, ls.DateCreated)
 }
 
+// RefreshStatus describes the domain outcome of Auth.Refresh.
+// It is NOT an HTTP status code.
+type RefreshStatus int
+
+const (
+	// RefreshOK means refresh succeeded and we return a LoginSession with new tokens.
+	RefreshOK RefreshStatus = iota
+
+	// RefreshUnauthorized means refresh cannot be completed with the provided data.
+	// (examples: refresh token not found, old token not allowed, expired session -> currently treated as unauthorized)
+	RefreshUnauthorized
+
+	// RefreshInvalidAPIKey means the API key is not valid for the app.
+	RefreshInvalidAPIKey
+
+	// RefreshInternalError means an unexpected technical error happened (db, external auth, token generation, etc.).
+	RefreshInternalError
+)
+
+// RefreshResult is the domain result from Auth.Refresh.
+type RefreshResult struct {
+	Status  RefreshStatus
+	Session *LoginSession //set only when Status == RefreshOK
+	Err     error         //usually set when Status == RefreshInternalError (optional otherwise)
+}
+
 // APIKey represents an API key entity
 type APIKey struct {
 	ID    string `json:"id" bson:"_id"`

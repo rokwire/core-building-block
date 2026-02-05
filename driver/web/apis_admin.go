@@ -214,12 +214,30 @@ func (h AdminApisHandler) refresh(l *logs.Log, r *http.Request, claims *tokenaut
 		return l.HTTPResponseErrorAction(logutils.ActionUnmarshal, logutils.MessageDataType("auth refresh request"), nil, err, http.StatusBadRequest, true)
 	}
 
-	loginSession, err := h.coreAPIs.Auth.Refresh(requestData.RefreshToken, requestData.ApiKey, &clientVersion, l)
-	if err != nil {
-		return l.HTTPResponseError("Error refreshing token", err, http.StatusInternalServerError, true)
+	result := h.coreAPIs.Auth.Refresh(requestData.RefreshToken, requestData.ApiKey, &clientVersion, l)
+
+	//handle by status
+	switch result.Status {
+	case model.RefreshOK:
+		//continue below
+
+	case model.RefreshUnauthorized:
+		return l.HTTPResponseError(http.StatusText(http.StatusUnauthorized), nil, http.StatusUnauthorized, true)
+
+	case model.RefreshInvalidAPIKey:
+		return l.HTTPResponseError("Error refreshing token", result.Err, http.StatusInternalServerError, true)
+
+	case model.RefreshInternalError:
+		return l.HTTPResponseError("Error refreshing token", result.Err, http.StatusInternalServerError, true)
+
+	default:
+		//unknown status, so treat as internal
+		return l.HTTPResponseError("Error refreshing token", result.Err, http.StatusInternalServerError, true)
 	}
+
+	loginSession := result.Session
 	if loginSession == nil {
-		//if login session is null then unauthorized
+		//safety net - should not happen when Status == RefreshOK
 		return l.HTTPResponseError(http.StatusText(http.StatusUnauthorized), nil, http.StatusUnauthorized, true)
 	}
 
