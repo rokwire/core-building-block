@@ -341,8 +341,15 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 		masked := utils.MaskString(refreshToken, 5)
 		l.Infof("old refresh token being used - %s", masked)
 
-		//small helper to avoid repeating returnUnauthorized
-		returnUnauthorized := func() model.RefreshResult {
+		//small helper to avoid repeating cleanup
+		cleanup := func() model.RefreshResult {
+			err = a.deleteLoginSession(nil, *loginSession, l)
+			if err != nil {
+				return model.RefreshResult{
+					Status: model.RefreshInternalError,
+					Err:    errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, logutils.StringArgs("previous refresh token"), err),
+				}
+			}
 			return model.RefreshResult{
 				Status: model.RefreshUnauthorized,
 			}
@@ -353,21 +360,21 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 		if err != nil {
 			//we cannot get the previous token, so we cannot allow refresh
 			l.Infof("error getting previous refresh token - %v", err)
-			return returnUnauthorized()
+			return cleanup()
 		}
 
 		//now check if the provided token is the previous token
 		if refreshToken != previousToken {
 			//not the previous token, so we cannot allow refresh
 			l.Infof("not the previous token, so we cannot allow refresh - %s", masked)
-			return returnUnauthorized()
+			return cleanup()
 		}
 
 		//now check if we are in the grace period
 		inRefreshGracePeriod, elapsed := loginSession.IsInRefreshGracePeriod(nil)
 		if !inRefreshGracePeriod {
 			l.Infof("not in grace period as elapsed is %v, so we cannot allow refresh - %s", elapsed, masked)
-			return returnUnauthorized()
+			return cleanup()
 		}
 
 		//the provided token is the previous token and we are in grace period, so allow refresh
