@@ -263,16 +263,29 @@ func (a *Auth) CanLink(authenticationType string, userIdentifier string, apiKey 
 
 // Refresh refreshes an access token using a refresh token
 //
-//	Input:
-//		refreshToken (string): Refresh token
-//		apiKey (string): API key to validate the specified app
-//		l (*logs.Log): Log object pointer for request
-//	Returns:
-//		Login session (*LoginSession): Signed ROKWIRE access token to be used to authorize future requests
-//			Access token (string): Signed ROKWIRE access token to be used to authorize future requests
-//			Refresh Token (string): Refresh token that can be sent to refresh the access token once it expires
-//			Params (interface{}): authType-specific set of parameters passed back to client
-func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string, l *logs.Log) (*model.LoginSession, error) {
+// Input:
+//
+//	refreshToken (string): Refresh token provided by the client
+//	apiKey (string): API key used to validate the calling application
+//	clientVersion (*string): Most recent client version (if provided by the client)
+//	l (*logs.Log): Log object pointer for request-scoped logging
+//
+// Returns:
+//
+//	RefreshResult (model.RefreshResult):
+//	  Status  (RefreshStatus): Domain-level result of the refresh operation.
+//	    - RefreshOK: Refresh succeeded and a new login session is returned.
+//	    - RefreshUnauthorized: Refresh token is missing, invalid, expired, or not allowed.
+//	    - RefreshInvalidAPIKey: API key validation failed.
+//	    - RefreshInternalError: An unexpected internal error occurred.
+//	  Session (*LoginSession): Updated login session containing:
+//	    - Access token (string): Signed ROKWIRE access token to authorize future requests.
+//	    - Refresh token (string): New refresh token to be used for the next refresh.
+//	    - Params (interface{}): authType-specific parameters passed back to the client.
+//	    This field is set only when Status == RefreshOK.
+//	  Err (error): Optional internal error details, mainly for logging and debugging.
+//	    Typically set only when Status == RefreshInternalError.
+func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string, l *logs.Log) model.RefreshResult {
 	a.logger.Infof("Auth.Refresh called rt=%s", utils.MaskString(refreshToken, 5))
 
 	var loginSession *model.LoginSession
@@ -281,11 +294,16 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 	loginSession, err := a.storage.FindLoginSession(refreshToken)
 	if err != nil {
 		l.Infof("error finding session by refresh token - %s", refreshToken)
-		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, logutils.StringArgs("refresh token"), err)
+		return model.RefreshResult{
+			Status: model.RefreshInternalError,
+			Err:    errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, logutils.StringArgs("refresh token"), err),
+		}
 	}
 	if loginSession == nil {
 		l.Infof("there is no a session for refresh token - %s", refreshToken)
-		return nil, nil
+		return model.RefreshResult{
+			Status: model.RefreshUnauthorized,
+		}
 	}
 	l.SetContext("account_id", loginSession.Identifier)
 
@@ -296,18 +314,26 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 		//remove the session
 		err = a.deleteLoginSession(nil, *loginSession, l)
 		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionDelete, "expired login session", nil, err)
+			return model.RefreshResult{
+				Status: model.RefreshInternalError,
+				Err:    errors.WrapErrorAction(logutils.ActionDelete, "expired login session", nil, err),
+			}
 		}
 
-		//return nul
-		return nil, nil
+		//return null (currently treated as unauthorized in existing behavior)
+		return model.RefreshResult{
+			Status: model.RefreshUnauthorized,
+		}
 	}
 
 	//check if a previous refresh token is being used
 	//the session must contain the token since the session was returned by Mongo, so the token is old if not equal to the last token in the list
 	currentToken, err := loginSession.CurrentRefreshToken()
 	if err != nil {
-		return nil, errors.WrapErrorAction(logutils.ActionGet, model.TypeRefreshToken, nil, err)
+		return model.RefreshResult{
+			Status: model.RefreshInternalError,
+			Err:    errors.WrapErrorAction(logutils.ActionGet, model.TypeRefreshToken, nil, err),
+		}
 	}
 	if refreshToken != currentToken {
 		//allow refresh if the previous token is being used and we are in the grace period
@@ -316,12 +342,17 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 		l.Infof("old refresh token being used - %s", masked)
 
 		//small helper to avoid repeating cleanup
-		cleanup := func() (*model.LoginSession, error) {
+		cleanup := func() model.RefreshResult {
 			err = a.deleteLoginSession(nil, *loginSession, l)
 			if err != nil {
-				return nil, errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, logutils.StringArgs("previous refresh token"), err)
+				return model.RefreshResult{
+					Status: model.RefreshInternalError,
+					Err:    errors.WrapErrorAction(logutils.ActionDelete, model.TypeLoginSession, logutils.StringArgs("previous refresh token"), err),
+				}
 			}
-			return nil, nil
+			return model.RefreshResult{
+				Status: model.RefreshUnauthorized,
+			}
 		}
 
 		//get the previous token as it is what we allow during grace period
@@ -353,7 +384,10 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 	//TODO: Ideally we would not make many database calls before validating the API key. Currently needed to get app ID
 	err = a.validateAPIKey(apiKey, loginSession.AppOrg.Application.ID)
 	if err != nil {
-		return nil, errors.WrapErrorData(logutils.StatusInvalid, model.TypeAPIKey, nil, err)
+		return model.RefreshResult{
+			Status: model.RefreshInvalidAPIKey,
+			Err:    errors.WrapErrorData(logutils.StatusInvalid, model.TypeAPIKey, nil, err),
+		}
 	}
 
 	///now:
@@ -375,27 +409,42 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 		extAuthType, err := a.getExternalAuthTypeImpl(loginSession.AuthType)
 		if err != nil {
 			l.Infof("error getting external auth type on refresh - %s", refreshToken)
-			return nil, errors.WrapErrorAction(logutils.ActionGet, "external auth type", nil, err)
+			return model.RefreshResult{
+				Status: model.RefreshInternalError,
+				Err:    errors.WrapErrorAction(logutils.ActionGet, "external auth type", nil, err),
+			}
 		}
 
 		externalUser, refreshedData, externalCreds, err := extAuthType.refresh(loginSession.Params, loginSession.AuthType, loginSession.AppType, loginSession.AppOrg, l)
 		if err != nil {
 			l.Infof("error refreshing external auth type on refresh - %s", refreshToken)
-			return nil, errors.WrapErrorAction(logutils.ActionRefresh, "external auth type", nil, err)
+			return model.RefreshResult{
+				Status: model.RefreshInternalError,
+				Err:    errors.WrapErrorAction(logutils.ActionRefresh, "external auth type", nil, err),
+			}
 		}
 		if externalUser == nil {
 			l.Errorf("externalUser is nil for some reasons - %s", loginSession.Identifier)
-			return nil, errors.Newf("ext auth type error")
+			return model.RefreshResult{
+				Status: model.RefreshInternalError,
+				Err:    errors.Newf("ext auth type error"),
+			}
 		}
 		if loginSession.AccountAuthType == nil {
 			l.Errorf("loginSession.AccountAuthType is nil for some reasons - %s", loginSession.Identifier)
-			return nil, errors.Newf("ext la auth type error")
+			return model.RefreshResult{
+				Status: model.RefreshInternalError,
+				Err:    errors.Newf("ext la auth type error"),
+			}
 		}
 
 		//check if need to update the account data
 		newAccount, err := a.updateExternalUserIfNeeded(*loginSession.AccountAuthType, *externalUser, loginSession.AuthType, loginSession.AppOrg, externalCreds, l)
 		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeExternalSystemUser, logutils.StringArgs("refresh"), err)
+			return model.RefreshResult{
+				Status: model.RefreshInternalError,
+				Err:    errors.WrapErrorAction(logutils.ActionUpdate, model.TypeExternalSystemUser, logutils.StringArgs("refresh"), err),
+			}
 		}
 
 		loginSession.Params = refreshedData //assign the refreshed data
@@ -409,7 +458,10 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 		accountAuthType := loginSession.AccountAuthType
 		if accountAuthType == nil {
 			l.Infof("for some reasons account auth type is null for not anonymous login - %s", loginSession.ID)
-			return nil, errors.ErrorAction("for some reasons account auth type is null for not anonymous login", "", nil)
+			return model.RefreshResult{
+				Status: model.RefreshInternalError,
+				Err:    errors.ErrorAction("for some reasons account auth type is null for not anonymous login", "", nil),
+			}
 		}
 		uid = accountAuthType.Identifier
 		name = accountAuthType.Account.Profile.GetFullName()
@@ -418,18 +470,26 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 		permissions = accountAuthType.Account.GetPermissionNames()
 		scopes = append(scopes, accountAuthType.Account.GetScopes()...)
 	}
+
 	claims := a.getStandardClaims(sub, uid, name, email, phone, rokwireTokenAud, orgID, appID, authType, loginSession.ExternalIDs, nil, anonymous, false, loginSession.AppOrg.Application.Admin, loginSession.AppOrg.Organization.System, false, true, loginSession.ID)
 	accessToken, err := a.buildAccessToken(claims, strings.Join(permissions, ","), strings.Join(scopes, " "))
 	if err != nil {
 		l.Infof("error generating acccess token on refresh - %s", refreshToken)
-		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
+		return model.RefreshResult{
+			Status: model.RefreshInternalError,
+			Err:    errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err),
+		}
 	}
 	loginSession.AccessToken = accessToken //set the generated token
+
 	// - generate new refresh token
 	refreshToken, err = a.buildRefreshToken()
 	if err != nil {
 		l.Infof("error generating refresh token on refresh - %s", refreshToken)
-		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err)
+		return model.RefreshResult{
+			Status: model.RefreshInternalError,
+			Err:    errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeToken, nil, err),
+		}
 	}
 	if loginSession.RefreshTokens == nil {
 		loginSession.RefreshTokens = make([]string, 0)
@@ -444,7 +504,10 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 	err = a.storage.UpdateLoginSession(nil, *loginSession)
 	if err != nil {
 		l.Infof("error updating login session on refresh - %s", refreshToken)
-		return nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeLoginSession, nil, err)
+		return model.RefreshResult{
+			Status: model.RefreshInternalError,
+			Err:    errors.WrapErrorAction(logutils.ActionUpdate, model.TypeLoginSession, nil, err),
+		}
 	}
 
 	// update account usage information
@@ -452,12 +515,18 @@ func (a *Auth) Refresh(refreshToken string, apiKey string, clientVersion *string
 	if !anonymous {
 		err = a.storage.UpdateAccountUsageInfo(nil, loginSession.Identifier, false, true, clientVersion)
 		if err != nil {
-			return nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountUsageInfo, nil, err)
+			return model.RefreshResult{
+				Status: model.RefreshInternalError,
+				Err:    errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccountUsageInfo, nil, err),
+			}
 		}
 	}
 
 	//return the updated session
-	return loginSession, nil
+	return model.RefreshResult{
+		Status:  model.RefreshOK,
+		Session: loginSession,
+	}
 }
 
 // GetLoginURL returns a pre-formatted login url for SSO providers
