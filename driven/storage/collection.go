@@ -21,7 +21,7 @@ import (
 	"time"
 
 	"github.com/rokwire/rokwire-building-block-sdk-go/utils/logging/logs"
-	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
@@ -40,7 +40,7 @@ func (collWrapper *collectionWrapper) FindWithContext(ctx context.Context, filte
 }
 
 func (collWrapper *collectionWrapper) FindWithParams(ctx context.Context, filter interface{}, result interface{},
-	findOptions *options.FindOptions, timeout *time.Duration) error {
+	findOptions []options.Lister[options.FindOptions], timeout *time.Duration) error {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -58,7 +58,7 @@ func (collWrapper *collectionWrapper) FindWithParams(ctx context.Context, filter
 		filter = bson.D{}
 	}
 
-	cur, err := collWrapper.coll.Find(ctx, filter, findOptions)
+	cur, err := collWrapper.coll.Find(ctx, filter, findOptions...)
 
 	if err == nil {
 		err = cur.All(ctx, result)
