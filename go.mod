@@ -14,7 +14,7 @@ require (
 	github.com/rokwire/rokwire-building-block-sdk-go v1.8.4
 	github.com/stretchr/testify v1.11.1
 	github.com/swaggo/http-swagger v1.3.4
-	go.mongodb.org/mongo-driver v1.17.4
+	go.mongodb.org/mongo-driver/v2 v2.5.0
 	golang.org/x/crypto v0.41.0
 	golang.org/x/sync v0.16.0
 	gopkg.in/go-playground/validator.v9 v9.31.0
