@@ -727,8 +727,28 @@ func (m *database) onDataChanged(changeDoc map[string]interface{}) {
 	if ns == nil {
 		return
 	}
-	nsMap := ns.(map[string]interface{})
-	coll := nsMap["coll"]
+
+	var coll interface{}
+
+	switch v := ns.(type) {
+	case map[string]interface{}:
+		coll = v["coll"]
+
+	case bson.D:
+		// ns is bson.D in v2 - find "coll" manually
+		for _, e := range v {
+			if e.Key == "coll" {
+				coll = e.Value
+				break
+			}
+		}
+
+	case bson.M:
+		coll = v["coll"]
+
+	default:
+		return
+	}
 
 	switch coll {
 	case "api_keys":
