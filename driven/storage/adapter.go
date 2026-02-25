@@ -29,7 +29,6 @@ import (
 	"github.com/rokwire/rokwire-building-block-sdk-go/utils/logging/logs"
 	"github.com/rokwire/rokwire-building-block-sdk-go/utils/logging/logutils"
 	"github.com/rokwire/rokwire-building-block-sdk-go/utils/rokwireutils"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
@@ -1518,9 +1517,9 @@ func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, 
 		}
 		regexFilter := bson.M{
 			"$or": []bson.M{
-				{"username": primitive.Regex{Pattern: searchStr, Options: "i"}},
-				{"profile.first_name": primitive.Regex{Pattern: searchStr, Options: "i"}},
-				{"profile.last_name": primitive.Regex{Pattern: searchStr, Options: "i"}},
+				{"username": bson.Regex{Pattern: searchStr, Options: "i"}},
+				{"profile.first_name": bson.Regex{Pattern: searchStr, Options: "i"}},
+				{"profile.last_name": bson.Regex{Pattern: searchStr, Options: "i"}},
 			},
 		}
 		pipeline = append(pipeline, bson.M{"$match": regexFilter})
