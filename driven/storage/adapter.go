@@ -1443,19 +1443,28 @@ func (sa *Adapter) FindAccounts(context TransactionContext, limit *int, offset *
 	}
 
 	var list []tenantAccount
-	var findOptions *options.FindOptions
-	if limit != nil {
-		findOptions = options.Find()
-		findOptions.SetLimit(int64(*limit))
-	}
-	if offset != nil {
-		if findOptions == nil {
-			findOptions = options.Find()
+	var findOptsBuilder options.Lister[options.FindOptions]
+	if limit != nil || offset != nil {
+		fo := options.Find()
+		if limit != nil {
+			fo.SetLimit(int64(*limit))
 		}
-		findOptions.SetSkip(int64(*offset))
+		if offset != nil {
+			fo.SetSkip(int64(*offset))
+		}
+		findOptsBuilder = fo
 	}
 
-	err = sa.db.tenantsAccounts.FindWithContext(context, filter, &list, findOptions)
+	var findOpts []options.Lister[options.FindOptions]
+	if findOptsBuilder != nil {
+		findOpts = []options.Lister[options.FindOptions]{findOptsBuilder}
+	}
+
+	err = sa.db.tenantsAccounts.FindWithContext(context, filter, &list, findOpts)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
@@ -1692,16 +1701,16 @@ func (sa *Adapter) FindAccountsByParams(searchParams map[string]interface{}, app
 	filter := sa.getFilterForParams(searchParams)
 
 	var accounts []map[string]interface{}
-	options := options.Find()
-	options.SetLimit(int64(limit))
-	options.SetSkip(int64(offset))
+	opts := options.Find()
+	opts.SetLimit(int64(limit))
+	opts.SetSkip(int64(offset))
 
 	// set projection if scope limited
 	if !allAccess {
-		options.SetProjection(sa.getProjectionForKeys(approvedKeys))
+		opts.SetProjection(sa.getProjectionForKeys(approvedKeys))
 	}
 
-	err = sa.db.tenantsAccounts.Find(filter, &accounts, options)
+	err = sa.db.tenantsAccounts.Find(filter, &accounts, []options.Lister[options.FindOptions]{opts})
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
@@ -2078,13 +2087,13 @@ func (sa *Adapter) UpdateServiceAccount(context TransactionContext, account *mod
 			bson.E{Key: "date_updated", Value: time.Now().UTC()},
 		}},
 	}
-	opts := options.FindOneAndUpdateOptions{}
-	opts.SetReturnDocument(options.After)
-	opts.SetProjection(bson.D{bson.E{Key: "secrets", Value: 0}})
+	opt := options.FindOneAndUpdate().
+		SetReturnDocument(options.After).
+		SetProjection(bson.D{{Key: "secrets", Value: 0}})
 
 	var updated serviceAccount
 	errFields := logutils.FieldArgs{"account_id": storageAccount.AccountID, "app_id": storageAccount.AppID, "org_id": storageAccount.OrgID}
-	err := sa.db.serviceAccounts.FindOneAndUpdateWithContext(context, filter, update, &updated, &opts)
+	err := sa.db.serviceAccounts.FindOneAndUpdateWithContext(context, filter, update, &updated, opt)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionUpdate, model.TypeServiceAccount, &errFields, err)
 	}
