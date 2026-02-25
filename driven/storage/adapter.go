@@ -976,7 +976,7 @@ func (sa *Adapter) FindLoginSessions(context TransactionContext, identifier stri
 	opts.SetSort(bson.D{bson.E{Key: "date_created", Value: 1}})
 
 	var loginSessions []loginSession
-	err := sa.db.loginsSessions.FindWithContext(context, filter, &loginSessions, opts)
+	err := sa.db.loginsSessions.FindWithContext(context, filter, &loginSessions, []options.Lister[options.FindOptions]{opts})
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, &logutils.FieldArgs{"identifier": identifier}, err)
 	}
