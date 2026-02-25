@@ -89,11 +89,11 @@ func (collWrapper *collectionWrapper) FindOneWithContext(ctx context.Context, fi
 	return nil
 }
 
-func (collWrapper *collectionWrapper) ReplaceOne(filter interface{}, replacement interface{}, replaceOptions *options.ReplaceOptions) error {
-	return collWrapper.ReplaceOneWithContext(context.Background(), filter, replacement, replaceOptions)
+func (collWrapper *collectionWrapper) ReplaceOne(filter interface{}, replacement interface{}, replaceOptions ...options.Lister[options.ReplaceOptions]) error {
+	return collWrapper.ReplaceOneWithContext(context.Background(), filter, replacement, replaceOptions...)
 }
 
-func (collWrapper *collectionWrapper) ReplaceOneWithContext(ctx context.Context, filter interface{}, replacement interface{}, replaceOptions *options.ReplaceOptions) error {
+func (collWrapper *collectionWrapper) ReplaceOneWithContext(ctx context.Context, filter interface{}, replacement interface{}, replaceOptions ...options.Lister[options.ReplaceOptions]) error {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -103,22 +103,16 @@ func (collWrapper *collectionWrapper) ReplaceOneWithContext(ctx context.Context,
 	if replacement == nil {
 		return errors.New("replace one - input parameters cannot be nil")
 	}
-	if replaceOptions == nil {
-		replaceOptions = options.Replace() // crash if not added!
-	}
 
-	res, err := collWrapper.coll.ReplaceOne(ctx, filter, replacement, replaceOptions)
+	res, err := collWrapper.coll.ReplaceOne(ctx, filter, replacement, replaceOptions...)
 	if err != nil {
 		return err
 	}
 	if res == nil {
 		return errors.New("replace one - res is nil")
 	}
-	if replaceOptions.Upsert == nil || !*replaceOptions.Upsert {
-		matchedCount := res.MatchedCount
-		if matchedCount == 0 {
-			return errors.New("replace one - no record replaced")
-		}
+	if res.MatchedCount == 0 && res.UpsertedCount == 0 {
+		return errors.New("replace one - no record replaced")
 	}
 
 	return nil
