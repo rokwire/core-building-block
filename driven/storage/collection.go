@@ -138,18 +138,18 @@ func (collWrapper *collectionWrapper) InsertOneWithContext(ctx context.Context, 
 	return nil, err
 }
 
-func (collWrapper *collectionWrapper) InsertMany(documents []interface{}, opts *options.InsertManyOptions) (*mongo.InsertManyResult, error) {
-	return collWrapper.InsertManyWithContext(context.Background(), documents, opts)
+func (collWrapper *collectionWrapper) InsertMany(documents []interface{}, opts ...options.Lister[options.InsertManyOptions]) (*mongo.InsertManyResult, error) {
+	return collWrapper.InsertManyWithContext(context.Background(), documents, opts...)
 }
 
-func (collWrapper *collectionWrapper) InsertManyWithContext(ctx context.Context, documents []interface{}, opts *options.InsertManyOptions) (*mongo.InsertManyResult, error) {
+func (collWrapper *collectionWrapper) InsertManyWithContext(ctx context.Context, documents []interface{}, opts ...options.Lister[options.InsertManyOptions]) (*mongo.InsertManyResult, error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
 	ctx, cancel := context.WithTimeout(ctx, collWrapper.database.mongoTimeout)
 	defer cancel()
 
-	result, err := collWrapper.coll.InsertMany(ctx, documents, opts)
+	result, err := collWrapper.coll.InsertMany(ctx, documents, opts...)
 	if err != nil {
 		return nil, err
 	}
