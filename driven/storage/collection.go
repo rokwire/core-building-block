@@ -391,18 +391,18 @@ func (collWrapper *collectionWrapper) DropIndex(name string) error {
 	return err
 }
 
-func (collWrapper *collectionWrapper) Aggregate(pipeline interface{}, result interface{}, ops *options.AggregateOptions) error {
-	return collWrapper.AggregateWithContext(context.Background(), pipeline, result, ops)
+func (collWrapper *collectionWrapper) Aggregate(pipeline interface{}, result interface{}, ops ...options.Lister[options.AggregateOptions]) error {
+	return collWrapper.AggregateWithContext(context.Background(), pipeline, result, ops...)
 }
 
-func (collWrapper *collectionWrapper) AggregateWithContext(ctx context.Context, pipeline interface{}, result interface{}, ops *options.AggregateOptions) error {
+func (collWrapper *collectionWrapper) AggregateWithContext(ctx context.Context, pipeline interface{}, result interface{}, ops ...options.Lister[options.AggregateOptions]) error {
 	if ctx == nil {
 		ctx = context.Background()
 	}
 	ctx, cancel := context.WithTimeout(ctx, time.Millisecond*15000)
 	defer cancel()
 
-	cursor, err := collWrapper.coll.Aggregate(ctx, pipeline, ops)
+	cursor, err := collWrapper.coll.Aggregate(ctx, pipeline, ops...)
 
 	if err == nil {
 		err = cursor.All(ctx, result)
