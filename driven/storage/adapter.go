@@ -131,24 +131,24 @@ func (sa *Adapter) RegisterStorageListener(storageListener Listener) {
 // PerformTransaction performs a transaction
 func (sa *Adapter) PerformTransaction(transaction func(context TransactionContext) error) error {
 	// transaction
-	err := sa.db.dbClient.UseSession(context.Background(), func(sessionContext mongo.SessionContext) error {
-		err := sessionContext.StartTransaction()
-		if err != nil {
-			sa.abortTransaction(sessionContext)
+	err := sa.db.dbClient.UseSession(context.Background(), func(ctx context.Context) error {
+		sess := mongo.SessionFromContext(ctx)
+
+		if err := sess.StartTransaction(); err != nil {
+			sa.abortTransaction(ctx)
 			return errors.WrapErrorAction(logutils.ActionStart, logutils.TypeTransaction, nil, err)
 		}
 
-		err = transaction(sessionContext)
-		if err != nil {
-			sa.abortTransaction(sessionContext)
+		if err := transaction(ctx); err != nil {
+			sa.abortTransaction(ctx)
 			return errors.WrapErrorAction("performing", logutils.TypeTransaction, nil, err)
 		}
 
-		err = sessionContext.CommitTransaction(sessionContext)
-		if err != nil {
-			sa.abortTransaction(sessionContext)
+		if err := sess.CommitTransaction(ctx); err != nil {
+			sa.abortTransaction(ctx)
 			return errors.WrapErrorAction(logutils.ActionCommit, logutils.TypeTransaction, nil, err)
 		}
+
 		return nil
 	})
 
@@ -4618,11 +4618,9 @@ func (sa *Adapter) convertID(result map[string]interface{}) {
 	}
 }
 
-func (sa *Adapter) abortTransaction(sessionContext mongo.SessionContext) {
-	err := sessionContext.AbortTransaction(sessionContext)
-	if err != nil {
-		sa.logger.Errorf("error aborting a transaction - %s", err)
-	}
+func (sa *Adapter) abortTransaction(ctx context.Context) {
+	sess := mongo.SessionFromContext(ctx)
+	_ = sess.AbortTransaction(ctx)
 }
 
 // NewStorageAdapter creates a new storage adapter instance
@@ -4746,5 +4744,5 @@ func (d *DefaultListenerImpl) OnConfigsUpdated() {}
 
 // TransactionContext wraps mongo.SessionContext for use by external packages
 type TransactionContext interface {
-	mongo.SessionContext
+	context.Context
 }
