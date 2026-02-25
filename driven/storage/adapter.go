@@ -1052,10 +1052,10 @@ func (sa *Adapter) FindLoginSessionsByParams(appID string, orgID string, session
 	}
 
 	var result []loginSession
-	options := options.Find()
+	findOpts := options.Find()
 	limitLoginSession := int64(20)
-	options.SetLimit(limitLoginSession)
-	err := sa.db.loginsSessions.Find(filter, &result, options)
+	findOpts.SetLimit(limitLoginSession)
+	err := sa.db.loginsSessions.Find(filter, &result, []options.Lister[options.FindOptions]{findOpts})
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeLoginSession, nil, err)
 	}
@@ -1098,20 +1098,16 @@ func (sa *Adapter) FindLoginSession(refreshToken string) (*model.LoginSession, e
 // FindAndUpdateLoginSession finds and updates a login session
 func (sa *Adapter) FindAndUpdateLoginSession(context TransactionContext, id string) (*model.LoginSession, error) {
 	//find loggin session
-	filter := bson.D{bson.E{Key: "_id", Value: id}}
+	filter := bson.D{{Key: "_id", Value: id}}
 	update := bson.D{
-		bson.E{Key: "$inc", Value: bson.D{
-			bson.E{Key: "mfa_attempts", Value: 1},
-		}},
-		bson.E{Key: "$set", Value: bson.D{
-			bson.E{Key: "date_updated", Value: time.Now().UTC()},
-		}},
+		{Key: "$inc", Value: bson.D{{Key: "mfa_attempts", Value: 1}}},
+		{Key: "$set", Value: bson.D{{Key: "date_updated", Value: time.Now().UTC()}}},
 	}
-	opts := options.FindOneAndUpdateOptions{}
-	opts.SetReturnDocument(options.Before)
+
+	opt := options.FindOneAndUpdate().SetReturnDocument(options.Before)
 
 	var loginSession loginSession
-	err := sa.db.loginsSessions.FindOneAndUpdateWithContext(context, filter, update, &loginSession, &opts)
+	err := sa.db.loginsSessions.FindOneAndUpdateWithContext(context, filter, update, &loginSession, opt)
 	if err != nil {
 		return nil, errors.WrapErrorAction("finding and updating", model.TypeLoginSession, &logutils.FieldArgs{"_id": id}, err)
 	}
