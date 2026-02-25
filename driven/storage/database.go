@@ -64,10 +64,10 @@ func (m *database) start() error {
 	m.logger.Info("database -> start")
 
 	//connect to the database
-	clientOptions := options.Client().ApplyURI(m.mongoDBAuth)
-	connectContext, cancel := context.WithTimeout(context.Background(), m.mongoTimeout)
-	client, err := mongo.Connect(connectContext, clientOptions)
-	cancel()
+	clientOptions := options.Client().
+		ApplyURI(m.mongoDBAuth).
+		SetTimeout(m.mongoTimeout)
+	client, err := mongo.Connect(clientOptions)
 	if err != nil {
 		return err
 	}
