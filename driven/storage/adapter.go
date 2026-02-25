@@ -2647,10 +2647,12 @@ func (sa *Adapter) InsertAccountAuthType(item model.AccountAuthType) error {
 // UpdateAccountAuthType updates account auth type
 func (sa *Adapter) UpdateAccountAuthType(item model.AccountAuthType) error {
 	// transaction
-	err := sa.db.dbClient.UseSession(context.Background(), func(sessionContext mongo.SessionContext) error {
-		err := sessionContext.StartTransaction()
+	err := sa.db.dbClient.UseSession(context.Background(), func(ctx context.Context) error {
+		sess := mongo.SessionFromContext(ctx)
+
+		err := sess.StartTransaction()
 		if err != nil {
-			sa.abortTransaction(sessionContext)
+			sa.abortTransaction(ctx)
 			return errors.WrapErrorAction(logutils.ActionStart, logutils.TypeTransaction, nil, err)
 		}
 
@@ -2664,13 +2666,13 @@ func (sa *Adapter) UpdateAccountAuthType(item model.AccountAuthType) error {
 		//3. first find the account record
 		findFilter := bson.M{"auth_types.id": item.ID}
 		var accounts []tenantAccount
-		err = sa.db.tenantsAccounts.FindWithContext(sessionContext, findFilter, &accounts, nil)
+		err = sa.db.tenantsAccounts.FindWithContext(ctx, findFilter, &accounts, nil)
 		if err != nil {
-			sa.abortTransaction(sessionContext)
+			sa.abortTransaction(ctx)
 			return errors.WrapErrorAction(logutils.ActionFind, model.TypeUserAuth, &logutils.FieldArgs{"account auth type id": item.ID}, err)
 		}
 		if len(accounts) == 0 {
-			sa.abortTransaction(sessionContext)
+			sa.abortTransaction(ctx)
 			return errors.ErrorAction(logutils.ActionFind, "for some reasons account is nil for account auth type", &logutils.FieldArgs{"acccount auth type id": item.ID})
 		}
 		account := accounts[0]
@@ -2687,18 +2689,18 @@ func (sa *Adapter) UpdateAccountAuthType(item model.AccountAuthType) error {
 		}
 		account.AuthTypes = newAccountAuthTypes
 
-		//4. update the account record
+		//5. update the account record
 		replaceFilter := bson.M{"_id": account.ID}
-		err = sa.db.tenantsAccounts.ReplaceOneWithContext(sessionContext, replaceFilter, account, nil)
+		err = sa.db.tenantsAccounts.ReplaceOneWithContext(ctx, replaceFilter, account)
 		if err != nil {
-			sa.abortTransaction(sessionContext)
+			sa.abortTransaction(ctx)
 			return errors.WrapErrorAction(logutils.ActionReplace, model.TypeAccount, nil, err)
 		}
 
 		//commit the transaction
-		err = sessionContext.CommitTransaction(sessionContext)
+		err = sess.CommitTransaction(ctx)
 		if err != nil {
-			sa.abortTransaction(sessionContext)
+			sa.abortTransaction(ctx)
 			return errors.WrapErrorAction(logutils.ActionCommit, logutils.TypeTransaction, nil, err)
 		}
 		return nil
