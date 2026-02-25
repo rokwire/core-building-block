@@ -157,15 +157,15 @@ func (collWrapper *collectionWrapper) InsertManyWithContext(ctx context.Context,
 	return result, nil
 }
 
-func (collWrapper *collectionWrapper) DeleteMany(filter interface{}, opts *options.DeleteOptions) (*mongo.DeleteResult, error) {
+func (collWrapper *collectionWrapper) DeleteMany(filter interface{}, opts ...options.Lister[options.DeleteManyOptions]) (*mongo.DeleteResult, error) {
 	return collWrapper.DeleteManyWithParams(context.Background(), filter, opts, nil)
 }
 
-func (collWrapper *collectionWrapper) DeleteManyWithContext(ctx context.Context, filter interface{}, opts *options.DeleteOptions) (*mongo.DeleteResult, error) {
+func (collWrapper *collectionWrapper) DeleteManyWithContext(ctx context.Context, filter interface{}, opts ...options.Lister[options.DeleteManyOptions]) (*mongo.DeleteResult, error) {
 	return collWrapper.DeleteManyWithParams(ctx, filter, opts, nil)
 }
 
-func (collWrapper *collectionWrapper) DeleteManyWithParams(ctx context.Context, filter interface{}, opts *options.DeleteOptions, timeout *time.Duration) (*mongo.DeleteResult, error) {
+func (collWrapper *collectionWrapper) DeleteManyWithParams(ctx context.Context, filter interface{}, opts []options.Lister[options.DeleteManyOptions], timeout *time.Duration) (*mongo.DeleteResult, error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -178,7 +178,7 @@ func (collWrapper *collectionWrapper) DeleteManyWithParams(ctx context.Context, 
 	ctx, cancel := context.WithTimeout(ctx, *timeout)
 	defer cancel()
 
-	result, err := collWrapper.coll.DeleteMany(ctx, filter, opts)
+	result, err := collWrapper.coll.DeleteMany(ctx, filter, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -186,18 +186,18 @@ func (collWrapper *collectionWrapper) DeleteManyWithParams(ctx context.Context, 
 	return result, nil
 }
 
-func (collWrapper *collectionWrapper) DeleteOne(filter interface{}, opts *options.DeleteOptions) (*mongo.DeleteResult, error) {
-	return collWrapper.DeleteOneWithContext(context.Background(), filter, opts)
+func (collWrapper *collectionWrapper) DeleteOne(filter interface{}, opts ...options.Lister[options.DeleteOneOptions]) (*mongo.DeleteResult, error) {
+	return collWrapper.DeleteOneWithContext(context.Background(), filter, opts...)
 }
 
-func (collWrapper *collectionWrapper) DeleteOneWithContext(ctx context.Context, filter interface{}, opts *options.DeleteOptions) (*mongo.DeleteResult, error) {
+func (collWrapper *collectionWrapper) DeleteOneWithContext(ctx context.Context, filter interface{}, opts ...options.Lister[options.DeleteOneOptions]) (*mongo.DeleteResult, error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
 	ctx, cancel := context.WithTimeout(ctx, collWrapper.database.mongoTimeout)
 	defer cancel()
 
-	result, err := collWrapper.coll.DeleteOne(ctx, filter, opts)
+	result, err := collWrapper.coll.DeleteOne(ctx, filter, opts...)
 	if err != nil {
 		return nil, err
 	}
