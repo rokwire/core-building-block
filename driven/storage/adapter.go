@@ -3280,13 +3280,13 @@ func (sa *Adapter) updateAppOrgRole(context TransactionContext, item model.AppOr
 			"org_apps_memberships.$[element].roles.$[roleElement].role.date_updated": item.DateUpdated,
 		},
 	}
-	accountsArrayFilters := options.ArrayFilters{
-		Filters: []interface{}{
-			bson.M{"element.roles.role._id": item.ID},
-			bson.M{"roleElement.role._id": item.ID},
-		},
+
+	accountsArrayFilters := []any{
+		bson.M{"element.roles.role._id": item.ID},
+		bson.M{"roleElement.role._id": item.ID},
 	}
-	updateOptions := options.Update().SetArrayFilters(accountsArrayFilters)
+	updateOptions := options.UpdateMany().SetArrayFilters(accountsArrayFilters)
+
 	res, err = sa.db.tenantsAccounts.UpdateManyWithContext(context, accountsFilter, accountsUpdate, updateOptions)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"roles.role._id": item.ID}, err)
@@ -3476,13 +3476,13 @@ func (sa *Adapter) updateAppOrgGroup(context TransactionContext, item model.AppO
 			"org_apps_memberships.$[element].groups.$[groupElement].group.date_updated": item.DateUpdated,
 		},
 	}
-	accountsArrayFilters := options.ArrayFilters{
-		Filters: []interface{}{
-			bson.M{"element.groups.group._id": item.ID},
-			bson.M{"groupElement.group._id": item.ID},
-		},
+
+	accountsArrayFilters := []any{
+		bson.M{"element.groups.group._id": item.ID},
+		bson.M{"groupElement.group._id": item.ID},
 	}
-	updateOptions := options.Update().SetArrayFilters(accountsArrayFilters)
+	updateOptions := options.UpdateMany().SetArrayFilters(accountsArrayFilters)
+
 	res, err = sa.db.tenantsAccounts.UpdateManyWithContext(context, accountsFilter, accountsUpdate, updateOptions)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeAccount, &logutils.FieldArgs{"groups.group.id": item.ID}, err)
@@ -3898,11 +3898,11 @@ func (sa *Adapter) FindApplications() ([]model.Application, error) {
 // loadAppConfigs loads all application configs
 func (sa *Adapter) loadAppConfigs() ([]model.ApplicationConfig, error) {
 	filter := bson.D{}
-	options := options.Find()
-	options.SetSort(bson.D{bson.E{Key: "app_type_id", Value: 1}, bson.E{Key: "app_org_id", Value: 1}, bson.E{Key: "version.version_numbers.major", Value: -1}, bson.E{Key: "version.version_numbers.minor", Value: -1}, bson.E{Key: "version.version_numbers.patch", Value: -1}}) //sort by version numbers
+	ops := options.Find()
+	ops.SetSort(bson.D{bson.E{Key: "app_type_id", Value: 1}, bson.E{Key: "app_org_id", Value: 1}, bson.E{Key: "version.version_numbers.major", Value: -1}, bson.E{Key: "version.version_numbers.minor", Value: -1}, bson.E{Key: "version.version_numbers.patch", Value: -1}}) //sort by version numbers
 	var list []applicationConfig
 
-	err := sa.db.applicationConfigs.Find(filter, &list, options)
+	err := sa.db.applicationConfigs.Find(filter, &list, []options.Lister[options.FindOptions]{ops})
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationConfig, nil, err)
 	}
