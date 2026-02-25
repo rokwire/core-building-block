@@ -19,8 +19,7 @@ import (
 	"time"
 
 	"github.com/rokwire/rokwire-building-block-sdk-go/utils/logging/logs"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
@@ -283,30 +282,30 @@ func (m *database) applyAccountsChecks(accounts *collectionWrapper) error {
 
 	//add compound index - auth_type identifier + auth_type_id
 	// Can't be unique because of anonymous accounts
-	err := accounts.AddIndex(bson.D{primitive.E{Key: "auth_types.identifier", Value: 1}, primitive.E{Key: "auth_types.auth_type_id", Value: 1}, primitive.E{Key: "app_org_id", Value: 1}}, false)
+	err := accounts.AddIndex(bson.D{bson.E{Key: "auth_types.identifier", Value: 1}, bson.E{Key: "auth_types.auth_type_id", Value: 1}, bson.E{Key: "app_org_id", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
 
 	//add compound index - app_org_id + username
-	err = accounts.AddIndex(bson.D{primitive.E{Key: "app_org_id", Value: 1}, primitive.E{Key: "username", Value: 1}}, false)
+	err = accounts.AddIndex(bson.D{bson.E{Key: "app_org_id", Value: 1}, bson.E{Key: "username", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
 
 	//add profile index
-	err = accounts.AddIndex(bson.D{primitive.E{Key: "profile.id", Value: 1}}, false)
+	err = accounts.AddIndex(bson.D{bson.E{Key: "profile.id", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
 
 	//add auth types index
-	err = accounts.AddIndex(bson.D{primitive.E{Key: "auth_types.id", Value: 1}}, false)
+	err = accounts.AddIndex(bson.D{bson.E{Key: "auth_types.id", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
 
-	// err = accounts.AddIndex(bson.D{primitive.E{Key: "username", Value: "text"}, primitive.E{Key: "profile.first_name", Value: "text"}, primitive.E{Key: "profile.last_name", Value: "text"}}, false)
+	// err = accounts.AddIndex(bson.D{bson.E{Key: "username", Value: "text"}, bson.E{Key: "profile.first_name", Value: "text"}, bson.E{Key: "profile.last_name", Value: "text"}}, false)
 	// if err != nil {
 	// 	return err
 	// }
@@ -319,55 +318,55 @@ func (m *database) applyTenantsAccountsIdentitiesChecks(tenantAccounts *collecti
 	m.logger.Info("apply tenants accounts checks.....")
 
 	//add org id index
-	err := tenantAccounts.AddIndex(bson.D{primitive.E{Key: "org_id", Value: 1}}, false)
+	err := tenantAccounts.AddIndex(bson.D{bson.E{Key: "org_id", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
 
 	//add profile index
-	err = tenantAccounts.AddIndex(bson.D{primitive.E{Key: "profile.id", Value: 1}}, false)
+	err = tenantAccounts.AddIndex(bson.D{bson.E{Key: "profile.id", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
 
 	//add auth types index
-	err = tenantAccounts.AddIndex(bson.D{primitive.E{Key: "auth_types.id", Value: 1}}, false)
+	err = tenantAccounts.AddIndex(bson.D{bson.E{Key: "auth_types.id", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
 
 	//add auth types identifier
-	err = tenantAccounts.AddIndex(bson.D{primitive.E{Key: "auth_types.identifier", Value: 1}}, false)
+	err = tenantAccounts.AddIndex(bson.D{bson.E{Key: "auth_types.identifier", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
 
 	//add auth types auth type id
-	err = tenantAccounts.AddIndex(bson.D{primitive.E{Key: "auth_types.auth_type_id", Value: 1}}, false)
+	err = tenantAccounts.AddIndex(bson.D{bson.E{Key: "auth_types.auth_type_id", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
 
 	//add username index
-	err = tenantAccounts.AddIndex(bson.D{primitive.E{Key: "username", Value: 1}}, false)
+	err = tenantAccounts.AddIndex(bson.D{bson.E{Key: "username", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
 
 	//add org apps memberships id index
-	err = tenantAccounts.AddIndex(bson.D{primitive.E{Key: "org_apps_memberships.id", Value: 1}}, true)
+	err = tenantAccounts.AddIndex(bson.D{bson.E{Key: "org_apps_memberships.id", Value: 1}}, true)
 	if err != nil {
 		return err
 	}
 
 	//add org apps memberships app org id index
-	err = tenantAccounts.AddIndex(bson.D{primitive.E{Key: "org_apps_memberships.app_org_id", Value: 1}}, false)
+	err = tenantAccounts.AddIndex(bson.D{bson.E{Key: "org_apps_memberships.app_org_id", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
 
 	//add ferpa index
-	err = tenantAccounts.AddIndex(bson.D{primitive.E{Key: "auth_types.params.user.ferpa", Value: 1}}, false)
+	err = tenantAccounts.AddIndex(bson.D{bson.E{Key: "auth_types.params.user.ferpa", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
@@ -408,7 +407,7 @@ func (m *database) applyDevicesChecks(devices *collectionWrapper) error {
 	m.logger.Info("apply devices checks.....")
 
 	//add compound unique index - device_id + account_id
-	err := devices.AddIndex(bson.D{primitive.E{Key: "device_id", Value: 1}, primitive.E{Key: "account_id", Value: 1}}, true)
+	err := devices.AddIndex(bson.D{bson.E{Key: "device_id", Value: 1}, bson.E{Key: "account_id", Value: 1}}, true)
 	if err != nil {
 		return err
 	}
@@ -421,7 +420,7 @@ func (m *database) applyCredentialChecks(credentials *collectionWrapper) error {
 	m.logger.Info("apply credentials checks.....")
 
 	// Add user_auth_type_id index
-	err := credentials.AddIndex(bson.D{primitive.E{Key: "user_auth_type_id", Value: 1}}, false)
+	err := credentials.AddIndex(bson.D{bson.E{Key: "user_auth_type_id", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
@@ -433,12 +432,12 @@ func (m *database) applyCredentialChecks(credentials *collectionWrapper) error {
 func (m *database) applyLoginsSessionsChecks(loginsSessions *collectionWrapper) error {
 	m.logger.Info("apply logins sessions checks.....")
 
-	err := loginsSessions.AddIndex(bson.D{primitive.E{Key: "refresh_token", Value: 1}}, false)
+	err := loginsSessions.AddIndex(bson.D{bson.E{Key: "refresh_token", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
 
-	err = loginsSessions.AddIndex(bson.D{primitive.E{Key: "expires", Value: 1}}, false)
+	err = loginsSessions.AddIndex(bson.D{bson.E{Key: "expires", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
@@ -460,13 +459,13 @@ func (m *database) applyAPIKeysChecks(apiKeys *collectionWrapper) error {
 	m.logger.Info("apply api keys checks.....")
 
 	// Add app_id index
-	err := apiKeys.AddIndex(bson.D{primitive.E{Key: "app_id", Value: 1}}, false)
+	err := apiKeys.AddIndex(bson.D{bson.E{Key: "app_id", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
 
 	// Add key index
-	err = apiKeys.AddIndex(bson.D{primitive.E{Key: "key", Value: 1}}, true)
+	err = apiKeys.AddIndex(bson.D{bson.E{Key: "key", Value: 1}}, true)
 	if err != nil {
 		return err
 	}
@@ -478,7 +477,7 @@ func (m *database) applyAPIKeysChecks(apiKeys *collectionWrapper) error {
 func (m *database) applyConfigsChecks(configs *collectionWrapper) error {
 	m.logger.Info("apply configs checks.....")
 
-	err := configs.AddIndex(bson.D{primitive.E{Key: "type", Value: 1}, primitive.E{Key: "app_id", Value: 1}, primitive.E{Key: "org_id", Value: 1}}, true)
+	err := configs.AddIndex(bson.D{bson.E{Key: "type", Value: 1}, bson.E{Key: "app_id", Value: 1}, bson.E{Key: "org_id", Value: 1}}, true)
 	if err != nil {
 		return err
 	}
@@ -491,7 +490,7 @@ func (m *database) applyServiceRegsChecks(serviceRegs *collectionWrapper) error 
 	m.logger.Info("apply service regs checks.....")
 
 	//add service_id index - unique
-	err := serviceRegs.AddIndex(bson.D{primitive.E{Key: "registration.service_id", Value: 1}}, true)
+	err := serviceRegs.AddIndex(bson.D{bson.E{Key: "registration.service_id", Value: 1}}, true)
 	if err != nil {
 		return err
 	}
@@ -504,7 +503,7 @@ func (m *database) applyServiceRegistrationsChecks(serviceRegistrations *collect
 	m.logger.Info("apply service registrations checks.....")
 
 	//add core_host, service_id index - unique
-	err := serviceRegistrations.AddIndex(bson.D{primitive.E{Key: "core_host", Value: 1}, primitive.E{Key: "registration.service_id", Value: 1}}, true)
+	err := serviceRegistrations.AddIndex(bson.D{bson.E{Key: "core_host", Value: 1}, bson.E{Key: "registration.service_id", Value: 1}}, true)
 	if err != nil {
 		return err
 	}
@@ -516,7 +515,7 @@ func (m *database) applyServiceRegistrationsChecks(serviceRegistrations *collect
 func (m *database) applyServiceAccountsChecks(serviceAccounts *collectionWrapper) error {
 	m.logger.Info("apply service accounts checks.....")
 
-	err := serviceAccounts.AddIndex(bson.D{primitive.E{Key: "account_id", Value: 1}, primitive.E{Key: "app_id", Value: 1}, primitive.E{Key: "org_id", Value: 1}}, true)
+	err := serviceAccounts.AddIndex(bson.D{bson.E{Key: "account_id", Value: 1}, bson.E{Key: "app_id", Value: 1}, bson.E{Key: "org_id", Value: 1}}, true)
 	if err != nil {
 		return err
 	}
@@ -529,7 +528,7 @@ func (m *database) applyServiceAuthorizationsChecks(serviceAuthorizations *colle
 	m.logger.Info("apply service authorizations checks.....")
 
 	//add user_id, service_id index - unique
-	err := serviceAuthorizations.AddIndex(bson.D{primitive.E{Key: "user_id", Value: 1}, primitive.E{Key: "service_id", Value: 1}}, true)
+	err := serviceAuthorizations.AddIndex(bson.D{bson.E{Key: "user_id", Value: 1}, bson.E{Key: "service_id", Value: 1}}, true)
 	if err != nil {
 		return err
 	}
@@ -542,7 +541,7 @@ func (m *database) applyOrganizationsChecks(organizations *collectionWrapper) er
 	m.logger.Info("apply organizations checks.....")
 
 	//add name index - unique
-	err := organizations.AddIndex(bson.D{primitive.E{Key: "name", Value: 1}}, true)
+	err := organizations.AddIndex(bson.D{bson.E{Key: "name", Value: 1}}, true)
 	if err != nil {
 		return err
 	}
@@ -550,7 +549,7 @@ func (m *database) applyOrganizationsChecks(organizations *collectionWrapper) er
 	//TODO
 
 	//add applications index
-	err = organizations.AddIndex(bson.D{primitive.E{Key: "applications", Value: 1}}, false)
+	err = organizations.AddIndex(bson.D{bson.E{Key: "applications", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
@@ -563,19 +562,19 @@ func (m *database) applyApplicationsChecks(applications *collectionWrapper) erro
 	m.logger.Info("apply applications checks.....")
 
 	//add name index - unique
-	err := applications.AddIndex(bson.D{primitive.E{Key: "name", Value: 1}}, true)
+	err := applications.AddIndex(bson.D{bson.E{Key: "name", Value: 1}}, true)
 	if err != nil {
 		return err
 	}
 
 	//add application type index - unique
-	err = applications.AddIndex(bson.D{primitive.E{Key: "types.id", Value: 1}}, true)
+	err = applications.AddIndex(bson.D{bson.E{Key: "types.id", Value: 1}}, true)
 	if err != nil {
 		return err
 	}
 
 	//add application type identifier index - unique
-	err = applications.AddIndex(bson.D{primitive.E{Key: "types.identifier", Value: 1}}, true)
+	err = applications.AddIndex(bson.D{bson.E{Key: "types.identifier", Value: 1}}, true)
 	if err != nil {
 		return err
 	}
@@ -588,8 +587,8 @@ func (m *database) applyApplicationsOrganizationsChecks(applicationsOrganization
 	m.logger.Info("apply applications organizations checks.....")
 
 	//add compound unique index - application + auth type + auth type identifier
-	err := applicationsOrganizations.AddIndex(bson.D{primitive.E{Key: "app_id", Value: 1},
-		primitive.E{Key: "org_id", Value: 1}},
+	err := applicationsOrganizations.AddIndex(bson.D{bson.E{Key: "app_id", Value: 1},
+		bson.E{Key: "org_id", Value: 1}},
 		true)
 	if err != nil {
 		return err
@@ -603,31 +602,31 @@ func (m *database) applyApplicationsOrganizationsGroupsChecks(applicationsOrgani
 	m.logger.Info("apply applications organizations groups checks.....")
 
 	//add compound unique index - name + app_org_id
-	err := applicationsOrganizationGroups.AddIndex(bson.D{primitive.E{Key: "name", Value: 1}, primitive.E{Key: "app_org_id", Value: 1}}, true)
+	err := applicationsOrganizationGroups.AddIndex(bson.D{bson.E{Key: "name", Value: 1}, bson.E{Key: "app_org_id", Value: 1}}, true)
 	if err != nil {
 		return err
 	}
 
 	//add application organization index
-	err = applicationsOrganizationGroups.AddIndex(bson.D{primitive.E{Key: "app_org_id", Value: 1}}, false)
+	err = applicationsOrganizationGroups.AddIndex(bson.D{bson.E{Key: "app_org_id", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
 
 	//add permissions index
-	err = applicationsOrganizationGroups.AddIndex(bson.D{primitive.E{Key: "permissions._id", Value: 1}}, false)
+	err = applicationsOrganizationGroups.AddIndex(bson.D{bson.E{Key: "permissions._id", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
 
 	//add roles index
-	err = applicationsOrganizationGroups.AddIndex(bson.D{primitive.E{Key: "roles._id", Value: 1}}, false)
+	err = applicationsOrganizationGroups.AddIndex(bson.D{bson.E{Key: "roles._id", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
 
 	//add roles permissions index
-	err = applicationsOrganizationGroups.AddIndex(bson.D{primitive.E{Key: "roles.permissions._id", Value: 1}}, false)
+	err = applicationsOrganizationGroups.AddIndex(bson.D{bson.E{Key: "roles.permissions._id", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
@@ -640,19 +639,19 @@ func (m *database) applyApplicationsOrganizationsRolesChecks(applicationsOrganiz
 	m.logger.Info("apply applications organizations roles checks.....")
 
 	//add compound unique index - name + app_org_id
-	err := applicationsOrganizationsRoles.AddIndex(bson.D{primitive.E{Key: "name", Value: 1}, primitive.E{Key: "app_org_id", Value: 1}}, true)
+	err := applicationsOrganizationsRoles.AddIndex(bson.D{bson.E{Key: "name", Value: 1}, bson.E{Key: "app_org_id", Value: 1}}, true)
 	if err != nil {
 		return err
 	}
 
 	//add application organization index
-	err = applicationsOrganizationsRoles.AddIndex(bson.D{primitive.E{Key: "app_org_id", Value: 1}}, false)
+	err = applicationsOrganizationsRoles.AddIndex(bson.D{bson.E{Key: "app_org_id", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
 
 	//add permissions index
-	err = applicationsOrganizationsRoles.AddIndex(bson.D{primitive.E{Key: "permissions._id", Value: 1}}, false)
+	err = applicationsOrganizationsRoles.AddIndex(bson.D{bson.E{Key: "permissions._id", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
@@ -665,7 +664,7 @@ func (m *database) applyPermissionsChecks(permissions *collectionWrapper) error 
 	m.logger.Info("apply applications permissions checks.....")
 
 	//add permissions index
-	err := permissions.AddIndex(bson.D{primitive.E{Key: "name", Value: 1}}, true)
+	err := permissions.AddIndex(bson.D{bson.E{Key: "name", Value: 1}}, true)
 	if err != nil {
 		return err
 	}
@@ -678,13 +677,13 @@ func (m *database) applyFollowsChecks(follows *collectionWrapper) error {
 	m.logger.Info("apply applications follows checks.....")
 
 	//add follower index
-	err := follows.AddIndex(bson.D{primitive.E{Key: "app_id", Value: 1}, primitive.E{Key: "org_id", Value: 1}, primitive.E{Key: "follower_id", Value: 1}}, false)
+	err := follows.AddIndex(bson.D{bson.E{Key: "app_id", Value: 1}, bson.E{Key: "org_id", Value: 1}, bson.E{Key: "follower_id", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
 
 	//add following index
-	err = follows.AddIndex(bson.D{primitive.E{Key: "app_id", Value: 1}, primitive.E{Key: "org_id", Value: 1}, primitive.E{Key: "following_id", Value: 1}, primitive.E{Key: "follower_id", Value: 1}}, true)
+	err = follows.AddIndex(bson.D{bson.E{Key: "app_id", Value: 1}, bson.E{Key: "org_id", Value: 1}, bson.E{Key: "following_id", Value: 1}, bson.E{Key: "follower_id", Value: 1}}, true)
 	if err != nil {
 		return err
 	}
@@ -697,7 +696,7 @@ func (m *database) applyDeletedMembershipsChecks(deletedMemberships *collectionW
 	m.logger.Info("apply deleted memberships checks.....")
 
 	//add app_org_id index
-	err := deletedMemberships.AddIndex(bson.D{primitive.E{Key: "app_org_id", Value: 1}}, false)
+	err := deletedMemberships.AddIndex(bson.D{bson.E{Key: "app_org_id", Value: 1}}, false)
 	if err != nil {
 		return err
 	}
@@ -710,7 +709,7 @@ func (m *database) applyApplicationConfigsChecks(applicationConfigs *collectionW
 	m.logger.Info("apply applications configs checks.....")
 
 	//add appconfigs index
-	err := applicationConfigs.AddIndex(bson.D{primitive.E{Key: "app_type_id", Value: 1}, primitive.E{Key: "app_org_id", Value: 1}, primitive.E{Key: "version.version_numbers.major", Value: -1}, primitive.E{Key: "version.version_numbers.minor", Value: -1}, primitive.E{Key: "version.version_numbers.patch", Value: -1}}, true)
+	err := applicationConfigs.AddIndex(bson.D{bson.E{Key: "app_type_id", Value: 1}, bson.E{Key: "app_org_id", Value: 1}, bson.E{Key: "version.version_numbers.major", Value: -1}, bson.E{Key: "version.version_numbers.minor", Value: -1}, bson.E{Key: "version.version_numbers.patch", Value: -1}}, true)
 	if err != nil {
 		return err
 	}
