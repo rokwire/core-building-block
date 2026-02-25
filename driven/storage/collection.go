@@ -205,18 +205,18 @@ func (collWrapper *collectionWrapper) DeleteOneWithContext(ctx context.Context, 
 	return result, nil
 }
 
-func (collWrapper *collectionWrapper) UpdateOne(filter interface{}, update interface{}, opts *options.UpdateOptions) (*mongo.UpdateResult, error) {
+func (collWrapper *collectionWrapper) UpdateOne(filter interface{}, update interface{}, opts ...options.Lister[options.UpdateOneOptions]) (*mongo.UpdateResult, error) {
 	return collWrapper.UpdateOneWithContext(context.Background(), filter, update, opts)
 }
 
-func (collWrapper *collectionWrapper) UpdateOneWithContext(ctx context.Context, filter interface{}, update interface{}, opts *options.UpdateOptions) (*mongo.UpdateResult, error) {
+func (collWrapper *collectionWrapper) UpdateOneWithContext(ctx context.Context, filter interface{}, update interface{}, opts []options.Lister[options.UpdateOneOptions]) (*mongo.UpdateResult, error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
 	ctx, cancel := context.WithTimeout(ctx, collWrapper.database.mongoTimeout)
 	defer cancel()
 
-	updateResult, err := collWrapper.coll.UpdateOne(ctx, filter, update, opts)
+	updateResult, err := collWrapper.coll.UpdateOne(ctx, filter, update, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -224,18 +224,18 @@ func (collWrapper *collectionWrapper) UpdateOneWithContext(ctx context.Context, 
 	return updateResult, nil
 }
 
-func (collWrapper *collectionWrapper) UpdateMany(filter interface{}, update interface{}, opts *options.UpdateOptions) (*mongo.UpdateResult, error) {
-	return collWrapper.UpdateManyWithContext(context.Background(), filter, update, opts)
+func (collWrapper *collectionWrapper) UpdateMany(filter interface{}, update interface{}, opts ...options.Lister[options.UpdateManyOptions]) (*mongo.UpdateResult, error) {
+	return collWrapper.UpdateManyWithContext(context.Background(), filter, update, opts...)
 }
 
-func (collWrapper *collectionWrapper) UpdateManyWithContext(ctx context.Context, filter interface{}, update interface{}, opts *options.UpdateOptions) (*mongo.UpdateResult, error) {
+func (collWrapper *collectionWrapper) UpdateManyWithContext(ctx context.Context, filter interface{}, update interface{}, opts ...options.Lister[options.UpdateManyOptions]) (*mongo.UpdateResult, error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
 	ctx, cancel := context.WithTimeout(ctx, collWrapper.database.mongoTimeout)
 	defer cancel()
 
-	updateResult, err := collWrapper.coll.UpdateMany(ctx, filter, update, opts)
+	updateResult, err := collWrapper.coll.UpdateMany(ctx, filter, update, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -243,18 +243,18 @@ func (collWrapper *collectionWrapper) UpdateManyWithContext(ctx context.Context,
 	return updateResult, nil
 }
 
-func (collWrapper *collectionWrapper) FindOneAndUpdate(filter interface{}, update interface{}, result interface{}, opts *options.FindOneAndUpdateOptions) error {
-	return collWrapper.FindOneAndUpdateWithContext(context.Background(), filter, update, result, opts)
+func (collWrapper *collectionWrapper) FindOneAndUpdate(filter interface{}, update interface{}, result interface{}, opts ...options.Lister[options.FindOneAndUpdateOptions]) error {
+	return collWrapper.FindOneAndUpdateWithContext(context.Background(), filter, update, result, opts...)
 }
 
-func (collWrapper *collectionWrapper) FindOneAndUpdateWithContext(ctx context.Context, filter interface{}, update interface{}, result interface{}, opts *options.FindOneAndUpdateOptions) error {
+func (collWrapper *collectionWrapper) FindOneAndUpdateWithContext(ctx context.Context, filter interface{}, update interface{}, result interface{}, opts ...options.Lister[options.FindOneAndUpdateOptions]) error {
 	if ctx == nil {
 		ctx = context.Background()
 	}
 	ctx, cancel := context.WithTimeout(ctx, collWrapper.database.mongoTimeout)
 	defer cancel()
 
-	singleResult := collWrapper.coll.FindOneAndUpdate(ctx, filter, update, opts)
+	singleResult := collWrapper.coll.FindOneAndUpdate(ctx, filter, update, opts...)
 	if singleResult.Err() != nil {
 		return singleResult.Err()
 	}
