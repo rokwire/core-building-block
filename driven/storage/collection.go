@@ -67,22 +67,18 @@ func (collWrapper *collectionWrapper) FindWithParams(ctx context.Context, filter
 	return err
 }
 
-func (collWrapper *collectionWrapper) FindOne(filter interface{}, result interface{}, findOptions *options.FindOneOptions) error {
-	return collWrapper.FindOneWithContext(context.Background(), filter, result, findOptions)
+func (collWrapper *collectionWrapper) FindOne(filter interface{}, result interface{}, findOptions ...options.Lister[options.FindOneOptions]) error {
+	return collWrapper.FindOneWithContext(context.Background(), filter, result, findOptions...)
 }
 
-func (collWrapper *collectionWrapper) FindOneWithContext(ctx context.Context, filter interface{}, result interface{}, findOptions *options.FindOneOptions) error {
+func (collWrapper *collectionWrapper) FindOneWithContext(ctx context.Context, filter interface{}, result interface{}, findOptions ...options.Lister[options.FindOneOptions]) error {
 	if ctx == nil {
 		ctx = context.Background()
 	}
 	ctx, cancel := context.WithTimeout(ctx, collWrapper.database.mongoTimeout)
 	defer cancel()
 
-	if findOptions == nil {
-		findOptions = options.FindOne() // crash if not added!
-	}
-
-	singleResult := collWrapper.coll.FindOne(ctx, filter, findOptions)
+	singleResult := collWrapper.coll.FindOne(ctx, filter, findOptions...)
 	if singleResult.Err() != nil {
 		return singleResult.Err()
 	}
