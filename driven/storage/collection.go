@@ -361,24 +361,20 @@ func (collWrapper *collectionWrapper) AddIndex(keys interface{}, unique bool) er
 	index := mongo.IndexModel{Keys: keys}
 
 	if unique {
-		index.Options = options.Index()
-		index.Options.Unique = &unique
+		index.Options = options.Index().SetUnique(true)
 	}
 
-	_, err := collWrapper.coll.Indexes().CreateOne(ctx, index, nil)
-
+	_, err := collWrapper.coll.Indexes().CreateOne(ctx, index)
 	return err
 }
 
-func (collWrapper *collectionWrapper) AddIndexWithOptions(keys interface{}, opt *options.IndexOptions) error {
+func (collWrapper *collectionWrapper) AddIndexWithOptions(keys interface{}, opt *options.IndexOptionsBuilder) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*15000)
 	defer cancel()
 
-	index := mongo.IndexModel{Keys: keys}
-	index.Options = opt
+	index := mongo.IndexModel{Keys: keys, Options: opt}
 
-	_, err := collWrapper.coll.Indexes().CreateOne(ctx, index, nil)
-
+	_, err := collWrapper.coll.Indexes().CreateOne(ctx, index)
 	return err
 }
 
@@ -386,9 +382,7 @@ func (collWrapper *collectionWrapper) DropIndex(name string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*15000)
 	defer cancel()
 
-	_, err := collWrapper.coll.Indexes().DropOne(ctx, name, nil)
-
-	return err
+	return collWrapper.coll.Indexes().DropOne(ctx, name)
 }
 
 func (collWrapper *collectionWrapper) Aggregate(pipeline interface{}, result interface{}, ops ...options.Lister[options.AggregateOptions]) error {
