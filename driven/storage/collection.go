@@ -31,11 +31,11 @@ type collectionWrapper struct {
 	coll     *mongo.Collection
 }
 
-func (collWrapper *collectionWrapper) Find(filter interface{}, result interface{}, findOptions *options.FindOptions) error {
+func (collWrapper *collectionWrapper) Find(filter interface{}, result interface{}, findOptions []options.Lister[options.FindOptions]) error {
 	return collWrapper.FindWithParams(context.Background(), filter, result, findOptions, nil)
 }
 
-func (collWrapper *collectionWrapper) FindWithContext(ctx context.Context, filter interface{}, result interface{}, findOptions *options.FindOptions) error {
+func (collWrapper *collectionWrapper) FindWithContext(ctx context.Context, filter interface{}, result interface{}, findOptions []options.Lister[options.FindOptions]) error {
 	return collWrapper.FindWithParams(ctx, filter, result, findOptions, nil)
 }
 
