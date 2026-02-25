@@ -29,8 +29,8 @@ import (
 	"github.com/rokwire/rokwire-building-block-sdk-go/utils/logging/logs"
 	"github.com/rokwire/rokwire-building-block-sdk-go/utils/logging/logutils"
 	"github.com/rokwire/rokwire-building-block-sdk-go/utils/rokwireutils"
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 	"golang.org/x/sync/syncmap"
@@ -942,10 +942,10 @@ func (sa *Adapter) InsertFollow(context TransactionContext, follow model.Follow)
 
 // DeleteFollow deletes a specified follow relationship
 func (sa *Adapter) DeleteFollow(context TransactionContext, appID string, orgID string, followingID string, followerID string) error {
-	filter := bson.D{primitive.E{Key: "app_id", Value: appID},
-		primitive.E{Key: "org_id", Value: orgID},
-		primitive.E{Key: "following_id", Value: followingID},
-		primitive.E{Key: "follower_id", Value: followerID}}
+	filter := bson.D{bson.E{Key: "app_id", Value: appID},
+		bson.E{Key: "org_id", Value: orgID},
+		bson.E{Key: "following_id", Value: followingID},
+		bson.E{Key: "follower_id", Value: followerID}}
 
 	res, err := sa.db.follows.DeleteOneWithContext(context, filter, nil)
 	if err != nil {
@@ -972,9 +972,9 @@ func (sa *Adapter) InsertLoginSession(context TransactionContext, session model.
 
 // FindLoginSessions finds login sessions by identifier and sorts by date created
 func (sa *Adapter) FindLoginSessions(context TransactionContext, identifier string) ([]model.LoginSession, error) {
-	filter := bson.D{primitive.E{Key: "identifier", Value: identifier}}
+	filter := bson.D{bson.E{Key: "identifier", Value: identifier}}
 	opts := options.Find()
-	opts.SetSort(bson.D{primitive.E{Key: "date_created", Value: 1}})
+	opts.SetSort(bson.D{bson.E{Key: "date_created", Value: 1}})
 
 	var loginSessions []loginSession
 	err := sa.db.loginsSessions.FindWithContext(context, filter, &loginSessions, opts)
@@ -1017,39 +1017,39 @@ func (sa *Adapter) FindLoginSessions(context TransactionContext, identifier stri
 // FindLoginSessionsByParams finds login sessions by params
 func (sa *Adapter) FindLoginSessionsByParams(appID string, orgID string, sessionID *string, identifier *string, accountAuthTypeIdentifier *string,
 	appTypeID *string, appTypeIdentifier *string, anonymous *bool, deviceID *string, ipAddress *string) ([]model.LoginSession, error) {
-	filter := bson.D{primitive.E{Key: "app_id", Value: appID},
-		primitive.E{Key: "org_id", Value: orgID}}
+	filter := bson.D{bson.E{Key: "app_id", Value: appID},
+		bson.E{Key: "org_id", Value: orgID}}
 
 	if sessionID != nil {
-		filter = append(filter, primitive.E{Key: "_id", Value: *sessionID})
+		filter = append(filter, bson.E{Key: "_id", Value: *sessionID})
 	}
 
 	if identifier != nil {
-		filter = append(filter, primitive.E{Key: "identifier", Value: *identifier})
+		filter = append(filter, bson.E{Key: "identifier", Value: *identifier})
 	}
 
 	if accountAuthTypeIdentifier != nil {
-		filter = append(filter, primitive.E{Key: "account_auth_type_identifier", Value: *accountAuthTypeIdentifier})
+		filter = append(filter, bson.E{Key: "account_auth_type_identifier", Value: *accountAuthTypeIdentifier})
 	}
 
 	if appTypeID != nil {
-		filter = append(filter, primitive.E{Key: "app_type_id", Value: appTypeID})
+		filter = append(filter, bson.E{Key: "app_type_id", Value: appTypeID})
 	}
 
 	if appTypeIdentifier != nil {
-		filter = append(filter, primitive.E{Key: "app_type_identifier", Value: appTypeIdentifier})
+		filter = append(filter, bson.E{Key: "app_type_identifier", Value: appTypeIdentifier})
 	}
 
 	if anonymous != nil {
-		filter = append(filter, primitive.E{Key: "anonymous", Value: anonymous})
+		filter = append(filter, bson.E{Key: "anonymous", Value: anonymous})
 	}
 
 	if deviceID != nil {
-		filter = append(filter, primitive.E{Key: "device_id", Value: deviceID})
+		filter = append(filter, bson.E{Key: "device_id", Value: deviceID})
 	}
 
 	if ipAddress != nil {
-		filter = append(filter, primitive.E{Key: "ip_address", Value: ipAddress})
+		filter = append(filter, bson.E{Key: "ip_address", Value: ipAddress})
 	}
 
 	var result []loginSession
@@ -1081,7 +1081,7 @@ func (sa *Adapter) FindLoginSessionsByParams(appID string, orgID string, session
 // FindLoginSession finds a login session
 func (sa *Adapter) FindLoginSession(refreshToken string) (*model.LoginSession, error) {
 	//find loggin session
-	filter := bson.D{primitive.E{Key: "refresh_tokens", Value: refreshToken}}
+	filter := bson.D{bson.E{Key: "refresh_tokens", Value: refreshToken}}
 	var loginsSessions []loginSession
 	err := sa.db.loginsSessions.Find(filter, &loginsSessions, nil)
 	if err != nil {
@@ -1099,13 +1099,13 @@ func (sa *Adapter) FindLoginSession(refreshToken string) (*model.LoginSession, e
 // FindAndUpdateLoginSession finds and updates a login session
 func (sa *Adapter) FindAndUpdateLoginSession(context TransactionContext, id string) (*model.LoginSession, error) {
 	//find loggin session
-	filter := bson.D{primitive.E{Key: "_id", Value: id}}
+	filter := bson.D{bson.E{Key: "_id", Value: id}}
 	update := bson.D{
-		primitive.E{Key: "$inc", Value: bson.D{
-			primitive.E{Key: "mfa_attempts", Value: 1},
+		bson.E{Key: "$inc", Value: bson.D{
+			bson.E{Key: "mfa_attempts", Value: 1},
 		}},
-		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
+		bson.E{Key: "$set", Value: bson.D{
+			bson.E{Key: "date_updated", Value: time.Now().UTC()},
 		}},
 	}
 	opts := options.FindOneAndUpdateOptions{}
@@ -1157,7 +1157,7 @@ func (sa *Adapter) buildLoginSession(context TransactionContext, ls *loginSessio
 func (sa *Adapter) UpdateLoginSession(context TransactionContext, loginSession model.LoginSession) error {
 	storageLoginSession := loginSessionToStorage(loginSession)
 
-	filter := bson.D{primitive.E{Key: "_id", Value: storageLoginSession.ID}}
+	filter := bson.D{bson.E{Key: "_id", Value: storageLoginSession.ID}}
 	err := sa.db.loginsSessions.ReplaceOneWithContext(context, filter, storageLoginSession, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeLoginSession, &logutils.FieldArgs{"_id": storageLoginSession.ID}, err)
@@ -1182,7 +1182,7 @@ func (sa *Adapter) DeleteLoginSession(context TransactionContext, id string) err
 
 // DeleteLoginSessionsByIDs deletes login sessions by ids
 func (sa *Adapter) DeleteLoginSessionsByIDs(transaction TransactionContext, ids []string) error {
-	filter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
+	filter := bson.D{bson.E{Key: "_id", Value: bson.M{"$in": ids}}}
 
 	var res *mongo.DeleteResult
 	var err error
@@ -1251,7 +1251,7 @@ func (sa *Adapter) DeleteLoginSessionsByAccountAndSessionID(context TransactionC
 func (sa *Adapter) DeleteMFAExpiredSessions() error {
 	now := time.Now().UTC()
 
-	filter := bson.D{primitive.E{Key: "state_expires", Value: bson.M{"$lte": now}}}
+	filter := bson.D{bson.E{Key: "state_expires", Value: bson.M{"$lte": now}}}
 
 	_, err := sa.db.loginsSessions.DeleteMany(filter, nil)
 	if err != nil {
@@ -1266,7 +1266,7 @@ func (sa *Adapter) DeleteMFAExpiredSessions() error {
 // - i.e. we do not apply any relations
 // - this partly filled is enough for some cases(expiration policy checks for example) but in the same time it give very good performace
 func (sa *Adapter) FindSessionsLazy(appID string, orgID string) ([]model.LoginSession, error) {
-	filter := bson.D{primitive.E{Key: "app_id", Value: appID}, primitive.E{Key: "org_id", Value: orgID}}
+	filter := bson.D{bson.E{Key: "app_id", Value: appID}, bson.E{Key: "org_id", Value: orgID}}
 
 	var loginSessions []loginSession
 	timeout := time.Millisecond * time.Duration(5000) //5 seconds
@@ -1304,9 +1304,9 @@ func (sa *Adapter) FindSessionsLazy(appID string, orgID string) ([]model.LoginSe
 // FindAccountByOrgAndIdentifier finds an account for org and user identity
 func (sa *Adapter) FindAccountByOrgAndIdentifier(context TransactionContext, orgID string, authTypeID string, accountAuthTypeIdentifier string, currentAppOrgID string) (*model.Account, error) {
 	filter := bson.D{
-		primitive.E{Key: "org_id", Value: orgID},
-		primitive.E{Key: "auth_types.auth_type_id", Value: authTypeID},
-		primitive.E{Key: "auth_types.identifier", Value: accountAuthTypeIdentifier}}
+		bson.E{Key: "org_id", Value: orgID},
+		bson.E{Key: "auth_types.auth_type_id", Value: authTypeID},
+		bson.E{Key: "auth_types.identifier", Value: accountAuthTypeIdentifier}}
 	var accounts []tenantAccount
 	err := sa.db.tenantsAccounts.FindWithContext(context, filter, &accounts, nil)
 	if err != nil {
@@ -1338,9 +1338,9 @@ func (sa *Adapter) FindAccountByOrgAndIdentifier(context TransactionContext, org
 // FindAccount finds an account for app, org, auth type and account auth type identifier
 func (sa *Adapter) FindAccount(context TransactionContext, appOrgID string, authTypeID string, accountAuthTypeIdentifier string) (*model.Account, error) {
 	filter := bson.D{
-		primitive.E{Key: "org_apps_memberships.app_org_id", Value: appOrgID},
-		primitive.E{Key: "auth_types.auth_type_id", Value: authTypeID},
-		primitive.E{Key: "auth_types.identifier", Value: accountAuthTypeIdentifier}}
+		bson.E{Key: "org_apps_memberships.app_org_id", Value: appOrgID},
+		bson.E{Key: "auth_types.auth_type_id", Value: authTypeID},
+		bson.E{Key: "auth_types.identifier", Value: accountAuthTypeIdentifier}}
 	var accounts []tenantAccount
 	err := sa.db.tenantsAccounts.FindWithContext(context, filter, &accounts, nil)
 	if err != nil {
@@ -1386,14 +1386,14 @@ func (sa *Adapter) FindAccounts(context TransactionContext, limit *int, offset *
 
 	//ID, profile, and auth type filters
 	if accountID != nil {
-		filter = append(filter, primitive.E{Key: "_id", Value: *accountID})
+		filter = append(filter, bson.E{Key: "_id", Value: *accountID})
 	}
-	filter = append(filter, primitive.E{Key: "org_apps_memberships.app_org_id", Value: appOrg.ID})
+	filter = append(filter, bson.E{Key: "org_apps_memberships.app_org_id", Value: appOrg.ID})
 	if firstName != nil {
-		filter = append(filter, primitive.E{Key: "profile.first_name", Value: *firstName})
+		filter = append(filter, bson.E{Key: "profile.first_name", Value: *firstName})
 	}
 	if lastName != nil {
-		filter = append(filter, primitive.E{Key: "profile.last_name", Value: *lastName})
+		filter = append(filter, bson.E{Key: "profile.last_name", Value: *lastName})
 	}
 	if authType != nil {
 		cachedAuthType, err := sa.getCachedAuthType(*authType)
@@ -1403,45 +1403,45 @@ func (sa *Adapter) FindAccounts(context TransactionContext, limit *int, offset *
 		if cachedAuthType == nil {
 			return nil, errors.ErrorData(logutils.StatusMissing, model.TypeAuthType, &logutils.FieldArgs{"code": *authType})
 		}
-		filter = append(filter, primitive.E{Key: "auth_types.auth_type_id", Value: cachedAuthType.ID})
+		filter = append(filter, bson.E{Key: "auth_types.auth_type_id", Value: cachedAuthType.ID})
 	}
 	if authTypeIdentifier != nil {
-		filter = append(filter, primitive.E{Key: "auth_types.identifier", Value: *authTypeIdentifier})
+		filter = append(filter, bson.E{Key: "auth_types.identifier", Value: *authTypeIdentifier})
 	}
 	if anonymous != nil {
-		filter = append(filter, primitive.E{Key: "anonymous", Value: *anonymous})
+		filter = append(filter, bson.E{Key: "anonymous", Value: *anonymous})
 	}
 
 	//authorization filters
 	overrideHasPermissions := false
 	if len(permissions) > 0 {
-		filter = append(filter, primitive.E{Key: "org_apps_memberships.permissions.name", Value: bson.M{"$in": permissions}})
+		filter = append(filter, bson.E{Key: "org_apps_memberships.permissions.name", Value: bson.M{"$in": permissions}})
 		overrideHasPermissions = true
 	}
 	if len(roleIDs) > 0 {
-		filter = append(filter, primitive.E{Key: "org_apps_memberships.roles.role._id", Value: bson.M{"$in": roleIDs}})
+		filter = append(filter, bson.E{Key: "org_apps_memberships.roles.role._id", Value: bson.M{"$in": roleIDs}})
 		overrideHasPermissions = true
 	}
 	if len(groupIDs) > 0 {
-		filter = append(filter, primitive.E{Key: "org_apps_memberships.groups.group._id", Value: bson.M{"$in": groupIDs}})
+		filter = append(filter, bson.E{Key: "org_apps_memberships.groups.group._id", Value: bson.M{"$in": groupIDs}})
 		overrideHasPermissions = true
 	}
 	if !overrideHasPermissions && hasPermissions != nil {
 		if *hasPermissions {
-			filter = append(filter, primitive.E{Key: "$or", Value: bson.A{
+			filter = append(filter, bson.E{Key: "$or", Value: bson.A{
 				bson.M{"org_apps_memberships.permissions.0": bson.M{"$exists": true}},
 				bson.M{"org_apps_memberships.roles.0": bson.M{"$exists": true}},
 				bson.M{"org_apps_memberships.groups.0": bson.M{"$exists": true}},
 			}})
 		} else {
-			filter = append(filter, primitive.E{Key: "org_apps_memberships.permissions.0", Value: bson.M{"$exists": false}})
-			filter = append(filter, primitive.E{Key: "org_apps_memberships.roles.0", Value: bson.M{"$exists": false}})
-			filter = append(filter, primitive.E{Key: "org_apps_memberships.groups.0", Value: bson.M{"$exists": false}})
+			filter = append(filter, bson.E{Key: "org_apps_memberships.permissions.0", Value: bson.M{"$exists": false}})
+			filter = append(filter, bson.E{Key: "org_apps_memberships.roles.0", Value: bson.M{"$exists": false}})
+			filter = append(filter, bson.E{Key: "org_apps_memberships.groups.0", Value: bson.M{"$exists": false}})
 		}
 	}
 
 	if userRole != nil {
-		filter = append(filter, primitive.E{
+		filter = append(filter, bson.E{
 			Key:   "org_apps_memberships.preferences.roles",
 			Value: *userRole,
 		})
@@ -1759,8 +1759,8 @@ func (sa *Adapter) FindAccountsByAccountID(context TransactionContext, appID str
 	}
 
 	accountFilter := bson.D{
-		primitive.E{Key: "_id", Value: bson.M{"$in": accountIDs}},
-		primitive.E{Key: "org_apps_memberships.app_org_id", Value: appOrg.ID}}
+		bson.E{Key: "_id", Value: bson.M{"$in": accountIDs}},
+		bson.E{Key: "org_apps_memberships.app_org_id", Value: appOrg.ID}}
 	var accountResult []tenantAccount
 	err = sa.db.tenantsAccounts.FindWithContext(context, accountFilter, &accountResult, nil)
 	if err != nil {
@@ -1784,8 +1784,8 @@ func (sa *Adapter) FindAccountsByUsername(context TransactionContext, appOrg *mo
 	}
 
 	filter := bson.D{
-		primitive.E{Key: "org_apps_memberships.app_org_id", Value: appOrg.ID},
-		primitive.E{Key: "username", Value: username},
+		bson.E{Key: "org_apps_memberships.app_org_id", Value: appOrg.ID},
+		bson.E{Key: "username", Value: username},
 	}
 
 	var accountResult []tenantAccount
@@ -1834,7 +1834,7 @@ func (sa *Adapter) FindDeletedOrgAppMemberships(appID string, orgID string, star
 
 	filter := bson.D{}
 	if len(appOrgIDs) > 0 {
-		filter = bson.D{primitive.E{Key: "app_org_id", Value: bson.M{"$in": appOrgIDs}}}
+		filter = bson.D{bson.E{Key: "app_org_id", Value: bson.M{"$in": appOrgIDs}}}
 	}
 
 	//start time
@@ -1981,7 +1981,7 @@ func (sa *Adapter) DeleteAccount(context TransactionContext, id string) error {
 
 // UpdateAccountUsageInfo updates the usage information in accounts
 func (sa *Adapter) UpdateAccountUsageInfo(context TransactionContext, accountID string, updateLoginTime bool, updateAccessTokenTime bool, clientVersion *string) error {
-	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
+	filter := bson.D{bson.E{Key: "_id", Value: accountID}}
 	now := time.Now().UTC()
 	update := bson.M{}
 	if updateLoginTime {
@@ -2008,7 +2008,7 @@ func (sa *Adapter) UpdateAccountUsageInfo(context TransactionContext, accountID 
 
 // FindServiceAccount finds a service account by accountID, appID, and orgID
 func (sa *Adapter) FindServiceAccount(context TransactionContext, accountID string, appID string, orgID string) (*model.ServiceAccount, error) {
-	filter := bson.D{primitive.E{Key: "account_id", Value: accountID}, primitive.E{Key: "app_id", Value: appID}, primitive.E{Key: "org_id", Value: orgID}}
+	filter := bson.D{bson.E{Key: "account_id", Value: accountID}, bson.E{Key: "app_id", Value: appID}, bson.E{Key: "org_id", Value: orgID}}
 
 	var account serviceAccount
 	errFields := logutils.FieldArgs{"account_id": accountID, "app_id": appID, "org_id": orgID}
@@ -2030,11 +2030,11 @@ func (sa *Adapter) FindServiceAccounts(params map[string]interface{}) ([]model.S
 	filter := bson.D{}
 	for k, v := range params {
 		if k == "permissions" {
-			filter = append(filter, primitive.E{Key: k + ".name", Value: bson.M{"$in": v}})
+			filter = append(filter, bson.E{Key: k + ".name", Value: bson.M{"$in": v}})
 		} else if k == "scopes" {
-			filter = append(filter, primitive.E{Key: k, Value: bson.M{"$in": v}})
+			filter = append(filter, bson.E{Key: k, Value: bson.M{"$in": v}})
 		} else {
-			filter = append(filter, primitive.E{Key: k, Value: v})
+			filter = append(filter, bson.E{Key: k, Value: v})
 		}
 	}
 
@@ -2074,13 +2074,13 @@ func (sa *Adapter) UpdateServiceAccount(context TransactionContext, account *mod
 
 	storageAccount := serviceAccountToStorage(*account)
 
-	filter := bson.D{primitive.E{Key: "account_id", Value: storageAccount.AccountID}, primitive.E{Key: "app_id", Value: storageAccount.AppID}, primitive.E{Key: "org_id", Value: storageAccount.OrgID}}
+	filter := bson.D{bson.E{Key: "account_id", Value: storageAccount.AccountID}, bson.E{Key: "app_id", Value: storageAccount.AppID}, bson.E{Key: "org_id", Value: storageAccount.OrgID}}
 	update := bson.D{
-		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "name", Value: storageAccount.Name},
-			primitive.E{Key: "permissions", Value: storageAccount.Permissions},
-			primitive.E{Key: "scopes", Value: storageAccount.Scopes},
-			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
+		bson.E{Key: "$set", Value: bson.D{
+			bson.E{Key: "name", Value: storageAccount.Name},
+			bson.E{Key: "permissions", Value: storageAccount.Permissions},
+			bson.E{Key: "scopes", Value: storageAccount.Scopes},
+			bson.E{Key: "date_updated", Value: time.Now().UTC()},
 		}},
 	}
 	opts := options.FindOneAndUpdateOptions{}
@@ -2104,7 +2104,7 @@ func (sa *Adapter) UpdateServiceAccount(context TransactionContext, account *mod
 
 // DeleteServiceAccount deletes a service account
 func (sa *Adapter) DeleteServiceAccount(accountID string, appID string, orgID string) error {
-	filter := bson.D{primitive.E{Key: "account_id", Value: accountID}, primitive.E{Key: "app_id", Value: appID}, primitive.E{Key: "org_id", Value: orgID}}
+	filter := bson.D{bson.E{Key: "account_id", Value: accountID}, bson.E{Key: "app_id", Value: appID}, bson.E{Key: "org_id", Value: orgID}}
 
 	errFields := logutils.FieldArgs{"account_id": accountID, "app_id": appID, "org_id": orgID}
 	res, err := sa.db.serviceAccounts.DeleteOne(filter, nil)
@@ -2123,7 +2123,7 @@ func (sa *Adapter) DeleteServiceAccount(accountID string, appID string, orgID st
 
 // DeleteServiceAccounts deletes service accounts by accountID
 func (sa *Adapter) DeleteServiceAccounts(accountID string) error {
-	filter := bson.D{primitive.E{Key: "account_id", Value: accountID}}
+	filter := bson.D{bson.E{Key: "account_id", Value: accountID}}
 
 	res, err := sa.db.serviceAccounts.DeleteMany(filter, nil)
 	if err != nil {
@@ -2142,13 +2142,13 @@ func (sa *Adapter) InsertServiceAccountCredential(accountID string, creds *model
 		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs("credentials"))
 	}
 
-	filter := bson.D{primitive.E{Key: "account_id", Value: accountID}}
+	filter := bson.D{bson.E{Key: "account_id", Value: accountID}}
 	update := bson.D{
-		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
+		bson.E{Key: "$set", Value: bson.D{
+			bson.E{Key: "date_updated", Value: time.Now().UTC()},
 		}},
-		primitive.E{Key: "$push", Value: bson.D{
-			primitive.E{Key: "credentials", Value: creds},
+		bson.E{Key: "$push", Value: bson.D{
+			bson.E{Key: "credentials", Value: creds},
 		}},
 	}
 
@@ -2168,13 +2168,13 @@ func (sa *Adapter) InsertServiceAccountCredential(accountID string, creds *model
 
 // DeleteServiceAccountCredential deletes a service account credential
 func (sa *Adapter) DeleteServiceAccountCredential(accountID string, credID string) error {
-	filter := bson.D{primitive.E{Key: "account_id", Value: accountID}}
+	filter := bson.D{bson.E{Key: "account_id", Value: accountID}}
 	update := bson.D{
-		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
+		bson.E{Key: "$set", Value: bson.D{
+			bson.E{Key: "date_updated", Value: time.Now().UTC()},
 		}},
-		primitive.E{Key: "$pull", Value: bson.D{
-			primitive.E{Key: "credentials", Value: bson.M{"id": credID}},
+		bson.E{Key: "$pull", Value: bson.D{
+			bson.E{Key: "credentials", Value: bson.M{"id": credID}},
 		}},
 	}
 
@@ -2232,11 +2232,11 @@ func (sa *Adapter) UpdateAccountPreferences(context TransactionContext, cOrgID s
 
 // UpdateAccountSystemConfigs updates account system configs
 func (sa *Adapter) UpdateAccountSystemConfigs(context TransactionContext, accountID string, configs map[string]interface{}) error {
-	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
+	filter := bson.D{bson.E{Key: "_id", Value: accountID}}
 	update := bson.D{
-		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "system_configs", Value: configs},
-			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
+		bson.E{Key: "$set", Value: bson.D{
+			bson.E{Key: "system_configs", Value: configs},
+			bson.E{Key: "date_updated", Value: time.Now().UTC()},
 		}},
 	}
 
@@ -2254,15 +2254,15 @@ func (sa *Adapter) UpdateAccountSystemConfigs(context TransactionContext, accoun
 // InsertAccountPermissions inserts account permissions
 func (sa *Adapter) InsertAccountPermissions(context TransactionContext, accountID string, appOrgID string, permissions []model.Permission) error {
 	filter := bson.D{
-		primitive.E{Key: "_id", Value: accountID},
-		primitive.E{Key: "org_apps_memberships.app_org_id", Value: appOrgID},
+		bson.E{Key: "_id", Value: accountID},
+		bson.E{Key: "org_apps_memberships.app_org_id", Value: appOrgID},
 	}
 	update := bson.D{
-		primitive.E{Key: "$push", Value: bson.D{
-			primitive.E{Key: "org_apps_memberships.$.permissions", Value: bson.M{"$each": permissions}},
+		bson.E{Key: "$push", Value: bson.D{
+			bson.E{Key: "org_apps_memberships.$.permissions", Value: bson.M{"$each": permissions}},
 		}},
-		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
+		bson.E{Key: "$set", Value: bson.D{
+			bson.E{Key: "date_updated", Value: time.Now().UTC()},
 		}},
 	}
 
@@ -2280,14 +2280,14 @@ func (sa *Adapter) InsertAccountPermissions(context TransactionContext, accountI
 // UpdateAccountPermissions updates account permissions
 func (sa *Adapter) UpdateAccountPermissions(context TransactionContext, accountID string, appOrgID string, permissions []model.Permission) error {
 	filter := bson.D{
-		primitive.E{Key: "_id", Value: accountID},
-		primitive.E{Key: "org_apps_memberships.app_org_id", Value: appOrgID},
+		bson.E{Key: "_id", Value: accountID},
+		bson.E{Key: "org_apps_memberships.app_org_id", Value: appOrgID},
 	}
 
 	update := bson.D{
-		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "org_apps_memberships.$.permissions", Value: permissions},
-			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
+		bson.E{Key: "$set", Value: bson.D{
+			bson.E{Key: "org_apps_memberships.$.permissions", Value: permissions},
+			bson.E{Key: "date_updated", Value: time.Now().UTC()},
 		}},
 	}
 
@@ -2306,17 +2306,17 @@ func (sa *Adapter) UpdateAccountPermissions(context TransactionContext, accountI
 func (sa *Adapter) DeleteAccountPermissions(context TransactionContext, accountID string, appOrgID string, permissionNames []string) error {
 	//filter
 	filter := bson.D{
-		primitive.E{Key: "_id", Value: accountID},
-		primitive.E{Key: "org_apps_memberships.app_org_id", Value: appOrgID},
+		bson.E{Key: "_id", Value: accountID},
+		bson.E{Key: "org_apps_memberships.app_org_id", Value: appOrgID},
 	}
 
 	//update
 	update := bson.D{
-		primitive.E{Key: "$pull", Value: bson.D{
-			primitive.E{Key: "org_apps_memberships.$.permissions", Value: bson.M{"name": bson.M{"$in": permissionNames}}},
+		bson.E{Key: "$pull", Value: bson.D{
+			bson.E{Key: "org_apps_memberships.$.permissions", Value: bson.M{"name": bson.M{"$in": permissionNames}}},
 		}},
-		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
+		bson.E{Key: "$set", Value: bson.D{
+			bson.E{Key: "date_updated", Value: time.Now().UTC()},
 		}},
 	}
 
@@ -2332,11 +2332,11 @@ func (sa *Adapter) DeleteAccountPermissions(context TransactionContext, accountI
 
 // UpdateAccountUsername updates an account's username
 func (sa *Adapter) UpdateAccountUsername(context TransactionContext, accountID string, username string) error {
-	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
+	filter := bson.D{bson.E{Key: "_id", Value: accountID}}
 	update := bson.D{
-		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "username", Value: username},
-			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
+		bson.E{Key: "$set", Value: bson.D{
+			bson.E{Key: "username", Value: username},
+			bson.E{Key: "date_updated", Value: time.Now().UTC()},
 		}},
 	}
 
@@ -2360,9 +2360,9 @@ func (sa *Adapter) UpdateAccountVerified(context TransactionContext, accountID s
 
 	filter := bson.M{"_id": accountID, "org_apps_memberships.app_org_id": appOrg.ID}
 	update := bson.D{
-		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "verified", Value: verified},
-			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
+		bson.E{Key: "$set", Value: bson.D{
+			bson.E{Key: "verified", Value: verified},
+			bson.E{Key: "date_updated", Value: time.Now().UTC()},
 		}},
 	}
 
@@ -2383,15 +2383,15 @@ func (sa *Adapter) InsertAccountRoles(context TransactionContext, accountID stri
 
 	//appID included in search to prevent accidentally assigning permissions to account from different application
 	filter := bson.D{
-		primitive.E{Key: "_id", Value: accountID},
-		primitive.E{Key: "org_apps_memberships.app_org_id", Value: appOrgID},
+		bson.E{Key: "_id", Value: accountID},
+		bson.E{Key: "org_apps_memberships.app_org_id", Value: appOrgID},
 	}
 	update := bson.D{
-		primitive.E{Key: "$push", Value: bson.D{
-			primitive.E{Key: "org_apps_memberships.$.roles", Value: bson.M{"$each": stgRoles}},
+		bson.E{Key: "$push", Value: bson.D{
+			bson.E{Key: "org_apps_memberships.$.roles", Value: bson.M{"$each": stgRoles}},
 		}},
-		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
+		bson.E{Key: "$set", Value: bson.D{
+			bson.E{Key: "date_updated", Value: time.Now().UTC()},
 		}},
 	}
 
@@ -2412,15 +2412,15 @@ func (sa *Adapter) InsertAccountGroups(context TransactionContext, accountID str
 
 	//appID included in search to prevent accidentally assigning permissions to account from different application
 	filter := bson.D{
-		primitive.E{Key: "_id", Value: accountID},
-		primitive.E{Key: "org_apps_memberships.app_org_id", Value: appOrgID},
+		bson.E{Key: "_id", Value: accountID},
+		bson.E{Key: "org_apps_memberships.app_org_id", Value: appOrgID},
 	}
 	update := bson.D{
-		primitive.E{Key: "$push", Value: bson.D{
-			primitive.E{Key: "org_apps_memberships.$.groups", Value: bson.M{"$each": stgGroups}},
+		bson.E{Key: "$push", Value: bson.D{
+			bson.E{Key: "org_apps_memberships.$.groups", Value: bson.M{"$each": stgGroups}},
 		}},
-		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
+		bson.E{Key: "$set", Value: bson.D{
+			bson.E{Key: "date_updated", Value: time.Now().UTC()},
 		}},
 	}
 
@@ -2443,18 +2443,18 @@ func (sa *Adapter) InsertAccountsGroup(context TransactionContext, appOrgID stri
 
 	//prepare filter
 	filter := bson.D{
-		primitive.E{Key: "_id", Value: bson.M{"$in": accountIDs}},
-		primitive.E{Key: "org_apps_memberships.app_org_id", Value: appOrgID},
+		bson.E{Key: "_id", Value: bson.M{"$in": accountIDs}},
+		bson.E{Key: "org_apps_memberships.app_org_id", Value: appOrgID},
 	}
 
 	//update
 	storageGroup := accountGroupToStorage(group)
 	update := bson.D{
-		primitive.E{Key: "$push", Value: bson.D{
-			primitive.E{Key: "org_apps_memberships.$.groups", Value: storageGroup},
+		bson.E{Key: "$push", Value: bson.D{
+			bson.E{Key: "org_apps_memberships.$.groups", Value: storageGroup},
 		}},
-		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
+		bson.E{Key: "$set", Value: bson.D{
+			bson.E{Key: "date_updated", Value: time.Now().UTC()},
 		}},
 	}
 
@@ -2473,16 +2473,16 @@ func (sa *Adapter) RemoveAccountsGroup(context TransactionContext, appOrgID stri
 	}
 
 	filter := bson.D{
-		primitive.E{Key: "_id", Value: bson.M{"$in": accountIDs}},
-		primitive.E{Key: "org_apps_memberships.app_org_id", Value: appOrgID},
+		bson.E{Key: "_id", Value: bson.M{"$in": accountIDs}},
+		bson.E{Key: "org_apps_memberships.app_org_id", Value: appOrgID},
 	}
 
 	update := bson.D{
-		primitive.E{Key: "$pull", Value: bson.D{
-			primitive.E{Key: "org_apps_memberships.$.groups", Value: bson.M{"group._id": groupID}},
+		bson.E{Key: "$pull", Value: bson.D{
+			bson.E{Key: "org_apps_memberships.$.groups", Value: bson.M{"group._id": groupID}},
 		}},
-		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
+		bson.E{Key: "$set", Value: bson.D{
+			bson.E{Key: "date_updated", Value: time.Now().UTC()},
 		}},
 	}
 
@@ -2503,14 +2503,14 @@ func (sa *Adapter) UpdateAccountRoles(context TransactionContext, accountID stri
 	stgRoles := accountRolesToStorage(roles)
 
 	filter := bson.D{
-		primitive.E{Key: "_id", Value: accountID},
-		primitive.E{Key: "org_apps_memberships.app_org_id", Value: appOrgID},
+		bson.E{Key: "_id", Value: accountID},
+		bson.E{Key: "org_apps_memberships.app_org_id", Value: appOrgID},
 	}
 
 	update := bson.D{
-		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "org_apps_memberships.$.roles", Value: stgRoles},
-			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
+		bson.E{Key: "$set", Value: bson.D{
+			bson.E{Key: "org_apps_memberships.$.roles", Value: stgRoles},
+			bson.E{Key: "date_updated", Value: time.Now().UTC()},
 		}},
 	}
 
@@ -2529,17 +2529,17 @@ func (sa *Adapter) UpdateAccountRoles(context TransactionContext, accountID stri
 func (sa *Adapter) DeleteAccountRoles(context TransactionContext, accountID string, appOrgID string, roleIDs []string) error {
 	//filter
 	filter := bson.D{
-		primitive.E{Key: "_id", Value: accountID},
-		primitive.E{Key: "org_apps_memberships.app_org_id", Value: appOrgID},
+		bson.E{Key: "_id", Value: accountID},
+		bson.E{Key: "org_apps_memberships.app_org_id", Value: appOrgID},
 	}
 
 	//update
 	update := bson.D{
-		primitive.E{Key: "$pull", Value: bson.D{
-			primitive.E{Key: "org_apps_memberships.$.roles", Value: bson.M{"role._id": bson.M{"$in": roleIDs}}},
+		bson.E{Key: "$pull", Value: bson.D{
+			bson.E{Key: "org_apps_memberships.$.roles", Value: bson.M{"role._id": bson.M{"$in": roleIDs}}},
 		}},
-		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
+		bson.E{Key: "$set", Value: bson.D{
+			bson.E{Key: "date_updated", Value: time.Now().UTC()},
 		}},
 	}
 
@@ -2555,10 +2555,10 @@ func (sa *Adapter) DeleteAccountRoles(context TransactionContext, accountID stri
 
 // DeleteOrgAppsMemberships deletes orgAppMemberships from the account for the given accountID
 func (sa *Adapter) DeleteOrgAppsMemberships(context TransactionContext, accountID string, membershipIDs []string) error {
-	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
+	filter := bson.D{bson.E{Key: "_id", Value: accountID}}
 	update := bson.D{
-		primitive.E{Key: "$pull", Value: bson.D{
-			primitive.E{Key: "org_apps_memberships", Value: bson.M{"id": bson.M{"$in": membershipIDs}}},
+		bson.E{Key: "$pull", Value: bson.D{
+			bson.E{Key: "org_apps_memberships", Value: bson.M{"id": bson.M{"$in": membershipIDs}}},
 		}},
 	}
 
@@ -2575,13 +2575,13 @@ func (sa *Adapter) UpdateAccountGroups(context TransactionContext, accountID str
 	stgGroups := accountGroupsToStorage(groups)
 
 	filter := bson.D{
-		primitive.E{Key: "_id", Value: accountID},
-		primitive.E{Key: "org_apps_memberships.app_org_id", Value: appOrgID}}
+		bson.E{Key: "_id", Value: accountID},
+		bson.E{Key: "org_apps_memberships.app_org_id", Value: appOrgID}}
 
 	update := bson.D{
-		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "org_apps_memberships.$.groups", Value: stgGroups},
-			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
+		bson.E{Key: "$set", Value: bson.D{
+			bson.E{Key: "org_apps_memberships.$.groups", Value: stgGroups},
+			bson.E{Key: "date_updated", Value: time.Now().UTC()},
 		}},
 	}
 
@@ -2598,11 +2598,11 @@ func (sa *Adapter) UpdateAccountGroups(context TransactionContext, accountID str
 
 // UpdateAccountScopes updates account scopes
 func (sa *Adapter) UpdateAccountScopes(context TransactionContext, accountID string, scopes []string) error {
-	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
+	filter := bson.D{bson.E{Key: "_id", Value: accountID}}
 	update := bson.D{
-		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "scopes", Value: scopes},
-			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
+		bson.E{Key: "$set", Value: bson.D{
+			bson.E{Key: "scopes", Value: scopes},
+			bson.E{Key: "date_updated", Value: time.Now().UTC()},
 		}},
 	}
 
@@ -2624,8 +2624,8 @@ func (sa *Adapter) InsertAccountAuthType(item model.AccountAuthType) error {
 	//3. first find the account record
 	filter := bson.M{"_id": item.Account.ID}
 	update := bson.D{
-		primitive.E{Key: "$push", Value: bson.D{
-			primitive.E{Key: "auth_types", Value: storageItem},
+		bson.E{Key: "$push", Value: bson.D{
+			bson.E{Key: "auth_types", Value: storageItem},
 		}},
 	}
 
@@ -2710,8 +2710,8 @@ func (sa *Adapter) UpdateAccountAuthType(item model.AccountAuthType) error {
 func (sa *Adapter) DeleteAccountAuthType(context TransactionContext, item model.AccountAuthType) error {
 	filter := bson.M{"_id": item.Account.ID}
 	update := bson.D{
-		primitive.E{Key: "$pull", Value: bson.D{
-			primitive.E{Key: "auth_types", Value: bson.M{"auth_type_code": item.AuthType.Code, "identifier": item.Identifier}},
+		bson.E{Key: "$pull", Value: bson.D{
+			bson.E{Key: "auth_types", Value: bson.M{"auth_type_code": item.AuthType.Code, "identifier": item.Identifier}},
 		}},
 	}
 
@@ -2728,12 +2728,12 @@ func (sa *Adapter) DeleteAccountAuthType(context TransactionContext, item model.
 
 // UpdateAccountExternalIDs updates account external IDs
 func (sa *Adapter) UpdateAccountExternalIDs(accountID string, externalIDs map[string]string) error {
-	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
+	filter := bson.D{bson.E{Key: "_id", Value: accountID}}
 	now := time.Now().UTC()
 	update := bson.D{
-		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "external_ids", Value: externalIDs},
-			primitive.E{Key: "date_updated", Value: &now},
+		bson.E{Key: "$set", Value: bson.D{
+			bson.E{Key: "external_ids", Value: externalIDs},
+			bson.E{Key: "date_updated", Value: &now},
 		}},
 	}
 
@@ -2750,12 +2750,12 @@ func (sa *Adapter) UpdateAccountExternalIDs(accountID string, externalIDs map[st
 
 // UpdateLoginSessionExternalIDs updates login session external IDs
 func (sa *Adapter) UpdateLoginSessionExternalIDs(accountID string, externalIDs map[string]string) error {
-	filter := bson.D{primitive.E{Key: "identifier", Value: accountID}}
+	filter := bson.D{bson.E{Key: "identifier", Value: accountID}}
 	now := time.Now().UTC()
 	update := bson.D{
-		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "external_ids", Value: externalIDs},
-			primitive.E{Key: "date_updated", Value: &now},
+		bson.E{Key: "$set", Value: bson.D{
+			bson.E{Key: "external_ids", Value: externalIDs},
+			bson.E{Key: "date_updated", Value: &now},
 		}},
 	}
 
@@ -2769,7 +2769,7 @@ func (sa *Adapter) UpdateLoginSessionExternalIDs(accountID string, externalIDs m
 
 // CountAccountsByRoleID counts how many accounts there are with the passed role id
 func (sa *Adapter) CountAccountsByRoleID(roleID string) (*int64, error) {
-	filter := bson.D{primitive.E{Key: "org_apps_memberships.roles.role._id", Value: roleID}}
+	filter := bson.D{bson.E{Key: "org_apps_memberships.roles.role._id", Value: roleID}}
 
 	count, err := sa.db.tenantsAccounts.CountDocuments(filter)
 	if err != nil {
@@ -2780,7 +2780,7 @@ func (sa *Adapter) CountAccountsByRoleID(roleID string) (*int64, error) {
 
 // CountAccountsByGroupID counts how many accounts there are with the passed group id
 func (sa *Adapter) CountAccountsByGroupID(groupID string) (*int64, error) {
-	filter := bson.D{primitive.E{Key: "org_apps_memberships.groups.group._id", Value: groupID}}
+	filter := bson.D{bson.E{Key: "org_apps_memberships.groups.group._id", Value: groupID}}
 
 	count, err := sa.db.tenantsAccounts.CountDocuments(filter)
 	if err != nil {
@@ -2791,7 +2791,7 @@ func (sa *Adapter) CountAccountsByGroupID(groupID string) (*int64, error) {
 
 // FindCredential finds a credential by ID
 func (sa *Adapter) FindCredential(context TransactionContext, ID string) (*model.Credential, error) {
-	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
+	filter := bson.D{bson.E{Key: "_id", Value: ID}}
 
 	var creds credential
 	err := sa.db.credentials.FindOneWithContext(context, filter, &creds, nil)
@@ -2830,7 +2830,7 @@ func (sa *Adapter) UpdateCredential(context TransactionContext, creds *model.Cre
 		return errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs(model.TypeCredential))
 	}
 
-	filter := bson.D{primitive.E{Key: "_id", Value: storageCreds.ID}}
+	filter := bson.D{bson.E{Key: "_id", Value: storageCreds.ID}}
 	err := sa.db.credentials.ReplaceOneWithContext(context, filter, storageCreds, nil)
 	if err != nil {
 		return errors.WrapErrorAction(logutils.ActionUpdate, model.TypeCredential, &logutils.FieldArgs{"_id": storageCreds.ID}, err)
@@ -2841,10 +2841,10 @@ func (sa *Adapter) UpdateCredential(context TransactionContext, creds *model.Cre
 
 // UpdateCredentialValue updates the value in credentials collection
 func (sa *Adapter) UpdateCredentialValue(ID string, value map[string]interface{}) error {
-	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
+	filter := bson.D{bson.E{Key: "_id", Value: ID}}
 	update := bson.D{
-		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "value", Value: value},
+		bson.E{Key: "$set", Value: bson.D{
+			bson.E{Key: "value", Value: value},
 		}},
 	}
 
@@ -2861,7 +2861,7 @@ func (sa *Adapter) UpdateCredentialValue(ID string, value map[string]interface{}
 
 // DeleteCredential deletes a credential
 func (sa *Adapter) DeleteCredential(context TransactionContext, ID string) error {
-	filter := bson.D{primitive.E{Key: "_id", Value: ID}}
+	filter := bson.D{bson.E{Key: "_id", Value: ID}}
 
 	res, err := sa.db.credentials.DeleteOneWithContext(context, filter, nil)
 	if err != nil {
@@ -2877,9 +2877,9 @@ func (sa *Adapter) DeleteCredential(context TransactionContext, ID string) error
 // FindMFAType finds one MFA type for an account
 func (sa *Adapter) FindMFAType(context TransactionContext, accountID string, identifier string, mfaType string) (*model.MFAType, error) {
 	filter := bson.D{
-		primitive.E{Key: "_id", Value: accountID},
-		primitive.E{Key: "mfa_types.type", Value: mfaType},
-		primitive.E{Key: "mfa_types.params.identifier", Value: identifier},
+		bson.E{Key: "_id", Value: accountID},
+		bson.E{Key: "mfa_types.type", Value: mfaType},
+		bson.E{Key: "mfa_types.params.identifier", Value: identifier},
 	}
 
 	var account tenantAccount
@@ -2900,7 +2900,7 @@ func (sa *Adapter) FindMFAType(context TransactionContext, accountID string, ide
 
 // FindMFATypes finds all MFA types for an account
 func (sa *Adapter) FindMFATypes(accountID string) ([]model.MFAType, error) {
-	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
+	filter := bson.D{bson.E{Key: "_id", Value: accountID}}
 
 	var account tenantAccount
 	err := sa.db.tenantsAccounts.FindOne(filter, &account, nil)
@@ -2923,15 +2923,15 @@ func (sa *Adapter) InsertMFAType(context TransactionContext, mfa *model.MFAType,
 	storageMfa := mfaTypeToStorage(mfa)
 
 	filter := bson.D{
-		primitive.E{Key: "_id", Value: accountID},
-		primitive.E{Key: "mfa_types.params.identifier", Value: bson.M{"$ne": mfa.Params["identifier"]}},
+		bson.E{Key: "_id", Value: accountID},
+		bson.E{Key: "mfa_types.params.identifier", Value: bson.M{"$ne": mfa.Params["identifier"]}},
 	}
 	update := bson.D{
-		primitive.E{Key: "$push", Value: bson.D{
-			primitive.E{Key: "mfa_types", Value: storageMfa},
+		bson.E{Key: "$push", Value: bson.D{
+			bson.E{Key: "mfa_types", Value: storageMfa},
 		}},
-		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
+		bson.E{Key: "$set", Value: bson.D{
+			bson.E{Key: "date_updated", Value: time.Now().UTC()},
 		}},
 	}
 
@@ -2954,15 +2954,15 @@ func (sa *Adapter) UpdateMFAType(context TransactionContext, mfa *model.MFAType,
 
 	now := time.Now().UTC()
 	filter := bson.D{
-		primitive.E{Key: "_id", Value: accountID},
-		primitive.E{Key: "mfa_types.id", Value: mfa.ID},
+		bson.E{Key: "_id", Value: accountID},
+		bson.E{Key: "mfa_types.id", Value: mfa.ID},
 	}
 	update := bson.D{
-		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "mfa_types.$.verified", Value: mfa.Verified},
-			primitive.E{Key: "mfa_types.$.params", Value: mfa.Params},
-			primitive.E{Key: "mfa_types.$.date_updated", Value: now},
-			primitive.E{Key: "date_updated", Value: now},
+		bson.E{Key: "$set", Value: bson.D{
+			bson.E{Key: "mfa_types.$.verified", Value: mfa.Verified},
+			bson.E{Key: "mfa_types.$.params", Value: mfa.Params},
+			bson.E{Key: "mfa_types.$.date_updated", Value: now},
+			bson.E{Key: "date_updated", Value: now},
 		}},
 	}
 
@@ -2982,13 +2982,13 @@ func (sa *Adapter) UpdateMFAType(context TransactionContext, mfa *model.MFAType,
 
 // DeleteMFAType deletes a MFA type
 func (sa *Adapter) DeleteMFAType(context TransactionContext, accountID string, identifier string, mfaType string) error {
-	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
+	filter := bson.D{bson.E{Key: "_id", Value: accountID}}
 	update := bson.D{
-		primitive.E{Key: "$pull", Value: bson.D{
-			primitive.E{Key: "mfa_types", Value: bson.M{"type": mfaType, "params.identifier": identifier}},
+		bson.E{Key: "$pull", Value: bson.D{
+			bson.E{Key: "mfa_types", Value: bson.M{"type": mfaType, "params.identifier": identifier}},
 		}},
-		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "date_updated", Value: time.Now().UTC()},
+		bson.E{Key: "$set", Value: bson.D{
+			bson.E{Key: "date_updated", Value: time.Now().UTC()},
 		}},
 	}
 
@@ -3012,7 +3012,7 @@ func (sa *Adapter) FindPermissions(context TransactionContext, ids []string) ([]
 		return []model.Permission{}, nil
 	}
 
-	permissionsFilter := bson.D{primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
+	permissionsFilter := bson.D{bson.E{Key: "_id", Value: bson.M{"$in": ids}}}
 	var permissionsResult []model.Permission
 	err := sa.db.permissions.FindWithContext(context, permissionsFilter, &permissionsResult, nil)
 	if err != nil {
@@ -3028,7 +3028,7 @@ func (sa *Adapter) FindPermissionsByServiceIDs(serviceIDs []string) ([]model.Per
 		return nil, nil
 	}
 
-	filter := bson.D{primitive.E{Key: "service_id", Value: bson.M{"$in": serviceIDs}}}
+	filter := bson.D{bson.E{Key: "service_id", Value: bson.M{"$in": serviceIDs}}}
 	var permissionsResult []model.Permission
 	err := sa.db.permissions.Find(filter, &permissionsResult, nil)
 	if err != nil {
@@ -3044,7 +3044,7 @@ func (sa *Adapter) FindPermissionsByName(context TransactionContext, names []str
 		return []model.Permission{}, nil
 	}
 
-	permissionsFilter := bson.D{primitive.E{Key: "name", Value: bson.M{"$in": names}}}
+	permissionsFilter := bson.D{bson.E{Key: "name", Value: bson.M{"$in": names}}}
 	var permissionsResult []model.Permission
 	err := sa.db.permissions.FindWithContext(context, permissionsFilter, &permissionsResult, nil)
 	if err != nil {
@@ -3096,15 +3096,15 @@ func (sa *Adapter) UpdatePermission(item model.Permission) error {
 	//Update the permission in all collection where there is a copy of it - accounts, application_roles, application_groups, service_accounts
 
 	// Update serviceIDs
-	filter := bson.D{primitive.E{Key: "name", Value: item.Name}}
+	filter := bson.D{bson.E{Key: "name", Value: item.Name}}
 
 	now := time.Now().UTC()
 	permissionUpdate := bson.D{
-		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "description", Value: item.Description},
-			primitive.E{Key: "service_id", Value: item.ServiceID},
-			primitive.E{Key: "assigners", Value: item.Assigners},
-			primitive.E{Key: "date_updated", Value: &now},
+		bson.E{Key: "$set", Value: bson.D{
+			bson.E{Key: "description", Value: item.Description},
+			bson.E{Key: "service_id", Value: item.ServiceID},
+			bson.E{Key: "assigners", Value: item.Assigners},
+			bson.E{Key: "date_updated", Value: &now},
 		}},
 	}
 
@@ -3130,7 +3130,7 @@ func (sa *Adapter) DeletePermission(id string) error {
 
 // FindAppOrgRoles finds all application organization roles fora given AppOrg ID
 func (sa *Adapter) FindAppOrgRoles(appOrgID string) ([]model.AppOrgRole, error) {
-	rolesFilter := bson.D{primitive.E{Key: "app_org_id", Value: appOrgID}}
+	rolesFilter := bson.D{bson.E{Key: "app_org_id", Value: appOrgID}}
 	var rolesResult []appOrgRole
 	err := sa.db.applicationsOrganizationsRoles.Find(rolesFilter, &rolesResult, nil)
 	if err != nil {
@@ -3157,7 +3157,7 @@ func (sa *Adapter) FindAppOrgRolesByIDs(context TransactionContext, ids []string
 		return []model.AppOrgRole{}, nil
 	}
 
-	rolesFilter := bson.D{primitive.E{Key: "app_org_id", Value: appOrgID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
+	rolesFilter := bson.D{bson.E{Key: "app_org_id", Value: appOrgID}, bson.E{Key: "_id", Value: bson.M{"$in": ids}}}
 	var rolesResult []appOrgRole
 	err := sa.db.applicationsOrganizationsRoles.FindWithContext(context, rolesFilter, &rolesResult, nil)
 	if err != nil {
@@ -3180,7 +3180,7 @@ func (sa *Adapter) FindAppOrgRolesByIDs(context TransactionContext, ids []string
 
 // FindAppOrgRole finds an application organization role
 func (sa *Adapter) FindAppOrgRole(context TransactionContext, id string, appOrgID string) (*model.AppOrgRole, error) {
-	filter := bson.D{primitive.E{Key: "_id", Value: id}, primitive.E{Key: "app_org_id", Value: appOrgID}}
+	filter := bson.D{bson.E{Key: "_id", Value: id}, bson.E{Key: "app_org_id", Value: appOrgID}}
 	var rolesResult []appOrgRole
 	err := sa.db.applicationsOrganizationsRoles.FindWithContext(context, filter, &rolesResult, nil)
 	if err != nil {
@@ -3229,15 +3229,15 @@ func (sa *Adapter) UpdateAppOrgRole(context TransactionContext, item model.AppOr
 
 func (sa *Adapter) updateAppOrgRole(context TransactionContext, item model.AppOrgRole) error {
 	// update role
-	roleFilter := bson.D{primitive.E{Key: "_id", Value: item.ID}}
+	roleFilter := bson.D{bson.E{Key: "_id", Value: item.ID}}
 	roleUpdate := bson.D{
-		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "name", Value: item.Name},
-			primitive.E{Key: "description", Value: item.Description},
-			primitive.E{Key: "permissions", Value: item.Permissions},
-			primitive.E{Key: "scopes", Value: item.Scopes},
-			primitive.E{Key: "system", Value: item.System},
-			primitive.E{Key: "date_updated", Value: item.DateUpdated},
+		bson.E{Key: "$set", Value: bson.D{
+			bson.E{Key: "name", Value: item.Name},
+			bson.E{Key: "description", Value: item.Description},
+			bson.E{Key: "permissions", Value: item.Permissions},
+			bson.E{Key: "scopes", Value: item.Scopes},
+			bson.E{Key: "system", Value: item.System},
+			bson.E{Key: "date_updated", Value: item.DateUpdated},
 		}},
 	}
 
@@ -3314,10 +3314,10 @@ func (sa *Adapter) DeleteAppOrgRole(id string) error {
 // InsertAppOrgRolePermissions inserts permissions to role
 func (sa *Adapter) InsertAppOrgRolePermissions(context TransactionContext, roleID string, permissions []model.Permission) error {
 
-	filter := bson.D{primitive.E{Key: "_id", Value: roleID}}
+	filter := bson.D{bson.E{Key: "_id", Value: roleID}}
 	update := bson.D{
-		primitive.E{Key: "$push", Value: bson.D{
-			primitive.E{Key: "permissions", Value: bson.M{"$each": permissions}},
+		bson.E{Key: "$push", Value: bson.D{
+			bson.E{Key: "permissions", Value: bson.M{"$each": permissions}},
 		}},
 	}
 
@@ -3343,7 +3343,7 @@ func (sa *Adapter) FindAppOrgGroupsByIDs(context TransactionContext, ids []strin
 		return []model.AppOrgGroup{}, nil
 	}
 
-	filter := bson.D{primitive.E{Key: "app_org_id", Value: appOrgID}, primitive.E{Key: "_id", Value: bson.M{"$in": ids}}}
+	filter := bson.D{bson.E{Key: "app_org_id", Value: appOrgID}, bson.E{Key: "_id", Value: bson.M{"$in": ids}}}
 	var groupsResult []appOrgGroup
 	err := sa.db.applicationsOrganizationsGroups.FindWithContext(context, filter, &groupsResult, nil)
 	if err != nil {
@@ -3365,7 +3365,7 @@ func (sa *Adapter) FindAppOrgGroupsByIDs(context TransactionContext, ids []strin
 
 // FindAppOrgGroup finds a application organization group
 func (sa *Adapter) FindAppOrgGroup(context TransactionContext, id string, appOrgID string) (*model.AppOrgGroup, error) {
-	filter := bson.D{primitive.E{Key: "_id", Value: id}, primitive.E{Key: "app_org_id", Value: appOrgID}}
+	filter := bson.D{bson.E{Key: "_id", Value: id}, bson.E{Key: "app_org_id", Value: appOrgID}}
 	var groupsResult []appOrgGroup
 	err := sa.db.applicationsOrganizationsGroups.FindWithContext(context, filter, &groupsResult, nil)
 	if err != nil {
@@ -3391,9 +3391,9 @@ func (sa *Adapter) FindAppOrgGroup(context TransactionContext, id string, appOrg
 }
 
 func (sa *Adapter) findAppOrgGroups(context TransactionContext, key *string, id string, appOrgID string) ([]model.AppOrgGroup, error) {
-	filter := bson.D{primitive.E{Key: "app_org_id", Value: appOrgID}}
+	filter := bson.D{bson.E{Key: "app_org_id", Value: appOrgID}}
 	if key != nil {
-		filter = append(filter, primitive.E{Key: *key, Value: id})
+		filter = append(filter, bson.E{Key: *key, Value: id})
 	}
 	var groupsResult []appOrgGroup
 	err := sa.db.applicationsOrganizationsGroups.FindWithContext(context, filter, &groupsResult, nil)
@@ -3438,15 +3438,15 @@ func (sa *Adapter) updateAppOrgGroup(context TransactionContext, item model.AppO
 	roles := appOrgRolesToStorage(item.Roles)
 
 	// update group
-	groupFilter := bson.D{primitive.E{Key: "_id", Value: item.ID}}
+	groupFilter := bson.D{bson.E{Key: "_id", Value: item.ID}}
 	groupUpdate := bson.D{
-		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "name", Value: item.Name},
-			primitive.E{Key: "description", Value: item.Description},
-			primitive.E{Key: "permissions", Value: item.Permissions},
-			primitive.E{Key: "roles", Value: roles},
-			primitive.E{Key: "system", Value: item.System},
-			primitive.E{Key: "date_updated", Value: item.DateUpdated},
+		bson.E{Key: "$set", Value: bson.D{
+			bson.E{Key: "name", Value: item.Name},
+			bson.E{Key: "description", Value: item.Description},
+			bson.E{Key: "permissions", Value: item.Permissions},
+			bson.E{Key: "roles", Value: roles},
+			bson.E{Key: "system", Value: item.System},
+			bson.E{Key: "date_updated", Value: item.DateUpdated},
 		}},
 	}
 
@@ -3510,7 +3510,7 @@ func (sa *Adapter) DeleteAppOrgGroup(id string) error {
 
 // CountGroupsByRoleID counts how many groups there are with the passed role id
 func (sa *Adapter) CountGroupsByRoleID(roleID string) (*int64, error) {
-	filter := bson.D{primitive.E{Key: "roles._id", Value: roleID}}
+	filter := bson.D{bson.E{Key: "roles._id", Value: roleID}}
 
 	count, err := sa.db.applicationsOrganizationsGroups.CountDocuments(filter)
 	if err != nil {
@@ -3587,29 +3587,29 @@ func (sa *Adapter) LoadIdentityProviders() ([]model.IdentityProvider, error) {
 
 // UpdateAccountProfile updates a profile
 func (sa *Adapter) UpdateAccountProfile(context TransactionContext, profile model.Profile) error {
-	filter := bson.D{primitive.E{Key: "profile.id", Value: profile.ID}}
+	filter := bson.D{bson.E{Key: "profile.id", Value: profile.ID}}
 
 	now := time.Now().UTC()
 	profileUpdate := bson.D{
-		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "profile.photo_url", Value: profile.PhotoURL},
-			primitive.E{Key: "profile.pronunciation_url", Value: profile.PronunciationURL},
-			primitive.E{Key: "profile.pronouns", Value: profile.Pronouns},
-			primitive.E{Key: "profile.first_name", Value: profile.FirstName},
-			primitive.E{Key: "profile.last_name", Value: profile.LastName},
-			primitive.E{Key: "profile.email", Value: profile.Email},
-			primitive.E{Key: "profile.phone", Value: profile.Phone},
-			primitive.E{Key: "profile.birth_year", Value: profile.BirthYear},
-			primitive.E{Key: "profile.address", Value: profile.Address},
-			primitive.E{Key: "profile.address2", Value: profile.Address2},
-			primitive.E{Key: "profile.po_box", Value: profile.POBox},
-			primitive.E{Key: "profile.city", Value: profile.City},
-			primitive.E{Key: "profile.zip_code", Value: profile.ZipCode},
-			primitive.E{Key: "profile.state", Value: profile.State},
-			primitive.E{Key: "profile.country", Value: profile.Country},
-			primitive.E{Key: "profile.website", Value: profile.Website},
-			primitive.E{Key: "profile.date_updated", Value: &now},
-			primitive.E{Key: "profile.unstructured_properties", Value: profile.UnstructuredProperties},
+		bson.E{Key: "$set", Value: bson.D{
+			bson.E{Key: "profile.photo_url", Value: profile.PhotoURL},
+			bson.E{Key: "profile.pronunciation_url", Value: profile.PronunciationURL},
+			bson.E{Key: "profile.pronouns", Value: profile.Pronouns},
+			bson.E{Key: "profile.first_name", Value: profile.FirstName},
+			bson.E{Key: "profile.last_name", Value: profile.LastName},
+			bson.E{Key: "profile.email", Value: profile.Email},
+			bson.E{Key: "profile.phone", Value: profile.Phone},
+			bson.E{Key: "profile.birth_year", Value: profile.BirthYear},
+			bson.E{Key: "profile.address", Value: profile.Address},
+			bson.E{Key: "profile.address2", Value: profile.Address2},
+			bson.E{Key: "profile.po_box", Value: profile.POBox},
+			bson.E{Key: "profile.city", Value: profile.City},
+			bson.E{Key: "profile.zip_code", Value: profile.ZipCode},
+			bson.E{Key: "profile.state", Value: profile.State},
+			bson.E{Key: "profile.country", Value: profile.Country},
+			bson.E{Key: "profile.website", Value: profile.Website},
+			bson.E{Key: "profile.date_updated", Value: &now},
+			bson.E{Key: "profile.unstructured_properties", Value: profile.UnstructuredProperties},
 		}},
 	}
 
@@ -3624,11 +3624,11 @@ func (sa *Adapter) UpdateAccountProfile(context TransactionContext, profile mode
 
 // UpdateAccountPrivacy updates the privacy settings for an account
 func (sa *Adapter) UpdateAccountPrivacy(context TransactionContext, accountID string, privacy model.Privacy) error {
-	filter := bson.D{primitive.E{Key: "_id", Value: accountID}}
+	filter := bson.D{bson.E{Key: "_id", Value: accountID}}
 
 	privacyUpdate := bson.D{
-		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "privacy", Value: privacy},
+		bson.E{Key: "$set", Value: bson.D{
+			bson.E{Key: "privacy", Value: privacy},
 		}},
 	}
 
@@ -3710,13 +3710,13 @@ func (sa *Adapter) InsertConfig(config model.Config) error {
 func (sa *Adapter) UpdateConfig(config model.Config) error {
 	filter := bson.M{"_id": config.ID}
 	update := bson.D{
-		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "type", Value: config.Type},
-			primitive.E{Key: "app_id", Value: config.AppID},
-			primitive.E{Key: "org_id", Value: config.OrgID},
-			primitive.E{Key: "system", Value: config.System},
-			primitive.E{Key: "data", Value: config.Data},
-			primitive.E{Key: "date_updated", Value: config.DateUpdated},
+		bson.E{Key: "$set", Value: bson.D{
+			bson.E{Key: "type", Value: config.Type},
+			bson.E{Key: "app_id", Value: config.AppID},
+			bson.E{Key: "org_id", Value: config.OrgID},
+			bson.E{Key: "system", Value: config.System},
+			bson.E{Key: "data", Value: config.Data},
+			bson.E{Key: "date_updated", Value: config.DateUpdated},
 		}},
 	}
 	_, err := sa.db.configs.UpdateOne(filter, update, nil)
@@ -3781,14 +3781,14 @@ func (sa *Adapter) UpdateOrganization(ID string, name string, requestType string
 
 	now := time.Now()
 	//TODO - use pointers and update only what not nil
-	updatOrganizationFilter := bson.D{primitive.E{Key: "_id", Value: ID}}
+	updatOrganizationFilter := bson.D{bson.E{Key: "_id", Value: ID}}
 	updateOrganization := bson.D{
-		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "name", Value: name},
-			primitive.E{Key: "type", Value: requestType},
-			primitive.E{Key: "config.domains", Value: organizationDomains},
-			primitive.E{Key: "config.date_updated", Value: now},
-			primitive.E{Key: "date_updated", Value: now},
+		bson.E{Key: "$set", Value: bson.D{
+			bson.E{Key: "name", Value: name},
+			bson.E{Key: "type", Value: requestType},
+			bson.E{Key: "config.domains", Value: organizationDomains},
+			bson.E{Key: "config.date_updated", Value: now},
+			bson.E{Key: "date_updated", Value: now},
 		}},
 	}
 
@@ -3856,7 +3856,7 @@ func (sa *Adapter) InsertApplication(context TransactionContext, application mod
 
 // SaveApplication saves an application
 func (sa *Adapter) SaveApplication(context TransactionContext, application model.Application) error {
-	filter := bson.D{primitive.E{Key: "_id", Value: application.ID}}
+	filter := bson.D{bson.E{Key: "_id", Value: application.ID}}
 	app := applicationToStorage(&application)
 
 	err := sa.db.applications.ReplaceOneWithContext(context, filter, app, nil)
@@ -3870,7 +3870,7 @@ func (sa *Adapter) SaveApplication(context TransactionContext, application model
 // FindApplication finds application
 func (sa *Adapter) FindApplication(context TransactionContext, ID string) (*model.Application, error) {
 	if context != nil {
-		filter := bson.D{primitive.E{Key: "_id", Value: ID}}
+		filter := bson.D{bson.E{Key: "_id", Value: ID}}
 
 		var app application
 		err := sa.db.applications.FindOneWithContext(context, filter, &app, nil)
@@ -3893,7 +3893,7 @@ func (sa *Adapter) FindApplications() ([]model.Application, error) {
 func (sa *Adapter) loadAppConfigs() ([]model.ApplicationConfig, error) {
 	filter := bson.D{}
 	options := options.Find()
-	options.SetSort(bson.D{primitive.E{Key: "app_type_id", Value: 1}, primitive.E{Key: "app_org_id", Value: 1}, primitive.E{Key: "version.version_numbers.major", Value: -1}, primitive.E{Key: "version.version_numbers.minor", Value: -1}, primitive.E{Key: "version.version_numbers.patch", Value: -1}}) //sort by version numbers
+	options.SetSort(bson.D{bson.E{Key: "app_type_id", Value: 1}, bson.E{Key: "app_org_id", Value: 1}, bson.E{Key: "version.version_numbers.major", Value: -1}, bson.E{Key: "version.version_numbers.minor", Value: -1}, bson.E{Key: "version.version_numbers.patch", Value: -1}}) //sort by version numbers
 	var list []applicationConfig
 
 	err := sa.db.applicationConfigs.Find(filter, &list, options)
@@ -3961,23 +3961,23 @@ func (sa *Adapter) InsertAppConfig(item model.ApplicationConfig) (*model.Applica
 func (sa *Adapter) UpdateAppConfig(ID string, appType model.ApplicationType, appOrg *model.ApplicationOrganization, version model.Version, data map[string]interface{}) error {
 	now := time.Now()
 	//TODO - use pointers and update only what not nil
-	updatAppConfigFilter := bson.D{primitive.E{Key: "_id", Value: ID}}
-	updateItem := bson.D{primitive.E{Key: "date_updated", Value: now}, primitive.E{Key: "app_type_id", Value: appType.ID}, primitive.E{Key: "version", Value: versionToStorage(version)}}
+	updatAppConfigFilter := bson.D{bson.E{Key: "_id", Value: ID}}
+	updateItem := bson.D{bson.E{Key: "date_updated", Value: now}, bson.E{Key: "app_type_id", Value: appType.ID}, bson.E{Key: "version", Value: versionToStorage(version)}}
 	// if version != "" {
-	// 	updateItem = append(updateItem, primitive.E{Key: "version.date_updated", Value: now}, primitive.E{Key: "version.version_numbers", Value: versionNumbers}, primitive.E{Key: "version.app_type", Value: appType})
+	// 	updateItem = append(updateItem, bson.E{Key: "version.date_updated", Value: now}, bson.E{Key: "version.version_numbers", Value: versionNumbers}, bson.E{Key: "version.app_type", Value: appType})
 	// }
 	if appOrg != nil {
-		updateItem = append(updateItem, primitive.E{Key: "app_org_id", Value: appOrg.ID})
+		updateItem = append(updateItem, bson.E{Key: "app_org_id", Value: appOrg.ID})
 	} else {
-		updateItem = append(updateItem, primitive.E{Key: "app_org_id", Value: nil})
+		updateItem = append(updateItem, bson.E{Key: "app_org_id", Value: nil})
 	}
 
 	if data != nil {
-		updateItem = append(updateItem, primitive.E{Key: "data", Value: data})
+		updateItem = append(updateItem, bson.E{Key: "data", Value: data})
 	}
 
 	updateAppConfig := bson.D{
-		primitive.E{Key: "$set", Value: updateItem},
+		bson.E{Key: "$set", Value: updateItem},
 	}
 	result, err := sa.db.applicationConfigs.UpdateOne(updatAppConfigFilter, updateAppConfig, nil)
 	if err != nil {
@@ -4138,14 +4138,14 @@ func (sa *Adapter) UpdateApplicationOrganization(context TransactionContext, app
 	now := time.Now()
 
 	filter := bson.M{"_id": applicationOrganization.ID}
-	update := bson.D{primitive.E{Key: "date_updated", Value: now},
-		primitive.E{Key: "identity_providers_settings", Value: appOrg.IdentityProvidersSettings},
-		primitive.E{Key: "supported_auth_types", Value: appOrg.SupportedAuthTypes},
-		primitive.E{Key: "logins_sessions_settings", Value: appOrg.LoginsSessionsSetting},
-		primitive.E{Key: "services_ids", Value: appOrg.ServicesIDs}}
+	update := bson.D{bson.E{Key: "date_updated", Value: now},
+		bson.E{Key: "identity_providers_settings", Value: appOrg.IdentityProvidersSettings},
+		bson.E{Key: "supported_auth_types", Value: appOrg.SupportedAuthTypes},
+		bson.E{Key: "logins_sessions_settings", Value: appOrg.LoginsSessionsSetting},
+		bson.E{Key: "services_ids", Value: appOrg.ServicesIDs}}
 
 	updateAppOrg := bson.D{
-		primitive.E{Key: "$set", Value: update},
+		bson.E{Key: "$set", Value: update},
 	}
 
 	res, err := sa.db.applicationsOrganizations.UpdateOneWithContext(context, filter, updateAppOrg, nil)
@@ -4161,10 +4161,10 @@ func (sa *Adapter) UpdateApplicationOrganization(context TransactionContext, app
 
 // FindDevice finds a device by device id and account id
 func (sa *Adapter) FindDevice(context TransactionContext, deviceID *string, accountID string) (*model.Device, error) {
-	filter := bson.D{primitive.E{Key: "account_id", Value: accountID}}
+	filter := bson.D{bson.E{Key: "account_id", Value: accountID}}
 
 	if deviceID != nil {
-		filter = append(filter, primitive.E{Key: "device_id", Value: *deviceID})
+		filter = append(filter, bson.E{Key: "device_id", Value: *deviceID})
 	}
 
 	var result []device
@@ -4194,8 +4194,8 @@ func (sa *Adapter) InsertDevice(context TransactionContext, device model.Device)
 	//insert in account record - we keep a device copy there too
 	filter := bson.M{"_id": device.Account.ID}
 	update := bson.D{
-		primitive.E{Key: "$push", Value: bson.D{
-			primitive.E{Key: "devices", Value: storageDevice},
+		bson.E{Key: "$push", Value: bson.D{
+			bson.E{Key: "devices", Value: storageDevice},
 		}},
 	}
 	res, err := sa.db.tenantsAccounts.UpdateOneWithContext(context, filter, update, nil)
@@ -4225,17 +4225,17 @@ func (sa *Adapter) UpdateAuthTypes(ID string, code string, description string, i
 	useCredentials bool, ignoreMFA bool, params map[string]interface{}) error {
 
 	now := time.Now()
-	updateAuthTypeFilter := bson.D{primitive.E{Key: "_id", Value: ID}}
+	updateAuthTypeFilter := bson.D{bson.E{Key: "_id", Value: ID}}
 	updateAuthType := bson.D{
-		primitive.E{Key: "$set", Value: bson.D{
-			primitive.E{Key: "code", Value: code},
-			primitive.E{Key: "description", Value: description},
-			primitive.E{Key: "is_external", Value: isExternal},
-			primitive.E{Key: "is_anonymous", Value: isAnonymous},
-			primitive.E{Key: "use_credentials", Value: useCredentials},
-			primitive.E{Key: "ignore_mfa", Value: ignoreMFA},
-			primitive.E{Key: "params", Value: params},
-			primitive.E{Key: "date_updated", Value: now},
+		bson.E{Key: "$set", Value: bson.D{
+			bson.E{Key: "code", Value: code},
+			bson.E{Key: "description", Value: description},
+			bson.E{Key: "is_external", Value: isExternal},
+			bson.E{Key: "is_anonymous", Value: isAnonymous},
+			bson.E{Key: "use_credentials", Value: useCredentials},
+			bson.E{Key: "ignore_mfa", Value: ignoreMFA},
+			bson.E{Key: "params", Value: params},
+			bson.E{Key: "date_updated", Value: now},
 		}},
 	}
 
