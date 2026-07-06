@@ -1,4 +1,4 @@
-FROM public.ecr.aws/docker/library/golang:1.25.11-alpine AS builder
+FROM public.ecr.aws/docker/library/golang:1.26.4-alpine AS builder
 
 ENV CGO_ENABLED=0
 
