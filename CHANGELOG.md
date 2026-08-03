@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Changed
+- API updates for User Directory [#825](https://github.com/rokwire/core-building-block/issues/825)
+
 ## [1.64.0] - 2026-07-06
 ### Changed
 - Temporary downgrade to mongo driver v1 [#828](https://github.com/rokwire/core-building-block/issues/828)
