@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//go:build integration
+
 package storage
 
 import (
@@ -35,7 +37,11 @@ import (
 // edge cases that changed behavior or API shape during the v1 -> v2 migration, since the
 // storage package previously had zero automated test coverage of its own.
 //
-// Requires a local Docker daemon. Run with: go test ./driven/storage/...
+// Requires a local Docker daemon. Gated behind the "integration" build tag so `go test ./...`
+// (and `make`, which runs it as part of the Docker image build) does not try to start a
+// container in environments with no Docker access. Run with:
+//
+//	go test -tags=integration ./driven/storage/...
 
 var testMongoURI string
 
