@@ -82,7 +82,7 @@ get:
       content:
         application/json:
           schema:
-            $ref: "../../../schemas/apis/services/v2/accounts-public/index/response/Response.yaml"
+            $ref: "../../schemas/apis/services/accounts-public-index/response/Response.yaml"
     400:
       description: Bad request
     401:

@@ -1187,6 +1187,97 @@ paths:
           description: Unauthorized
         '500':
           description: Internal error
+  /services/accounts/public/index:
+    get:
+      tags:
+        - Services
+      summary: Finds the letters which have matching public accounts
+      description: |
+        Returns the set of last name initials which currently have at least one matching public account, using the same
+        filter set as the public accounts listing API. Used to render the collapsed A-Z accordion of the user directory
+        without paying the cost of the full accounts pipeline.
+
+        Only letters with at least one match are returned - a missing letter means zero matches for the current filters.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: search
+          in: query
+          description: 'The search for username, firstname, or lastname'
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
+        - name: username
+          in: query
+          description: The username
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
+        - name: firstname
+          in: query
+          description: The account profile first name
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
+        - name: lastname
+          in: query
+          description: The account profile last name
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
+        - name: following-id
+          in: query
+          description: The ID of the account being followed
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
+        - name: follower-id
+          in: query
+          description: The ID of the account following
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
+        - name: unstructured_properties
+          in: query
+          description: Map containing filters by unstructured properties in profile
+          required: false
+          style: form
+          explode: true
+          schema:
+            type: object
+        - name: ids
+          in: query
+          description: A comma-separated list of IDs
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_services_res_accounts-public-index'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
   /services/v2/accounts/public:
     get:
       tags:
@@ -1306,97 +1397,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/_services_res_accounts-public'
-        '400':
-          description: Bad request
-        '401':
-          description: Unauthorized
-        '500':
-          description: Internal error
-  /services/v2/accounts/public/index:
-    get:
-      tags:
-        - Services
-      summary: Finds the letters which have matching public accounts
-      description: |
-        Returns the set of last name initials which currently have at least one matching public account, using the same
-        filter set as the public accounts listing API. Used to render the collapsed A-Z accordion of the user directory
-        without paying the cost of the full accounts pipeline.
-
-        Only letters with at least one match are returned - a missing letter means zero matches for the current filters.
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: search
-          in: query
-          description: 'The search for username, firstname, or lastname'
-          required: false
-          style: form
-          explode: false
-          schema:
-            type: string
-        - name: username
-          in: query
-          description: The username
-          required: false
-          style: form
-          explode: false
-          schema:
-            type: string
-        - name: firstname
-          in: query
-          description: The account profile first name
-          required: false
-          style: form
-          explode: false
-          schema:
-            type: string
-        - name: lastname
-          in: query
-          description: The account profile last name
-          required: false
-          style: form
-          explode: false
-          schema:
-            type: string
-        - name: following-id
-          in: query
-          description: The ID of the account being followed
-          required: false
-          style: form
-          explode: false
-          schema:
-            type: string
-        - name: follower-id
-          in: query
-          description: The ID of the account following
-          required: false
-          style: form
-          explode: false
-          schema:
-            type: string
-        - name: unstructured_properties
-          in: query
-          description: Map containing filters by unstructured properties in profile
-          required: false
-          style: form
-          explode: true
-          schema:
-            type: object
-        - name: ids
-          in: query
-          description: A comma-separated list of IDs
-          required: false
-          style: form
-          explode: false
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/_services_res_accounts-public-index'
         '400':
           description: Bad request
         '401':

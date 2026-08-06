@@ -5,4 +5,4 @@ properties:
   letters:
     type: array
     items:
-      $ref: "../../../../../../user/PublicAccountLetter.yaml"
+      $ref: "../../../../user/PublicAccountLetter.yaml"

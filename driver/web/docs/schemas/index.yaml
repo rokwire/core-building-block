@@ -220,7 +220,7 @@ _services_res_authorize-service:
 _services_res_accounts-public:
   $ref: "./apis/services/v2/accounts-public/response/Response.yaml"
 _services_res_accounts-public-index:
-  $ref: "./apis/services/v2/accounts-public/index/response/Response.yaml"
+  $ref: "./apis/services/accounts-public-index/response/Response.yaml"
 
 ### service-accounts API
 _services_req_service-accounts_params:
