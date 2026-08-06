@@ -982,6 +982,25 @@ type PublicAccountIdentifier struct {
 	Identifier string
 }
 
+// PublicAccountsFilter represents the filter set shared by the public accounts listing and letter index APIs
+type PublicAccountsFilter struct {
+	Search      *string
+	Username    *string
+	FirstName   *string
+	LastName    *string
+	FollowingID *string
+	FollowerID  *string
+	IDs         *[]string
+
+	UnstructuredProperties map[string]string
+}
+
+// PublicAccountLetter represents a last name initial which has at least one matching public account
+type PublicAccountLetter struct {
+	Letter string
+	Count  int
+}
+
 // Follow shows the relationship between user and follower
 type Follow struct {
 	ID          string    `json:"id" bson:"_id"`

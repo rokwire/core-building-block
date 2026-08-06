@@ -124,6 +124,7 @@ func (we Adapter) Start() {
 	servicesSubRouter.HandleFunc("/accounts", we.wrapFunc(we.servicesApisHandler.createAdminAccount, we.auth.services.Permissions)).Methods("POST")
 	servicesSubRouter.HandleFunc("/accounts", we.wrapFunc(we.servicesApisHandler.updateAdminAccount, we.auth.services.Permissions)).Methods("PUT")
 	servicesSubRouter.HandleFunc("/accounts/public", we.wrapFunc(we.servicesApisHandler.getPublicAccounts, we.auth.services.Standard)).Methods("GET")
+	servicesSubRouter.HandleFunc("/accounts/public/index", we.wrapFunc(we.servicesApisHandler.getPublicAccountsLetterIndex, we.auth.services.Standard)).Methods("GET")
 	servicesSubRouter.HandleFunc("/v2/accounts/public", we.wrapFunc(we.servicesApisHandler.getPublicAccountsV2, we.auth.services.Standard)).Methods("GET")
 	servicesSubRouter.HandleFunc("/account", we.wrapFunc(we.servicesApisHandler.deleteAccount, we.auth.services.Standard)).Methods("DELETE")
 	servicesSubRouter.HandleFunc("/account", we.wrapFunc(we.servicesApisHandler.getAccount, we.auth.services.Standard)).Methods("GET")
@@ -309,7 +310,7 @@ func (we Adapter) Start() {
 	if len(we.corsAllowedOrigins) > 0 {
 		handler = webauth.SetupCORS(we.corsAllowedOrigins, we.corsAllowedHeaders, router)
 	}
-	err := http.ListenAndServe(":"+we.port, handler)
+	err := http.ListenAndServe(":5050", handler)
 	if err != nil {
 		we.logger.Fatalf("error on listen and server - %s", err.Error())
 	}

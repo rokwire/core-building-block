@@ -22,8 +22,10 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/gorilla/mux"
 	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth/authorization"
@@ -929,6 +931,83 @@ func (h ServicesApisHandler) getAccounts(l *logs.Log, r *http.Request, claims *t
 	return l.HTTPResponseSuccessJSON(data)
 }
 
+// publicAccountsExplicitQueryParams are the query params handled explicitly by the public accounts APIs.
+// Every other query param is treated as an unstructured profile property filter, so a new param must be added
+// here as well, otherwise it silently becomes a filter by a non-existing unstructured property.
+var publicAccountsExplicitQueryParams = []string{"limit", "offset", "order", "search", "username", "firstname", "lastname", "following-id", "follower-id", "ids", "letter"}
+
+// publicAccountsFilterFromQuery reads the filter set shared by all public accounts APIs
+func publicAccountsFilterFromQuery(query url.Values) model.PublicAccountsFilter {
+	filter := model.PublicAccountsFilter{}
+
+	//search
+	searchParam := query.Get("search")
+	if len(searchParam) > 0 {
+		filter.Search = &searchParam
+	}
+
+	//username
+	usernameParam := query.Get("username")
+	if len(usernameParam) > 0 {
+		filter.Username = &usernameParam
+	}
+
+	//first name
+	firstNameParam := query.Get("firstname")
+	if len(firstNameParam) > 0 {
+		filter.FirstName = &firstNameParam
+	}
+
+	//last name
+	lastNameParam := query.Get("lastname")
+	if len(lastNameParam) > 0 {
+		filter.LastName = &lastNameParam
+	}
+
+	//following id
+	followingIDParam := query.Get("following-id")
+	if len(followingIDParam) > 0 {
+		filter.FollowingID = &followingIDParam
+	}
+
+	//follower id
+	followerIDParam := query.Get("follower-id")
+	if len(followerIDParam) > 0 {
+		filter.FollowerID = &followerIDParam
+	}
+
+	//ids
+	idsParam := query.Get("ids")
+	if idsParam != "" {
+		parsedIDs := strings.Split(idsParam, ",")
+		filter.IDs = &parsedIDs
+	}
+
+	filter.UnstructuredProperties = make(map[string]string)
+	for k := range query {
+		if !utils.Contains(publicAccountsExplicitQueryParams, k) {
+			filter.UnstructuredProperties[k] = query.Get(k)
+		}
+	}
+
+	return filter
+}
+
+// parsePublicAccountsLetter reads the optional letter param. It returns nil when the param is not set at all,
+// and an error when it is set to an empty or a multi-character value.
+func parsePublicAccountsLetter(query url.Values) (*string, error) {
+	if !query.Has("letter") {
+		return nil, nil
+	}
+
+	letter := strings.TrimSpace(query.Get("letter"))
+	if letter == "" || utf8.RuneCountInString(letter) > 1 {
+		return nil, errors.ErrorData(logutils.StatusInvalid, logutils.TypeArg, logutils.StringArgs("letter"))
+	}
+
+	return &letter, nil
+}
+
 func (h ServicesApisHandler) getPublicAccounts(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
 	var err error
 	query := r.URL.Query()
@@ -953,65 +1032,15 @@ func (h ServicesApisHandler) getPublicAccounts(l *logs.Log, r *http.Request, cla
 		offset = &offsetVal
 	}
 
-	//search
-	var search *string
-	searchParam := query.Get("search")
-	if len(searchParam) > 0 {
-		search = &searchParam
+	//letter
+	letter, err := parsePublicAccountsLetter(query)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionParse, logutils.TypeArg, logutils.StringArgs("letter"), err, http.StatusBadRequest, false)
 	}
 
-	//username
-	var username *string
-	usernameParam := query.Get("username")
-	if len(usernameParam) > 0 {
-		username = &usernameParam
-	}
+	filter := publicAccountsFilterFromQuery(query)
 
-	//first name
-	var firstName *string
-	firstNameParam := query.Get("firstname")
-	if len(firstNameParam) > 0 {
-		firstName = &firstNameParam
-	}
-	//last name
-	var lastName *string
-	lastNameParam := query.Get("lastname")
-	if len(lastNameParam) > 0 {
-		lastName = &lastNameParam
-	}
-
-	//following id
-	var followingID *string
-	followingIDParam := query.Get("following-id")
-	if len(followingIDParam) > 0 {
-		followingID = &followingIDParam
-	}
-
-	//following id
-	var followerID *string
-	followerIDParam := query.Get("follower-id")
-	if len(followerIDParam) > 0 {
-		followerID = &followerIDParam
-	}
-
-	//ids
-	var ids *[]string
-	idsParam := query.Get("ids")
-	if idsParam != "" {
-		parsedIDs := strings.Split(idsParam, ",")
-		ids = &parsedIDs
-	}
-
-	unstructuredProperties := make(map[string]string)
-	explicitQueryParams := []string{"limit", "offset", "order", "search", "username", "firstname", "lastname", "following-id", "follower-id", "ids"}
-	for k := range query {
-		if !utils.Contains(explicitQueryParams, k) {
-			unstructuredProperties[k] = query.Get(k)
-		}
-	}
-
-	accounts, _, _, err := h.coreAPIs.Services.SerGetPublicAccounts(claims.AppID, claims.OrgID, limit, offset, nil, nil, nil, string(Def.Asc), search,
-		firstName, lastName, username, followingID, followerID, unstructuredProperties, claims.Subject, ids)
+	accounts, _, _, err := h.coreAPIs.Services.SerGetPublicAccounts(claims.AppID, claims.OrgID, filter, letter, limit, offset, nil, nil, nil, string(Def.Asc), claims.Subject)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionGet, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}
@@ -1065,65 +1094,15 @@ func (h ServicesApisHandler) getPublicAccountsV2(l *logs.Log, r *http.Request, c
 	}
 	order = orderArg
 
-	//search
-	var search *string
-	searchParam := query.Get("search")
-	if len(searchParam) > 0 {
-		search = &searchParam
+	//letter
+	letter, err := parsePublicAccountsLetter(query)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionParse, logutils.TypeArg, logutils.StringArgs("letter"), err, http.StatusBadRequest, false)
 	}
 
-	//username
-	var username *string
-	usernameParam := query.Get("username")
-	if len(usernameParam) > 0 {
-		username = &usernameParam
-	}
+	filter := publicAccountsFilterFromQuery(query)
 
-	//first name
-	var firstName *string
-	firstNameParam := query.Get("firstname")
-	if len(firstNameParam) > 0 {
-		firstName = &firstNameParam
-	}
-	//last name
-	var lastName *string
-	lastNameParam := query.Get("lastname")
-	if len(lastNameParam) > 0 {
-		lastName = &lastNameParam
-	}
-
-	//following id
-	var followingID *string
-	followingIDParam := query.Get("following-id")
-	if len(followingIDParam) > 0 {
-		followingID = &followingIDParam
-	}
-
-	//following id
-	var followerID *string
-	followerIDParam := query.Get("follower-id")
-	if len(followerIDParam) > 0 {
-		followerID = &followerIDParam
-	}
-
-	//ids
-	var ids *[]string
-	idsParam := query.Get("ids")
-	if idsParam != "" {
-		parsedIDs := strings.Split(idsParam, ",")
-		ids = &parsedIDs
-	}
-
-	unstructuredProperties := make(map[string]string)
-	explicitQueryParams := []string{"limit", "offset", "order", "search", "username", "firstname", "lastname", "following-id", "follower-id", "ids"}
-	for k := range query {
-		if !utils.Contains(explicitQueryParams, k) {
-			unstructuredProperties[k] = query.Get(k)
-		}
-	}
-
-	accounts, indexCounts, total, err := h.coreAPIs.Services.SerGetPublicAccounts(claims.AppID, claims.OrgID, limit, nil, firstNameOffset, lastNameOffset, idOffset, order, search,
-		firstName, lastName, username, followingID, followerID, unstructuredProperties, claims.Subject, ids)
+	accounts, indexCounts, total, err := h.coreAPIs.Services.SerGetPublicAccounts(claims.AppID, claims.OrgID, filter, letter, limit, nil, firstNameOffset, lastNameOffset, idOffset, order, claims.Subject)
 	if err != nil {
 		return l.HTTPResponseErrorAction(logutils.ActionGet, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
 	}
@@ -1142,6 +1121,24 @@ func (h ServicesApisHandler) getPublicAccountsV2(l *logs.Log, r *http.Request, c
 		Counts:   indexCounts,
 		Accounts: publicAccountsToDef(accounts),
 	}
+
+	data, err := json.Marshal(result)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionMarshal, model.TypeAccount, nil, err, http.StatusInternalServerError, false)
+	}
+	return l.HTTPResponseSuccessJSON(data)
+}
+
+func (h ServicesApisHandler) getPublicAccountsLetterIndex(l *logs.Log, r *http.Request, claims *tokenauth.Claims) logs.HTTPResponse {
+	//limit, offset and order are not exposed - the endpoint returns at most one row per letter
+	filter := publicAccountsFilterFromQuery(r.URL.Query())
+
+	letters, err := h.coreAPIs.Services.SerGetPublicAccountsLetterIndex(claims.AppID, claims.OrgID, filter)
+	if err != nil {
+		return l.HTTPResponseErrorAction(logutils.ActionGet, model.TypeAccount, nil, err, http.StatusInternalServerError, true)
+	}
+
+	result := Def.ServicesResAccountsPublicIndex{Letters: publicAccountLettersToDef(letters)}
 
 	data, err := json.Marshal(result)
 	if err != nil {

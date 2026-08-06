@@ -1145,6 +1145,17 @@ paths:
           explode: false
           schema:
             type: string
+        - name: letter
+          in: query
+          description: |
+            A single letter (A-Z, case-insensitive) which scopes the query to accounts whose last name starts with it.
+            Used when the user expands a specific A-Z section header.
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
+            maxLength: 1
         - name: unstructured_properties
           in: query
           description: Map containing filters by unstructured properties in profile
@@ -1170,6 +1181,97 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/PublicAccount'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal error
+  /services/accounts/public/index:
+    get:
+      tags:
+        - Services
+      summary: Finds the letters which have matching public accounts
+      description: |
+        Returns the set of last name initials which currently have at least one matching public account, using the same
+        filter set as the public accounts listing API. Used to render the collapsed A-Z accordion of the user directory
+        without paying the cost of the full accounts pipeline.
+
+        Only letters with at least one match are returned - a missing letter means zero matches for the current filters.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: search
+          in: query
+          description: 'The search for username, firstname, or lastname'
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
+        - name: username
+          in: query
+          description: The username
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
+        - name: firstname
+          in: query
+          description: The account profile first name
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
+        - name: lastname
+          in: query
+          description: The account profile last name
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
+        - name: following-id
+          in: query
+          description: The ID of the account being followed
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
+        - name: follower-id
+          in: query
+          description: The ID of the account following
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
+        - name: unstructured_properties
+          in: query
+          description: Map containing filters by unstructured properties in profile
+          required: false
+          style: form
+          explode: true
+          schema:
+            type: object
+        - name: ids
+          in: query
+          description: A comma-separated list of IDs
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/_services_res_accounts-public-index'
         '400':
           description: Bad request
         '401':
@@ -1261,6 +1363,17 @@ paths:
           explode: false
           schema:
             type: string
+        - name: letter
+          in: query
+          description: |
+            A single letter (A-Z, case-insensitive) which scopes the query to accounts whose last name starts with it.
+            Used when the user expands a specific A-Z section header. The returned total and counts are scoped to the letter as well.
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
+            maxLength: 1
         - name: unstructured_properties
           in: query
           description: Map containing filters by unstructured properties in profile
@@ -7080,6 +7193,16 @@ components:
           type: string
         identifier:
           type: string
+    PublicAccountLetter:
+      required:
+        - letter
+        - count
+      type: object
+      properties:
+        letter:
+          type: string
+        count:
+          type: integer
     PartialAccount:
       required:
         - id
@@ -8001,6 +8124,15 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/PublicAccount'
+    _services_res_accounts-public-index:
+      required:
+        - letters
+      type: object
+      properties:
+        letters:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublicAccountLetter'
     _services_req_service-accounts_params:
       required:
         - auth_type
