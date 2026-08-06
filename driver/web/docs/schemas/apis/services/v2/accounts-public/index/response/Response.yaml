@@ -1,0 +1,8 @@
+required:
+  - letters
+type: object
+properties:
+  letters:
+    type: array
+    items:
+      $ref: "../../../../../../user/PublicAccountLetter.yaml"

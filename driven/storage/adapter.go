@@ -20,6 +20,7 @@ import (
 	"core-building-block/utils"
 	"fmt"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -1475,41 +1476,27 @@ func (sa *Adapter) FindAccounts(context TransactionContext, limit *int, offset *
 	return accounts, nil
 }
 
-// FindPublicAccounts finds accounts and returns name and username
-func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, orgID string, limit *int, offset *int, firstNameOffset *string, lastNameOffset *string, idOffset *string, order string, search *string, firstName *string,
-	lastName *string, username *string, followingID *string, followerID *string, unstructuredProperties map[string]string, userID string, ids *[]string) ([]model.PublicAccount, map[string]int, *int64, error) {
-	appOrg, err := sa.FindApplicationOrganization(appID, orgID)
-	if err != nil {
-		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
-	}
-
+// buildPublicAccountsMatchPipeline builds the $match stages shared by the public accounts listing and letter index queries.
+// Any new filter must be added here so that both APIs stay in sync - implementing a filter on only one of the paths
+// would make the letter index disagree with the accounts it is supposed to describe.
+func buildPublicAccountsMatchPipeline(appOrgID string, filter model.PublicAccountsFilter, letter *string) []bson.M {
 	pipeline := []bson.M{}
 
-	var searchStr, nameOffsetStr, firstNameStr, lastNameStr, usernameStr, followingIDStr, followerIDStr string
-	nameOffsetOp := "$gt"
-	sortVal := 1
-	if order == "desc" {
-		nameOffsetOp = "$lt"
-		sortVal = -1
-	}
-
 	// search for matching using text search. No substring matches
-	// if search != nil {
-	// 	searchStr = *search
+	// if filter.Search != nil {
 	// 	pipeline = append(pipeline,
 	// 		bson.M{
 	// 			"$match": bson.M{
 	// 				"$text": bson.M{
-	// 					"$search": search,
+	// 					"$search": filter.Search,
 	// 					// "$caseSensitive": false,
 	// 				}},
 	// 		})
 	// }
 
-	if search != nil {
-		searchStr = *search
-		searchStrParts := strings.Split(searchStr, " ")
-		searchStr = ""
+	if filter.Search != nil {
+		searchStrParts := strings.Split(*filter.Search, " ")
+		searchStr := ""
 		for _, part := range searchStrParts {
 			if searchStr != "" {
 				searchStr += "|"
@@ -1526,38 +1513,67 @@ func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, 
 		pipeline = append(pipeline, bson.M{"$match": regexFilter})
 	}
 
-	if firstName != nil {
-		firstNameStr = *firstName
-		pipeline = append(pipeline, bson.M{"$match": bson.M{"profile.first_name": *firstName}})
+	if filter.FirstName != nil {
+		pipeline = append(pipeline, bson.M{"$match": bson.M{"profile.first_name": *filter.FirstName}})
 	}
-	if lastName != nil {
-		lastNameStr = *lastName
-		pipeline = append(pipeline, bson.M{"$match": bson.M{"profile.last_name": *lastName}})
+	if filter.LastName != nil {
+		pipeline = append(pipeline, bson.M{"$match": bson.M{"profile.last_name": *filter.LastName}})
 	}
-	if username != nil {
-		usernameStr = *username
-		pipeline = append(pipeline, bson.M{"$match": bson.M{"username": *username}})
+	if filter.Username != nil {
+		pipeline = append(pipeline, bson.M{"$match": bson.M{"username": *filter.Username}})
 	}
 
-	if followingID != nil {
-		followingIDStr = *followingID
-		pipeline = append(pipeline, bson.M{"$match": bson.M{"followers.following_id": *followingID}})
+	if filter.FollowingID != nil {
+		pipeline = append(pipeline, bson.M{"$match": bson.M{"followers.following_id": *filter.FollowingID}})
 	}
 
-	if followerID != nil {
-		followerIDStr = *followerID
-		pipeline = append(pipeline, bson.M{"$match": bson.M{"followings.follower_id": *followerID}})
+	if filter.FollowerID != nil {
+		pipeline = append(pipeline, bson.M{"$match": bson.M{"followings.follower_id": *filter.FollowerID}})
 	}
 
-	if ids != nil && len(*ids) > 0 {
-		pipeline = append(pipeline, bson.M{"$match": bson.M{"_id": bson.M{"$in": *ids}}})
+	if filter.IDs != nil && len(*filter.IDs) > 0 {
+		pipeline = append(pipeline, bson.M{"$match": bson.M{"_id": bson.M{"$in": *filter.IDs}}})
 	}
 
-	for k, v := range unstructuredProperties {
+	for k, v := range filter.UnstructuredProperties {
 		pipeline = append(pipeline, bson.M{"$match": bson.M{"profile.unstructured_properties." + k: v}})
 	}
 
-	pipeline = append(pipeline, bson.M{"$match": bson.M{"org_apps_memberships.app_org_id": appOrg.ID, "privacy.public": true}})
+	// scopes the whole query to a single last name initial. QuoteMeta is required because the letter is only
+	// validated for length, so a value such as "." would otherwise be interpreted as a regex wildcard
+	if letter != nil && *letter != "" {
+		pipeline = append(pipeline, bson.M{"$match": bson.M{"profile.last_name": bson.Regex{Pattern: "^" + regexp.QuoteMeta(*letter), Options: "i"}}})
+	}
+
+	pipeline = append(pipeline, bson.M{"$match": bson.M{"org_apps_memberships.app_org_id": appOrgID, "privacy.public": true}})
+
+	return pipeline
+}
+
+// publicAccountsFilterLogArgs builds the error log fields for the public accounts queries
+func publicAccountsFilterLogArgs(appID string, orgID string, filter model.PublicAccountsFilter, letter *string) *logutils.FieldArgs {
+	return &logutils.FieldArgs{"app_id": appID, "org_id": orgID, "search": utils.GetPrintableString(filter.Search, ""), "letter": utils.GetPrintableString(letter, ""),
+		"first_name": utils.GetPrintableString(filter.FirstName, ""), "last_name": utils.GetPrintableString(filter.LastName, ""), "username": utils.GetPrintableString(filter.Username, ""),
+		"following_id": utils.GetPrintableString(filter.FollowingID, ""), "follower_id": utils.GetPrintableString(filter.FollowerID, "")}
+}
+
+// FindPublicAccounts finds accounts and returns name and username
+func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, orgID string, filter model.PublicAccountsFilter, letter *string, limit *int, offset *int,
+	firstNameOffset *string, lastNameOffset *string, idOffset *string, order string, userID string) ([]model.PublicAccount, map[string]int, *int64, error) {
+	appOrg, err := sa.FindApplicationOrganization(appID, orgID)
+	if err != nil {
+		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
+	}
+
+	var nameOffsetStr string
+	nameOffsetOp := "$gt"
+	sortVal := 1
+	if order == "desc" {
+		nameOffsetOp = "$lt"
+		sortVal = -1
+	}
+
+	pipeline := buildPublicAccountsMatchPipeline(appOrg.ID, filter, letter)
 
 	// secondary pipeline for pagination, sorting, adding fields
 	facetPipeline := []bson.M{}
@@ -1643,7 +1659,9 @@ func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, 
 	var results []publicAccountsResult
 	err = sa.db.tenantsAccounts.Aggregate(pipeline, &results, nil)
 	if err != nil {
-		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, &logutils.FieldArgs{"app_id": appID, "org_id": orgID, "search": searchStr, "name_offset": nameOffsetStr, "first_name": firstNameStr, "last_name": lastNameStr, "username": usernameStr, "following_id": followingIDStr, "follower_id": followerIDStr}, err)
+		logArgs := publicAccountsFilterLogArgs(appID, orgID, filter, letter)
+		(*logArgs)["name_offset"] = nameOffsetStr
+		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, logArgs, err)
 	}
 	if len(results) == 0 {
 		// no results found
@@ -1675,6 +1693,47 @@ func (sa *Adapter) FindPublicAccounts(context TransactionContext, appID string, 
 	}
 
 	return publicAccounts, letterCounts, &result.Total.Value, nil
+}
+
+// FindPublicAccountsLetterIndex finds the last name initials which have at least one matching public account.
+// It shares the $match stages with FindPublicAccounts, but skips the follows lookups, the sorting and the pagination
+// as it returns at most one row per letter.
+func (sa *Adapter) FindPublicAccountsLetterIndex(context TransactionContext, appID string, orgID string, filter model.PublicAccountsFilter) ([]model.PublicAccountLetter, error) {
+	appOrg, err := sa.FindApplicationOrganization(appID, orgID)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeApplicationOrganization, nil, err)
+	}
+
+	pipeline := buildPublicAccountsMatchPipeline(appOrg.ID, filter, nil)
+
+	// group by the first letter of the last name. $substrBytes is used on purpose to stay consistent with the
+	// "counts" facet of FindPublicAccounts - both are to be migrated to $substrCP at the same time
+	pipeline = append(pipeline, bson.M{"$group": bson.M{
+		"_id":   bson.M{"$toUpper": bson.M{"$substrBytes": bson.A{"$profile.last_name", 0, 1}}},
+		"count": bson.M{"$sum": 1},
+	}})
+	// sorted by the server so that the order does not depend on the serializer
+	pipeline = append(pipeline, bson.M{"$sort": bson.D{{Key: "_id", Value: 1}}})
+
+	var results []struct {
+		Letter string `bson:"_id"`
+		Count  int    `bson:"count"`
+	}
+	err = sa.db.tenantsAccounts.Aggregate(pipeline, &results, nil)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, publicAccountsFilterLogArgs(appID, orgID, filter, nil), err)
+	}
+
+	letters := make([]model.PublicAccountLetter, 0, len(results))
+	for _, item := range results {
+		if item.Letter == "" {
+			// accounts without a last name do not belong to any letter section
+			continue
+		}
+		letters = append(letters, model.PublicAccountLetter{Letter: item.Letter, Count: item.Count})
+	}
+
+	return letters, nil
 }
 
 // FindAccountsByParams finds accounts by an arbitrary set of search params

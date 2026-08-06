@@ -83,6 +83,17 @@ get:
       explode: false
       schema:
         type: string
+    - name: letter
+      in: query
+      description: |
+        A single letter (A-Z, case-insensitive) which scopes the query to accounts whose last name starts with it.
+        Used when the user expands a specific A-Z section header. The returned total and counts are scoped to the letter as well.
+      required: false
+      style: form
+      explode: false
+      schema:
+        type: string
+        maxLength: 1
     - name: unstructured_properties
       in: query
       description: Map containing filters by unstructured properties in profile

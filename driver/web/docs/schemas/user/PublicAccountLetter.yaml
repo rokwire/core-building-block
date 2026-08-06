@@ -1,0 +1,9 @@
+required:
+  - letter
+  - count
+type: object
+properties:
+  letter:
+    type: string
+  count:
+    type: integer

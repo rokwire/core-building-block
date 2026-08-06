@@ -154,15 +154,25 @@ func (app *application) serGetAccounts(limit int, offset int, appID string, orgI
 	return accounts, nil
 }
 
-func (app *application) serGetPublicAccounts(appID string, orgID string, limit int, offset *int, firstNameOffset *string, lastNameOffset *string, idOffset *string, order string, search *string, firstName *string,
-	lastName *string, username *string, followingID *string, followerID *string, unstructuredProperties map[string]string, userID string, ids *[]string) ([]model.PublicAccount, map[string]int, *int64, error) {
+func (app *application) serGetPublicAccounts(appID string, orgID string, filter model.PublicAccountsFilter, letter *string, limit int, offset *int, firstNameOffset *string,
+	lastNameOffset *string, idOffset *string, order string, userID string) ([]model.PublicAccount, map[string]int, *int64, error) {
 	//find the accounts
-	accounts, indexCounts, totalCount, err := app.storage.FindPublicAccounts(nil, appID, orgID, &limit, offset, firstNameOffset, lastNameOffset, idOffset, order, search, firstName, lastName, username, followingID, followerID, unstructuredProperties, userID, ids)
+	accounts, indexCounts, totalCount, err := app.storage.FindPublicAccounts(nil, appID, orgID, filter, letter, &limit, offset, firstNameOffset, lastNameOffset, idOffset, order, userID)
 	if err != nil {
 		return nil, nil, nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
 	}
 
 	return accounts, indexCounts, totalCount, nil
+}
+
+func (app *application) serGetPublicAccountsLetterIndex(appID string, orgID string, filter model.PublicAccountsFilter) ([]model.PublicAccountLetter, error) {
+	//find the letters which have at least one matching public account
+	letters, err := app.storage.FindPublicAccountsLetterIndex(nil, appID, orgID, filter)
+	if err != nil {
+		return nil, errors.WrapErrorAction(logutils.ActionFind, model.TypeAccount, nil, err)
+	}
+
+	return letters, nil
 }
 
 func (app *application) serAddFollow(follow model.Follow) error {

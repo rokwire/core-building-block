@@ -653,6 +653,12 @@ type PublicAccountIdentifier struct {
 	Identifier string `json:"identifier"`
 }
 
+// PublicAccountLetter defines model for PublicAccountLetter.
+type PublicAccountLetter struct {
+	Count  int    `json:"count"`
+	Letter string `json:"letter"`
+}
+
 // RefreshGracePeriodPolicy defines model for RefreshGracePeriodPolicy.
 type RefreshGracePeriodPolicy struct {
 	Active      bool `json:"active"`
@@ -949,6 +955,11 @@ type ServicesResAccountsPublic struct {
 	Accounts []PublicAccount `json:"accounts"`
 	Counts   map[string]int  `json:"counts"`
 	Total    int             `json:"total"`
+}
+
+// ServicesResAccountsPublicIndex defines model for _services_res_accounts-public-index.
+type ServicesResAccountsPublicIndex struct {
+	Letters []PublicAccountLetter `json:"letters"`
 }
 
 // ServicesResAuthorizeService defines model for _services_res_authorize-service.
@@ -1517,6 +1528,10 @@ type GetServicesAccountsPublicParams struct {
 	// FollowerId The ID of the account following
 	FollowerId *string `form:"follower-id,omitempty" json:"follower-id,omitempty"`
 
+	// Letter A single letter (A-Z, case-insensitive) which scopes the query to accounts whose last name starts with it.
+	// Used when the user expands a specific A-Z section header.
+	Letter *string `form:"letter,omitempty" json:"letter,omitempty"`
+
 	// UnstructuredProperties Map containing filters by unstructured properties in profile
 	UnstructuredProperties *map[string]interface{} `form:"unstructured_properties,omitempty" json:"unstructured_properties,omitempty"`
 
@@ -1579,6 +1594,10 @@ type GetServicesV2AccountsPublicParams struct {
 	// FollowerId The ID of the account following
 	FollowerId *string `form:"follower-id,omitempty" json:"follower-id,omitempty"`
 
+	// Letter A single letter (A-Z, case-insensitive) which scopes the query to accounts whose last name starts with it.
+	// Used when the user expands a specific A-Z section header. The returned total and counts are scoped to the letter as well.
+	Letter *string `form:"letter,omitempty" json:"letter,omitempty"`
+
 	// UnstructuredProperties Map containing filters by unstructured properties in profile
 	UnstructuredProperties *map[string]interface{} `form:"unstructured_properties,omitempty" json:"unstructured_properties,omitempty"`
 
@@ -1588,6 +1607,33 @@ type GetServicesV2AccountsPublicParams struct {
 
 // GetServicesV2AccountsPublicParamsOrder defines parameters for GetServicesV2AccountsPublic.
 type GetServicesV2AccountsPublicParamsOrder string
+
+// GetServicesV2AccountsPublicIndexParams defines parameters for GetServicesV2AccountsPublicIndex.
+type GetServicesV2AccountsPublicIndexParams struct {
+	// Search The search for username, firstname, or lastname
+	Search *string `form:"search,omitempty" json:"search,omitempty"`
+
+	// Username The username
+	Username *string `form:"username,omitempty" json:"username,omitempty"`
+
+	// Firstname The account profile first name
+	Firstname *string `form:"firstname,omitempty" json:"firstname,omitempty"`
+
+	// Lastname The account profile last name
+	Lastname *string `form:"lastname,omitempty" json:"lastname,omitempty"`
+
+	// FollowingId The ID of the account being followed
+	FollowingId *string `form:"following-id,omitempty" json:"following-id,omitempty"`
+
+	// FollowerId The ID of the account following
+	FollowerId *string `form:"follower-id,omitempty" json:"follower-id,omitempty"`
+
+	// UnstructuredProperties Map containing filters by unstructured properties in profile
+	UnstructuredProperties *map[string]interface{} `form:"unstructured_properties,omitempty" json:"unstructured_properties,omitempty"`
+
+	// Ids A comma-separated list of IDs
+	Ids *string `form:"ids,omitempty" json:"ids,omitempty"`
+}
 
 // DeleteSystemApiKeysParams defines parameters for DeleteSystemApiKeys.
 type DeleteSystemApiKeysParams struct {

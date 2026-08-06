@@ -1,29 +1,17 @@
 get:
   tags:
   - Services
-  summary: Finds public accounts
+  summary: Finds the letters which have matching public accounts
   description: |
-    Finds public accounts using search, username, first name, and last name, following id, and follower id
+    Returns the set of last name initials which currently have at least one matching public account, using the same
+    filter set as the public accounts listing API. Used to render the collapsed A-Z accordion of the user directory
+    without paying the cost of the full accounts pipeline.
+
+    Only letters with at least one match are returned - a missing letter means zero matches for the current filters.
 
   security:
     - bearerAuth: []
   parameters:
-    - name: limit
-      in: query
-      description: The maximum number of accounts to return
-      required: false
-      style: form
-      explode: false
-      schema:
-        type: integer
-    - name: offset
-      in: query
-      description: The index of the first account to return
-      required: false
-      style: form
-      explode: false
-      schema:
-        type: integer
     - name: search
       in: query
       description: The search for username, firstname, or lastname
@@ -72,17 +60,6 @@ get:
       explode: false
       schema:
         type: string
-    - name: letter
-      in: query
-      description: |
-        A single letter (A-Z, case-insensitive) which scopes the query to accounts whose last name starts with it.
-        Used when the user expands a specific A-Z section header.
-      required: false
-      style: form
-      explode: false
-      schema:
-        type: string
-        maxLength: 1
     - name: unstructured_properties
       in: query
       description: Map containing filters by unstructured properties in profile
@@ -105,9 +82,7 @@ get:
       content:
         application/json:
           schema:
-            type: array
-            items:
-              $ref: "../../schemas/user/PublicAccount.yaml"
+            $ref: "../../../schemas/apis/services/v2/accounts-public/index/response/Response.yaml"
     400:
       description: Bad request
     401:

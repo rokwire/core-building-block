@@ -434,6 +434,18 @@ func publicAccountIdentifiersToDef(items []model.PublicAccountIdentifier) []Def.
 	return result
 }
 
+func publicAccountLetterToDef(item model.PublicAccountLetter) Def.PublicAccountLetter {
+	return Def.PublicAccountLetter{Letter: item.Letter, Count: item.Count}
+}
+
+func publicAccountLettersToDef(items []model.PublicAccountLetter) []Def.PublicAccountLetter {
+	result := make([]Def.PublicAccountLetter, len(items))
+	for i, item := range items {
+		result[i] = publicAccountLetterToDef(item)
+	}
+	return result
+}
+
 func privacyToDef(item *model.Privacy) *Def.Privacy {
 	if item == nil {
 		return nil
