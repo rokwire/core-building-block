@@ -15,11 +15,13 @@
 package identitybb
 
 import (
+	"context"
 	"core-building-block/core/model"
 	"encoding/json"
 	"io"
 	"net/http"
 	"net/url"
+	"time"
 
 	"github.com/rokwire/rokwire-building-block-sdk-go/services/core/auth"
 
@@ -28,6 +30,11 @@ import (
 	"github.com/rokwire/rokwire-building-block-sdk-go/utils/logging/logutils"
 	"github.com/rokwire/rokwire-building-block-sdk-go/utils/rokwireutils"
 )
+
+// getUserProfileTimeout caps how long we wait for the Identity BB. This call only enriches
+// the profile - it is not required for login or refresh to succeed - so it must never be
+// able to block those flows. Without it the request hangs until the gateway gives up.
+const getUserProfileTimeout = 5 * time.Second
 
 // Adapter implements the IdentityBuildingBlock interface
 type Adapter struct {
@@ -50,7 +57,10 @@ func (a *Adapter) GetUserProfile(baseURL string, externalUser model.ExternalSyst
 		"last-name":   {externalUser.LastName},
 	}
 
-	req, err := http.NewRequest(http.MethodGet, baseURL+"/student-summary?"+queryParams.Encode(), nil)
+	ctx, cancel := context.WithTimeout(context.Background(), getUserProfileTimeout)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, baseURL+"/student-summary?"+queryParams.Encode(), nil)
 	if err != nil {
 		return nil, errors.WrapErrorAction(logutils.ActionCreate, logutils.TypeRequest, nil, err)
 	}
