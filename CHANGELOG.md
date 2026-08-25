@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+### Changed
+- Optimise refresh flow when Indetity BB is not available [#833](https://github.com/rokwire/core-building-block/issues/833)
 
 ## [1.66.0] - 2026-08-06
 ### Changed
