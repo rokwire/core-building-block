@@ -652,6 +652,8 @@ func (a *Auth) updateExternalUserIfNeeded(accountAuthType model.AccountAuthType,
 		identityBBProfile, err = a.identityBB.GetUserProfile(identityProviderSetting.IdentityBBBaseURL, externalUser, externalCreds, identityProviderSetting.IdentityBBProfileFields, l)
 		if err != nil {
 			l.WarnError(logutils.MessageAction(logutils.StatusError, "syncing", "identity bb data", nil), err)
+		} else {
+			l.Info("identity bb profile successfully retrieved")
 		}
 	}
 
